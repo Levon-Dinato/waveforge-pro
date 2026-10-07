@@ -1,0 +1,26 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: linear-gradient(180deg, #07070c 0%, #0e0e16 100%);
+  color: #e8e8f0;
+  min-height: 100vh;
+}
+
+button {
+  font-family: inherit;
+  transition: all 0.15s ease;
+}
+
+button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.15);
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

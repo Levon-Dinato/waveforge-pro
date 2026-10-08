@@ -27,7 +27,16 @@ import './styles.css';
 
 export default function App() {
   const engine = useAudioEngine();
-  const { result, finalNotes, isAnalyzing, isPlaying, currentTime } = engine;
+  const {
+    result,
+    finalNotes,
+    isAnalyzing,
+    isPlaying,
+    currentTime,
+    fileName,
+    fileSize,
+    fileFormat,
+  } = engine;
 
   const [isSeparating, setIsSeparating] = useState(false);
   const [isAnalyzingVocals, setIsAnalyzingVocals] = useState(false);
@@ -278,6 +287,12 @@ export default function App() {
     return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   };
 
+  const formatSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
   return (
     <>
       <VideoBackground />
@@ -395,11 +410,63 @@ export default function App() {
                 overflow: 'hidden',
               }}
             >
-              <div className="panel-header">
-                <span>🎵 WAVEFORM</span>
-                <span className="mono" style={{ fontSize: 10, color: '#888' }}>
-                  {formatTime(currentTime)} / {formatTime(result.duration)}
-                </span>
+              <div
+                className="panel-header"
+                style={{
+                  flexDirection: 'column',
+                  alignItems: 'flex-start',
+                  gap: 4,
+                  padding: '8px 12px',
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    width: '100%',
+                    alignItems: 'center',
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 600,
+                      color: 'var(--cyan)',
+                      maxWidth: '70%',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    🎵 {fileName || 'SANS TITRE'}
+                  </span>
+                  <span
+                    className="mono"
+                    style={{ fontSize: 10, color: '#888' }}
+                  >
+                    {formatTime(currentTime)} / {formatTime(result.duration)}
+                  </span>
+                </div>
+                <div
+                  className="label-uppercase"
+                  style={{
+                    fontSize: 8,
+                    color: '#666',
+                    display: 'flex',
+                    gap: 6,
+                    flexWrap: 'wrap',
+                  }}
+                >
+                  {fileFormat && <span>{fileFormat}</span>}
+                  <span>·</span>
+                  <span>{result.sampleRate} Hz</span>
+                  <span>·</span>
+                  <span>STÉRÉO</span>
+                  <span>·</span>
+                  <span>{formatTime(result.duration)}</span>
+                  <span>·</span>
+                  <span>{formatSize(fileSize)}</span>
+                </div>
               </div>
 
               {/* TIMELINE MARKERS */}
@@ -610,16 +677,22 @@ export default function App() {
                       disabled={isDetectingSections}
                       style={{
                         background:
-                          sections.length > 0 ? 'var(--cyan-dim)' : 'var(--bg-2)',
+                          sections.length > 0
+                            ? 'var(--cyan-dim)'
+                            : 'var(--bg-2)',
                         color:
                           sections.length > 0 ? 'var(--cyan)' : 'var(--text)',
                         borderColor:
-                          sections.length > 0 ? 'var(--cyan)' : 'var(--border)',
+                          sections.length > 0
+                            ? 'var(--cyan)'
+                            : 'var(--border)',
                       }}
                     >
                       {isDetectingSections
                         ? '⏳ SECTIONS...'
-                        : `🎬 SECTIONS${sections.length > 0 ? ` (${sections.length})` : ''}`}
+                        : `🎬 SECTIONS${
+                            sections.length > 0 ? ` (${sections.length})` : ''
+                          }`}
                     </button>
 
                     <button
@@ -636,7 +709,9 @@ export default function App() {
                           ? 'var(--cyan)'
                           : 'var(--bg-2)',
                         color: showGenerator ? 'var(--bg-0)' : 'var(--text)',
-                        borderColor: showGenerator ? 'var(--cyan)' : 'var(--border)',
+                        borderColor: showGenerator
+                          ? 'var(--cyan)'
+                          : 'var(--border)',
                       }}
                     >
                       {showGenerator ? '✕' : '🎼'} GÉNÉRATEUR
@@ -662,7 +737,6 @@ export default function App() {
                         ⚙️ OPTIONS D'EXPORT MIDI
                       </div>
 
-                      {/* Quantize */}
                       <div style={{ marginBottom: 12 }}>
                         <div
                           className="label-uppercase"
@@ -707,7 +781,6 @@ export default function App() {
                         </div>
                       </div>
 
-                      {/* Force */}
                       <div style={{ marginBottom: 12 }}>
                         <div
                           className="label-uppercase"
@@ -731,7 +804,6 @@ export default function App() {
                         />
                       </div>
 
-                      {/* Swing */}
                       <div style={{ marginBottom: 12 }}>
                         <div
                           className="label-uppercase"
@@ -755,7 +827,6 @@ export default function App() {
                         />
                       </div>
 
-                      {/* Snap */}
                       <div
                         style={{
                           display: 'flex',

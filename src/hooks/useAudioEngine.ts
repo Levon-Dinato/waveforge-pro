@@ -29,6 +29,11 @@ export function useAudioEngine() {
   const [currentTime, setCurrentTime] = useState(0);
   const [settings, setSettings] = useState<EngineSettings>(DEFAULT_SETTINGS);
 
+  // 📄 Infos du fichier importé
+  const [fileName, setFileName] = useState<string>('');
+  const [fileSize, setFileSize] = useState<number>(0);
+  const [fileFormat, setFileFormat] = useState<string>('');
+
   const finalNotes = useMemo(() => {
     if (!result) return [];
     let notes = rawNotes;
@@ -60,6 +65,12 @@ export function useAudioEngine() {
       setIsAnalyzing(true);
       setResult(null);
       setRawNotes([]);
+
+      // 📄 Stocke les infos du fichier
+      setFileName(file.name);
+      setFileSize(file.size);
+      const ext = file.name.split('.').pop()?.toUpperCase() ?? '';
+      setFileFormat(ext);
 
       const startTime = performance.now();
 
@@ -186,6 +197,9 @@ export function useAudioEngine() {
   return {
     rawNotes,
     finalNotes,
+    fileName,
+    fileSize,
+    fileFormat,
     result,
     isAnalyzing,
     isPlaying,

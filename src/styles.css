@@ -364,3 +364,116 @@ select:focus {
     font-size: 10px;
   }
 }
+/* ============================================================
+   ÉTATS DES BOUTONS (loading / success / error)
+   ============================================================ */
+
+/* Shimmer pendant le chargement */
+@keyframes shimmerBtn {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.btn-action.loading {
+  background: linear-gradient(
+    90deg,
+    var(--bg-2) 0%,
+    var(--bg-3) 25%,
+    var(--cyan-dim) 50%,
+    var(--bg-3) 75%,
+    var(--bg-2) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmerBtn 1.5s ease-in-out infinite;
+  color: var(--cyan);
+  border-color: var(--cyan-dim);
+  pointer-events: none;
+}
+
+/* Pulse verte quand terminé */
+@keyframes pulseSuccess {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 255, 136, 0.6);
+    border-color: var(--green);
+  }
+  50% {
+    box-shadow: 0 0 0 12px rgba(0, 255, 136, 0);
+    border-color: var(--green);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 255, 136, 0);
+    border-color: var(--border);
+  }
+}
+
+.btn-action.success {
+  animation: pulseSuccess 0.8s ease-out;
+  background: rgba(0, 255, 136, 0.15);
+  border-color: var(--green);
+  color: var(--green);
+}
+
+/* Shake rouge en cas d'erreur */
+@keyframes shakeError {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+  20%, 40%, 60%, 80% { transform: translateX(4px); }
+}
+
+.btn-action.error {
+  animation: shakeError 0.5s ease-in-out;
+  background: rgba(255, 51, 102, 0.15);
+  border-color: var(--red);
+  color: var(--red);
+}
+
+/* ============================================================
+   ANIMATION D'ENTRÉE GLOBALE POUR PANNEAUX
+   ============================================================ */
+
+@keyframes panelEnter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+.panel-enter {
+  animation: panelEnter 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ============================================================
+   HOVER SUR LES BOUTONS D'ANALYSE
+   ============================================================ */
+
+.btn-action:hover:not(:disabled):not(.loading) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 217, 255, 0.15);
+}
+
+/* ============================================================
+   ANIMATION DE LA TÊTE DE LECTURE (pulse subtil)
+   ============================================================ */
+
+@keyframes playheadPulse {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(255, 51, 102, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 16px rgba(255, 51, 102, 0.9);
+  }
+}
+
+.playhead-active {
+  animation: playheadPulse 1s ease-in-out infinite;
+}

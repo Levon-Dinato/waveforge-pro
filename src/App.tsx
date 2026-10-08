@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 import { VideoBackground } from './components/VideoBackground';
 import { Waveform } from './components/Waveform';
 import { VUMeter } from './components/VUMeter';
+import { AnimatedButton } from './components/AnimatedButton';
 import { DropZone } from './components/DropZone';
 import { PianoRoll } from './components/PianoRoll';
 import { StemPlayer } from './components/StemPlayer';
@@ -95,7 +96,9 @@ export default function App() {
   }, [finalNotes, bassNotes, chordNotes]);
 
   const handleAnalyzeVocals = useCallback(async () => {
-    if (!stems?.vocals) return;
+    if (!stems?.vocals) {
+      throw new Error('Sépare les stems d\'abord');
+    }
     setIsAnalyzingVocals(true);
     try {
       const ctx = new AudioContext();
@@ -110,14 +113,16 @@ export default function App() {
       console.log(`✅ ${vocalNotes.length} notes détectées sur vocals.wav`);
     } catch (e) {
       console.error('Erreur analyse voix :', e);
-      alert('Erreur : ' + (e as Error).message);
+      throw e;
     } finally {
       setIsAnalyzingVocals(false);
     }
   }, [stems, engine]);
 
   const handleAnalyzeDrums = useCallback(async () => {
-    if (!stems?.noVocals) return;
+    if (!stems?.noVocals) {
+      throw new Error('Sépare les stems d\'abord');
+    }
     setIsAnalyzingDrums(true);
     try {
       const ctx = new AudioContext();
@@ -130,14 +135,16 @@ export default function App() {
       console.log(`✅ ${drums.length} événements batterie détectés`);
     } catch (e) {
       console.error('Erreur analyse batterie :', e);
-      alert('Erreur : ' + (e as Error).message);
+      throw e;
     } finally {
       setIsAnalyzingDrums(false);
     }
   }, [stems]);
 
   const handleAnalyzeBass = useCallback(async () => {
-    if (!stems?.noVocals) return;
+    if (!stems?.noVocals) {
+      throw new Error('Sépare les stems d\'abord');
+    }
     setIsAnalyzingBass(true);
     try {
       const ctx = new AudioContext();
@@ -150,14 +157,16 @@ export default function App() {
       console.log(`✅ ${bass.length} notes de basse détectées`);
     } catch (e) {
       console.error('Erreur analyse basse :', e);
-      alert('Erreur : ' + (e as Error).message);
+      throw e;
     } finally {
       setIsAnalyzingBass(false);
     }
   }, [stems]);
 
   const handleAnalyzeChords = useCallback(async () => {
-    if (!stems?.noVocals) return;
+    if (!stems?.noVocals) {
+      throw new Error('Sépare les stems d\'abord');
+    }
     setIsAnalyzingChords(true);
     try {
       const ctx = new AudioContext();
@@ -170,14 +179,16 @@ export default function App() {
       console.log(`✅ ${chords.length} notes d'accords détectées`);
     } catch (e) {
       console.error('Erreur analyse accords :', e);
-      alert('Erreur : ' + (e as Error).message);
+      throw e;
     } finally {
       setIsAnalyzingChords(false);
     }
   }, [stems]);
 
   const handleSeparate = useCallback(async () => {
-    if (!engine.audioBuffer) return;
+    if (!engine.audioBuffer) {
+      throw new Error('Charge un audio d\'abord');
+    }
     setIsSeparating(true);
     try {
       const wav = audioBufferToWav(engine.audioBuffer);
@@ -187,7 +198,7 @@ export default function App() {
       console.log('✅ Stems séparés :', res);
     } catch (e) {
       console.error('Erreur séparation :', e);
-      alert('Erreur : ' + (e as Error).message);
+      throw e;
     } finally {
       setIsSeparating(false);
     }
@@ -419,48 +430,43 @@ export default function App() {
                         margin: '0 4px',
                       }}
                     />
-                    <button
-                      className="btn-action"
+                    <AnimatedButton
                       onClick={handleSeparate}
                       disabled={isSeparating || demucsOnline === false}
                     >
-                      {isSeparating ? '⏳ SÉPARATION...' : '🎤 SÉPARER STEMS'}
-                    </button>
+                      🎤 SÉPARER STEMS
+                    </AnimatedButton>
 
                     {stems && (
                       <>
-                        <button
-                          className="btn-action"
+                        <AnimatedButton
                           onClick={handleAnalyzeVocals}
                           disabled={isAnalyzingVocals}
                           style={{ borderColor: 'rgba(255, 184, 0, 0.3)' }}
                         >
-                          {isAnalyzingVocals ? '⏳' : '🎼'} VOIX
-                        </button>
-                        <button
-                          className="btn-action"
+                          🎼 VOIX
+                        </AnimatedButton>
+                        <AnimatedButton
                           onClick={handleAnalyzeDrums}
                           disabled={isAnalyzingDrums}
                           style={{ borderColor: 'rgba(0, 255, 136, 0.3)' }}
                         >
-                          {isAnalyzingDrums ? '⏳' : '🥁'} BATTERIE
-                        </button>
-                        <button
-                          className="btn-action"
+                          🥁 BATTERIE
+                        </AnimatedButton>
+                        <AnimatedButton
                           onClick={handleAnalyzeBass}
                           disabled={isAnalyzingBass}
                           style={{ borderColor: 'rgba(139, 92, 246, 0.3)' }}
                         >
-                          {isAnalyzingBass ? '⏳' : '🎸'} BASSE
-                        </button>
-                        <button
-                          className="btn-action"
+                          🎸 BASSE
+                        </AnimatedButton>
+                        <AnimatedButton
                           onClick={handleAnalyzeChords}
                           disabled={isAnalyzingChords}
                           style={{ borderColor: 'rgba(236, 72, 153, 0.3)' }}
                         >
-                          {isAnalyzingChords ? '⏳' : '🎹'} ACCORDS
-                        </button>
+                          🎹 ACCORDS
+                        </AnimatedButton>
                       </>
                     )}
 

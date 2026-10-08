@@ -1,130 +1,143 @@
 import type { DetectedNote } from '../types';
 
-// Notes MIDI du General MIDI (canal 10 = percussion)
+// Notes MIDI General MIDI (canal 10 = percussion)
 const GM_KICK = 36;
 const GM_SNARE = 38;
 const GM_HIHAT = 42;
 
+interface BasicPitchNote {
+  pitchMidi: number;
+  startTimeSeconds: number;
+  durationSeconds: number;
+  amplitude: number;
+  pitchBends?: number[];
+}
+
+let basicPitchInstance: any = null;
+
 /**
- * Détecte les onsets (attaques) d'un signal audio et les classifie
- * en kick / snare / hihat selon leur contenu fréquentiel.
+ * Charge Basic Pitch (lazy loading).
  */
-export function transcribeDrums(audioBuffer: AudioBuffer): DetectedNote[] {
-  const sr = audioBuffer.sampleRate;
-  const data = audioBuffer.getChannelData(0);
+async function getBasicPitch() {
+  if (basicPitchInstance) return basicPitchInstance;
 
-  // 1. Détection des onsets par spectral flux
-  const onsets = detectOnsets(data, sr);
+  console.log('🥁 Chargement de Basic Pitch...');
 
-  // 2. Classification kick/snare/hihat par analyse fréquentielle
-  const notes: DetectedNote[] = [];
+  const bp = await import('@spotify/basic-pitch');
 
-  for (const onset of onsets) {
-    const { time, energy } = onset;
-    const startSample = Math.floor(time * sr);
-    const endSample = Math.min(startSample + 2048, data.length);
-    const window = data.slice(startSample, endSample);
+  basicPitchInstance = {
+    BasicPitch: bp.BasicPitch,
+    noteFramesToTime: bp.noteFramesToTime,
+    addPitchBendsToNoteEvents: bp.addPitchBendsToNoteEvents,
+    outputToNotesPoly: bp.outputToNotesPoly,
+    model: new bp.BasicPitch('/model/model.json'),
+  };
 
-    if (window.length < 256) continue;
+  console.log('✅ Basic Pitch chargé');
+  return basicPitchInstance;
+}
 
-    // FFT simple pour analyse fréquentielle
-    const spectrum = computeSpectrum(window);
+/**
+ * Détecte la batterie en utilisant Basic Pitch (modèle ML de Spotify).
+ * Seuils ajustés pour éviter les faux positifs.
+ */
+export async function transcribeDrums(audioBuffer: AudioBuffer): Promise<DetectedNote[]> {
+  console.log(`🥁 Analyse batterie Basic Pitch : ${audioBuffer.duration.toFixed(2)}s`);
 
-    // Bandes d'énergie
-    const lowEnergy = bandEnergy(spectrum, sr, 0, 120);       // kick
-    const midEnergy = bandEnergy(spectrum, sr, 120, 8000);    // snare
-    const highEnergy = bandEnergy(spectrum, sr, 8000, 16000); // hihat
+  const bp = await getBasicPitch();
 
-    const total = lowEnergy + midEnergy + highEnergy;
-    if (total < 0.01) continue;
+  // 1. Convertit en mono
+  const monoData = mixToMono(audioBuffer);
+  console.log(`🥁 ${monoData.length} samples mono`);
 
-    // Classification
-    let midi = GM_HIHAT;
-    if (lowEnergy / total > 0.4) midi = GM_KICK;
-    else if (midEnergy / total > 0.35) midi = GM_SNARE;
-    else if (highEnergy / total > 0.3) midi = GM_HIHAT;
+  // 2. Inférence
+  const frames: number[][] = [];
+  const onsets: number[][] = [];
+  const contours: number[][] = [];
 
-    const velocity = Math.min(127, Math.round(energy * 200 + 40));
+  await bp.model.evaluateModel(
+    monoData,
+    (f: number[][], o: number[][], c: number[][]) => {
+      frames.push(...f);
+      onsets.push(...o);
+      contours.push(...c);
+    },
+    () => {}
+  );
 
-    notes.push({
+  console.log(`🥁 Inférence terminée : ${frames.length} frames`);
+
+  // 3. Conversion en notes avec seuils TRÈS STRICTS
+  const rawNotes = bp.outputToNotesPoly(
+    frames,
+    onsets,
+    0.7,    // onsetThresh : 0.5 → 0.7 (rejette les onsets faibles)
+    0.6,    // frameThresh : 0.5 → 0.6 (rejette les frames faibles)
+    0.15,   // minNoteLen : 0.1 → 0.15 (rejette les notes très courtes)
+    true    // inferOnsets
+  );
+
+  const withBends = bp.addPitchBendsToNoteEvents(contours, rawNotes);
+  const timedNotes: BasicPitchNote[] = bp.noteFramesToTime(withBends);
+
+  console.log(`🥁 Basic Pitch : ${timedNotes.length} notes brutes`);
+
+  // 4. Filtre batterie (notes basses)
+  const drumNotes = timedNotes.filter(
+    (n) => n.pitchMidi >= 30 && n.pitchMidi <= 50
+  );
+
+  console.log(`🥁 ${drumNotes.length} notes dans la plage batterie (30-50)`);
+
+  // 5. Classification par pitch MIDI
+  const detected: DetectedNote[] = [];
+
+  for (const n of drumNotes) {
+    const pitch = Math.round(n.pitchMidi);
+    let midi: number;
+
+    if (pitch <= 37) {
+      midi = GM_KICK;
+    } else if (pitch <= 40) {
+      midi = GM_SNARE;
+    } else {
+      midi = GM_HIHAT;
+    }
+
+    detected.push({
       midi,
-      start: time,
-      duration: 0.05,
-      velocity,
-      confidence: Math.min(1, energy * 2),
+      start: n.startTimeSeconds,
+      duration: Math.max(0.05, n.durationSeconds),
+      velocity: Math.min(127, Math.max(30, Math.round(n.amplitude * 127))),
+      confidence: Math.min(1, n.amplitude * 1.5),
       track: 'drums' as any,
     });
   }
 
-  return notes;
+  const kicks = detected.filter((n) => n.midi === GM_KICK).length;
+  const snares = detected.filter((n) => n.midi === GM_SNARE).length;
+  const hihats = detected.filter((n) => n.midi === GM_HIHAT).length;
+
+  console.log(`🥁 RÉSULTAT : ${kicks} kicks, ${snares} snares, ${hihats} hihats (total ${detected.length})`);
+
+  return detected;
 }
 
 /**
- * Détecte les onsets par différence spectrale (spectral flux).
+ * Mixe l'audio en mono.
  */
-function detectOnsets(data: Float32Array, sr: number): { time: number; energy: number }[] {
-  const FRAME = 1024;
-  const HOP = 512;
-  const THRESHOLD = 0.15;
-
-  const energies: number[] = [];
-  const times: number[] = [];
-
-  for (let i = 0; i + FRAME < data.length; i += HOP) {
-    let energy = 0;
-    for (let j = 0; j < FRAME; j++) {
-      energy += data[i + j] * data[i + j];
-    }
-    energies.push(energy / FRAME);
-    times.push(i / sr);
+function mixToMono(buffer: AudioBuffer): Float32Array {
+  if (buffer.numberOfChannels === 1) {
+    return buffer.getChannelData(0);
   }
 
-  // Détection des pics (onsets)
-  const onsets: { time: number; energy: number }[] = [];
-  for (let i = 1; i < energies.length - 1; i++) {
-    const prev = energies[i - 1];
-    const curr = energies[i];
-    const next = energies[i + 1];
+  const L = buffer.getChannelData(0);
+  const R = buffer.getChannelData(1);
+  const out = new Float32Array(L.length);
 
-    // Pic local + seuil
-    if (curr > prev * 1.5 && curr > next * 1.2 && curr > THRESHOLD) {
-      onsets.push({ time: times[i], energy: curr });
-    }
+  for (let i = 0; i < L.length; i++) {
+    out[i] = (L[i] + R[i]) * 0.5;
   }
 
-  return onsets;
-}
-
-/**
- * Calcule un spectre simple (magnitude) via FFT rudimentaire.
- */
-function computeSpectrum(window: Float32Array): Float32Array {
-  const N = Math.min(512, window.length);
-  const spectrum = new Float32Array(N / 2);
-
-  for (let k = 0; k < N / 2; k++) {
-    let real = 0;
-    let imag = 0;
-    for (let n = 0; n < N; n++) {
-      const angle = (-2 * Math.PI * k * n) / N;
-      real += window[n] * Math.cos(angle);
-      imag += window[n] * Math.sin(angle);
-    }
-    spectrum[k] = Math.sqrt(real * real + imag * imag) / N;
-  }
-
-  return spectrum;
-}
-
-/**
- * Somme l'énergie dans une bande de fréquences.
- */
-function bandEnergy(spectrum: Float32Array, sr: number, fMin: number, fMax: number): number {
-  const binHz = sr / (spectrum.length * 2);
-  const kMin = Math.floor(fMin / binHz);
-  const kMax = Math.min(Math.ceil(fMax / binHz), spectrum.length - 1);
-
-  let sum = 0;
-  for (let k = kMin; k <= kMax; k++) sum += spectrum[k];
-  return sum;
+  return out;
 }

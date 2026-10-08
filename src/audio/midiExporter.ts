@@ -1,52 +1,40 @@
 import { Midi } from '@tonejs/midi';
-import type { DetectedNote, TrackType } from '../types';
+import type { DetectedNote } from '../types';
 
-const TRACK_NAMES: Record<string, string> = {
-  lead: 'Vocals',
-  bass: 'Bass',
-  harmony: 'Chords',
-  drums: 'Drums',
-};
+const DRUM_CHANNEL = 9; // Canal 10 GM (index 0)
 
-const TRACK_CHANNELS: Record<string, number> = {
-  lead: 0,
-  bass: 1,
-  harmony: 2,
-  drums: 9, // Canal 10 pour percussion GM
-};
-
-export interface MultiTrackStems {
-  vocals?: DetectedNote[];
+export interface MultiTrackData {
+  melody?: DetectedNote[];
   bass?: DetectedNote[];
-  harmony?: DetectedNote[];
   drums?: DetectedNote[];
 }
 
 /**
- * Exporte un MIDI multipiste (voix + basse + accords + batterie).
+ * Exporte un MIDI multipiste (mélodie + basse + batterie).
  */
-export function exportMultiTrackMidi(
-  stems: MultiTrackStems,
-  bpm = 120
-): Blob {
+export function exportMidi(notes: DetectedNote[], bpm = 120): Blob {
+  // Rétro-compatibilité : détecte les pistes dans les notes
+  const drums = notes.filter((n) => n.track === 'drums');
+  const bass = notes.filter((n) => n.track === 'bass');
+  const melody = notes.filter((n) => n.track !== 'drums' && n.track !== 'bass');
+
+  return exportMultiTrackMidi({ melody, bass, drums }, bpm);
+}
+
+/**
+ * Export multipiste complet.
+ */
+export function exportMultiTrackMidi(data: MultiTrackData, bpm = 120): Blob {
   const midi = new Midi();
   midi.header.setTempo(bpm);
 
-  const trackMap: { type: TrackType; notes?: DetectedNote[] }[] = [
-    { type: 'lead', notes: stems.vocals },
-    { type: 'drums', notes: stems.drums },
-    { type: 'bass', notes: stems.bass },
-    { type: 'harmony', notes: stems.harmony },
-  ];
-
-  for (const { type, notes } of trackMap) {
-    if (!notes || notes.length === 0) continue;
-
+  // 1. Piste Melody (voix + instruments mélodiques)
+  if (data.melody && data.melody.length > 0) {
     const track = midi.addTrack();
-    track.name = TRACK_NAMES[type] ?? type;
-    track.channel = TRACK_CHANNELS[type] ?? 0;
+    track.name = 'Melody';
+    track.channel = 0;
 
-    for (const n of notes) {
+    for (const n of data.melody) {
       if (n.duration < 0.03) continue;
       track.addNote({
         midi: n.midi,
@@ -57,15 +45,41 @@ export function exportMultiTrackMidi(
     }
   }
 
+  // 2. Piste Bass
+  if (data.bass && data.bass.length > 0) {
+    const track = midi.addTrack();
+    track.name = 'Bass';
+    track.channel = 1;
+
+    for (const n of data.bass) {
+      if (n.duration < 0.03) continue;
+      track.addNote({
+        midi: n.midi,
+        time: n.start,
+        duration: Math.max(0.05, n.duration),
+        velocity: n.velocity / 127,
+      });
+    }
+  }
+
+  // 3. Piste Drums (canal 10 GM)
+  if (data.drums && data.drums.length > 0) {
+    const drumTrack = midi.addTrack();
+    drumTrack.name = 'Drums';
+    drumTrack.channel = DRUM_CHANNEL;
+
+    for (const n of data.drums) {
+      drumTrack.addNote({
+        midi: n.midi,
+        time: n.start,
+        duration: 0.05,
+        velocity: n.velocity / 127,
+      });
+    }
+  }
+
   const bytes = midi.toArray();
   return new Blob([bytes as BlobPart], { type: 'audio/midi' });
-}
-
-/**
- * Export mono-piste (compatibilité descendante).
- */
-export function exportMidi(notes: DetectedNote[], bpm = 120): Blob {
-  return exportMultiTrackMidi({ vocals: notes }, bpm);
 }
 
 export function exportJSON(notes: DetectedNote[]): Blob {

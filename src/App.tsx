@@ -6,6 +6,8 @@ import { StemPlayer } from './components/StemPlayer';
 import { useAudioEngine } from './hooks/useAudioEngine';
 import { exportMidi, download } from './audio/midiExporter';
 import { separateVocals, checkDemucsHealth } from './audio/demucsClient';
+import { transcribeDrums } from './audio/drumDetector';
+import { transcribeBass } from './audio/bassDetector';
 import './styles.css';
 
 export default function App() {
@@ -14,7 +16,11 @@ export default function App() {
 
   const [isSeparating, setIsSeparating] = useState(false);
   const [isAnalyzingVocals, setIsAnalyzingVocals] = useState(false);
+  const [isAnalyzingDrums, setIsAnalyzingDrums] = useState(false);
+  const [isAnalyzingBass, setIsAnalyzingBass] = useState(false);
   const [stems, setStems] = useState<{ vocals: string; noVocals: string } | null>(null);
+  const [drumNotes, setDrumNotes] = useState<any[] | null>(null);
+  const [bassNotes, setBassNotes] = useState<any[] | null>(null);
   const [demucsOnline, setDemucsOnline] = useState<boolean | null>(null);
 
   useState(() => {
@@ -23,9 +29,14 @@ export default function App() {
 
   const handleExport = useCallback(() => {
     if (!result) return;
-    const blob = exportMidi(finalNotes, result.bpm);
+    const allNotes = [
+      ...finalNotes,
+      ...(drumNotes || []),
+      ...(bassNotes || []),
+    ];
+    const blob = exportMidi(allNotes, result.bpm);
     download(blob, 'waveforge.mid');
-  }, [result, finalNotes]);
+  }, [result, finalNotes, drumNotes, bassNotes]);
 
   const handleAnalyzeVocals = useCallback(async () => {
     if (!stems?.vocals) return;
@@ -48,6 +59,46 @@ export default function App() {
       setIsAnalyzingVocals(false);
     }
   }, [stems, engine]);
+
+  const handleAnalyzeDrums = useCallback(async () => {
+    if (!stems?.noVocals) return;
+    setIsAnalyzingDrums(true);
+    try {
+      const ctx = new AudioContext();
+      const buffer = await fetch(stems.noVocals)
+        .then((r) => r.arrayBuffer())
+        .then((buf) => ctx.decodeAudioData(buf));
+
+      const drums = await transcribeDrums(buffer);
+      setDrumNotes(drums);
+      console.log(`✅ ${drums.length} événements batterie détectés`);
+    } catch (e) {
+      console.error('Erreur analyse batterie :', e);
+      alert('Erreur : ' + (e as Error).message);
+    } finally {
+      setIsAnalyzingDrums(false);
+    }
+  }, [stems]);
+
+  const handleAnalyzeBass = useCallback(async () => {
+    if (!stems?.noVocals) return;
+    setIsAnalyzingBass(true);
+    try {
+      const ctx = new AudioContext();
+      const buffer = await fetch(stems.noVocals)
+        .then((r) => r.arrayBuffer())
+        .then((buf) => ctx.decodeAudioData(buf));
+
+      const bass = await transcribeBass(buffer);
+      setBassNotes(bass);
+      console.log(`✅ ${bass.length} notes de basse détectées`);
+    } catch (e) {
+      console.error('Erreur analyse basse :', e);
+      alert('Erreur : ' + (e as Error).message);
+    } finally {
+      setIsAnalyzingBass(false);
+    }
+  }, [stems]);
 
   const handleSeparate = useCallback(async () => {
     if (!engine.audioBuffer) return;
@@ -79,7 +130,6 @@ export default function App() {
           zIndex: 1,
         }}
       >
-        {/* HEADER */}
         <header
           style={{
             marginBottom: 32,
@@ -134,15 +184,13 @@ export default function App() {
             >
               {demucsOnline
                 ? '🟢 Serveur Demucs en ligne'
-                : '🔴 Serveur Demucs hors ligne'}
+                : '🔴 Séparation de stems : disponible en local'}
             </div>
           )}
         </header>
 
-        {/* ZONE DE DROP */}
         <DropZone onFile={engine.loadFile} isAnalyzing={isAnalyzing} />
 
-        {/* CONTENU PRINCIPAL */}
         {result && (
           <div
             style={{
@@ -153,13 +201,16 @@ export default function App() {
             }}
           >
             <PianoRoll
-              notes={finalNotes}
+              notes={[
+                ...finalNotes,
+                ...(drumNotes || []),
+                ...(bassNotes || []),
+              ]}
               duration={result.duration}
               currentTime={currentTime}
               onSeek={engine.seek}
             />
 
-            {/* BARRE DE BOUTONS */}
             <div className="glass" style={{ padding: 16 }}>
               <div
                 style={{
@@ -192,7 +243,9 @@ export default function App() {
                 <button
                   onClick={handleExport}
                   style={btnStyle('#ff5c9d')}
-                  disabled={finalNotes.length === 0}
+                  disabled={
+                    finalNotes.length === 0 && !drumNotes && !bassNotes
+                  }
                 >
                   💾 Export .mid
                 </button>
@@ -214,7 +267,31 @@ export default function App() {
                   >
                     {isAnalyzingVocals
                       ? '⏳ Analyse voix…'
-                      : '🎼 Analyser la voix isolée'}
+                      : '🎼 Analyser la voix'}
+                  </button>
+                )}
+
+                {stems && (
+                  <button
+                    onClick={handleAnalyzeDrums}
+                    disabled={isAnalyzingDrums}
+                    style={btnStyle('#10b981')}
+                  >
+                    {isAnalyzingDrums
+                      ? '⏳ Analyse batterie…'
+                      : '🥁 Analyser la batterie'}
+                  </button>
+                )}
+
+                {stems && (
+                  <button
+                    onClick={handleAnalyzeBass}
+                    disabled={isAnalyzingBass}
+                    style={btnStyle('#8b5cf6')}
+                  >
+                    {isAnalyzingBass
+                      ? '⏳ Analyse basse…'
+                      : '🎸 Analyser la basse'}
                   </button>
                 )}
 
@@ -227,12 +304,13 @@ export default function App() {
                 >
                   {isAnalyzing
                     ? '⏳ Analyse…'
-                    : `🎵 ${finalNotes.length} notes · ${result.duration.toFixed(2)}s`}
+                    : `🎵 ${finalNotes.length} notes${
+                        drumNotes ? ` + 🥁 ${drumNotes.length}` : ''
+                      }${bassNotes ? ` + 🎸 ${bassNotes.length}` : ''} · ${result.duration.toFixed(2)}s`}
                 </div>
               </div>
             </div>
 
-            {/* STEMS SÉPARÉS */}
             {stems && (
               <>
                 <div className="glass" style={{ padding: 16 }}>
@@ -293,10 +371,90 @@ export default function App() {
                 />
               </>
             )}
+
+            {drumNotes && drumNotes.length > 0 && (
+              <div
+                className="glass"
+                style={{
+                  padding: 16,
+                  borderColor: 'rgba(16, 185, 129, 0.4)',
+                }}
+              >
+                <h3
+                  style={{
+                    margin: '0 0 12px',
+                    fontSize: 16,
+                    color: '#10b981',
+                  }}
+                >
+                  🥁 Batterie détectée (Basic Pitch)
+                </h3>
+                <div
+                  style={{
+                    display: 'flex',
+                    gap: 24,
+                    flexWrap: 'wrap',
+                    fontSize: 13,
+                    color: '#ccc',
+                  }}
+                >
+                  <span>
+                    🥁 Kick : <strong>{drumNotes.filter((n) => n.midi === 36).length}</strong>
+                  </span>
+                  <span>
+                    🥁 Snare : <strong>{drumNotes.filter((n) => n.midi === 38).length}</strong>
+                  </span>
+                  <span>
+                    🥁 Hihat : <strong>{drumNotes.filter((n) => n.midi === 42).length}</strong>
+                  </span>
+                  <span>
+                    Total : <strong>{drumNotes.length}</strong>
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {bassNotes && bassNotes.length > 0 && (
+              <div
+                className="glass"
+                style={{
+                  padding: 16,
+                  borderColor: 'rgba(139, 92, 246, 0.4)',
+                }}
+              >
+                <h3
+                  style={{
+                    margin: '0 0 12px',
+                    fontSize: 16,
+                    color: '#8b5cf6',
+                  }}
+                >
+                  🎸 Basse détectée
+                </h3>
+                <div
+                  style={{
+                    display: 'flex',
+                    gap: 24,
+                    flexWrap: 'wrap',
+                    fontSize: 13,
+                    color: '#ccc',
+                  }}
+                >
+                  <span>
+                    Total : <strong>{bassNotes.length}</strong> notes
+                  </span>
+                  <span>
+                    Note la plus basse : <strong>{Math.min(...bassNotes.map((n) => n.midi))}</strong>
+                  </span>
+                  <span>
+                    Note la plus haute : <strong>{Math.max(...bassNotes.map((n) => n.midi))}</strong>
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
-        {/* FOOTER */}
         <footer
           style={{
             marginTop: 32,
@@ -305,16 +463,12 @@ export default function App() {
             textAlign: 'center',
           }}
         >
-          Prototype v0.3 — YIN · Tone.js · Demucs integration
+          Prototype v0.6 — YIN · Tone.js · Demucs · Basic Pitch · Bass
         </footer>
       </div>
     </>
   );
 }
-
-/* ============================================================
-   STYLES RÉUTILISABLES
-   ============================================================ */
 
 function btnStyle(bg: string): React.CSSProperties {
   return {
@@ -343,10 +497,6 @@ function stemLinkStyle(): React.CSSProperties {
     transition: 'all 0.15s ease',
   };
 }
-
-/* ============================================================
-   UTILITAIRE — AudioBuffer → WAV
-   ============================================================ */
 
 function audioBufferToWav(buffer: AudioBuffer): ArrayBuffer {
   const numChannels = buffer.numberOfChannels;

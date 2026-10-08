@@ -1,4 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
+import { Knob } from './Knob';
+import { Waveform } from './Waveform';
 
 interface Stem {
   id: string;
@@ -10,10 +12,11 @@ interface Stem {
 
 interface Props {
   stems: Stem[];
+  audioBuffer?: AudioBuffer | null;
   onClose?: () => void;
 }
 
-export function StemPlayer({ stems, onClose }: Props) {
+export function StemPlayer({ stems, audioBuffer, onClose }: Props) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -21,10 +24,13 @@ export function StemPlayer({ stems, onClose }: Props) {
   const [muted, setMuted] = useState<Record<string, boolean>>({});
   const [solo, setSolo] = useState<string | null>(null);
 
+  const [tempo, setTempo] = useState(1.0);
+  const [pitch, setPitch] = useState(0);
+
   const audioRefs = useRef<Record<string, HTMLAudioElement | null>>({});
   const rafRef = useRef<number | null>(null);
 
-  // Init volumes à 100%
+  // Init
   useEffect(() => {
     const initVols: Record<string, number> = {};
     const initMuted: Record<string, boolean> = {};
@@ -36,21 +42,19 @@ export function StemPlayer({ stems, onClose }: Props) {
     setMuted(initMuted);
   }, [stems]);
 
-  // Récupère la durée du premier stem
+  // Durée
   useEffect(() => {
     const first = stems[0];
     if (!first) return;
     const audio = audioRefs.current[first.id];
     if (!audio) return;
 
-    const onLoaded = () => {
-      setDuration(audio.duration);
-    };
+    const onLoaded = () => setDuration(audio.duration);
     audio.addEventListener('loadedmetadata', onLoaded);
     return () => audio.removeEventListener('loadedmetadata', onLoaded);
   }, [stems]);
 
-  // Applique volume + mute + solo
+  // Volume / mute / solo
   useEffect(() => {
     for (const stem of stems) {
       const audio = audioRefs.current[stem.id];
@@ -64,7 +68,15 @@ export function StemPlayer({ stems, onClose }: Props) {
     }
   }, [volumes, muted, solo, stems]);
 
-  // Play / Pause
+  // Tempo + pitch
+  useEffect(() => {
+    const rate = tempo * Math.pow(2, pitch / 12);
+    for (const stem of stems) {
+      const audio = audioRefs.current[stem.id];
+      if (audio) audio.playbackRate = rate;
+    }
+  }, [tempo, pitch, stems]);
+
   const togglePlay = useCallback(async () => {
     const firstAudio = audioRefs.current[stems[0]?.id];
     if (!firstAudio) return;
@@ -76,20 +88,15 @@ export function StemPlayer({ stems, onClose }: Props) {
       setIsPlaying(false);
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     } else {
-      // Synchronise tous les audios sur le temps actuel
       for (const stem of stems) {
         const audio = audioRefs.current[stem.id];
-        if (audio) {
-          audio.currentTime = currentTime;
-        }
+        if (audio) audio.currentTime = currentTime;
       }
-      // Lance tous en même temps
       await Promise.all(
         stems.map((stem) => audioRefs.current[stem.id]?.play().catch(() => {}))
       );
       setIsPlaying(true);
 
-      // Boucle de mise à jour du temps
       const tick = () => {
         const audio = audioRefs.current[stems[0]?.id];
         if (audio) {
@@ -106,9 +113,7 @@ export function StemPlayer({ stems, onClose }: Props) {
     }
   }, [isPlaying, currentTime, stems]);
 
-  // Seek
-  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const t = parseFloat(e.target.value);
+  const handleSeek = (t: number) => {
     setCurrentTime(t);
     for (const stem of stems) {
       const audio = audioRefs.current[stem.id];
@@ -116,220 +121,253 @@ export function StemPlayer({ stems, onClose }: Props) {
     }
   };
 
+  const resetTempoPitch = () => {
+    setTempo(1.0);
+    setPitch(0);
+  };
+
   const formatTime = (t: number) => {
     const m = Math.floor(t / 60);
     const s = Math.floor(t % 60);
-    const ms = Math.floor((t % 1) * 10);
-    return `${m}:${String(s).padStart(2, '0')}.${ms}`;
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   };
 
   return (
-    <div
-      style={{
-        background: '#0e0e16',
-        border: '1px solid #1e1e2a',
-        borderRadius: 12,
-        padding: 20,
-        marginTop: 16,
-      }}
-    >
-      {/* Header */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: 16,
-        }}
-      >
-        <h3 style={{ margin: 0, fontSize: 16, color: '#e8e8f0' }}>
-          🎧 Player Stems
-        </h3>
-        {onClose && (
-          <button
-            onClick={onClose}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: '#888',
-              cursor: 'pointer',
-              fontSize: 18,
-            }}
-          >
-            ✕
-          </button>
-        )}
-      </div>
-
-      {/* Transport principal */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-        <button
-          onClick={togglePlay}
-          style={{
-            width: 48,
-            height: 48,
-            borderRadius: '50%',
-            background: isPlaying ? '#ff5c9d' : '#7c5cff',
-            border: 'none',
-            color: '#fff',
-            fontSize: 20,
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          {isPlaying ? '⏸' : '▶'}
-        </button>
-
-        <div style={{ flex: 1 }}>
-          <input
-            type="range"
-            min={0}
-            max={duration || 0}
-            step={0.01}
-            value={currentTime}
-            onChange={handleSeek}
-            style={{
-              width: '100%',
-              accentColor: '#7c5cff',
-            }}
-          />
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              fontSize: 11,
-              color: '#888',
-              fontFamily: 'ui-monospace, monospace',
-              marginTop: 2,
-            }}
-          >
-            <span>{formatTime(currentTime)}</span>
-            <span>{formatTime(duration)}</span>
-          </div>
+    <div className="panel fade-in" style={{ marginTop: 16 }}>
+      {/* HEADER */}
+      <div className="panel-header">
+        <span>🎧 PLAYER</span>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <div className={`led ${isPlaying ? 'active' : ''}`} />
+          <span className="mono" style={{ fontSize: 10, color: '#888' }}>
+            {formatTime(currentTime)} / {formatTime(duration)}
+          </span>
+          {onClose && (
+            <button
+              onClick={onClose}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: '#888',
+                cursor: 'pointer',
+                fontSize: 14,
+                padding: 0,
+              }}
+            >
+              ✕
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Pistes */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {stems.map((stem) => {
-          const isMuted = muted[stem.id];
-          const isSoloed = solo === stem.id;
-          const isDimmed = (solo !== null && !isSoloed) || isMuted;
+      {/* WAVEFORM */}
+      <div style={{ padding: '8px 0', background: '#0a0a0f' }}>
+        <Waveform
+          audioBuffer={audioBuffer || null}
+          currentTime={currentTime}
+          duration={duration}
+          onSeek={handleSeek}
+          height={100}
+          color="#00d9ff"
+        />
+      </div>
 
-          return (
-            <div
-              key={stem.id}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 12,
-                padding: 10,
-                background: '#0a0a0f',
-                borderRadius: 8,
-                border: `1px solid ${isSoloed ? stem.color : '#1e1e2a'}`,
-                opacity: isDimmed ? 0.4 : 1,
-                transition: 'all .15s',
-              }}
-            >
-              {/* Icon + Nom */}
-              <div style={{ minWidth: 130, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: 18 }}>{stem.icon}</span>
-                <span
+      {/* BODY */}
+      <div className="panel-body" style={{ padding: 16 }}>
+        {/* TRANSPORT + KNOBS */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 20,
+            paddingBottom: 16,
+            borderBottom: '1px solid var(--border)',
+            marginBottom: 16,
+          }}
+        >
+          {/* Play/Pause */}
+          <button
+            className={`btn-transport ${isPlaying ? 'active' : ''}`}
+            onClick={togglePlay}
+            style={{ width: 44, height: 44, fontSize: 18 }}
+          >
+            {isPlaying ? '⏸' : '▶'}
+          </button>
+
+          {/* Stop */}
+          <button
+            className="btn-transport"
+            onClick={() => {
+              for (const stem of stems) {
+                audioRefs.current[stem.id]?.pause();
+              }
+              setIsPlaying(false);
+              handleSeek(0);
+            }}
+          >
+            ⏹
+          </button>
+
+          {/* Knobs */}
+          <div style={{ display: 'flex', gap: 24, marginLeft: 20 }}>
+            <Knob
+              value={tempo}
+              min={0.5}
+              max={1.5}
+              step={0.01}
+              label="TEMPO"
+              color="#00d9ff"
+              defaultValue={1.0}
+              size={54}
+              onChange={setTempo}
+              formatValue={(v) => `${Math.round(v * 100)}%`}
+            />
+
+            <Knob
+              value={pitch}
+              min={-12}
+              max={12}
+              step={1}
+              label="PITCH"
+              color="#ff3366"
+              defaultValue={0}
+              size={54}
+              bipolar
+              onChange={setPitch}
+              formatValue={(v) => `${v > 0 ? '+' : ''}${v}`}
+            />
+          </div>
+
+          {/* Reset */}
+          <button
+            className="btn-action"
+            onClick={resetTempoPitch}
+            style={{ marginLeft: 'auto' }}
+          >
+            🔄 RESET
+          </button>
+        </div>
+
+        {/* PISTES */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {stems.map((stem) => {
+            const isMuted = muted[stem.id];
+            const isSoloed = solo === stem.id;
+            const isDimmed = (solo !== null && !isSoloed) || isMuted;
+
+            return (
+              <div
+                key={stem.id}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 12,
+                  padding: 10,
+                  background: '#0a0a0f',
+                  borderRadius: 6,
+                  border: `1px solid ${
+                    isSoloed ? stem.color : 'var(--border)'
+                  }`,
+                  opacity: isDimmed ? 0.4 : 1,
+                  transition: 'all 0.15s',
+                }}
+              >
+                {/* Icon + Name */}
+                <div
                   style={{
-                    fontSize: 13,
-                    fontWeight: 600,
-                    color: stem.color,
+                    minWidth: 140,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
                   }}
                 >
-                  {stem.name}
+                  <span style={{ fontSize: 16 }}>{stem.icon}</span>
+                  <span
+                    className="label-uppercase"
+                    style={{ color: stem.color, fontSize: 10 }}
+                  >
+                    {stem.name}
+                  </span>
+                </div>
+
+                {/* Mute */}
+                <button
+                  onClick={() =>
+                    setMuted((m) => ({ ...m, [stem.id]: !m[stem.id] }))
+                  }
+                  className="btn-transport"
+                  style={{
+                    width: 28,
+                    height: 28,
+                    fontSize: 11,
+                    background: isMuted ? '#ff3366' : 'var(--bg-2)',
+                    borderColor: isMuted ? '#ff3366' : 'var(--border)',
+                    color: isMuted ? '#fff' : '#888',
+                  }}
+                  title="Mute"
+                >
+                  M
+                </button>
+
+                {/* Solo */}
+                <button
+                  onClick={() => setSolo((s) => (s === stem.id ? null : stem.id))}
+                  className="btn-transport"
+                  style={{
+                    width: 28,
+                    height: 28,
+                    fontSize: 11,
+                    background: isSoloed ? '#ffb800' : 'var(--bg-2)',
+                    borderColor: isSoloed ? '#ffb800' : 'var(--border)',
+                    color: isSoloed ? '#000' : '#888',
+                  }}
+                  title="Solo"
+                >
+                  S
+                </button>
+
+                {/* Slider Volume (horizontal, plus compact) */}
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  value={volumes[stem.id] ?? 100}
+                  onChange={(e) =>
+                    setVolumes((v) => ({
+                      ...v,
+                      [stem.id]: parseInt(e.target.value),
+                    }))
+                  }
+                  style={{
+                    flex: 1,
+                    accentColor: stem.color,
+                  }}
+                />
+
+                <span
+                  className="mono"
+                  style={{
+                    minWidth: 40,
+                    fontSize: 11,
+                    color: '#888',
+                    textAlign: 'right',
+                  }}
+                >
+                  {volumes[stem.id] ?? 100}%
                 </span>
+
+                <audio
+                  ref={(el) => {
+                    audioRefs.current[stem.id] = el;
+                  }}
+                  src={stem.url}
+                  preload="metadata"
+                  style={{ display: 'none' }}
+                />
               </div>
-
-              {/* Mute */}
-              <button
-                onClick={() =>
-                  setMuted((m) => ({ ...m, [stem.id]: !m[stem.id] }))
-                }
-                style={{
-                  width: 32,
-                  height: 28,
-                  background: isMuted ? '#ff5c9d' : '#1e1e2a',
-                  border: 'none',
-                  borderRadius: 4,
-                  color: '#fff',
-                  fontSize: 11,
-                  cursor: 'pointer',
-                  fontWeight: 700,
-                }}
-                title="Mute"
-              >
-                M
-              </button>
-
-              {/* Solo */}
-              <button
-                onClick={() =>
-                  setSolo((s) => (s === stem.id ? null : stem.id))
-                }
-                style={{
-                  width: 32,
-                  height: 28,
-                  background: isSoloed ? '#f59e0b' : '#1e1e2a',
-                  border: 'none',
-                  borderRadius: 4,
-                  color: '#fff',
-                  fontSize: 11,
-                  cursor: 'pointer',
-                  fontWeight: 700,
-                }}
-                title="Solo"
-              >
-                S
-              </button>
-
-              {/* Volume */}
-              <input
-                type="range"
-                min={0}
-                max={100}
-                value={volumes[stem.id] ?? 100}
-                onChange={(e) =>
-                  setVolumes((v) => ({
-                    ...v,
-                    [stem.id]: parseInt(e.target.value),
-                  }))
-                }
-                style={{
-                  flex: 1,
-                  accentColor: stem.color,
-                }}
-              />
-
-              <span
-                style={{
-                  minWidth: 40,
-                  fontSize: 11,
-                  color: '#888',
-                  textAlign: 'right',
-                  fontFamily: 'ui-monospace, monospace',
-                }}
-              >
-                {volumes[stem.id] ?? 100}%
-              </span>
-
-              {/* Audio caché */}
-              <audio
-                ref={(el) => {
-                  audioRefs.current[stem.id] = el;
-                }}
-                src={stem.url}
-                preload="metadata"
-              />
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
     </div>
   );

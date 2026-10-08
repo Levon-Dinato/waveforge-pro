@@ -3,6 +3,7 @@ import { VideoBackground } from './components/VideoBackground';
 import { DropZone } from './components/DropZone';
 import { PianoRoll } from './components/PianoRoll';
 import { StemPlayer } from './components/StemPlayer';
+import { MelodyGenerator } from './components/MelodyGenerator';
 import { useAudioEngine } from './hooks/useAudioEngine';
 import { exportMidi, download } from './audio/midiExporter';
 import { separateVocals, checkDemucsHealth } from './audio/demucsClient';
@@ -40,6 +41,7 @@ export default function App() {
     confidence: number;
   } | null>(null);
   const [showSettings, setShowSettings] = useState(false);
+  const [showGenerator, setShowGenerator] = useState(false);
 
   useState(() => {
     checkDemucsHealth().then(setDemucsOnline);
@@ -194,604 +196,645 @@ export default function App() {
       <VideoBackground />
 
       <div
+        className="studio-grid"
         style={{
-          padding: 24,
-          maxWidth: 1000,
-          margin: '0 auto',
+          minHeight: '100vh',
+          padding: 20,
           position: 'relative',
           zIndex: 1,
         }}
       >
-        <header
-          style={{
-            marginBottom: 32,
-            textAlign: 'center',
-            animation: 'fadeInUp 0.6s ease both',
-          }}
-        >
-          <h1
+        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+          {/* HEADER */}
+          <header
+            className="fade-in"
             style={{
-              margin: 0,
-              fontSize: 42,
-              fontWeight: 800,
-              letterSpacing: '-1.5px',
-              background: 'linear-gradient(135deg, #7c5cff 0%, #ff5c9d 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              filter: 'drop-shadow(0 2px 20px rgba(124, 92, 255, 0.4))',
+              marginBottom: 20,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              paddingBottom: 16,
+              borderBottom: '1px solid var(--border)',
             }}
           >
-            🎹 WaveForge PRO
-          </h1>
-          <p
-            style={{
-              margin: '8px 0 0',
-              color: '#aaa',
-              fontSize: 15,
-              letterSpacing: 0.5,
-            }}
-          >
-            De l'onde à la note. Instantanément.
-          </p>
-          {demucsOnline !== null && (
-            <div
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 6,
-                marginTop: 12,
-                padding: '4px 12px',
-                background: demucsOnline
-                  ? 'rgba(74, 222, 128, 0.1)'
-                  : 'rgba(255, 92, 157, 0.1)',
-                border: `1px solid ${
-                  demucsOnline
-                    ? 'rgba(74, 222, 128, 0.3)'
-                    : 'rgba(255, 92, 157, 0.3)'
-                }`,
-                borderRadius: 20,
-                fontSize: 12,
-                color: demucsOnline ? '#4ade80' : '#ff5c9d',
-              }}
-            >
-              {demucsOnline
-                ? '🟢 Serveur Demucs en ligne'
-                : '🔴 Séparation de stems : disponible en local'}
-            </div>
-          )}
-        </header>
-
-        <DropZone onFile={engine.loadFile} isAnalyzing={isAnalyzing} />
-
-        {result && (
-          <div
-            style={{
-              marginTop: 24,
-              display: 'grid',
-              gap: 16,
-              animation: 'fadeInUp 0.5s ease both',
-            }}
-          >
-            <PianoRoll
-              notes={[
-                ...finalNotes,
-                ...(drumNotes || []),
-                ...(bassNotes || []),
-                ...(chordNotes || []),
-              ]}
-              duration={result.duration}
-              currentTime={currentTime}
-              onSeek={engine.seek}
-            />
-
-            <div className="glass" style={{ padding: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <div
                 style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 6,
+                  background: 'linear-gradient(135deg, #00d9ff, #0088ff)',
                   display: 'flex',
-                  gap: 12,
                   alignItems: 'center',
-                  flexWrap: 'wrap',
+                  justifyContent: 'center',
+                  fontSize: 16,
+                  boxShadow: '0 0 20px rgba(0, 217, 255, 0.4)',
                 }}
               >
-                <button
-                  onClick={engine.playAudioOriginal}
-                  style={btnStyle('#3a3a4a')}
-                >
-                  ▶ Audio original
-                </button>
-                <button
-                  onClick={engine.playMidi}
-                  style={btnStyle('#7c5cff')}
-                  disabled={finalNotes.length === 0}
-                >
-                  ▶ MIDI
-                </button>
-                <button
-                  onClick={engine.stopAll}
-                  style={btnStyle('#3a3a4a')}
-                  disabled={!isPlaying}
-                >
-                  ⏹ Stop
-                </button>
-                <button
-                  onClick={handleExport}
-                  style={btnStyle('#ff5c9d')}
-                  disabled={
-                    finalNotes.length === 0 &&
-                    !drumNotes &&
-                    !bassNotes &&
-                    !chordNotes
-                  }
-                >
-                  💾 Export .mid
-                </button>
-                <button
-                  onClick={handleSeparate}
-                  disabled={isSeparating || demucsOnline === false}
-                  style={btnStyle('#0ea5e9')}
-                >
-                  {isSeparating
-                    ? '⏳ Séparation en cours…'
-                    : '🎤 Séparer les stems'}
-                </button>
-
-                {stems && (
-                  <button
-                    onClick={handleAnalyzeVocals}
-                    disabled={isAnalyzingVocals}
-                    style={btnStyle('#f59e0b')}
-                  >
-                    {isAnalyzingVocals
-                      ? '⏳ Analyse voix…'
-                      : '🎼 Analyser la voix'}
-                  </button>
-                )}
-
-                {stems && (
-                  <button
-                    onClick={handleAnalyzeDrums}
-                    disabled={isAnalyzingDrums}
-                    style={btnStyle('#10b981')}
-                  >
-                    {isAnalyzingDrums
-                      ? '⏳ Analyse batterie…'
-                      : '🥁 Analyser la batterie'}
-                  </button>
-                )}
-
-                {stems && (
-                  <button
-                    onClick={handleAnalyzeBass}
-                    disabled={isAnalyzingBass}
-                    style={btnStyle('#8b5cf6')}
-                  >
-                    {isAnalyzingBass
-                      ? '⏳ Analyse basse…'
-                      : '🎸 Analyser la basse'}
-                  </button>
-                )}
-
-                {stems && (
-                  <button
-                    onClick={handleAnalyzeChords}
-                    disabled={isAnalyzingChords}
-                    style={btnStyle('#ec4899')}
-                  >
-                    {isAnalyzingChords
-                      ? '⏳ Analyse accords…'
-                      : '🎹 Analyser les accords'}
-                  </button>
-                )}
-
-                <button
-                  onClick={() => setShowSettings(!showSettings)}
-                  style={btnStyle('#6b7280')}
-                >
-                  {showSettings ? '✕ Fermer' : '⚙️ Options'}
-                </button>
-
-                <div
+                🎹
+              </div>
+              <div>
+                <h1
                   style={{
-                    marginLeft: 'auto',
-                    color: '#aaa',
-                    fontSize: 14,
+                    margin: 0,
+                    fontSize: 18,
+                    fontWeight: 700,
+                    letterSpacing: '0.02em',
+                    color: '#fff',
                   }}
                 >
-                  {isAnalyzing
-                    ? '⏳ Analyse…'
-                    : `🎵 ${finalNotes.length}${
-                        drumNotes ? ` + 🥁 ${drumNotes.length}` : ''
-                      }${
-                        bassNotes ? ` + 🎸 ${bassNotes.length}` : ''
-                      }${chordNotes ? ` + 🎹 ${chordNotes.length}` : ''} · ${result.duration.toFixed(2)}s`}
+                  WAVEFORGE{' '}
+                  <span style={{ color: 'var(--cyan)', fontWeight: 300 }}>
+                    PRO
+                  </span>
+                </h1>
+                <p
+                  className="label-uppercase"
+                  style={{ margin: 0, fontSize: 9, color: '#666' }}
+                >
+                  Audio → MIDI Studio
+                </p>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              {demucsOnline !== null && (
+                <div
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    padding: '4px 10px',
+                    background: demucsOnline
+                      ? 'rgba(0, 255, 136, 0.08)'
+                      : 'rgba(255, 51, 102, 0.08)',
+                    border: `1px solid ${
+                      demucsOnline
+                        ? 'rgba(0, 255, 136, 0.3)'
+                        : 'rgba(255, 51, 102, 0.3)'
+                    }`,
+                    borderRadius: 4,
+                    fontSize: 10,
+                    fontFamily: 'var(--font-mono)',
+                    color: demucsOnline ? '#00ff88' : '#ff3366',
+                    letterSpacing: '0.05em',
+                  }}
+                >
+                  <div
+                    className={`led ${demucsOnline ? 'active' : ''}`}
+                    style={{
+                      background: demucsOnline ? '#00ff88' : '#ff3366',
+                    }}
+                  />
+                  DEMUCS {demucsOnline ? 'ONLINE' : 'OFFLINE'}
+                </div>
+              )}
+            </div>
+          </header>
+
+          {/* DROP ZONE */}
+          <DropZone onFile={engine.loadFile} isAnalyzing={isAnalyzing} />
+
+          {/* CONTENU */}
+          {result && (
+            <div style={{ marginTop: 20, display: 'grid', gap: 16 }}>
+              {/* PIANO ROLL */}
+              <PianoRoll
+                notes={[
+                  ...finalNotes,
+                  ...(drumNotes || []),
+                  ...(bassNotes || []),
+                  ...(chordNotes || []),
+                ]}
+                duration={result.duration}
+                currentTime={currentTime}
+                onSeek={engine.seek}
+              />
+
+              {/* BARRE DE BOUTONS */}
+              <div className="panel slide-in">
+                <div className="panel-header">
+                  <span>⚡ TRANSPORT & ANALYSE</span>
+                  <span className="mono" style={{ fontSize: 10, color: '#888' }}>
+                    {isAnalyzing
+                      ? '⏳ ANALYSE...'
+                      : `🎵 ${finalNotes.length}${
+                          drumNotes ? ` + 🥁 ${drumNotes.length}` : ''
+                        }${
+                          bassNotes ? ` + 🎸 ${bassNotes.length}` : ''
+                        }${
+                          chordNotes ? ` + 🎹 ${chordNotes.length}` : ''
+                        } · ${result.duration.toFixed(2)}s`}
+                  </span>
+                </div>
+                <div className="panel-body">
+                  <div
+                    style={{
+                      display: 'flex',
+                      gap: 8,
+                      alignItems: 'center',
+                      flexWrap: 'wrap',
+                    }}
+                  >
+                    <button
+                      className="btn-action"
+                      onClick={engine.playAudioOriginal}
+                    >
+                      ▶ AUDIO
+                    </button>
+                    <button
+                      className="btn-action primary"
+                      onClick={engine.playMidi}
+                      disabled={finalNotes.length === 0}
+                    >
+                      ▶ MIDI
+                    </button>
+                    <button
+                      className="btn-action"
+                      onClick={engine.stopAll}
+                      disabled={!isPlaying}
+                    >
+                      ⏹ STOP
+                    </button>
+                    <button
+                      className="btn-action primary"
+                      onClick={handleExport}
+                      disabled={
+                        finalNotes.length === 0 &&
+                        !drumNotes &&
+                        !bassNotes &&
+                        !chordNotes
+                      }
+                    >
+                      💾 EXPORT MIDI
+                    </button>
+                    <div
+                      style={{
+                        width: 1,
+                        height: 20,
+                        background: 'var(--border)',
+                        margin: '0 4px',
+                      }}
+                    />
+                    <button
+                      className="btn-action"
+                      onClick={handleSeparate}
+                      disabled={isSeparating || demucsOnline === false}
+                    >
+                      {isSeparating ? '⏳ SÉPARATION...' : '🎤 SÉPARER STEMS'}
+                    </button>
+
+                    {stems && (
+                      <>
+                        <button
+                          className="btn-action"
+                          onClick={handleAnalyzeVocals}
+                          disabled={isAnalyzingVocals}
+                          style={{ borderColor: 'rgba(255, 184, 0, 0.3)' }}
+                        >
+                          {isAnalyzingVocals ? '⏳' : '🎼'} VOIX
+                        </button>
+                        <button
+                          className="btn-action"
+                          onClick={handleAnalyzeDrums}
+                          disabled={isAnalyzingDrums}
+                          style={{ borderColor: 'rgba(0, 255, 136, 0.3)' }}
+                        >
+                          {isAnalyzingDrums ? '⏳' : '🥁'} BATTERIE
+                        </button>
+                        <button
+                          className="btn-action"
+                          onClick={handleAnalyzeBass}
+                          disabled={isAnalyzingBass}
+                          style={{ borderColor: 'rgba(139, 92, 246, 0.3)' }}
+                        >
+                          {isAnalyzingBass ? '⏳' : '🎸'} BASSE
+                        </button>
+                        <button
+                          className="btn-action"
+                          onClick={handleAnalyzeChords}
+                          disabled={isAnalyzingChords}
+                          style={{ borderColor: 'rgba(236, 72, 153, 0.3)' }}
+                        >
+                          {isAnalyzingChords ? '⏳' : '🎹'} ACCORDS
+                        </button>
+                      </>
+                    )}
+
+                    <div style={{ flex: 1 }} />
+
+                    <button
+                      className="btn-action"
+                      onClick={() => setShowSettings(!showSettings)}
+                    >
+                      {showSettings ? '✕' : '⚙️'} OPTIONS
+                    </button>
+                    <button
+                      className="btn-action"
+                      onClick={() => setShowGenerator(!showGenerator)}
+                      style={{
+                        background: showGenerator
+                          ? 'var(--cyan)'
+                          : 'var(--bg-2)',
+                        color: showGenerator ? 'var(--bg-0)' : 'var(--text)',
+                        borderColor: showGenerator ? 'var(--cyan)' : 'var(--border)',
+                      }}
+                    >
+                      {showGenerator ? '✕' : '🎼'} GÉNÉRATEUR
+                    </button>
+                  </div>
+
+                  {/* OPTIONS */}
+                  {showSettings && (
+                    <div
+                      className="fade-in"
+                      style={{
+                        marginTop: 12,
+                        padding: 12,
+                        background: 'var(--bg-1)',
+                        border: '1px solid var(--border)',
+                        borderRadius: 6,
+                      }}
+                    >
+                      <div
+                        className="label-uppercase"
+                        style={{ marginBottom: 12, color: 'var(--cyan)' }}
+                      >
+                        ⚙️ OPTIONS D'EXPORT MIDI
+                      </div>
+
+                      {/* Quantize */}
+                      <div style={{ marginBottom: 12 }}>
+                        <div
+                          className="label-uppercase"
+                          style={{ marginBottom: 6 }}
+                        >
+                          Quantisation
+                        </div>
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          {[
+                            { v: 0, l: 'OFF' },
+                            { v: 4, l: '1/4' },
+                            { v: 8, l: '1/8' },
+                            { v: 16, l: '1/16' },
+                            { v: 32, l: '1/32' },
+                          ].map((opt) => (
+                            <button
+                              key={opt.v}
+                              onClick={() =>
+                                setQuantize({ ...quantize, grid: opt.v as any })
+                              }
+                              className="btn-action"
+                              style={{
+                                padding: '5px 10px',
+                                fontSize: 10,
+                                background:
+                                  quantize.grid === opt.v
+                                    ? 'var(--cyan)'
+                                    : 'var(--bg-2)',
+                                color:
+                                  quantize.grid === opt.v
+                                    ? 'var(--bg-0)'
+                                    : 'var(--text)',
+                                borderColor:
+                                  quantize.grid === opt.v
+                                    ? 'var(--cyan)'
+                                    : 'var(--border)',
+                              }}
+                            >
+                              {opt.l}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Force */}
+                      <div style={{ marginBottom: 12 }}>
+                        <div
+                          className="label-uppercase"
+                          style={{ marginBottom: 6 }}
+                        >
+                          Force : {Math.round(quantize.strength * 100)}%
+                        </div>
+                        <input
+                          type="range"
+                          min={0}
+                          max={1}
+                          step={0.01}
+                          value={quantize.strength}
+                          onChange={(e) =>
+                            setQuantize({
+                              ...quantize,
+                              strength: parseFloat(e.target.value),
+                            })
+                          }
+                          style={{ width: '100%' }}
+                        />
+                      </div>
+
+                      {/* Swing */}
+                      <div style={{ marginBottom: 12 }}>
+                        <div
+                          className="label-uppercase"
+                          style={{ marginBottom: 6 }}
+                        >
+                          Swing : {Math.round(quantize.swing * 100)}%
+                        </div>
+                        <input
+                          type="range"
+                          min={0}
+                          max={1}
+                          step={0.01}
+                          value={quantize.swing}
+                          onChange={(e) =>
+                            setQuantize({
+                              ...quantize,
+                              swing: parseFloat(e.target.value),
+                            })
+                          }
+                          style={{ width: '100%' }}
+                        />
+                      </div>
+
+                      {/* Snap */}
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 12,
+                        }}
+                      >
+                        <button
+                          className="btn-action"
+                          onClick={() => setSnapEnabled(!snapEnabled)}
+                          style={{
+                            background: snapEnabled
+                              ? 'var(--green)'
+                              : 'var(--bg-2)',
+                            color: snapEnabled ? 'var(--bg-0)' : 'var(--text)',
+                            borderColor: snapEnabled
+                              ? 'var(--green)'
+                              : 'var(--border)',
+                          }}
+                        >
+                          {snapEnabled ? '✅' : '⭕'} SNAP GAMME
+                        </button>
+                        {detectedKey ? (
+                          <span
+                            className="mono"
+                            style={{ fontSize: 10, color: 'var(--cyan)' }}
+                          >
+                            {detectedKey.key} {detectedKey.mode} (
+                            {(detectedKey.confidence * 100).toFixed(0)}%)
+                          </span>
+                        ) : (
+                          <button
+                            className="btn-action"
+                            onClick={handleDetectKey}
+                            style={{
+                              background: 'var(--yellow)',
+                              color: 'var(--bg-0)',
+                              borderColor: 'var(--yellow)',
+                            }}
+                          >
+                            🎼 DÉTECTER TONALITÉ
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
-              {showSettings && (
-                <div
-                  className="glass"
-                  style={{ padding: 16, marginTop: 16 }}
-                >
-                  <h3
-                    style={{
-                      margin: '0 0 16px',
-                      fontSize: 14,
-                      color: '#e8e8f0',
-                    }}
-                  >
-                    ⚙️ Options d'export MIDI
-                  </h3>
+              {/* GÉNÉRATEUR */}
+              {showGenerator && (
+                <div className="slide-in">
+                  <MelodyGenerator bpm={result.bpm} />
+                </div>
+              )}
 
-                  <div style={{ marginBottom: 12 }}>
-                    <label
-                      style={{
-                        fontSize: 12,
-                        color: '#aaa',
-                        display: 'block',
-                        marginBottom: 4,
-                      }}
-                    >
-                      Quantisation
-                    </label>
-                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                      {[
-                        { v: 0, l: 'Off' },
-                        { v: 4, l: '1/4' },
-                        { v: 8, l: '1/8' },
-                        { v: 16, l: '1/16' },
-                        { v: 32, l: '1/32' },
-                      ].map((opt) => (
-                        <button
-                          key={opt.v}
-                          onClick={() =>
-                            setQuantize({ ...quantize, grid: opt.v as any })
-                          }
-                          style={{
-                            ...btnStyle(
-                              quantize.grid === opt.v ? '#7c5cff' : '#2a2a3a'
-                            ),
-                            fontSize: 12,
-                            padding: '6px 12px',
-                          }}
-                        >
-                          {opt.l}
-                        </button>
-                      ))}
+              {/* STEMS SÉPARÉS */}
+              {stems && (
+                <>
+                  <div className="panel slide-in delay-1">
+                    <div className="panel-header">
+                      <span>🎉 STEMS SÉPARÉS</span>
+                    </div>
+                    <div className="panel-body">
+                      <div
+                        style={{
+                          display: 'flex',
+                          gap: 8,
+                          flexWrap: 'wrap',
+                        }}
+                      >
+                        {stems.vocals && (
+                          <a
+                            href={stems.vocals}
+                            download="vocals.wav"
+                            className="btn-action"
+                            style={{
+                              textDecoration: 'none',
+                              color: 'var(--cyan)',
+                              borderColor: 'rgba(0, 217, 255, 0.3)',
+                              display: 'inline-block',
+                            }}
+                          >
+                            🎤 VOCALS.WAV
+                          </a>
+                        )}
+                        {stems.noVocals && (
+                          <a
+                            href={stems.noVocals}
+                            download="no_vocals.wav"
+                            className="btn-action"
+                            style={{
+                              textDecoration: 'none',
+                              color: 'var(--cyan)',
+                              borderColor: 'rgba(0, 217, 255, 0.3)',
+                              display: 'inline-block',
+                            }}
+                          >
+                            🎸 NO_VOCALS.WAV
+                          </a>
+                        )}
+                      </div>
                     </div>
                   </div>
 
-                  <div style={{ marginBottom: 12 }}>
-                    <label
-                      style={{
-                        fontSize: 12,
-                        color: '#aaa',
-                        display: 'block',
-                        marginBottom: 4,
-                      }}
-                    >
-                      Force : {Math.round(quantize.strength * 100)}%
-                    </label>
-                    <input
-                      type="range"
-                      min={0}
-                      max={1}
-                      step={0.01}
-                      value={quantize.strength}
-                      onChange={(e) =>
-                        setQuantize({
-                          ...quantize,
-                          strength: parseFloat(e.target.value),
-                        })
-                      }
-                      style={{ width: '100%' }}
+                  <div className="slide-in delay-2">
+                    <StemPlayer
+                      audioBuffer={engine.audioBuffer}
+                      stems={[
+                        {
+                          id: 'vocals',
+                          name: 'VOIX',
+                          url: stems.vocals,
+                          color: '#ff3366',
+                          icon: '🎤',
+                        },
+                        {
+                          id: 'no_vocals',
+                          name: 'INSTRUMENTAL',
+                          url: stems.noVocals,
+                          color: '#00ff88',
+                          icon: '🎸',
+                        },
+                      ].filter((s) => s.url)}
                     />
                   </div>
+                </>
+              )}
 
-                  <div style={{ marginBottom: 12 }}>
-                    <label
-                      style={{
-                        fontSize: 12,
-                        color: '#aaa',
-                        display: 'block',
-                        marginBottom: 4,
-                      }}
-                    >
-                      Swing : {Math.round(quantize.swing * 100)}%
-                    </label>
-                    <input
-                      type="range"
-                      min={0}
-                      max={1}
-                      step={0.01}
-                      value={quantize.swing}
-                      onChange={(e) =>
-                        setQuantize({
-                          ...quantize,
-                          swing: parseFloat(e.target.value),
-                        })
-                      }
-                      style={{ width: '100%' }}
-                    />
+              {/* BATTERIE */}
+              {drumNotes && drumNotes.length > 0 && (
+                <div
+                  className="panel slide-in delay-3"
+                  style={{ borderColor: 'rgba(0, 255, 136, 0.2)' }}
+                >
+                  <div
+                    className="panel-header"
+                    style={{ color: 'var(--green)' }}
+                  >
+                    <span>🥁 BATTERIE DÉTECTÉE (BASIC PITCH)</span>
+                    <span className="mono" style={{ fontSize: 10 }}>
+                      {drumNotes.length} HITS
+                    </span>
                   </div>
-
-                  <div style={{ marginBottom: 12 }}>
-                    <button
-                      onClick={() => setSnapEnabled(!snapEnabled)}
+                  <div className="panel-body">
+                    <div
                       style={{
-                        ...btnStyle(snapEnabled ? '#4ade80' : '#2a2a3a'),
-                        fontSize: 12,
-                        padding: '6px 12px',
+                        display: 'flex',
+                        gap: 20,
+                        flexWrap: 'wrap',
+                        fontSize: 11,
                       }}
                     >
-                      {snapEnabled ? '✅' : '⭕'} Snap à la gamme
-                    </button>
-                    {detectedKey && (
-                      <span
-                        style={{
-                          marginLeft: 12,
-                          fontSize: 12,
-                          color: '#aaa',
-                        }}
-                      >
-                        Détecté : {detectedKey.key} {detectedKey.mode} (
-                        {(detectedKey.confidence * 100).toFixed(0)}%)
+                      <span>
+                        <span className="label-uppercase">KICK :</span>{' '}
+                        <strong className="mono" style={{ color: 'var(--green)' }}>
+                          {drumNotes.filter((n) => n.midi === 36).length}
+                        </strong>
                       </span>
-                    )}
-                    {!detectedKey && (
-                      <button
-                        onClick={handleDetectKey}
-                        style={{
-                          ...btnStyle('#f59e0b'),
-                          fontSize: 12,
-                          padding: '6px 12px',
-                          marginLeft: 12,
-                        }}
-                      >
-                        🎼 Détecter la tonalité
-                      </button>
-                    )}
+                      <span>
+                        <span className="label-uppercase">SNARE :</span>{' '}
+                        <strong className="mono" style={{ color: 'var(--green)' }}>
+                          {drumNotes.filter((n) => n.midi === 38).length}
+                        </strong>
+                      </span>
+                      <span>
+                        <span className="label-uppercase">HIHAT :</span>{' '}
+                        <strong className="mono" style={{ color: 'var(--green)' }}>
+                          {drumNotes.filter((n) => n.midi === 42).length}
+                        </strong>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* BASSE */}
+              {bassNotes && bassNotes.length > 0 && (
+                <div
+                  className="panel slide-in delay-3"
+                  style={{ borderColor: 'rgba(139, 92, 246, 0.2)' }}
+                >
+                  <div
+                    className="panel-header"
+                    style={{ color: 'var(--purple)' }}
+                  >
+                    <span>🎸 BASSE DÉTECTÉE</span>
+                    <span className="mono" style={{ fontSize: 10 }}>
+                      {bassNotes.length} NOTES
+                    </span>
+                  </div>
+                  <div className="panel-body">
+                    <div
+                      style={{
+                        display: 'flex',
+                        gap: 20,
+                        flexWrap: 'wrap',
+                        fontSize: 11,
+                      }}
+                    >
+                      <span>
+                        <span className="label-uppercase">MIN :</span>{' '}
+                        <strong className="mono" style={{ color: 'var(--purple)' }}>
+                          {Math.min(...bassNotes.map((n) => n.midi))}
+                        </strong>
+                      </span>
+                      <span>
+                        <span className="label-uppercase">MAX :</span>{' '}
+                        <strong className="mono" style={{ color: 'var(--purple)' }}>
+                          {Math.max(...bassNotes.map((n) => n.midi))}
+                        </strong>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ACCORDS */}
+              {chordNotes && chordNotes.length > 0 && (
+                <div
+                  className="panel slide-in delay-3"
+                  style={{ borderColor: 'rgba(236, 72, 153, 0.2)' }}
+                >
+                  <div
+                    className="panel-header"
+                    style={{ color: '#ec4899' }}
+                  >
+                    <span>🎹 ACCORDS DÉTECTÉS</span>
+                    <span className="mono" style={{ fontSize: 10 }}>
+                      {chordNotes.length} NOTES
+                    </span>
+                  </div>
+                  <div className="panel-body">
+                    <div
+                      style={{
+                        display: 'flex',
+                        gap: 20,
+                        flexWrap: 'wrap',
+                        fontSize: 11,
+                      }}
+                    >
+                      <span>
+                        <span className="label-uppercase">MIN :</span>{' '}
+                        <strong className="mono" style={{ color: '#ec4899' }}>
+                          {Math.min(...chordNotes.map((n) => n.midi))}
+                        </strong>
+                      </span>
+                      <span>
+                        <span className="label-uppercase">MAX :</span>{' '}
+                        <strong className="mono" style={{ color: '#ec4899' }}>
+                          {Math.max(...chordNotes.map((n) => n.midi))}
+                        </strong>
+                      </span>
+                    </div>
                   </div>
                 </div>
               )}
             </div>
+          )}
 
-            {stems && (
-              <>
-                <div className="glass" style={{ padding: 16 }}>
-                  <h3
-                    style={{
-                      margin: '0 0 12px',
-                      fontSize: 16,
-                      color: '#e8e8f0',
-                    }}
-                  >
-                    🎉 Stems séparés
-                  </h3>
-                  <div
-                    style={{
-                      display: 'flex',
-                      gap: 16,
-                      flexWrap: 'wrap',
-                    }}
-                  >
-                    {stems.vocals && (
-                      <a
-                        href={stems.vocals}
-                        download="vocals.wav"
-                        style={stemLinkStyle()}
-                      >
-                        🎤 Télécharger vocals.wav
-                      </a>
-                    )}
-                    {stems.noVocals && (
-                      <a
-                        href={stems.noVocals}
-                        download="no_vocals.wav"
-                        style={stemLinkStyle()}
-                      >
-                        🎸 Télécharger no_vocals.wav
-                      </a>
-                    )}
-                  </div>
-                </div>
-
-                <StemPlayer
-                  stems={[
-                    {
-                      id: 'vocals',
-                      name: 'Voix',
-                      url: stems.vocals,
-                      color: '#ff5c9d',
-                      icon: '🎤',
-                    },
-                    {
-                      id: 'no_vocals',
-                      name: 'Instrumental',
-                      url: stems.noVocals,
-                      color: '#4ade80',
-                      icon: '🎸',
-                    },
-                  ].filter((s) => s.url)}
-                />
-              </>
-            )}
-
-            {drumNotes && drumNotes.length > 0 && (
-              <div
-                className="glass"
-                style={{
-                  padding: 16,
-                  borderColor: 'rgba(16, 185, 129, 0.4)',
-                }}
-              >
-                <h3
-                  style={{
-                    margin: '0 0 12px',
-                    fontSize: 16,
-                    color: '#10b981',
-                  }}
-                >
-                  🥁 Batterie détectée (Basic Pitch)
-                </h3>
-                <div
-                  style={{
-                    display: 'flex',
-                    gap: 24,
-                    flexWrap: 'wrap',
-                    fontSize: 13,
-                    color: '#ccc',
-                  }}
-                >
-                  <span>
-                    🥁 Kick :{' '}
-                    <strong>
-                      {drumNotes.filter((n) => n.midi === 36).length}
-                    </strong>
-                  </span>
-                  <span>
-                    🥁 Snare :{' '}
-                    <strong>
-                      {drumNotes.filter((n) => n.midi === 38).length}
-                    </strong>
-                  </span>
-                  <span>
-                    🥁 Hihat :{' '}
-                    <strong>
-                      {drumNotes.filter((n) => n.midi === 42).length}
-                    </strong>
-                  </span>
-                  <span>
-                    Total : <strong>{drumNotes.length}</strong>
-                  </span>
-                </div>
-              </div>
-            )}
-
-            {bassNotes && bassNotes.length > 0 && (
-              <div
-                className="glass"
-                style={{
-                  padding: 16,
-                  borderColor: 'rgba(139, 92, 246, 0.4)',
-                }}
-              >
-                <h3
-                  style={{
-                    margin: '0 0 12px',
-                    fontSize: 16,
-                    color: '#8b5cf6',
-                  }}
-                >
-                  🎸 Basse détectée
-                </h3>
-                <div
-                  style={{
-                    display: 'flex',
-                    gap: 24,
-                    flexWrap: 'wrap',
-                    fontSize: 13,
-                    color: '#ccc',
-                  }}
-                >
-                  <span>
-                    Total : <strong>{bassNotes.length}</strong> notes
-                  </span>
-                  <span>
-                    Note la plus basse :{' '}
-                    <strong>{Math.min(...bassNotes.map((n) => n.midi))}</strong>
-                  </span>
-                  <span>
-                    Note la plus haute :{' '}
-                    <strong>{Math.max(...bassNotes.map((n) => n.midi))}</strong>
-                  </span>
-                </div>
-              </div>
-            )}
-
-            {chordNotes && chordNotes.length > 0 && (
-              <div
-                className="glass"
-                style={{
-                  padding: 16,
-                  borderColor: 'rgba(236, 72, 153, 0.4)',
-                }}
-              >
-                <h3
-                  style={{
-                    margin: '0 0 12px',
-                    fontSize: 16,
-                    color: '#ec4899',
-                  }}
-                >
-                  🎹 Accords détectés
-                </h3>
-                <div
-                  style={{
-                    display: 'flex',
-                    gap: 24,
-                    flexWrap: 'wrap',
-                    fontSize: 13,
-                    color: '#ccc',
-                  }}
-                >
-                  <span>
-                    Total : <strong>{chordNotes.length}</strong> notes
-                  </span>
-                  <span>
-                    Note la plus basse :{' '}
-                    <strong>{Math.min(...chordNotes.map((n) => n.midi))}</strong>
-                  </span>
-                  <span>
-                    Note la plus haute :{' '}
-                    <strong>{Math.max(...chordNotes.map((n) => n.midi))}</strong>
-                  </span>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        <footer
-          style={{
-            marginTop: 32,
-            color: '#555',
-            fontSize: 12,
-            textAlign: 'center',
-          }}
-        >
-          Prototype v0.8 — YIN · Tone.js · Demucs · Basic Pitch · Quantize · Key
-        </footer>
+          {/* FOOTER */}
+          <footer
+            style={{
+              marginTop: 32,
+              paddingTop: 16,
+              borderTop: '1px solid var(--border)',
+              textAlign: 'center',
+              fontSize: 10,
+              color: '#555',
+              letterSpacing: '0.05em',
+            }}
+          >
+            WAVEFORGE PRO · YIN · TONE.JS · DEMUCS · BASIC PITCH · v1.0
+          </footer>
+        </div>
       </div>
     </>
   );
-}
-
-function btnStyle(bg: string): React.CSSProperties {
-  return {
-    padding: '10px 16px',
-    background: bg,
-    color: '#fff',
-    border: 'none',
-    borderRadius: 8,
-    cursor: 'pointer',
-    fontWeight: 600,
-    fontSize: 14,
-  };
-}
-
-function stemLinkStyle(): React.CSSProperties {
-  return {
-    display: 'inline-block',
-    padding: '10px 16px',
-    background: 'rgba(30, 30, 42, 0.8)',
-    color: '#4ade80',
-    borderRadius: 8,
-    textDecoration: 'none',
-    fontWeight: 600,
-    fontSize: 13,
-    border: '1px solid rgba(74, 222, 128, 0.3)',
-    transition: 'all 0.15s ease',
-  };
 }
 
 function audioBufferToWav(buffer: AudioBuffer): ArrayBuffer {

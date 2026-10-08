@@ -31,11 +31,9 @@ export function PianoRoll({ notes, duration, currentTime, onSeek }: Props) {
     canvas.width = W;
     canvas.height = H;
 
-    // Fond
     ctx.fillStyle = '#0a0a0f';
     ctx.fillRect(0, 0, W, H);
 
-    // Lignes horizontales (octaves)
     ctx.strokeStyle = '#1a1a24';
     ctx.lineWidth = 1;
     for (let m = MIN_MIDI; m <= MAX_MIDI; m += 12) {
@@ -48,7 +46,6 @@ export function PianoRoll({ notes, duration, currentTime, onSeek }: Props) {
 
     if (duration <= 0) return;
 
-    // Notes
     for (const n of notes) {
       const x = (n.start / duration) * W;
       const w = Math.max(2, (n.duration / duration) * W);
@@ -65,7 +62,6 @@ export function PianoRoll({ notes, duration, currentTime, onSeek }: Props) {
       ctx.globalAlpha = 1;
     }
 
-    // Playhead
     const px = (currentTime / duration) * W;
     ctx.fillStyle = '#ff5c9d';
     ctx.fillRect(px - 1, 0, 2, H);
@@ -78,18 +74,25 @@ export function PianoRoll({ notes, duration, currentTime, onSeek }: Props) {
   };
 
   return (
-    <canvas
-      ref={canvasRef}
-      onClick={handleClick}
+    <div
+      className="glass fade-in-up"
       style={{
-        width: '100%',
-        height: 380,
-        borderRadius: 12,
-        border: '1px solid #1e1e2a',
-        cursor: 'crosshair',
-        display: 'block',
-        background: '#0a0a0f',
+        padding: 0,
+        overflow: 'hidden',
+        position: 'relative',
       }}
-    />
+    >
+      <canvas
+        ref={canvasRef}
+        onClick={handleClick}
+        style={{
+          width: '100%',
+          height: 380,
+          cursor: 'crosshair',
+          display: 'block',
+          background: '#0a0a0f',
+        }}
+      />
+    </div>
   );
 }

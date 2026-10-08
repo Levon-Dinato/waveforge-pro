@@ -9,6 +9,8 @@ import { separateVocals, checkDemucsHealth } from './audio/demucsClient';
 import { transcribeDrums } from './audio/drumDetector';
 import { transcribeBass } from './audio/bassDetector';
 import { transcribeChords } from './audio/chordDetector';
+import { quantizeNotes, detectKey, snapToKey } from './audio/quantizer';
+import type { QuantizeOptions } from './audio/quantizer';
 import './styles.css';
 
 export default function App() {
@@ -26,21 +28,67 @@ export default function App() {
   const [chordNotes, setChordNotes] = useState<any[] | null>(null);
   const [demucsOnline, setDemucsOnline] = useState<boolean | null>(null);
 
+  const [quantize, setQuantize] = useState<QuantizeOptions>({
+    grid: 16,
+    swing: 0,
+    strength: 0.8,
+  });
+  const [snapEnabled, setSnapEnabled] = useState(false);
+  const [detectedKey, setDetectedKey] = useState<{
+    key: string;
+    mode: 'major' | 'minor';
+    confidence: number;
+  } | null>(null);
+  const [showSettings, setShowSettings] = useState(false);
+
   useState(() => {
     checkDemucsHealth().then(setDemucsOnline);
   });
 
   const handleExport = useCallback(() => {
     if (!result) return;
-    const allNotes = [
+
+    let allNotes = [
       ...finalNotes,
       ...(drumNotes || []),
       ...(bassNotes || []),
       ...(chordNotes || []),
     ];
+
+    const melodicNotes = allNotes.filter((n) => n.track !== 'drums');
+    const drumNotesOnly = allNotes.filter((n) => n.track === 'drums');
+
+    let processed = quantizeNotes(melodicNotes, result.bpm, quantize);
+
+    if (snapEnabled && detectedKey) {
+      processed = snapToKey(processed, detectedKey.key, detectedKey.mode);
+    }
+
+    allNotes = [...processed, ...drumNotesOnly];
+
     const blob = exportMidi(allNotes, result.bpm);
     download(blob, 'waveforge.mid');
-  }, [result, finalNotes, drumNotes, bassNotes, chordNotes]);
+  }, [
+    result,
+    finalNotes,
+    drumNotes,
+    bassNotes,
+    chordNotes,
+    quantize,
+    snapEnabled,
+    detectedKey,
+  ]);
+
+  const handleDetectKey = useCallback(() => {
+    const allNotes = [...finalNotes, ...(bassNotes || []), ...(chordNotes || [])];
+    if (allNotes.length === 0) return;
+
+    const key = detectKey(allNotes);
+    setDetectedKey(key);
+    console.log(
+      `🎼 Tonalité détectée : ${key.key} ${key.mode} (confiance ${(key.confidence * 100).toFixed(0)}%)`
+    );
+  }, [finalNotes, bassNotes, chordNotes]);
 
   const handleAnalyzeVocals = useCallback(async () => {
     if (!stems?.vocals) return;
@@ -335,6 +383,13 @@ export default function App() {
                   </button>
                 )}
 
+                <button
+                  onClick={() => setShowSettings(!showSettings)}
+                  style={btnStyle('#6b7280')}
+                >
+                  {showSettings ? '✕ Fermer' : '⚙️ Options'}
+                </button>
+
                 <div
                   style={{
                     marginLeft: 'auto',
@@ -351,6 +406,153 @@ export default function App() {
                       }${chordNotes ? ` + 🎹 ${chordNotes.length}` : ''} · ${result.duration.toFixed(2)}s`}
                 </div>
               </div>
+
+              {showSettings && (
+                <div
+                  className="glass"
+                  style={{ padding: 16, marginTop: 16 }}
+                >
+                  <h3
+                    style={{
+                      margin: '0 0 16px',
+                      fontSize: 14,
+                      color: '#e8e8f0',
+                    }}
+                  >
+                    ⚙️ Options d'export MIDI
+                  </h3>
+
+                  <div style={{ marginBottom: 12 }}>
+                    <label
+                      style={{
+                        fontSize: 12,
+                        color: '#aaa',
+                        display: 'block',
+                        marginBottom: 4,
+                      }}
+                    >
+                      Quantisation
+                    </label>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                      {[
+                        { v: 0, l: 'Off' },
+                        { v: 4, l: '1/4' },
+                        { v: 8, l: '1/8' },
+                        { v: 16, l: '1/16' },
+                        { v: 32, l: '1/32' },
+                      ].map((opt) => (
+                        <button
+                          key={opt.v}
+                          onClick={() =>
+                            setQuantize({ ...quantize, grid: opt.v as any })
+                          }
+                          style={{
+                            ...btnStyle(
+                              quantize.grid === opt.v ? '#7c5cff' : '#2a2a3a'
+                            ),
+                            fontSize: 12,
+                            padding: '6px 12px',
+                          }}
+                        >
+                          {opt.l}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div style={{ marginBottom: 12 }}>
+                    <label
+                      style={{
+                        fontSize: 12,
+                        color: '#aaa',
+                        display: 'block',
+                        marginBottom: 4,
+                      }}
+                    >
+                      Force : {Math.round(quantize.strength * 100)}%
+                    </label>
+                    <input
+                      type="range"
+                      min={0}
+                      max={1}
+                      step={0.01}
+                      value={quantize.strength}
+                      onChange={(e) =>
+                        setQuantize({
+                          ...quantize,
+                          strength: parseFloat(e.target.value),
+                        })
+                      }
+                      style={{ width: '100%' }}
+                    />
+                  </div>
+
+                  <div style={{ marginBottom: 12 }}>
+                    <label
+                      style={{
+                        fontSize: 12,
+                        color: '#aaa',
+                        display: 'block',
+                        marginBottom: 4,
+                      }}
+                    >
+                      Swing : {Math.round(quantize.swing * 100)}%
+                    </label>
+                    <input
+                      type="range"
+                      min={0}
+                      max={1}
+                      step={0.01}
+                      value={quantize.swing}
+                      onChange={(e) =>
+                        setQuantize({
+                          ...quantize,
+                          swing: parseFloat(e.target.value),
+                        })
+                      }
+                      style={{ width: '100%' }}
+                    />
+                  </div>
+
+                  <div style={{ marginBottom: 12 }}>
+                    <button
+                      onClick={() => setSnapEnabled(!snapEnabled)}
+                      style={{
+                        ...btnStyle(snapEnabled ? '#4ade80' : '#2a2a3a'),
+                        fontSize: 12,
+                        padding: '6px 12px',
+                      }}
+                    >
+                      {snapEnabled ? '✅' : '⭕'} Snap à la gamme
+                    </button>
+                    {detectedKey && (
+                      <span
+                        style={{
+                          marginLeft: 12,
+                          fontSize: 12,
+                          color: '#aaa',
+                        }}
+                      >
+                        Détecté : {detectedKey.key} {detectedKey.mode} (
+                        {(detectedKey.confidence * 100).toFixed(0)}%)
+                      </span>
+                    )}
+                    {!detectedKey && (
+                      <button
+                        onClick={handleDetectKey}
+                        style={{
+                          ...btnStyle('#f59e0b'),
+                          fontSize: 12,
+                          padding: '6px 12px',
+                          marginLeft: 12,
+                        }}
+                      >
+                        🎼 Détecter la tonalité
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             {stems && (
@@ -557,7 +759,7 @@ export default function App() {
             textAlign: 'center',
           }}
         >
-          Prototype v0.7 — YIN · Tone.js · Demucs · Basic Pitch · Bass · Chords
+          Prototype v0.8 — YIN · Tone.js · Demucs · Basic Pitch · Quantize · Key
         </footer>
       </div>
     </>

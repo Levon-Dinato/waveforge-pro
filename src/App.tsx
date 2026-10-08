@@ -3,6 +3,7 @@ import { VideoBackground } from './components/VideoBackground';
 import { Waveform } from './components/Waveform';
 import { VUMeter } from './components/VUMeter';
 import { AnimatedButton } from './components/AnimatedButton';
+import { Tooltip } from './components/Tooltip';
 import { UploadProgress } from './components/UploadProgress';
 import { TimelineMarkers } from './components/TimelineMarkers';
 import { TrackSelector } from './components/TrackSelector';
@@ -307,7 +308,6 @@ export default function App() {
         }}
       >
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-          {/* HEADER */}
           <header
             className="fade-in"
             style={{
@@ -400,7 +400,6 @@ export default function App() {
             </div>
           </header>
 
-          {/* WAVEFORM GLOBALE */}
           {result && (
             <div
               className="panel fade-in"
@@ -469,7 +468,6 @@ export default function App() {
                 </div>
               </div>
 
-              {/* TIMELINE MARKERS */}
               {sections.length > 0 && (
                 <TimelineMarkers
                   sections={sections}
@@ -492,13 +490,10 @@ export default function App() {
             </div>
           )}
 
-          {/* DROP ZONE */}
           <DropZone onFile={engine.loadFile} isAnalyzing={isAnalyzing} />
 
-          {/* CONTENU */}
           {result && (
             <div style={{ marginTop: 20, display: 'grid', gap: 16 }}>
-              {/* TRACK SELECTOR */}
               <TrackSelector
                 tracks={[
                   {
@@ -542,7 +537,6 @@ export default function App() {
                 }
               />
 
-              {/* PIANO ROLL */}
               <PianoRoll
                 notes={[
                   ...(trackEnabled.melody ? finalNotes : []),
@@ -555,7 +549,6 @@ export default function App() {
                 onSeek={engine.seek}
               />
 
-              {/* UPLOAD PROGRESS */}
               <UploadProgress
                 percent={uploadProgress.percent}
                 loaded={uploadProgress.loaded}
@@ -564,8 +557,7 @@ export default function App() {
                 stage={uploadProgress.stage}
               />
 
-              {/* BARRE DE BOUTONS */}
-              <div className="panel slide-in">
+              <div className="panel slide-in" style={{ overflow: 'visible' }}>
                 <div className="panel-header">
                   <span>⚡ TRANSPORT & ANALYSE</span>
                   <span className="mono" style={{ fontSize: 10, color: '#888' }}>
@@ -589,38 +581,50 @@ export default function App() {
                       flexWrap: 'wrap',
                     }}
                   >
-                    <button
-                      className="btn-action"
-                      onClick={engine.playAudioOriginal}
-                    >
-                      ▶ AUDIO
-                    </button>
-                    <button
-                      className="btn-action primary"
-                      onClick={engine.playMidi}
-                      disabled={finalNotes.length === 0}
-                    >
-                      ▶ MIDI
-                    </button>
-                    <button
-                      className="btn-action"
-                      onClick={engine.stopAll}
-                      disabled={!isPlaying}
-                    >
-                      ⏹ STOP
-                    </button>
-                    <button
-                      className="btn-action primary"
-                      onClick={handleExport}
-                      disabled={
-                        finalNotes.length === 0 &&
-                        !drumNotes &&
-                        !bassNotes &&
-                        !chordNotes
-                      }
-                    >
-                      💾 EXPORT MIDI
-                    </button>
+                    <Tooltip text="Joue l'audio original importé (mp3/wav)">
+                      <button
+                        className="btn-action"
+                        onClick={engine.playAudioOriginal}
+                      >
+                        ▶ AUDIO
+                      </button>
+                    </Tooltip>
+
+                    <Tooltip text="Joue les notes MIDI détectées avec un synthé">
+                      <button
+                        className="btn-action primary"
+                        onClick={engine.playMidi}
+                        disabled={finalNotes.length === 0}
+                      >
+                        ▶ MIDI
+                      </button>
+                    </Tooltip>
+
+                    <Tooltip text="Arrête toutes les lectures en cours">
+                      <button
+                        className="btn-action"
+                        onClick={engine.stopAll}
+                        disabled={!isPlaying}
+                      >
+                        ⏹ STOP
+                      </button>
+                    </Tooltip>
+
+                    <Tooltip text="Exporte un MIDI multipiste (4 pistes) compatible Ableton">
+                      <button
+                        className="btn-action primary"
+                        onClick={handleExport}
+                        disabled={
+                          finalNotes.length === 0 &&
+                          !drumNotes &&
+                          !bassNotes &&
+                          !chordNotes
+                        }
+                      >
+                        💾 EXPORT MIDI
+                      </button>
+                    </Tooltip>
+
                     <div
                       style={{
                         width: 1,
@@ -629,96 +633,120 @@ export default function App() {
                         margin: '0 4px',
                       }}
                     />
-                    <AnimatedButton
-                      onClick={handleSeparate}
-                      disabled={isSeparating || demucsOnline === false}
-                    >
-                      🎤 SÉPARER STEMS
-                    </AnimatedButton>
+
+                    <Tooltip text="Sépare en voix + instru (Demucs IA, 1-5 min)">
+                      <AnimatedButton
+                        onClick={handleSeparate}
+                        disabled={isSeparating || demucsOnline === false}
+                      >
+                        🎤 SÉPARER STEMS
+                      </AnimatedButton>
+                    </Tooltip>
 
                     {stems && (
                       <>
-                        <AnimatedButton
-                          onClick={handleAnalyzeVocals}
-                          disabled={isAnalyzingVocals}
-                          style={{ borderColor: 'rgba(255, 184, 0, 0.3)' }}
-                        >
-                          🎼 VOIX
-                        </AnimatedButton>
-                        <AnimatedButton
-                          onClick={handleAnalyzeDrums}
-                          disabled={isAnalyzingDrums}
-                          style={{ borderColor: 'rgba(0, 255, 136, 0.3)' }}
-                        >
-                          🥁 BATTERIE
-                        </AnimatedButton>
-                        <AnimatedButton
-                          onClick={handleAnalyzeBass}
-                          disabled={isAnalyzingBass}
-                          style={{ borderColor: 'rgba(139, 92, 246, 0.3)' }}
-                        >
-                          🎸 BASSE
-                        </AnimatedButton>
-                        <AnimatedButton
-                          onClick={handleAnalyzeChords}
-                          disabled={isAnalyzingChords}
-                          style={{ borderColor: 'rgba(236, 72, 153, 0.3)' }}
-                        >
-                          🎹 ACCORDS
-                        </AnimatedButton>
+                        <Tooltip text="Analyse la voix isolée avec YIN">
+                          <AnimatedButton
+                            onClick={handleAnalyzeVocals}
+                            disabled={isAnalyzingVocals}
+                            style={{ borderColor: 'rgba(255, 184, 0, 0.3)' }}
+                          >
+                            🎼 VOIX
+                          </AnimatedButton>
+                        </Tooltip>
+
+                        <Tooltip text="Détecte kick / snare / hihat (Basic Pitch)">
+                          <AnimatedButton
+                            onClick={handleAnalyzeDrums}
+                            disabled={isAnalyzingDrums}
+                            style={{ borderColor: 'rgba(0, 255, 136, 0.3)' }}
+                          >
+                            🥁 BATTERIE
+                          </AnimatedButton>
+                        </Tooltip>
+
+                        <Tooltip text="Détecte la ligne de basse (Basic Pitch)">
+                          <AnimatedButton
+                            onClick={handleAnalyzeBass}
+                            disabled={isAnalyzingBass}
+                            style={{ borderColor: 'rgba(139, 92, 246, 0.3)' }}
+                          >
+                            🎸 BASSE
+                          </AnimatedButton>
+                        </Tooltip>
+
+                        <Tooltip text="Détecte les accords / harmonies (Basic Pitch)">
+                          <AnimatedButton
+                            onClick={handleAnalyzeChords}
+                            disabled={isAnalyzingChords}
+                            style={{ borderColor: 'rgba(236, 72, 153, 0.3)' }}
+                          >
+                            🎹 ACCORDS
+                          </AnimatedButton>
+                        </Tooltip>
                       </>
                     )}
 
                     <div style={{ flex: 1 }} />
 
-                    <button
-                      className="btn-action"
-                      onClick={handleDetectSections}
-                      disabled={isDetectingSections}
-                      style={{
-                        background:
-                          sections.length > 0
-                            ? 'var(--cyan-dim)'
+                    <Tooltip text="Détecte Intro/Verse/Chorus/Bridge/Outro" position="bottom">
+                      <button
+                        className="btn-action"
+                        onClick={handleDetectSections}
+                        disabled={isDetectingSections}
+                        style={{
+                          background:
+                            sections.length > 0
+                              ? 'var(--cyan-dim)'
+                              : 'var(--bg-2)',
+                          color:
+                            sections.length > 0
+                              ? 'var(--cyan)'
+                              : 'var(--text)',
+                          borderColor:
+                            sections.length > 0
+                              ? 'var(--cyan)'
+                              : 'var(--border)',
+                        }}
+                      >
+                        {isDetectingSections
+                          ? '⏳ SECTIONS...'
+                          : `🎬 SECTIONS${
+                              sections.length > 0
+                                ? ` (${sections.length})`
+                                : ''
+                            }`}
+                      </button>
+                    </Tooltip>
+
+                    <Tooltip text="Options d'export : quantize, swing, snap gamme" position="bottom">
+                      <button
+                        className="btn-action"
+                        onClick={() => setShowSettings(!showSettings)}
+                      >
+                        {showSettings ? '✕' : '⚙️'} OPTIONS
+                      </button>
+                    </Tooltip>
+
+                    <Tooltip text="Génère des mélodies (Pop, Trap, Lo-Fi, Drill, House)" position="bottom">
+                      <button
+                        className="btn-action"
+                        onClick={() => setShowGenerator(!showGenerator)}
+                        style={{
+                          background: showGenerator
+                            ? 'var(--cyan)'
                             : 'var(--bg-2)',
-                        color:
-                          sections.length > 0 ? 'var(--cyan)' : 'var(--text)',
-                        borderColor:
-                          sections.length > 0
+                          color: showGenerator ? 'var(--bg-0)' : 'var(--text)',
+                          borderColor: showGenerator
                             ? 'var(--cyan)'
                             : 'var(--border)',
-                      }}
-                    >
-                      {isDetectingSections
-                        ? '⏳ SECTIONS...'
-                        : `🎬 SECTIONS${
-                            sections.length > 0 ? ` (${sections.length})` : ''
-                          }`}
-                    </button>
-
-                    <button
-                      className="btn-action"
-                      onClick={() => setShowSettings(!showSettings)}
-                    >
-                      {showSettings ? '✕' : '⚙️'} OPTIONS
-                    </button>
-                    <button
-                      className="btn-action"
-                      onClick={() => setShowGenerator(!showGenerator)}
-                      style={{
-                        background: showGenerator
-                          ? 'var(--cyan)'
-                          : 'var(--bg-2)',
-                        color: showGenerator ? 'var(--bg-0)' : 'var(--text)',
-                        borderColor: showGenerator
-                          ? 'var(--cyan)'
-                          : 'var(--border)',
-                      }}
-                    >
-                      {showGenerator ? '✕' : '🎼'} GÉNÉRATEUR
-                    </button>
+                        }}
+                      >
+                        {showGenerator ? '✕' : '🎼'} GÉNÉRATEUR
+                      </button>
+                    </Tooltip>
                   </div>
 
-                  {/* OPTIONS */}
                   {showSettings && (
                     <div
                       className="fade-in"
@@ -876,14 +904,12 @@ export default function App() {
                 </div>
               </div>
 
-              {/* GÉNÉRATEUR */}
               {showGenerator && (
                 <div className="slide-in">
                   <MelodyGenerator bpm={result.bpm} />
                 </div>
               )}
 
-              {/* STEMS SÉPARÉS */}
               {stems && (
                 <>
                   <div className="panel slide-in delay-1">
@@ -956,7 +982,6 @@ export default function App() {
                 </>
               )}
 
-              {/* BATTERIE */}
               {drumNotes && drumNotes.length > 0 && (
                 <div
                   className="panel slide-in delay-3"
@@ -1003,7 +1028,6 @@ export default function App() {
                 </div>
               )}
 
-              {/* BASSE */}
               {bassNotes && bassNotes.length > 0 && (
                 <div
                   className="panel slide-in delay-3"
@@ -1044,7 +1068,6 @@ export default function App() {
                 </div>
               )}
 
-              {/* ACCORDS */}
               {chordNotes && chordNotes.length > 0 && (
                 <div
                   className="panel slide-in delay-3"
@@ -1084,7 +1107,6 @@ export default function App() {
             </div>
           )}
 
-          {/* FOOTER */}
           <footer
             style={{
               marginTop: 32,

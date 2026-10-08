@@ -48,6 +48,7 @@ export default function App() {
   const [drumNotes, setDrumNotes] = useState<any[] | null>(null);
   const [bassNotes, setBassNotes] = useState<any[] | null>(null);
   const [chordNotes, setChordNotes] = useState<any[] | null>(null);
+  const [chordSegments, setChordSegments] = useState<{ name: string; count: number }[]>([]);
   const [demucsOnline, setDemucsOnline] = useState<boolean | null>(null);
 
   const [quantize, setQuantize] = useState<QuantizeOptions>({
@@ -211,9 +212,31 @@ export default function App() {
         .then((r) => r.arrayBuffer())
         .then((buf) => ctx.decodeAudioData(buf));
 
+      // 1. Analyse des notes avec Basic Pitch
       const chords = await transcribeChords(buffer);
       setChordNotes(chords);
       console.log(`✅ ${chords.length} notes d'accords détectées`);
+
+      // 2. Reconnaissance des accords nommés
+      const { detectChordsFromNotes, summarizeChords } = await import(
+        './audio/chordRecognition'
+      );
+
+      const noteData = chords.map((n) => ({
+        midi: n.midi,
+        start: n.start,
+        duration: n.duration,
+      }));
+
+      const segments = detectChordsFromNotes(noteData, 0.5);
+      const summary = summarizeChords(segments);
+
+      setChordSegments(summary);
+      console.log(`🎼 ${segments.length} accords détectés`);
+      console.log(
+        '🎼 Progression :',
+        summary.slice(0, 10).map((s) => s.name).join(' → ')
+      );
     } catch (e) {
       console.error('Erreur analyse accords :', e);
       throw e;
@@ -689,7 +712,10 @@ export default function App() {
 
                     <div style={{ flex: 1 }} />
 
-                    <Tooltip text="Détecte Intro/Verse/Chorus/Bridge/Outro" position="bottom">
+                    <Tooltip
+                      text="Détecte Intro/Verse/Chorus/Bridge/Outro"
+                      position="bottom"
+                    >
                       <button
                         className="btn-action"
                         onClick={handleDetectSections}
@@ -719,7 +745,10 @@ export default function App() {
                       </button>
                     </Tooltip>
 
-                    <Tooltip text="Options d'export : quantize, swing, snap gamme" position="bottom">
+                    <Tooltip
+                      text="Options d'export : quantize, swing, snap gamme"
+                      position="bottom"
+                    >
                       <button
                         className="btn-action"
                         onClick={() => setShowSettings(!showSettings)}
@@ -728,7 +757,10 @@ export default function App() {
                       </button>
                     </Tooltip>
 
-                    <Tooltip text="Génère des mélodies (Pop, Trap, Lo-Fi, Drill, House)" position="bottom">
+                    <Tooltip
+                      text="Génère des mélodies (Pop, Trap, Lo-Fi, Drill, House)"
+                      position="bottom"
+                    >
                       <button
                         className="btn-action"
                         onClick={() => setShowGenerator(!showGenerator)}
@@ -1076,7 +1108,12 @@ export default function App() {
                   <div className="panel-header" style={{ color: '#ec4899' }}>
                     <span>🎹 ACCORDS DÉTECTÉS</span>
                     <span className="mono" style={{ fontSize: 10 }}>
-                      {chordNotes.length} NOTES
+                      {chordSegments.length > 0
+                        ? `${chordSegments.reduce(
+                            (sum, s) => sum + s.count,
+                            0
+                          )} ACCORDS · ${chordNotes.length} NOTES`
+                        : `${chordNotes.length} NOTES`}
                     </span>
                   </div>
                   <div className="panel-body">
@@ -1086,6 +1123,7 @@ export default function App() {
                         gap: 20,
                         flexWrap: 'wrap',
                         fontSize: 11,
+                        marginBottom: chordSegments.length > 0 ? 16 : 0,
                       }}
                     >
                       <span>
@@ -1101,6 +1139,94 @@ export default function App() {
                         </strong>
                       </span>
                     </div>
+
+                    {chordSegments.length > 0 && (
+                      <>
+                        <div
+                          className="label-uppercase"
+                          style={{
+                            marginBottom: 8,
+                            color: '#ec4899',
+                            fontSize: 9,
+                          }}
+                        >
+                          ACCORDS PRINCIPAUX
+                        </div>
+                        <div
+                          style={{
+                            display: 'flex',
+                            gap: 6,
+                            flexWrap: 'wrap',
+                            marginBottom: 16,
+                          }}
+                        >
+                          {chordSegments.slice(0, 20).map((chord, i) => (
+                            <div
+                              key={i}
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 6,
+                                padding: '6px 12px',
+                                background: 'rgba(236, 72, 153, 0.1)',
+                                border:
+                                  '1px solid rgba(236, 72, 153, 0.3)',
+                                borderRadius: 6,
+                                fontSize: 12,
+                              }}
+                            >
+                              <span
+                                className="mono"
+                                style={{
+                                  color: '#ec4899',
+                                  fontWeight: 700,
+                                  fontSize: 14,
+                                }}
+                              >
+                                {chord.name}
+                              </span>
+                              <span
+                                className="mono"
+                                style={{ color: '#888', fontSize: 10 }}
+                              >
+                                ×{chord.count}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+
+                        <div
+                          className="label-uppercase"
+                          style={{
+                            marginBottom: 6,
+                            color: '#ec4899',
+                            fontSize: 9,
+                          }}
+                        >
+                          PROGRESSION
+                        </div>
+                        <div
+                          style={{
+                            display: 'flex',
+                            gap: 4,
+                            flexWrap: 'wrap',
+                            fontSize: 11,
+                            fontFamily: 'var(--font-mono)',
+                          }}
+                        >
+                          {chordSegments.slice(0, 16).map((chord, i) => (
+                            <span key={i}>
+                              <span style={{ color: '#ec4899' }}>
+                                {chord.name}
+                              </span>
+                              {i < Math.min(chordSegments.length, 16) - 1 && (
+                                <span style={{ color: '#444' }}> → </span>
+                              )}
+                            </span>
+                          ))}
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               )}

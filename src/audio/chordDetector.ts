@@ -1,5 +1,8 @@
 import type { DetectedNote } from '../types';
 import { yieldToBrowser } from './asyncHelpers';
+import { getSharedBasicPitch } from './basicPitchCache';
+import { detectChordsFromNotes } from './chordRecognition';
+import type { ChordSegment } from './chordRecognition';
 
 const MIN_MIDI = 48;
 const MAX_MIDI = 84;
@@ -12,37 +15,18 @@ interface BasicPitchNote {
   pitchBends?: number[];
 }
 
-let basicPitchInstance: any = null;
-
-async function getBasicPitch() {
-  if (basicPitchInstance) return basicPitchInstance;
-
-  console.log('🎹 Chargement de Basic Pitch (accords)...');
-
-  const bp = await import('@spotify/basic-pitch');
-
-  basicPitchInstance = {
-    BasicPitch: bp.BasicPitch,
-    noteFramesToTime: bp.noteFramesToTime,
-    addPitchBendsToNoteEvents: bp.addPitchBendsToNoteEvents,
-    outputToNotesPoly: bp.outputToNotesPoly,
-    model: new bp.BasicPitch('/model/model.json'),
-  };
-
-  console.log('✅ Basic Pitch (accords) chargé');
-  return basicPitchInstance;
-}
-
+/**
+ * Détecte les accords/harmonies avec Basic Pitch + reconnaissance.
+ */
 export async function transcribeChords(
   audioBuffer: AudioBuffer
 ): Promise<DetectedNote[]> {
-  const sr = audioBuffer.sampleRate;
   console.log(`🎹 Analyse accords : ${audioBuffer.duration.toFixed(2)}s`);
 
-  const bp = await getBasicPitch();
+  const bp = await getSharedBasicPitch();
 
   const rawData = mixToMono(audioBuffer);
-  const filtered = bandPassFilter(rawData, sr, 200, 4000);
+  const filtered = bandPassFilter(rawData, audioBuffer.sampleRate, 200, 4000);
 
   await yieldToBrowser();
 
@@ -71,6 +55,27 @@ export async function transcribeChords(
     (n) => n.pitchMidi >= MIN_MIDI && n.pitchMidi <= MAX_MIDI
   );
 
+  // 🎼 RECONNAISSANCE D'ACCORDS
+  const noteData = chordNotes.map((n) => ({
+    midi: Math.round(n.pitchMidi),
+    start: n.startTimeSeconds,
+    duration: n.durationSeconds,
+  }));
+
+  const chordSegments: ChordSegment[] = detectChordsFromNotes(noteData, 0.5);
+
+  console.log(`🎼 ${chordSegments.length} accords détectés`);
+
+  // Résumé pour log
+  const summary = summarizeSegments(chordSegments);
+  if (summary.length > 0) {
+    console.log(
+      `🎼 Accords principaux :`,
+      summary.slice(0, 8).map((s) => `${s.name}(${s.count})`).join(' · ')
+    );
+  }
+
+  // Conversion en DetectedNote (avec track harmony)
   const detected: DetectedNote[] = chordNotes.map((n) => ({
     midi: Math.round(n.pitchMidi),
     start: n.startTimeSeconds,
@@ -82,6 +87,16 @@ export async function transcribeChords(
 
   console.log(`🎹 RÉSULTAT : ${detected.length} notes`);
   return detected;
+}
+
+function summarizeSegments(segments: ChordSegment[]): { name: string; count: number }[] {
+  const counts: Record<string, number> = {};
+  for (const seg of segments) {
+    counts[seg.chord.name] = (counts[seg.chord.name] ?? 0) + 1;
+  }
+  return Object.entries(counts)
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count);
 }
 
 function lowPassFilter(data: Float32Array, sr: number, cutoff: number): Float32Array {

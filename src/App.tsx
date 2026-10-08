@@ -3,6 +3,7 @@ import { VideoBackground } from './components/VideoBackground';
 import { Waveform } from './components/Waveform';
 import { VUMeter } from './components/VUMeter';
 import { AnimatedButton } from './components/AnimatedButton';
+import { TrackSelector } from './components/TrackSelector';
 import { DropZone } from './components/DropZone';
 import { PianoRoll } from './components/PianoRoll';
 import { StemPlayer } from './components/StemPlayer';
@@ -46,6 +47,13 @@ export default function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [showGenerator, setShowGenerator] = useState(false);
 
+  const [trackEnabled, setTrackEnabled] = useState({
+    melody: true,
+    bass: true,
+    harmony: true,
+    drums: true,
+  });
+
   useState(() => {
     checkDemucsHealth().then(setDemucsOnline);
   });
@@ -54,10 +62,10 @@ export default function App() {
     if (!result) return;
 
     let allNotes = [
-      ...finalNotes,
-      ...(drumNotes || []),
-      ...(bassNotes || []),
-      ...(chordNotes || []),
+      ...(trackEnabled.melody ? finalNotes : []),
+      ...(trackEnabled.drums ? drumNotes || [] : []),
+      ...(trackEnabled.bass ? bassNotes || [] : []),
+      ...(trackEnabled.harmony ? chordNotes || [] : []),
     ];
 
     const melodicNotes = allNotes.filter((n) => n.track !== 'drums');
@@ -82,6 +90,7 @@ export default function App() {
     quantize,
     snapEnabled,
     detectedKey,
+    trackEnabled,
   ]);
 
   const handleDetectKey = useCallback(() => {
@@ -352,13 +361,57 @@ export default function App() {
           {/* CONTENU */}
           {result && (
             <div style={{ marginTop: 20, display: 'grid', gap: 16 }}>
+              {/* TRACK SELECTOR */}
+              <TrackSelector
+                tracks={[
+                  {
+                    id: 'melody',
+                    name: 'MELODY',
+                    color: '#7c5cff',
+                    icon: '🎼',
+                    enabled: trackEnabled.melody,
+                    count: finalNotes.length,
+                  },
+                  {
+                    id: 'bass',
+                    name: 'BASS',
+                    color: '#00ff88',
+                    icon: '🎸',
+                    enabled: trackEnabled.bass,
+                    count: bassNotes?.length ?? 0,
+                  },
+                  {
+                    id: 'harmony',
+                    name: 'CHORDS',
+                    color: '#ec4899',
+                    icon: '🎹',
+                    enabled: trackEnabled.harmony,
+                    count: chordNotes?.length ?? 0,
+                  },
+                  {
+                    id: 'drums',
+                    name: 'DRUMS',
+                    color: '#ffb800',
+                    icon: '🥁',
+                    enabled: trackEnabled.drums,
+                    count: drumNotes?.length ?? 0,
+                  },
+                ]}
+                onToggle={(id) =>
+                  setTrackEnabled((prev) => ({
+                    ...prev,
+                    [id]: !prev[id as keyof typeof prev],
+                  }))
+                }
+              />
+
               {/* PIANO ROLL */}
               <PianoRoll
                 notes={[
-                  ...finalNotes,
-                  ...(drumNotes || []),
-                  ...(bassNotes || []),
-                  ...(chordNotes || []),
+                  ...(trackEnabled.melody ? finalNotes : []),
+                  ...(trackEnabled.drums ? drumNotes || [] : []),
+                  ...(trackEnabled.bass ? bassNotes || [] : []),
+                  ...(trackEnabled.harmony ? chordNotes || [] : []),
                 ]}
                 duration={result.duration}
                 currentTime={currentTime}

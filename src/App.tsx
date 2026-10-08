@@ -488,6 +488,10 @@ export default function App() {
                   <span>{formatTime(result.duration)}</span>
                   <span>·</span>
                   <span>{formatSize(fileSize)}</span>
+<span>·</span>
+<span style={{ color: 'var(--cyan)', fontWeight: 700 }}>
+  {result.bpm} BPM
+</span>
                 </div>
               </div>
 

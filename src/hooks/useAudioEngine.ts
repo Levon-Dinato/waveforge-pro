@@ -1,6 +1,7 @@
 import { useRef, useState, useCallback, useMemo } from 'react';
 import * as Tone from 'tone';
 import { analyzePolyphonic } from '../audio/basicPitchEngine';
+import { detectBPM } from '../audio/bpmDetector';
 import { splitTracks } from '../audio/noteSplitter';
 import { quantizeNotes } from '../audio/quantizer';
 import type { DetectedNote, AnalysisResult, EngineSettings } from '../types';
@@ -29,7 +30,7 @@ export function useAudioEngine() {
   const [currentTime, setCurrentTime] = useState(0);
   const [settings, setSettings] = useState<EngineSettings>(DEFAULT_SETTINGS);
 
-  // 📄 Infos du fichier importé
+  // Infos du fichier importé
   const [fileName, setFileName] = useState<string>('');
   const [fileSize, setFileSize] = useState<number>(0);
   const [fileFormat, setFileFormat] = useState<string>('');
@@ -66,7 +67,7 @@ export function useAudioEngine() {
       setResult(null);
       setRawNotes([]);
 
-      // 📄 Stocke les infos du fichier
+      // Stocke les infos du fichier
       setFileName(file.name);
       setFileSize(file.size);
       const ext = file.name.split('.').pop()?.toUpperCase() ?? '';
@@ -84,9 +85,15 @@ export function useAudioEngine() {
           `📥 Audio chargé : ${audioBuffer.duration.toFixed(2)}s @ ${audioBuffer.sampleRate} Hz`
         );
 
-        // ⚡ Analyse limitée à 30 sec par défaut
+        // 🥁 Détection du BPM
+        const bpmResult = await detectBPM(audioBuffer);
+        const bpm = bpmResult.bpm;
+        console.log(
+          `🥁 BPM détecté : ${bpm} BPM (confiance ${(bpmResult.confidence * 100).toFixed(0)}%)`
+        );
+
+        // Analyse YIN (limitée à 30 sec)
         const notes = await analyzePolyphonic(audioBuffer, settings.sensitivity);
-        const bpm = 120;
 
         const elapsed = ((performance.now() - startTime) / 1000).toFixed(2);
         console.log(`⚡ Analyse YIN terminée en ${elapsed}s (${notes.length} notes)`);

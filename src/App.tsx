@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 import { VideoBackground } from './components/VideoBackground';
 import { Waveform } from './components/Waveform';
+import { VUMeter } from './components/VUMeter';
 import { DropZone } from './components/DropZone';
 import { PianoRoll } from './components/PianoRoll';
 import { StemPlayer } from './components/StemPlayer';
@@ -265,6 +266,12 @@ export default function App() {
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <VUMeter
+                audioBuffer={engine.audioBuffer}
+                isPlaying={isPlaying}
+                currentTime={currentTime}
+              />
+
               {demucsOnline !== null && (
                 <div
                   style={{

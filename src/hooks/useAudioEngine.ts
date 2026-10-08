@@ -55,33 +55,47 @@ export function useAudioEngine() {
     return synthRef.current;
   }, []);
 
-  const loadFile = useCallback(async (file: File) => {
-    setIsAnalyzing(true);
-    setResult(null);
-    setRawNotes([]);
+  const loadFile = useCallback(
+    async (file: File) => {
+      setIsAnalyzing(true);
+      setResult(null);
+      setRawNotes([]);
 
-    try {
-      const buf = await file.arrayBuffer();
-      const ctx = Tone.getContext().rawContext as AudioContext;
-      const audioBuffer = await ctx.decodeAudioData(buf.slice(0));
-      audioBufferRef.current = audioBuffer;
+      const startTime = performance.now();
 
-      const notes = await analyzePolyphonic(audioBuffer, settings.sensitivity);
-      const bpm = 120;
+      try {
+        const buf = await file.arrayBuffer();
+        const ctx = Tone.getContext().rawContext as AudioContext;
+        const audioBuffer = await ctx.decodeAudioData(buf.slice(0));
+        audioBufferRef.current = audioBuffer;
 
-      setRawNotes(notes);
-      setResult({
-        notes,
-        duration: audioBuffer.duration,
-        sampleRate: audioBuffer.sampleRate,
-        bpm,
-      });
-    } catch (e) {
-      console.error('Erreur analyse:', e);
-    } finally {
-      setIsAnalyzing(false);
-    }
-  }, [settings.sensitivity]);
+        console.log(
+          `📥 Audio chargé : ${audioBuffer.duration.toFixed(2)}s @ ${audioBuffer.sampleRate} Hz`
+        );
+
+        // ⚡ Analyse limitée à 30 sec par défaut
+        const notes = await analyzePolyphonic(audioBuffer, settings.sensitivity);
+        const bpm = 120;
+
+        const elapsed = ((performance.now() - startTime) / 1000).toFixed(2);
+        console.log(`⚡ Analyse YIN terminée en ${elapsed}s (${notes.length} notes)`);
+
+        setRawNotes(notes);
+        setResult({
+          notes,
+          duration: audioBuffer.duration,
+          sampleRate: audioBuffer.sampleRate,
+          bpm,
+        });
+      } catch (e) {
+        console.error('Erreur analyse:', e);
+        alert('Erreur analyse : ' + (e as Error).message);
+      } finally {
+        setIsAnalyzing(false);
+      }
+    },
+    [settings.sensitivity]
+  );
 
   const loadNotesFromBuffer = useCallback((notes: DetectedNote[]) => {
     setRawNotes(notes);
@@ -138,7 +152,12 @@ export function useAudioEngine() {
       if (n.start + n.duration < offset) return;
       const startAt = now + Math.max(0, n.start - offset);
       const freq = Tone.Frequency(n.midi, 'midi').toFrequency();
-      synth.triggerAttackRelease(freq, Math.max(0.05, n.duration), startAt, n.velocity / 127);
+      synth.triggerAttackRelease(
+        freq,
+        Math.max(0.05, n.duration),
+        startAt,
+        n.velocity / 127
+      );
     });
 
     const startWall = performance.now() - offset * 1000;

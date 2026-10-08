@@ -4,26 +4,39 @@ import { yieldToBrowser } from './asyncHelpers';
 
 /**
  * Analyse mono (fallback si Basic Pitch indisponible).
- * Utilise YIN sur des fenêtres glissantes.
- * Version ASYNC pour éviter les freezes.
+ * ⚠️ LIMITÉE à 30 sec par défaut pour éviter les longs calculs.
  */
 export async function analyzeMonophonic(
-  audioBuffer: AudioBuffer
+  audioBuffer: AudioBuffer,
+  maxDuration: number = 30
 ): Promise<DetectedNote[]> {
   const sr = audioBuffer.sampleRate;
-  const data = audioBuffer.getChannelData(0);
+
+  // ⚡ Limite la durée analysée
+  const maxSamples = Math.min(
+    audioBuffer.length,
+    Math.floor(maxDuration * sr)
+  );
+
+  const data = audioBuffer.getChannelData(0).slice(0, maxSamples);
   const FRAME = 2048;
-  const HOP = 512;
-  const MIN_DURATION = 0.05;
+  const HOP = 2048; // ⚡ HOP plus grand = moins de frames = plus rapide
+  const MIN_DURATION = 0.08;
+
+  console.log(
+    `🎼 Analyse YIN sur ${maxDuration}s (${data.length} samples, hop=${HOP})`
+  );
 
   const notes: DetectedNote[] = [];
   let current: DetectedNote | null = null;
+  let frameCount = 0;
 
   for (let i = 0; i + FRAME < data.length; i += HOP) {
-    // Yield tous les 20 frames pour éviter le freeze
-    if ((i / HOP) % 20 === 0) {
+    // ⚡ Yield tous les 10 frames seulement
+    if (frameCount % 10 === 0) {
       await yieldToBrowser();
     }
+    frameCount++;
 
     const frame = data.slice(i, i + FRAME);
     const { freq, confidence } = detectPitchYIN(frame, sr);
@@ -52,16 +65,14 @@ export async function analyzeMonophonic(
   }
 
   if (current && current.duration >= MIN_DURATION) notes.push(current);
+
+  console.log(`🎼 ${notes.length} notes YIN en ${frameCount} frames`);
   return notes;
 }
 
-/**
- * Analyse polyphonique — utilise Basic Pitch (via dynamic import).
- */
 export async function analyzePolyphonic(
   audioBuffer: AudioBuffer,
   _sensitivity = 0.5
 ): Promise<DetectedNote[]> {
-  // Fallback mono pour l'instant
   return analyzeMonophonic(audioBuffer);
 }

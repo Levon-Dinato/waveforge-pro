@@ -1,5 +1,6 @@
 import type { DetectedNote } from '../types';
 import { yieldToBrowser } from './asyncHelpers';
+import { getSharedBasicPitch } from './basicPitchCache';
 
 const GM_KICK = 36;
 const GM_SNARE = 38;
@@ -13,44 +14,21 @@ interface BasicPitchNote {
   pitchBends?: number[];
 }
 
-let basicPitchInstance: any = null;
-
-async function getBasicPitch() {
-  if (basicPitchInstance) return basicPitchInstance;
-
-  console.log('🥁 Chargement de Basic Pitch...');
-
-  const bp = await import('@spotify/basic-pitch');
-
-  basicPitchInstance = {
-    BasicPitch: bp.BasicPitch,
-    noteFramesToTime: bp.noteFramesToTime,
-    addPitchBendsToNoteEvents: bp.addPitchBendsToNoteEvents,
-    outputToNotesPoly: bp.outputToNotesPoly,
-    model: new bp.BasicPitch('/model/model.json'),
-  };
-
-  console.log('✅ Basic Pitch chargé');
-  return basicPitchInstance;
-}
-
 /**
  * Détecte la batterie avec Basic Pitch (modèle ML Spotify).
- * Version async avec yield pour éviter les freezes.
+ * Utilise un cache partagé du modèle.
  */
 export async function transcribeDrums(
   audioBuffer: AudioBuffer
 ): Promise<DetectedNote[]> {
-  
   console.log(`🥁 Analyse batterie : ${audioBuffer.duration.toFixed(2)}s`);
 
-  const bp = await getBasicPitch();
+  const bp = await getSharedBasicPitch();
 
   // Mix mono
   const data = mixToMono(audioBuffer);
   console.log(`🥁 ${data.length} samples mono`);
 
-  // Yield avant le gros calcul
   await yieldToBrowser();
 
   // Inférence Basic Pitch
@@ -72,21 +50,13 @@ export async function transcribeDrums(
   await yieldToBrowser();
 
   // Conversion en notes avec seuils stricts
-  const rawNotes = bp.outputToNotesPoly(
-    frames,
-    onsets,
-    0.7,
-    0.6,
-    0.15,
-    true
-  );
-
+  const rawNotes = bp.outputToNotesPoly(frames, onsets, 0.7, 0.6, 0.15, true);
   const withBends = bp.addPitchBendsToNoteEvents(contours, rawNotes);
   const timedNotes: BasicPitchNote[] = bp.noteFramesToTime(withBends);
 
   console.log(`🥁 Basic Pitch : ${timedNotes.length} notes brutes`);
 
-  // Filtre batterie
+  // Filtre batterie (plage basse)
   const drumNotes = timedNotes.filter(
     (n) => n.pitchMidi >= 30 && n.pitchMidi <= 50
   );
@@ -113,7 +83,9 @@ export async function transcribeDrums(
   const snares = detected.filter((n) => n.midi === GM_SNARE).length;
   const hihats = detected.filter((n) => n.midi === GM_HIHAT).length;
 
-  console.log(`🥁 RÉSULTAT : ${kicks} kicks, ${snares} snares, ${hihats} hihats`);
+  console.log(
+    `🥁 RÉSULTAT : ${kicks} kicks, ${snares} snares, ${hihats} hihats (total ${detected.length})`
+  );
 
   return detected;
 }

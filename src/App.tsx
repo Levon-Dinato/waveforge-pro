@@ -4,6 +4,7 @@ import { Waveform } from './components/Waveform';
 import { VUMeter } from './components/VUMeter';
 import { AnimatedButton } from './components/AnimatedButton';
 import { UploadProgress } from './components/UploadProgress';
+import { TimelineMarkers } from './components/TimelineMarkers';
 import { TrackSelector } from './components/TrackSelector';
 import { DropZone } from './components/DropZone';
 import { PianoRoll } from './components/PianoRoll';
@@ -18,6 +19,8 @@ import {
 import { transcribeDrums } from './audio/drumDetector';
 import { transcribeBass } from './audio/bassDetector';
 import { transcribeChords } from './audio/chordDetector';
+import { detectSections } from './audio/sectionDetector';
+import type { Section } from './audio/sectionDetector';
 import { quantizeNotes, detectKey, snapToKey } from './audio/quantizer';
 import type { QuantizeOptions } from './audio/quantizer';
 import './styles.css';
@@ -65,6 +68,9 @@ export default function App() {
     total: 0,
     stage: 'upload' as 'upload' | 'processing',
   });
+
+  const [sections, setSections] = useState<Section[]>([]);
+  const [isDetectingSections, setIsDetectingSections] = useState(false);
 
   useState(() => {
     checkDemucsHealth().then(setDemucsOnline);
@@ -212,7 +218,6 @@ export default function App() {
     }
     setIsSeparating(true);
 
-    // Reset progression
     setUploadProgress({
       visible: true,
       percent: 0,
@@ -225,7 +230,6 @@ export default function App() {
       const wav = audioBufferToWav(engine.audioBuffer);
       const file = new File([wav], 'input.wav', { type: 'audio/wav' });
 
-      // Upload avec progression
       const res = await separateVocalsWithProgress(
         file,
         (percent, loaded, total) => {
@@ -242,7 +246,6 @@ export default function App() {
       setStems({ vocals: res.vocalsUrl, noVocals: res.noVocalsUrl });
       console.log('✅ Stems séparés :', res);
 
-      // Cache la barre après un court délai
       setTimeout(() => {
         setUploadProgress((p) => ({ ...p, visible: false }));
       }, 800);
@@ -252,6 +255,20 @@ export default function App() {
       throw e;
     } finally {
       setIsSeparating(false);
+    }
+  }, [engine.audioBuffer]);
+
+  const handleDetectSections = useCallback(async () => {
+    if (!engine.audioBuffer) return;
+    setIsDetectingSections(true);
+    try {
+      const detected = await detectSections(engine.audioBuffer);
+      setSections(detected);
+      console.log(`✅ ${detected.length} sections détectées`);
+    } catch (e) {
+      console.error('Erreur détection sections :', e);
+    } finally {
+      setIsDetectingSections(false);
     }
   }, [engine.audioBuffer]);
 
@@ -384,6 +401,17 @@ export default function App() {
                   {formatTime(currentTime)} / {formatTime(result.duration)}
                 </span>
               </div>
+
+              {/* TIMELINE MARKERS */}
+              {sections.length > 0 && (
+                <TimelineMarkers
+                  sections={sections}
+                  duration={result.duration}
+                  currentTime={currentTime}
+                  onSeek={engine.seek}
+                />
+              )}
+
               <div style={{ padding: 0 }}>
                 <Waveform
                   audioBuffer={engine.audioBuffer}
@@ -575,6 +603,24 @@ export default function App() {
                     )}
 
                     <div style={{ flex: 1 }} />
+
+                    <button
+                      className="btn-action"
+                      onClick={handleDetectSections}
+                      disabled={isDetectingSections}
+                      style={{
+                        background:
+                          sections.length > 0 ? 'var(--cyan-dim)' : 'var(--bg-2)',
+                        color:
+                          sections.length > 0 ? 'var(--cyan)' : 'var(--text)',
+                        borderColor:
+                          sections.length > 0 ? 'var(--cyan)' : 'var(--border)',
+                      }}
+                    >
+                      {isDetectingSections
+                        ? '⏳ SECTIONS...'
+                        : `🎬 SECTIONS${sections.length > 0 ? ` (${sections.length})` : ''}`}
+                    </button>
 
                     <button
                       className="btn-action"

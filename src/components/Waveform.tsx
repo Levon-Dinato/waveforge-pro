@@ -6,8 +6,8 @@ interface Props {
   duration: number;
   onSeek: (t: number) => void;
   height?: number;
-  color?: string;
   showGrid?: boolean;
+  variant?: 'full' | 'compact';
 }
 
 export function Waveform({
@@ -15,14 +15,14 @@ export function Waveform({
   currentTime,
   duration,
   onSeek,
-  height = 120,
-  color = '#00d9ff',
+  height = 140,
   showGrid = true,
+  variant = 'full',
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const peaksRef = useRef<Float32Array | null>(null);
 
-  // Calcule les peaks une fois quand l'audioBuffer change
+  // Calcule les peaks
   useEffect(() => {
     if (!audioBuffer) {
       peaksRef.current = null;
@@ -30,7 +30,7 @@ export function Waveform({
     }
 
     const data = audioBuffer.getChannelData(0);
-    const samples = 800; // nombre de barres
+    const samples = variant === 'full' ? 800 : 300;
     const blockSize = Math.floor(data.length / samples);
     const peaks = new Float32Array(samples);
     let maxPeak = 0;
@@ -45,15 +45,30 @@ export function Waveform({
       if (peaks[i] > maxPeak) maxPeak = peaks[i];
     }
 
-    // Normalise
     if (maxPeak > 0) {
       for (let i = 0; i < samples; i++) {
         peaks[i] /= maxPeak;
       }
     }
 
-    peaksRef.current = peaks;
-  }, [audioBuffer]);
+    // Lissage
+    const smoothed = new Float32Array(samples);
+    const smoothWindow = variant === 'full' ? 3 : 2;
+    for (let i = 0; i < samples; i++) {
+      let sum = 0;
+      let count = 0;
+      for (let j = -smoothWindow; j <= smoothWindow; j++) {
+        const idx = i + j;
+        if (idx >= 0 && idx < samples) {
+          sum += peaks[idx];
+          count++;
+        }
+      }
+      smoothed[i] = sum / count;
+    }
+
+    peaksRef.current = smoothed;
+  }, [audioBuffer, variant]);
 
   // Dessine
   useEffect(() => {
@@ -70,85 +85,118 @@ export function Waveform({
     ctx.scale(DPR, DPR);
 
     // Fond
-    ctx.fillStyle = '#0a0a0f';
+    ctx.fillStyle = '#08080d';
     ctx.fillRect(0, 0, W, H);
 
     // Grille
     if (showGrid) {
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.02)';
       ctx.lineWidth = 1;
-
-      // Lignes verticales (8 divisions)
-      for (let i = 1; i < 8; i++) {
-        const x = (i / 8) * W;
+      const divisions = variant === 'full' ? 16 : 8;
+      for (let i = 1; i < divisions; i++) {
+        const x = (i / divisions) * W;
         ctx.beginPath();
         ctx.moveTo(x, 0);
         ctx.lineTo(x, H);
         ctx.stroke();
       }
-
-      // Ligne horizontale centrale
-      ctx.beginPath();
-      ctx.moveTo(0, H / 2);
-      ctx.lineTo(W, H / 2);
-      ctx.stroke();
     }
 
     const peaks = peaksRef.current;
+
+    // Sans audio : message
     if (!peaks) {
-      // Aucun audio chargé : affiche une ligne plate
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(0, H / 2);
-      ctx.lineTo(W, H / 2);
-      ctx.stroke();
+      if (variant === 'full') {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+        ctx.font = '600 11px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.letterSpacing = '2px';
+        ctx.fillText('DÉPOSE TON AUDIO POUR VOIR LA WAVEFORM', W / 2, H / 2);
+      } else {
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(0, H / 2);
+        ctx.lineTo(W, H / 2);
+        ctx.stroke();
+      }
       return;
     }
 
-    const barWidth = W / peaks.length;
     const centerY = H / 2;
-    const maxBarHeight = H * 0.4;
+    const maxAmplitude = H * 0.42;
+    const playedRatio = duration > 0 ? Math.min(1, currentTime / duration) : 0;
+    const playedX = playedRatio * W;
 
-    // Waveform (barres)
+    // ============ ÉTAPE 1 : WAVEFORM GRISE (partie non jouée) ============
+    ctx.fillStyle = 'rgba(80, 80, 100, 0.5)';
+
     for (let i = 0; i < peaks.length; i++) {
-      const x = i * barWidth;
-      const barHeight = peaks[i] * maxBarHeight;
+      const x = (i / peaks.length) * W;
+      const barWidth = W / peaks.length;
+      const barHeight = peaks[i] * maxAmplitude;
 
-      // Détermine si la barre est avant ou après le playhead
-      const barTime = (i / peaks.length) * duration;
-      const isPlayed = barTime <= currentTime;
-
-      // Couleur avec glow
-      if (isPlayed) {
-        ctx.fillStyle = color;
-        ctx.shadowColor = color;
-        ctx.shadowBlur = 4;
-      } else {
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
-        ctx.shadowBlur = 0;
+      // Ne dessine que si après la tête de lecture
+      if (x >= playedX) {
+        ctx.fillRect(x, centerY - barHeight, barWidth * 0.85, barHeight * 2);
       }
+    }
 
-      // Barre centrale symétrique
-      ctx.fillRect(x, centerY - barHeight, barWidth * 0.7, barHeight * 2);
+    // ============ ÉTAPE 2 : WAVEFORM CYAN (partie jouée) ============
+    // Clip pour ne pas dépasser la tête de lecture
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(0, 0, playedX, H);
+    ctx.clip();
+
+    // Dégradé vertical
+    const gradient = ctx.createLinearGradient(0, 0, 0, H);
+    gradient.addColorStop(0, 'rgba(0, 217, 255, 0.15)');
+    gradient.addColorStop(0.3, 'rgba(0, 217, 255, 0.7)');
+    gradient.addColorStop(0.5, 'rgba(0, 217, 255, 1)');
+    gradient.addColorStop(0.7, 'rgba(0, 217, 255, 0.7)');
+    gradient.addColorStop(1, 'rgba(0, 217, 255, 0.15)');
+
+    ctx.fillStyle = gradient;
+    ctx.shadowColor = '#00d9ff';
+    ctx.shadowBlur = 8;
+
+    for (let i = 0; i < peaks.length; i++) {
+      const x = (i / peaks.length) * W;
+      const barWidth = W / peaks.length;
+      const barHeight = peaks[i] * maxAmplitude;
+
+      ctx.fillRect(x, centerY - barHeight, barWidth * 0.85, barHeight * 2);
     }
 
     ctx.shadowBlur = 0;
+    ctx.restore();
 
-    // Playhead
-    if (duration > 0) {
-      const playheadX = (currentTime / duration) * W;
+    // ============ ÉTAPE 3 : TÊTE DE LECTURE ============
+    if (duration > 0 && playedRatio < 1) {
+      // Ligne verticale
       ctx.strokeStyle = '#ff3366';
       ctx.lineWidth = 2;
       ctx.shadowColor = '#ff3366';
-      ctx.shadowBlur = 8;
+      ctx.shadowBlur = 12;
       ctx.beginPath();
-      ctx.moveTo(playheadX, 0);
-      ctx.lineTo(playheadX, H);
+      ctx.moveTo(playedX, 0);
+      ctx.lineTo(playedX, H);
       ctx.stroke();
+
+      // Pointeur triangle
+      ctx.fillStyle = '#ff3366';
+      ctx.beginPath();
+      ctx.moveTo(playedX - 5, 0);
+      ctx.lineTo(playedX + 5, 0);
+      ctx.lineTo(playedX, 8);
+      ctx.closePath();
+      ctx.fill();
+
       ctx.shadowBlur = 0;
     }
-  }, [currentTime, duration, color, showGrid]);
+  }, [currentTime, duration, showGrid, variant]);
 
   const handleClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -165,7 +213,6 @@ export function Waveform({
         height,
         display: 'block',
         cursor: 'crosshair',
-        borderRadius: 6,
       }}
     />
   );

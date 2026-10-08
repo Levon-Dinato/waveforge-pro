@@ -168,7 +168,7 @@ export function StemPlayer({ stems, audioBuffer, onClose }: Props) {
           duration={duration}
           onSeek={handleSeek}
           height={100}
-          color="#00d9ff"
+          variant="compact"
         />
       </div>
 
@@ -311,7 +311,9 @@ export function StemPlayer({ stems, audioBuffer, onClose }: Props) {
 
                 {/* Solo */}
                 <button
-                  onClick={() => setSolo((s) => (s === stem.id ? null : stem.id))}
+                  onClick={() =>
+                    setSolo((s) => (s === stem.id ? null : stem.id))
+                  }
                   className="btn-transport"
                   style={{
                     width: 28,
@@ -326,7 +328,7 @@ export function StemPlayer({ stems, audioBuffer, onClose }: Props) {
                   S
                 </button>
 
-                {/* Slider Volume (horizontal, plus compact) */}
+                {/* Slider Volume */}
                 <input
                   type="range"
                   min={0}

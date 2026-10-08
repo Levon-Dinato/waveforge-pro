@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
 import { VideoBackground } from './components/VideoBackground';
+import { Waveform } from './components/Waveform';
 import { DropZone } from './components/DropZone';
 import { PianoRoll } from './components/PianoRoll';
 import { StemPlayer } from './components/StemPlayer';
@@ -191,6 +192,12 @@ export default function App() {
     }
   }, [engine.audioBuffer]);
 
+  const formatTime = (t: number) => {
+    const m = Math.floor(t / 60);
+    const s = Math.floor(t % 60);
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  };
+
   return (
     <>
       <VideoBackground />
@@ -291,6 +298,35 @@ export default function App() {
               )}
             </div>
           </header>
+
+          {/* WAVEFORM GLOBALE */}
+          {result && (
+            <div
+              className="panel fade-in"
+              style={{
+                marginBottom: 20,
+                borderColor: 'rgba(0, 217, 255, 0.15)',
+                overflow: 'hidden',
+              }}
+            >
+              <div className="panel-header">
+                <span>🎵 WAVEFORM</span>
+                <span className="mono" style={{ fontSize: 10, color: '#888' }}>
+                  {formatTime(currentTime)} / {formatTime(result.duration)}
+                </span>
+              </div>
+              <div style={{ padding: 0 }}>
+                <Waveform
+                  audioBuffer={engine.audioBuffer}
+                  currentTime={currentTime}
+                  duration={result.duration}
+                  onSeek={engine.seek}
+                  height={100}
+                  variant="full"
+                />
+              </div>
+            </div>
+          )}
 
           {/* DROP ZONE */}
           <DropZone onFile={engine.loadFile} isAnalyzing={isAnalyzing} />
@@ -780,10 +816,7 @@ export default function App() {
                   className="panel slide-in delay-3"
                   style={{ borderColor: 'rgba(236, 72, 153, 0.2)' }}
                 >
-                  <div
-                    className="panel-header"
-                    style={{ color: '#ec4899' }}
-                  >
+                  <div className="panel-header" style={{ color: '#ec4899' }}>
                     <span>🎹 ACCORDS DÉTECTÉS</span>
                     <span className="mono" style={{ fontSize: 10 }}>
                       {chordNotes.length} NOTES

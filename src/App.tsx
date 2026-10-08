@@ -3,6 +3,7 @@ import { VideoBackground } from './components/VideoBackground';
 import { Waveform } from './components/Waveform';
 import { VUMeter } from './components/VUMeter';
 import { AnimatedButton } from './components/AnimatedButton';
+import { UploadProgress } from './components/UploadProgress';
 import { TrackSelector } from './components/TrackSelector';
 import { DropZone } from './components/DropZone';
 import { PianoRoll } from './components/PianoRoll';
@@ -10,7 +11,10 @@ import { StemPlayer } from './components/StemPlayer';
 import { MelodyGenerator } from './components/MelodyGenerator';
 import { useAudioEngine } from './hooks/useAudioEngine';
 import { exportMidi, download } from './audio/midiExporter';
-import { separateVocals, checkDemucsHealth } from './audio/demucsClient';
+import {
+  separateVocalsWithProgress,
+  checkDemucsHealth,
+} from './audio/demucsClient';
 import { transcribeDrums } from './audio/drumDetector';
 import { transcribeBass } from './audio/bassDetector';
 import { transcribeChords } from './audio/chordDetector';
@@ -52,6 +56,14 @@ export default function App() {
     bass: true,
     harmony: true,
     drums: true,
+  });
+
+  const [uploadProgress, setUploadProgress] = useState({
+    visible: false,
+    percent: 0,
+    loaded: 0,
+    total: 0,
+    stage: 'upload' as 'upload' | 'processing',
   });
 
   useState(() => {
@@ -199,14 +211,44 @@ export default function App() {
       throw new Error("Charge un audio d'abord");
     }
     setIsSeparating(true);
+
+    // Reset progression
+    setUploadProgress({
+      visible: true,
+      percent: 0,
+      loaded: 0,
+      total: 0,
+      stage: 'upload',
+    });
+
     try {
       const wav = audioBufferToWav(engine.audioBuffer);
       const file = new File([wav], 'input.wav', { type: 'audio/wav' });
-      const res = await separateVocals(file);
+
+      // Upload avec progression
+      const res = await separateVocalsWithProgress(
+        file,
+        (percent, loaded, total) => {
+          setUploadProgress({
+            visible: true,
+            percent,
+            loaded,
+            total,
+            stage: percent >= 100 ? 'processing' : 'upload',
+          });
+        }
+      );
+
       setStems({ vocals: res.vocalsUrl, noVocals: res.noVocalsUrl });
       console.log('✅ Stems séparés :', res);
+
+      // Cache la barre après un court délai
+      setTimeout(() => {
+        setUploadProgress((p) => ({ ...p, visible: false }));
+      }, 800);
     } catch (e) {
       console.error('Erreur séparation :', e);
+      setUploadProgress((p) => ({ ...p, visible: false }));
       throw e;
     } finally {
       setIsSeparating(false);
@@ -416,6 +458,15 @@ export default function App() {
                 duration={result.duration}
                 currentTime={currentTime}
                 onSeek={engine.seek}
+              />
+
+              {/* UPLOAD PROGRESS */}
+              <UploadProgress
+                percent={uploadProgress.percent}
+                loaded={uploadProgress.loaded}
+                total={uploadProgress.total}
+                visible={uploadProgress.visible}
+                stage={uploadProgress.stage}
               />
 
               {/* BARRE DE BOUTONS */}

@@ -8,6 +8,7 @@ import { exportMidi, download } from './audio/midiExporter';
 import { separateVocals, checkDemucsHealth } from './audio/demucsClient';
 import { transcribeDrums } from './audio/drumDetector';
 import { transcribeBass } from './audio/bassDetector';
+import { transcribeChords } from './audio/chordDetector';
 import './styles.css';
 
 export default function App() {
@@ -18,9 +19,11 @@ export default function App() {
   const [isAnalyzingVocals, setIsAnalyzingVocals] = useState(false);
   const [isAnalyzingDrums, setIsAnalyzingDrums] = useState(false);
   const [isAnalyzingBass, setIsAnalyzingBass] = useState(false);
+  const [isAnalyzingChords, setIsAnalyzingChords] = useState(false);
   const [stems, setStems] = useState<{ vocals: string; noVocals: string } | null>(null);
   const [drumNotes, setDrumNotes] = useState<any[] | null>(null);
   const [bassNotes, setBassNotes] = useState<any[] | null>(null);
+  const [chordNotes, setChordNotes] = useState<any[] | null>(null);
   const [demucsOnline, setDemucsOnline] = useState<boolean | null>(null);
 
   useState(() => {
@@ -33,10 +36,11 @@ export default function App() {
       ...finalNotes,
       ...(drumNotes || []),
       ...(bassNotes || []),
+      ...(chordNotes || []),
     ];
     const blob = exportMidi(allNotes, result.bpm);
     download(blob, 'waveforge.mid');
-  }, [result, finalNotes, drumNotes, bassNotes]);
+  }, [result, finalNotes, drumNotes, bassNotes, chordNotes]);
 
   const handleAnalyzeVocals = useCallback(async () => {
     if (!stems?.vocals) return;
@@ -97,6 +101,26 @@ export default function App() {
       alert('Erreur : ' + (e as Error).message);
     } finally {
       setIsAnalyzingBass(false);
+    }
+  }, [stems]);
+
+  const handleAnalyzeChords = useCallback(async () => {
+    if (!stems?.noVocals) return;
+    setIsAnalyzingChords(true);
+    try {
+      const ctx = new AudioContext();
+      const buffer = await fetch(stems.noVocals)
+        .then((r) => r.arrayBuffer())
+        .then((buf) => ctx.decodeAudioData(buf));
+
+      const chords = await transcribeChords(buffer);
+      setChordNotes(chords);
+      console.log(`✅ ${chords.length} notes d'accords détectées`);
+    } catch (e) {
+      console.error('Erreur analyse accords :', e);
+      alert('Erreur : ' + (e as Error).message);
+    } finally {
+      setIsAnalyzingChords(false);
     }
   }, [stems]);
 
@@ -205,6 +229,7 @@ export default function App() {
                 ...finalNotes,
                 ...(drumNotes || []),
                 ...(bassNotes || []),
+                ...(chordNotes || []),
               ]}
               duration={result.duration}
               currentTime={currentTime}
@@ -244,7 +269,10 @@ export default function App() {
                   onClick={handleExport}
                   style={btnStyle('#ff5c9d')}
                   disabled={
-                    finalNotes.length === 0 && !drumNotes && !bassNotes
+                    finalNotes.length === 0 &&
+                    !drumNotes &&
+                    !bassNotes &&
+                    !chordNotes
                   }
                 >
                   💾 Export .mid
@@ -295,6 +323,18 @@ export default function App() {
                   </button>
                 )}
 
+                {stems && (
+                  <button
+                    onClick={handleAnalyzeChords}
+                    disabled={isAnalyzingChords}
+                    style={btnStyle('#ec4899')}
+                  >
+                    {isAnalyzingChords
+                      ? '⏳ Analyse accords…'
+                      : '🎹 Analyser les accords'}
+                  </button>
+                )}
+
                 <div
                   style={{
                     marginLeft: 'auto',
@@ -304,9 +344,11 @@ export default function App() {
                 >
                   {isAnalyzing
                     ? '⏳ Analyse…'
-                    : `🎵 ${finalNotes.length} notes${
+                    : `🎵 ${finalNotes.length}${
                         drumNotes ? ` + 🥁 ${drumNotes.length}` : ''
-                      }${bassNotes ? ` + 🎸 ${bassNotes.length}` : ''} · ${result.duration.toFixed(2)}s`}
+                      }${
+                        bassNotes ? ` + 🎸 ${bassNotes.length}` : ''
+                      }${chordNotes ? ` + 🎹 ${chordNotes.length}` : ''} · ${result.duration.toFixed(2)}s`}
                 </div>
               </div>
             </div>
@@ -399,13 +441,22 @@ export default function App() {
                   }}
                 >
                   <span>
-                    🥁 Kick : <strong>{drumNotes.filter((n) => n.midi === 36).length}</strong>
+                    🥁 Kick :{' '}
+                    <strong>
+                      {drumNotes.filter((n) => n.midi === 36).length}
+                    </strong>
                   </span>
                   <span>
-                    🥁 Snare : <strong>{drumNotes.filter((n) => n.midi === 38).length}</strong>
+                    🥁 Snare :{' '}
+                    <strong>
+                      {drumNotes.filter((n) => n.midi === 38).length}
+                    </strong>
                   </span>
                   <span>
-                    🥁 Hihat : <strong>{drumNotes.filter((n) => n.midi === 42).length}</strong>
+                    🥁 Hihat :{' '}
+                    <strong>
+                      {drumNotes.filter((n) => n.midi === 42).length}
+                    </strong>
                   </span>
                   <span>
                     Total : <strong>{drumNotes.length}</strong>
@@ -444,10 +495,53 @@ export default function App() {
                     Total : <strong>{bassNotes.length}</strong> notes
                   </span>
                   <span>
-                    Note la plus basse : <strong>{Math.min(...bassNotes.map((n) => n.midi))}</strong>
+                    Note la plus basse :{' '}
+                    <strong>{Math.min(...bassNotes.map((n) => n.midi))}</strong>
                   </span>
                   <span>
-                    Note la plus haute : <strong>{Math.max(...bassNotes.map((n) => n.midi))}</strong>
+                    Note la plus haute :{' '}
+                    <strong>{Math.max(...bassNotes.map((n) => n.midi))}</strong>
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {chordNotes && chordNotes.length > 0 && (
+              <div
+                className="glass"
+                style={{
+                  padding: 16,
+                  borderColor: 'rgba(236, 72, 153, 0.4)',
+                }}
+              >
+                <h3
+                  style={{
+                    margin: '0 0 12px',
+                    fontSize: 16,
+                    color: '#ec4899',
+                  }}
+                >
+                  🎹 Accords détectés
+                </h3>
+                <div
+                  style={{
+                    display: 'flex',
+                    gap: 24,
+                    flexWrap: 'wrap',
+                    fontSize: 13,
+                    color: '#ccc',
+                  }}
+                >
+                  <span>
+                    Total : <strong>{chordNotes.length}</strong> notes
+                  </span>
+                  <span>
+                    Note la plus basse :{' '}
+                    <strong>{Math.min(...chordNotes.map((n) => n.midi))}</strong>
+                  </span>
+                  <span>
+                    Note la plus haute :{' '}
+                    <strong>{Math.max(...chordNotes.map((n) => n.midi))}</strong>
                   </span>
                 </div>
               </div>
@@ -463,7 +557,7 @@ export default function App() {
             textAlign: 'center',
           }}
         >
-          Prototype v0.6 — YIN · Tone.js · Demucs · Basic Pitch · Bass
+          Prototype v0.7 — YIN · Tone.js · Demucs · Basic Pitch · Bass · Chords
         </footer>
       </div>
     </>

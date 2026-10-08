@@ -1,7 +1,8 @@
 import type { DetectedNote } from '../types';
+import { yieldToBrowser } from './asyncHelpers';
 
-const MIN_MIDI = 24;  // C1
-const MAX_MIDI = 60;  // C4
+const MIN_MIDI = 24;
+const MAX_MIDI = 60;
 
 interface BasicPitchNote {
   pitchMidi: number;
@@ -32,21 +33,19 @@ async function getBasicPitch() {
   return basicPitchInstance;
 }
 
-/**
- * Détecte la ligne de basse avec Basic Pitch (modèle ML de Spotify).
- * Seuils stricts pour ne garder que les vraies notes.
- */
-export async function transcribeBass(audioBuffer: AudioBuffer): Promise<DetectedNote[]> {
+export async function transcribeBass(
+  audioBuffer: AudioBuffer
+): Promise<DetectedNote[]> {
   const sr = audioBuffer.sampleRate;
-  console.log(`🎸 Analyse basse Basic Pitch : ${audioBuffer.duration.toFixed(2)}s`);
+  console.log(`🎸 Analyse basse : ${audioBuffer.duration.toFixed(2)}s`);
 
   const bp = await getBasicPitch();
 
-  // Filtre passe-bas pour isoler la zone basse (0-500 Hz)
   const rawData = mixToMono(audioBuffer);
   const data = lowPassFilter(rawData, sr, 500);
 
-  // Inférence
+  await yieldToBrowser();
+
   const frames: number[][] = [];
   const onsets: number[][] = [];
   const contours: number[][] = [];
@@ -62,30 +61,16 @@ export async function transcribeBass(audioBuffer: AudioBuffer): Promise<Detected
   );
 
   console.log(`🎸 Inférence terminée : ${frames.length} frames`);
+  await yieldToBrowser();
 
-  // Conversion en notes avec seuils TRÈS STRICTS
-  const rawNotes = bp.outputToNotesPoly(
-    frames,
-    onsets,
-    0.8,    // onsetThresh : 0.7 → 0.8
-    0.7,    // frameThresh : 0.6 → 0.7
-    0.2,    // minNoteLen : 0.15 → 0.2 (notes ≥ 200ms)
-    true
-  );
-
+  const rawNotes = bp.outputToNotesPoly(frames, onsets, 0.8, 0.7, 0.2, true);
   const withBends = bp.addPitchBendsToNoteEvents(contours, rawNotes);
   const timedNotes: BasicPitchNote[] = bp.noteFramesToTime(withBends);
 
-  console.log(`🎸 Basic Pitch : ${timedNotes.length} notes brutes`);
-
-  // Filtre plage basse (C1 à C4)
   const bassNotes = timedNotes.filter(
     (n) => n.pitchMidi >= MIN_MIDI && n.pitchMidi <= MAX_MIDI
   );
 
-  console.log(`🎸 ${bassNotes.length} notes dans la plage basse (24-60)`);
-
-  // Conversion en DetectedNote
   const detected: DetectedNote[] = bassNotes.map((n) => ({
     midi: Math.round(n.pitchMidi),
     start: n.startTimeSeconds,
@@ -95,14 +80,10 @@ export async function transcribeBass(audioBuffer: AudioBuffer): Promise<Detected
     track: 'bass' as any,
   }));
 
-  console.log(`🎸 RÉSULTAT BASSE : ${detected.length} notes`);
-
+  console.log(`🎸 RÉSULTAT : ${detected.length} notes`);
   return detected;
 }
 
-/**
- * Filtre passe-bas simple (one-pole).
- */
 function lowPassFilter(data: Float32Array, sr: number, cutoff: number): Float32Array {
   const out = new Float32Array(data.length);
   const rc = 1.0 / (2 * Math.PI * cutoff);
@@ -117,9 +98,6 @@ function lowPassFilter(data: Float32Array, sr: number, cutoff: number): Float32A
   return out;
 }
 
-/**
- * Mixe en mono.
- */
 function mixToMono(buffer: AudioBuffer): Float32Array {
   if (buffer.numberOfChannels === 1) return buffer.getChannelData(0);
   const L = buffer.getChannelData(0);

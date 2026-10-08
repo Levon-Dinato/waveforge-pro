@@ -1,6 +1,6 @@
 import type { DetectedNote } from '../types';
+import { yieldToBrowser } from './asyncHelpers';
 
-// Plage médium : C3 (48) à C6 (84)
 const MIN_MIDI = 48;
 const MAX_MIDI = 84;
 
@@ -33,21 +33,19 @@ async function getBasicPitch() {
   return basicPitchInstance;
 }
 
-/**
- * Détecte les accords avec Basic Pitch (modèle ML de Spotify).
- * Seuils permissifs car les accords sont souvent noyés dans le mix.
- */
-export async function transcribeChords(audioBuffer: AudioBuffer): Promise<DetectedNote[]> {
+export async function transcribeChords(
+  audioBuffer: AudioBuffer
+): Promise<DetectedNote[]> {
   const sr = audioBuffer.sampleRate;
-  console.log(`🎹 Analyse accords Basic Pitch : ${audioBuffer.duration.toFixed(2)}s`);
+  console.log(`🎹 Analyse accords : ${audioBuffer.duration.toFixed(2)}s`);
 
   const bp = await getBasicPitch();
 
-  // Filtre passe-bande (200 Hz - 4000 Hz) pour isoler la zone accords
   const rawData = mixToMono(audioBuffer);
   const filtered = bandPassFilter(rawData, sr, 200, 4000);
 
-  // Inférence
+  await yieldToBrowser();
+
   const frames: number[][] = [];
   const onsets: number[][] = [];
   const contours: number[][] = [];
@@ -63,30 +61,16 @@ export async function transcribeChords(audioBuffer: AudioBuffer): Promise<Detect
   );
 
   console.log(`🎹 Inférence terminée : ${frames.length} frames`);
+  await yieldToBrowser();
 
-  // Conversion avec seuils PERMISSIFS (0.5 / 0.4 / 0.1)
-  const rawNotes = bp.outputToNotesPoly(
-    frames,
-    onsets,
-    0.5,    // onsetThresh : 0.7 → 0.5
-    0.4,    // frameThresh : 0.6 → 0.4
-    0.1,    // minNoteLen : 0.15 → 0.1
-    true
-  );
-
+  const rawNotes = bp.outputToNotesPoly(frames, onsets, 0.5, 0.4, 0.1, true);
   const withBends = bp.addPitchBendsToNoteEvents(contours, rawNotes);
   const timedNotes: BasicPitchNote[] = bp.noteFramesToTime(withBends);
 
-  console.log(`🎹 Basic Pitch : ${timedNotes.length} notes brutes`);
-
-  // Filtre plage médium (accords)
   const chordNotes = timedNotes.filter(
     (n) => n.pitchMidi >= MIN_MIDI && n.pitchMidi <= MAX_MIDI
   );
 
-  console.log(`🎹 ${chordNotes.length} notes dans la plage accords (48-84)`);
-
-  // Conversion en DetectedNote
   const detected: DetectedNote[] = chordNotes.map((n) => ({
     midi: Math.round(n.pitchMidi),
     start: n.startTimeSeconds,
@@ -96,14 +80,10 @@ export async function transcribeChords(audioBuffer: AudioBuffer): Promise<Detect
     track: 'harmony' as any,
   }));
 
-  console.log(`🎹 RÉSULTAT ACCORDS : ${detected.length} notes`);
-
+  console.log(`🎹 RÉSULTAT : ${detected.length} notes`);
   return detected;
 }
 
-/**
- * Filtre passe-bas.
- */
 function lowPassFilter(data: Float32Array, sr: number, cutoff: number): Float32Array {
   const out = new Float32Array(data.length);
   const rc = 1.0 / (2 * Math.PI * cutoff);
@@ -118,9 +98,6 @@ function lowPassFilter(data: Float32Array, sr: number, cutoff: number): Float32A
   return out;
 }
 
-/**
- * Filtre passe-haut.
- */
 function highPassFilter(data: Float32Array, sr: number, cutoff: number): Float32Array {
   const out = new Float32Array(data.length);
   const rc = 1.0 / (2 * Math.PI * cutoff);
@@ -137,17 +114,11 @@ function highPassFilter(data: Float32Array, sr: number, cutoff: number): Float32
   return out;
 }
 
-/**
- * Filtre passe-bande (HP + LP).
- */
 function bandPassFilter(data: Float32Array, sr: number, lowCut: number, highCut: number): Float32Array {
   const hp = highPassFilter(data, sr, lowCut);
   return lowPassFilter(hp, sr, highCut);
 }
 
-/**
- * Mixe en mono.
- */
 function mixToMono(buffer: AudioBuffer): Float32Array {
   if (buffer.numberOfChannels === 1) return buffer.getChannelData(0);
   const L = buffer.getChannelData(0);

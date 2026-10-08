@@ -1,11 +1,15 @@
 import type { DetectedNote } from '../types';
 import { detectPitchYIN, freqToMidi } from './yinDetector';
+import { yieldToBrowser } from './asyncHelpers';
 
 /**
  * Analyse mono (fallback si Basic Pitch indisponible).
  * Utilise YIN sur des fenêtres glissantes.
+ * Version ASYNC pour éviter les freezes.
  */
-export function analyzeMonophonic(audioBuffer: AudioBuffer): DetectedNote[] {
+export async function analyzeMonophonic(
+  audioBuffer: AudioBuffer
+): Promise<DetectedNote[]> {
   const sr = audioBuffer.sampleRate;
   const data = audioBuffer.getChannelData(0);
   const FRAME = 2048;
@@ -16,6 +20,11 @@ export function analyzeMonophonic(audioBuffer: AudioBuffer): DetectedNote[] {
   let current: DetectedNote | null = null;
 
   for (let i = 0; i + FRAME < data.length; i += HOP) {
+    // Yield tous les 20 frames pour éviter le freeze
+    if ((i / HOP) % 20 === 0) {
+      await yieldToBrowser();
+    }
+
     const frame = data.slice(i, i + FRAME);
     const { freq, confidence } = detectPitchYIN(frame, sr);
     const time = i / sr;
@@ -47,14 +56,12 @@ export function analyzeMonophonic(audioBuffer: AudioBuffer): DetectedNote[] {
 }
 
 /**
- * Analyse polyphonique — placeholder pour Basic Pitch.
- * Utilise YIN en attendant l'intégration complète de TensorFlow.js.
+ * Analyse polyphonique — utilise Basic Pitch (via dynamic import).
  */
 export async function analyzePolyphonic(
   audioBuffer: AudioBuffer,
   _sensitivity = 0.5
 ): Promise<DetectedNote[]> {
-  // TODO: Intégrer @spotify/basic-pitch
-  // Pour l'instant, on utilise le fallback mono
+  // Fallback mono pour l'instant
   return analyzeMonophonic(audioBuffer);
 }

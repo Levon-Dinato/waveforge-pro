@@ -106,7 +106,7 @@ export default function App() {
 
   const handleAnalyzeVocals = useCallback(async () => {
     if (!stems?.vocals) {
-      throw new Error('Sépare les stems d\'abord');
+      throw new Error("Sépare les stems d'abord");
     }
     setIsAnalyzingVocals(true);
     try {
@@ -116,7 +116,7 @@ export default function App() {
         .then((buf) => ctx.decodeAudioData(buf));
 
       const { analyzeMonophonic } = await import('./audio/basicPitchEngine');
-      const vocalNotes = analyzeMonophonic(buffer);
+      const vocalNotes = await analyzeMonophonic(buffer);
 
       engine.loadNotesFromBuffer(vocalNotes);
       console.log(`✅ ${vocalNotes.length} notes détectées sur vocals.wav`);
@@ -130,7 +130,7 @@ export default function App() {
 
   const handleAnalyzeDrums = useCallback(async () => {
     if (!stems?.noVocals) {
-      throw new Error('Sépare les stems d\'abord');
+      throw new Error("Sépare les stems d'abord");
     }
     setIsAnalyzingDrums(true);
     try {
@@ -152,7 +152,7 @@ export default function App() {
 
   const handleAnalyzeBass = useCallback(async () => {
     if (!stems?.noVocals) {
-      throw new Error('Sépare les stems d\'abord');
+      throw new Error("Sépare les stems d'abord");
     }
     setIsAnalyzingBass(true);
     try {
@@ -174,7 +174,7 @@ export default function App() {
 
   const handleAnalyzeChords = useCallback(async () => {
     if (!stems?.noVocals) {
-      throw new Error('Sépare les stems d\'abord');
+      throw new Error("Sépare les stems d'abord");
     }
     setIsAnalyzingChords(true);
     try {
@@ -196,7 +196,7 @@ export default function App() {
 
   const handleSeparate = useCallback(async () => {
     if (!engine.audioBuffer) {
-      throw new Error('Charge un audio d\'abord');
+      throw new Error("Charge un audio d'abord");
     }
     setIsSeparating(true);
     try {

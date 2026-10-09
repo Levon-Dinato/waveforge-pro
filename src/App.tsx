@@ -1,9 +1,10 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useEffect, useMemo } from 'react';
 import { VideoBackground } from './components/VideoBackground';
 import { Waveform } from './components/Waveform';
 import { VUMeter } from './components/VUMeter';
 import { AnimatedButton } from './components/AnimatedButton';
 import { Tooltip } from './components/Tooltip';
+import { ExportWav } from './components/ExportWav';
 import { UploadProgress } from './components/UploadProgress';
 import { TimelineMarkers } from './components/TimelineMarkers';
 import { TrackSelector } from './components/TrackSelector';
@@ -11,6 +12,7 @@ import { DropZone } from './components/DropZone';
 import { PianoRoll } from './components/PianoRoll';
 import { StemPlayer } from './components/StemPlayer';
 import { MelodyGenerator } from './components/MelodyGenerator';
+import { MasteringPanel } from './components/MasteringPanel';
 import { useAudioEngine } from './hooks/useAudioEngine';
 import { exportMidi, download } from './audio/midiExporter';
 import {
@@ -25,6 +27,7 @@ import type { Section } from './audio/sectionDetector';
 import { quantizeNotes, detectKey, snapToKey } from './audio/quantizer';
 import type { QuantizeOptions } from './audio/quantizer';
 import './styles.css';
+import { audioBufferToWav } from './audio/wavEncoder';
 
 export default function App() {
   const engine = useAudioEngine();
@@ -64,6 +67,7 @@ export default function App() {
   } | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [showGenerator, setShowGenerator] = useState(false);
+  const [showMastering, setShowMastering] = useState(false);
 
   const [trackEnabled, setTrackEnabled] = useState({
     melody: true,
@@ -83,9 +87,18 @@ export default function App() {
   const [sections, setSections] = useState<Section[]>([]);
   const [isDetectingSections, setIsDetectingSections] = useState(false);
 
-  useState(() => {
+  // ✅ CORRECTION : useState → useEffect (bug silencieux corrigé)
+  useEffect(() => {
     checkDemucsHealth().then(setDemucsOnline);
-  });
+  }, []);
+
+  // ✅ Récupération de l'AudioContext depuis le moteur (si disponible)
+  const audioContext = useMemo(() => {
+    if ((engine as any).audioContext) {
+      return (engine as any).audioContext as AudioContext;
+    }
+    return null;
+  }, [engine]);
 
   const handleExport = useCallback(() => {
     if (!result) return;
@@ -212,12 +225,10 @@ export default function App() {
         .then((r) => r.arrayBuffer())
         .then((buf) => ctx.decodeAudioData(buf));
 
-      // 1. Analyse des notes avec Basic Pitch
       const chords = await transcribeChords(buffer);
       setChordNotes(chords);
       console.log(`✅ ${chords.length} notes d'accords détectées`);
 
-      // 2. Reconnaissance des accords nommés
       const { detectChordsFromNotes, summarizeChords } = await import(
         './audio/chordRecognition'
       );
@@ -462,10 +473,7 @@ export default function App() {
                   >
                     🎵 {fileName || 'SANS TITRE'}
                   </span>
-                  <span
-                    className="mono"
-                    style={{ fontSize: 10, color: '#888' }}
-                  >
+                  <span className="mono" style={{ fontSize: 10, color: '#888' }}>
                     {formatTime(currentTime)} / {formatTime(result.duration)}
                   </span>
                 </div>
@@ -488,14 +496,14 @@ export default function App() {
                   <span>{formatTime(result.duration)}</span>
                   <span>·</span>
                   <span>{formatSize(fileSize)}</span>
-<span>·</span>
-<span style={{ color: 'var(--cyan)', fontWeight: 700 }}>
-  {result.bpm} BPM
-</span>
+                  <span>·</span>
+                  <span style={{ color: 'var(--cyan)', fontWeight: 700 }}>
+                    {result.bpm} BPM
+                  </span>
                 </div>
               </div>
 
-                            {sections.length > 0 && (
+              {sections.length > 0 && (
                 <TimelineMarkers
                   sections={sections}
                   duration={result.duration}
@@ -565,7 +573,7 @@ export default function App() {
                 }
               />
 
-                            <PianoRoll
+              <PianoRoll
                 notes={[
                   ...(trackEnabled.melody ? finalNotes : []),
                   ...(trackEnabled.drums ? drumNotes || [] : []),
@@ -749,6 +757,29 @@ export default function App() {
                                 ? ` (${sections.length})`
                                 : ''
                             }`}
+                      </button>
+                    </Tooltip>
+
+                    {/* ✅ NOUVEAU : Bouton Mastering */}
+                    <Tooltip
+                      text="Mastering IA : LUFS, presets Warm/Balanced/Open, export WAV"
+                      position="bottom"
+                    >
+                      <button
+                        className="btn-action"
+                        onClick={() => setShowMastering(!showMastering)}
+                        style={{
+                          background: showMastering
+                            ? 'linear-gradient(135deg, #00d9ff, #0088ff)'
+                            : 'var(--bg-2)',
+                          color: showMastering ? '#000' : 'var(--text)',
+                          borderColor: showMastering
+                            ? 'var(--cyan)'
+                            : 'var(--border)',
+                          fontWeight: showMastering ? 700 : 400,
+                        }}
+                      >
+                        {showMastering ? '✕' : '🎚️'} MASTERING
                       </button>
                     </Tooltip>
 
@@ -943,6 +974,17 @@ export default function App() {
                 </div>
               </div>
 
+              {/* ✅ NOUVEAU : Panneau de Mastering */}
+              {showMastering && (
+                <div className="slide-in">
+                  <MasteringPanel
+                    audioContext={audioContext}
+                    sourceNode={null}
+                    sourceBuffer={engine.audioBuffer}
+                  />
+                </div>
+              )}
+
               {showGenerator && (
                 <div className="slide-in">
                   <MelodyGenerator bpm={result.bpm} />
@@ -1018,6 +1060,8 @@ export default function App() {
                       ].filter((s) => s.url)}
                     />
                   </div>
+
+                  <ExportWav stems={stems} duration={result.duration} />
                 </>
               )}
 
@@ -1045,266 +1089,115 @@ export default function App() {
                       }}
                     >
                       <span>
-                        <span className="label-uppercase">KICK :</span>{' '}
-                        <strong className="mono" style={{ color: 'var(--green)' }}>
-                          {drumNotes.filter((n) => n.midi === 36).length}
-                        </strong>
-                      </span>
-                      <span>
-                        <span className="label-uppercase">SNARE :</span>{' '}
-                        <strong className="mono" style={{ color: 'var(--green)' }}>
-                          {drumNotes.filter((n) => n.midi === 38).length}
-                        </strong>
-                      </span>
-                      <span>
-                        <span className="label-uppercase">HIHAT :</span>{' '}
-                        <strong className="mono" style={{ color: 'var(--green)' }}>
-                          {drumNotes.filter((n) => n.midi === 42).length}
-                        </strong>
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              )}
+                                                <span className="label-uppercase">KICK :</span>{' '}<strong className="mono" style={{ color: 'var(--green)' }}>
+  {drumNotes.filter((n) => n.midi === 36).length}
+</strong>
+</span>
+<span>
+  <span className="label-uppercase">SNARE :</span>{' '}
+  <strong className="mono" style={{ color: 'var(--green)' }}>
+    {drumNotes.filter((n) => n.midi === 38).length}
+  </strong>
+</span>
+<span>
+  <span className="label-uppercase">HIHAT :</span>{' '}
+  <strong className="mono" style={{ color: 'var(--green)' }}>
+    {drumNotes.filter((n) => n.midi === 42).length}
+  </strong>
+</span>
+</div>
+</div>
+</div>
+)}
 
-              {bassNotes && bassNotes.length > 0 && (
-                <div
-                  className="panel slide-in delay-3"
-                  style={{ borderColor: 'rgba(139, 92, 246, 0.2)' }}
-                >
-                  <div
-                    className="panel-header"
-                    style={{ color: 'var(--purple)' }}
-                  >
-                    <span>🎸 BASSE DÉTECTÉE</span>
-                    <span className="mono" style={{ fontSize: 10 }}>
-                      {bassNotes.length} NOTES
-                    </span>
-                  </div>
-                  <div className="panel-body">
-                    <div
-                      style={{
-                        display: 'flex',
-                        gap: 20,
-                        flexWrap: 'wrap',
-                        fontSize: 11,
-                      }}
-                    >
-                      <span>
-                        <span className="label-uppercase">MIN :</span>{' '}
-                        <strong className="mono" style={{ color: 'var(--purple)' }}>
-                          {Math.min(...bassNotes.map((n) => n.midi))}
-                        </strong>
-                      </span>
-                      <span>
-                        <span className="label-uppercase">MAX :</span>{' '}
-                        <strong className="mono" style={{ color: 'var(--purple)' }}>
-                          {Math.max(...bassNotes.map((n) => n.midi))}
-                        </strong>
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {chordNotes && chordNotes.length > 0 && (
-                <div
-                  className="panel slide-in delay-3"
-                  style={{ borderColor: 'rgba(236, 72, 153, 0.2)' }}
-                >
-                  <div className="panel-header" style={{ color: '#ec4899' }}>
-                    <span>🎹 ACCORDS DÉTECTÉS</span>
-                    <span className="mono" style={{ fontSize: 10 }}>
-                      {chordSegments.length > 0
-                        ? `${chordSegments.reduce(
-                            (sum, s) => sum + s.count,
-                            0
-                          )} ACCORDS · ${chordNotes.length} NOTES`
-                        : `${chordNotes.length} NOTES`}
-                    </span>
-                  </div>
-                  <div className="panel-body">
-                    <div
-                      style={{
-                        display: 'flex',
-                        gap: 20,
-                        flexWrap: 'wrap',
-                        fontSize: 11,
-                        marginBottom: chordSegments.length > 0 ? 16 : 0,
-                      }}
-                    >
-                      <span>
-                        <span className="label-uppercase">MIN :</span>{' '}
-                        <strong className="mono" style={{ color: '#ec4899' }}>
-                          {Math.min(...chordNotes.map((n) => n.midi))}
-                        </strong>
-                      </span>
-                      <span>
-                        <span className="label-uppercase">MAX :</span>{' '}
-                        <strong className="mono" style={{ color: '#ec4899' }}>
-                          {Math.max(...chordNotes.map((n) => n.midi))}
-                        </strong>
-                      </span>
-                    </div>
-
-                    {chordSegments.length > 0 && (
-                      <>
-                        <div
-                          className="label-uppercase"
-                          style={{
-                            marginBottom: 8,
-                            color: '#ec4899',
-                            fontSize: 9,
-                          }}
-                        >
-                          ACCORDS PRINCIPAUX
-                        </div>
-                        <div
-                          style={{
-                            display: 'flex',
-                            gap: 6,
-                            flexWrap: 'wrap',
-                            marginBottom: 16,
-                          }}
-                        >
-                          {chordSegments.slice(0, 20).map((chord, i) => (
-                            <div
-                              key={i}
-                              style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 6,
-                                padding: '6px 12px',
-                                background: 'rgba(236, 72, 153, 0.1)',
-                                border:
-                                  '1px solid rgba(236, 72, 153, 0.3)',
-                                borderRadius: 6,
-                                fontSize: 12,
-                              }}
-                            >
-                              <span
-                                className="mono"
-                                style={{
-                                  color: '#ec4899',
-                                  fontWeight: 700,
-                                  fontSize: 14,
-                                }}
-                              >
-                                {chord.name}
-                              </span>
-                              <span
-                                className="mono"
-                                style={{ color: '#888', fontSize: 10 }}
-                              >
-                                ×{chord.count}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-
-                        <div
-                          className="label-uppercase"
-                          style={{
-                            marginBottom: 6,
-                            color: '#ec4899',
-                            fontSize: 9,
-                          }}
-                        >
-                          PROGRESSION
-                        </div>
-                        <div
-                          style={{
-                            display: 'flex',
-                            gap: 4,
-                            flexWrap: 'wrap',
-                            fontSize: 11,
-                            fontFamily: 'var(--font-mono)',
-                          }}
-                        >
-                          {chordSegments.slice(0, 16).map((chord, i) => (
-                            <span key={i}>
-                              <span style={{ color: '#ec4899' }}>
-                                {chord.name}
-                              </span>
-                              {i < Math.min(chordSegments.length, 16) - 1 && (
-                                <span style={{ color: '#444' }}> → </span>
-                              )}
-                            </span>
-                          ))}
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          <footer
-            style={{
-              marginTop: 32,
-              paddingTop: 16,
-              borderTop: '1px solid var(--border)',
-              textAlign: 'center',
-              fontSize: 10,
-              color: '#555',
-              letterSpacing: '0.05em',
-            }}
-          >
-            WAVEFORGE PRO · YIN · TONE.JS · DEMUCS · BASIC PITCH · v1.0
-          </footer>
-        </div>
+{bassNotes && bassNotes.length > 0 && (
+  <div className="panel slide-in delay-3" style={{ borderColor: 'rgba(139, 92, 246, 0.2)' }}>
+    <div className="panel-header" style={{ color: 'var(--purple)' }}>
+      <span>🎸 BASSE DÉTECTÉE</span>
+      <span className="mono" style={{ fontSize: 10 }}>{bassNotes.length} NOTES</span>
+    </div>
+    <div className="panel-body">
+      <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', fontSize: 11 }}>
+        <span>
+          <span className="label-uppercase">MIN :</span>{' '}
+          <strong className="mono" style={{ color: 'var(--purple)' }}>
+            {Math.min(...bassNotes.map((n) => n.midi))}
+          </strong>
+        </span>
+        <span>
+          <span className="label-uppercase">MAX :</span>{' '}
+          <strong className="mono" style={{ color: 'var(--purple)' }}>
+            {Math.max(...bassNotes.map((n) => n.midi))}
+          </strong>
+        </span>
       </div>
-    </>
-  );
-}
+    </div>
+  </div>
+)}
 
-function audioBufferToWav(buffer: AudioBuffer): ArrayBuffer {
-  const numChannels = buffer.numberOfChannels;
-  const sampleRate = buffer.sampleRate;
-  const format = 1;
-  const bitDepth = 16;
+{chordNotes && chordNotes.length > 0 && (
+  <div className="panel slide-in delay-3" style={{ borderColor: 'rgba(236, 72, 153, 0.2)' }}>
+    <div className="panel-header" style={{ color: '#ec4899' }}>
+      <span>🎹 ACCORDS DÉTECTÉS</span>
+      <span className="mono" style={{ fontSize: 10 }}>
+        {chordSegments.length > 0
+          ? `${chordSegments.reduce((sum, s) => sum + s.count, 0)} ACCORDS · ${chordNotes.length} NOTES`
+          : `${chordNotes.length} NOTES`}
+      </span>
+    </div>
+    <div className="panel-body">
+      <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', fontSize: 11, marginBottom: chordSegments.length > 0 ? 16 : 0 }}>
+        <span>
+          <span className="label-uppercase">MIN :</span>{' '}
+          <strong className="mono" style={{ color: '#ec4899' }}>
+            {Math.min(...chordNotes.map((n) => n.midi))}
+          </strong>
+        </span>
+        <span>
+          <span className="label-uppercase">MAX :</span>{' '}
+          <strong className="mono" style={{ color: '#ec4899' }}>
+            {Math.max(...chordNotes.map((n) => n.midi))}
+          </strong>
+        </span>
+      </div>
 
-  const bytesPerSample = bitDepth / 8;
-  const blockAlign = numChannels * bytesPerSample;
-  const dataLength = buffer.length * blockAlign;
-  const bufferLength = 44 + dataLength;
+      {chordSegments.length > 0 && (
+        <>
+          <div className="label-uppercase" style={{ marginBottom: 8, color: '#ec4899', fontSize: 9 }}>
+            ACCORDS PRINCIPAUX
+          </div>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 16 }}>
+            {chordSegments.slice(0, 20).map((chord, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', background: 'rgba(236, 72, 153, 0.1)', border: '1px solid rgba(236, 72, 153, 0.3)', borderRadius: 6, fontSize: 12 }}>
+                <span className="mono" style={{ color: '#ec4899', fontWeight: 700, fontSize: 14 }}>{chord.name}</span>
+                <span className="mono" style={{ color: '#888', fontSize: 10 }}>×{chord.count}</span>
+              </div>
+            ))}
+          </div>
+          <div className="label-uppercase" style={{ marginBottom: 6, color: '#ec4899', fontSize: 9 }}>
+            PROGRESSION
+          </div>
+          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', fontSize: 11, fontFamily: 'var(--font-mono)' }}>
+            {chordSegments.slice(0, 16).map((chord, i) => (
+              <span key={i}>
+                <span style={{ color: '#ec4899' }}>{chord.name}</span>
+                {i < Math.min(chordSegments.length, 16) - 1 && <span style={{ color: '#444' }}> → </span>}
+              </span>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  </div>
+)}
+</div>
+)}
 
-  const arrayBuffer = new ArrayBuffer(bufferLength);
-  const view = new DataView(arrayBuffer);
-
-  const writeString = (offset: number, str: string) => {
-    for (let i = 0; i < str.length; i++)
-      view.setUint8(offset + i, str.charCodeAt(i));
-  };
-
-  writeString(0, 'RIFF');
-  view.setUint32(4, 36 + dataLength, true);
-  writeString(8, 'WAVE');
-  writeString(12, 'fmt ');
-  view.setUint32(16, 16, true);
-  view.setUint16(20, format, true);
-  view.setUint16(22, numChannels, true);
-  view.setUint32(24, sampleRate, true);
-  view.setUint32(28, sampleRate * blockAlign, true);
-  view.setUint16(32, blockAlign, true);
-  view.setUint16(34, bitDepth, true);
-  writeString(36, 'data');
-  view.setUint32(40, dataLength, true);
-
-  const channels: Float32Array[] = [];
-  for (let i = 0; i < numChannels; i++)
-    channels.push(buffer.getChannelData(i));
-
-  let offset = 44;
-  for (let i = 0; i < buffer.length; i++) {
-    for (let ch = 0; ch < numChannels; ch++) {
-      let sample = Math.max(-1, Math.min(1, channels[ch][i]));
-      sample = sample < 0 ? sample * 0x8000 : sample * 0x7fff;
-      view.setInt16(offset, sample, true);
-      offset += 2;
-    }
-  }
-
-  return arrayBuffer;
+<footer style={{ marginTop: 32, paddingTop: 16, borderTop: '1px solid var(--border)', textAlign: 'center', fontSize: 10, color: '#555', letterSpacing: '0.05em' }}>
+  WAVEFORGE PRO · YIN · TONE.JS · DEMUCS · BASIC PITCH · v1.0
+</footer>
+</div>
+</div>
+</>
+);
 }

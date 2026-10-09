@@ -13,6 +13,7 @@
     "@spotify/basic-pitch": "^1.0.1",
     "@tensorflow/tfjs": "^4.22.0",
     "@tonejs/midi": "^2.0.28",
+    "audiobuffer-to-wav": "^1.0.0",
     "essentia.js": "^0.1.3",
     "jszip": "^3.10.2",
     "react": "^19.2.8",

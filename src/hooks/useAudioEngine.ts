@@ -29,11 +29,18 @@ export function useAudioEngine() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [settings, setSettings] = useState<EngineSettings>(DEFAULT_SETTINGS);
+  const [sourceFile, setSourceFile] = useState<File | null>(null);
 
   // Infos du fichier importé
   const [fileName, setFileName] = useState<string>('');
   const [fileSize, setFileSize] = useState<number>(0);
   const [fileFormat, setFileFormat] = useState<string>('');
+
+  // ✅ AudioContext (Tone.js rawContext) exposé pour le mastering
+  const audioContext = useMemo(
+    () => (Tone.getContext().rawContext as AudioContext) || null,
+    []
+  );
 
   const finalNotes = useMemo(() => {
     if (!result) return [];
@@ -67,6 +74,9 @@ export function useAudioEngine() {
       setIsAnalyzing(true);
       setResult(null);
       setRawNotes([]);
+
+      // ✅ Stockage du fichier source (nécessaire pour le module Remix)
+      setSourceFile(file);
 
       setFileName(file.name);
       setFileSize(file.size);
@@ -220,5 +230,7 @@ export function useAudioEngine() {
     stopAll,
     seek,
     audioBuffer: audioBufferRef.current,
+    sourceFile,        // ✅ Exposé pour le RemixPanel
+    audioContext,      // ✅ Exposé pour le MasteringPanel
   };
 }

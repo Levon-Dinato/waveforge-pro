@@ -1,5 +1,5 @@
 // src/contexts/AudioEngineContext.tsx
-import React, { createContext, useContext, ReactNode } from 'react';
+import React, { createContext, useContext, type ReactNode } from 'react';
 import { useAudioEngine } from '../hooks/useAudioEngine';
 
 // ✅ Récupère automatiquement le type de retour de useAudioEngine

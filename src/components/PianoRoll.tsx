@@ -5,6 +5,8 @@ interface Props {
   notes: DetectedNote[];
   duration: number;
   currentTime: number;
+  bpm?: number;
+  grid?: number;
   onSeek: (t: number) => void;
 }
 
@@ -19,7 +21,15 @@ const TRACK_COLORS: Record<string, string> = {
   drums: '#f59e0b',
 };
 
-export function PianoRoll({ notes, duration, currentTime, onSeek }: Props) {
+export function PianoRoll({
+  notes,
+  duration,
+  currentTime,
+  bpm = 120,
+  grid = 16,
+  onSeek,
+}: Props) {
+
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -33,6 +43,32 @@ export function PianoRoll({ notes, duration, currentTime, onSeek }: Props) {
 
     ctx.fillStyle = '#0a0a0f';
     ctx.fillRect(0, 0, W, H);
+        // 🎼 Grille BPM
+    if (bpm > 0 && grid > 0 && duration > 0) {
+      const beatDur = 60 / bpm;
+      const gridDur = beatDur * (4 / grid);
+      const totalLines = Math.ceil(duration / gridDur);
+
+      for (let i = 0; i <= totalLines; i++) {
+        const t = i * gridDur;
+        const x = (t / duration) * W;
+
+        const isBar = i % 16 === 0;
+        const isStrong = i % 4 === 0;
+
+        ctx.strokeStyle = isBar
+          ? 'rgba(0, 217, 255, 0.15)'
+          : isStrong
+          ? 'rgba(255, 255, 255, 0.05)'
+          : 'rgba(255, 255, 255, 0.02)';
+
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, H);
+        ctx.stroke();
+      }
+    }
+
 
     ctx.strokeStyle = '#1a1a24';
     ctx.lineWidth = 1;

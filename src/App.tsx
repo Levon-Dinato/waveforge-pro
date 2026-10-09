@@ -495,11 +495,12 @@ export default function App() {
                 </div>
               </div>
 
-              {sections.length > 0 && (
+                            {sections.length > 0 && (
                 <TimelineMarkers
                   sections={sections}
                   duration={result.duration}
                   currentTime={currentTime}
+                  bpm={result.bpm}
                   onSeek={engine.seek}
                 />
               )}
@@ -564,7 +565,7 @@ export default function App() {
                 }
               />
 
-              <PianoRoll
+                            <PianoRoll
                 notes={[
                   ...(trackEnabled.melody ? finalNotes : []),
                   ...(trackEnabled.drums ? drumNotes || [] : []),
@@ -573,6 +574,8 @@ export default function App() {
                 ]}
                 duration={result.duration}
                 currentTime={currentTime}
+                bpm={result.bpm}
+                grid={quantize.grid}
                 onSeek={engine.seek}
               />
 

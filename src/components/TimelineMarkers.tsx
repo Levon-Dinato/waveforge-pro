@@ -4,6 +4,7 @@ interface Props {
   sections: Section[];
   duration: number;
   currentTime: number;
+  bpm: number;
   onSeek: (t: number) => void;
 }
 
@@ -11,9 +12,14 @@ export function TimelineMarkers({
   sections,
   duration,
   currentTime,
+  bpm,
   onSeek,
 }: Props) {
   if (sections.length === 0 || duration <= 0) return null;
+
+  // Durée d'une mesure (4/4)
+  const barDur = (60 / bpm) * 4;
+  const totalBars = Math.ceil(duration / barDur);
 
   return (
     <div
@@ -26,6 +32,30 @@ export function TimelineMarkers({
         overflow: 'hidden',
       }}
     >
+      {/* Grille de mesures */}
+      {Array.from({ length: totalBars }).map((_, i) => {
+        const barTime = i * barDur;
+        const leftPercent = (barTime / duration) * 100;
+        const isMajor = i % 4 === 0;
+
+        return (
+          <div
+            key={`bar-${i}`}
+            style={{
+              position: 'absolute',
+              left: `${leftPercent}%`,
+              top: 0,
+              bottom: 0,
+              width: 1,
+              background: isMajor
+                ? 'rgba(0, 217, 255, 0.3)'
+                : 'rgba(255, 255, 255, 0.05)',
+            }}
+          />
+        );
+      })}
+
+      {/* Sections */}
       {sections.map((section) => {
         const leftPercent = (section.start / duration) * 100;
         const widthPercent = (section.duration / duration) * 100;

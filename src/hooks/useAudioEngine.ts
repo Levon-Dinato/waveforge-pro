@@ -1,7 +1,7 @@
 import { useRef, useState, useCallback, useMemo } from 'react';
 import * as Tone from 'tone';
 import { analyzePolyphonic } from '../audio/basicPitchEngine';
-import { detectBPM } from '../audio/bpmDetector';
+import { detectBPMPro } from '../audio/bpmDetectorPro';
 import { splitTracks } from '../audio/noteSplitter';
 import { quantizeNotes } from '../audio/quantizer';
 import type { DetectedNote, AnalysisResult, EngineSettings } from '../types';
@@ -45,6 +45,7 @@ export function useAudioEngine() {
 
     if (settings.splitTracks) notes = splitTracks(notes);
 
+    // 🎯 Quantize avec le BPM RÉEL du morceau
     notes = quantizeNotes(notes, result.bpm, settings.quantize);
 
     return notes;
@@ -67,7 +68,6 @@ export function useAudioEngine() {
       setResult(null);
       setRawNotes([]);
 
-      // Stocke les infos du fichier
       setFileName(file.name);
       setFileSize(file.size);
       const ext = file.name.split('.').pop()?.toUpperCase() ?? '';
@@ -85,8 +85,8 @@ export function useAudioEngine() {
           `📥 Audio chargé : ${audioBuffer.duration.toFixed(2)}s @ ${audioBuffer.sampleRate} Hz`
         );
 
-        // 🥁 Détection du BPM
-        const bpmResult = await detectBPM(audioBuffer);
+        // 🥁 Détection du BPM PRO (essentia.js)
+        const bpmResult = await detectBPMPro(audioBuffer);
         const bpm = bpmResult.bpm;
         console.log(
           `🥁 BPM détecté : ${bpm} BPM (confiance ${(bpmResult.confidence * 100).toFixed(0)}%)`

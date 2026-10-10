@@ -9,6 +9,7 @@ import { MasteringPage } from './pages/MasteringPage';
 import { RemixPage } from './pages/RemixPage';
 import { GeneratorPage } from './pages/GeneratorPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { HelpPage } from './pages/HelpPage';
 import './styles.css';
 
 export default function App() {
@@ -24,6 +25,7 @@ export default function App() {
             <Route path="remix" element={<RemixPage />} />
             <Route path="generator" element={<GeneratorPage />} />
             <Route path="settings" element={<SettingsPage />} />
+            <Route path="help" element={<HelpPage />} />
           </Route>
         </Routes>
       </BrowserRouter>

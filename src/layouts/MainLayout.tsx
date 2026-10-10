@@ -20,6 +20,7 @@ const NAV_ITEMS: NavItem[] = [
   { path: '/mastering', label: 'Mastering',   icon: '🎚️', color: '#7c5cff' },
   { path: '/remix',     label: 'Remix AI',    icon: '🎛️', color: '#ff5cf0' },
   { path: '/generator', label: 'Générateur',  icon: '🎼', color: '#ffd43b' },
+  { path: '/help',      label: 'Guide',       icon: '📖', color: '#00d9ff' },
   { path: '/settings',  label: 'Réglages',    icon: '⚙️', color: '#888' },
 ];
 

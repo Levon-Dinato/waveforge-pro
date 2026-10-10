@@ -1,8 +1,9 @@
 // src/components/MasteringPanel.tsx
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { AudioAnalyzer, type AudioMetrics } from '../audio/audioAnalyzer';
-import { MasteringChain, type MasteringPreset } from '../audio/masteringChain';
+import { MasteringChain, type MasteringPreset, DEFAULT_EQ_BANDS, type EQBand } from '../audio/masteringChain';
 import { Knob } from './Knob';
+import { EQPanel } from './EQPanel';
 import { exportMasteredWav, downloadBlob } from '../audio/masteringExporter';
 
 interface MasteringPanelProps {
@@ -30,17 +31,21 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
     dr: 0,
   });
 
-  // Knobs (valeurs par défaut)
+  // Knobs
   const [loudness, setLoudness] = useState(0);
   const [presence, setPresence] = useState(0);
   const [width, setWidth] = useState(0);
   const [saturation, setSaturation] = useState(0);
 
+  // ✅ NOUVEAU : EQ 5 bandes
+  const [eqBands, setEqBands] = useState<EQBand[]>(DEFAULT_EQ_BANDS);
+  const [showEQ, setShowEQ] = useState(true); // Ouvert par défaut
+
   // --- Refs ---
   const chainRef = useRef<MasteringChain | null>(null);
   const analyzerRef = useRef<AudioAnalyzer | null>(null);
 
-  // --- Initialisation de la chaîne de mastering (SANS sourceNode obligatoire) ---
+  // --- Initialisation de la chaîne ---
   useEffect(() => {
     if (!audioContext) {
       console.warn('⚠️ MasteringPanel : audioContext est null');
@@ -73,7 +78,7 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
     };
   }, [audioContext]);
 
-  // --- Reconnexion dynamique si sourceNode change après coup ---
+  // --- Reconnexion sourceNode ---
   useEffect(() => {
     if (!chainRef.current || !sourceNode) return;
     chainRef.current.connect(sourceNode);
@@ -100,7 +105,7 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
     };
   }, [isAnalyzing]);
 
-  // --- Application des paramètres à la chaîne ---
+  // --- Application des paramètres ---
   useEffect(() => {
     const chain = chainRef.current;
     if (!chain) return;
@@ -111,20 +116,19 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
     chain.setSaturation(saturation);
   }, [loudness, presence, width, saturation]);
 
-  // --- Application du preset (repositionnement des knobs) ---
+  // --- Application du preset ---
   useEffect(() => {
     const chain = chainRef.current;
     if (!chain) {
-      // ⚠️ Fallback : si la chaîne n'est pas encore prête, on utilise les
-      // valeurs en dur pour que les knobs se repositionnent quand même.
+      // Fallback
       const fallbackValues: Record<MasteringPreset, {
-  loudness: number; presence: number; width: number; saturation: number;
-}> = {
-  warm: { loudness: -1, presence: -1, width: 1.1, saturation: 0.15 },
-  balanced: { loudness: -2, presence: 0, width: 1.0, saturation: 0.08 },
-  open: { loudness: -3, presence: 2.5, width: 1.3, saturation: 0.05 },
-  master: { loudness: 0, presence: 0, width: 1.0, saturation: 0 },
-};
+        loudness: number; presence: number; width: number; saturation: number;
+      }> = {
+        warm: { loudness: -1, presence: -1, width: 1.1, saturation: 0.15 },
+        balanced: { loudness: -2, presence: 0, width: 1.0, saturation: 0.08 },
+        open: { loudness: -3, presence: 2.5, width: 1.3, saturation: 0.05 },
+        master: { loudness: 0, presence: 0, width: 1.0, saturation: 0 },
+      };
       const v = fallbackValues[preset];
       setLoudness(v.loudness);
       setPresence(v.presence);
@@ -140,7 +144,17 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
     setPresence(presetValues.presence);
     setWidth(presetValues.width);
     setSaturation(presetValues.saturation);
-  }, [preset, audioContext]); // Ajout de audioContext pour relancer quand la chaîne se recrée
+
+    // ✅ Applique aussi les EQ bands du preset
+    const eqPreset = chain.getEQPreset(preset);
+    const newBands = DEFAULT_EQ_BANDS.map((band, i) => ({
+      ...band,
+      frequency: eqPreset[i].frequency,
+      gain: eqPreset[i].gain,
+      q: eqPreset[i].q,
+    }));
+    setEqBands(newBands);
+  }, [preset, audioContext]);
 
   // --- Gestion du bypass ---
   useEffect(() => {
@@ -150,7 +164,38 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
     chain.setBypass(isBypassed);
   }, [isBypassed]);
 
-  // --- Handler d'export WAV masterisé ---
+  // ✅ NOUVEAU : Changement d'une bande EQ
+  const handleEQChange = useCallback(
+    (index: number, frequency: number, gain: number, q: number) => {
+      const newBands = [...eqBands];
+      newBands[index] = { ...newBands[index], frequency, gain, q };
+      setEqBands(newBands);
+
+      const chain = chainRef.current;
+      if (chain) {
+        chain.setEQBand(index, frequency, gain, q);
+      }
+    },
+    [eqBands]
+  );
+
+  // ✅ NOUVEAU : Reset EQ
+  const handleEQReset = useCallback(() => {
+    const resetBands = DEFAULT_EQ_BANDS.map((band) => ({
+      ...band,
+      gain: 0,
+    }));
+    setEqBands(resetBands);
+
+    const chain = chainRef.current;
+    if (chain) {
+      resetBands.forEach((band, i) => {
+        chain.setEQBand(i, band.frequency, 0, band.q);
+      });
+    }
+  }, []);
+
+  // --- Export WAV ---
   const handleExport = useCallback(async () => {
     if (!sourceBuffer) {
       alert("Veuillez d'abord charger un fichier audio.");
@@ -238,7 +283,7 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
         padding: '20px',
         borderRadius: '12px',
         fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
-        maxWidth: '520px',
+        maxWidth: '620px',
         margin: '0 auto',
         border: '1px solid #1f1f1f',
         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.6)',
@@ -275,7 +320,47 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
           {renderPresetButton('warm', 'Warm')}
           {renderPresetButton('balanced', 'Balanced')}
           {renderPresetButton('open', 'Open')}
+          {renderPresetButton('master', 'Master')}
         </div>
+      </div>
+
+      {/* ✅ NOUVEAU : EQ 5 BANDES */}
+      <div style={{ marginBottom: '20px' }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '10px',
+          }}
+        >
+          <div style={{ fontSize: '10px', color: '#666', letterSpacing: '1px' }}>
+            🎛️ ÉGALISEUR 5 BANDES
+          </div>
+          <button
+            onClick={() => setShowEQ(!showEQ)}
+            style={{
+              background: 'transparent',
+              border: '1px solid #2a2a2a',
+              borderRadius: 4,
+              color: showEQ ? '#00d9ff' : '#666',
+              fontSize: 10,
+              cursor: 'pointer',
+              padding: '2px 8px',
+              fontWeight: 600,
+            }}
+          >
+            {showEQ ? '▼ MASQUER' : '▶ AFFICHER'}
+          </button>
+        </div>
+        {showEQ && (
+          <EQPanel
+            bands={eqBands}
+            onChange={handleEQChange}
+            onReset={handleEQReset}
+            height={160}
+          />
+        )}
       </div>
 
       {/* Métriques Live */}
@@ -450,7 +535,7 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
           letterSpacing: '1px',
         }}
       >
-        WAVEFORGE PRO · MASTERING ENGINE v1.0
+        WAVEFORGE PRO · MASTERING ENGINE v1.1 · EQ 5 BANDES
       </div>
     </div>
   );

@@ -5,17 +5,38 @@ import { AudioEngineProvider } from './contexts/AudioEngineContext';
 import { MainLayout } from './layouts/MainLayout';
 import './styles.css';
 
-// ✅ LAZY LOADING : chaque page est un chunk séparé, chargé à la demande
-const HomePage = lazy(() => import('./pages/HomePage').then((m) => ({ default: m.HomePage })));
-const StudioPage = lazy(() => import('./pages/StudioPage').then((m) => ({ default: m.StudioPage })));
-const StemsPage = lazy(() => import('./pages/StemsPage').then((m) => ({ default: m.StemsPage })));
-const MasteringPage = lazy(() => import('./pages/MasteringPage').then((m) => ({ default: m.MasteringPage })));
-const MusicGenPage = lazy(() => import('./pages/MusicGenPage').then((m) => ({ default: m.MusicGenPage })));
-const GeneratorPage = lazy(() => import('./pages/GeneratorPage').then((m) => ({ default: m.GeneratorPage })));
-const HelpPage = lazy(() => import('./pages/HelpPage').then((m) => ({ default: m.HelpPage })));
-const SettingsPage = lazy(() => import('./pages/SettingsPage').then((m) => ({ default: m.SettingsPage })));
+// ============================================================
+// ✅ LAZY LOADING : chaque page devient un chunk séparé
+// Chargé uniquement quand l'utilisateur navigue dessus
+// ============================================================
+const HomePage = lazy(() =>
+  import('./pages/HomePage').then((m) => ({ default: m.HomePage }))
+);
+const StudioPage = lazy(() =>
+  import('./pages/StudioPage').then((m) => ({ default: m.StudioPage }))
+);
+const StemsPage = lazy(() =>
+  import('./pages/StemsPage').then((m) => ({ default: m.StemsPage }))
+);
+const MasteringPage = lazy(() =>
+  import('./pages/MasteringPage').then((m) => ({ default: m.MasteringPage }))
+);
+const MusicGenPage = lazy(() =>
+  import('./pages/MusicGenPage').then((m) => ({ default: m.MusicGenPage }))
+);
+const GeneratorPage = lazy(() =>
+  import('./pages/GeneratorPage').then((m) => ({ default: m.GeneratorPage }))
+);
+const HelpPage = lazy(() =>
+  import('./pages/HelpPage').then((m) => ({ default: m.HelpPage }))
+);
+const SettingsPage = lazy(() =>
+  import('./pages/SettingsPage').then((m) => ({ default: m.SettingsPage }))
+);
 
-// ✅ Loader visuel pendant le chargement d'une page
+// ============================================================
+// ✅ Loader visuel affiché pendant le chargement d'une page
+// ============================================================
 const PageLoader = () => (
   <div
     style={{
@@ -55,6 +76,9 @@ const PageLoader = () => (
   </div>
 );
 
+// ============================================================
+// ✅ App avec React Router + Suspense pour le lazy loading
+// ============================================================
 export default function App() {
   return (
     <AudioEngineProvider>

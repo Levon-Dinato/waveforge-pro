@@ -19,10 +19,10 @@ const NAV_ITEMS: NavItem[] = [
   { path: '/stems',     label: 'Stems',       icon: '🎤', color: '#00ff88' },
   { path: '/mastering', label: 'Mastering',   icon: '🎚️', color: '#7c5cff' },
   //{ path: '/remix',     label: 'Remix AI',    icon: '🎛️', color: '#ff5cf0' },//
-  { path: '/generator', label: 'Générateur',  icon: '🎼', color: '#ffd43b' },
+  { path: '/generator', label: 'Générateur de mélodies',  icon: '🎼', color: '#ffd43b' },
+  { path: '/musicgen', label: 'Génération IA', icon: '🎵', color: '#00ff88' },
   { path: '/help',      label: 'Guide',       icon: '📖', color: '#00d9ff' },
   { path: '/settings',  label: 'Réglages',    icon: '⚙️', color: '#888' },
-  { path: '/musicgen', label: 'Génération IA', icon: '🎵', color: '#00ff88' },
 ];
 
 export const MainLayout: React.FC = () => {

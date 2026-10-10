@@ -9,20 +9,20 @@ import { useIsMobile } from '../hooks/useIsMobile';
 interface NavItem {
   path: string;
   label: string;
+  shortLabel: string;
   icon: string;
   color: string;
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { path: '/',          label: 'Accueil',     icon: '🏠', color: '#888' },
-  { path: '/studio',    label: 'Studio',      icon: '🎹', color: '#00d9ff' },
-  { path: '/stems',     label: 'Stems',       icon: '🎤', color: '#00ff88' },
-  { path: '/mastering', label: 'Mastering',   icon: '🎚️', color: '#7c5cff' },
-  //{ path: '/remix',     label: 'Remix AI',    icon: '🎛️', color: '#ff5cf0' },//
-  { path: '/generator', label: 'Générateur de mélodies',  icon: '🎼', color: '#ffd43b' },
-  { path: '/musicgen', label: 'Génération IA', icon: '🎵', color: '#00ff88' },
-  { path: '/help',      label: 'Guide',       icon: '📖', color: '#00d9ff' },
-  { path: '/settings',  label: 'Réglages',    icon: '⚙️', color: '#888' },
+  { path: '/',          label: 'Accueil',       shortLabel: 'Accueil',  icon: '🏠', color: '#888' },
+  { path: '/studio',    label: 'Studio',        shortLabel: 'Studio',   icon: '🎹', color: '#00d9ff' },
+  { path: '/stems',     label: 'Stems',         shortLabel: 'Stems',    icon: '🎤', color: '#00ff88' },
+  { path: '/mastering', label: 'Mastering',     shortLabel: 'Master',   icon: '🎚️', color: '#7c5cff' },
+  { path: '/generator', label: 'Générateur',    shortLabel: 'Généro',   icon: '🎼', color: '#ffd43b' },
+  { path: '/musicgen',  label: 'Génération IA', shortLabel: 'Gén.IA',   icon: '🎵', color: '#00ff88' },
+  { path: '/help',      label: 'Guide',         shortLabel: 'Guide',    icon: '📖', color: '#00d9ff' },
+  { path: '/settings',  label: 'Réglages',      shortLabel: 'Réglages', icon: '⚙️', color: '#888' },
 ];
 
 export const MainLayout: React.FC = () => {
@@ -45,7 +45,7 @@ export const MainLayout: React.FC = () => {
             zIndex: 1,
             display: 'flex',
             flexDirection: 'column',
-            paddingBottom: 72, // espace pour la nav en bas
+            paddingBottom: 72,
           }}
         >
           {/* HEADER MOBILE */}
@@ -102,7 +102,6 @@ export const MainLayout: React.FC = () => {
               </div>
             </div>
 
-            {/* VU mètre compact */}
             <div style={{ transform: 'scale(0.75)', transformOrigin: 'right center' }}>
               <VUMeter
                 audioBuffer={engine.audioBuffer}
@@ -160,7 +159,7 @@ export const MainLayout: React.FC = () => {
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: 3,
-                  padding: '6px 4px',
+                  padding: '6px 2px',
                   borderRadius: 8,
                   textDecoration: 'none',
                   flex: 1,
@@ -191,9 +190,10 @@ export const MainLayout: React.FC = () => {
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
                         maxWidth: '100%',
+                        textAlign: 'center',
                       }}
                     >
-                      {item.label}
+                      {item.shortLabel}
                     </span>
                   </>
                 )}

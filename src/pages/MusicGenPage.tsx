@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { checkMusicGenHealth, generateMusic } from '../audio/musicgenClient';
 import { musicgenHistory, type MusicGenHistoryEntry } from '../utils/musicgenHistory';
 import { AudioPlayer } from '../components/AudioPlayer';
+import { useIsMobile } from '../hooks/useIsMobile';
 
 const PRESETS = [
   { id: 'lofi', label: 'Lo-Fi', prompt: 'lofi hip hop beat, chill, jazzy, warm piano, vinyl crackle', color: '#ffd43b' },
@@ -18,6 +19,7 @@ const PRESETS = [
 ];
 
 export const MusicGenPage: React.FC = () => {
+  const isMobile = useIsMobile(768);
   const [isOnline, setIsOnline] = useState<boolean | null>(null);
   const [prompt, setPrompt] = useState('');
   const [duration, setDuration] = useState(8);
@@ -167,12 +169,12 @@ export const MusicGenPage: React.FC = () => {
     <div
       className="fade-in"
       style={{
-        padding: 20,
+        padding: isMobile ? 12 : 20,
         display: 'grid',
-        gridTemplateColumns: 'minmax(280px, 340px) 1fr',
-        gap: 20,
+        gridTemplateColumns: isMobile ? '1fr' : 'minmax(280px, 340px) 1fr',
+        gap: isMobile ? 16 : 20,
         alignItems: 'start',
-        minHeight: 'calc(100vh - 40px)',
+        minHeight: isMobile ? 'auto' : 'calc(100vh - 40px)',
       }}
     >
       {/* ============================================================ */}
@@ -182,11 +184,11 @@ export const MusicGenPage: React.FC = () => {
         className="panel"
         style={{
           padding: 0,
-          position: 'sticky',
-          top: 20,
+          position: isMobile ? 'relative' : 'sticky',
+          top: isMobile ? 'auto' : 20,
           display: 'flex',
           flexDirection: 'column',
-          maxHeight: 'calc(100vh - 40px)',
+          maxHeight: isMobile ? 'none' : 'calc(100vh - 40px)',
           overflow: 'hidden',
         }}
       >
@@ -261,7 +263,13 @@ export const MusicGenPage: React.FC = () => {
         </div>
 
         {/* Contenu défilable */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: 16 }}>
+        <div
+          style={{
+            flex: 1,
+            overflowY: isMobile ? 'visible' : 'auto',
+            padding: 16,
+          }}
+        >
           {/* OFFLINE */}
           {isOnline === false && !isGenerating && (
             <div
@@ -350,7 +358,7 @@ export const MusicGenPage: React.FC = () => {
               onChange={(e) => setPrompt(e.target.value)}
               disabled={isGenerating}
               placeholder="Ex: lofi hip hop beat, chill, jazzy piano..."
-              rows={4}
+              rows={isMobile ? 3 : 4}
               style={{
                 width: '100%',
                 padding: 10,
@@ -508,7 +516,7 @@ export const MusicGenPage: React.FC = () => {
           )}
         </div>
 
-        {/* BOUTON GÉNÉRER (fixe en bas) */}
+        {/* BOUTON GÉNÉRER */}
         <div
           style={{
             padding: 16,
@@ -585,7 +593,7 @@ export const MusicGenPage: React.FC = () => {
           }}
         >
           <div>
-            <h2 style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>
+            <h2 style={{ fontSize: isMobile ? 16 : 20, fontWeight: 700, margin: 0 }}>
               🎵 <span style={{ color: '#00ff88' }}>Génération IA</span>
             </h2>
             <p style={{ color: '#888', fontSize: 11, margin: '4px 0 0' }}>
@@ -618,13 +626,13 @@ export const MusicGenPage: React.FC = () => {
           <div
             className="panel"
             style={{
-              padding: 48,
+              padding: isMobile ? 32 : 48,
               textAlign: 'center',
               borderStyle: 'dashed',
               borderColor: 'rgba(0, 255, 136, 0.2)',
             }}
           >
-            <div style={{ fontSize: 64, marginBottom: 16 }}>🎵</div>
+            <div style={{ fontSize: isMobile ? 48 : 64, marginBottom: 16 }}>🎵</div>
             <div
               style={{
                 fontSize: 15,
@@ -644,7 +652,7 @@ export const MusicGenPage: React.FC = () => {
                 lineHeight: 1.6,
               }}
             >
-              Choisis un style dans le panneau de gauche, décris ce que tu
+              Choisis un style dans le panneau, décris ce que tu
               veux, puis clique sur <strong style={{ color: '#00ff88' }}>GÉNÉRER</strong>.
             </div>
           </div>
@@ -678,7 +686,7 @@ export const MusicGenPage: React.FC = () => {
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: 12,
+                    gap: 10,
                     marginBottom: 10,
                     flexWrap: 'wrap',
                   }}
@@ -686,8 +694,8 @@ export const MusicGenPage: React.FC = () => {
                   {/* Numéro / Nouveau */}
                   <div
                     style={{
-                      width: 36,
-                      height: 36,
+                      width: isMobile ? 32 : 36,
+                      height: isMobile ? 32 : 36,
                       borderRadius: 8,
                       background: index === 0 && !isGenerating
                         ? 'rgba(0, 255, 136, 0.15)'
@@ -709,7 +717,7 @@ export const MusicGenPage: React.FC = () => {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div
                       style={{
-                        fontSize: 12,
+                        fontSize: isMobile ? 11 : 12,
                         color: '#fff',
                         fontWeight: 600,
                         overflow: 'hidden',
@@ -723,7 +731,7 @@ export const MusicGenPage: React.FC = () => {
                     <div
                       style={{
                         display: 'flex',
-                        gap: 12,
+                        gap: 10,
                         fontSize: 9,
                         color: '#666',
                         fontFamily: 'var(--font-mono)',
@@ -741,8 +749,8 @@ export const MusicGenPage: React.FC = () => {
                     <button
                       onClick={() => toggleFavorite(h.id)}
                       style={{
-                        width: 32,
-                        height: 32,
+                        width: isMobile ? 28 : 32,
+                        height: isMobile ? 28 : 32,
                         borderRadius: 6,
                         border: '1px solid var(--border)',
                         background: isFav ? 'rgba(255, 51, 102, 0.1)' : 'transparent',
@@ -760,8 +768,8 @@ export const MusicGenPage: React.FC = () => {
                     <button
                       onClick={() => handleDownload(h.audioUrl, `musicgen-${h.id}.wav`)}
                       style={{
-                        width: 32,
-                        height: 32,
+                        width: isMobile ? 28 : 32,
+                        height: isMobile ? 28 : 32,
                         borderRadius: 6,
                         border: '1px solid var(--border)',
                         background: 'transparent',
@@ -779,8 +787,8 @@ export const MusicGenPage: React.FC = () => {
                     <button
                       onClick={() => handleDelete(h.id)}
                       style={{
-                        width: 32,
-                        height: 32,
+                        width: isMobile ? 28 : 32,
+                        height: isMobile ? 28 : 32,
                         borderRadius: 6,
                         border: '1px solid rgba(255, 51, 102, 0.3)',
                         background: 'transparent',
@@ -815,7 +823,7 @@ export const MusicGenPage: React.FC = () => {
             className="panel"
             style={{
               marginTop: 12,
-              padding: 20,
+              padding: isMobile ? 16 : 20,
               borderStyle: 'dashed',
               borderColor: 'rgba(0, 217, 255, 0.3)',
               textAlign: 'center',
@@ -826,7 +834,6 @@ export const MusicGenPage: React.FC = () => {
               style={{
                 fontSize: 24,
                 marginBottom: 8,
-                animation: 'pulse 1.5s infinite',
               }}
             >
               🎵

@@ -35,26 +35,41 @@ export class MasteringChain {
   private eqMid: BiquadFilterNode;
   private saturator: WaveShaperNode;
   private stereoWidener: StereoPannerNode;
+
+  // Mono-Maker
+  private monoMakerInput: GainNode;
+  private monoMakerOutput: GainNode;
+  private monoMakerSplitter: ChannelSplitterNode;
+  private monoMakerMerger: ChannelMergerNode;
+  private monoMakerBassL: BiquadFilterNode;
+  private monoMakerBassR: BiquadFilterNode;
+  private monoMakerHighL: BiquadFilterNode;
+  private monoMakerHighR: BiquadFilterNode;
+  private monoMakerBassGainL: GainNode;
+  private monoMakerBassGainR: GainNode;
+  private monoMakerBassMono: GainNode;
+  private monoMakerMixL: GainNode;
+  private monoMakerMixR: GainNode;
+  private monoMakerWetGain: GainNode;
+  private monoMakerDryGain: GainNode;
+  private monoMakerFreq = 120;
+  private monoMakerEnabled = false;
+
   private limiter: DynamicsCompressorNode;
-  private bassMonoFilter: BiquadFilterNode;
-  private bassMonoSplitter: ChannelSplitterNode;
-  private bassMonoMerger: ChannelMergerNode;
   private bypassGain: GainNode;
   private processedGain: GainNode;
   private outputGain: GainNode;
   private inputNode: AudioNode | null = null;
   private context: BaseAudioContext;
-  private monoMakerEnabled = false;
-  private monoMakerFreq = 120;
 
   constructor(context: BaseAudioContext) {
     this.context = context;
 
-    // Gain d'entrée
+    // 1. Gain d'entrée
     this.inputGain = context.createGain();
     this.inputGain.gain.value = 1;
 
-    // 5 bandes EQ
+    // 2. EQ 5 bandes
     for (const band of DEFAULT_EQ_BANDS) {
       const filter = context.createBiquadFilter();
       filter.type = band.type;
@@ -64,29 +79,94 @@ export class MasteringChain {
       this.eqBands.push(filter);
     }
 
-    // EQ Mid (legacy pour compatibilité presets)
+    // EQ Mid legacy
     this.eqMid = context.createBiquadFilter();
     this.eqMid.type = 'peaking';
     this.eqMid.frequency.value = 1000;
     this.eqMid.Q.value = 1;
     this.eqMid.gain.value = 0;
 
-    // Saturateur
+    // 3. Saturateur
     this.saturator = context.createWaveShaper();
     this.saturator.curve = this.makeDistortionCurve(0) as Float32Array<ArrayBuffer>;
 
-    // Stéréo widener
+    // 4. Stéréo Widener
     this.stereoWidener = context.createStereoPanner();
     this.stereoWidener.pan.value = 0;
 
-    // Mono Maker (bass mono)
-    this.bassMonoSplitter = context.createChannelSplitter(2);
-    this.bassMonoMerger = context.createChannelMerger(2);
-    this.bassMonoFilter = context.createBiquadFilter();
-    this.bassMonoFilter.type = 'lowpass';
-    this.bassMonoFilter.frequency.value = 120;
+    // 5. MONO-MAKER
+    this.monoMakerInput = context.createGain();
+    this.monoMakerOutput = context.createGain();
+    this.monoMakerSplitter = context.createChannelSplitter(2);
+    this.monoMakerMerger = context.createChannelMerger(2);
 
-    // Limiteur
+    this.monoMakerBassL = context.createBiquadFilter();
+    this.monoMakerBassL.type = 'lowpass';
+    this.monoMakerBassL.frequency.value = this.monoMakerFreq;
+    this.monoMakerBassL.Q.value = 0.7;
+
+    this.monoMakerBassR = context.createBiquadFilter();
+    this.monoMakerBassR.type = 'lowpass';
+    this.monoMakerBassR.frequency.value = this.monoMakerFreq;
+    this.monoMakerBassR.Q.value = 0.7;
+
+    this.monoMakerBassGainL = context.createGain();
+    this.monoMakerBassGainL.gain.value = 0.5;
+    this.monoMakerBassGainR = context.createGain();
+    this.monoMakerBassGainR.gain.value = 0.5;
+
+    this.monoMakerBassMono = context.createGain();
+    this.monoMakerBassMono.gain.value = 1;
+
+    this.monoMakerHighL = context.createBiquadFilter();
+    this.monoMakerHighL.type = 'highpass';
+    this.monoMakerHighL.frequency.value = this.monoMakerFreq;
+    this.monoMakerHighL.Q.value = 0.7;
+
+    this.monoMakerHighR = context.createBiquadFilter();
+    this.monoMakerHighR.type = 'highpass';
+    this.monoMakerHighR.frequency.value = this.monoMakerFreq;
+    this.monoMakerHighR.Q.value = 0.7;
+
+    this.monoMakerMixL = context.createGain();
+    this.monoMakerMixL.gain.value = 1;
+    this.monoMakerMixR = context.createGain();
+    this.monoMakerMixR.gain.value = 1;
+
+    this.monoMakerWetGain = context.createGain();
+    this.monoMakerWetGain.gain.value = 0;
+    this.monoMakerDryGain = context.createGain();
+    this.monoMakerDryGain.gain.value = 1;
+
+    // Connexions Mono-Maker
+    this.monoMakerInput.connect(this.monoMakerSplitter);
+    this.monoMakerInput.connect(this.monoMakerDryGain);
+    this.monoMakerDryGain.connect(this.monoMakerOutput);
+
+    this.monoMakerSplitter.connect(this.monoMakerBassL, 0);
+    this.monoMakerBassL.connect(this.monoMakerBassGainL);
+    this.monoMakerBassGainL.connect(this.monoMakerBassMono);
+
+    this.monoMakerSplitter.connect(this.monoMakerBassR, 1);
+    this.monoMakerBassR.connect(this.monoMakerBassGainR);
+    this.monoMakerBassGainR.connect(this.monoMakerBassMono);
+
+    this.monoMakerSplitter.connect(this.monoMakerHighL, 0);
+    this.monoMakerHighL.connect(this.monoMakerMixL);
+
+    this.monoMakerSplitter.connect(this.monoMakerHighR, 1);
+    this.monoMakerHighR.connect(this.monoMakerMixR);
+
+    this.monoMakerBassMono.connect(this.monoMakerMixL);
+    this.monoMakerBassMono.connect(this.monoMakerMixR);
+
+    this.monoMakerMixL.connect(this.monoMakerMerger, 0, 0);
+    this.monoMakerMixR.connect(this.monoMakerMerger, 0, 1);
+
+    this.monoMakerMerger.connect(this.monoMakerWetGain);
+    this.monoMakerWetGain.connect(this.monoMakerOutput);
+
+    // 6. Limiteur
     this.limiter = context.createDynamicsCompressor();
     this.limiter.threshold.value = -1;
     this.limiter.knee.value = 0;
@@ -94,16 +174,14 @@ export class MasteringChain {
     this.limiter.attack.value = 0.003;
     this.limiter.release.value = 0.1;
 
-    // Gains bypass
+    // 7. Bypass & gains
     this.bypassGain = context.createGain();
     this.bypassGain.gain.value = 0;
     this.processedGain = context.createGain();
     this.processedGain.gain.value = 1;
-
-    // Gain sortie
     this.outputGain = context.createGain();
 
-    // Chaîne : input → EQ1 → EQ2 → EQ3 → EQ4 → EQ5 → eqMid → saturator → widener → limiter → processedGain → output
+    // 8. Chaîne traitée
     let prev: AudioNode = this.inputGain;
     for (const band of this.eqBands) {
       prev.connect(band);
@@ -112,11 +190,12 @@ export class MasteringChain {
     prev.connect(this.eqMid);
     this.eqMid.connect(this.saturator);
     this.saturator.connect(this.stereoWidener);
-    this.stereoWidener.connect(this.limiter);
+    this.stereoWidener.connect(this.monoMakerInput);
+    this.monoMakerOutput.connect(this.limiter);
     this.limiter.connect(this.processedGain);
     this.processedGain.connect(this.outputGain);
 
-    // Bypass
+    // Bypass complet
     this.inputGain.connect(this.bypassGain);
     this.bypassGain.connect(this.outputGain);
   }
@@ -144,17 +223,10 @@ export class MasteringChain {
     source.connect(this.inputGain);
   }
 
-  getOutputNode(): AudioNode {
-    return this.outputGain;
-  }
+  getOutputNode(): AudioNode { return this.outputGain; }
+  getInputNode(): AudioNode { return this.inputGain; }
 
-  getInputNode(): AudioNode {
-    return this.inputGain;
-  }
-
-  // ============================================================
-  // CONTRÔLES EXISTANTS
-  // ============================================================
+  // Contrôles
   setLoudness(value: number): void {
     this.inputGain.gain.value = Math.pow(10, value / 20);
   }
@@ -176,9 +248,7 @@ export class MasteringChain {
     this.processedGain.gain.value = bypass ? 0 : 1;
   }
 
-  // ============================================================
-  // ✅ NOUVEAU : CONTRÔLE EQ 5 BANDES
-  // ============================================================
+  // EQ 5 bandes
   setEQBand(index: number, frequency: number, gain: number, q?: number): void {
     const band = this.eqBands[index];
     if (!band) return;
@@ -187,57 +257,33 @@ export class MasteringChain {
     if (q !== undefined) band.Q.value = q;
   }
 
-  getEQBandCount(): number {
-    return this.eqBands.length;
-  }
+  getEQBandCount(): number { return this.eqBands.length; }
 
-  /**
-   * Retourne la réponse en fréquence de la chaîne EQ complète
-   * (utile pour dessiner la courbe)
-   */
-  getFrequencyResponse(frequencies: Float32Array): {
-    magnitude: Float32Array;
-    phase: Float32Array;
-  } {
-    const N = frequencies.length;
-    const totalMag = new Float32Array(N).fill(1);
-    const totalPhase = new Float32Array(N).fill(0);
-
-    for (const band of this.eqBands) {
-      const mag = new Float32Array(N);
-      const phase = new Float32Array(N);
-      band.getFrequencyResponse(frequencies, mag, phase);
-      for (let i = 0; i < N; i++) {
-        totalMag[i] *= mag[i];
-        totalPhase[i] += phase[i];
-      }
+  // Mono-Maker
+  setMonoMaker(enabled: boolean, frequency?: number): void {
+    this.monoMakerEnabled = enabled;
+    if (frequency !== undefined) {
+      this.monoMakerFreq = frequency;
+      this.monoMakerBassL.frequency.value = frequency;
+      this.monoMakerBassR.frequency.value = frequency;
+      this.monoMakerHighL.frequency.value = frequency;
+      this.monoMakerHighR.frequency.value = frequency;
     }
 
-    return { magnitude: totalMag, phase: totalPhase };
+    const now = this.context.currentTime;
+    if (enabled) {
+      this.monoMakerWetGain.gain.setTargetAtTime(1, now, 0.02);
+      this.monoMakerDryGain.gain.setTargetAtTime(0, now, 0.02);
+    } else {
+      this.monoMakerWetGain.gain.setTargetAtTime(0, now, 0.02);
+      this.monoMakerDryGain.gain.setTargetAtTime(1, now, 0.02);
+    }
   }
 
-  // ============================================================
-  // ✅ NOUVEAU : MONO-MAKER
-  // ============================================================
-  setMonoMaker(enabled: boolean, frequency = 120): void {
-    this.monoMakerEnabled = enabled;
-    this.monoMakerFreq = frequency;
-    this.bassMonoFilter.frequency.value = frequency;
-    // Pour simplifier, on utilise juste le filtre pour le moment
-    // L'implémentation réelle split/merge serait plus complexe
-  }
+  isMonoMakerEnabled(): boolean { return this.monoMakerEnabled; }
+  getMonoMakerFrequency(): number { return this.monoMakerFreq; }
 
-  getMonoMakerFrequency(): number {
-    return this.monoMakerFreq;
-  }
-
-  isMonoMakerEnabled(): boolean {
-    return this.monoMakerEnabled;
-  }
-
-  // ============================================================
-  // PRESETS
-  // ============================================================
+  // Presets
   applyPreset(preset: MasteringPreset): void {
     const values = this.getPresetValues(preset);
     this.setLoudness(values.loudness);
@@ -245,11 +291,16 @@ export class MasteringChain {
     this.setWidth(values.width);
     this.setSaturation(values.saturation);
 
-    // Applique aussi les EQ bands selon le preset
-    const eqPresets = this.getEQPreset(preset);
-    eqPresets.forEach((band, i) => {
+    const eqPreset = this.getEQPreset(preset);
+    eqPreset.forEach((band, i) => {
       this.setEQBand(i, band.frequency, band.gain, band.q);
     });
+
+    if (preset === 'warm' || preset === 'balanced') {
+      this.setMonoMaker(true, 120);
+    } else {
+      this.setMonoMaker(false);
+    }
   }
 
   getPresetValues(preset: MasteringPreset): PresetValues {
@@ -304,9 +355,21 @@ export class MasteringChain {
     this.eqMid.disconnect();
     this.saturator.disconnect();
     this.stereoWidener.disconnect();
-    this.bassMonoFilter.disconnect();
-    this.bassMonoSplitter.disconnect();
-    this.bassMonoMerger.disconnect();
+    this.monoMakerInput.disconnect();
+    this.monoMakerOutput.disconnect();
+    this.monoMakerSplitter.disconnect();
+    this.monoMakerMerger.disconnect();
+    this.monoMakerBassL.disconnect();
+    this.monoMakerBassR.disconnect();
+    this.monoMakerHighL.disconnect();
+    this.monoMakerHighR.disconnect();
+    this.monoMakerBassGainL.disconnect();
+    this.monoMakerBassGainR.disconnect();
+    this.monoMakerBassMono.disconnect();
+    this.monoMakerMixL.disconnect();
+    this.monoMakerMixR.disconnect();
+    this.monoMakerWetGain.disconnect();
+    this.monoMakerDryGain.disconnect();
     this.limiter.disconnect();
     this.bypassGain.disconnect();
     this.processedGain.disconnect();

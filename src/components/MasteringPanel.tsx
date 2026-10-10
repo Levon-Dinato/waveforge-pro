@@ -4,6 +4,7 @@ import { AudioAnalyzer, type AudioMetrics } from '../audio/audioAnalyzer';
 import { MasteringChain, type MasteringPreset, DEFAULT_EQ_BANDS, type EQBand } from '../audio/masteringChain';
 import { Knob } from './Knob';
 import { EQPanel } from './EQPanel';
+import { MonoMakerPanel } from './MonoMakerPanel';
 import { exportMasteredWav, downloadBlob } from '../audio/masteringExporter';
 
 interface MasteringPanelProps {
@@ -19,7 +20,6 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
   sourceBuffer,
   onExport,
 }) => {
-  // --- États ---
   const [preset, setPreset] = useState<MasteringPreset>('balanced');
   const [isBypassed, setIsBypassed] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -31,43 +31,32 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
     dr: 0,
   });
 
-  // Knobs
   const [loudness, setLoudness] = useState(0);
   const [presence, setPresence] = useState(0);
   const [width, setWidth] = useState(0);
   const [saturation, setSaturation] = useState(0);
 
-  // ✅ NOUVEAU : EQ 5 bandes
   const [eqBands, setEqBands] = useState<EQBand[]>(DEFAULT_EQ_BANDS);
-  const [showEQ, setShowEQ] = useState(true); // Ouvert par défaut
+  const [showEQ, setShowEQ] = useState(true);
 
-  // --- Refs ---
+  // Mono-Maker
+  const [monoMakerEnabled, setMonoMakerEnabled] = useState(false);
+  const [monoMakerFreq, setMonoMakerFreq] = useState(120);
+
   const chainRef = useRef<MasteringChain | null>(null);
   const analyzerRef = useRef<AudioAnalyzer | null>(null);
 
-  // --- Initialisation de la chaîne ---
+  // Init chaîne
   useEffect(() => {
-    if (!audioContext) {
-      console.warn('⚠️ MasteringPanel : audioContext est null');
-      return;
-    }
-
-    console.log('🎚️ Initialisation de la chaîne de mastering...');
+    if (!audioContext) return;
 
     const chain = new MasteringChain(audioContext);
-    if (sourceNode) {
-      chain.connect(sourceNode);
-      console.log('🔌 sourceNode connecté à la chaîne');
-    } else {
-      console.log('⏳ sourceNode est null, la chaîne sera connectée plus tard');
-    }
+    if (sourceNode) chain.connect(sourceNode);
     chainRef.current = chain;
 
     const analyzer = new AudioAnalyzer(audioContext);
     const outputNode = chain.getOutputNode();
-    if (outputNode) {
-      analyzer.connect(outputNode);
-    }
+    if (outputNode) analyzer.connect(outputNode);
     analyzerRef.current = analyzer;
 
     return () => {
@@ -78,58 +67,42 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
     };
   }, [audioContext]);
 
-  // --- Reconnexion sourceNode ---
   useEffect(() => {
     if (!chainRef.current || !sourceNode) return;
     chainRef.current.connect(sourceNode);
-    console.log('🔌 Reconnexion de sourceNode à la chaîne de mastering');
   }, [sourceNode]);
 
-  // --- Démarrage / arrêt de l'analyse ---
   useEffect(() => {
     if (!analyzerRef.current) return;
-
     if (isAnalyzing) {
-      console.log('▶ Analyse démarrée');
-      analyzerRef.current.start((newMetrics: AudioMetrics) => {
-        setMetrics(newMetrics);
-      });
+      analyzerRef.current.start((newMetrics) => setMetrics(newMetrics));
     } else {
       analyzerRef.current.stop();
     }
-
     return () => {
-      if (analyzerRef.current) {
-        analyzerRef.current.stop();
-      }
+      if (analyzerRef.current) analyzerRef.current.stop();
     };
   }, [isAnalyzing]);
 
-  // --- Application des paramètres ---
   useEffect(() => {
     const chain = chainRef.current;
     if (!chain) return;
-
     chain.setLoudness(loudness);
     chain.setPresence(presence);
     chain.setWidth(width);
     chain.setSaturation(saturation);
   }, [loudness, presence, width, saturation]);
 
-  // --- Application du preset ---
   useEffect(() => {
     const chain = chainRef.current;
     if (!chain) {
-      // Fallback
-      const fallbackValues: Record<MasteringPreset, {
-        loudness: number; presence: number; width: number; saturation: number;
-      }> = {
+      const fallback: Record<MasteringPreset, any> = {
         warm: { loudness: -1, presence: -1, width: 1.1, saturation: 0.15 },
         balanced: { loudness: -2, presence: 0, width: 1.0, saturation: 0.08 },
         open: { loudness: -3, presence: 2.5, width: 1.3, saturation: 0.05 },
         master: { loudness: 0, presence: 0, width: 1.0, saturation: 0 },
       };
-      const v = fallbackValues[preset];
+      const v = fallback[preset];
       setLoudness(v.loudness);
       setPresence(v.presence);
       setWidth(v.width);
@@ -138,14 +111,12 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
     }
 
     chain.applyPreset(preset);
-
     const presetValues = chain.getPresetValues(preset);
     setLoudness(presetValues.loudness);
     setPresence(presetValues.presence);
     setWidth(presetValues.width);
     setSaturation(presetValues.saturation);
 
-    // ✅ Applique aussi les EQ bands du preset
     const eqPreset = chain.getEQPreset(preset);
     const newBands = DEFAULT_EQ_BANDS.map((band, i) => ({
       ...band,
@@ -154,58 +125,64 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
       q: eqPreset[i].q,
     }));
     setEqBands(newBands);
+
+    // Sync Mono-Maker state depuis le chain
+    setMonoMakerEnabled(preset === 'warm' || preset === 'balanced');
+    setMonoMakerFreq(120);
   }, [preset, audioContext]);
 
-  // --- Gestion du bypass ---
   useEffect(() => {
     const chain = chainRef.current;
     if (!chain) return;
-
     chain.setBypass(isBypassed);
   }, [isBypassed]);
 
-  // ✅ NOUVEAU : Changement d'une bande EQ
   const handleEQChange = useCallback(
     (index: number, frequency: number, gain: number, q: number) => {
       const newBands = [...eqBands];
       newBands[index] = { ...newBands[index], frequency, gain, q };
       setEqBands(newBands);
-
       const chain = chainRef.current;
-      if (chain) {
-        chain.setEQBand(index, frequency, gain, q);
-      }
+      if (chain) chain.setEQBand(index, frequency, gain, q);
     },
     [eqBands]
   );
 
-  // ✅ NOUVEAU : Reset EQ
   const handleEQReset = useCallback(() => {
-    const resetBands = DEFAULT_EQ_BANDS.map((band) => ({
-      ...band,
-      gain: 0,
-    }));
+    const resetBands = DEFAULT_EQ_BANDS.map((band) => ({ ...band, gain: 0 }));
     setEqBands(resetBands);
-
     const chain = chainRef.current;
     if (chain) {
-      resetBands.forEach((band, i) => {
-        chain.setEQBand(i, band.frequency, 0, band.q);
-      });
+      resetBands.forEach((band, i) => chain.setEQBand(i, band.frequency, 0, band.q));
     }
   }, []);
 
-  // --- Export WAV ---
+  const handleMonoMakerToggle = useCallback(
+    (enabled: boolean) => {
+      setMonoMakerEnabled(enabled);
+      const chain = chainRef.current;
+      if (chain) chain.setMonoMaker(enabled, monoMakerFreq);
+    },
+    [monoMakerFreq]
+  );
+
+  const handleMonoMakerFreqChange = useCallback(
+    (freq: number) => {
+      setMonoMakerFreq(freq);
+      const chain = chainRef.current;
+      if (chain) chain.setMonoMaker(monoMakerEnabled, freq);
+    },
+    [monoMakerEnabled]
+  );
+
   const handleExport = useCallback(async () => {
     if (!sourceBuffer) {
       alert("Veuillez d'abord charger un fichier audio.");
       return;
     }
-
     try {
       setIsExporting(true);
       setExportProgress(0);
-
       const blob = await exportMasteredWav({
         buffer: sourceBuffer,
         preset,
@@ -215,10 +192,8 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
         saturation,
         onProgress: (p) => setExportProgress(p),
       });
-
       const filename = `waveforge-master-${preset}-${Date.now()}.wav`;
       downloadBlob(blob, filename);
-
       if (onExport) onExport(preset);
     } catch (error) {
       console.error("Erreur lors de l'export :", error);
@@ -229,7 +204,6 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
     }
   }, [sourceBuffer, preset, loudness, presence, width, saturation, onExport]);
 
-  // --- Rendu des métriques ---
   const renderMetric = (label: string, value: number, unit: string, color: string) => (
     <div
       style={{
@@ -251,7 +225,6 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
     </div>
   );
 
-  // --- Rendu d'un preset ---
   const renderPresetButton = (p: MasteringPreset, label: string) => (
     <button
       key={p}
@@ -324,7 +297,7 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
         </div>
       </div>
 
-      {/* ✅ NOUVEAU : EQ 5 BANDES */}
+      {/* EQ 5 bandes */}
       <div style={{ marginBottom: '20px' }}>
         <div
           style={{
@@ -363,7 +336,17 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
         )}
       </div>
 
-      {/* Métriques Live */}
+      {/* Mono-Maker */}
+      <div style={{ marginBottom: '20px' }}>
+        <MonoMakerPanel
+          enabled={monoMakerEnabled}
+          frequency={monoMakerFreq}
+          onToggle={handleMonoMakerToggle}
+          onFrequencyChange={handleMonoMakerFreqChange}
+        />
+      </div>
+
+      {/* Métriques */}
       <div style={{ marginBottom: '20px' }}>
         <div style={{ fontSize: '10px', color: '#666', marginBottom: '8px', letterSpacing: '1px' }}>
           LIVE METRICS
@@ -381,47 +364,10 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
           PARAMETERS
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center' }}>
-          <Knob
-            label="Loudness"
-            value={loudness}
-            min={-12}
-            max={12}
-            step={0.1}
-            unit="dB"
-            color="#00d9ff"
-            onChange={setLoudness}
-          />
-          <Knob
-            label="Presence"
-            value={presence}
-            min={-12}
-            max={12}
-            step={0.1}
-            unit="dB"
-            color="#00d9ff"
-            onChange={setPresence}
-          />
-          <Knob
-            label="Width"
-            value={width}
-            min={0}
-            max={2}
-            step={0.01}
-            unit="x"
-            color="#00d9ff"
-            onChange={setWidth}
-          />
-          <Knob
-            label="Saturation"
-            value={saturation}
-            min={0}
-            max={1}
-            step={0.01}
-            unit="%"
-            color="#00d9ff"
-            onChange={setSaturation}
-            formatValue={(v) => `${(v * 100).toFixed(0)}`}
-          />
+          <Knob label="Loudness" value={loudness} min={-12} max={12} step={0.1} unit="dB" color="#00d9ff" onChange={setLoudness} />
+          <Knob label="Presence" value={presence} min={-12} max={12} step={0.1} unit="dB" color="#00d9ff" onChange={setPresence} />
+          <Knob label="Width" value={width} min={0} max={2} step={0.01} unit="x" color="#00d9ff" onChange={setWidth} />
+          <Knob label="Saturation" value={saturation} min={0} max={1} step={0.01} unit="%" color="#00d9ff" onChange={setSaturation} formatValue={(v) => `${(v * 100).toFixed(0)}`} />
         </div>
       </div>
 
@@ -465,7 +411,7 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
         </button>
       </div>
 
-      {/* Export WAV masterisé */}
+      {/* Export */}
       <button
         onClick={handleExport}
         disabled={isExporting || !sourceBuffer}
@@ -485,24 +431,10 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
           fontSize: '12px',
           letterSpacing: '2px',
           textTransform: 'uppercase',
-          boxShadow: !sourceBuffer
-            ? 'none'
-            : '0 4px 16px rgba(0, 217, 255, 0.3)',
+          boxShadow: !sourceBuffer ? 'none' : '0 4px 16px rgba(0, 217, 255, 0.3)',
           transition: 'all 0.2s',
           position: 'relative',
           overflow: 'hidden',
-        }}
-        onMouseEnter={(e) => {
-          if (!isExporting && sourceBuffer) {
-            e.currentTarget.style.transform = 'translateY(-1px)';
-            e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 217, 255, 0.4)';
-          }
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.transform = 'translateY(0)';
-          e.currentTarget.style.boxShadow = !sourceBuffer
-            ? 'none'
-            : '0 4px 16px rgba(0, 217, 255, 0.3)';
         }}
       >
         {isExporting
@@ -525,17 +457,8 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
         )}
       </button>
 
-      {/* Footer info */}
-      <div
-        style={{
-          marginTop: '15px',
-          fontSize: '9px',
-          color: '#333',
-          textAlign: 'center',
-          letterSpacing: '1px',
-        }}
-      >
-        WAVEFORGE PRO · MASTERING ENGINE v1.1 · EQ 5 BANDES
+      <div style={{ marginTop: '15px', fontSize: '9px', color: '#333', textAlign: 'center', letterSpacing: '1px' }}>
+        WAVEFORGE PRO · MASTERING ENGINE v1.2 · EQ + MONO-MAKER
       </div>
     </div>
   );

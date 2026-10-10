@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { checkMusicGenHealth, generateMusic } from '../audio/musicgenClient';
 import { musicgenHistory, type MusicGenHistoryEntry } from '../utils/musicgenHistory';
+import { AudioPlayer } from '../components/AudioPlayer';
 
 const PRESETS = [
   { id: 'lofi', label: 'Lo-Fi Chill', prompt: 'lofi hip hop beat, chill, jazzy, warm piano, vinyl crackle', color: '#ffd43b' },
@@ -414,7 +415,15 @@ export const MusicGenPage: React.FC = () => {
             <div className="mono" style={{ fontSize: 10, color: '#666' }}>⚡ {result.generationTime}s de calcul</div>
           </div>
 
-          <div style={{ fontSize: 10, color: '#888', marginBottom: 10, fontStyle: 'italic' }}>"{result.prompt}"</div>
+          <div style={{ marginBottom: 12 }}>
+  <AudioPlayer
+    src={result.audioUrl}
+    title="Morceau généré"
+    subtitle={result.prompt}
+    color="#00ff88"
+    onDownload={() => handleDownload(result.audioUrl, `musicgen-${Date.now()}.wav`)}
+  />
+</div>
 
           <audio src={result.audioUrl} controls style={{ width: '100%', marginBottom: 12 }} />
 
@@ -449,7 +458,12 @@ export const MusicGenPage: React.FC = () => {
                   <button onClick={() => handleDownload(h.audioUrl, `musicgen-${h.id}.wav`)} className="btn-action" style={{ fontSize: 10, padding: '4px 10px' }} title="Télécharger">💾</button>
                   <button onClick={() => handleDeleteEntry(h.id)} className="btn-action" style={{ fontSize: 10, padding: '4px 10px', color: '#ff3366', borderColor: 'rgba(255, 51, 102, 0.3)' }} title="Supprimer">✕</button>
                 </div>
-                <audio src={h.audioUrl} controls style={{ width: '100%', height: 28 }} />
+                <AudioPlayer
+  src={h.audioUrl}
+  subtitle={new Date(h.timestamp).toLocaleTimeString('fr-FR') + ` · ${h.duration}s · ⚡ ${h.generationTime}s`}
+  color="#00ff88"
+  compact
+/>
               </div>
             ))}
           </div>

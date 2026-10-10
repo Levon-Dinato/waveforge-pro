@@ -1,7 +1,9 @@
 // src/pages/MusicGenPage.tsx
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { checkMusicGenHealth, generateMusic } from '../audio/musicgenClient';
 import { musicgenHistory, type MusicGenHistoryEntry } from '../utils/musicgenHistory';
+import { audioTransfer } from '../utils/audioTransfer';
 import { AudioPlayer } from '../components/AudioPlayer';
 import { useIsMobile } from '../hooks/useIsMobile';
 
@@ -19,7 +21,6 @@ const PRESETS = [
 ];
 
 type SortOption = 'recent' | 'old' | 'duration' | 'az';
-
 const SORT_OPTIONS: { value: SortOption; label: string; icon: string }[] = [
   { value: 'recent', label: 'Récents', icon: '🕐' },
   { value: 'old', label: 'Anciens', icon: '📅' },
@@ -29,6 +30,7 @@ const SORT_OPTIONS: { value: SortOption; label: string; icon: string }[] = [
 
 export const MusicGenPage: React.FC = () => {
   const isMobile = useIsMobile(768);
+  const navigate = useNavigate();
   const [isOnline, setIsOnline] = useState<boolean | null>(null);
   const [prompt, setPrompt] = useState('');
   const [duration, setDuration] = useState(8);
@@ -40,12 +42,8 @@ export const MusicGenPage: React.FC = () => {
   const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
   const [history, setHistory] = useState<(MusicGenHistoryEntry & { audioUrl: string })[]>([]);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
-
-  // Renommage
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState('');
-
-  // ✅ NOUVEAU : Filtres & tri
   const [searchQuery, setSearchQuery] = useState('');
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [sortBy, setSortBy] = useState<SortOption>('recent');
@@ -55,9 +53,6 @@ export const MusicGenPage: React.FC = () => {
   const timerRef = useRef<number | null>(null);
   const failCountRef = useRef(0);
 
-  // ============================================================
-  // HEALTH CHECK
-  // ============================================================
   useEffect(() => {
     if (isGenerating) return;
     const check = async () => {
@@ -75,9 +70,6 @@ export const MusicGenPage: React.FC = () => {
     return () => clearInterval(int);
   }, [isGenerating]);
 
-  // ============================================================
-  // CHARGEMENT INITIAL
-  // ============================================================
   useEffect(() => {
     loadHistory();
     try {
@@ -94,13 +86,8 @@ export const MusicGenPage: React.FC = () => {
     setHistory(withUrls);
   };
 
-  // ============================================================
-  // ✅ NOUVEAU : LISTE FILTRÉE & TRIÉE
-  // ============================================================
   const filteredHistory = useMemo(() => {
     let result = [...history];
-
-    // 1. Filtre recherche
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim();
       result = result.filter((h) => {
@@ -109,23 +96,13 @@ export const MusicGenPage: React.FC = () => {
         return title.includes(q) || prmpt.includes(q);
       });
     }
-
-    // 2. Filtre favoris
     if (showFavoritesOnly) {
       result = result.filter((h) => favorites.has(h.id));
     }
-
-    // 3. Tri
     switch (sortBy) {
-      case 'recent':
-        result.sort((a, b) => b.timestamp - a.timestamp);
-        break;
-      case 'old':
-        result.sort((a, b) => a.timestamp - b.timestamp);
-        break;
-      case 'duration':
-        result.sort((a, b) => b.duration - a.duration);
-        break;
+      case 'recent': result.sort((a, b) => b.timestamp - a.timestamp); break;
+      case 'old': result.sort((a, b) => a.timestamp - b.timestamp); break;
+      case 'duration': result.sort((a, b) => b.duration - a.duration); break;
       case 'az':
         result.sort((a, b) => {
           const aTitle = (a.title || a.prompt).toLowerCase();
@@ -134,13 +111,9 @@ export const MusicGenPage: React.FC = () => {
         });
         break;
     }
-
     return result;
   }, [history, searchQuery, showFavoritesOnly, favorites, sortBy]);
 
-  // ============================================================
-  // GÉNÉRATION
-  // ============================================================
   const estimatedTime = duration * 8;
 
   const handleGenerate = async () => {
@@ -168,7 +141,6 @@ export const MusicGenPage: React.FC = () => {
         setStatus
       );
       setProgress(100);
-
       const blob = await fetch(res.audioUrl).then((r) => r.blob());
       const entry: MusicGenHistoryEntry = {
         id: `mg-${Date.now()}`,
@@ -203,9 +175,6 @@ export const MusicGenPage: React.FC = () => {
     if (timerRef.current) clearInterval(timerRef.current);
   };
 
-  // ============================================================
-  // ACTIONS
-  // ============================================================
   const handleDownload = (url: string, name: string) => {
     const a = document.createElement('a');
     a.href = url;
@@ -221,6 +190,13 @@ export const MusicGenPage: React.FC = () => {
     else newFavs.add(id);
     setFavorites(newFavs);
     localStorage.setItem('waveforge-musicgen-favs', JSON.stringify([...newFavs]));
+  };
+
+  // ✅ NOUVEAU : Envoyer vers Studio ou Mastering
+  const handleTransfer = async (entry: MusicGenHistoryEntry, target: 'studio' | 'mastering') => {
+    const filename = `${(entry.title || entry.prompt).replace(/[^a-z0-9]/gi, '-').slice(0, 40)}.wav`;
+    await audioTransfer.save(entry.audioBlob, filename, target);
+    navigate(target === 'studio' ? '/studio' : '/mastering');
   };
 
   const handleDelete = async (id: string) => {
@@ -255,9 +231,6 @@ export const MusicGenPage: React.FC = () => {
     setEditingTitle('');
   };
 
-  // ============================================================
-  // RENDU
-  // ============================================================
   return (
     <div
       className="fade-in"
@@ -270,9 +243,7 @@ export const MusicGenPage: React.FC = () => {
         minHeight: isMobile ? 'auto' : 'calc(100vh - 40px)',
       }}
     >
-      {/* ============================================================ */}
       {/* COLONNE GAUCHE : CRÉATION */}
-      {/* ============================================================ */}
       <div
         className="panel"
         style={{
@@ -285,7 +256,6 @@ export const MusicGenPage: React.FC = () => {
           overflow: 'hidden',
         }}
       >
-        {/* Header du panneau */}
         <div
           style={{
             padding: 16,
@@ -298,12 +268,7 @@ export const MusicGenPage: React.FC = () => {
           <div>
             <div
               className="label-uppercase"
-              style={{
-                fontSize: 10,
-                color: '#666',
-                letterSpacing: '1px',
-                marginBottom: 4,
-              }}
+              style={{ fontSize: 10, color: '#666', letterSpacing: '1px', marginBottom: 4 }}
             >
               CRÉATION
             </div>
@@ -343,25 +308,14 @@ export const MusicGenPage: React.FC = () => {
                 height: 6,
                 borderRadius: '50%',
                 background: isGenerating ? '#00d9ff' : isOnline ? '#00ff88' : '#ff3366',
-                boxShadow: isGenerating
-                  ? '0 0 8px #00d9ff'
-                  : isOnline
-                  ? '0 0 8px #00ff88'
-                  : 'none',
+                boxShadow: isGenerating ? '0 0 8px #00d9ff' : isOnline ? '0 0 8px #00ff88' : 'none',
               }}
             />
             {isGenerating ? 'CALCUL' : isOnline === null ? '...' : isOnline ? 'ONLINE' : 'OFFLINE'}
           </div>
         </div>
 
-        {/* Contenu */}
-        <div
-          style={{
-            flex: 1,
-            overflowY: isMobile ? 'visible' : 'auto',
-            padding: 16,
-          }}
-        >
+        <div style={{ flex: 1, overflowY: isMobile ? 'visible' : 'auto', padding: 16 }}>
           {isOnline === false && !isGenerating && (
             <div
               style={{
@@ -382,16 +336,10 @@ export const MusicGenPage: React.FC = () => {
             </div>
           )}
 
-          {/* PRESETS */}
           <div style={{ marginBottom: 16 }}>
             <div
               className="label-uppercase"
-              style={{
-                fontSize: 9,
-                color: '#666',
-                letterSpacing: '1px',
-                marginBottom: 8,
-              }}
+              style={{ fontSize: 9, color: '#666', letterSpacing: '1px', marginBottom: 8 }}
             >
               STYLE RAPIDE
             </div>
@@ -422,16 +370,10 @@ export const MusicGenPage: React.FC = () => {
             </div>
           </div>
 
-          {/* DESCRIPTION */}
           <div style={{ marginBottom: 16 }}>
             <div
               className="label-uppercase"
-              style={{
-                fontSize: 9,
-                color: '#666',
-                letterSpacing: '1px',
-                marginBottom: 8,
-              }}
+              style={{ fontSize: 9, color: '#666', letterSpacing: '1px', marginBottom: 8 }}
             >
               DESCRIPTION
             </div>
@@ -457,7 +399,6 @@ export const MusicGenPage: React.FC = () => {
             />
           </div>
 
-          {/* DURÉE */}
           <div style={{ marginBottom: 16 }}>
             <div
               style={{
@@ -467,10 +408,7 @@ export const MusicGenPage: React.FC = () => {
                 marginBottom: 6,
               }}
             >
-              <div
-                className="label-uppercase"
-                style={{ fontSize: 9, color: '#666', letterSpacing: '1px' }}
-              >
+              <div className="label-uppercase" style={{ fontSize: 9, color: '#666', letterSpacing: '1px' }}>
                 DURÉE
               </div>
               <span className="mono" style={{ fontSize: 11, color: '#00ff88', fontWeight: 700 }}>
@@ -501,7 +439,6 @@ export const MusicGenPage: React.FC = () => {
             </div>
           </div>
 
-          {/* CRÉATIVITÉ */}
           <div style={{ marginBottom: 16 }}>
             <div
               style={{
@@ -511,10 +448,7 @@ export const MusicGenPage: React.FC = () => {
                 marginBottom: 6,
               }}
             >
-              <div
-                className="label-uppercase"
-                style={{ fontSize: 9, color: '#666', letterSpacing: '1px' }}
-              >
+              <div className="label-uppercase" style={{ fontSize: 9, color: '#666', letterSpacing: '1px' }}>
                 CRÉATIVITÉ
               </div>
               <span className="mono" style={{ fontSize: 11, color: '#00d9ff', fontWeight: 700 }}>
@@ -545,7 +479,6 @@ export const MusicGenPage: React.FC = () => {
             </div>
           </div>
 
-          {/* PROGRESSION */}
           {isGenerating && (
             <div
               style={{
@@ -590,7 +523,6 @@ export const MusicGenPage: React.FC = () => {
           )}
         </div>
 
-        {/* BOUTON GÉNÉRER */}
         <div
           style={{
             padding: 16,
@@ -650,11 +582,8 @@ export const MusicGenPage: React.FC = () => {
         </div>
       </div>
 
-      {/* ============================================================ */}
-      {/* COLONNE DROITE : LISTE DES MORCEAUX */}
-      {/* ============================================================ */}
+      {/* COLONNE DROITE : LISTE */}
       <div style={{ minWidth: 0 }}>
-        {/* Header */}
         <div
           style={{
             display: 'flex',
@@ -671,7 +600,8 @@ export const MusicGenPage: React.FC = () => {
             </h2>
             <p style={{ color: '#888', fontSize: 11, margin: '4px 0 0' }}>
               MusicGen (Meta) · 100% local · {history.length} morceau{history.length > 1 ? 'x' : ''}
-              {filteredHistory.length !== history.length && ` · ${filteredHistory.length} affiché${filteredHistory.length > 1 ? 's' : ''}`}
+              {filteredHistory.length !== history.length &&
+                ` · ${filteredHistory.length} affiché${filteredHistory.length > 1 ? 's' : ''}`}
             </p>
           </div>
 
@@ -695,7 +625,6 @@ export const MusicGenPage: React.FC = () => {
           )}
         </div>
 
-        {/* ✅ BARRE DE FILTRES */}
         {history.length > 0 && (
           <div
             className="panel"
@@ -708,7 +637,6 @@ export const MusicGenPage: React.FC = () => {
               alignItems: 'center',
             }}
           >
-            {/* Recherche */}
             <div style={{ flex: 1, minWidth: isMobile ? '100%' : 200, position: 'relative' }}>
               <input
                 type="text"
@@ -749,7 +677,6 @@ export const MusicGenPage: React.FC = () => {
               )}
             </div>
 
-            {/* Bouton Favoris */}
             <button
               onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
               style={{
@@ -771,7 +698,6 @@ export const MusicGenPage: React.FC = () => {
               {showFavoritesOnly ? '❤️' : '🤍'} Favoris
             </button>
 
-            {/* Menu de tri */}
             <div style={{ position: 'relative' }}>
               <button
                 onClick={() => setShowSortMenu(!showSortMenu)}
@@ -797,16 +723,10 @@ export const MusicGenPage: React.FC = () => {
 
               {showSortMenu && (
                 <>
-                  {/* Overlay pour fermer */}
                   <div
                     onClick={() => setShowSortMenu(false)}
-                    style={{
-                      position: 'fixed',
-                      inset: 0,
-                      zIndex: 50,
-                    }}
+                    style={{ position: 'fixed', inset: 0, zIndex: 50 }}
                   />
-                  {/* Menu */}
                   <div
                     style={{
                       position: 'absolute',
@@ -834,19 +754,14 @@ export const MusicGenPage: React.FC = () => {
                           gap: 8,
                           width: '100%',
                           padding: '8px 12px',
-                          background: sortBy === opt.value ? 'rgba(0, 255, 136, 0.1)' : 'transparent',
+                          background:
+                            sortBy === opt.value ? 'rgba(0, 255, 136, 0.1)' : 'transparent',
                           border: 'none',
                           color: sortBy === opt.value ? '#00ff88' : '#ccc',
                           fontSize: 11,
                           cursor: 'pointer',
                           textAlign: 'left',
                           fontWeight: sortBy === opt.value ? 600 : 400,
-                        }}
-                        onMouseEnter={(e) => {
-                          if (sortBy !== opt.value) e.currentTarget.style.background = 'var(--bg-1)';
-                        }}
-                        onMouseLeave={(e) => {
-                          if (sortBy !== opt.value) e.currentTarget.style.background = 'transparent';
                         }}
                       >
                         {opt.icon} {opt.label}
@@ -860,7 +775,6 @@ export const MusicGenPage: React.FC = () => {
           </div>
         )}
 
-        {/* État vide (aucun historique) */}
         {history.length === 0 && !isGenerating && (
           <div
             className="panel"
@@ -890,7 +804,6 @@ export const MusicGenPage: React.FC = () => {
           </div>
         )}
 
-        {/* État vide (filtres) */}
         {history.length > 0 && filteredHistory.length === 0 && (
           <div
             className="panel"
@@ -923,12 +836,12 @@ export const MusicGenPage: React.FC = () => {
           </div>
         )}
 
-        {/* Liste des morceaux */}
         <div style={{ display: 'grid', gap: 12 }}>
           {filteredHistory.map((h, index) => {
             const isFav = favorites.has(h.id);
             const isEditing = editingId === h.id;
-            const isNewest = index === 0 && sortBy === 'recent' && !searchQuery && !showFavoritesOnly;
+            const isNewest =
+              index === 0 && sortBy === 'recent' && !searchQuery && !showFavoritesOnly;
             const date = new Date(h.timestamp);
             const dateStr = date.toLocaleString('fr-FR', {
               day: '2-digit',
@@ -943,16 +856,17 @@ export const MusicGenPage: React.FC = () => {
                 className="panel"
                 style={{
                   padding: 14,
-                  border: isNewest && !isGenerating
-                    ? '1px solid rgba(0, 255, 136, 0.3)'
-                    : '1px solid var(--border)',
-                  background: isNewest && !isGenerating
-                    ? 'linear-gradient(135deg, rgba(0, 255, 136, 0.03), transparent)'
-                    : undefined,
+                  border:
+                    isNewest && !isGenerating
+                      ? '1px solid rgba(0, 255, 136, 0.3)'
+                      : '1px solid var(--border)',
+                  background:
+                    isNewest && !isGenerating
+                      ? 'linear-gradient(135deg, rgba(0, 255, 136, 0.03), transparent)'
+                      : undefined,
                   transition: 'all 0.2s',
                 }}
               >
-                {/* En-tête du morceau */}
                 <div
                   style={{
                     display: 'flex',
@@ -962,16 +876,16 @@ export const MusicGenPage: React.FC = () => {
                     flexWrap: 'wrap',
                   }}
                 >
-                  {/* Numéro / Nouveau */}
                   <div
                     style={{
                       width: isMobile ? 32 : 36,
                       height: isMobile ? 32 : 36,
                       borderRadius: 8,
-                      background: isNewest && !isGenerating
-                        ? 'rgba(0, 255, 136, 0.15)'
-                        : 'var(--bg-1)',
-                      border: `1px solid ${isNewest && !isGenerating ? 'rgba(0, 255, 136, 0.4)' : 'var(--border)'}`,
+                      background:
+                        isNewest && !isGenerating ? 'rgba(0, 255, 136, 0.15)' : 'var(--bg-1)',
+                      border: `1px solid ${
+                        isNewest && !isGenerating ? 'rgba(0, 255, 136, 0.4)' : 'var(--border)'
+                      }`,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -984,10 +898,16 @@ export const MusicGenPage: React.FC = () => {
                     {isNewest && !isGenerating ? '★' : index + 1}
                   </div>
 
-                  {/* Titre + sous-titre (ÉDITABLE) */}
                   <div style={{ flex: 1, minWidth: 0 }}>
                     {isEditing ? (
-                      <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 4 }}>
+                      <div
+                        style={{
+                          display: 'flex',
+                          gap: 6,
+                          alignItems: 'center',
+                          marginBottom: 4,
+                        }}
+                      >
                         <input
                           type="text"
                           value={editingTitle}
@@ -1115,7 +1035,53 @@ export const MusicGenPage: React.FC = () => {
                   </div>
 
                   {/* Boutons actions */}
-                  <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      gap: 6,
+                      flexShrink: 0,
+                      flexWrap: 'wrap',
+                      justifyContent: 'flex-end',
+                    }}
+                  >
+                    <button
+                      onClick={() => handleTransfer(h, 'studio')}
+                      style={{
+                        width: isMobile ? 28 : 32,
+                        height: isMobile ? 28 : 32,
+                        borderRadius: 6,
+                        border: '1px solid rgba(0, 217, 255, 0.3)',
+                        background: 'rgba(0, 217, 255, 0.05)',
+                        color: '#00d9ff',
+                        fontSize: 14,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                      title="Envoyer au Studio (analyse MIDI)"
+                    >
+                      🎹
+                    </button>
+                    <button
+                      onClick={() => handleTransfer(h, 'mastering')}
+                      style={{
+                        width: isMobile ? 28 : 32,
+                        height: isMobile ? 28 : 32,
+                        borderRadius: 6,
+                        border: '1px solid rgba(124, 92, 255, 0.3)',
+                        background: 'rgba(124, 92, 255, 0.05)',
+                        color: '#7c5cff',
+                        fontSize: 14,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                      title="Envoyer au Mastering"
+                    >
+                      🎚️
+                    </button>
                     <button
                       onClick={() => toggleFavorite(h.id)}
                       style={{
@@ -1176,14 +1142,12 @@ export const MusicGenPage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Player LED */}
                 <AudioPlayer src={h.audioUrl} color="#00ff88" compact />
               </div>
             );
           })}
         </div>
 
-        {/* Message pendant génération */}
         {isGenerating && (
           <div
             className="panel"

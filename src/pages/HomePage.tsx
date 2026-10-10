@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAudioEngineContext } from '../contexts/AudioEngineContext';
+import { useIsMobile } from '../hooks/useIsMobile';
 import { historyStore } from '../remix/historyStore';
 import type { RemixEntry } from '../remix/types';
 
@@ -11,55 +12,20 @@ interface ModuleCard {
   title: string;
   description: string;
   color: string;
-  badge?: string;
 }
 
 const MODULES: ModuleCard[] = [
-  {
-    to: '/studio',
-    icon: '🎹',
-    title: 'Studio',
-    description: 'Analyse audio → MIDI, quantisation, export multipiste',
-    color: '#00d9ff',
-  },
-  {
-    to: '/stems',
-    icon: '🎤',
-    title: 'Séparation de Stems',
-    description: 'Isolation voix/instrumental avec Demucs IA',
-    color: '#00ff88',
-  },
-  {
-    to: '/mastering',
-    icon: '🎚️',
-    title: 'Mastering',
-    description: 'Presets Warm/Balanced/Open/Master + analyse LUFS + WAV',
-    color: '#7c5cff',
-  },
-  {
-    to: '/remix',
-    icon: '🎛️',
-    title: 'Remix AI',
-    description: 'Transformation IA avec Treblo · apprentissage continu',
-    color: '#ff5cf0',
-  },
-  {
-    to: '/generator',
-    icon: '🎼',
-    title: 'Générateur',
-    description: 'Création de mélodies · Pop, Trap, Lo-Fi, Drill, House',
-    color: '#ffd43b',
-  },
-  {
-    to: '/settings',
-    icon: '⚙️',
-    title: 'Réglages',
-    description: 'Clé API Treblo · préférences · historique',
-    color: '#888',
-  },
+  { to: '/studio', icon: '🎹', title: 'Studio', description: 'Analyse audio → MIDI, quantisation, export multipiste', color: '#00d9ff' },
+  { to: '/stems', icon: '🎤', title: 'Séparation de Stems', description: 'Isolation voix/instrumental avec Demucs IA', color: '#00ff88' },
+  { to: '/mastering', icon: '🎚️', title: 'Mastering', description: 'Presets Warm/Balanced/Open/Master + analyse LUFS + WAV', color: '#7c5cff' },
+  { to: '/musicgen', icon: '🎵', title: 'Génération IA', description: 'Générer des morceaux avec MusicGen (Meta) · 100% local', color: '#00ff88' },
+  { to: '/generator', icon: '🎼', title: 'Générateur', description: 'Création de mélodies · Pop, Trap, Lo-Fi, Drill, House', color: '#ffd43b' },
+  { to: '/help', icon: '📖', title: 'Guide', description: 'Comment utiliser WaveForge pour débuter', color: '#00d9ff' },
+  { to: '/settings', icon: '⚙️', title: 'Réglages', description: 'Clé API Treblo · préférences · historique', color: '#888' },
 ];
 
 export const HomePage: React.FC = () => {
+  const isMobile = useIsMobile(768);
   const engine = useAudioEngineContext();
   const [recentRemixes, setRecentRemixes] = useState<RemixEntry[]>([]);
   const [stats, setStats] = useState({ total: 0, exported: 0, avgRating: 0 });
@@ -71,32 +37,33 @@ export const HomePage: React.FC = () => {
       setStats({
         total: all.length,
         exported: all.filter((e) => e.userAction === 'exported').length,
-        avgRating:
-          rated.length > 0
-            ? rated.reduce((s, e) => s + e.userRating, 0) / rated.length
-            : 0,
+        avgRating: rated.length > 0 ? rated.reduce((s, e) => s + e.userRating, 0) / rated.length : 0,
       });
     });
   }, []);
 
   const hasAudio = !!engine.audioBuffer;
-  const hasStems = false; // on pourra l'exposer plus tard via un contexte global
 
   return (
-    <div className="fade-in" style={{ padding: 20, display: 'grid', gap: 20 }}>
-      {/* === HERO === */}
+    <div
+      className="fade-in"
+      style={{
+        padding: isMobile ? 12 : 20,
+        display: 'grid',
+        gap: isMobile ? 14 : 20,
+      }}
+    >
+      {/* HERO */}
       <div
         className="panel"
         style={{
           position: 'relative',
           overflow: 'hidden',
-          padding: '28px 24px',
+          padding: isMobile ? '20px 16px' : '28px 24px',
           border: '1px solid rgba(0, 217, 255, 0.2)',
-          background:
-            'linear-gradient(135deg, rgba(0, 217, 255, 0.06) 0%, rgba(255, 92, 240, 0.04) 100%)',
+          background: 'linear-gradient(135deg, rgba(0, 217, 255, 0.06) 0%, rgba(255, 92, 240, 0.04) 100%)',
         }}
       >
-        {/* Cercles décoratifs */}
         <div
           style={{
             position: 'absolute',
@@ -105,29 +72,14 @@ export const HomePage: React.FC = () => {
             width: 200,
             height: 200,
             borderRadius: '50%',
-            background:
-              'radial-gradient(circle, rgba(0, 217, 255, 0.15) 0%, transparent 70%)',
+            background: 'radial-gradient(circle, rgba(0, 217, 255, 0.15) 0%, transparent 70%)',
             pointerEvents: 'none',
           }}
         />
-        <div
-          style={{
-            position: 'absolute',
-            bottom: -80,
-            right: 40,
-            width: 150,
-            height: 150,
-            borderRadius: '50%',
-            background:
-              'radial-gradient(circle, rgba(255, 92, 240, 0.12) 0%, transparent 70%)',
-            pointerEvents: 'none',
-          }}
-        />
-
         <div style={{ position: 'relative' }}>
           <h1
             style={{
-              fontSize: 26,
+              fontSize: isMobile ? 20 : 26,
               fontWeight: 700,
               margin: 0,
               marginBottom: 8,
@@ -146,22 +98,20 @@ export const HomePage: React.FC = () => {
               WaveForge PRO
             </span>
           </h1>
-          <p style={{ color: '#888', fontSize: 13, margin: 0, maxWidth: 600 }}>
+          <p style={{ color: '#888', fontSize: isMobile ? 11 : 13, margin: 0, maxWidth: 600 }}>
             Ton studio de production musicale IA · analyse audio, séparation de stems,
             mastering, remix IA et génération de mélodies — le tout dans le navigateur.
           </p>
         </div>
       </div>
 
-      {/* === STATUT DE SESSION === */}
+      {/* SESSION */}
       <div
         className="panel"
         style={{
           padding: 16,
           borderColor: hasAudio ? 'rgba(0, 255, 136, 0.25)' : 'var(--border)',
-          background: hasAudio
-            ? 'linear-gradient(135deg, rgba(0, 255, 136, 0.03), transparent)'
-            : undefined,
+          background: hasAudio ? 'linear-gradient(135deg, rgba(0, 255, 136, 0.03), transparent)' : undefined,
         }}
       >
         <div
@@ -204,31 +154,14 @@ export const HomePage: React.FC = () => {
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
-              gap: 12,
+              gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(auto-fit, minmax(120px, 1fr))',
+              gap: 10,
             }}
           >
             <StatBox label="FICHIER" value={engine.fileName || '—'} color="#00d9ff" />
-            <StatBox
-              label="DURÉE"
-              value={`${engine.result?.duration.toFixed(1)}s`}
-              color="#fff"
-            />
-            <StatBox
-              label="BPM"
-              value={engine.result?.bpm?.toString() ?? '—'}
-              color="#00d9ff"
-            />
-            <StatBox
-              label="NOTES"
-              value={engine.finalNotes.length.toString()}
-              color="#7c5cff"
-            />
-            <StatBox
-              label="SAMPLE RATE"
-              value={`${(engine.result?.sampleRate ?? 0) / 1000} kHz`}
-              color="#888"
-            />
+            <StatBox label="DURÉE" value={`${engine.result?.duration.toFixed(1)}s`} color="#fff" />
+            <StatBox label="BPM" value={engine.result?.bpm?.toString() ?? '—'} color="#00d9ff" />
+            <StatBox label="NOTES" value={engine.finalNotes.length.toString()} color="#7c5cff" />
           </div>
         ) : (
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
@@ -253,67 +186,33 @@ export const HomePage: React.FC = () => {
         )}
       </div>
 
-      {/* === STATISTIQUES GLOBALES === */}
+      {/* STATS */}
       <div>
         <div
           className="label-uppercase"
-          style={{
-            fontSize: 10,
-            color: '#666',
-            marginBottom: 12,
-            letterSpacing: '1px',
-          }}
+          style={{ fontSize: 10, color: '#666', marginBottom: 12, letterSpacing: '1px' }}
         >
           ACTIVITÉ GLOBALE
         </div>
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+            gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(auto-fit, minmax(160px, 1fr))',
             gap: 12,
           }}
         >
-          <BigStatCard
-            icon="🎛️"
-            label="REMIX IA"
-            value={stats.total}
-            color="#ff5cf0"
-            description="générations totales"
-          />
-          <BigStatCard
-            icon="💾"
-            label="EXPORTS"
-            value={stats.exported}
-            color="#51cf66"
-            description="fichiers sauvegardés"
-          />
-          <BigStatCard
-            icon="⭐"
-            label="NOTE MOYENNE"
-            value={stats.avgRating.toFixed(1)}
-            color="#ffd43b"
-            description="sur 5"
-          />
-          <BigStatCard
-            icon="🎵"
-            label="NOTES MIDI"
-            value={engine.finalNotes.length}
-            color="#00d9ff"
-            description="dans la session"
-          />
+          <BigStatCard icon="🎛️" label="REMIX IA" value={stats.total} color="#ff5cf0" description="générations totales" />
+          <BigStatCard icon="💾" label="EXPORTS" value={stats.exported} color="#51cf66" description="fichiers sauvegardés" />
+          <BigStatCard icon="⭐" label="NOTE MOYENNE" value={stats.avgRating.toFixed(1)} color="#ffd43b" description="sur 5" />
+          <BigStatCard icon="🎵" label="NOTES MIDI" value={engine.finalNotes.length} color="#00d9ff" description="dans la session" />
         </div>
       </div>
 
-      {/* === MODULES === */}
+      {/* MODULES */}
       <div>
         <div
           className="label-uppercase"
-          style={{
-            fontSize: 10,
-            color: '#666',
-            marginBottom: 12,
-            letterSpacing: '1px',
-          }}
+          style={{ fontSize: 10, color: '#666', marginBottom: 12, letterSpacing: '1px' }}
         >
           MODULES
         </div>
@@ -321,22 +220,17 @@ export const HomePage: React.FC = () => {
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-            gap: 16,
+            gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(280px, 1fr))',
+            gap: 12,
           }}
         >
           {MODULES.map((card) => (
-            <ModuleCardComponent
-              key={card.to}
-              card={card}
-              hasAudio={hasAudio}
-              hasStems={hasStems}
-            />
+            <ModuleCardComponent key={card.to} card={card} hasAudio={hasAudio} />
           ))}
         </div>
       </div>
 
-      {/* === ACTIVITÉ RÉCENTE === */}
+      {/* ACTIVITÉ RÉCENTE */}
       {recentRemixes.length > 0 && (
         <div>
           <div
@@ -375,8 +269,7 @@ export const HomePage: React.FC = () => {
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
-                  borderBottom:
-                    i < recentRemixes.length - 1 ? '1px solid var(--border)' : 'none',
+                  borderBottom: i < recentRemixes.length - 1 ? '1px solid var(--border)' : 'none',
                 }}
               >
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -399,59 +292,19 @@ export const HomePage: React.FC = () => {
                       hour: '2-digit',
                       minute: '2-digit',
                     })}
-                    {entry.sourceFileName && ` · ${entry.sourceFileName}`}
                   </div>
                 </div>
-                <div style={{ fontSize: 14, marginLeft: 12 }}>
-                  {'⭐'.repeat(entry.userRating)}
-                </div>
+                <div style={{ fontSize: 14, marginLeft: 12 }}>{'⭐'.repeat(entry.userRating)}</div>
               </div>
             ))}
           </div>
         </div>
       )}
-
-      {/* === RACCOURCIS === */}
-      <div className="panel" style={{ padding: 16 }}>
-        <div
-          className="label-uppercase"
-          style={{
-            fontSize: 10,
-            color: '#666',
-            marginBottom: 12,
-            letterSpacing: '1px',
-          }}
-        >
-          RACCOURCIS
-        </div>
-        <div
-          style={{
-            display: 'flex',
-            gap: 20,
-            flexWrap: 'wrap',
-            fontSize: 11,
-            color: '#888',
-          }}
-        >
-          <Shortcut keys={['Espace']} description="Play / Pause" />
-          <Shortcut keys={['Ctrl', 'O']} description="Ouvrir un fichier" />
-          <Shortcut keys={['Ctrl', 'S']} description="Sauvegarder le MIDI" />
-          <Shortcut keys={['Ctrl', 'R']} description="Recharger la page" />
-        </div>
-      </div>
     </div>
   );
 };
 
-/* ============================================================
-   SOUS-COMPOSANTS
-   ============================================================ */
-
-const StatBox: React.FC<{ label: string; value: string; color: string }> = ({
-  label,
-  value,
-  color,
-}) => (
+const StatBox: React.FC<{ label: string; value: string; color: string }> = ({ label, value, color }) => (
   <div
     style={{
       padding: '8px 12px',
@@ -461,10 +314,7 @@ const StatBox: React.FC<{ label: string; value: string; color: string }> = ({
       minWidth: 0,
     }}
   >
-    <div
-      className="label-uppercase"
-      style={{ fontSize: 8, color: '#666', marginBottom: 4 }}
-    >
+    <div className="label-uppercase" style={{ fontSize: 8, color: '#666', marginBottom: 4 }}>
       {label}
     </div>
     <div
@@ -493,46 +343,41 @@ const BigStatCard: React.FC<{
   <div
     className="panel"
     style={{
-      padding: 16,
+      padding: 14,
       display: 'flex',
       alignItems: 'center',
-      gap: 12,
+      gap: 10,
       borderColor: 'var(--border)',
       transition: 'all 0.2s ease',
     }}
     onMouseEnter={(e) => {
       e.currentTarget.style.borderColor = color;
-      e.currentTarget.style.transform = 'translateY(-2px)';
     }}
     onMouseLeave={(e) => {
       e.currentTarget.style.borderColor = 'var(--border)';
-      e.currentTarget.style.transform = 'translateY(0)';
     }}
   >
     <div
       style={{
-        width: 40,
-        height: 40,
+        width: 36,
+        height: 36,
         borderRadius: 8,
         background: `${color}15`,
         border: `1px solid ${color}40`,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        fontSize: 18,
+        fontSize: 16,
         flexShrink: 0,
       }}
     >
       {icon}
     </div>
     <div style={{ minWidth: 0 }}>
-      <div
-        className="label-uppercase"
-        style={{ fontSize: 8, color: '#666', marginBottom: 2 }}
-      >
+      <div className="label-uppercase" style={{ fontSize: 8, color: '#666', marginBottom: 2 }}>
         {label}
       </div>
-      <div className="mono" style={{ fontSize: 20, fontWeight: 700, color }}>
+      <div className="mono" style={{ fontSize: 18, fontWeight: 700, color }}>
         {value}
       </div>
       <div style={{ fontSize: 9, color: '#666' }}>{description}</div>
@@ -540,25 +385,13 @@ const BigStatCard: React.FC<{
   </div>
 );
 
-const ModuleCardComponent: React.FC<{
-  card: ModuleCard;
-  hasAudio: boolean;
-  hasStems: boolean;
-}> = ({ card, hasAudio, hasStems }) => {
-  // Détermine si le module a des données à afficher
-  const badgeText =
-    card.to === '/studio' && hasAudio
-      ? 'ACTIF'
-      : card.to === '/stems' && hasStems
-      ? 'PRÊT'
-      : undefined;
-
+const ModuleCardComponent: React.FC<{ card: ModuleCard; hasAudio: boolean }> = ({ card, hasAudio }) => {
   return (
     <Link to={card.to} style={{ textDecoration: 'none', color: 'inherit' }}>
       <div
         className="panel fade-in"
         style={{
-          padding: 20,
+          padding: 16,
           cursor: 'pointer',
           transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
           borderColor: 'var(--border)',
@@ -577,7 +410,6 @@ const ModuleCardComponent: React.FC<{
           e.currentTarget.style.boxShadow = 'none';
         }}
       >
-        {/* Halo décoratif */}
         <div
           style={{
             position: 'absolute',
@@ -591,79 +423,39 @@ const ModuleCardComponent: React.FC<{
           }}
         />
 
-        {/* Badge */}
-        {badgeText && (
-          <div
-            style={{
-              position: 'absolute',
-              top: 12,
-              right: 12,
-              padding: '2px 8px',
-              fontSize: 8,
-              fontWeight: 700,
-              letterSpacing: '0.5px',
-              borderRadius: 10,
-              background: `${card.color}20`,
-              border: `1px solid ${card.color}60`,
-              color: card.color,
-            }}
-          >
-            {badgeText}
-          </div>
-        )}
-
         <div
           style={{
-            width: 44,
-            height: 44,
+            width: 40,
+            height: 40,
             borderRadius: 10,
             background: `${card.color}12`,
             border: `1px solid ${card.color}30`,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: 22,
-            marginBottom: 16,
+            fontSize: 20,
+            marginBottom: 12,
             position: 'relative',
           }}
         >
           {card.icon}
         </div>
 
-        <h3
-          style={{
-            margin: 0,
-            marginBottom: 6,
-            fontSize: 14,
-            fontWeight: 700,
-            color: '#fff',
-            position: 'relative',
-          }}
-        >
+        <h3 style={{ margin: 0, marginBottom: 6, fontSize: 13, fontWeight: 700, color: '#fff' }}>
           {card.title}
         </h3>
 
-        <p
-          style={{
-            margin: 0,
-            fontSize: 11,
-            color: '#888',
-            lineHeight: 1.5,
-            position: 'relative',
-          }}
-        >
+        <p style={{ margin: 0, fontSize: 10, color: '#888', lineHeight: 1.5 }}>
           {card.description}
         </p>
 
-        {/* Flèche */}
         <div
           style={{
-            marginTop: 16,
-            fontSize: 11,
+            marginTop: 12,
+            fontSize: 10,
             color: card.color,
             fontWeight: 600,
             letterSpacing: '0.5px',
-            position: 'relative',
           }}
         >
           OUVRIR →
@@ -672,28 +464,3 @@ const ModuleCardComponent: React.FC<{
     </Link>
   );
 };
-
-const Shortcut: React.FC<{ keys: string[]; description: string }> = ({
-  keys,
-  description,
-}) => (
-  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-    {keys.map((k) => (
-      <kbd
-        key={k}
-        style={{
-          padding: '2px 6px',
-          background: 'var(--bg-2)',
-          border: '1px solid var(--border)',
-          borderRadius: 3,
-          fontSize: 10,
-          fontFamily: 'var(--font-mono)',
-          color: '#ccc',
-        }}
-      >
-        {k}
-      </kbd>
-    ))}
-    <span>{description}</span>
-  </div>
-);

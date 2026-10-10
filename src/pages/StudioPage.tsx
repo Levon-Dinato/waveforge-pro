@@ -1,5 +1,5 @@
 // src/pages/StudioPage.tsx
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { DropZone } from '../components/DropZone';
 import { Waveform } from '../components/Waveform';
 import { TrackSelector } from '../components/TrackSelector';
@@ -9,6 +9,7 @@ import { UploadProgress } from '../components/UploadProgress';
 import { Tooltip } from '../components/Tooltip';
 import { useAudioEngineContext } from '../contexts/AudioEngineContext';
 import { useIsMobile } from '../hooks/useIsMobile';
+import { audioTransfer } from '../utils/audioTransfer';
 import { exportMidi, download } from '../audio/midiExporter';
 import { detectSections } from '../audio/sectionDetector';
 import type { Section } from '../audio/sectionDetector';
@@ -28,6 +29,17 @@ export const StudioPage: React.FC = () => {
   const [quantize, setQuantize] = useState<QuantizeOptions>({ grid: 16, swing: 0, strength: 0.8 });
   const [trackEnabled, setTrackEnabled] = useState({ melody: true, bass: true, harmony: true, drums: true });
   const [uploadProgress] = useState({ visible: false, percent: 0, loaded: 0, total: 0, stage: 'upload' as const });
+
+  // ✅ NOUVEAU : Consommer un transfert de MusicGen
+  useEffect(() => {
+    audioTransfer.consume('studio').then((pending) => {
+      if (pending) {
+        const file = new File([pending.blob], pending.filename, { type: 'audio/wav' });
+        console.log('📥 Transfert reçu depuis MusicGen :', pending.filename);
+        engine.loadFile(file);
+      }
+    });
+  }, []);
 
   const formatTime = (t: number) => {
     const m = Math.floor(t / 60);
@@ -82,7 +94,6 @@ export const StudioPage: React.FC = () => {
         gap: isMobile ? 12 : 16,
       }}
     >
-      {/* HEADER */}
       <div>
         <h2 style={{ fontSize: isMobile ? 16 : 20, fontWeight: 700, margin: 0, marginBottom: 8 }}>
           🎹 <span style={{ color: 'var(--cyan)' }}>Studio</span>
@@ -94,7 +105,6 @@ export const StudioPage: React.FC = () => {
 
       <DropZone onFile={engine.loadFile} isAnalyzing={isAnalyzing} />
 
-      {/* WAVEFORM */}
       {result && (
         <div className="panel" style={{ overflow: 'hidden', borderColor: 'rgba(0, 217, 255, 0.15)' }}>
           <div
@@ -106,7 +116,14 @@ export const StudioPage: React.FC = () => {
               padding: '8px 12px',
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                width: '100%',
+                alignItems: 'center',
+              }}
+            >
               <span
                 style={{
                   fontSize: 11,
@@ -161,7 +178,6 @@ export const StudioPage: React.FC = () => {
         </div>
       )}
 
-      {/* TRANSPORT */}
       {result && (
         <div className="panel slide-in" style={{ overflow: 'visible' }}>
           <div className="panel-header">
@@ -171,14 +187,7 @@ export const StudioPage: React.FC = () => {
             </span>
           </div>
           <div className="panel-body">
-            <div
-              style={{
-                display: 'flex',
-                gap: 8,
-                alignItems: 'center',
-                flexWrap: 'wrap',
-              }}
-            >
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
               <Tooltip text="Joue l'audio original">
                 <button className="btn-action" onClick={engine.playAudioOriginal}>
                   ▶ AUDIO
@@ -222,7 +231,9 @@ export const StudioPage: React.FC = () => {
                     borderColor: sections.length > 0 ? 'var(--cyan)' : 'var(--border)',
                   }}
                 >
-                  {isDetectingSections ? '⏳...' : `🎬 SECTIONS${sections.length > 0 ? ` (${sections.length})` : ''}`}
+                  {isDetectingSections
+                    ? '⏳...'
+                    : `🎬 SECTIONS${sections.length > 0 ? ` (${sections.length})` : ''}`}
                 </button>
               </Tooltip>
 
@@ -288,7 +299,9 @@ export const StudioPage: React.FC = () => {
                     max={1}
                     step={0.01}
                     value={quantize.strength}
-                    onChange={(e) => setQuantize({ ...quantize, strength: parseFloat(e.target.value) })}
+                    onChange={(e) =>
+                      setQuantize({ ...quantize, strength: parseFloat(e.target.value) })
+                    }
                     style={{ width: '100%' }}
                   />
                 </div>
@@ -303,7 +316,9 @@ export const StudioPage: React.FC = () => {
                     max={1}
                     step={0.01}
                     value={quantize.swing}
-                    onChange={(e) => setQuantize({ ...quantize, swing: parseFloat(e.target.value) })}
+                    onChange={(e) =>
+                      setQuantize({ ...quantize, swing: parseFloat(e.target.value) })
+                    }
                     style={{ width: '100%' }}
                   />
                 </div>
@@ -322,7 +337,8 @@ export const StudioPage: React.FC = () => {
                   </button>
                   {detectedKey ? (
                     <span className="mono" style={{ fontSize: 10, color: 'var(--cyan)' }}>
-                      {detectedKey.key} {detectedKey.mode} ({(detectedKey.confidence * 100).toFixed(0)}%)
+                      {detectedKey.key} {detectedKey.mode} (
+                      {(detectedKey.confidence * 100).toFixed(0)}%)
                     </span>
                   ) : (
                     <button
@@ -344,7 +360,6 @@ export const StudioPage: React.FC = () => {
         </div>
       )}
 
-      {/* TRACKS + PIANOROLL */}
       {result && (
         <>
           <TrackSelector
@@ -354,7 +369,9 @@ export const StudioPage: React.FC = () => {
               { id: 'harmony', name: 'CHORDS', color: '#ec4899', icon: '🎹', enabled: trackEnabled.harmony, count: 0 },
               { id: 'drums', name: 'DRUMS', color: '#ffb800', icon: '🥁', enabled: trackEnabled.drums, count: 0 },
             ]}
-            onToggle={(id) => setTrackEnabled((prev) => ({ ...prev, [id]: !prev[id as keyof typeof prev] }))}
+            onToggle={(id) =>
+              setTrackEnabled((prev) => ({ ...prev, [id]: !prev[id as keyof typeof prev] }))
+            }
           />
 
           <UploadProgress

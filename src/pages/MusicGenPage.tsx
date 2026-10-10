@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { checkMusicGenHealth, generateMusic } from '../audio/musicgenClient';
-import { transcribeToMidi, downloadMidi, formatDuration } from '../audio/musicgenToMidi';
+import { transcribeToMidi, downloadMidi } from '../audio/musicgenToMidi';
 import { musicgenHistory, type MusicGenHistoryEntry } from '../utils/musicgenHistory';
 import { audioTransfer } from '../utils/audioTransfer';
 import { isProduction, LOCAL_SERVER_MESSAGE } from '../utils/env';

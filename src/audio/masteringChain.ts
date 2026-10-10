@@ -85,7 +85,7 @@ export class MasteringChain {
   private imagerHighDryR: GainNode;
   private imagerHighMonoSum: GainNode;
   private imagerHighMonoGain: GainNode;
-  private imagerEnabled = false;
+  // ✅ SUPPRIMÉ : private imagerEnabled = false;  (jamais lu)
 
   // Limiteur & sortie
   private limiter: DynamicsCompressorNode;
@@ -338,7 +338,6 @@ export class MasteringChain {
     // ============================================================
     // 9. Chaîne principale
     // ============================================================
-    // input → EQ1..5 → eqMid → saturator → widener → IMAGER → MONO-MAKER → limiter → processedGain → output
     let prev: AudioNode = this.inputGain;
     for (const band of this.eqBands) {
       prev.connect(band);
@@ -451,7 +450,7 @@ export class MasteringChain {
   // IMAGER 3 BANDES
   // ============================================================
   setImager(enabled: boolean, lowAmount?: number, midAmount?: number, highAmount?: number): void {
-    this.imagerEnabled = enabled;
+    // ✅ SUPPRIMÉ : this.imagerEnabled = enabled;  (jamais lu)
 
     if (lowAmount !== undefined) {
       this.imagerLowDryL.gain.value = 1 - lowAmount;

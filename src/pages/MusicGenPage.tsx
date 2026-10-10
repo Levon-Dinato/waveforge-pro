@@ -31,16 +31,38 @@ export const MusicGenPage: React.FC = () => {
 
   const abortRef = useRef<AbortController | null>(null);
   const timerRef = useRef<number | null>(null);
+  const failCountRef = useRef(0);
 
+  // ============================================================
+  // HEALTH CHECK (désactivé pendant la génération)
+  // ============================================================
   useEffect(() => {
-    checkMusicGenHealth().then((s) => setIsOnline(s.status === 'online'));
-    const interval = setInterval(() => {
-      checkMusicGenHealth().then((s) => setIsOnline(s.status === 'online'));
-    }, 10000);
-    return () => clearInterval(interval);
-  }, []);
+    // ✅ Ne pas faire de health check pendant une génération
+    // (sinon le serveur est trop occupé pour répondre et on voit OFFLINE à tort)
+    if (isGenerating) return;
 
-  // Charger l'historique depuis IndexedDB
+    const checkHealth = async () => {
+      const s = await checkMusicGenHealth();
+      if (s.status === 'online') {
+        failCountRef.current = 0;
+        setIsOnline(true);
+      } else {
+        failCountRef.current++;
+        // ✅ Ne passer OFFLINE qu'après 3 échecs consécutifs (30 sec)
+        if (failCountRef.current >= 3) {
+          setIsOnline(false);
+        }
+      }
+    };
+
+    checkHealth();
+    const interval = setInterval(checkHealth, 10000);
+    return () => clearInterval(interval);
+  }, [isGenerating]);
+
+  // ============================================================
+  // CHARGEMENT DE L'HISTORIQUE
+  // ============================================================
   useEffect(() => {
     loadHistory();
   }, []);
@@ -57,16 +79,20 @@ export const MusicGenPage: React.FC = () => {
     setHistory(withUrls);
   };
 
-  // Estimation : ~8 secondes de calcul par seconde d'audio sur CPU
+  // ============================================================
+  // ESTIMATION DU TEMPS
+  // ============================================================
   const estimatedTime = duration * 8;
 
+  // ============================================================
+  // GÉNÉRATION
+  // ============================================================
   const handleGenerate = async () => {
     if (!prompt.trim()) {
       alert('Écris une description du morceau que tu veux générer.');
       return;
     }
 
-    // AbortController pour pouvoir annuler
     const controller = new AbortController();
     abortRef.current = controller;
 
@@ -76,7 +102,6 @@ export const MusicGenPage: React.FC = () => {
     setElapsed(0);
     setResult(null);
 
-    // Timer pour la barre de progression
     const startTime = Date.now();
     timerRef.current = window.setInterval(() => {
       const sec = (Date.now() - startTime) / 1000;
@@ -94,7 +119,7 @@ export const MusicGenPage: React.FC = () => {
       const newResult = { ...res, prompt: prompt.trim() };
       setResult(newResult);
 
-      // Sauvegarder dans l'historique
+      // Sauvegarde dans l'historique
       const blob = await fetch(res.audioUrl).then((r) => r.blob());
       const entry: MusicGenHistoryEntry = {
         id: `mg-${Date.now()}`,
@@ -149,17 +174,20 @@ export const MusicGenPage: React.FC = () => {
   };
 
   const handleDeleteEntry = async (id: string) => {
-    if (!confirm('Supprimer ce morceau de l\'historique ?')) return;
+    if (!confirm("Supprimer ce morceau de l'historique ?")) return;
     await musicgenHistory.delete(id);
     await loadHistory();
   };
 
   const handleClearHistory = async () => {
-    if (!confirm('Effacer TOUT l\'historique ? Action irréversible.')) return;
+    if (!confirm("Effacer TOUT l'historique ? Action irréversible.")) return;
     await musicgenHistory.clear();
     await loadHistory();
   };
 
+  // ============================================================
+  // RENDU
+  // ============================================================
   return (
     <div className="fade-in" style={{ padding: 20, display: 'grid', gap: 20 }}>
       {/* HEADER */}
@@ -174,14 +202,56 @@ export const MusicGenPage: React.FC = () => {
           </p>
         </div>
 
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 12px', background: isOnline ? 'rgba(0, 255, 136, 0.06)' : 'rgba(255, 51, 102, 0.06)', border: `1px solid ${isOnline ? 'rgba(0, 255, 136, 0.3)' : 'rgba(255, 51, 102, 0.3)'}`, borderRadius: 8, fontSize: 10, color: isOnline ? '#00ff88' : '#ff3366' }}>
-          <div style={{ width: 6, height: 6, borderRadius: '50%', background: isOnline ? '#00ff88' : '#ff3366', boxShadow: isOnline ? '0 0 8px #00ff88' : 'none' }} />
-          MUSICGEN {isOnline === null ? '...' : isOnline ? 'ONLINE' : 'OFFLINE'}
+        {/* BADGE DE STATUT */}
+        <div
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+            padding: '6px 12px',
+            background: isGenerating
+              ? 'rgba(0, 217, 255, 0.06)'
+              : isOnline
+              ? 'rgba(0, 255, 136, 0.06)'
+              : 'rgba(255, 51, 102, 0.06)',
+            border: `1px solid ${
+              isGenerating
+                ? 'rgba(0, 217, 255, 0.3)'
+                : isOnline
+                ? 'rgba(0, 255, 136, 0.3)'
+                : 'rgba(255, 51, 102, 0.3)'
+            }`,
+            borderRadius: 8,
+            fontSize: 10,
+            color: isGenerating ? '#00d9ff' : isOnline ? '#00ff88' : '#ff3366',
+          }}
+        >
+          <div
+            style={{
+              width: 6,
+              height: 6,
+              borderRadius: '50%',
+              background: isGenerating ? '#00d9ff' : isOnline ? '#00ff88' : '#ff3366',
+              boxShadow: isGenerating
+                ? '0 0 8px #00d9ff'
+                : isOnline
+                ? '0 0 8px #00ff88'
+                : 'none',
+              animation: isGenerating ? 'pulse 1s infinite' : 'none',
+            }}
+          />
+          {isGenerating
+            ? 'MUSICGEN · CALCUL'
+            : isOnline === null
+            ? 'MUSICGEN ...'
+            : isOnline
+            ? 'MUSICGEN ONLINE'
+            : 'MUSICGEN OFFLINE'}
         </div>
       </div>
 
-      {/* OFFLINE */}
-      {isOnline === false && (
+      {/* OFFLINE (seulement si vraiment offline ET pas en génération) */}
+      {isOnline === false && !isGenerating && (
         <div className="panel" style={{ padding: 20, borderColor: 'rgba(255, 51, 102, 0.3)', background: 'linear-gradient(135deg, rgba(255, 51, 102, 0.03), transparent)' }}>
           <div style={{ fontSize: 13, color: '#ff3366', fontWeight: 600, marginBottom: 8 }}>⚠️ Serveur MusicGen hors ligne</div>
           <div style={{ fontSize: 11, color: '#888', marginBottom: 12 }}>Lance le serveur Python :</div>
@@ -194,17 +264,53 @@ export const MusicGenPage: React.FC = () => {
         </div>
       )}
 
-      {/* PRESETS */}
+      {/* PRESETS + FORMULAIRE */}
       <div className="panel" style={{ padding: 20 }}>
         <div className="label-uppercase" style={{ fontSize: 10, color: '#666', marginBottom: 12, letterSpacing: '1px' }}>🎨 PRESETS RAPIDES</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 8, marginBottom: 20 }}>
           {PRESETS.map((p) => (
-            <button key={p.id} onClick={() => setPrompt(p.prompt)} className="btn-action" style={{ borderColor: prompt === p.prompt ? p.color : 'var(--border)', color: prompt === p.prompt ? p.color : '#ccc', background: prompt === p.prompt ? `${p.color}15` : 'var(--bg-1)', fontSize: 11, justifyContent: 'center' }}>{p.label}</button>
+            <button
+              key={p.id}
+              onClick={() => setPrompt(p.prompt)}
+              disabled={isGenerating}
+              className="btn-action"
+              style={{
+                borderColor: prompt === p.prompt ? p.color : 'var(--border)',
+                color: prompt === p.prompt ? p.color : '#ccc',
+                background: prompt === p.prompt ? `${p.color}15` : 'var(--bg-1)',
+                fontSize: 11,
+                justifyContent: 'center',
+                opacity: isGenerating ? 0.5 : 1,
+                cursor: isGenerating ? 'not-allowed' : 'pointer',
+              }}
+            >
+              {p.label}
+            </button>
           ))}
         </div>
 
         <div className="label-uppercase" style={{ fontSize: 10, color: '#666', marginBottom: 8, letterSpacing: '1px' }}>📝 DESCRIPTION</div>
-        <textarea id="musicgen-prompt" value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="Ex: lofi hip hop beat, chill, jazzy piano, vinyl crackle..." rows={3} style={{ width: '100%', padding: 12, background: 'var(--bg-1)', border: '1px solid var(--border)', borderRadius: 6, color: '#fff', fontSize: 12, fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box' }} />
+        <textarea
+          id="musicgen-prompt"
+          value={prompt}
+          onChange={(e) => setPrompt(e.target.value)}
+          disabled={isGenerating}
+          placeholder="Ex: lofi hip hop beat, chill, jazzy piano, vinyl crackle..."
+          rows={3}
+          style={{
+            width: '100%',
+            padding: 12,
+            background: 'var(--bg-1)',
+            border: '1px solid var(--border)',
+            borderRadius: 6,
+            color: '#fff',
+            fontSize: 12,
+            fontFamily: 'inherit',
+            resize: 'vertical',
+            boxSizing: 'border-box',
+            opacity: isGenerating ? 0.5 : 1,
+          }}
+        />
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginTop: 16 }}>
           <div>
@@ -219,7 +325,7 @@ export const MusicGenPage: React.FC = () => {
           </div>
         </div>
 
-        {/* PROGRESS BAR */}
+        {/* BARRE DE PROGRESSION */}
         {isGenerating && (
           <div style={{ marginTop: 20 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: 10 }}>
@@ -229,19 +335,73 @@ export const MusicGenPage: React.FC = () => {
               </span>
             </div>
             <div style={{ width: '100%', height: 6, background: 'var(--bg-1)', borderRadius: 3, overflow: 'hidden' }}>
-              <div style={{ height: '100%', width: `${progress}%`, background: 'linear-gradient(90deg, #00ff88, #00b866)', transition: 'width 0.2s linear', borderRadius: 3 }} />
+              <div
+                style={{
+                  height: '100%',
+                  width: `${progress}%`,
+                  background: 'linear-gradient(90deg, #00ff88, #00b866)',
+                  transition: 'width 0.2s linear',
+                  borderRadius: 3,
+                }}
+              />
+            </div>
+            <div
+              style={{
+                marginTop: 8,
+                fontSize: 10,
+                color: '#666',
+                textAlign: 'center',
+                fontStyle: 'italic',
+              }}
+            >
+              💡 Le serveur est en calcul intense. Le badge reste vert car c'est normal.
             </div>
           </div>
         )}
 
         {/* BOUTONS */}
         <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
-          <button onClick={handleGenerate} disabled={isGenerating || isOnline !== true} className="btn-action primary" style={{ flex: 1, padding: 14, background: isGenerating || isOnline !== true ? 'var(--bg-2)' : 'linear-gradient(135deg, #00ff88, #00b866)', color: isGenerating || isOnline !== true ? '#666' : '#000', borderColor: 'transparent', fontWeight: 700, fontSize: 13, letterSpacing: '1px', justifyContent: 'center' }}>
-            {isGenerating ? `⏳ GÉNÉRATION... ${Math.floor(progress)}%` : isOnline === false ? '❌ SERVEUR HORS LIGNE' : '🎵 GÉNÉRER LE MORCEAU'}
+          <button
+            onClick={handleGenerate}
+            disabled={isGenerating || isOnline !== true}
+            className="btn-action primary"
+            style={{
+              flex: 1,
+              padding: 14,
+              background:
+                isGenerating || isOnline !== true
+                  ? 'var(--bg-2)'
+                  : 'linear-gradient(135deg, #00ff88, #00b866)',
+              color: isGenerating || isOnline !== true ? '#666' : '#000',
+              borderColor: 'transparent',
+              fontWeight: 700,
+              fontSize: 13,
+              letterSpacing: '1px',
+              justifyContent: 'center',
+            }}
+          >
+            {isGenerating
+              ? `⏳ GÉNÉRATION... ${Math.floor(progress)}%`
+              : isOnline === false
+              ? '❌ SERVEUR HORS LIGNE'
+              : '🎵 GÉNÉRER LE MORCEAU'}
           </button>
 
           {isGenerating && (
-            <button onClick={handleCancel} className="btn-action" style={{ padding: '14px 20px', background: '#ff3366', color: '#fff', borderColor: 'transparent', fontWeight: 700, fontSize: 12 }}>⏹ ANNULER</button>
+            <button
+              onClick={handleCancel}
+              className="btn-action"
+              style={{
+                padding: '14px 20px',
+                background: '#ff3366',
+                color: '#fff',
+                borderColor: 'transparent',
+                fontWeight: 700,
+                fontSize: 12,
+              }}
+            >
+              ⏹ ANNULER
+            </button>
           )}
         </div>
       </div>
@@ -258,7 +418,6 @@ export const MusicGenPage: React.FC = () => {
 
           <audio src={result.audioUrl} controls style={{ width: '100%', marginBottom: 12 }} />
 
-          {/* ACTIONS */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 8 }}>
             <button onClick={() => handleDownload(result.audioUrl, `musicgen-${Date.now()}.wav`)} className="btn-action" style={{ color: '#00ff88', borderColor: 'rgba(0, 255, 136, 0.3)', justifyContent: 'center', fontSize: 11 }}>💾 TÉLÉCHARGER</button>
             <button onClick={handleGenerate} className="btn-action" style={{ color: '#ffd43b', borderColor: 'rgba(255, 212, 59, 0.3)', justifyContent: 'center', fontSize: 11 }}>🔄 RÉGÉNÉRER</button>

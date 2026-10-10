@@ -18,7 +18,7 @@ export interface MusicGenStatus {
 export async function checkMusicGenHealth(): Promise<MusicGenStatus> {
   try {
     const res = await fetch(`${MUSICGEN_URL}/health`, {
-      signal: AbortSignal.timeout(3000),
+      signal: AbortSignal.timeout(15000),
     });
     if (!res.ok) return { status: 'offline' };
     const data = await res.json();

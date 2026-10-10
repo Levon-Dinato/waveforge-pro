@@ -10,6 +10,7 @@ import {
 import { Knob } from './Knob';
 import { EQPanel } from './EQPanel';
 import { MonoMakerPanel } from './MonoMakerPanel';
+import { ImagerPanel } from './ImagerPanel';
 import { VectorScope } from './VectorScope';
 import { PresetManager } from './PresetManager';
 import { exportMasteredWav, downloadBlob } from '../audio/masteringExporter';
@@ -30,9 +31,6 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
   onExport,
   onChainReady,
 }) => {
-  // ============================================================
-  // ÉTATS PRINCIPAUX
-  // ============================================================
   const [preset, setPreset] = useState<MasteringPreset>('balanced');
   const [isBypassed, setIsBypassed] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -45,13 +43,11 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
     dr: 0,
   });
 
-  // Knobs
   const [loudness, setLoudness] = useState(0);
   const [presence, setPresence] = useState(0);
   const [width, setWidth] = useState(0);
   const [saturation, setSaturation] = useState(0);
 
-  // EQ 5 bandes
   const [eqBands, setEqBands] = useState<EQBand[]>(DEFAULT_EQ_BANDS);
   const [showEQ, setShowEQ] = useState(true);
 
@@ -59,20 +55,21 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
   const [monoMakerEnabled, setMonoMakerEnabled] = useState(false);
   const [monoMakerFreq, setMonoMakerFreq] = useState(120);
 
-  // Vector Scope
-  const [showScope, setShowScope] = useState(true);
+  // Imager
+  const [imagerEnabled, setImagerEnabled] = useState(false);
+  const [imagerLow, setImagerLow] = useState(0);
+  const [imagerMid, setImagerMid] = useState(0);
+  const [imagerHigh, setImagerHigh] = useState(0);
 
-  // Analyser (state pour déclencher le re-render du VectorScope)
+  // Scope
+  const [showScope, setShowScope] = useState(true);
   const [analyserNode, setAnalyserNode] = useState<AnalyserNode | null>(null);
 
-  // ============================================================
-  // REFS
-  // ============================================================
   const chainRef = useRef<MasteringChain | null>(null);
   const analyzerRef = useRef<AudioAnalyzer | null>(null);
 
   // ============================================================
-  // INITIALISATION DE LA CHAÎNE
+  // INITIALISATION
   // ============================================================
   useEffect(() => {
     if (!audioContext) {
@@ -85,24 +82,21 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
     const chain = new MasteringChain(audioContext);
     if (sourceNode) {
       chain.connect(sourceNode);
-      console.log('🔌 sourceNode connecté à la chaîne');
+      console.log('🔌 sourceNode connecté');
     } else {
-      console.log('⏳ sourceNode null, chaîne connectée plus tard');
+      console.log('⏳ sourceNode null, connecté plus tard');
     }
     chainRef.current = chain;
 
     const analyzer = new AudioAnalyzer(audioContext);
     const outputNode = chain.getOutputNode();
     if (outputNode) {
-      // Sortie de la chaîne vers les enceintes
       outputNode.connect(audioContext.destination);
-      // Et vers l'analyseur
       analyzer.connect(outputNode);
     }
     analyzerRef.current = analyzer;
     setAnalyserNode(analyzer.getAnalyserNode());
 
-    // Expose la chaîne au parent
     if (onChainReady) onChainReady(chain);
 
     return () => {
@@ -114,36 +108,26 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
     };
   }, [audioContext]);
 
-  // Reconnexion dynamique si sourceNode change
+  // Reconnexion sourceNode
   useEffect(() => {
     if (!chainRef.current || !sourceNode) return;
     chainRef.current.connect(sourceNode);
-    console.log('🔌 Reconnexion de sourceNode');
   }, [sourceNode]);
 
-  // ============================================================
-  // ANALYSE TEMPS RÉEL
-  // ============================================================
+  // Analyse
   useEffect(() => {
     if (!analyzerRef.current) return;
-
     if (isAnalyzing) {
-      console.log('▶ Analyse démarrée');
-      analyzerRef.current.start((newMetrics: AudioMetrics) => {
-        setMetrics(newMetrics);
-      });
+      analyzerRef.current.start((newMetrics) => setMetrics(newMetrics));
     } else {
       analyzerRef.current.stop();
     }
-
     return () => {
       if (analyzerRef.current) analyzerRef.current.stop();
     };
   }, [isAnalyzing]);
 
-  // ============================================================
-  // APPLICATION DES PARAMÈTRES
-  // ============================================================
+  // Paramètres
   useEffect(() => {
     const chain = chainRef.current;
     if (!chain) return;
@@ -153,7 +137,7 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
     chain.setSaturation(saturation);
   }, [loudness, presence, width, saturation]);
 
-  // Application du preset officiel
+  // Preset
   useEffect(() => {
     const chain = chainRef.current;
     if (!chain) {
@@ -239,17 +223,52 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
     [monoMakerEnabled]
   );
 
-  // ✅ CHARGER UN PRESET UTILISATEUR
-  const handleLoadUserPreset = useCallback((userPreset: UserMasteringPreset) => {
-    console.log('📂 Chargement preset utilisateur:', userPreset.name);
+  // Imager handlers
+  const handleImagerToggle = useCallback(
+    (enabled: boolean) => {
+      setImagerEnabled(enabled);
+      const chain = chainRef.current;
+      if (chain) chain.setImager(enabled, imagerLow, imagerMid, imagerHigh);
+    },
+    [imagerLow, imagerMid, imagerHigh]
+  );
 
-    // Applique les knobs
+  const handleImagerLowChange = useCallback(
+    (v: number) => {
+      setImagerLow(v);
+      const chain = chainRef.current;
+      if (chain) chain.setImager(imagerEnabled, v, imagerMid, imagerHigh);
+    },
+    [imagerEnabled, imagerMid, imagerHigh]
+  );
+
+  const handleImagerMidChange = useCallback(
+    (v: number) => {
+      setImagerMid(v);
+      const chain = chainRef.current;
+      if (chain) chain.setImager(imagerEnabled, imagerLow, v, imagerHigh);
+    },
+    [imagerEnabled, imagerLow, imagerHigh]
+  );
+
+  const handleImagerHighChange = useCallback(
+    (v: number) => {
+      setImagerHigh(v);
+      const chain = chainRef.current;
+      if (chain) chain.setImager(imagerEnabled, imagerLow, imagerMid, v);
+    },
+    [imagerEnabled, imagerLow, imagerMid]
+  );
+
+  // Charger un preset utilisateur
+  const handleLoadUserPreset = useCallback((userPreset: UserMasteringPreset) => {
+    console.log('📂 Chargement preset:', userPreset.name);
+
     setLoudness(userPreset.loudness);
     setPresence(userPreset.presence);
     setWidth(userPreset.width);
     setSaturation(userPreset.saturation);
 
-    // Applique les EQ bands
     const newBands = DEFAULT_EQ_BANDS.map((band, i) => ({
       ...band,
       frequency: userPreset.eqBands[i]?.frequency ?? band.frequency,
@@ -258,22 +277,18 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
     }));
     setEqBands(newBands);
 
-    // Applique Mono-Maker
     setMonoMakerEnabled(userPreset.monoMakerEnabled);
     setMonoMakerFreq(userPreset.monoMakerFreq);
 
-    // Met à jour la chaîne
     const chain = chainRef.current;
     if (chain) {
       chain.setLoudness(userPreset.loudness);
       chain.setPresence(userPreset.presence);
       chain.setWidth(userPreset.width);
       chain.setSaturation(userPreset.saturation);
-
       newBands.forEach((band, i) => {
         chain.setEQBand(i, band.frequency, band.gain, band.q);
       });
-
       chain.setMonoMaker(userPreset.monoMakerEnabled, userPreset.monoMakerFreq);
     }
   }, []);
@@ -442,7 +457,7 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
         </div>
       </div>
 
-      {/* ✅ NOUVEAU : MES PRESETS UTILISATEUR */}
+      {/* PRESETS UTILISATEUR */}
       <div style={{ marginBottom: '20px' }}>
         <PresetManager
           currentValues={{
@@ -511,6 +526,20 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
         />
       </div>
 
+      {/* IMAGER 3 BANDES */}
+      <div style={{ marginBottom: '20px' }}>
+        <ImagerPanel
+          enabled={imagerEnabled}
+          lowAmount={imagerLow}
+          midAmount={imagerMid}
+          highAmount={imagerHigh}
+          onToggle={handleImagerToggle}
+          onLowChange={handleImagerLowChange}
+          onMidChange={handleImagerMidChange}
+          onHighChange={handleImagerHighChange}
+        />
+      </div>
+
       {/* VECTOR SCOPE */}
       <div style={{ marginBottom: '20px' }}>
         <div
@@ -540,7 +569,6 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
             {showScope ? '▼ MASQUER' : '▶ AFFICHER'}
           </button>
         </div>
-
         {showScope && (
           <div
             style={{
@@ -600,47 +628,10 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
             alignItems: 'center',
           }}
         >
-          <Knob
-            label="Loudness"
-            value={loudness}
-            min={-12}
-            max={12}
-            step={0.1}
-            unit="dB"
-            color="#00d9ff"
-            onChange={setLoudness}
-          />
-          <Knob
-            label="Presence"
-            value={presence}
-            min={-12}
-            max={12}
-            step={0.1}
-            unit="dB"
-            color="#00d9ff"
-            onChange={setPresence}
-          />
-          <Knob
-            label="Width"
-            value={width}
-            min={0}
-            max={2}
-            step={0.01}
-            unit="x"
-            color="#00d9ff"
-            onChange={setWidth}
-          />
-          <Knob
-            label="Saturation"
-            value={saturation}
-            min={0}
-            max={1}
-            step={0.01}
-            unit="%"
-            color="#00d9ff"
-            onChange={setSaturation}
-            formatValue={(v) => `${(v * 100).toFixed(0)}`}
-          />
+          <Knob label="Loudness" value={loudness} min={-12} max={12} step={0.1} unit="dB" color="#00d9ff" onChange={setLoudness} />
+          <Knob label="Presence" value={presence} min={-12} max={12} step={0.1} unit="dB" color="#00d9ff" onChange={setPresence} />
+          <Knob label="Width" value={width} min={0} max={2} step={0.01} unit="x" color="#00d9ff" onChange={setWidth} />
+          <Knob label="Saturation" value={saturation} min={0} max={1} step={0.01} unit="%" color="#00d9ff" onChange={setSaturation} formatValue={(v) => `${(v * 100).toFixed(0)}`} />
         </div>
       </div>
 
@@ -709,18 +700,6 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
           position: 'relative',
           overflow: 'hidden',
         }}
-        onMouseEnter={(e) => {
-          if (!isExporting && sourceBuffer) {
-            e.currentTarget.style.transform = 'translateY(-1px)';
-            e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 217, 255, 0.4)';
-          }
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.transform = 'translateY(0)';
-          e.currentTarget.style.boxShadow = !sourceBuffer
-            ? 'none'
-            : '0 4px 16px rgba(0, 217, 255, 0.3)';
-        }}
       >
         {isExporting
           ? `EXPORT EN COURS... ${(exportProgress * 100).toFixed(0)}%`
@@ -742,7 +721,6 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
         )}
       </button>
 
-      {/* FOOTER */}
       <div
         style={{
           marginTop: '15px',
@@ -752,7 +730,7 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
           letterSpacing: '1px',
         }}
       >
-        WAVEFORGE PRO · MASTERING ENGINE v1.5 · EQ + MONO + SCOPE + PRESETS
+        WAVEFORGE PRO · MASTERING ENGINE v1.6 · EQ + MONO + IMAGER + SCOPE + PRESETS
       </div>
     </div>
   );

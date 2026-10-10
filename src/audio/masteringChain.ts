@@ -22,14 +22,15 @@ export interface EQBand {
 }
 
 export const DEFAULT_EQ_BANDS: EQBand[] = [
-  { id: 0, type: 'lowshelf',  frequency: 80,    gain: 0, q: 0.7, label: 'Basses',   color: '#00d9ff', minFreq: 20,  maxFreq: 300 },
-  { id: 1, type: 'peaking',   frequency: 250,   gain: 0, q: 1,   label: 'Low-Mid',  color: '#7c5cff', minFreq: 100, maxFreq: 800 },
-  { id: 2, type: 'peaking',   frequency: 1000,  gain: 0, q: 1,   label: 'Mid',      color: '#00ff88', minFreq: 400, maxFreq: 3000 },
+  { id: 0, type: 'lowshelf',  frequency: 80,    gain: 0, q: 0.7, label: 'Basses',   color: '#00d9ff', minFreq: 20,   maxFreq: 300 },
+  { id: 1, type: 'peaking',   frequency: 250,   gain: 0, q: 1,   label: 'Low-Mid',  color: '#7c5cff', minFreq: 100,  maxFreq: 800 },
+  { id: 2, type: 'peaking',   frequency: 1000,  gain: 0, q: 1,   label: 'Mid',      color: '#00ff88', minFreq: 400,  maxFreq: 3000 },
   { id: 3, type: 'peaking',   frequency: 4000,  gain: 0, q: 1,   label: 'High-Mid', color: '#ffd43b', minFreq: 1500, maxFreq: 8000 },
   { id: 4, type: 'highshelf', frequency: 12000, gain: 0, q: 0.7, label: 'Aigus',    color: '#ff5cf0', minFreq: 6000, maxFreq: 20000 },
 ];
 
 export class MasteringChain {
+  // EQ
   private inputGain: GainNode;
   private eqBands: BiquadFilterNode[] = [];
   private eqMid: BiquadFilterNode;
@@ -55,6 +56,38 @@ export class MasteringChain {
   private monoMakerFreq = 120;
   private monoMakerEnabled = false;
 
+  // Imager 3 bandes
+  private imagerInput: GainNode;
+  private imagerOutput: GainNode;
+  private imagerWetGain: GainNode;
+  private imagerDryGain: GainNode;
+  // Basses
+  private imagerLowFilter: BiquadFilterNode;
+  private imagerLowSplitter: ChannelSplitterNode;
+  private imagerLowMerger: ChannelMergerNode;
+  private imagerLowDryL: GainNode;
+  private imagerLowDryR: GainNode;
+  private imagerLowMonoSum: GainNode;
+  private imagerLowMonoGain: GainNode;
+  // Mids
+  private imagerMidFilter: BiquadFilterNode;
+  private imagerMidSplitter: ChannelSplitterNode;
+  private imagerMidMerger: ChannelMergerNode;
+  private imagerMidDryL: GainNode;
+  private imagerMidDryR: GainNode;
+  private imagerMidMonoSum: GainNode;
+  private imagerMidMonoGain: GainNode;
+  // Aigus
+  private imagerHighFilter: BiquadFilterNode;
+  private imagerHighSplitter: ChannelSplitterNode;
+  private imagerHighMerger: ChannelMergerNode;
+  private imagerHighDryL: GainNode;
+  private imagerHighDryR: GainNode;
+  private imagerHighMonoSum: GainNode;
+  private imagerHighMonoGain: GainNode;
+  private imagerEnabled = false;
+
+  // Limiteur & sortie
   private limiter: DynamicsCompressorNode;
   private bypassGain: GainNode;
   private processedGain: GainNode;
@@ -65,11 +98,15 @@ export class MasteringChain {
   constructor(context: BaseAudioContext) {
     this.context = context;
 
+    // ============================================================
     // 1. Gain d'entrée
+    // ============================================================
     this.inputGain = context.createGain();
     this.inputGain.gain.value = 1;
 
+    // ============================================================
     // 2. EQ 5 bandes
+    // ============================================================
     for (const band of DEFAULT_EQ_BANDS) {
       const filter = context.createBiquadFilter();
       filter.type = band.type;
@@ -86,15 +123,128 @@ export class MasteringChain {
     this.eqMid.Q.value = 1;
     this.eqMid.gain.value = 0;
 
+    // ============================================================
     // 3. Saturateur
+    // ============================================================
     this.saturator = context.createWaveShaper();
     this.saturator.curve = this.makeDistortionCurve(0) as Float32Array<ArrayBuffer>;
 
+    // ============================================================
     // 4. Stéréo Widener
+    // ============================================================
     this.stereoWidener = context.createStereoPanner();
     this.stereoWidener.pan.value = 0;
 
-    // 5. MONO-MAKER
+    // ============================================================
+    // 5. IMAGER 3 BANDES
+    // ============================================================
+    this.imagerInput = context.createGain();
+    this.imagerOutput = context.createGain();
+    this.imagerWetGain = context.createGain();
+    this.imagerWetGain.gain.value = 0;
+    this.imagerDryGain = context.createGain();
+    this.imagerDryGain.gain.value = 1;
+
+    // Basses (lowpass 200Hz)
+    this.imagerLowFilter = context.createBiquadFilter();
+    this.imagerLowFilter.type = 'lowpass';
+    this.imagerLowFilter.frequency.value = 200;
+    this.imagerLowFilter.Q.value = 0.7;
+    this.imagerLowSplitter = context.createChannelSplitter(2);
+    this.imagerLowMerger = context.createChannelMerger(2);
+    this.imagerLowDryL = context.createGain();
+    this.imagerLowDryL.gain.value = 1;
+    this.imagerLowDryR = context.createGain();
+    this.imagerLowDryR.gain.value = 1;
+    this.imagerLowMonoSum = context.createGain();
+    this.imagerLowMonoSum.gain.value = 0.5;
+    this.imagerLowMonoGain = context.createGain();
+    this.imagerLowMonoGain.gain.value = 0;
+
+    // Mids (bandpass ~1kHz)
+    this.imagerMidFilter = context.createBiquadFilter();
+    this.imagerMidFilter.type = 'bandpass';
+    this.imagerMidFilter.frequency.value = 1000;
+    this.imagerMidFilter.Q.value = 0.5;
+    this.imagerMidSplitter = context.createChannelSplitter(2);
+    this.imagerMidMerger = context.createChannelMerger(2);
+    this.imagerMidDryL = context.createGain();
+    this.imagerMidDryL.gain.value = 1;
+    this.imagerMidDryR = context.createGain();
+    this.imagerMidDryR.gain.value = 1;
+    this.imagerMidMonoSum = context.createGain();
+    this.imagerMidMonoSum.gain.value = 0.5;
+    this.imagerMidMonoGain = context.createGain();
+    this.imagerMidMonoGain.gain.value = 0;
+
+    // Aigus (highpass 4kHz)
+    this.imagerHighFilter = context.createBiquadFilter();
+    this.imagerHighFilter.type = 'highpass';
+    this.imagerHighFilter.frequency.value = 4000;
+    this.imagerHighFilter.Q.value = 0.7;
+    this.imagerHighSplitter = context.createChannelSplitter(2);
+    this.imagerHighMerger = context.createChannelMerger(2);
+    this.imagerHighDryL = context.createGain();
+    this.imagerHighDryL.gain.value = 1;
+    this.imagerHighDryR = context.createGain();
+    this.imagerHighDryR.gain.value = 1;
+    this.imagerHighMonoSum = context.createGain();
+    this.imagerHighMonoSum.gain.value = 0.5;
+    this.imagerHighMonoGain = context.createGain();
+    this.imagerHighMonoGain.gain.value = 0;
+
+    // Connexions Imager
+    this.imagerInput.connect(this.imagerDryGain);
+    this.imagerDryGain.connect(this.imagerOutput);
+
+    // Basses
+    this.imagerInput.connect(this.imagerLowFilter);
+    this.imagerLowFilter.connect(this.imagerLowSplitter);
+    this.imagerLowSplitter.connect(this.imagerLowDryL, 0);
+    this.imagerLowSplitter.connect(this.imagerLowDryR, 1);
+    this.imagerLowDryL.connect(this.imagerLowMerger, 0, 0);
+    this.imagerLowDryR.connect(this.imagerLowMerger, 0, 1);
+    this.imagerLowSplitter.connect(this.imagerLowMonoSum, 0);
+    this.imagerLowSplitter.connect(this.imagerLowMonoSum, 1);
+    this.imagerLowMonoSum.connect(this.imagerLowMonoGain);
+    this.imagerLowMonoGain.connect(this.imagerLowMerger, 0, 0);
+    this.imagerLowMonoGain.connect(this.imagerLowMerger, 0, 1);
+    this.imagerLowMerger.connect(this.imagerWetGain);
+
+    // Mids
+    this.imagerInput.connect(this.imagerMidFilter);
+    this.imagerMidFilter.connect(this.imagerMidSplitter);
+    this.imagerMidSplitter.connect(this.imagerMidDryL, 0);
+    this.imagerMidSplitter.connect(this.imagerMidDryR, 1);
+    this.imagerMidDryL.connect(this.imagerMidMerger, 0, 0);
+    this.imagerMidDryR.connect(this.imagerMidMerger, 0, 1);
+    this.imagerMidSplitter.connect(this.imagerMidMonoSum, 0);
+    this.imagerMidSplitter.connect(this.imagerMidMonoSum, 1);
+    this.imagerMidMonoSum.connect(this.imagerMidMonoGain);
+    this.imagerMidMonoGain.connect(this.imagerMidMerger, 0, 0);
+    this.imagerMidMonoGain.connect(this.imagerMidMerger, 0, 1);
+    this.imagerMidMerger.connect(this.imagerWetGain);
+
+    // Aigus
+    this.imagerInput.connect(this.imagerHighFilter);
+    this.imagerHighFilter.connect(this.imagerHighSplitter);
+    this.imagerHighSplitter.connect(this.imagerHighDryL, 0);
+    this.imagerHighSplitter.connect(this.imagerHighDryR, 1);
+    this.imagerHighDryL.connect(this.imagerHighMerger, 0, 0);
+    this.imagerHighDryR.connect(this.imagerHighMerger, 0, 1);
+    this.imagerHighSplitter.connect(this.imagerHighMonoSum, 0);
+    this.imagerHighSplitter.connect(this.imagerHighMonoSum, 1);
+    this.imagerHighMonoSum.connect(this.imagerHighMonoGain);
+    this.imagerHighMonoGain.connect(this.imagerHighMerger, 0, 0);
+    this.imagerHighMonoGain.connect(this.imagerHighMerger, 0, 1);
+    this.imagerHighMerger.connect(this.imagerWetGain);
+
+    // Wet → Output
+    this.imagerWetGain.connect(this.imagerOutput);
+
+    // ============================================================
+    // 6. MONO-MAKER
+    // ============================================================
     this.monoMakerInput = context.createGain();
     this.monoMakerOutput = context.createGain();
     this.monoMakerSplitter = context.createChannelSplitter(2);
@@ -166,7 +316,9 @@ export class MasteringChain {
     this.monoMakerMerger.connect(this.monoMakerWetGain);
     this.monoMakerWetGain.connect(this.monoMakerOutput);
 
-    // 6. Limiteur
+    // ============================================================
+    // 7. Limiteur
+    // ============================================================
     this.limiter = context.createDynamicsCompressor();
     this.limiter.threshold.value = -1;
     this.limiter.knee.value = 0;
@@ -174,14 +326,19 @@ export class MasteringChain {
     this.limiter.attack.value = 0.003;
     this.limiter.release.value = 0.1;
 
-    // 7. Bypass & gains
+    // ============================================================
+    // 8. Bypass & gains
+    // ============================================================
     this.bypassGain = context.createGain();
     this.bypassGain.gain.value = 0;
     this.processedGain = context.createGain();
     this.processedGain.gain.value = 1;
     this.outputGain = context.createGain();
 
-    // 8. Chaîne traitée
+    // ============================================================
+    // 9. Chaîne principale
+    // ============================================================
+    // input → EQ1..5 → eqMid → saturator → widener → IMAGER → MONO-MAKER → limiter → processedGain → output
     let prev: AudioNode = this.inputGain;
     for (const band of this.eqBands) {
       prev.connect(band);
@@ -190,7 +347,8 @@ export class MasteringChain {
     prev.connect(this.eqMid);
     this.eqMid.connect(this.saturator);
     this.saturator.connect(this.stereoWidener);
-    this.stereoWidener.connect(this.monoMakerInput);
+    this.stereoWidener.connect(this.imagerInput);
+    this.imagerOutput.connect(this.monoMakerInput);
     this.monoMakerOutput.connect(this.limiter);
     this.limiter.connect(this.processedGain);
     this.processedGain.connect(this.outputGain);
@@ -226,7 +384,9 @@ export class MasteringChain {
   getOutputNode(): AudioNode { return this.outputGain; }
   getInputNode(): AudioNode { return this.inputGain; }
 
-  // Contrôles
+  // ============================================================
+  // CONTRÔLES PRINCIPAUX
+  // ============================================================
   setLoudness(value: number): void {
     this.inputGain.gain.value = Math.pow(10, value / 20);
   }
@@ -248,7 +408,9 @@ export class MasteringChain {
     this.processedGain.gain.value = bypass ? 0 : 1;
   }
 
-  // EQ 5 bandes
+  // ============================================================
+  // EQ 5 BANDES
+  // ============================================================
   setEQBand(index: number, frequency: number, gain: number, q?: number): void {
     const band = this.eqBands[index];
     if (!band) return;
@@ -259,7 +421,9 @@ export class MasteringChain {
 
   getEQBandCount(): number { return this.eqBands.length; }
 
-  // Mono-Maker
+  // ============================================================
+  // MONO-MAKER
+  // ============================================================
   setMonoMaker(enabled: boolean, frequency?: number): void {
     this.monoMakerEnabled = enabled;
     if (frequency !== undefined) {
@@ -283,7 +447,41 @@ export class MasteringChain {
   isMonoMakerEnabled(): boolean { return this.monoMakerEnabled; }
   getMonoMakerFrequency(): number { return this.monoMakerFreq; }
 
-  // Presets
+  // ============================================================
+  // IMAGER 3 BANDES
+  // ============================================================
+  setImager(enabled: boolean, lowAmount?: number, midAmount?: number, highAmount?: number): void {
+    this.imagerEnabled = enabled;
+
+    if (lowAmount !== undefined) {
+      this.imagerLowDryL.gain.value = 1 - lowAmount;
+      this.imagerLowDryR.gain.value = 1 - lowAmount;
+      this.imagerLowMonoGain.gain.value = lowAmount;
+    }
+    if (midAmount !== undefined) {
+      this.imagerMidDryL.gain.value = 1 - midAmount;
+      this.imagerMidDryR.gain.value = 1 - midAmount;
+      this.imagerMidMonoGain.gain.value = midAmount;
+    }
+    if (highAmount !== undefined) {
+      this.imagerHighDryL.gain.value = 1 - highAmount;
+      this.imagerHighDryR.gain.value = 1 - highAmount;
+      this.imagerHighMonoGain.gain.value = highAmount;
+    }
+
+    const now = this.context.currentTime;
+    if (enabled) {
+      this.imagerWetGain.gain.setTargetAtTime(1, now, 0.02);
+      this.imagerDryGain.gain.setTargetAtTime(0, now, 0.02);
+    } else {
+      this.imagerWetGain.gain.setTargetAtTime(0, now, 0.02);
+      this.imagerDryGain.gain.setTargetAtTime(1, now, 0.02);
+    }
+  }
+
+  // ============================================================
+  // PRESETS
+  // ============================================================
   applyPreset(preset: MasteringPreset): void {
     const values = this.getPresetValues(preset);
     this.setLoudness(values.loudness);
@@ -350,11 +548,41 @@ export class MasteringChain {
   }
 
   destroy(): void {
+    // EQ
     this.inputGain.disconnect();
     this.eqBands.forEach((b) => b.disconnect());
     this.eqMid.disconnect();
     this.saturator.disconnect();
     this.stereoWidener.disconnect();
+
+    // Imager
+    this.imagerInput.disconnect();
+    this.imagerOutput.disconnect();
+    this.imagerWetGain.disconnect();
+    this.imagerDryGain.disconnect();
+    this.imagerLowFilter.disconnect();
+    this.imagerLowSplitter.disconnect();
+    this.imagerLowMerger.disconnect();
+    this.imagerLowDryL.disconnect();
+    this.imagerLowDryR.disconnect();
+    this.imagerLowMonoSum.disconnect();
+    this.imagerLowMonoGain.disconnect();
+    this.imagerMidFilter.disconnect();
+    this.imagerMidSplitter.disconnect();
+    this.imagerMidMerger.disconnect();
+    this.imagerMidDryL.disconnect();
+    this.imagerMidDryR.disconnect();
+    this.imagerMidMonoSum.disconnect();
+    this.imagerMidMonoGain.disconnect();
+    this.imagerHighFilter.disconnect();
+    this.imagerHighSplitter.disconnect();
+    this.imagerHighMerger.disconnect();
+    this.imagerHighDryL.disconnect();
+    this.imagerHighDryR.disconnect();
+    this.imagerHighMonoSum.disconnect();
+    this.imagerHighMonoGain.disconnect();
+
+    // Mono-Maker
     this.monoMakerInput.disconnect();
     this.monoMakerOutput.disconnect();
     this.monoMakerSplitter.disconnect();
@@ -370,6 +598,8 @@ export class MasteringChain {
     this.monoMakerMixR.disconnect();
     this.monoMakerWetGain.disconnect();
     this.monoMakerDryGain.disconnect();
+
+    // Limiteur & sortie
     this.limiter.disconnect();
     this.bypassGain.disconnect();
     this.processedGain.disconnect();

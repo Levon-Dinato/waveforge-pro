@@ -448,6 +448,7 @@ export const MasteringPage: React.FC = () => {
               height={isMobile ? 100 : 160}
               color={abMode === 'mastered' ? '#00ff88' : '#7c5cff'}
               barCount={isMobile ? 40 : 72}
+              colorByAmplitude={true}
             />
           </div>
 

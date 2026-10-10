@@ -1,0 +1,53 @@
+{
+  "name": "WaveForge PRO - Audio → MIDI Studio",
+  "short_name": "WaveForge",
+  "description": "Studio de production musicale IA : analyse audio, stems, mastering, remix IA et génération de mélodies",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#050508",
+  "theme_color": "#00d9ff",
+  "scope": "/",
+  "lang": "fr",
+  "categories": ["music", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Studio",
+      "short_name": "Studio",
+      "url": "/studio",
+      "description": "Analyse audio → MIDI"
+    },
+    {
+      "name": "Mastering",
+      "short_name": "Master",
+      "url": "/mastering",
+      "description": "Masteriser un morceau"
+    },
+    {
+      "name": "Remix AI",
+      "short_name": "Remix",
+      "url": "/remix",
+      "description": "Remix IA avec Treblo"
+    }
+  ]
+}

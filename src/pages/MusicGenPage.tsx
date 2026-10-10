@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { checkMusicGenHealth, generateMusic } from '../audio/musicgenClient';
+import { transcribeToMidi, downloadMidi, formatDuration } from '../audio/musicgenToMidi';
 import { musicgenHistory, type MusicGenHistoryEntry } from '../utils/musicgenHistory';
 import { audioTransfer } from '../utils/audioTransfer';
 import { isProduction, LOCAL_SERVER_MESSAGE } from '../utils/env';
@@ -49,6 +50,11 @@ export const MusicGenPage: React.FC = () => {
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [sortBy, setSortBy] = useState<SortOption>('recent');
   const [showSortMenu, setShowSortMenu] = useState(false);
+
+  // ✅ État pour le MIDI
+  const [transcribingId, setTranscribingId] = useState<string | null>(null);
+  const [transcribeStatus, setTranscribeStatus] = useState('');
+  const [midiSuccess, setMidiSuccess] = useState<{ id: string; count: number } | null>(null);
 
   const abortRef = useRef<AbortController | null>(null);
   const timerRef = useRef<number | null>(null);
@@ -201,6 +207,37 @@ export const MusicGenPage: React.FC = () => {
     const filename = `${(entry.title || entry.prompt).replace(/[^a-z0-9]/gi, '-').slice(0, 40)}.wav`;
     await audioTransfer.save(entry.audioBlob, filename, target);
     navigate(target === 'studio' ? '/studio' : '/mastering');
+  };
+
+  // ✅ NOUVEAU : Extraction MIDI via Basic Pitch
+  const handleExtractMidi = async (entry: MusicGenHistoryEntry) => {
+    if (transcribingId) return; // Évite les double-clics
+
+    setTranscribingId(entry.id);
+    setTranscribeStatus('Préparation...');
+    setMidiSuccess(null);
+
+    try {
+      const bpm = 120; // BPM par défaut pour la transcription
+      const result = await transcribeToMidi(entry.audioBlob, bpm, setTranscribeStatus);
+
+      // Télécharge le fichier MIDI
+      downloadMidi(result.midiBlob, result.fileName);
+
+      // Affiche la confirmation
+      setMidiSuccess({ id: entry.id, count: result.noteCount });
+
+      console.log(`✅ ${result.noteCount} notes transcrites en ${result.duration.toFixed(1)}s`);
+
+      // Efface le succès après 4 secondes
+      setTimeout(() => setMidiSuccess(null), 4000);
+    } catch (e: any) {
+      console.error('Erreur transcription MIDI:', e);
+      alert(`Erreur : ${e.message}`);
+    } finally {
+      setTranscribingId(null);
+      setTranscribeStatus('');
+    }
   };
 
   const handleDelete = async (id: string) => {
@@ -860,6 +897,8 @@ export const MusicGenPage: React.FC = () => {
           {filteredHistory.map((h, index) => {
             const isFav = favorites.has(h.id);
             const isEditing = editingId === h.id;
+            const isTranscribing = transcribingId === h.id;
+            const isMidiJustExtracted = midiSuccess?.id === h.id;
             const isNewest = index === 0 && sortBy === 'recent' && !searchQuery && !showFavoritesOnly;
             const date = new Date(h.timestamp);
             const dateStr = date.toLocaleString('fr-FR', {
@@ -875,14 +914,16 @@ export const MusicGenPage: React.FC = () => {
                 className="panel"
                 style={{
                   padding: 14,
-                  border:
-                    isNewest && !isGenerating
-                      ? '1px solid rgba(0, 255, 136, 0.3)'
-                      : '1px solid var(--border)',
-                  background:
-                    isNewest && !isGenerating
-                      ? 'linear-gradient(135deg, rgba(0, 255, 136, 0.03), transparent)'
-                      : undefined,
+                  border: isMidiJustExtracted
+                    ? '1px solid rgba(124, 92, 255, 0.5)'
+                    : isNewest && !isGenerating
+                    ? '1px solid rgba(0, 255, 136, 0.3)'
+                    : '1px solid var(--border)',
+                  background: isMidiJustExtracted
+                    ? 'linear-gradient(135deg, rgba(124, 92, 255, 0.08), transparent)'
+                    : isNewest && !isGenerating
+                    ? 'linear-gradient(135deg, rgba(0, 255, 136, 0.03), transparent)'
+                    : undefined,
                   transition: 'all 0.2s',
                 }}
               >
@@ -900,18 +941,32 @@ export const MusicGenPage: React.FC = () => {
                       width: isMobile ? 32 : 36,
                       height: isMobile ? 32 : 36,
                       borderRadius: 8,
-                      background: isNewest && !isGenerating ? 'rgba(0, 255, 136, 0.15)' : 'var(--bg-1)',
-                      border: `1px solid ${isNewest && !isGenerating ? 'rgba(0, 255, 136, 0.4)' : 'var(--border)'}`,
+                      background: isMidiJustExtracted
+                        ? 'rgba(124, 92, 255, 0.15)'
+                        : isNewest && !isGenerating
+                        ? 'rgba(0, 255, 136, 0.15)'
+                        : 'var(--bg-1)',
+                      border: `1px solid ${
+                        isMidiJustExtracted
+                          ? 'rgba(124, 92, 255, 0.5)'
+                          : isNewest && !isGenerating
+                          ? 'rgba(0, 255, 136, 0.4)'
+                          : 'var(--border)'
+                      }`,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       fontSize: 16,
                       flexShrink: 0,
-                      color: isNewest && !isGenerating ? '#00ff88' : '#888',
+                      color: isMidiJustExtracted
+                        ? '#7c5cff'
+                        : isNewest && !isGenerating
+                        ? '#00ff88'
+                        : '#888',
                       fontWeight: 700,
                     }}
                   >
-                    {isNewest && !isGenerating ? '★' : index + 1}
+                    {isMidiJustExtracted ? '🎼' : isNewest && !isGenerating ? '★' : index + 1}
                   </div>
 
                   <div style={{ flex: 1, minWidth: 0 }}>
@@ -1041,6 +1096,47 @@ export const MusicGenPage: React.FC = () => {
                       <span>⏱️ {h.duration}s</span>
                       <span>⚡ {h.generationTime}s</span>
                     </div>
+
+                    {/* Status de transcription */}
+                    {isTranscribing && (
+                      <div
+                        style={{
+                          marginTop: 6,
+                          fontSize: 10,
+                          color: '#7c5cff',
+                          fontWeight: 600,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 6,
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: 10,
+                            height: 10,
+                            border: '2px solid rgba(124, 92, 255, 0.3)',
+                            borderTop: '2px solid #7c5cff',
+                            borderRadius: '50%',
+                            animation: 'spin 0.8s linear infinite',
+                          }}
+                        />
+                        {transcribeStatus || 'Transcription...'}
+                      </div>
+                    )}
+
+                    {/* Succès MIDI */}
+                    {isMidiJustExtracted && midiSuccess && (
+                      <div
+                        style={{
+                          marginTop: 6,
+                          fontSize: 10,
+                          color: '#7c5cff',
+                          fontWeight: 600,
+                        }}
+                      >
+                        ✅ {midiSuccess.count} notes extraites · MIDI téléchargé
+                      </div>
+                    )}
                   </div>
 
                   <div
@@ -1052,8 +1148,34 @@ export const MusicGenPage: React.FC = () => {
                       justifyContent: 'flex-end',
                     }}
                   >
+                    {/* 🎼 EXTRAIRE MIDI */}
+                    <button
+                      onClick={() => handleExtractMidi(h)}
+                      disabled={isTranscribing || !!transcribingId}
+                      style={{
+                        width: isMobile ? 28 : 32,
+                        height: isMobile ? 28 : 32,
+                        borderRadius: 6,
+                        border: '1px solid rgba(124, 92, 255, 0.3)',
+                        background: isMidiJustExtracted
+                          ? 'rgba(124, 92, 255, 0.2)'
+                          : 'rgba(124, 92, 255, 0.05)',
+                        color: '#7c5cff',
+                        fontSize: 14,
+                        cursor: isTranscribing ? 'wait' : 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        opacity: transcribingId && !isTranscribing ? 0.4 : 1,
+                      }}
+                      title="Extraire les notes MIDI (Basic Pitch)"
+                    >
+                      {isTranscribing ? '⏳' : '🎼'}
+                    </button>
+
                     <button
                       onClick={() => handleTransfer(h, 'studio')}
+                      disabled={isTranscribing}
                       style={{
                         width: isMobile ? 28 : 32,
                         height: isMobile ? 28 : 32,
@@ -1066,13 +1188,15 @@ export const MusicGenPage: React.FC = () => {
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
+                        opacity: isTranscribing ? 0.4 : 1,
                       }}
-                      title="Envoyer au Studio (analyse MIDI)"
+                      title="Envoyer au Studio"
                     >
                       🎹
                     </button>
                     <button
                       onClick={() => handleTransfer(h, 'mastering')}
+                      disabled={isTranscribing}
                       style={{
                         width: isMobile ? 28 : 32,
                         height: isMobile ? 28 : 32,
@@ -1085,6 +1209,7 @@ export const MusicGenPage: React.FC = () => {
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
+                        opacity: isTranscribing ? 0.4 : 1,
                       }}
                       title="Envoyer au Mastering"
                     >
@@ -1092,6 +1217,7 @@ export const MusicGenPage: React.FC = () => {
                     </button>
                     <button
                       onClick={() => toggleFavorite(h.id)}
+                      disabled={isTranscribing}
                       style={{
                         width: isMobile ? 28 : 32,
                         height: isMobile ? 28 : 32,
@@ -1104,6 +1230,7 @@ export const MusicGenPage: React.FC = () => {
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
+                        opacity: isTranscribing ? 0.4 : 1,
                       }}
                       title={isFav ? 'Retirer des favoris' : 'Ajouter aux favoris'}
                     >
@@ -1111,6 +1238,7 @@ export const MusicGenPage: React.FC = () => {
                     </button>
                     <button
                       onClick={() => handleDownload(h.audioUrl, `musicgen-${h.id}.wav`)}
+                      disabled={isTranscribing}
                       style={{
                         width: isMobile ? 28 : 32,
                         height: isMobile ? 28 : 32,
@@ -1123,13 +1251,15 @@ export const MusicGenPage: React.FC = () => {
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
+                        opacity: isTranscribing ? 0.4 : 1,
                       }}
-                      title="Télécharger"
+                      title="Télécharger WAV"
                     >
                       💾
                     </button>
                     <button
                       onClick={() => handleDelete(h.id)}
+                      disabled={isTranscribing}
                       style={{
                         width: isMobile ? 28 : 32,
                         height: isMobile ? 28 : 32,
@@ -1142,6 +1272,7 @@ export const MusicGenPage: React.FC = () => {
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
+                        opacity: isTranscribing ? 0.4 : 1,
                       }}
                       title="Supprimer"
                     >
@@ -1185,6 +1316,12 @@ export const MusicGenPage: React.FC = () => {
           </div>
         )}
       </div>
+
+      <style>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 };

@@ -12,6 +12,7 @@ import { EQPanel } from './EQPanel';
 import { MonoMakerPanel } from './MonoMakerPanel';
 import { ImagerPanel } from './ImagerPanel';
 import { VectorScope } from './VectorScope';
+import { CorrelationMeter } from './CorrelationMeter';
 import { PresetManager } from './PresetManager';
 import { exportMasteredWav, downloadBlob } from '../audio/masteringExporter';
 import type { UserMasteringPreset } from '../utils/masteringPresets';
@@ -63,6 +64,7 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
 
   // Scope
   const [showScope, setShowScope] = useState(true);
+  const [showCorrelation, setShowCorrelation] = useState(true);
   const [analyserNode, setAnalyserNode] = useState<AnalyserNode | null>(null);
 
   const chainRef = useRef<MasteringChain | null>(null);
@@ -587,6 +589,44 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
               color="#00d9ff"
             />
           </div>
+        )}
+      </div>
+
+            {/* CORRELATION METER */}
+      <div style={{ marginBottom: '20px' }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '10px',
+          }}
+        >
+          <div style={{ fontSize: '10px', color: '#666', letterSpacing: '1px' }}>
+            📊 CORRELATION METER
+          </div>
+          <button
+            onClick={() => setShowCorrelation(!showCorrelation)}
+            style={{
+              background: 'transparent',
+              border: '1px solid #2a2a2a',
+              borderRadius: 4,
+              color: showCorrelation ? '#00d9ff' : '#666',
+              fontSize: 10,
+              cursor: 'pointer',
+              padding: '2px 8px',
+              fontWeight: 600,
+            }}
+          >
+            {showCorrelation ? '▼ MASQUER' : '▶ AFFICHER'}
+          </button>
+        </div>
+        {showCorrelation && (
+          <CorrelationMeter
+            analyser={analyserNode}
+            isActive={isAnalyzing}
+            color="#00d9ff"
+          />
         )}
       </div>
 

@@ -19,7 +19,6 @@ export const VectorScope: React.FC<VectorScopeProps> = ({
   const leftRef = useRef<Float32Array | null>(null);
   const rightRef = useRef<Float32Array | null>(null);
 
-  // Init buffers
   useEffect(() => {
     if (!analyser) return;
     leftRef.current = new Float32Array(analyser.fftSize);
@@ -42,7 +41,6 @@ export const VectorScope: React.FC<VectorScopeProps> = ({
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
 
-    // Fond noir semi-transparent pour effet de traîne
     ctx.fillStyle = 'rgba(5, 5, 8, 0.25)';
     ctx.fillRect(0, 0, W, H);
 
@@ -50,9 +48,7 @@ export const VectorScope: React.FC<VectorScopeProps> = ({
     const cy = H / 2;
     const radius = Math.min(W, H) / 2 - 14;
 
-    // ============================================================
-    // GRILLE
-    // ============================================================
+    // Grille
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
     ctx.lineWidth = 1;
     ctx.beginPath();
@@ -67,7 +63,7 @@ export const VectorScope: React.FC<VectorScopeProps> = ({
     ctx.arc(cx, cy, radius * 0.33, 0, Math.PI * 2);
     ctx.stroke();
 
-    // Axes diagonaux L/R
+    // Axes diagonaux
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
     ctx.beginPath();
     ctx.moveTo(cx - radius, cy + radius);
@@ -78,7 +74,7 @@ export const VectorScope: React.FC<VectorScopeProps> = ({
     ctx.lineTo(cx + radius, cy + radius);
     ctx.stroke();
 
-    // Axes horizontaux/verticaux
+    // Axes H/V
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
     ctx.beginPath();
     ctx.moveTo(cx - radius, cy);
@@ -97,45 +93,30 @@ export const VectorScope: React.FC<VectorScopeProps> = ({
     ctx.fillText('M', cx, cy - radius - 8);
     ctx.fillText('S', cx, cy + radius + 8);
 
-    if (!analyser || !leftRef.current || !rightRef.current) {
+    if (!analyser || !leftRef.current) {
       if (isActive) rafRef.current = requestAnimationFrame(draw);
       return;
     }
 
-    // ============================================================
-    // RÉCUPÉRATION L/R (via 2 analysers séparés = pas dispo)
-    // Approche : on utilise getFloatTimeDomainData sur le signal mono
-    // et on simule L/R en prenant l'échantillon i et i+1
-    // ============================================================
     const buffer = leftRef.current;
-    analyser.getFloatTimeDomainData(buffer);
+    // ✅ Cast pour Vercel
+    analyser.getFloatTimeDomainData(buffer as Float32Array<ArrayBuffer>);
 
-    // ============================================================
-    // DESSIN DES POINTS
-    // ============================================================
     ctx.globalCompositeOperation = 'lighter';
 
     const N = buffer.length;
     const dotSize = 1.4;
 
     for (let i = 0; i < N - 1; i += 4) {
-      // Approximation L/R : on prend 2 échantillons successifs
-      // (pour un vrai scope L/R, il faudrait 2 analysers)
       const l = buffer[i] || 0;
       const r = buffer[i + 1] || 0;
 
-      // Formule goniomètre :
-      //   side = (L - R) → axe horizontal
-      //   mid  = (L + R) → axe vertical
       const side = (l - r) * 0.9;
       const mid = (l + r) * 0.9;
 
-      // Conversion en coordonnées écran
-      // Note : sur l'axe horizontal, gauche = -side, droite = +side
       const x = cx + side * radius;
       const y = cy - mid * radius;
 
-      // Distance au centre pour modulation d'opacité
       const dx = (x - cx) / radius;
       const dy = (y - cy) / radius;
       const dist = Math.sqrt(dx * dx + dy * dy);

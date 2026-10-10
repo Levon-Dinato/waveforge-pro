@@ -17,7 +17,7 @@ interface ModuleCard {
 const MODULES: ModuleCard[] = [
   { to: '/studio', icon: '🎹', title: 'Studio', description: 'Analyse audio → MIDI, quantisation, export multipiste', color: '#00d9ff' },
   { to: '/stems', icon: '🎤', title: 'Séparation de Stems', description: 'Isolation voix/instrumental avec Demucs IA', color: '#00ff88' },
-  { to: '/mastering', icon: '🎚️', title: 'Mastering', description: 'Presets Warm/Balanced/Open/Master + analyse LUFS + WAV', color: '#7c5cff' },
+  { to: '/mastering', icon: '🎚️', title: 'Mastering', description: 'EQ 5 bandes · Mono-Maker · Vector Scope · Export WAV', color: '#7c5cff' },
   { to: '/musicgen', icon: '🎵', title: 'Génération IA', description: 'Générer des morceaux avec MusicGen (Meta) · 100% local', color: '#00ff88' },
   { to: '/generator', icon: '🎼', title: 'Générateur', description: 'Création de mélodies · Pop, Trap, Lo-Fi, Drill, House', color: '#ffd43b' },
   { to: '/help', icon: '📖', title: 'Guide', description: 'Comment utiliser WaveForge pour débuter', color: '#00d9ff' },
@@ -225,7 +225,7 @@ export const HomePage: React.FC = () => {
           }}
         >
           {MODULES.map((card) => (
-            <ModuleCardComponent key={card.to} card={card} hasAudio={hasAudio} />
+            <ModuleCardComponent key={card.to} card={card} />
           ))}
         </div>
       </div>
@@ -385,7 +385,7 @@ const BigStatCard: React.FC<{
   </div>
 );
 
-const ModuleCardComponent: React.FC<{ card: ModuleCard; hasAudio: boolean }> = ({ card, hasAudio }) => {
+const ModuleCardComponent: React.FC<{ card: ModuleCard }> = ({ card }) => {
   return (
     <Link to={card.to} style={{ textDecoration: 'none', color: 'inherit' }}>
       <div

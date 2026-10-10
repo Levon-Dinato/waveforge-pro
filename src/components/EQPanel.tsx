@@ -1,6 +1,6 @@
 // src/components/EQPanel.tsx
 import React, { useRef, useEffect, useState, useCallback } from 'react';
-import { DEFAULT_EQ_BANDS, type EQBand } from '../audio/masteringChain';
+import type { EQBand } from '../audio/masteringChain';
 
 interface EQPanelProps {
   bands: EQBand[];
@@ -114,22 +114,18 @@ export const EQPanel: React.FC<EQPanelProps> = ({
       freqsArray[i] = MIN_FREQ * Math.pow(MAX_FREQ / MIN_FREQ, i / (N - 1));
     }
 
-    // Calcul de la réponse : pour chaque bande
-    const magnitudes = new Float32Array(N).fill(0); // en dB
+    const magnitudes = new Float32Array(N).fill(0);
     for (const band of bands) {
       for (let i = 0; i < N; i++) {
         const f = freqsArray[i];
         let gain = 0;
         const logDist = Math.log2(f / band.frequency);
-        const width = 1 / Math.max(0.1, band.q);
 
         if (band.type === 'lowshelf') {
-          // Rampe douce autour de la fréquence
           gain = band.gain / (1 + Math.pow(f / band.frequency, 2));
         } else if (band.type === 'highshelf') {
           gain = band.gain / (1 + Math.pow(band.frequency / f, 2));
         } else {
-          // Peaking
           const qFactor = Math.exp(-Math.pow(logDist * band.q, 2) / 2);
           gain = band.gain * qFactor;
         }
@@ -223,7 +219,6 @@ export const EQPanel: React.FC<EQPanelProps> = ({
     const w = rect.width;
     const h = rect.height;
 
-    // Trouve la bande la plus proche
     let closestIdx = -1;
     let closestDist = Infinity;
     bands.forEach((band, i) => {
@@ -257,7 +252,6 @@ export const EQPanel: React.FC<EQPanelProps> = ({
       const newGain = Math.max(MIN_DB, Math.min(MAX_DB, yToDb(my, h)));
       onChange(draggingBand, Math.round(newFreq), parseFloat(newGain.toFixed(1)), band.q);
     } else {
-      // Détecte le hover
       let hovered = -1;
       bands.forEach((band, i) => {
         const bx = freqToX(band.frequency, w);
@@ -279,7 +273,6 @@ export const EQPanel: React.FC<EQPanelProps> = ({
     return () => window.removeEventListener('mouseup', up);
   }, []);
 
-  // Knob pour la bande sélectionnée
   const selected = selectedBand !== null ? bands[selectedBand] : null;
 
   return (

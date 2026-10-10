@@ -33,7 +33,6 @@ export class AudioAnalyzer {
     source.connect(this.analyser);
   }
 
-  // ✅ NOUVEAU : Accès à l'AnalyserNode pour le VectorScope
   getAnalyserNode(): AnalyserNode {
     return this.analyser;
   }
@@ -60,7 +59,8 @@ export class AudioAnalyzer {
   }
 
   getMetrics(): AudioMetrics {
-    this.analyser.getFloatTimeDomainData(this.dataArray);
+    // ✅ Cast pour Vercel (TS strict)
+    this.analyser.getFloatTimeDomainData(this.dataArray as Float32Array<ArrayBuffer>);
 
     // True Peak
     let peak = 0;

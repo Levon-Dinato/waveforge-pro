@@ -1,8 +1,9 @@
 // src/layouts/MainLayout.tsx
-import React from 'react';
+import React, { useState } from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
 import { VideoBackground } from '../components/VideoBackground';
 import { VUMeter } from '../components/VUMeter';
+import { SessionPanel } from '../components/SessionPanel';
 import { useAudioEngineContext } from '../contexts/AudioEngineContext';
 import { useIsMobile } from '../hooks/useIsMobile';
 
@@ -28,6 +29,7 @@ const NAV_ITEMS: NavItem[] = [
 export const MainLayout: React.FC = () => {
   const engine = useAudioEngineContext();
   const isMobile = useIsMobile(768);
+  const [showSessions, setShowSessions] = useState(false);
 
   // ============================================================
   // VERSION MOBILE
@@ -102,12 +104,33 @@ export const MainLayout: React.FC = () => {
               </div>
             </div>
 
-            <div style={{ transform: 'scale(0.75)', transformOrigin: 'right center' }}>
-              <VUMeter
-                audioBuffer={engine.audioBuffer}
-                isPlaying={engine.isPlaying}
-                currentTime={engine.currentTime}
-              />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <button
+                onClick={() => setShowSessions(true)}
+                style={{
+                  padding: '6px 10px',
+                  background: 'var(--bg-1)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 6,
+                  color: '#00d9ff',
+                  fontSize: 14,
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+                title="Sessions sauvegardées"
+              >
+                💾
+              </button>
+              <div style={{ transform: 'scale(0.7)', transformOrigin: 'right center' }}>
+                <VUMeter
+                  audioBuffer={engine.audioBuffer}
+                  isPlaying={engine.isPlaying}
+                  currentTime={engine.currentTime}
+                />
+              </div>
             </div>
           </header>
 
@@ -130,7 +153,7 @@ export const MainLayout: React.FC = () => {
             WAVEFORGE PRO · v1.0
           </footer>
 
-          {/* BARRE DE NAVIGATION EN BAS */}
+          {/* NAV BOTTOM */}
           <nav
             style={{
               position: 'fixed',
@@ -176,7 +199,9 @@ export const MainLayout: React.FC = () => {
                       style={{
                         fontSize: 18,
                         lineHeight: 1,
-                        filter: isActive ? 'none' : 'grayscale(0.5) opacity(0.7)',
+                        filter: isActive
+                          ? 'none'
+                          : 'grayscale(0.5) opacity(0.7)',
                       }}
                     >
                       {item.icon}
@@ -201,6 +226,8 @@ export const MainLayout: React.FC = () => {
             ))}
           </nav>
         </div>
+
+        <SessionPanel isOpen={showSessions} onClose={() => setShowSessions(false)} />
       </>
     );
   }
@@ -229,7 +256,7 @@ export const MainLayout: React.FC = () => {
             gap: 20,
           }}
         >
-          {/* === SIDEBAR === */}
+          {/* SIDEBAR */}
           <aside
             style={{
               width: 220,
@@ -320,8 +347,41 @@ export const MainLayout: React.FC = () => {
               ))}
             </nav>
 
-            {/* VU Mètre en bas de la sidebar */}
-            <div style={{ marginTop: 'auto', paddingTop: 16 }}>
+            {/* Bouton Sessions */}
+            <button
+              onClick={() => setShowSessions(true)}
+              style={{
+                marginTop: 'auto',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+                padding: '10px 12px',
+                background:
+                  'linear-gradient(135deg, rgba(0, 217, 255, 0.1), rgba(0, 136, 255, 0.05))',
+                border: '1px solid rgba(0, 217, 255, 0.3)',
+                borderRadius: 8,
+                color: '#00d9ff',
+                fontSize: 11,
+                fontWeight: 700,
+                cursor: 'pointer',
+                letterSpacing: '0.5px',
+                transition: 'all 0.2s',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background =
+                  'linear-gradient(135deg, rgba(0, 217, 255, 0.2), rgba(0, 136, 255, 0.1))';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background =
+                  'linear-gradient(135deg, rgba(0, 217, 255, 0.1), rgba(0, 136, 255, 0.05))';
+              }}
+            >
+              💾 SESSIONS
+            </button>
+
+            {/* VU Mètre */}
+            <div style={{ paddingTop: 16 }}>
               <div
                 className="label-uppercase"
                 style={{ fontSize: 8, color: '#444', marginBottom: 8 }}
@@ -336,7 +396,7 @@ export const MainLayout: React.FC = () => {
             </div>
           </aside>
 
-          {/* === CONTENU PRINCIPAL === */}
+          {/* CONTENU PRINCIPAL */}
           <main
             style={{
               flex: 1,
@@ -365,13 +425,12 @@ export const MainLayout: React.FC = () => {
           WAVEFORGE PRO · YIN · TONE.JS · DEMUCS · BASIC PITCH · v1.0
         </footer>
       </div>
+
+      <SessionPanel isOpen={showSessions} onClose={() => setShowSessions(false)} />
     </>
   );
 };
 
-/**
- * Convertit un code hex (#RRGGBB) en "R, G, B" pour rgba()
- */
 function hexToRgb(hex: string): string {
   const clean = hex.replace('#', '');
   const r = parseInt(clean.substring(0, 2), 16);

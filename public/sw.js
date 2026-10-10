@@ -41,15 +41,26 @@ self.addEventListener('fetch', (event) => {
   if (request.url.includes('/api/treblo')) return;
 
   event.respondWith(
-    fetch(request)
-      .then((response) => {
-        // Cache les assets statiques
-        if (response.ok && request.destination !== '') {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
-        }
-        return response;
-      })
+  fetch(request)
+    .then((response) => {
+      // ✅ Ne cache QUE les réponses complètes (200), pas les 206 (Partial Content)
+      // Cela évite l'erreur "Partial response is unsupported"
+      if (
+        response.status === 200 &&
+        request.destination !== '' &&
+        request.destination !== 'video'  // Ne pas cacher les vidéos
+      ) {
+        const clone = response.clone();
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(request, clone).catch((err) => {
+            // Ignore silencieusement les erreurs de cache
+            console.debug('Cache skip:', request.url);
+          });
+        });
+      }
+      return response;
+    })
+    
       .catch(() => {
         // Fallback sur le cache si offline
         return caches.match(request).then((cached) => {

@@ -6,6 +6,7 @@ import { SpectrumVisualizer } from '../components/SpectrumVisualizer';
 import { useAudioEngineContext } from '../contexts/AudioEngineContext';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { audioTransfer } from '../utils/audioTransfer';
+import type { MasteringChain } from '../audio/masteringChain';
 
 interface MasteredExport {
   id: string;
@@ -21,30 +22,10 @@ const PRESET_INFO: Record<
   string,
   { name: string; description: string; color: string; values: string }
 > = {
-  warm: {
-    name: 'WARM',
-    description: 'Chaud et chaleureux',
-    color: '#ffb800',
-    values: '+2dB · -1dB · 1.1x · 12%',
-  },
-  balanced: {
-    name: 'BALANCED',
-    description: 'Neutre et équilibré',
-    color: '#00d9ff',
-    values: '0dB · 0dB · 1.0x · 8%',
-  },
-  open: {
-    name: 'OPEN',
-    description: 'Aérien et large',
-    color: '#00ff88',
-    values: '-1dB · +2.5dB · 1.3x · 5%',
-  },
-  master: {
-    name: 'MASTER',
-    description: 'Neutre (fichiers déjà masterisés)',
-    color: '#888',
-    values: '0dB · 0dB · 1.0x · 0%',
-  },
+  warm: { name: 'WARM', description: 'Chaud et chaleureux', color: '#ffb800', values: '+2dB · -1dB · 1.1x · 12%' },
+  balanced: { name: 'BALANCED', description: 'Neutre et équilibré', color: '#00d9ff', values: '0dB · 0dB · 1.0x · 8%' },
+  open: { name: 'OPEN', description: 'Aérien et large', color: '#00ff88', values: '-1dB · +2.5dB · 1.3x · 5%' },
+  master: { name: 'MASTER', description: 'Neutre (fichiers déjà masterisés)', color: '#888', values: '0dB · 0dB · 1.0x · 0%' },
 };
 
 export const MasteringPage: React.FC = () => {
@@ -60,20 +41,16 @@ export const MasteringPage: React.FC = () => {
   const [exports, setExports] = useState<MasteredExport[]>([]);
 
   const sourceRef = useRef<AudioBufferSourceNode | null>(null);
+  const chainRef = useRef<MasteringChain | null>(null);
+  const tapAnalyserRef = useRef<AnalyserNode | null>(null);
 
-  // ============================================================
-  // CHARGEMENT HISTORIQUE
-  // ============================================================
   useEffect(() => {
     try {
       const raw = localStorage.getItem('waveforge-mastering-exports');
       if (raw) setExports(JSON.parse(raw));
-    } catch (e) {
-      console.warn('Erreur chargement exports:', e);
-    }
+    } catch (e) {}
   }, []);
 
-  // ✅ NOUVEAU : Consommer un transfert de MusicGen
   useEffect(() => {
     audioTransfer.consume('mastering').then((pending) => {
       if (pending) {
@@ -84,13 +61,10 @@ export const MasteringPage: React.FC = () => {
     });
   }, []);
 
-  // Cleanup
   useEffect(() => {
     return () => {
       if (sourceRef.current) {
-        try {
-          sourceRef.current.stop();
-        } catch {}
+        try { sourceRef.current.stop(); } catch {}
       }
     };
   }, []);
@@ -105,40 +79,69 @@ export const MasteringPage: React.FC = () => {
     const ctx = engine.audioContext;
 
     if (sourceRef.current) {
-      try {
-        sourceRef.current.stop();
-      } catch {}
+      try { sourceRef.current.stop(); } catch {}
       sourceRef.current = null;
+    }
+
+    // Déconnecte l'ancien tap analyser
+    if (tapAnalyserRef.current) {
+      try { tapAnalyserRef.current.disconnect(); } catch {}
+      tapAnalyserRef.current = null;
     }
 
     const source = ctx.createBufferSource();
     source.buffer = engine.audioBuffer;
 
-    const analyser = ctx.createAnalyser();
-    analyser.fftSize = 2048;
-    analyser.smoothingTimeConstant = 0.82;
+    if (chainRef.current) {
+      const chainInput = chainRef.current.getInputNode();
+      const chainOutput = chainRef.current.getOutputNode();
 
-    source.connect(analyser);
-    analyser.connect(ctx.destination);
+      // Source → entrée de la chaîne
+      source.connect(chainInput);
+      console.log('🔌 Source connectée à la chaîne de mastering');
 
-    setAbAnalyser(analyser);
+      // ✅ Tap analyser sur la SORTIE de la chaîne (pour le Spectrum)
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 2048;
+      analyser.smoothingTimeConstant = 0.82;
+      chainOutput.connect(analyser);
+      tapAnalyserRef.current = analyser;
+      setAbAnalyser(analyser);
+    } else {
+      // Pas de chaîne → lecture directe
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 2048;
+      analyser.smoothingTimeConstant = 0.82;
+      source.connect(analyser);
+      analyser.connect(ctx.destination);
+      tapAnalyserRef.current = analyser;
+      setAbAnalyser(analyser);
+      console.warn('⚠️ Pas de chaîne, lecture directe');
+    }
+
     source.start(0);
     sourceRef.current = source;
     setIsPlayingAB(true);
 
     source.onended = () => {
       setIsPlayingAB(false);
-      setAbAnalyser(null);
       sourceRef.current = null;
+      setAbAnalyser(null);
+      if (tapAnalyserRef.current) {
+        try { tapAnalyserRef.current.disconnect(); } catch {}
+        tapAnalyserRef.current = null;
+      }
     };
   }, [engine]);
 
   const handleStopAB = useCallback(() => {
     if (sourceRef.current) {
-      try {
-        sourceRef.current.stop();
-      } catch {}
+      try { sourceRef.current.stop(); } catch {}
       sourceRef.current = null;
+    }
+    if (tapAnalyserRef.current) {
+      try { tapAnalyserRef.current.disconnect(); } catch {}
+      tapAnalyserRef.current = null;
     }
     setIsPlayingAB(false);
     setAbAnalyser(null);
@@ -169,14 +172,7 @@ export const MasteringPage: React.FC = () => {
         }}
       >
         <div>
-          <h2
-            style={{
-              fontSize: isMobile ? 16 : 20,
-              fontWeight: 700,
-              margin: 0,
-              marginBottom: 8,
-            }}
-          >
+          <h2 style={{ fontSize: isMobile ? 16 : 20, fontWeight: 700, margin: 0, marginBottom: 8 }}>
             🎚️ <span style={{ color: '#7c5cff' }}>Mastering</span>
             <span
               style={{
@@ -196,7 +192,7 @@ export const MasteringPage: React.FC = () => {
             </span>
           </h2>
           <p style={{ color: '#888', fontSize: 11, margin: 0 }}>
-            Chaîne complète : EQ · Compression · Saturation · Limiteur · Export WAV
+            Chaîne complète : EQ 5 bandes · Mono-Maker · Vector Scope · Limiteur · Export WAV
           </p>
         </div>
 
@@ -240,14 +236,7 @@ export const MasteringPage: React.FC = () => {
           }}
         >
           <div style={{ fontSize: isMobile ? 40 : 52, marginBottom: 16 }}>🎚️</div>
-          <div
-            style={{
-              fontSize: 15,
-              color: '#fff',
-              marginBottom: 10,
-              fontWeight: 600,
-            }}
-          >
+          <div style={{ fontSize: 15, color: '#fff', marginBottom: 10, fontWeight: 600 }}>
             Aucun audio chargé
           </div>
           <div
@@ -260,8 +249,7 @@ export const MasteringPage: React.FC = () => {
               lineHeight: 1.6,
             }}
           >
-            Charge un audio dans la page Studio pour accéder à la chaîne de mastering
-            professionnelle : EQ, compression, saturation, limiteur et export WAV.
+            Charge un audio dans la page Studio pour accéder à la chaîne de mastering.
           </div>
           <Link
             to="/studio"
@@ -296,16 +284,10 @@ export const MasteringPage: React.FC = () => {
               gap: 20,
             }}
           >
-            {/* A/B */}
             <div>
               <div
                 className="label-uppercase"
-                style={{
-                  fontSize: 10,
-                  color: '#666',
-                  marginBottom: 10,
-                  letterSpacing: '1px',
-                }}
+                style={{ fontSize: 10, color: '#666', marginBottom: 10, letterSpacing: '1px' }}
               >
                 🎧 COMPARAISON A/B
               </div>
@@ -352,67 +334,43 @@ export const MasteringPage: React.FC = () => {
                 </button>
               </div>
 
-              <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
-                <button
-                  onClick={isPlayingAB ? handleStopAB : handlePlayAB}
-                  className="btn-action primary"
-                  style={{
-                    flex: 1,
-                    background: isPlayingAB
-                      ? '#ff3366'
-                      : abMode === 'mastered'
-                      ? '#00ff88'
-                      : '#7c5cff',
-                    color: abMode === 'mastered' && !isPlayingAB ? '#000' : '#fff',
-                    borderColor: 'transparent',
-                    fontWeight: 700,
-                    padding: '10px',
-                    fontSize: 11,
-                    justifyContent: 'center',
-                  }}
-                >
-                  {isPlayingAB
-                    ? '⏹ ARRÊTER'
-                    : `▶ LIRE (${abMode === 'mastered' ? 'Master' : 'Original'})`}
-                </button>
-              </div>
+              <button
+                onClick={isPlayingAB ? handleStopAB : handlePlayAB}
+                className="btn-action primary"
+                style={{
+                  width: '100%',
+                  marginTop: 10,
+                  background: isPlayingAB
+                    ? '#ff3366'
+                    : abMode === 'mastered'
+                    ? '#00ff88'
+                    : '#7c5cff',
+                  color: abMode === 'mastered' && !isPlayingAB ? '#000' : '#fff',
+                  borderColor: 'transparent',
+                  fontWeight: 700,
+                  padding: '10px',
+                  fontSize: 11,
+                  justifyContent: 'center',
+                }}
+              >
+                {isPlayingAB
+                  ? '⏹ ARRÊTER'
+                  : `▶ LIRE (${abMode === 'mastered' ? 'Master' : 'Original'})`}
+              </button>
             </div>
 
-            {/* INTENSITÉ */}
             <div>
               <div
                 className="label-uppercase"
-                style={{
-                  fontSize: 10,
-                  color: '#666',
-                  marginBottom: 10,
-                  letterSpacing: '1px',
-                }}
+                style={{ fontSize: 10, color: '#666', marginBottom: 10, letterSpacing: '1px' }}
               >
                 ⚡ INTENSITÉ DU PRESET
               </div>
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 10,
-                  marginBottom: 8,
-                }}
-              >
-                <span
-                  className="mono"
-                  style={{ fontSize: 24, fontWeight: 700, color: '#7c5cff' }}
-                >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                <span className="mono" style={{ fontSize: 24, fontWeight: 700, color: '#7c5cff' }}>
                   {presetIntensity}%
                 </span>
-                <div
-                  style={{
-                    flex: 1,
-                    fontSize: 10,
-                    color: '#666',
-                    lineHeight: 1.4,
-                  }}
-                >
+                <div style={{ flex: 1, fontSize: 10, color: '#666', lineHeight: 1.4 }}>
                   {presetIntensity === 0
                     ? 'Aucun effet appliqué'
                     : presetIntensity < 50
@@ -461,7 +419,7 @@ export const MasteringPage: React.FC = () => {
                 className="label-uppercase"
                 style={{ fontSize: 10, color: '#666', letterSpacing: '1px' }}
               >
-                📊 SPECTRE SONORE EN TEMPS RÉEL
+                📊 SPECTRE SONORE
               </div>
               <div
                 style={{
@@ -515,23 +473,11 @@ export const MasteringPage: React.FC = () => {
               <div className="panel" style={{ padding: 16 }}>
                 <div
                   className="label-uppercase"
-                  style={{
-                    fontSize: 10,
-                    color: '#666',
-                    marginBottom: 12,
-                    letterSpacing: '1px',
-                  }}
+                  style={{ fontSize: 10, color: '#666', marginBottom: 12, letterSpacing: '1px' }}
                 >
                   🎵 FICHIER SOURCE
                 </div>
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 10,
-                    marginBottom: 12,
-                  }}
-                >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
                   <div
                     style={{
                       width: 36,
@@ -561,28 +507,14 @@ export const MasteringPage: React.FC = () => {
                     >
                       {engine.fileName || 'Sans titre'}
                     </div>
-                    <div
-                      className="mono"
-                      style={{ fontSize: 9, color: '#888', marginTop: 2 }}
-                    >
-                      {engine.fileFormat} ·{' '}
-                      {((engine.fileSize ?? 0) / (1024 * 1024)).toFixed(1)} MB
+                    <div className="mono" style={{ fontSize: 9, color: '#888', marginTop: 2 }}>
+                      {engine.fileFormat} · {((engine.fileSize ?? 0) / (1024 * 1024)).toFixed(1)} MB
                     </div>
                   </div>
                 </div>
-                <div
-                  style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}
-                >
-                  <InfoBox
-                    label="DURÉE"
-                    value={`${engine.result?.duration.toFixed(1)}s`}
-                    color="#7c5cff"
-                  />
-                  <InfoBox
-                    label="BPM"
-                    value={engine.result?.bpm?.toString() ?? '—'}
-                    color="#7c5cff"
-                  />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                  <InfoBox label="DURÉE" value={`${engine.result?.duration.toFixed(1)}s`} color="#7c5cff" />
+                  <InfoBox label="BPM" value={engine.result?.bpm?.toString() ?? '—'} color="#7c5cff" />
                 </div>
               </div>
 
@@ -592,26 +524,21 @@ export const MasteringPage: React.FC = () => {
                 style={{
                   padding: 16,
                   borderColor: 'rgba(124, 92, 255, 0.2)',
-                  background:
-                    'linear-gradient(135deg, rgba(124, 92, 255, 0.03), transparent)',
+                  background: 'linear-gradient(135deg, rgba(124, 92, 255, 0.03), transparent)',
                 }}
               >
                 <div
                   className="label-uppercase"
-                  style={{
-                    fontSize: 10,
-                    color: '#7c5cff',
-                    marginBottom: 12,
-                    letterSpacing: '1px',
-                  }}
+                  style={{ fontSize: 10, color: '#7c5cff', marginBottom: 12, letterSpacing: '1px' }}
                 >
                   ⚙️ CHAÎNE DE TRAITEMENT
                 </div>
                 <div style={{ display: 'grid', gap: 6, fontSize: 11 }}>
-                  <ChainStep icon="🎛️" label="EQ 3 bandes" />
+                  <ChainStep icon="🎛️" label="EQ 5 bandes" />
                   <ChainStep icon="📊" label="Compression" />
                   <ChainStep icon="🔥" label="Saturation" />
                   <ChainStep icon="🌌" label="Stéréo Widener" />
+                  <ChainStep icon="🎵" label="Mono-Maker" />
                   <ChainStep icon="🛡️" label="Limiteur brickwall" />
                 </div>
               </div>
@@ -620,12 +547,7 @@ export const MasteringPage: React.FC = () => {
               <div className="panel" style={{ padding: 16 }}>
                 <div
                   className="label-uppercase"
-                  style={{
-                    fontSize: 10,
-                    color: '#666',
-                    marginBottom: 12,
-                    letterSpacing: '1px',
-                  }}
+                  style={{ fontSize: 10, color: '#666', marginBottom: 12, letterSpacing: '1px' }}
                 >
                   🎨 PRESETS DISPONIBLES
                 </div>
@@ -647,34 +569,13 @@ export const MasteringPage: React.FC = () => {
               {/* Astuce */}
               <div
                 className="panel"
-                style={{
-                  padding: 12,
-                  background: 'var(--bg-1)',
-                  borderColor: 'var(--border)',
-                }}
+                style={{ padding: 12, background: 'var(--bg-1)', borderColor: 'var(--border)' }}
               >
-                <div
-                  style={{
-                    fontSize: 10,
-                    color: '#666',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 6,
-                  }}
-                >
+                <div style={{ fontSize: 10, color: '#666', display: 'flex', alignItems: 'center', gap: 6 }}>
                   💡 <strong style={{ color: '#888' }}>Astuce :</strong>
                 </div>
-                <div
-                  style={{
-                    fontSize: 10,
-                    color: '#666',
-                    marginTop: 6,
-                    lineHeight: 1.5,
-                  }}
-                >
-                  Fichier déjà masterisé (BandLab, LANDR...) ? Utilise le preset{' '}
-                  <strong style={{ color: '#888' }}>MASTER</strong> pour éviter le
-                  clipping.
+                <div style={{ fontSize: 10, color: '#666', marginTop: 6, lineHeight: 1.5 }}>
+                  Fichier déjà masterisé ? Utilise le preset <strong style={{ color: '#888' }}>MASTER</strong> pour éviter le clipping.
                 </div>
               </div>
             </div>
@@ -685,6 +586,10 @@ export const MasteringPage: React.FC = () => {
                 audioContext={engine.audioContext}
                 sourceNode={null}
                 sourceBuffer={engine.audioBuffer}
+                onChainReady={(chain) => {
+                  chainRef.current = chain;
+                  console.log('✅ Chaîne de mastering prête');
+                }}
               />
             </div>
           </div>
@@ -699,28 +604,16 @@ export const MasteringPage: React.FC = () => {
                 marginBottom: 12,
               }}
             >
-              <div
-                className="label-uppercase"
-                style={{
-                  fontSize: 10,
-                  color: '#666',
-                  letterSpacing: '1px',
-                }}
-              >
-                📦 HISTORIQUE DES EXPORTS · {exports.length}
+              <div className="label-uppercase" style={{ fontSize: 10, color: '#666', letterSpacing: '1px' }}>
+                📦 HISTORIQUE · {exports.length}
               </div>
               {exports.length > 0 && (
                 <button
                   onClick={() => {
-                    if (confirm("Effacer tout l'historique des exports ?"))
-                      saveExports([]);
+                    if (confirm("Effacer tout l'historique des exports ?")) saveExports([]);
                   }}
                   className="btn-action"
-                  style={{
-                    padding: '4px 10px',
-                    fontSize: 10,
-                    color: '#ff3366',
-                  }}
+                  style={{ padding: '4px 10px', fontSize: 10, color: '#ff3366' }}
                 >
                   🗑️ TOUT EFFACER
                 </button>
@@ -738,25 +631,18 @@ export const MasteringPage: React.FC = () => {
                   borderStyle: 'dashed',
                 }}
               >
-                Aucun export pour le moment. Clique sur "EXPORT WAV MASTERISÉ" pour
-                commencer.
+                Aucun export pour le moment.
               </div>
             ) : (
               <div
                 style={{
                   display: 'grid',
-                  gridTemplateColumns: isMobile
-                    ? '1fr'
-                    : 'repeat(auto-fill, minmax(240px, 1fr))',
+                  gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(240px, 1fr))',
                   gap: 12,
                 }}
               >
                 {exports.slice(0, 6).map((exp) => (
-                  <ExportCard
-                    key={exp.id}
-                    exportItem={exp}
-                    onDelete={() => handleDeleteExport(exp.id)}
-                  />
+                  <ExportCard key={exp.id} exportItem={exp} onDelete={() => handleDeleteExport(exp.id)} />
                 ))}
               </div>
             )}
@@ -767,15 +653,8 @@ export const MasteringPage: React.FC = () => {
   );
 };
 
-/* ============================================================
-   SOUS-COMPOSANTS
-   ============================================================ */
-
-const InfoBox: React.FC<{ label: string; value: string; color: string }> = ({
-  label,
-  value,
-  color,
-}) => (
+/* SOUS-COMPOSANTS */
+const InfoBox: React.FC<{ label: string; value: string; color: string }> = ({ label, value, color }) => (
   <div
     style={{
       padding: '8px 10px',
@@ -785,10 +664,7 @@ const InfoBox: React.FC<{ label: string; value: string; color: string }> = ({
       textAlign: 'center',
     }}
   >
-    <div
-      className="label-uppercase"
-      style={{ fontSize: 8, color: '#666', marginBottom: 3 }}
-    >
+    <div className="label-uppercase" style={{ fontSize: 8, color: '#666', marginBottom: 3 }}>
       {label}
     </div>
     <div className="mono" style={{ fontSize: 13, color, fontWeight: 600 }}>
@@ -844,9 +720,7 @@ const PresetInfo: React.FC<{
         marginBottom: 2,
       }}
     >
-      <span
-        style={{ color, fontWeight: 700, fontSize: 11, letterSpacing: '0.5px' }}
-      >
+      <span style={{ color, fontWeight: 700, fontSize: 11, letterSpacing: '0.5px' }}>
         {name}
         {isActive && <span style={{ marginLeft: 6, fontSize: 9 }}>✓</span>}
       </span>
@@ -858,10 +732,7 @@ const PresetInfo: React.FC<{
   </div>
 );
 
-const ExportCard: React.FC<{
-  exportItem: MasteredExport;
-  onDelete: () => void;
-}> = ({ exportItem, onDelete }) => {
+const ExportCard: React.FC<{ exportItem: MasteredExport; onDelete: () => void }> = ({ exportItem, onDelete }) => {
   const date = new Date(exportItem.timestamp);
   const dateStr = date.toLocaleString('fr-FR', {
     day: '2-digit',
@@ -871,13 +742,7 @@ const ExportCard: React.FC<{
   });
 
   return (
-    <div
-      className="panel fade-in"
-      style={{
-        padding: 14,
-        borderColor: 'var(--border)',
-      }}
-    >
+    <div className="panel fade-in" style={{ padding: 14, borderColor: 'var(--border)' }}>
       <div
         style={{
           display: 'flex',
@@ -900,10 +765,7 @@ const ExportCard: React.FC<{
           >
             {exportItem.preset} · {exportItem.intensity}%
           </div>
-          <div
-            className="mono"
-            style={{ fontSize: 9, color: '#666', marginTop: 2 }}
-          >
+          <div className="mono" style={{ fontSize: 9, color: '#666', marginTop: 2 }}>
             {dateStr}
           </div>
         </div>
@@ -940,11 +802,7 @@ const ExportCard: React.FC<{
         🎵 {exportItem.fileName}
       </div>
 
-      <audio
-        src={exportItem.audioUrl}
-        controls
-        style={{ width: '100%', height: 28 }}
-      />
+      <audio src={exportItem.audioUrl} controls style={{ width: '100%', height: 28 }} />
     </div>
   );
 };

@@ -13,6 +13,7 @@ interface MasteringPanelProps {
   sourceNode: AudioNode | null;
   sourceBuffer: AudioBuffer | null;
   onExport?: (preset: MasteringPreset) => void;
+  onChainReady?: (chain: MasteringChain) => void;
 }
 
 export const MasteringPanel: React.FC<MasteringPanelProps> = ({
@@ -20,6 +21,7 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
   sourceNode,
   sourceBuffer,
   onExport,
+  onChainReady,
 }) => {
   const [preset, setPreset] = useState<MasteringPreset>('balanced');
   const [isBypassed, setIsBypassed] = useState(false);
@@ -47,6 +49,9 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
   // Vector Scope
   const [showScope, setShowScope] = useState(true);
 
+  // ✅ NOUVEAU : Analyser en state (pour que le VectorScope se mette à jour)
+  const [analyserNode, setAnalyserNode] = useState<AnalyserNode | null>(null);
+
   const chainRef = useRef<MasteringChain | null>(null);
   const analyzerRef = useRef<AudioAnalyzer | null>(null);
 
@@ -60,14 +65,26 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
 
     const analyzer = new AudioAnalyzer(audioContext);
     const outputNode = chain.getOutputNode();
-    if (outputNode) analyzer.connect(outputNode);
+    if (outputNode) {
+      // ✅ Connecte la sortie de la chaîne à destination
+      outputNode.connect(audioContext.destination);
+      // ✅ Et à l'analyseur
+      analyzer.connect(outputNode);
+    }
     analyzerRef.current = analyzer;
+
+    // ✅ Met à jour le state (déclenche un re-render du VectorScope)
+    setAnalyserNode(analyzer.getAnalyserNode());
+
+    // ✅ Expose la chaîne au parent
+    if (onChainReady) onChainReady(chain);
 
     return () => {
       analyzer.destroy();
       chain.destroy();
       chainRef.current = null;
       analyzerRef.current = null;
+      setAnalyserNode(null);
     };
   }, [audioContext]);
 
@@ -390,8 +407,9 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
               justifyContent: 'center',
             }}
           >
+            {/* ✅ Utilise le state au lieu de la ref */}
             <VectorScope
-              analyser={analyzerRef.current?.getAnalyserNode() ?? null}
+              analyser={analyserNode}
               isActive={isAnalyzing}
               size={220}
               color="#00d9ff"
@@ -512,7 +530,7 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
       </button>
 
       <div style={{ marginTop: '15px', fontSize: '9px', color: '#333', textAlign: 'center', letterSpacing: '1px' }}>
-        WAVEFORGE PRO · MASTERING ENGINE v1.3 · EQ + MONO-MAKER + SCOPE
+        WAVEFORGE PRO · MASTERING ENGINE v1.4 · EQ + MONO-MAKER + SCOPE
       </div>
     </div>
   );

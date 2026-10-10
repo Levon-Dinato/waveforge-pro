@@ -32,6 +32,10 @@ export const MusicGenPage: React.FC = () => {
   const [history, setHistory] = useState<(MusicGenHistoryEntry & { audioUrl: string })[]>([]);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
 
+  // ✅ États pour le renommage inline
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingTitle, setEditingTitle] = useState('');
+
   const abortRef = useRef<AbortController | null>(null);
   const timerRef = useRef<number | null>(null);
   const failCountRef = useRef(0);
@@ -160,6 +164,27 @@ export const MusicGenPage: React.FC = () => {
     if (!confirm("Effacer TOUT l'historique ?")) return;
     await musicgenHistory.clear();
     await loadHistory();
+  };
+
+  // ✅ NOUVEAU : Renommer
+  const startEditing = (id: string, currentTitle: string) => {
+    setEditingId(id);
+    setEditingTitle(currentTitle);
+  };
+
+  const saveTitle = async (id: string) => {
+    const newTitle = editingTitle.trim();
+    if (newTitle) {
+      await musicgenHistory.update(id, { title: newTitle });
+    }
+    setEditingId(null);
+    setEditingTitle('');
+    await loadHistory();
+  };
+
+  const cancelEditing = () => {
+    setEditingId(null);
+    setEditingTitle('');
   };
 
   // ============================================================
@@ -304,13 +329,7 @@ export const MusicGenPage: React.FC = () => {
             >
               STYLE RAPIDE
             </div>
-            <div
-              style={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                gap: 6,
-              }}
-            >
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
               {PRESETS.map((p) => (
                 <button
                   key={p.id}
@@ -662,6 +681,7 @@ export const MusicGenPage: React.FC = () => {
         <div style={{ display: 'grid', gap: 12 }}>
           {history.map((h, index) => {
             const isFav = favorites.has(h.id);
+            const isEditing = editingId === h.id;
             const date = new Date(h.timestamp);
             const dateStr = date.toLocaleString('fr-FR', {
               day: '2-digit',
@@ -713,21 +733,124 @@ export const MusicGenPage: React.FC = () => {
                     {index === 0 && !isGenerating ? '★' : history.length - index}
                   </div>
 
-                  {/* Titre + sous-titre */}
+                  {/* Titre + sous-titre (ÉDITABLE) */}
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div
-                      style={{
-                        fontSize: isMobile ? 11 : 12,
-                        color: '#fff',
-                        fontWeight: 600,
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                        marginBottom: 4,
-                      }}
-                    >
-                      {h.prompt}
-                    </div>
+                    {isEditing ? (
+                      // Mode édition
+                      <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 4 }}>
+                        <input
+                          type="text"
+                          value={editingTitle}
+                          onChange={(e) => setEditingTitle(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') saveTitle(h.id);
+                            if (e.key === 'Escape') cancelEditing();
+                          }}
+                          autoFocus
+                          placeholder="Titre du morceau..."
+                          style={{
+                            flex: 1,
+                            padding: '4px 8px',
+                            background: 'var(--bg-1)',
+                            border: '1px solid #00ff88',
+                            borderRadius: 4,
+                            color: '#fff',
+                            fontSize: isMobile ? 11 : 12,
+                            fontFamily: 'inherit',
+                            outline: 'none',
+                            minWidth: 0,
+                          }}
+                        />
+                        <button
+                          onClick={() => saveTitle(h.id)}
+                          style={{
+                            padding: '4px 8px',
+                            background: '#00ff88',
+                            border: 'none',
+                            borderRadius: 4,
+                            color: '#000',
+                            fontSize: 10,
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                          }}
+                          title="Enregistrer"
+                        >
+                          ✓
+                        </button>
+                        <button
+                          onClick={cancelEditing}
+                          style={{
+                            padding: '4px 8px',
+                            background: 'transparent',
+                            border: '1px solid var(--border)',
+                            borderRadius: 4,
+                            color: '#888',
+                            fontSize: 10,
+                            cursor: 'pointer',
+                          }}
+                          title="Annuler"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ) : (
+                      // Mode affichage
+                      <div
+                        onClick={() => startEditing(h.id, h.title || h.prompt)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 6,
+                          cursor: 'pointer',
+                          marginBottom: 4,
+                        }}
+                        title="Clique pour renommer"
+                      >
+                        <div
+                          style={{
+                            fontSize: isMobile ? 11 : 12,
+                            color: '#fff',
+                            fontWeight: 600,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                            flex: 1,
+                            minWidth: 0,
+                          }}
+                        >
+                          {h.title || h.prompt}
+                        </div>
+                        <span
+                          style={{
+                            fontSize: 10,
+                            color: '#666',
+                            opacity: 0.6,
+                            flexShrink: 0,
+                          }}
+                        >
+                          ✏️
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Prompt en sous-titre si titre perso */}
+                    {h.title && h.title !== h.prompt && !isEditing && (
+                      <div
+                        style={{
+                          fontSize: 9,
+                          color: '#666',
+                          fontStyle: 'italic',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          marginBottom: 4,
+                        }}
+                      >
+                        {h.prompt}
+                      </div>
+                    )}
+
+                    {/* Métadonnées */}
                     <div
                       style={{
                         display: 'flex',
@@ -830,14 +953,7 @@ export const MusicGenPage: React.FC = () => {
               background: 'linear-gradient(135deg, rgba(0, 217, 255, 0.03), transparent)',
             }}
           >
-            <div
-              style={{
-                fontSize: 24,
-                marginBottom: 8,
-              }}
-            >
-              🎵
-            </div>
+            <div style={{ fontSize: 24, marginBottom: 8 }}>🎵</div>
             <div style={{ fontSize: 12, color: '#00d9ff', fontWeight: 600 }}>
               Génération en cours... {Math.floor(progress)}%
             </div>

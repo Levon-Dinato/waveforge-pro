@@ -2,12 +2,13 @@
 
 export interface MusicGenHistoryEntry {
   id: string;
+  title?: string;         // ✅ NOUVEAU : titre personnalisé (optionnel)
   prompt: string;
   duration: number;
   temperature: number;
   generationTime: number;
   timestamp: number;
-  audioBlob: Blob;  // On stocke le blob directement
+  audioBlob: Blob;
 }
 
 const DB_NAME = 'waveforge-musicgen';
@@ -46,6 +47,19 @@ class MusicGenHistory {
       req.onsuccess = () => resolve();
       req.onerror = () => reject(req.error);
     });
+  }
+
+  /**
+   * ✅ NOUVEAU : Met à jour une entrée (utile pour renommer)
+   */
+  async update(id: string, updates: Partial<MusicGenHistoryEntry>): Promise<void> {
+    await this.init();
+    if (!this.db) return;
+    const all = await this.getAll();
+    const existing = all.find((e) => e.id === id);
+    if (!existing) return;
+    const updated = { ...existing, ...updates };
+    return this.add(updated);
   }
 
   async getAll(): Promise<MusicGenHistoryEntry[]> {

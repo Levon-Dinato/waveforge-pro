@@ -22,6 +22,7 @@ const NAV_ITEMS: NavItem[] = [
   { path: '/generator', label: 'Générateur',  icon: '🎼', color: '#ffd43b' },
   { path: '/help',      label: 'Guide',       icon: '📖', color: '#00d9ff' },
   { path: '/settings',  label: 'Réglages',    icon: '⚙️', color: '#888' },
+  { path: '/musicgen', label: 'Génération IA', icon: '🎵', color: '#00ff88' },
 ];
 
 export const MainLayout: React.FC = () => {

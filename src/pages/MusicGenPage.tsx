@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { checkMusicGenHealth, generateMusic } from '../audio/musicgenClient';
 import { musicgenHistory, type MusicGenHistoryEntry } from '../utils/musicgenHistory';
 import { audioTransfer } from '../utils/audioTransfer';
+import { isProduction, LOCAL_SERVER_MESSAGE } from '../utils/env';
 import { AudioPlayer } from '../components/AudioPlayer';
 import { useIsMobile } from '../hooks/useIsMobile';
 
@@ -121,6 +122,10 @@ export const MusicGenPage: React.FC = () => {
       alert('Écris une description du morceau.');
       return;
     }
+    if (isProduction()) {
+      alert("La génération MusicGen nécessite le serveur Python local.");
+      return;
+    }
     const controller = new AbortController();
     abortRef.current = controller;
     setIsGenerating(true);
@@ -192,7 +197,6 @@ export const MusicGenPage: React.FC = () => {
     localStorage.setItem('waveforge-musicgen-favs', JSON.stringify([...newFavs]));
   };
 
-  // ✅ NOUVEAU : Envoyer vers Studio ou Mastering
   const handleTransfer = async (entry: MusicGenHistoryEntry, target: 'studio' | 'mastering') => {
     const filename = `${(entry.title || entry.prompt).replace(/[^a-z0-9]/gi, '-').slice(0, 40)}.wav`;
     await audioTransfer.save(entry.audioBlob, filename, target);
@@ -320,19 +324,36 @@ export const MusicGenPage: React.FC = () => {
             <div
               style={{
                 padding: 12,
-                background: 'rgba(255, 51, 102, 0.06)',
-                border: '1px solid rgba(255, 51, 102, 0.3)',
+                background: isProduction()
+                  ? 'rgba(255, 212, 59, 0.06)'
+                  : 'rgba(255, 51, 102, 0.06)',
+                border: `1px solid ${
+                  isProduction()
+                    ? 'rgba(255, 212, 59, 0.3)'
+                    : 'rgba(255, 51, 102, 0.3)'
+                }`,
                 borderRadius: 8,
                 fontSize: 10,
-                color: '#ff3366',
+                color: isProduction() ? '#ffd43b' : '#ff3366',
                 marginBottom: 16,
                 lineHeight: 1.6,
               }}
             >
-              ⚠️ Serveur MusicGen hors ligne.
-              <div style={{ color: '#888', marginTop: 6 }}>
-                Lance le serveur avec <strong>start-all.bat</strong>.
-              </div>
+              {isProduction() ? (
+                <>
+                  <div style={{ fontSize: 11, fontWeight: 600, marginBottom: 6 }}>
+                    ⚠️ Serveur local requis
+                  </div>
+                  <div style={{ color: '#888' }}>{LOCAL_SERVER_MESSAGE}</div>
+                </>
+              ) : (
+                <>
+                  ⚠️ Serveur MusicGen hors ligne.
+                  <div style={{ color: '#888', marginTop: 6 }}>
+                    Lance le serveur avec <strong>start-all.bat</strong>.
+                  </div>
+                </>
+              )}
             </div>
           )}
 
@@ -754,8 +775,7 @@ export const MusicGenPage: React.FC = () => {
                           gap: 8,
                           width: '100%',
                           padding: '8px 12px',
-                          background:
-                            sortBy === opt.value ? 'rgba(0, 255, 136, 0.1)' : 'transparent',
+                          background: sortBy === opt.value ? 'rgba(0, 255, 136, 0.1)' : 'transparent',
                           border: 'none',
                           color: sortBy === opt.value ? '#00ff88' : '#ccc',
                           fontSize: 11,
@@ -840,8 +860,7 @@ export const MusicGenPage: React.FC = () => {
           {filteredHistory.map((h, index) => {
             const isFav = favorites.has(h.id);
             const isEditing = editingId === h.id;
-            const isNewest =
-              index === 0 && sortBy === 'recent' && !searchQuery && !showFavoritesOnly;
+            const isNewest = index === 0 && sortBy === 'recent' && !searchQuery && !showFavoritesOnly;
             const date = new Date(h.timestamp);
             const dateStr = date.toLocaleString('fr-FR', {
               day: '2-digit',
@@ -881,11 +900,8 @@ export const MusicGenPage: React.FC = () => {
                       width: isMobile ? 32 : 36,
                       height: isMobile ? 32 : 36,
                       borderRadius: 8,
-                      background:
-                        isNewest && !isGenerating ? 'rgba(0, 255, 136, 0.15)' : 'var(--bg-1)',
-                      border: `1px solid ${
-                        isNewest && !isGenerating ? 'rgba(0, 255, 136, 0.4)' : 'var(--border)'
-                      }`,
+                      background: isNewest && !isGenerating ? 'rgba(0, 255, 136, 0.15)' : 'var(--bg-1)',
+                      border: `1px solid ${isNewest && !isGenerating ? 'rgba(0, 255, 136, 0.4)' : 'var(--border)'}`,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -900,14 +916,7 @@ export const MusicGenPage: React.FC = () => {
 
                   <div style={{ flex: 1, minWidth: 0 }}>
                     {isEditing ? (
-                      <div
-                        style={{
-                          display: 'flex',
-                          gap: 6,
-                          alignItems: 'center',
-                          marginBottom: 4,
-                        }}
-                      >
+                      <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 4 }}>
                         <input
                           type="text"
                           value={editingTitle}
@@ -1034,7 +1043,6 @@ export const MusicGenPage: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Boutons actions */}
                   <div
                     style={{
                       display: 'flex',

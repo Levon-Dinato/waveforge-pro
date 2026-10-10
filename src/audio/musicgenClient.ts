@@ -1,6 +1,6 @@
 // src/audio/musicgenClient.ts
 
-const MUSICGEN_URL = 'http://localhost:8001';
+import { isProduction, MUSICGEN_URL } from '../utils/env';
 
 export interface MusicGenRequest {
   prompt: string;
@@ -16,9 +16,14 @@ export interface MusicGenStatus {
 }
 
 export async function checkMusicGenHealth(): Promise<MusicGenStatus> {
+  // ✅ En production, le serveur local n'est pas accessible
+  if (isProduction()) {
+    return { status: 'offline' };
+  }
+
   try {
     const res = await fetch(`${MUSICGEN_URL}/health`, {
-      signal: AbortSignal.timeout(15000),
+      signal: AbortSignal.timeout(3000),
     });
     if (!res.ok) return { status: 'offline' };
     const data = await res.json();

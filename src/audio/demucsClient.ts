@@ -1,4 +1,4 @@
-const DEMUCS_API = 'http://localhost:8000';
+import { isProduction, DEMUCS_URL } from '../utils/env';
 
 export interface DemucsResult {
   vocalsUrl: string;
@@ -93,8 +93,15 @@ export async function separateVocals(file: File): Promise<DemucsResult> {
  * Test simple du serveur Demucs.
  */
 export async function checkDemucsHealth(): Promise<boolean> {
+  // ✅ En production, le serveur local n'est pas accessible
+  if (isProduction()) {
+    return false;
+  }
+
   try {
-    const res = await fetch(`${DEMUCS_API}/health`);
+    const res = await fetch(`${DEMUCS_URL}/health`, {
+      signal: AbortSignal.timeout(3000),
+    });
     return res.ok;
   } catch {
     return false;

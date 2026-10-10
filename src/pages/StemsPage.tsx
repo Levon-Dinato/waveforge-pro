@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAudioEngineContext } from '../contexts/AudioEngineContext';
 import { useIsMobile } from '../hooks/useIsMobile';
+import { isProduction, LOCAL_SERVER_MESSAGE } from '../utils/env';
 import { separateVocalsWithProgress, checkDemucsHealth } from '../audio/demucsClient';
 import { audioBufferToWav } from '../audio/wavEncoder';
 import { UploadProgress } from '../components/UploadProgress';
@@ -146,7 +147,7 @@ export const StemsPage: React.FC = () => {
             </div>
           </div>
 
-          {demucsOnline === false && (
+                    {demucsOnline === false && (
             <div
               style={{
                 fontSize: 10,
@@ -159,10 +160,23 @@ export const StemsPage: React.FC = () => {
                 maxWidth: '100%',
               }}
             >
-              <div style={{ color: '#ff3366', marginBottom: 4 }}>⚠️ Lance le serveur Python :</div>
-              <div>cd C:\Users\NATO\demucs-server</div>
-              <div>.\venv\Scripts\Activate.ps1</div>
-              <div>uvicorn server:app --reload --port 8000</div>
+              {isProduction() ? (
+                <>
+                  <div style={{ color: '#ffd43b', marginBottom: 6, fontSize: 11 }}>
+                    ⚠️ Serveur local requis
+                  </div>
+                  <div style={{ color: '#888', fontSize: 10, lineHeight: 1.5 }}>
+                    {LOCAL_SERVER_MESSAGE}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div style={{ color: '#ff3366', marginBottom: 4 }}>⚠️ Lance le serveur Python :</div>
+                  <div>cd C:\Users\NATO\demucs-server</div>
+                  <div>.\venv\Scripts\Activate.ps1</div>
+                  <div>uvicorn server:app --reload --port 8000</div>
+                </>
+              )}
             </div>
           )}
         </div>

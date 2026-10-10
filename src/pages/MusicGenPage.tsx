@@ -1,5 +1,5 @@
 // src/pages/MusicGenPage.tsx
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { checkMusicGenHealth, generateMusic } from '../audio/musicgenClient';
 import { musicgenHistory, type MusicGenHistoryEntry } from '../utils/musicgenHistory';
 import { AudioPlayer } from '../components/AudioPlayer';
@@ -18,6 +18,15 @@ const PRESETS = [
   { id: 'reggaeton', label: 'Reggaeton', prompt: 'reggaeton, latin, dembow, catchy, dance', color: '#10b981' },
 ];
 
+type SortOption = 'recent' | 'old' | 'duration' | 'az';
+
+const SORT_OPTIONS: { value: SortOption; label: string; icon: string }[] = [
+  { value: 'recent', label: 'Récents', icon: '🕐' },
+  { value: 'old', label: 'Anciens', icon: '📅' },
+  { value: 'duration', label: 'Durée', icon: '⏱️' },
+  { value: 'az', label: 'A-Z', icon: '🔤' },
+];
+
 export const MusicGenPage: React.FC = () => {
   const isMobile = useIsMobile(768);
   const [isOnline, setIsOnline] = useState<boolean | null>(null);
@@ -32,15 +41,23 @@ export const MusicGenPage: React.FC = () => {
   const [history, setHistory] = useState<(MusicGenHistoryEntry & { audioUrl: string })[]>([]);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
 
-  // ✅ États pour le renommage inline
+  // Renommage
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState('');
+
+  // ✅ NOUVEAU : Filtres & tri
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const [sortBy, setSortBy] = useState<SortOption>('recent');
+  const [showSortMenu, setShowSortMenu] = useState(false);
 
   const abortRef = useRef<AbortController | null>(null);
   const timerRef = useRef<number | null>(null);
   const failCountRef = useRef(0);
 
-  // Health check
+  // ============================================================
+  // HEALTH CHECK
+  // ============================================================
   useEffect(() => {
     if (isGenerating) return;
     const check = async () => {
@@ -58,7 +75,9 @@ export const MusicGenPage: React.FC = () => {
     return () => clearInterval(int);
   }, [isGenerating]);
 
-  // Chargement historique + favoris
+  // ============================================================
+  // CHARGEMENT INITIAL
+  // ============================================================
   useEffect(() => {
     loadHistory();
     try {
@@ -75,6 +94,53 @@ export const MusicGenPage: React.FC = () => {
     setHistory(withUrls);
   };
 
+  // ============================================================
+  // ✅ NOUVEAU : LISTE FILTRÉE & TRIÉE
+  // ============================================================
+  const filteredHistory = useMemo(() => {
+    let result = [...history];
+
+    // 1. Filtre recherche
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      result = result.filter((h) => {
+        const title = (h.title || '').toLowerCase();
+        const prmpt = h.prompt.toLowerCase();
+        return title.includes(q) || prmpt.includes(q);
+      });
+    }
+
+    // 2. Filtre favoris
+    if (showFavoritesOnly) {
+      result = result.filter((h) => favorites.has(h.id));
+    }
+
+    // 3. Tri
+    switch (sortBy) {
+      case 'recent':
+        result.sort((a, b) => b.timestamp - a.timestamp);
+        break;
+      case 'old':
+        result.sort((a, b) => a.timestamp - b.timestamp);
+        break;
+      case 'duration':
+        result.sort((a, b) => b.duration - a.duration);
+        break;
+      case 'az':
+        result.sort((a, b) => {
+          const aTitle = (a.title || a.prompt).toLowerCase();
+          const bTitle = (b.title || b.prompt).toLowerCase();
+          return aTitle.localeCompare(bTitle);
+        });
+        break;
+    }
+
+    return result;
+  }, [history, searchQuery, showFavoritesOnly, favorites, sortBy]);
+
+  // ============================================================
+  // GÉNÉRATION
+  // ============================================================
   const estimatedTime = duration * 8;
 
   const handleGenerate = async () => {
@@ -137,6 +203,9 @@ export const MusicGenPage: React.FC = () => {
     if (timerRef.current) clearInterval(timerRef.current);
   };
 
+  // ============================================================
+  // ACTIONS
+  // ============================================================
   const handleDownload = (url: string, name: string) => {
     const a = document.createElement('a');
     a.href = url;
@@ -166,7 +235,6 @@ export const MusicGenPage: React.FC = () => {
     await loadHistory();
   };
 
-  // ✅ NOUVEAU : Renommer
   const startEditing = (id: string, currentTitle: string) => {
     setEditingId(id);
     setEditingTitle(currentTitle);
@@ -244,7 +312,6 @@ export const MusicGenPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Badge statut */}
           <div
             style={{
               display: 'inline-flex',
@@ -287,7 +354,7 @@ export const MusicGenPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Contenu défilable */}
+        {/* Contenu */}
         <div
           style={{
             flex: 1,
@@ -295,7 +362,6 @@ export const MusicGenPage: React.FC = () => {
             padding: 16,
           }}
         >
-          {/* OFFLINE */}
           {isOnline === false && !isGenerating && (
             <div
               style={{
@@ -340,11 +406,8 @@ export const MusicGenPage: React.FC = () => {
                   disabled={isGenerating}
                   style={{
                     padding: '5px 10px',
-                    background:
-                      selectedPreset === p.id ? `${p.color}20` : 'var(--bg-1)',
-                    border: `1px solid ${
-                      selectedPreset === p.id ? p.color : 'var(--border)'
-                    }`,
+                    background: selectedPreset === p.id ? `${p.color}20` : 'var(--bg-1)',
+                    border: `1px solid ${selectedPreset === p.id ? p.color : 'var(--border)'}`,
                     borderRadius: 12,
                     color: selectedPreset === p.id ? p.color : '#ccc',
                     fontSize: 10,
@@ -410,10 +473,7 @@ export const MusicGenPage: React.FC = () => {
               >
                 DURÉE
               </div>
-              <span
-                className="mono"
-                style={{ fontSize: 11, color: '#00ff88', fontWeight: 700 }}
-              >
+              <span className="mono" style={{ fontSize: 11, color: '#00ff88', fontWeight: 700 }}>
                 {duration}s
               </span>
             </div>
@@ -457,10 +517,7 @@ export const MusicGenPage: React.FC = () => {
               >
                 CRÉATIVITÉ
               </div>
-              <span
-                className="mono"
-                style={{ fontSize: 11, color: '#00d9ff', fontWeight: 700 }}
-              >
+              <span className="mono" style={{ fontSize: 11, color: '#00d9ff', fontWeight: 700 }}>
                 {temperature.toFixed(1)}
               </span>
             </div>
@@ -507,9 +564,7 @@ export const MusicGenPage: React.FC = () => {
                   marginBottom: 8,
                 }}
               >
-                <span style={{ color: '#00ff88', fontWeight: 600 }}>
-                  ⏳ {status}
-                </span>
+                <span style={{ color: '#00ff88', fontWeight: 600 }}>⏳ {status}</span>
                 <span className="mono" style={{ color: '#666' }}>
                   {elapsed}s / ~{estimatedTime}s
                 </span>
@@ -560,8 +615,7 @@ export const MusicGenPage: React.FC = () => {
                 fontWeight: 700,
                 fontSize: 12,
                 letterSpacing: '1px',
-                cursor:
-                  isGenerating || isOnline !== true ? 'not-allowed' : 'pointer',
+                cursor: isGenerating || isOnline !== true ? 'not-allowed' : 'pointer',
                 boxShadow:
                   isGenerating || isOnline !== true
                     ? 'none'
@@ -617,6 +671,7 @@ export const MusicGenPage: React.FC = () => {
             </h2>
             <p style={{ color: '#888', fontSize: 11, margin: '4px 0 0' }}>
               MusicGen (Meta) · 100% local · {history.length} morceau{history.length > 1 ? 'x' : ''}
+              {filteredHistory.length !== history.length && ` · ${filteredHistory.length} affiché${filteredHistory.length > 1 ? 's' : ''}`}
             </p>
           </div>
 
@@ -640,7 +695,172 @@ export const MusicGenPage: React.FC = () => {
           )}
         </div>
 
-        {/* État vide */}
+        {/* ✅ BARRE DE FILTRES */}
+        {history.length > 0 && (
+          <div
+            className="panel"
+            style={{
+              padding: 10,
+              marginBottom: 12,
+              display: 'flex',
+              gap: 8,
+              flexWrap: 'wrap',
+              alignItems: 'center',
+            }}
+          >
+            {/* Recherche */}
+            <div style={{ flex: 1, minWidth: isMobile ? '100%' : 200, position: 'relative' }}>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="🔍 Rechercher un morceau..."
+                style={{
+                  width: '100%',
+                  padding: '8px 30px 8px 12px',
+                  background: 'var(--bg-1)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 6,
+                  color: '#fff',
+                  fontSize: 11,
+                  fontFamily: 'inherit',
+                  boxSizing: 'border-box',
+                }}
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  style={{
+                    position: 'absolute',
+                    right: 8,
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#666',
+                    fontSize: 14,
+                    cursor: 'pointer',
+                    padding: 2,
+                  }}
+                  title="Effacer"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+
+            {/* Bouton Favoris */}
+            <button
+              onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+              style={{
+                padding: '8px 12px',
+                background: showFavoritesOnly ? 'rgba(255, 51, 102, 0.15)' : 'var(--bg-1)',
+                border: `1px solid ${showFavoritesOnly ? '#ff3366' : 'var(--border)'}`,
+                borderRadius: 6,
+                color: showFavoritesOnly ? '#ff3366' : '#ccc',
+                fontSize: 11,
+                fontWeight: 600,
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+              }}
+              title="Afficher uniquement les favoris"
+            >
+              {showFavoritesOnly ? '❤️' : '🤍'} Favoris
+            </button>
+
+            {/* Menu de tri */}
+            <div style={{ position: 'relative' }}>
+              <button
+                onClick={() => setShowSortMenu(!showSortMenu)}
+                style={{
+                  padding: '8px 12px',
+                  background: 'var(--bg-1)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 6,
+                  color: '#ccc',
+                  fontSize: 11,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                }}
+              >
+                {SORT_OPTIONS.find((s) => s.value === sortBy)?.icon}{' '}
+                {SORT_OPTIONS.find((s) => s.value === sortBy)?.label}
+                <span style={{ fontSize: 8 }}>▼</span>
+              </button>
+
+              {showSortMenu && (
+                <>
+                  {/* Overlay pour fermer */}
+                  <div
+                    onClick={() => setShowSortMenu(false)}
+                    style={{
+                      position: 'fixed',
+                      inset: 0,
+                      zIndex: 50,
+                    }}
+                  />
+                  {/* Menu */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: 'calc(100% + 4px)',
+                      right: 0,
+                      background: '#0d0d14',
+                      border: '1px solid var(--border)',
+                      borderRadius: 6,
+                      minWidth: 140,
+                      overflow: 'hidden',
+                      zIndex: 51,
+                      boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
+                    }}
+                  >
+                    {SORT_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.value}
+                        onClick={() => {
+                          setSortBy(opt.value);
+                          setShowSortMenu(false);
+                        }}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 8,
+                          width: '100%',
+                          padding: '8px 12px',
+                          background: sortBy === opt.value ? 'rgba(0, 255, 136, 0.1)' : 'transparent',
+                          border: 'none',
+                          color: sortBy === opt.value ? '#00ff88' : '#ccc',
+                          fontSize: 11,
+                          cursor: 'pointer',
+                          textAlign: 'left',
+                          fontWeight: sortBy === opt.value ? 600 : 400,
+                        }}
+                        onMouseEnter={(e) => {
+                          if (sortBy !== opt.value) e.currentTarget.style.background = 'var(--bg-1)';
+                        }}
+                        onMouseLeave={(e) => {
+                          if (sortBy !== opt.value) e.currentTarget.style.background = 'transparent';
+                        }}
+                      >
+                        {opt.icon} {opt.label}
+                        {sortBy === opt.value && <span style={{ marginLeft: 'auto' }}>✓</span>}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* État vide (aucun historique) */}
         {history.length === 0 && !isGenerating && (
           <div
             className="panel"
@@ -652,14 +872,7 @@ export const MusicGenPage: React.FC = () => {
             }}
           >
             <div style={{ fontSize: isMobile ? 48 : 64, marginBottom: 16 }}>🎵</div>
-            <div
-              style={{
-                fontSize: 15,
-                color: '#fff',
-                fontWeight: 600,
-                marginBottom: 8,
-              }}
-            >
+            <div style={{ fontSize: 15, color: '#fff', fontWeight: 600, marginBottom: 8 }}>
               Aucun morceau pour le moment
             </div>
             <div
@@ -671,17 +884,51 @@ export const MusicGenPage: React.FC = () => {
                 lineHeight: 1.6,
               }}
             >
-              Choisis un style dans le panneau, décris ce que tu
-              veux, puis clique sur <strong style={{ color: '#00ff88' }}>GÉNÉRER</strong>.
+              Choisis un style dans le panneau, décris ce que tu veux, puis clique sur{' '}
+              <strong style={{ color: '#00ff88' }}>GÉNÉRER</strong>.
             </div>
+          </div>
+        )}
+
+        {/* État vide (filtres) */}
+        {history.length > 0 && filteredHistory.length === 0 && (
+          <div
+            className="panel"
+            style={{
+              padding: 32,
+              textAlign: 'center',
+              borderStyle: 'dashed',
+              borderColor: 'rgba(255, 212, 59, 0.3)',
+            }}
+          >
+            <div style={{ fontSize: 48, marginBottom: 12 }}>🔍</div>
+            <div style={{ fontSize: 13, color: '#ffd43b', fontWeight: 600, marginBottom: 6 }}>
+              Aucun résultat
+            </div>
+            <div style={{ fontSize: 11, color: '#888', marginBottom: 16 }}>
+              {showFavoritesOnly
+                ? 'Aucun favori ne correspond à ta recherche.'
+                : 'Aucun morceau ne correspond à ta recherche.'}
+            </div>
+            <button
+              onClick={() => {
+                setSearchQuery('');
+                setShowFavoritesOnly(false);
+              }}
+              className="btn-action"
+              style={{ fontSize: 11 }}
+            >
+              🔄 Réinitialiser les filtres
+            </button>
           </div>
         )}
 
         {/* Liste des morceaux */}
         <div style={{ display: 'grid', gap: 12 }}>
-          {history.map((h, index) => {
+          {filteredHistory.map((h, index) => {
             const isFav = favorites.has(h.id);
             const isEditing = editingId === h.id;
+            const isNewest = index === 0 && sortBy === 'recent' && !searchQuery && !showFavoritesOnly;
             const date = new Date(h.timestamp);
             const dateStr = date.toLocaleString('fr-FR', {
               day: '2-digit',
@@ -696,8 +943,12 @@ export const MusicGenPage: React.FC = () => {
                 className="panel"
                 style={{
                   padding: 14,
-                  border: index === 0 && !isGenerating ? '1px solid rgba(0, 255, 136, 0.3)' : '1px solid var(--border)',
-                  background: index === 0 && !isGenerating ? 'linear-gradient(135deg, rgba(0, 255, 136, 0.03), transparent)' : undefined,
+                  border: isNewest && !isGenerating
+                    ? '1px solid rgba(0, 255, 136, 0.3)'
+                    : '1px solid var(--border)',
+                  background: isNewest && !isGenerating
+                    ? 'linear-gradient(135deg, rgba(0, 255, 136, 0.03), transparent)'
+                    : undefined,
                   transition: 'all 0.2s',
                 }}
               >
@@ -717,26 +968,25 @@ export const MusicGenPage: React.FC = () => {
                       width: isMobile ? 32 : 36,
                       height: isMobile ? 32 : 36,
                       borderRadius: 8,
-                      background: index === 0 && !isGenerating
+                      background: isNewest && !isGenerating
                         ? 'rgba(0, 255, 136, 0.15)'
                         : 'var(--bg-1)',
-                      border: `1px solid ${index === 0 && !isGenerating ? 'rgba(0, 255, 136, 0.4)' : 'var(--border)'}`,
+                      border: `1px solid ${isNewest && !isGenerating ? 'rgba(0, 255, 136, 0.4)' : 'var(--border)'}`,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       fontSize: 16,
                       flexShrink: 0,
-                      color: index === 0 && !isGenerating ? '#00ff88' : '#888',
+                      color: isNewest && !isGenerating ? '#00ff88' : '#888',
                       fontWeight: 700,
                     }}
                   >
-                    {index === 0 && !isGenerating ? '★' : history.length - index}
+                    {isNewest && !isGenerating ? '★' : index + 1}
                   </div>
 
                   {/* Titre + sous-titre (ÉDITABLE) */}
                   <div style={{ flex: 1, minWidth: 0 }}>
                     {isEditing ? (
-                      // Mode édition
                       <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 4 }}>
                         <input
                           type="text"
@@ -794,7 +1044,6 @@ export const MusicGenPage: React.FC = () => {
                         </button>
                       </div>
                     ) : (
-                      // Mode affichage
                       <div
                         onClick={() => startEditing(h.id, h.title || h.prompt)}
                         style={{
@@ -833,7 +1082,6 @@ export const MusicGenPage: React.FC = () => {
                       </div>
                     )}
 
-                    {/* Prompt en sous-titre si titre perso */}
                     {h.title && h.title !== h.prompt && !isEditing && (
                       <div
                         style={{
@@ -850,7 +1098,6 @@ export const MusicGenPage: React.FC = () => {
                       </div>
                     )}
 
-                    {/* Métadonnées */}
                     <div
                       style={{
                         display: 'flex',
@@ -930,11 +1177,7 @@ export const MusicGenPage: React.FC = () => {
                 </div>
 
                 {/* Player LED */}
-                <AudioPlayer
-                  src={h.audioUrl}
-                  color="#00ff88"
-                  compact
-                />
+                <AudioPlayer src={h.audioUrl} color="#00ff88" compact />
               </div>
             );
           })}

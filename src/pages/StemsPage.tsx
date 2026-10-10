@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAudioEngineContext } from '../contexts/AudioEngineContext';
+import { useIsMobile } from '../hooks/useIsMobile';
 import { separateVocalsWithProgress, checkDemucsHealth } from '../audio/demucsClient';
 import { audioBufferToWav } from '../audio/wavEncoder';
 import { UploadProgress } from '../components/UploadProgress';
@@ -9,6 +10,7 @@ import { StemPlayer } from '../components/StemPlayer';
 import { ExportWav } from '../components/ExportWav';
 
 export const StemsPage: React.FC = () => {
+  const isMobile = useIsMobile(768);
   const engine = useAudioEngineContext();
 
   const [isSeparating, setIsSeparating] = useState(false);
@@ -31,14 +33,12 @@ export const StemsPage: React.FC = () => {
       alert("Charge un audio d'abord dans la page Studio");
       return;
     }
-
     setIsSeparating(true);
     setUploadProgress({ visible: true, percent: 0, loaded: 0, total: 0, stage: 'upload' });
 
     try {
       const wav = audioBufferToWav(engine.audioBuffer);
       const file = new File([wav], 'input.wav', { type: 'audio/wav' });
-
       const res = await separateVocalsWithProgress(file, (percent, loaded, total) => {
         setUploadProgress({
           visible: true,
@@ -48,9 +48,7 @@ export const StemsPage: React.FC = () => {
           stage: percent >= 100 ? 'processing' : 'upload',
         });
       });
-
       setStems({ vocals: res.vocalsUrl, noVocals: res.noVocalsUrl });
-
       setTimeout(() => setUploadProgress((p) => ({ ...p, visible: false })), 800);
     } catch (e) {
       console.error('Erreur séparation:', e);
@@ -71,27 +69,35 @@ export const StemsPage: React.FC = () => {
   };
 
   return (
-    <div className="fade-in" style={{ padding: 20, display: 'grid', gap: 20 }}>
-      {/* === HEADER === */}
+    <div
+      className="fade-in"
+      style={{
+        padding: isMobile ? 12 : 20,
+        display: 'grid',
+        gap: isMobile ? 14 : 20,
+      }}
+    >
+      {/* HEADER */}
       <div>
-        <h2 style={{ fontSize: 20, fontWeight: 700, margin: 0, marginBottom: 8 }}>
+        <h2 style={{ fontSize: isMobile ? 16 : 20, fontWeight: 700, margin: 0, marginBottom: 8 }}>
           🎤 <span style={{ color: '#00ff88' }}>Séparation de Stems</span>
         </h2>
-        <p style={{ color: '#888', fontSize: 12, margin: 0 }}>
+        <p style={{ color: '#888', fontSize: 11, margin: 0 }}>
           Isolation voix / instrumental avec Demucs IA (htdemucs_ft)
         </p>
       </div>
 
-      {/* === STATUT SERVEUR DEMUCS === */}
+      {/* STATUT SERVEUR */}
       <div
         className="panel"
         style={{
           padding: 16,
-          borderColor: demucsOnline === true
-            ? 'rgba(0, 255, 136, 0.3)'
-            : demucsOnline === false
-            ? 'rgba(255, 51, 102, 0.3)'
-            : 'var(--border)',
+          borderColor:
+            demucsOnline === true
+              ? 'rgba(0, 255, 136, 0.3)'
+              : demucsOnline === false
+              ? 'rgba(255, 51, 102, 0.3)'
+              : 'var(--border)',
           background:
             demucsOnline === true
               ? 'linear-gradient(135deg, rgba(0, 255, 136, 0.03), transparent)'
@@ -119,10 +125,7 @@ export const StemsPage: React.FC = () => {
               }}
             />
             <div>
-              <div
-                className="label-uppercase"
-                style={{ fontSize: 10, color: '#666', marginBottom: 2 }}
-              >
+              <div className="label-uppercase" style={{ fontSize: 10, color: '#666', marginBottom: 2 }}>
                 SERVEUR DEMUCS
               </div>
               <div
@@ -130,11 +133,7 @@ export const StemsPage: React.FC = () => {
                 style={{
                   fontSize: 12,
                   color:
-                    demucsOnline === true
-                      ? '#00ff88'
-                      : demucsOnline === false
-                      ? '#ff3366'
-                      : '#888',
+                    demucsOnline === true ? '#00ff88' : demucsOnline === false ? '#ff3366' : '#888',
                   fontWeight: 600,
                 }}
               >
@@ -157,11 +156,10 @@ export const StemsPage: React.FC = () => {
                 border: '1px solid var(--border)',
                 borderRadius: 6,
                 fontFamily: 'var(--font-mono)',
+                maxWidth: '100%',
               }}
             >
-              <div style={{ color: '#ff3366', marginBottom: 4 }}>
-                ⚠️ Lance le serveur Python :
-              </div>
+              <div style={{ color: '#ff3366', marginBottom: 4 }}>⚠️ Lance le serveur Python :</div>
               <div>cd C:\Users\NATO\demucs-server</div>
               <div>.\venv\Scripts\Activate.ps1</div>
               <div>uvicorn server:app --reload --port 8000</div>
@@ -170,24 +168,31 @@ export const StemsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* === ÉTAT VIDE : PAS D'AUDIO === */}
+      {/* ÉTAT VIDE */}
       {!engine.audioBuffer && (
         <div
           className="panel"
           style={{
-            padding: 32,
+            padding: isMobile ? 24 : 32,
             textAlign: 'center',
             borderStyle: 'dashed',
             borderColor: 'rgba(0, 255, 136, 0.3)',
           }}
         >
-          <div style={{ fontSize: 48, marginBottom: 12 }}>🎤</div>
+          <div style={{ fontSize: isMobile ? 40 : 48, marginBottom: 12 }}>🎤</div>
           <div style={{ fontSize: 14, color: '#fff', marginBottom: 8, fontWeight: 600 }}>
             Aucun audio chargé
           </div>
-          <div style={{ fontSize: 12, color: '#888', marginBottom: 20, maxWidth: 400, margin: '0 auto 20px' }}>
-            Pour séparer les stems (voix + instrumental), tu dois d'abord charger un audio
-            dans la page Studio.
+          <div
+            style={{
+              fontSize: 12,
+              color: '#888',
+              marginBottom: 20,
+              maxWidth: 400,
+              margin: '0 auto 20px',
+            }}
+          >
+            Pour séparer les stems, tu dois d'abord charger un audio dans la page Studio.
           </div>
           <Link
             to="/studio"
@@ -197,6 +202,7 @@ export const StemsPage: React.FC = () => {
               display: 'inline-flex',
               alignItems: 'center',
               gap: 6,
+              justifyContent: 'center',
             }}
           >
             🎹 Aller au Studio
@@ -204,15 +210,11 @@ export const StemsPage: React.FC = () => {
         </div>
       )}
 
-      {/* === ÉTAT PRÊT : AUDIO CHARGÉ === */}
+      {/* PRÊT */}
       {engine.audioBuffer && !stems && (
         <>
-          {/* Info fichier */}
           <div className="panel" style={{ padding: 16 }}>
-            <div
-              className="label-uppercase"
-              style={{ fontSize: 10, color: '#666', marginBottom: 8 }}
-            >
+            <div className="label-uppercase" style={{ fontSize: 10, color: '#666', marginBottom: 8 }}>
               FICHIER SOURCE
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -246,31 +248,23 @@ export const StemsPage: React.FC = () => {
                   {engine.fileName || 'Sans titre'}
                 </div>
                 <div className="mono" style={{ fontSize: 10, color: '#888', marginTop: 2 }}>
-                  {engine.result?.duration.toFixed(1)}s ·{' '}
-                  {engine.result?.sampleRate} Hz · {engine.result?.bpm} BPM
+                  {engine.result?.duration.toFixed(1)}s · {engine.result?.sampleRate} Hz ·{' '}
+                  {engine.result?.bpm} BPM
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Bouton de séparation */}
           <div
             className="panel"
             style={{
-              padding: 24,
+              padding: isMobile ? 16 : 24,
               borderColor: demucsOnline === true ? 'rgba(0, 255, 136, 0.3)' : 'var(--border)',
               textAlign: 'center',
             }}
           >
             <div style={{ fontSize: 36, marginBottom: 12 }}>✂️</div>
-            <div
-              style={{
-                fontSize: 14,
-                color: '#fff',
-                fontWeight: 600,
-                marginBottom: 8,
-              }}
-            >
+            <div style={{ fontSize: 14, color: '#fff', fontWeight: 600, marginBottom: 8 }}>
               Prêt à séparer
             </div>
             <div
@@ -283,7 +277,6 @@ export const StemsPage: React.FC = () => {
               }}
             >
               Le traitement prend en moyenne 1 à 5 minutes selon la durée du morceau.
-              Le fichier sera analysé en 2 pistes : voix et instrumental.
             </div>
 
             <button
@@ -292,7 +285,7 @@ export const StemsPage: React.FC = () => {
               className="btn-action primary"
               style={{
                 padding: '14px 32px',
-                fontSize: 13,
+                fontSize: 12,
                 fontWeight: 700,
                 letterSpacing: '1px',
                 background:
@@ -301,21 +294,14 @@ export const StemsPage: React.FC = () => {
                     : 'linear-gradient(135deg, #00ff88, #00b866)',
                 color: isSeparating || demucsOnline !== true ? '#666' : '#000',
                 borderColor: 'transparent',
-                cursor:
-                  isSeparating || demucsOnline !== true ? 'not-allowed' : 'pointer',
+                cursor: isSeparating || demucsOnline !== true ? 'not-allowed' : 'pointer',
+                justifyContent: 'center',
               }}
             >
               {isSeparating ? '⏳ SÉPARATION EN COURS...' : '🎤 LANCER LA SÉPARATION'}
             </button>
-
-            {demucsOnline === false && (
-              <div style={{ fontSize: 10, color: '#ff3366', marginTop: 12 }}>
-                ⚠️ Le serveur Demucs doit être démarré pour continuer
-              </div>
-            )}
           </div>
 
-          {/* Barre de progression */}
           <UploadProgress
             percent={uploadProgress.percent}
             loaded={uploadProgress.loaded}
@@ -326,25 +312,21 @@ export const StemsPage: React.FC = () => {
         </>
       )}
 
-      {/* === RÉSULTATS : STEMS SÉPARÉS === */}
+      {/* RÉSULTATS */}
       {stems && (
         <>
-          {/* En-tête de succès */}
           <div
             className="panel fade-in"
             style={{
               padding: 20,
               borderColor: 'rgba(0, 255, 136, 0.3)',
-              background:
-                'linear-gradient(135deg, rgba(0, 255, 136, 0.05), transparent)',
+              background: 'linear-gradient(135deg, rgba(0, 255, 136, 0.05), transparent)',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <div style={{ fontSize: 32 }}>🎉</div>
               <div>
-                <div
-                  style={{ fontSize: 15, fontWeight: 700, color: '#00ff88', marginBottom: 4 }}
-                >
+                <div style={{ fontSize: 15, fontWeight: 700, color: '#00ff88', marginBottom: 4 }}>
                   Séparation terminée !
                 </div>
                 <div style={{ fontSize: 11, color: '#888' }}>
@@ -354,11 +336,10 @@ export const StemsPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Cartes de stems */}
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+              gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(280px, 1fr))',
               gap: 16,
             }}
           >
@@ -380,7 +361,6 @@ export const StemsPage: React.FC = () => {
             />
           </div>
 
-          {/* Player multi-piste */}
           <div className="panel slide-in">
             <div className="panel-header">
               <span>🎚️ LECTEUR MULTI-PISTE</span>
@@ -396,16 +376,10 @@ export const StemsPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Export WAV */}
           <ExportWav stems={stems} duration={engine.result?.duration ?? 0} />
 
-          {/* Bouton reset */}
           <div style={{ textAlign: 'center' }}>
-            <button
-              className="btn-action"
-              onClick={() => setStems(null)}
-              style={{ fontSize: 11 }}
-            >
+            <button className="btn-action" onClick={() => setStems(null)} style={{ fontSize: 11 }}>
               🔄 Nouvelle séparation
             </button>
           </div>
@@ -414,10 +388,6 @@ export const StemsPage: React.FC = () => {
     </div>
   );
 };
-
-/* ============================================================
-   SOUS-COMPOSANT : Carte de stem
-   ============================================================ */
 
 const StemCard: React.FC<{
   icon: string;
@@ -435,14 +405,7 @@ const StemCard: React.FC<{
       background: `linear-gradient(135deg, ${color}08, transparent)`,
     }}
   >
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 12,
-        marginBottom: 16,
-      }}
-    >
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
       <div
         style={{
           width: 44,
@@ -460,31 +423,16 @@ const StemCard: React.FC<{
         {icon}
       </div>
       <div>
-        <div
-          className="label-uppercase"
-          style={{ fontSize: 9, color: '#666', marginBottom: 2 }}
-        >
+        <div className="label-uppercase" style={{ fontSize: 9, color: '#666', marginBottom: 2 }}>
           PISTE
         </div>
         <div style={{ fontSize: 14, fontWeight: 700, color }}>{name}</div>
-        <div style={{ fontSize: 10, color: '#888', marginTop: 2 }}>
-          {description}
-        </div>
+        <div style={{ fontSize: 10, color: '#888', marginTop: 2 }}>{description}</div>
       </div>
     </div>
 
-    {/* Audio player natif */}
-    <audio
-      src={url}
-      controls
-      style={{
-        width: '100%',
-        height: 32,
-        marginBottom: 12,
-      }}
-    />
+    <audio src={url} controls style={{ width: '100%', height: 32, marginBottom: 12 }} />
 
-    {/* Bouton de téléchargement */}
     <button
       onClick={onDownload}
       className="btn-action"
@@ -493,6 +441,7 @@ const StemCard: React.FC<{
         color,
         borderColor: `${color}40`,
         background: `${color}10`,
+        justifyContent: 'center',
       }}
     >
       💾 TÉLÉCHARGER WAV

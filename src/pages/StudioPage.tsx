@@ -8,6 +8,7 @@ import { TimelineMarkers } from '../components/TimelineMarkers';
 import { UploadProgress } from '../components/UploadProgress';
 import { Tooltip } from '../components/Tooltip';
 import { useAudioEngineContext } from '../contexts/AudioEngineContext';
+import { useIsMobile } from '../hooks/useIsMobile';
 import { exportMidi, download } from '../audio/midiExporter';
 import { detectSections } from '../audio/sectionDetector';
 import type { Section } from '../audio/sectionDetector';
@@ -15,10 +16,10 @@ import { quantizeNotes, detectKey, snapToKey } from '../audio/quantizer';
 import type { QuantizeOptions } from '../audio/quantizer';
 
 export const StudioPage: React.FC = () => {
+  const isMobile = useIsMobile(768);
   const engine = useAudioEngineContext();
   const { result, finalNotes, isAnalyzing, isPlaying, currentTime, fileName, fileSize, fileFormat } = engine;
 
-  // États locaux pour le transport
   const [sections, setSections] = useState<Section[]>([]);
   const [isDetectingSections, setIsDetectingSections] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -73,38 +74,63 @@ export const StudioPage: React.FC = () => {
   }, [engine.audioBuffer]);
 
   return (
-    <div className="fade-in" style={{ padding: 20, display: 'grid', gap: 16 }}>
-      {/* Header de la page */}
+    <div
+      className="fade-in"
+      style={{
+        padding: isMobile ? 12 : 20,
+        display: 'grid',
+        gap: isMobile ? 12 : 16,
+      }}
+    >
+      {/* HEADER */}
       <div>
-        <h2 style={{ fontSize: 20, fontWeight: 700, margin: 0, marginBottom: 8 }}>
+        <h2 style={{ fontSize: isMobile ? 16 : 20, fontWeight: 700, margin: 0, marginBottom: 8 }}>
           🎹 <span style={{ color: 'var(--cyan)' }}>Studio</span>
         </h2>
-        <p style={{ color: '#888', fontSize: 12, margin: 0 }}>
+        <p style={{ color: '#888', fontSize: 11, margin: 0 }}>
           Analyse audio → MIDI, quantisation, export multipiste
         </p>
       </div>
 
-      {/* DropZone */}
       <DropZone onFile={engine.loadFile} isAnalyzing={isAnalyzing} />
 
-      {/* Infos fichier + Waveform */}
+      {/* WAVEFORM */}
       {result && (
         <div className="panel" style={{ overflow: 'hidden', borderColor: 'rgba(0, 217, 255, 0.15)' }}>
-          <div className="panel-header" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 4, padding: '8px 12px' }}>
+          <div
+            className="panel-header"
+            style={{
+              flexDirection: 'column',
+              alignItems: 'flex-start',
+              gap: 4,
+              padding: '8px 12px',
+            }}
+          >
             <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
-              <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--cyan)', maxWidth: '70%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <span
+                style={{
+                  fontSize: 11,
+                  fontWeight: 600,
+                  color: 'var(--cyan)',
+                  maxWidth: '70%',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
                 🎵 {fileName || 'SANS TITRE'}
               </span>
               <span className="mono" style={{ fontSize: 10, color: '#888' }}>
                 {formatTime(currentTime)} / {formatTime(result.duration)}
               </span>
             </div>
-            <div className="label-uppercase" style={{ fontSize: 8, color: '#666', display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            <div
+              className="label-uppercase"
+              style={{ fontSize: 8, color: '#666', display: 'flex', gap: 6, flexWrap: 'wrap' }}
+            >
               {fileFormat && <span>{fileFormat}</span>}
               <span>·</span>
               <span>{result.sampleRate} Hz</span>
-              <span>·</span>
-              <span>STÉRÉO</span>
               <span>·</span>
               <span>{formatTime(result.duration)}</span>
               <span>·</span>
@@ -129,45 +155,63 @@ export const StudioPage: React.FC = () => {
             currentTime={currentTime}
             duration={result.duration}
             onSeek={engine.seek}
-            height={100}
+            height={isMobile ? 70 : 100}
             variant="full"
           />
         </div>
       )}
 
-      {/* TRANSPORT & ANALYSE */}
+      {/* TRANSPORT */}
       {result && (
         <div className="panel slide-in" style={{ overflow: 'visible' }}>
           <div className="panel-header">
             <span>⚡ TRANSPORT & ANALYSE</span>
             <span className="mono" style={{ fontSize: 10, color: '#888' }}>
-              {isAnalyzing
-                ? '⏳ ANALYSE...'
-                : `🎵 ${finalNotes.length} · ${result.duration.toFixed(2)}s`}
+              {isAnalyzing ? '⏳ ANALYSE...' : `🎵 ${finalNotes.length}`}
             </span>
           </div>
           <div className="panel-body">
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+            <div
+              style={{
+                display: 'flex',
+                gap: 8,
+                alignItems: 'center',
+                flexWrap: 'wrap',
+              }}
+            >
               <Tooltip text="Joue l'audio original">
-                <button className="btn-action" onClick={engine.playAudioOriginal}>▶ AUDIO</button>
+                <button className="btn-action" onClick={engine.playAudioOriginal}>
+                  ▶ AUDIO
+                </button>
               </Tooltip>
-              <Tooltip text="Joue les notes MIDI détectées">
-                <button className="btn-action primary" onClick={engine.playMidi} disabled={finalNotes.length === 0}>
+              <Tooltip text="Joue les notes MIDI">
+                <button
+                  className="btn-action primary"
+                  onClick={engine.playMidi}
+                  disabled={finalNotes.length === 0}
+                >
                   ▶ MIDI
                 </button>
               </Tooltip>
-              <Tooltip text="Arrête toutes les lectures">
-                <button className="btn-action" onClick={engine.stopAll} disabled={!isPlaying}>⏹ STOP</button>
+              <Tooltip text="Arrête la lecture">
+                <button className="btn-action" onClick={engine.stopAll} disabled={!isPlaying}>
+                  ⏹ STOP
+                </button>
               </Tooltip>
-              <Tooltip text="Exporte un MIDI multipiste">
-                <button className="btn-action primary" onClick={handleExport} disabled={finalNotes.length === 0}>
-                  💾 EXPORT MIDI
+              <Tooltip text="Exporte en MIDI">
+                <button
+                  className="btn-action primary"
+                  onClick={handleExport}
+                  disabled={finalNotes.length === 0}
+                >
+                  💾 EXPORT
                 </button>
               </Tooltip>
 
-              <div style={{ flex: 1 }} />
+              {!isMobile && <div style={{ flex: 1 }} />}
+              {isMobile && <div style={{ width: '100%' }} />}
 
-              <Tooltip text="Détecte Intro/Verse/Chorus">
+              <Tooltip text="Détecte les sections">
                 <button
                   className="btn-action"
                   onClick={handleDetectSections}
@@ -178,7 +222,7 @@ export const StudioPage: React.FC = () => {
                     borderColor: sections.length > 0 ? 'var(--cyan)' : 'var(--border)',
                   }}
                 >
-                  {isDetectingSections ? '⏳ SECTIONS...' : `🎬 SECTIONS${sections.length > 0 ? ` (${sections.length})` : ''}`}
+                  {isDetectingSections ? '⏳...' : `🎬 SECTIONS${sections.length > 0 ? ` (${sections.length})` : ''}`}
                 </button>
               </Tooltip>
 
@@ -190,19 +234,39 @@ export const StudioPage: React.FC = () => {
             </div>
 
             {showSettings && (
-              <div className="fade-in" style={{ marginTop: 12, padding: 12, background: 'var(--bg-1)', border: '1px solid var(--border)', borderRadius: 6 }}>
-                <div className="label-uppercase" style={{ marginBottom: 12, color: 'var(--cyan)' }}>⚙️ OPTIONS D'EXPORT MIDI</div>
+              <div
+                className="fade-in"
+                style={{
+                  marginTop: 12,
+                  padding: 12,
+                  background: 'var(--bg-1)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 6,
+                }}
+              >
+                <div className="label-uppercase" style={{ marginBottom: 12, color: 'var(--cyan)' }}>
+                  ⚙️ OPTIONS D'EXPORT MIDI
+                </div>
 
                 <div style={{ marginBottom: 12 }}>
-                  <div className="label-uppercase" style={{ marginBottom: 6 }}>Quantisation</div>
-                  <div style={{ display: 'flex', gap: 6 }}>
-                    {[{ v: 0, l: 'OFF' }, { v: 4, l: '1/4' }, { v: 8, l: '1/8' }, { v: 16, l: '1/16' }, { v: 32, l: '1/32' }].map((opt) => (
+                  <div className="label-uppercase" style={{ marginBottom: 6 }}>
+                    Quantisation
+                  </div>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                    {[
+                      { v: 0, l: 'OFF' },
+                      { v: 4, l: '1/4' },
+                      { v: 8, l: '1/8' },
+                      { v: 16, l: '1/16' },
+                      { v: 32, l: '1/32' },
+                    ].map((opt) => (
                       <button
                         key={opt.v}
                         onClick={() => setQuantize({ ...quantize, grid: opt.v as any })}
                         className="btn-action"
                         style={{
-                          padding: '5px 10px', fontSize: 10,
+                          padding: '5px 10px',
+                          fontSize: 10,
                           background: quantize.grid === opt.v ? 'var(--cyan)' : 'var(--bg-2)',
                           color: quantize.grid === opt.v ? 'var(--bg-0)' : 'var(--text)',
                           borderColor: quantize.grid === opt.v ? 'var(--cyan)' : 'var(--border)',
@@ -215,26 +279,45 @@ export const StudioPage: React.FC = () => {
                 </div>
 
                 <div style={{ marginBottom: 12 }}>
-                  <div className="label-uppercase" style={{ marginBottom: 6 }}>Force : {Math.round(quantize.strength * 100)}%</div>
-                  <input type="range" min={0} max={1} step={0.01} value={quantize.strength}
+                  <div className="label-uppercase" style={{ marginBottom: 6 }}>
+                    Force : {Math.round(quantize.strength * 100)}%
+                  </div>
+                  <input
+                    type="range"
+                    min={0}
+                    max={1}
+                    step={0.01}
+                    value={quantize.strength}
                     onChange={(e) => setQuantize({ ...quantize, strength: parseFloat(e.target.value) })}
-                    style={{ width: '100%' }} />
+                    style={{ width: '100%' }}
+                  />
                 </div>
 
                 <div style={{ marginBottom: 12 }}>
-                  <div className="label-uppercase" style={{ marginBottom: 6 }}>Swing : {Math.round(quantize.swing * 100)}%</div>
-                  <input type="range" min={0} max={1} step={0.01} value={quantize.swing}
+                  <div className="label-uppercase" style={{ marginBottom: 6 }}>
+                    Swing : {Math.round(quantize.swing * 100)}%
+                  </div>
+                  <input
+                    type="range"
+                    min={0}
+                    max={1}
+                    step={0.01}
+                    value={quantize.swing}
                     onChange={(e) => setQuantize({ ...quantize, swing: parseFloat(e.target.value) })}
-                    style={{ width: '100%' }} />
+                    style={{ width: '100%' }}
+                  />
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <button className="btn-action" onClick={() => setSnapEnabled(!snapEnabled)}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+                  <button
+                    className="btn-action"
+                    onClick={() => setSnapEnabled(!snapEnabled)}
                     style={{
                       background: snapEnabled ? 'var(--green)' : 'var(--bg-2)',
                       color: snapEnabled ? 'var(--bg-0)' : 'var(--text)',
                       borderColor: snapEnabled ? 'var(--green)' : 'var(--border)',
-                    }}>
+                    }}
+                  >
                     {snapEnabled ? '✅' : '⭕'} SNAP GAMME
                   </button>
                   {detectedKey ? (
@@ -242,8 +325,15 @@ export const StudioPage: React.FC = () => {
                       {detectedKey.key} {detectedKey.mode} ({(detectedKey.confidence * 100).toFixed(0)}%)
                     </span>
                   ) : (
-                    <button className="btn-action" onClick={handleDetectKey}
-                      style={{ background: 'var(--yellow)', color: 'var(--bg-0)', borderColor: 'var(--yellow)' }}>
+                    <button
+                      className="btn-action"
+                      onClick={handleDetectKey}
+                      style={{
+                        background: 'var(--yellow)',
+                        color: 'var(--bg-0)',
+                        borderColor: 'var(--yellow)',
+                      }}
+                    >
                       🎼 DÉTECTER TONALITÉ
                     </button>
                   )}
@@ -254,7 +344,7 @@ export const StudioPage: React.FC = () => {
         </div>
       )}
 
-      {/* TrackSelector + PianoRoll */}
+      {/* TRACKS + PIANOROLL */}
       {result && (
         <>
           <TrackSelector

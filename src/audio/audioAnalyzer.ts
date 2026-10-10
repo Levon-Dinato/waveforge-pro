@@ -8,7 +8,7 @@ export interface AudioMetrics {
 
 export class AudioAnalyzer {
   private audioContext: AudioContext;
-  private analyser: AnalyserNode;
+  public analyser: AnalyserNode;
   private sourceNode: AudioNode | null = null;
   private dataArray: Float32Array;
   private lufsBuffer: number[] = [];
@@ -19,7 +19,7 @@ export class AudioAnalyzer {
   constructor(audioContext: AudioContext) {
     this.audioContext = audioContext;
     this.analyser = this.audioContext.createAnalyser();
-    this.analyser.fftSize = 4096;
+    this.analyser.fftSize = 2048;
     this.analyser.smoothingTimeConstant = 0.8;
     this.dataArray = new Float32Array(this.analyser.fftSize);
     this.lufsBuffer = new Array(Math.floor(this.LUFS_WINDOW * 10)).fill(-Infinity);
@@ -33,11 +33,9 @@ export class AudioAnalyzer {
     source.connect(this.analyser);
   }
 
-  disconnect(): void {
-    if (this.sourceNode) {
-      this.sourceNode.disconnect(this.analyser);
-      this.sourceNode = null;
-    }
+  // ✅ NOUVEAU : Accès à l'AnalyserNode pour le VectorScope
+  getAnalyserNode(): AnalyserNode {
+    return this.analyser;
   }
 
   start(callback: (metrics: AudioMetrics) => void): void {
@@ -62,9 +60,9 @@ export class AudioAnalyzer {
   }
 
   getMetrics(): AudioMetrics {
-    this.analyser.getFloatTimeDomainData(this.dataArray as Float32Array<ArrayBuffer>);
+    this.analyser.getFloatTimeDomainData(this.dataArray);
 
-    // True Peak (approximation)
+    // True Peak
     let peak = 0;
     for (let i = 0; i < this.dataArray.length; i++) {
       const absVal = Math.abs(this.dataArray[i]);
@@ -72,7 +70,7 @@ export class AudioAnalyzer {
     }
     const truePeak = peak > 0 ? 20 * Math.log10(peak) + 0.5 : -Infinity;
 
-    // LUFS (approximation RMS K-weighted)
+    // LUFS
     let sumSquares = 0;
     for (let i = 0; i < this.dataArray.length; i++) {
       sumSquares += this.dataArray[i] * this.dataArray[i];
@@ -90,7 +88,9 @@ export class AudioAnalyzer {
       ? validLufs.reduce((a, b) => a + b, 0) / validLufs.length
       : -Infinity;
 
-    const dr = (isFinite(truePeak) && isFinite(lufs)) ? Math.max(0, truePeak - lufs) : 0;
+    const dr = (isFinite(truePeak) && isFinite(lufs))
+      ? Math.max(0, truePeak - lufs)
+      : 0;
 
     return {
       lufs: isFinite(lufs) ? parseFloat(lufs.toFixed(1)) : -Infinity,
@@ -105,6 +105,9 @@ export class AudioAnalyzer {
 
   destroy(): void {
     this.stop();
-    this.disconnect();
+    if (this.sourceNode) {
+      this.sourceNode.disconnect(this.analyser);
+    }
+    this.analyser.disconnect();
   }
 }

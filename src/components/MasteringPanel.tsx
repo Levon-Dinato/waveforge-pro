@@ -5,6 +5,7 @@ import { MasteringChain, type MasteringPreset, DEFAULT_EQ_BANDS, type EQBand } f
 import { Knob } from './Knob';
 import { EQPanel } from './EQPanel';
 import { MonoMakerPanel } from './MonoMakerPanel';
+import { VectorScope } from './VectorScope';
 import { exportMasteredWav, downloadBlob } from '../audio/masteringExporter';
 
 interface MasteringPanelProps {
@@ -42,6 +43,9 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
   // Mono-Maker
   const [monoMakerEnabled, setMonoMakerEnabled] = useState(false);
   const [monoMakerFreq, setMonoMakerFreq] = useState(120);
+
+  // Vector Scope
+  const [showScope, setShowScope] = useState(true);
 
   const chainRef = useRef<MasteringChain | null>(null);
   const analyzerRef = useRef<AudioAnalyzer | null>(null);
@@ -126,7 +130,6 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
     }));
     setEqBands(newBands);
 
-    // Sync Mono-Maker state depuis le chain
     setMonoMakerEnabled(preset === 'warm' || preset === 'balanced');
     setMonoMakerFreq(120);
   }, [preset, audioContext]);
@@ -346,6 +349,57 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
         />
       </div>
 
+      {/* Vector Scope */}
+      <div style={{ marginBottom: '20px' }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '10px',
+          }}
+        >
+          <div style={{ fontSize: '10px', color: '#666', letterSpacing: '1px' }}>
+            🌌 VECTOR SCOPE (STÉRÉO)
+          </div>
+          <button
+            onClick={() => setShowScope(!showScope)}
+            style={{
+              background: 'transparent',
+              border: '1px solid #2a2a2a',
+              borderRadius: 4,
+              color: showScope ? '#00d9ff' : '#666',
+              fontSize: 10,
+              cursor: 'pointer',
+              padding: '2px 8px',
+              fontWeight: 600,
+            }}
+          >
+            {showScope ? '▼ MASQUER' : '▶ AFFICHER'}
+          </button>
+        </div>
+
+        {showScope && (
+          <div
+            style={{
+              padding: 16,
+              background: 'rgba(0, 0, 0, 0.3)',
+              border: '1px solid #1f1f1f',
+              borderRadius: 8,
+              display: 'flex',
+              justifyContent: 'center',
+            }}
+          >
+            <VectorScope
+              analyser={analyzerRef.current?.getAnalyserNode() ?? null}
+              isActive={isAnalyzing}
+              size={220}
+              color="#00d9ff"
+            />
+          </div>
+        )}
+      </div>
+
       {/* Métriques */}
       <div style={{ marginBottom: '20px' }}>
         <div style={{ fontSize: '10px', color: '#666', marginBottom: '8px', letterSpacing: '1px' }}>
@@ -458,7 +512,7 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
       </button>
 
       <div style={{ marginTop: '15px', fontSize: '9px', color: '#333', textAlign: 'center', letterSpacing: '1px' }}>
-        WAVEFORGE PRO · MASTERING ENGINE v1.2 · EQ + MONO-MAKER
+        WAVEFORGE PRO · MASTERING ENGINE v1.3 · EQ + MONO-MAKER + SCOPE
       </div>
     </div>
   );

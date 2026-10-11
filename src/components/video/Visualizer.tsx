@@ -19,7 +19,6 @@ interface VisualizerProps {
   config: VisualizerConfig;
   width?: number;
   height?: number;
-  /** Si true, enregistre ce canvas pour l'export (via ref) */
   registerCanvas?: (canvas: HTMLCanvasElement | null) => void;
 }
 
@@ -33,9 +32,10 @@ export const Visualizer: React.FC<VisualizerProps> = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rafRef = useRef<number | null>(null);
   const smoothedRef = useRef<number[]>([]);
-  const particlesRef = useRef<Array<{ x: number; y: number; vx: number; vy: number; life: number }>>([]);
+  const particlesRef = useRef<
+    Array<{ x: number; y: number; vx: number; vy: number; life: number }>
+  >([]);
 
-  // Enregistre le canvas auprès du parent pour l'export
   useEffect(() => {
     if (registerCanvas && canvasRef.current) {
       registerCanvas(canvasRef.current);
@@ -51,7 +51,6 @@ export const Visualizer: React.FC<VisualizerProps> = ({
     const ctx = canvas.getContext('2d', { alpha: false });
     if (!ctx) return;
 
-    // Résolution interne fixe
     canvas.width = width;
     canvas.height = height;
 
@@ -99,7 +98,6 @@ export const Visualizer: React.FC<VisualizerProps> = ({
         return;
       }
 
-      // Récupère les données
       analyser.getByteFrequencyData(dataArray);
       analyser.getByteTimeDomainData(timeDomainArray);
 
@@ -118,7 +116,6 @@ export const Visualizer: React.FC<VisualizerProps> = ({
           break;
       }
 
-      // Titre en bas
       drawStaticTitle(ctx, width, height, title, subtitle, primaryColor, accentColor);
     };
 
@@ -144,6 +141,50 @@ export const Visualizer: React.FC<VisualizerProps> = ({
 };
 
 // ============================================================
+// HELPERS
+// ============================================================
+
+function getFreqValue(
+  data: Uint8Array,
+  t: number,
+  smoothed: number[],
+  index: number
+): number {
+  // ✅ Utilise 65% des bins
+  const usableBins = Math.floor(data.length * 0.65);
+
+  // ✅ Échelle log AGRESSIVE pour bien étaler les basses (pow 2.2)
+  const logPos = Math.pow(t, 2.2);
+  const binIndex = Math.max(0, Math.min(usableBins - 1, Math.floor(logPos * usableBins)));
+
+  // Moyenne sur 3 bins
+  const idx0 = Math.max(0, binIndex - 1);
+  const idx1 = Math.min(data.length - 1, binIndex);
+  const idx2 = Math.min(data.length - 1, binIndex + 1);
+  let value = (data[idx0] + data[idx1] + data[idx2]) / 3 / 255;
+
+  // ✅ Boost log modéré (0.8 au lieu de 0.75)
+  value = Math.pow(value, 0.8);
+
+  // ✅ Compensation aigus BEAUCOUP plus douce (x1 → x1.4 seulement)
+  const compensation = 1 + t * 0.4;
+  value = value * compensation;
+
+  // ✅ Baseline minimale : toutes les barres ont au moins 8% de hauteur
+  value = Math.max(0.08, value);
+
+  // ✅ Clamp
+  value = Math.min(1, value);
+
+  // Lissage temporel
+  const prev = smoothed[index] || 0;
+  const smoothed_value = value > prev ? value * 0.65 + prev * 0.35 : prev * 0.88 + value * 0.12;
+  smoothed[index] = smoothed_value;
+
+  return smoothed_value;
+}
+
+// ============================================================
 // DESSINS
 // ============================================================
 
@@ -164,16 +205,10 @@ function drawBars(
 
   for (let i = 0; i < barCount; i++) {
     const t = i / barCount;
-    const binIndex = Math.floor(Math.pow(t, 1.8) * (data.length * 0.7));
-    const raw = (data[binIndex] || 0) / 255;
-    const target = Math.pow(raw, 0.85) * 1.2;
-    smoothed[i] = smoothed[i] * 0.7 + target * 0.3;
-    const value = Math.min(1, smoothed[i]);
-
-    const h = Math.max(4, value * maxBarHeight);
+    const value = getFreqValue(data, t, smoothed, i);
+    const h = Math.max(6, value * maxBarHeight);
     const x = i * barWidth + gap / 2;
 
-    // Gradient vertical : accent en haut, primary en bas
     const grad = ctx.createLinearGradient(0, baseY - h, 0, baseY);
     grad.addColorStop(0, accent);
     grad.addColorStop(1, primary);
@@ -184,13 +219,11 @@ function drawBars(
     ctx.fillRect(x, baseY - h, barWidth - gap, h);
     ctx.shadowBlur = 0;
 
-    // Miroir sous la ligne
     ctx.globalAlpha = 0.15;
     ctx.fillRect(x, baseY, barWidth - gap, h * 0.4);
     ctx.globalAlpha = 1;
   }
 
-  // Ligne de base
   ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
   ctx.lineWidth = 2;
   ctx.beginPath();
@@ -226,7 +259,6 @@ function drawWave(
   ctx.stroke();
   ctx.shadowBlur = 0;
 
-  // Ligne médiane
   ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
   ctx.lineWidth = 1;
   ctx.beginPath();
@@ -252,15 +284,12 @@ function drawCircle(
 
   for (let i = 0; i < barCount; i++) {
     const t = i / barCount;
-    const binIndex = Math.floor(Math.pow(t, 1.6) * (data.length * 0.6));
-    const raw = (data[binIndex] || 0) / 255;
-    const target = Math.pow(raw, 0.8) * 1.3;
-    smoothed[i] = smoothed[i] * 0.75 + target * 0.25;
-    const value = Math.min(1, smoothed[i]);
+    const value = getFreqValue(data, t, smoothed, i);
 
     const angle = (i / barCount) * Math.PI * 2 - Math.PI / 2;
     const innerR = baseRadius;
-    const outerR = baseRadius + value * maxSpike;
+    // ✅ Min spike de 20px pour que les traits soient toujours visibles
+    const outerR = baseRadius + Math.max(20, value * maxSpike);
 
     const x1 = cx + Math.cos(angle) * innerR;
     const y1 = cy + Math.sin(angle) * innerR;
@@ -295,12 +324,10 @@ function drawParticles(
   primary: string,
   particles: Array<{ x: number; y: number; vx: number; vy: number; life: number }>
 ) {
-  // Détecte un "kick" (énergie dans les basses fréquences)
   let bassEnergy = 0;
   for (let i = 0; i < 20; i++) bassEnergy += data[i] || 0;
   bassEnergy /= 20 * 255;
 
-  // Spawn de particules sur kick
   if (bassEnergy > 0.35 && particles.length < 200) {
     const count = Math.floor(bassEnergy * 8);
     for (let i = 0; i < count; i++) {
@@ -316,14 +343,13 @@ function drawParticles(
     }
   }
 
-  // Update + draw
   ctx.shadowBlur = 20;
   ctx.shadowColor = primary;
   for (let i = particles.length - 1; i >= 0; i--) {
     const p = particles[i];
     p.x += p.vx;
     p.y += p.vy;
-    p.vy += 0.15; // gravité légère
+    p.vy += 0.15;
     p.life -= 0.012;
 
     if (p.life <= 0 || p.x < 0 || p.x > W || p.y > H) {
@@ -341,7 +367,6 @@ function drawParticles(
   ctx.globalAlpha = 1;
   ctx.shadowBlur = 0;
 
-  // Cercle central pulsant
   const pulse = 60 + bassEnergy * 120;
   ctx.strokeStyle = primary;
   ctx.lineWidth = 4;
@@ -386,7 +411,6 @@ function drawStaticTitle(
     ctx.fillText(subtitle, padding, baseY + 50);
   }
 
-  // Logo WaveForge en haut à droite
   ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
   ctx.font = '600 20px "Inter", system-ui, sans-serif';
   ctx.textAlign = 'right';

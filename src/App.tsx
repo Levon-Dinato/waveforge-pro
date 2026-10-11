@@ -33,6 +33,10 @@ const HelpPage = lazy(() =>
 const SettingsPage = lazy(() =>
   import('./pages/SettingsPage').then((m) => ({ default: m.SettingsPage }))
 );
+// ✅ NOUVEAU : Page générateur de clip vidéo
+const VideoPage = lazy(() =>
+  import('./pages/VideoPage').then((m) => ({ default: m.VideoPage }))
+);
 
 // ============================================================
 // ✅ Loader visuel affiché pendant le chargement d'une page
@@ -92,6 +96,8 @@ export default function App() {
               <Route path="mastering" element={<MasteringPage />} />
               <Route path="musicgen" element={<MusicGenPage />} />
               <Route path="generator" element={<GeneratorPage />} />
+              {/* ✅ NOUVEAU : route générateur de clip vidéo */}
+              <Route path="video" element={<VideoPage />} />
               <Route path="help" element={<HelpPage />} />
               <Route path="settings" element={<SettingsPage />} />
             </Route>

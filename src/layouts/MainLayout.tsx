@@ -22,6 +22,8 @@ const NAV_ITEMS: NavItem[] = [
   { path: '/mastering', label: 'Mastering',     shortLabel: 'Master',   icon: '🎚️', color: '#7c5cff' },
   { path: '/generator', label: 'Générateur',    shortLabel: 'Généro',   icon: '🎼', color: '#ffd43b' },
   { path: '/musicgen',  label: 'Génération IA', shortLabel: 'Gén.IA',   icon: '🎵', color: '#00ff88' },
+  // ✅ NOUVEAU : Générateur de clip vidéo
+  { path: '/video',     label: 'Clip vidéo',    shortLabel: 'Vidéo',    icon: '🎬', color: '#ff5cf0' },
   { path: '/help',      label: 'Guide',         shortLabel: 'Guide',    icon: '📖', color: '#00d9ff' },
   { path: '/settings',  label: 'Réglages',      shortLabel: 'Réglages', icon: '⚙️', color: '#888' },
 ];
@@ -169,6 +171,7 @@ export const MainLayout: React.FC = () => {
               padding: '8px 4px',
               zIndex: 100,
               paddingBottom: 'max(8px, env(safe-area-inset-bottom))',
+              overflowX: 'auto',
             }}
           >
             {NAV_ITEMS.map((item) => (

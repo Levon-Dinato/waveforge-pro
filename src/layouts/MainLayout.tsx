@@ -4,6 +4,7 @@ import { Outlet, NavLink } from 'react-router-dom';
 import { VideoBackground } from '../components/VideoBackground';
 import { VUMeter } from '../components/VUMeter';
 import { SessionPanel } from '../components/SessionPanel';
+import { InstallButton } from '../components/InstallButton';
 import { useAudioEngineContext } from '../contexts/AudioEngineContext';
 import { useIsMobile } from '../hooks/useIsMobile';
 
@@ -22,7 +23,6 @@ const NAV_ITEMS: NavItem[] = [
   { path: '/mastering', label: 'Mastering',     shortLabel: 'Master',   icon: '🎚️', color: '#7c5cff' },
   { path: '/generator', label: 'Générateur',    shortLabel: 'Généro',   icon: '🎼', color: '#ffd43b' },
   { path: '/musicgen',  label: 'Génération IA', shortLabel: 'Gén.IA',   icon: '🎵', color: '#00ff88' },
-  // ✅ NOUVEAU : Générateur de clip vidéo
   { path: '/video',     label: 'Clip vidéo',    shortLabel: 'Vidéo',    icon: '🎬', color: '#ff5cf0' },
   { path: '/help',      label: 'Guide',         shortLabel: 'Guide',    icon: '📖', color: '#00d9ff' },
   { path: '/settings',  label: 'Réglages',      shortLabel: 'Réglages', icon: '⚙️', color: '#888' },
@@ -230,6 +230,9 @@ export const MainLayout: React.FC = () => {
           </nav>
         </div>
 
+        {/* ✅ BANDEAU D'INSTALLATION (mobile) */}
+        <InstallButton variant="banner" />
+
         <SessionPanel isOpen={showSessions} onClose={() => setShowSessions(false)} />
       </>
     );
@@ -349,6 +352,9 @@ export const MainLayout: React.FC = () => {
                 </NavLink>
               ))}
             </nav>
+
+            {/* ✅ BOUTON D'INSTALLATION (desktop) */}
+            <InstallButton variant="sidebar" />
 
             {/* Bouton Sessions */}
             <button

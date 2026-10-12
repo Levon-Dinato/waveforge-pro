@@ -8,10 +8,11 @@ interface BeforeInstallPromptEvent extends Event {
 
 export function usePWAInstall() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [isInstallable, setIsInstallable] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
+  const [isAndroid, setIsAndroid] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
+  const [hasNativePrompt, setHasNativePrompt] = useState(false);
 
   useEffect(() => {
     // Déjà installé (mode standalone) ?
@@ -24,29 +25,27 @@ export function usePWAInstall() {
       return;
     }
 
-    // Détection iOS (Safari n'a pas beforeinstallprompt)
+    // Détection OS
     const ua = window.navigator.userAgent.toLowerCase();
     const iOS = /iphone|ipad|ipod/.test(ua);
+    const android = /android/.test(ua);
     setIsIOS(iOS);
-    if (iOS) {
-      // Sur iOS, on peut toujours proposer (même si pas d'event)
-      setIsInstallable(true);
-    }
+    setIsAndroid(android);
 
     // Écoute l'événement Chrome/Edge
     const handler = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
-      setIsInstallable(true);
+      setHasNativePrompt(true);
     };
 
     window.addEventListener('beforeinstallprompt', handler);
 
-    // Détecte si l'utilisateur installe finalement
+    // Détecte l'installation
     const installedHandler = () => {
       setIsInstalled(true);
-      setIsInstallable(false);
       setDeferredPrompt(null);
+      setHasNativePrompt(false);
     };
     window.addEventListener('appinstalled', installedHandler);
 
@@ -56,34 +55,45 @@ export function usePWAInstall() {
     };
   }, []);
 
-  const promptInstall = useCallback(async (): Promise<'accepted' | 'dismissed' | 'ios'> => {
-    // Sur iOS : pas de prompt natif, on retourne 'ios' pour afficher les instructions
+  const promptInstall = useCallback(async (): Promise<'accepted' | 'dismissed' | 'ios' | 'manual'> => {
+    // iOS → modale manuelle
     if (isIOS) return 'ios';
 
-    if (!deferredPrompt) return 'dismissed';
-
-    try {
-      await deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted') {
-        setIsInstalled(true);
-        setIsInstallable(false);
+    // Prompt natif disponible
+    if (deferredPrompt) {
+      try {
+        await deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          setIsInstalled(true);
+        }
+        setDeferredPrompt(null);
+        setHasNativePrompt(false);
+        return outcome;
+      } catch {
+        return 'dismissed';
       }
-      setDeferredPrompt(null);
-      return outcome;
-    } catch {
-      return 'dismissed';
     }
+
+    // Fallback : instructions manuelles
+    return 'manual';
   }, [deferredPrompt, isIOS]);
 
   const dismiss = useCallback(() => {
     setIsDismissed(true);
   }, []);
 
+  // ✅ Affiche le bouton TOUJOURS si non installé (fallback pour Chrome Mobile, Safari, etc.)
+  const shouldShowInstall =
+    !isInstalled &&
+    !isDismissed;
+
   return {
-    isInstallable: isInstallable && !isInstalled && !isDismissed,
+    shouldShowInstall,
     isInstalled,
     isIOS,
+    isAndroid,
+    hasNativePrompt,
     promptInstall,
     dismiss,
   };

@@ -8,15 +8,15 @@ interface InstallButtonProps {
 }
 
 export const InstallButton: React.FC<InstallButtonProps> = ({ variant = 'sidebar', onClose }) => {
-  const { isInstallable, promptInstall, dismiss } = usePWAInstall();
-  const [showIOSHelp, setShowIOSHelp] = useState(false);
+  const { shouldShowInstall, isIOS, isAndroid, promptInstall, dismiss } = usePWAInstall();
+  const [showManualHelp, setShowManualHelp] = useState(false);
 
-  if (!isInstallable) return null;
+  if (!shouldShowInstall) return null;
 
   const handleClick = async () => {
     const result = await promptInstall();
-    if (result === 'ios') {
-      setShowIOSHelp(true);
+    if (result === 'ios' || result === 'manual') {
+      setShowManualHelp(true);
     } else if (result === 'accepted') {
       onClose?.();
     }
@@ -28,9 +28,9 @@ export const InstallButton: React.FC<InstallButtonProps> = ({ variant = 'sidebar
   };
 
   // ============================================================
-  // MODALE iOS (instructions)
+  // MODALE INSTRUCTIONS (iOS + fallback desktop/mobile)
   // ============================================================
-  const iosModal = showIOSHelp && (
+  const manualModal = showManualHelp && (
     <div
       style={{
         position: 'fixed',
@@ -43,7 +43,7 @@ export const InstallButton: React.FC<InstallButtonProps> = ({ variant = 'sidebar
         justifyContent: 'center',
         padding: 20,
       }}
-      onClick={() => setShowIOSHelp(false)}
+      onClick={() => setShowManualHelp(false)}
     >
       <div
         onClick={(e) => e.stopPropagation()}
@@ -52,12 +52,14 @@ export const InstallButton: React.FC<InstallButtonProps> = ({ variant = 'sidebar
           border: '1px solid #00d9ff',
           borderRadius: 12,
           padding: 24,
-          maxWidth: 360,
+          maxWidth: 380,
           width: '100%',
           boxShadow: '0 20px 60px rgba(0, 217, 255, 0.3)',
         }}
       >
-        <div style={{ fontSize: 40, textAlign: 'center', marginBottom: 12 }}>📱</div>
+        <div style={{ fontSize: 40, textAlign: 'center', marginBottom: 12 }}>
+          {isIOS ? '📱' : isAndroid ? '🤖' : '💻'}
+        </div>
         <h3
           style={{
             margin: 0,
@@ -69,33 +71,80 @@ export const InstallButton: React.FC<InstallButtonProps> = ({ variant = 'sidebar
             letterSpacing: '0.5px',
           }}
         >
-          INSTALLER SUR iOS
+          INSTALLER WAVEFORGE PRO
         </h3>
 
-        <ol
-          style={{
-            margin: 0,
-            padding: '0 0 0 20px',
-            fontSize: 13,
-            color: '#ccc',
-            lineHeight: 1.8,
-          }}
-        >
-          <li>
-            Ouvre le menu <strong style={{ color: '#fff' }}>Partager</strong> de Safari{' '}
-            <span style={{ color: '#00d9ff' }}>⎙</span>
-          </li>
-          <li>
-            Fais défiler et tape sur{' '}
-            <strong style={{ color: '#fff' }}>« Sur l'écran d'accueil »</strong>
-          </li>
-          <li>
-            Confirme avec <strong style={{ color: '#fff' }}>Ajouter</strong>
-          </li>
-        </ol>
+        {isIOS ? (
+          <ol
+            style={{
+              margin: 0,
+              padding: '0 0 0 20px',
+              fontSize: 13,
+              color: '#ccc',
+              lineHeight: 1.8,
+            }}
+          >
+            <li>
+              Ouvre le menu <strong style={{ color: '#fff' }}>Partager</strong> de Safari{' '}
+              <span style={{ color: '#00d9ff' }}>⎙</span>
+            </li>
+            <li>
+              Fais défiler et tape sur{' '}
+              <strong style={{ color: '#fff' }}>« Sur l'écran d'accueil »</strong>
+            </li>
+            <li>
+              Confirme avec <strong style={{ color: '#fff' }}>Ajouter</strong>
+            </li>
+          </ol>
+        ) : isAndroid ? (
+          <ol
+            style={{
+              margin: 0,
+              padding: '0 0 0 20px',
+              fontSize: 13,
+              color: '#ccc',
+              lineHeight: 1.8,
+            }}
+          >
+            <li>
+              Ouvre le menu <strong style={{ color: '#fff' }}>⋮</strong> de Chrome (en haut à droite)
+            </li>
+            <li>
+              Tape sur{' '}
+              <strong style={{ color: '#fff' }}>« Installer l'application »</strong>
+              <br />
+              <span style={{ fontSize: 11, color: '#888' }}>
+                (ou « Ajouter à l'écran d'accueil »)
+              </span>
+            </li>
+            <li>
+              Confirme avec <strong style={{ color: '#fff' }}>Installer</strong>
+            </li>
+          </ol>
+        ) : (
+          <ol
+            style={{
+              margin: 0,
+              padding: '0 0 0 20px',
+              fontSize: 13,
+              color: '#ccc',
+              lineHeight: 1.8,
+            }}
+          >
+            <li>
+              Cherche l'icône <strong style={{ color: '#fff' }}>⬇️</strong> à droite de la barre
+              d'adresse
+            </li>
+            <li>
+              OU ouvre le menu <strong style={{ color: '#fff' }}>⋮</strong> de Chrome →{' '}
+              <strong style={{ color: '#fff' }}>« Installer WaveForge PRO »</strong>
+            </li>
+            <li>Confirme l'installation</li>
+          </ol>
+        )}
 
         <button
-          onClick={() => setShowIOSHelp(false)}
+          onClick={() => setShowManualHelp(false)}
           style={{
             marginTop: 20,
             width: '100%',
@@ -169,7 +218,7 @@ export const InstallButton: React.FC<InstallButtonProps> = ({ variant = 'sidebar
               Installer WaveForge PRO
             </div>
             <div style={{ fontSize: 10, color: '#888' }}>
-              Accès rapide · Hors-ligne · Sans barre d'URL
+              Accès rapide · Sans barre d'URL
             </div>
           </div>
 
@@ -210,7 +259,7 @@ export const InstallButton: React.FC<InstallButtonProps> = ({ variant = 'sidebar
             ✕
           </button>
         </div>
-        {iosModal}
+        {manualModal}
       </>
     );
   }
@@ -253,7 +302,7 @@ export const InstallButton: React.FC<InstallButtonProps> = ({ variant = 'sidebar
       >
         ⬇️ INSTALLER L'APP
       </button>
-      {iosModal}
+      {manualModal}
     </>
   );
 };

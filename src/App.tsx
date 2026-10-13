@@ -5,10 +5,6 @@ import { AudioEngineProvider } from './contexts/AudioEngineContext';
 import { MainLayout } from './layouts/MainLayout';
 import './styles.css';
 
-// ============================================================
-// ✅ LAZY LOADING : chaque page devient un chunk séparé
-// Chargé uniquement quand l'utilisateur navigue dessus
-// ============================================================
 const HomePage = lazy(() =>
   import('./pages/HomePage').then((m) => ({ default: m.HomePage }))
 );
@@ -27,20 +23,22 @@ const MusicGenPage = lazy(() =>
 const GeneratorPage = lazy(() =>
   import('./pages/GeneratorPage').then((m) => ({ default: m.GeneratorPage }))
 );
+const VideoPage = lazy(() =>
+  import('./pages/VideoPage').then((m) => ({ default: m.VideoPage }))
+);
+const CDJPage = lazy(() =>
+  import('./pages/CDJPage').then((m) => ({ default: m.CDJPage }))
+);
+const MixerPage = lazy(() =>
+  import('./pages/MixerPage').then((m) => ({ default: m.MixerPage }))
+);
 const HelpPage = lazy(() =>
   import('./pages/HelpPage').then((m) => ({ default: m.HelpPage }))
 );
 const SettingsPage = lazy(() =>
   import('./pages/SettingsPage').then((m) => ({ default: m.SettingsPage }))
 );
-// ✅ NOUVEAU : Page générateur de clip vidéo
-const VideoPage = lazy(() =>
-  import('./pages/VideoPage').then((m) => ({ default: m.VideoPage }))
-);
 
-// ============================================================
-// ✅ Loader visuel affiché pendant le chargement d'une page
-// ============================================================
 const PageLoader = () => (
   <div
     style={{
@@ -80,9 +78,6 @@ const PageLoader = () => (
   </div>
 );
 
-// ============================================================
-// ✅ App avec React Router + Suspense pour le lazy loading
-// ============================================================
 export default function App() {
   return (
     <AudioEngineProvider>
@@ -96,8 +91,9 @@ export default function App() {
               <Route path="mastering" element={<MasteringPage />} />
               <Route path="musicgen" element={<MusicGenPage />} />
               <Route path="generator" element={<GeneratorPage />} />
-              {/* ✅ NOUVEAU : route générateur de clip vidéo */}
               <Route path="video" element={<VideoPage />} />
+              <Route path="cdj" element={<CDJPage />} />
+              <Route path="mixer" element={<MixerPage />} />
               <Route path="help" element={<HelpPage />} />
               <Route path="settings" element={<SettingsPage />} />
             </Route>

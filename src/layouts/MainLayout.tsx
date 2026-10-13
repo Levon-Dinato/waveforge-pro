@@ -24,6 +24,8 @@ const NAV_ITEMS: NavItem[] = [
   { path: '/generator', label: 'Générateur',    shortLabel: 'Généro',   icon: '🎼', color: '#ffd43b' },
   { path: '/musicgen',  label: 'Génération IA', shortLabel: 'Gén.IA',   icon: '🎵', color: '#00ff88' },
   { path: '/video',     label: 'Clip vidéo',    shortLabel: 'Vidéo',    icon: '🎬', color: '#ff5cf0' },
+  { path: '/cdj',       label: 'DJ Prep PRO',      shortLabel: 'CDJ',      icon: '🎛️', color: '#00d9ff' },
+  //{ path: '/mixer',     label: 'Mixer',         shortLabel: 'Mixer',    icon: '🎚️', color: '#7c5cff' },//
   { path: '/help',      label: 'Guide',         shortLabel: 'Guide',    icon: '📖', color: '#00d9ff' },
   { path: '/settings',  label: 'Réglages',      shortLabel: 'Réglages', icon: '⚙️', color: '#888' },
 ];

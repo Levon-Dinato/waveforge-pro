@@ -48,7 +48,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ trackId }) => {
     setLoading(true);
     setError(null);
 
-    // On récupère les commentaires avec le username du profile via une sous-requête
+    // ✅ CORRECTION : typage explicite du retour de la requête
     const { data, error: fetchError } = await supabase
       .from('comments')
       .select('*')
@@ -62,8 +62,13 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ trackId }) => {
       return;
     }
 
-    // Récupère les profils des auteurs
-    const userIds = Array.from(new Set((data || []).map((c) => c.user_id)));
+    const rawComments: Comment[] = (data || []) as Comment[];
+
+    // ✅ CORRECTION : typage explicite du paramètre 'c'
+    const userIds = Array.from(
+      new Set(rawComments.map((c: Comment) => c.user_id))
+    );
+
     let profileMap: Record<string, string> = {};
 
     if (userIds.length > 0) {
@@ -73,14 +78,19 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ trackId }) => {
         .in('id', userIds);
 
       if (profiles) {
-        profileMap = profiles.reduce((acc, p) => {
-          acc[p.id] = p.username || 'Anonyme';
-          return acc;
-        }, {} as Record<string, string>);
+        // ✅ CORRECTION : typage explicite du paramètre 'p'
+        profileMap = (profiles as { id: string; username: string | null }[]).reduce(
+          (acc, p) => {
+            acc[p.id] = p.username || 'Anonyme';
+            return acc;
+          },
+          {} as Record<string, string>
+        );
       }
     }
 
-    const enriched: Comment[] = (data || []).map((c) => ({
+    // ✅ CORRECTION : typage explicite du paramètre 'c'
+    const enriched: Comment[] = rawComments.map((c: Comment) => ({
       ...c,
       author_username: profileMap[c.user_id] || 'Anonyme',
     }));
@@ -118,7 +128,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ trackId }) => {
 
       if (inserted) {
         const enriched: Comment = {
-          ...inserted,
+          ...(inserted as Comment),
           author_username: username || 'Anonyme',
         };
         setComments((prev) => [...prev, enriched]);
@@ -141,7 +151,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ trackId }) => {
         .delete()
         .eq('id', id);
       if (deleteError) throw deleteError;
-      setComments((prev) => prev.filter((c) => c.id !== id));
+      setComments((prev) => prev.filter((c: Comment) => c.id !== id));
     } catch (err: any) {
       console.error('Erreur suppression:', err);
       alert('Erreur : ' + (err.message || err));
@@ -165,7 +175,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ trackId }) => {
           marginBottom: 10,
         }}
       >
-        💬 COMMENTAIRES ({comments.length})
+        COMMENTAIRES ({comments.length})
       </div>
 
       {loading && (
@@ -174,7 +184,6 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ trackId }) => {
         </div>
       )}
 
-      {/* Liste des commentaires */}
       {!loading && comments.length === 0 && (
         <div
           style={{
@@ -189,7 +198,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ trackId }) => {
       )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {comments.map((c) => {
+        {comments.map((c: Comment) => {
           const isOwn = user?.id === c.user_id;
           return (
             <div
@@ -204,7 +213,6 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ trackId }) => {
                 border: '1px solid rgba(255, 255, 255, 0.05)',
               }}
             >
-              {/* Avatar placeholder */}
               <div
                 style={{
                   width: 30,
@@ -284,7 +292,6 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ trackId }) => {
         })}
       </div>
 
-      {/* Formulaire */}
       {user ? (
         <form
           onSubmit={handleSubmit}
@@ -362,7 +369,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ trackId }) => {
             color: '#ff8c8c',
           }}
         >
-          ⚠️ {error}
+          {error}
         </div>
       )}
     </div>

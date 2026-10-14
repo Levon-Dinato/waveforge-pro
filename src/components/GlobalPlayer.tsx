@@ -130,7 +130,7 @@ const WaveProgress: React.FC<WaveProgressProps> = ({
         const barRatio = i / displayPeaks.length;
         const isPlayed = barRatio <= progress;
         const isHovered = hoverRatio !== null && barRatio <= hoverRatio;
-        const h = Math.max(3, (peak / 100) * height);
+        const h = Math.max(2, (peak / 100) * height);
 
         return (
           <div
@@ -158,8 +158,8 @@ const WaveProgress: React.FC<WaveProgressProps> = ({
             left: `${progress * 100}%`,
             top: '50%',
             transform: 'translate(-50%, -50%)',
-            width: 10,
-            height: 10,
+            width: 8,
+            height: 8,
             borderRadius: '50%',
             background: '#fff',
             boxShadow: '0 0 10px #00d9ff, 0 0 3px #fff',
@@ -174,7 +174,7 @@ const WaveProgress: React.FC<WaveProgressProps> = ({
           style={{
             position: 'absolute',
             left: `${hoverRatio * 100}%`,
-            bottom: height + 8,
+            bottom: height + 6,
             transform: 'translateX(-50%)',
             background: 'rgba(0, 0, 0, 0.92)',
             border: '1px solid rgba(0, 217, 255, 0.5)',
@@ -201,12 +201,12 @@ const WaveProgress: React.FC<WaveProgressProps> = ({
 // ÉGALISEUR ANIMÉ
 // ═══════════════════════════════════════════════════════════
 const EqualizerBars: React.FC<{ isPlaying: boolean; small?: boolean }> = ({ isPlaying, small }) => {
-  const h = small ? 10 : 14;
+  const h = small ? 8 : 10;
   return (
     <div
       style={{
         position: 'absolute',
-        bottom: 3,
+        bottom: 2,
         left: 3,
         right: 3,
         height: h,
@@ -238,7 +238,7 @@ const EqualizerBars: React.FC<{ isPlaying: boolean; small?: boolean }> = ({ isPl
       <style>{`
         @keyframes eqBar {
           0%, 100% { height: 3px; opacity: 0.7; }
-          50% { height: ${small ? '9' : '13'}px; opacity: 1; }
+          50% { height: ${small ? '7' : '9'}px; opacity: 1; }
         }
       `}</style>
     </div>
@@ -286,7 +286,6 @@ export const GlobalPlayer: React.FC = () => {
     }
   };
 
-  // ✅ Téléchargement depuis le player
   const handleDownload = async () => {
     if (!currentTrack) return;
 
@@ -345,10 +344,10 @@ export const GlobalPlayer: React.FC = () => {
           WebkitBackdropFilter: 'blur(24px)',
           fontFamily: 'monospace',
           color: '#fff',
-          padding: '8px 10px 6px',
+          padding: '7px 10px 5px',
           display: 'flex',
           flexDirection: 'column',
-          gap: 4,
+          gap: 3,
           animation: 'playerSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
         }}
       >
@@ -363,7 +362,7 @@ export const GlobalPlayer: React.FC = () => {
           peaks={currentTrack.peaks || []}
           progress={progress}
           onSeek={seek}
-          height={12}
+          height={10}
           duration={duration}
           compact={true}
         />
@@ -372,8 +371,8 @@ export const GlobalPlayer: React.FC = () => {
           <Link
             to={currentTrack.user_id ? `/profil/${currentTrack.user_id}` : '#'}
             style={{
-              width: 36,
-              height: 36,
+              width: 34,
+              height: 34,
               borderRadius: 6,
               flexShrink: 0,
               position: 'relative',
@@ -385,9 +384,9 @@ export const GlobalPlayer: React.FC = () => {
               alignItems: 'center',
               justifyContent: 'center',
               textDecoration: 'none',
-              fontSize: 14,
+              fontSize: 13,
               overflow: 'hidden',
-              boxShadow: isPlaying ? '0 0 12px rgba(0, 217, 255, 0.5)' : 'none',
+              boxShadow: isPlaying ? '0 0 10px rgba(0, 217, 255, 0.5)' : 'none',
             }}
           >
             {!currentTrack.cover_url && '🎵'}
@@ -397,7 +396,7 @@ export const GlobalPlayer: React.FC = () => {
           <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
             <div
               style={{
-                fontSize: '0.76rem',
+                fontSize: '0.72rem',
                 fontWeight: 700,
                 color: '#fff',
                 whiteSpace: 'nowrap',
@@ -410,7 +409,7 @@ export const GlobalPlayer: React.FC = () => {
             </div>
             <div
               style={{
-                fontSize: '0.62rem',
+                fontSize: '0.6rem',
                 color: 'rgba(255,255,255,0.55)',
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
@@ -421,18 +420,17 @@ export const GlobalPlayer: React.FC = () => {
             </div>
           </div>
 
-          {/* Bouton Download mobile */}
           <button
             onClick={handleDownload}
             disabled={isDownloading}
             style={{
-              width: 30,
-              height: 30,
+              width: 28,
+              height: 28,
               borderRadius: '50%',
               background: user ? 'rgba(0, 217, 255, 0.15)' : 'rgba(255,255,255,0.05)',
               border: user ? '1px solid rgba(0, 217, 255, 0.4)' : '1px solid rgba(255,255,255,0.15)',
               color: user ? '#00d9ff' : 'rgba(255,255,255,0.4)',
-              fontSize: 12,
+              fontSize: 11,
               flexShrink: 0,
               display: 'flex',
               alignItems: 'center',
@@ -447,20 +445,20 @@ export const GlobalPlayer: React.FC = () => {
           <button
             onClick={togglePlay}
             style={{
-              width: 34,
-              height: 34,
+              width: 32,
+              height: 32,
               borderRadius: '50%',
               background: 'linear-gradient(135deg, #00d9ff, #0088ff)',
               color: '#000',
               border: 'none',
-              fontSize: 13,
+              fontSize: 12,
               fontWeight: 900,
               flexShrink: 0,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
-              boxShadow: isPlaying ? '0 0 14px rgba(0, 217, 255, 0.7)' : '0 0 10px rgba(0, 217, 255, 0.5)',
+              boxShadow: isPlaying ? '0 0 12px rgba(0, 217, 255, 0.7)' : '0 0 8px rgba(0, 217, 255, 0.5)',
             }}
           >
             {isPlaying ? '⏸' : '▶'}
@@ -469,13 +467,13 @@ export const GlobalPlayer: React.FC = () => {
           <button
             onClick={stop}
             style={{
-              width: 26,
-              height: 26,
+              width: 24,
+              height: 24,
               borderRadius: '50%',
               background: 'rgba(255, 60, 60, 0.1)',
               border: '1px solid rgba(255, 60, 60, 0.3)',
               color: '#ff5c5c',
-              fontSize: 10,
+              fontSize: 9,
               flexShrink: 0,
               display: 'flex',
               alignItems: 'center',
@@ -491,7 +489,7 @@ export const GlobalPlayer: React.FC = () => {
   }
 
   // ═══════════════════════════════════════════════════════════
-  // DESKTOP — BARRE DE TÂCHE
+  // DESKTOP — BARRE DE TÂCHE COMPACTE (64px)
   // ═══════════════════════════════════════════════════════════
   return (
     <div
@@ -502,7 +500,7 @@ export const GlobalPlayer: React.FC = () => {
         bottom: 0,
         left: 0,
         right: 0,
-        height: 84,
+        height: 64,
         zIndex: 9999,
         background: 'linear-gradient(180deg, rgba(15, 18, 28, 0.97) 0%, rgba(10, 12, 20, 0.99) 100%)',
         borderTop: `1px solid ${isHovered ? 'rgba(0, 217, 255, 0.6)' : 'rgba(0, 217, 255, 0.35)'}`,
@@ -515,8 +513,8 @@ export const GlobalPlayer: React.FC = () => {
         display: 'grid',
         gridTemplateColumns: '1fr 2fr 1fr',
         alignItems: 'center',
-        padding: '0 24px',
-        gap: 24,
+        padding: '0 18px',
+        gap: 18,
         fontFamily: 'monospace',
         color: '#fff',
         animation: 'playerSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
@@ -544,13 +542,13 @@ export const GlobalPlayer: React.FC = () => {
       `}</style>
 
       {/* ═══ GAUCHE : Pochette + Titre + Artiste ═══ */}
-      <div style={{ display: 'flex', gap: 12, alignItems: 'center', minWidth: 0 }}>
+      <div style={{ display: 'flex', gap: 10, alignItems: 'center', minWidth: 0 }}>
         <Link
           to={currentTrack.user_id ? `/profil/${currentTrack.user_id}` : '#'}
           style={{
-            width: 56,
-            height: 56,
-            borderRadius: 10,
+            width: 44,
+            height: 44,
+            borderRadius: 8,
             flexShrink: 0,
             position: 'relative',
             background: currentTrack.cover_url
@@ -561,11 +559,11 @@ export const GlobalPlayer: React.FC = () => {
             alignItems: 'center',
             justifyContent: 'center',
             textDecoration: 'none',
-            fontSize: 22,
+            fontSize: 18,
             overflow: 'hidden',
             boxShadow: isPlaying
-              ? '0 0 24px rgba(0, 217, 255, 0.55), inset 0 0 12px rgba(255,255,255,0.15)'
-              : '0 0 14px rgba(0, 217, 255, 0.25)',
+              ? '0 0 20px rgba(0, 217, 255, 0.55), inset 0 0 10px rgba(255,255,255,0.15)'
+              : '0 0 12px rgba(0, 217, 255, 0.25)',
             transition: 'transform 0.25s ease',
           }}
           onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.06)'; }}
@@ -578,21 +576,21 @@ export const GlobalPlayer: React.FC = () => {
         <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
           <div
             style={{
-              fontSize: 9,
+              fontSize: 8,
               color: 'rgba(0, 217, 255, 0.7)',
               fontWeight: 800,
               letterSpacing: '1.5px',
-              marginBottom: 3,
+              marginBottom: 2,
             }}
           >
             {isPlaying ? '▶ EN LECTURE' : '⏸ EN PAUSE'}
           </div>
 
-          <div style={{ overflow: 'hidden', marginBottom: 3 }}>
+          <div style={{ overflow: 'hidden', marginBottom: 2 }}>
             <div
               ref={titleRef}
               style={{
-                fontSize: '0.85rem',
+                fontSize: '0.8rem',
                 fontWeight: 700,
                 color: '#fff',
                 whiteSpace: 'nowrap',
@@ -612,7 +610,7 @@ export const GlobalPlayer: React.FC = () => {
           <Link
             to={currentTrack.user_id ? `/profil/${currentTrack.user_id}` : '#'}
             style={{
-              fontSize: '0.7rem',
+              fontSize: '0.65rem',
               color: 'rgba(255,255,255,0.6)',
               textDecoration: 'none',
               display: 'block',
@@ -630,38 +628,38 @@ export const GlobalPlayer: React.FC = () => {
       </div>
 
       {/* ═══ CENTRE : Waveform + Contrôles ═══ */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 16, minWidth: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
         <button
           className="player-btn"
           onClick={togglePlay}
           title={isPlaying ? 'Pause' : 'Lecture'}
           style={{
-            width: 44,
-            height: 44,
+            width: 36,
+            height: 36,
             borderRadius: '50%',
             background: 'linear-gradient(135deg, #00d9ff, #0088ff)',
             color: '#000',
             border: 'none',
-            fontSize: 16,
+            fontSize: 14,
             fontWeight: 900,
             flexShrink: 0,
             boxShadow: isPlaying
-              ? '0 0 24px rgba(0, 217, 255, 0.8), inset 0 0 12px rgba(255,255,255,0.4)'
-              : '0 0 16px rgba(0, 217, 255, 0.5), inset 0 0 8px rgba(255,255,255,0.2)',
+              ? '0 0 20px rgba(0, 217, 255, 0.8), inset 0 0 10px rgba(255,255,255,0.4)'
+              : '0 0 14px rgba(0, 217, 255, 0.5), inset 0 0 6px rgba(255,255,255,0.2)',
           }}
         >
           {isPlaying ? '⏸' : '▶'}
         </button>
 
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span
               style={{
-                fontSize: 10,
+                fontSize: 9,
                 color: '#00d9ff',
                 fontWeight: 700,
                 fontFamily: 'monospace',
-                width: 36,
+                width: 32,
                 textAlign: 'right',
                 flexShrink: 0,
               }}
@@ -674,18 +672,18 @@ export const GlobalPlayer: React.FC = () => {
                 peaks={currentTrack.peaks || []}
                 progress={progress}
                 onSeek={seek}
-                height={28}
+                height={18}
                 duration={duration}
               />
             </div>
 
             <span
               style={{
-                fontSize: 10,
+                fontSize: 9,
                 color: 'rgba(255,255,255,0.55)',
                 fontWeight: 600,
                 fontFamily: 'monospace',
-                width: 36,
+                width: 32,
                 flexShrink: 0,
               }}
             >
@@ -696,8 +694,8 @@ export const GlobalPlayer: React.FC = () => {
       </div>
 
       {/* ═══ DROITE : Volume + Download + Fermer ═══ */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 120 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 100 }}>
           <button
             className="player-btn"
             onClick={handleVolumeToggle}
@@ -706,9 +704,9 @@ export const GlobalPlayer: React.FC = () => {
               background: 'transparent',
               border: 'none',
               color: 'rgba(255,255,255,0.7)',
-              fontSize: 15,
+              fontSize: 13,
               padding: 0,
-              width: 22,
+              width: 20,
             }}
           >
             {volumeIcon}
@@ -734,29 +732,28 @@ export const GlobalPlayer: React.FC = () => {
           />
         </div>
 
-        {/* ✅ BOUTON DOWNLOAD */}
         <button
           className="player-btn"
           onClick={handleDownload}
           disabled={isDownloading}
           title={user ? 'Télécharger ce morceau' : 'Connectez-vous pour télécharger'}
           style={{
-            padding: '8px 14px',
-            borderRadius: 8,
+            padding: '6px 12px',
+            borderRadius: 6,
             background: user
               ? 'linear-gradient(135deg, #00d9ff, #0088ff)'
               : 'rgba(255,255,255,0.05)',
             border: user ? 'none' : '1px solid rgba(255,255,255,0.15)',
             color: user ? '#000' : 'rgba(255,255,255,0.5)',
-            fontSize: 11,
+            fontSize: 10,
             fontWeight: 800,
             fontFamily: 'monospace',
             display: 'flex',
             alignItems: 'center',
-            gap: 6,
+            gap: 5,
             flexShrink: 0,
             cursor: isDownloading ? 'wait' : 'pointer',
-            boxShadow: user ? '0 2px 12px rgba(0, 217, 255, 0.3)' : 'none',
+            boxShadow: user ? '0 2px 10px rgba(0, 217, 255, 0.3)' : 'none',
             letterSpacing: '0.5px',
           }}
         >
@@ -764,13 +761,13 @@ export const GlobalPlayer: React.FC = () => {
             '...'
           ) : user ? (
             <>
-              <span style={{ fontSize: 13 }}>⬇</span>
-              DOWNLOAD
+              <span style={{ fontSize: 12 }}>⬇</span>
+              DL
             </>
           ) : (
             <>
-              <span style={{ fontSize: 13 }}>🔒</span>
-              CONNEXION
+              <span style={{ fontSize: 12 }}>🔒</span>
+              LOGIN
             </>
           )}
         </button>
@@ -780,13 +777,13 @@ export const GlobalPlayer: React.FC = () => {
           onClick={stop}
           title="Fermer le player"
           style={{
-            width: 30,
-            height: 30,
+            width: 26,
+            height: 26,
             borderRadius: '50%',
             background: 'rgba(255, 60, 60, 0.08)',
             border: '1px solid rgba(255, 60, 60, 0.3)',
             color: '#ff5c5c',
-            fontSize: 12,
+            fontSize: 11,
             flexShrink: 0,
           }}
         >

@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { usePlayer } from '../contexts/PlayerContext';
+import { useAuth } from '../contexts/AuthContext';
 import { useIsMobile } from '../hooks/useIsMobile';
 
 const formatTime = (sec: number): string => {
@@ -143,16 +144,13 @@ const WaveProgress: React.FC<WaveProgressProps> = ({
                 : isHovered
                 ? 'rgba(0, 217, 255, 0.55)'
                 : 'rgba(255, 255, 255, 0.18)',
-              boxShadow: isPlayed
-                ? '0 0 4px rgba(0, 217, 255, 0.6)'
-                : 'none',
+              boxShadow: isPlayed ? '0 0 4px rgba(0, 217, 255, 0.6)' : 'none',
               transition: 'background 0.08s, box-shadow 0.08s',
             }}
           />
         );
       })}
 
-      {/* Curseur point */}
       {progress > 0 && progress < 1 && !compact && (
         <div
           style={{
@@ -171,7 +169,6 @@ const WaveProgress: React.FC<WaveProgressProps> = ({
         />
       )}
 
-      {/* Tooltip hover */}
       {hoverRatio !== null && duration > 0 && !compact && (
         <div
           style={{
@@ -256,10 +253,13 @@ export const GlobalPlayer: React.FC = () => {
     currentTrack, isPlaying, currentTime, duration, volume,
     togglePlay, stop, seek, setVolume,
   } = usePlayer();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const isMobile = useIsMobile(768);
   const [isMuted, setIsMuted] = useState(false);
   const [prevVolume, setPrevVolume] = useState(0.8);
   const [isHovered, setIsHovered] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const titleRef = useRef<HTMLDivElement>(null);
   const [shouldMarquee, setShouldMarquee] = useState(false);
@@ -286,10 +286,47 @@ export const GlobalPlayer: React.FC = () => {
     }
   };
 
+  // ✅ Téléchargement depuis le player
+  const handleDownload = async () => {
+    if (!currentTrack) return;
+
+    if (!user) {
+      if (window.confirm('Vous devez être connecté pour télécharger.\n\nSe connecter maintenant ?')) {
+        navigate('/auth');
+      }
+      return;
+    }
+
+    setIsDownloading(true);
+    try {
+      const response = await fetch(currentTrack.audio_url);
+      if (!response.ok) throw new Error('Impossible de récupérer le fichier');
+      const blob = await response.blob();
+
+      const safeTitle = currentTrack.title.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const safeArtist = currentTrack.artist.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const fileName = `${safeArtist}_-_${safeTitle}.mp3`;
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err: any) {
+      console.error('Erreur téléchargement:', err);
+      alert('Erreur téléchargement : ' + (err.message || err));
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   const volumeIcon = isMuted || volume === 0 ? '🔇' : volume < 0.4 ? '🔉' : '🔊';
 
   // ═══════════════════════════════════════════════════════════
-  // MOBILE — BARRE COMPACTE AU-DESSUS DE LA NAV
+  // MOBILE
   // ═══════════════════════════════════════════════════════════
   if (isMobile) {
     return (
@@ -320,13 +357,8 @@ export const GlobalPlayer: React.FC = () => {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
           }
-          @keyframes marqueeScrollMobile {
-            from { transform: translateX(0); }
-            to { transform: translateX(-50%); }
-          }
         `}</style>
 
-        {/* Waveform fine */}
         <WaveProgress
           peaks={currentTrack.peaks || []}
           progress={progress}
@@ -336,8 +368,7 @@ export const GlobalPlayer: React.FC = () => {
           compact={true}
         />
 
-        {/* Ligne compacte */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <Link
             to={currentTrack.user_id ? `/profil/${currentTrack.user_id}` : '#'}
             style={{
@@ -390,6 +421,29 @@ export const GlobalPlayer: React.FC = () => {
             </div>
           </div>
 
+          {/* Bouton Download mobile */}
+          <button
+            onClick={handleDownload}
+            disabled={isDownloading}
+            style={{
+              width: 30,
+              height: 30,
+              borderRadius: '50%',
+              background: user ? 'rgba(0, 217, 255, 0.15)' : 'rgba(255,255,255,0.05)',
+              border: user ? '1px solid rgba(0, 217, 255, 0.4)' : '1px solid rgba(255,255,255,0.15)',
+              color: user ? '#00d9ff' : 'rgba(255,255,255,0.4)',
+              fontSize: 12,
+              flexShrink: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: isDownloading ? 'wait' : 'pointer',
+            }}
+            title={user ? 'Télécharger' : 'Connectez-vous'}
+          >
+            {isDownloading ? '...' : user ? '⬇' : '🔒'}
+          </button>
+
           <button
             onClick={togglePlay}
             style={{
@@ -437,7 +491,7 @@ export const GlobalPlayer: React.FC = () => {
   }
 
   // ═══════════════════════════════════════════════════════════
-  // DESKTOP — BARRE DE TÂCHE PLEINE LARGEUR (style Spotify)
+  // DESKTOP — BARRE DE TÂCHE
   // ═══════════════════════════════════════════════════════════
   return (
     <div
@@ -476,10 +530,6 @@ export const GlobalPlayer: React.FC = () => {
         @keyframes marqueeScroll {
           from { transform: translateX(0); }
           to { transform: translateX(-50%); }
-        }
-        @keyframes glowPulse {
-          0%, 100% { box-shadow: 0 0 20px rgba(0, 217, 255, 0.5), inset 0 0 12px rgba(255,255,255,0.15); }
-          50% { box-shadow: 0 0 32px rgba(0, 217, 255, 0.8), inset 0 0 16px rgba(255,255,255,0.25); }
         }
         .player-btn {
           display: flex;
@@ -581,7 +631,6 @@ export const GlobalPlayer: React.FC = () => {
 
       {/* ═══ CENTRE : Waveform + Contrôles ═══ */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 16, minWidth: 0 }}>
-        {/* Play/Pause */}
         <button
           className="player-btn"
           onClick={togglePlay}
@@ -604,7 +653,6 @@ export const GlobalPlayer: React.FC = () => {
           {isPlaying ? '⏸' : '▶'}
         </button>
 
-        {/* Waveform + temps */}
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <span
@@ -647,10 +695,9 @@ export const GlobalPlayer: React.FC = () => {
         </div>
       </div>
 
-      {/* ═══ DROITE : Volume + Fermer ═══ */}
+      {/* ═══ DROITE : Volume + Download + Fermer ═══ */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12 }}>
-        {/* Volume */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 140 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 120 }}>
           <button
             className="player-btn"
             onClick={handleVolumeToggle}
@@ -687,7 +734,47 @@ export const GlobalPlayer: React.FC = () => {
           />
         </div>
 
-        {/* Fermer */}
+        {/* ✅ BOUTON DOWNLOAD */}
+        <button
+          className="player-btn"
+          onClick={handleDownload}
+          disabled={isDownloading}
+          title={user ? 'Télécharger ce morceau' : 'Connectez-vous pour télécharger'}
+          style={{
+            padding: '8px 14px',
+            borderRadius: 8,
+            background: user
+              ? 'linear-gradient(135deg, #00d9ff, #0088ff)'
+              : 'rgba(255,255,255,0.05)',
+            border: user ? 'none' : '1px solid rgba(255,255,255,0.15)',
+            color: user ? '#000' : 'rgba(255,255,255,0.5)',
+            fontSize: 11,
+            fontWeight: 800,
+            fontFamily: 'monospace',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            flexShrink: 0,
+            cursor: isDownloading ? 'wait' : 'pointer',
+            boxShadow: user ? '0 2px 12px rgba(0, 217, 255, 0.3)' : 'none',
+            letterSpacing: '0.5px',
+          }}
+        >
+          {isDownloading ? (
+            '...'
+          ) : user ? (
+            <>
+              <span style={{ fontSize: 13 }}>⬇</span>
+              DOWNLOAD
+            </>
+          ) : (
+            <>
+              <span style={{ fontSize: 13 }}>🔒</span>
+              CONNEXION
+            </>
+          )}
+        </button>
+
         <button
           className="player-btn"
           onClick={stop}

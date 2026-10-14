@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { GlassCard } from '../components/ui/GlassCard';
 import { CommentSection } from '../components/CommentSection';
+import { OnlineUsersWidget } from '../components/OnlineUsersWidget';
 import { supabase, AUDIO_BUCKET } from '../lib/supabase';
 import { detectBPM } from '../audio/bpmDetector';
 import { parseBlob } from 'music-metadata';
@@ -213,7 +214,7 @@ const uploadCoverToSupabase = async (blob: Blob, baseName: string): Promise<stri
 };
 
 // ═══════════════════════════════════════════════════════════
-// WAVEFORM DRAGGABLE (avec curseur visible + support tactile)
+// WAVEFORM DRAGGABLE
 // ═══════════════════════════════════════════════════════════
 interface WaveformProps {
   peaks: number[];
@@ -255,7 +256,6 @@ const Waveform: React.FC<WaveformProps> = ({
     const progressX = progress * width;
     const barWidth = width / displayPeaks.length;
 
-    // Barres
     for (let i = 0; i < displayPeaks.length; i++) {
       const x = i * barWidth;
       const h = (displayPeaks[i] / 100) * (height * 0.85);
@@ -272,28 +272,23 @@ const Waveform: React.FC<WaveformProps> = ({
       ctx.fillRect(x, y, Math.max(1, barWidth - 0.5), h);
     }
 
-    // Ligne hover
     if (hoverRatio !== null && onSeek) {
       ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
       ctx.fillRect(hoverRatio * width - 0.5, 0, 1, height);
     }
 
-    // ✅ Curseur visible TOUJOURS
     if (onSeek || progress > 0) {
       const cursorX = Math.max(2, Math.min(width - 2, progressX));
 
-      // Halo
       const haloGrad = ctx.createRadialGradient(cursorX, midY, 0, cursorX, midY, 14);
       haloGrad.addColorStop(0, 'rgba(0, 217, 255, 0.4)');
       haloGrad.addColorStop(1, 'rgba(0, 217, 255, 0)');
       ctx.fillStyle = haloGrad;
       ctx.fillRect(cursorX - 14, 0, 28, height);
 
-      // Ligne blanche verticale
       ctx.fillStyle = '#fff';
       ctx.fillRect(cursorX - 1, 0, 2, height);
 
-      // ✅ Point draggable visible
       const dotY = midY;
       const dotR = isDragging ? 8 : hoverRatio !== null ? 7 : 5;
 
@@ -420,7 +415,7 @@ const Waveform: React.FC<WaveformProps> = ({
 };
 
 // ═══════════════════════════════════════════════════════════
-// BOUTON PLAY CIRCULAIRE (cyan)
+// BOUTON PLAY CIRCULAIRE
 // ═══════════════════════════════════════════════════════════
 const PlayButton: React.FC<{
   isPlaying: boolean;
@@ -497,6 +492,10 @@ export const NouveautesPage: React.FC = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ title: '', artist: '', genre: '', bpm: 0 });
   const [openComments, setOpenComments] = useState<Set<string>>(new Set());
+
+  // ✅ PAGINATION
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
 
   useEffect(() => {
     loadTracks();
@@ -802,6 +801,19 @@ export const NouveautesPage: React.FC = () => {
     return list;
   }, [tracks, search, sortBy, selectedGenre]);
 
+  // ✅ Reset page quand les filtres changent
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, sortBy, selectedGenre]);
+
+  // ✅ Calcul pagination
+  const totalPages = Math.max(1, Math.ceil(visibleTracks.length / ITEMS_PER_PAGE));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const paginatedTracks = useMemo(() => {
+    const start = (safeCurrentPage - 1) * ITEMS_PER_PAGE;
+    return visibleTracks.slice(start, start + ITEMS_PER_PAGE);
+  }, [visibleTracks, safeCurrentPage]);
+
   const toggleComments = (trackId: string) => {
     setOpenComments((prev) => {
       const next = new Set(prev);
@@ -816,7 +828,7 @@ export const NouveautesPage: React.FC = () => {
       padding: isMobile ? '12px' : '20px',
       fontFamily: 'monospace',
       color: '#fff',
-      paddingBottom: isMobile ? 140 : 20,
+      paddingBottom: isMobile ? 140 : 80,
     }}>
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -970,6 +982,10 @@ export const NouveautesPage: React.FC = () => {
                   ))}
                 </>
               )}
+
+              <div style={{ padding: '0 14px' }}>
+                <OnlineUsersWidget />
+              </div>
             </div>
           </aside>
         )}
@@ -1057,7 +1073,7 @@ export const NouveautesPage: React.FC = () => {
               </div>
             )}
 
-            {visibleTracks.map((track) => {
+            {paginatedTracks.map((track) => {
               const isThisCurrent = currentTrack?.id === track.id;
               const isThisPlaying = isThisCurrent && isPlaying;
               const isEditing = editingId === track.id;
@@ -1348,6 +1364,178 @@ export const NouveautesPage: React.FC = () => {
               );
             })}
           </div>
+
+          {/* ✅ PAGINATION */}
+          {!loading && totalPages > 1 && (
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              gap: 6,
+              marginTop: 20,
+              paddingTop: 20,
+              borderTop: '1px solid rgba(255,255,255,0.06)',
+              flexWrap: 'wrap',
+            }}>
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={safeCurrentPage === 1}
+                style={{
+                  padding: '8px 12px',
+                  background: 'rgba(255,255,255,0.03)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: 6,
+                  color: safeCurrentPage === 1 ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.7)',
+                  fontFamily: 'monospace',
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  cursor: safeCurrentPage === 1 ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.15s',
+                  opacity: safeCurrentPage === 1 ? 0.4 : 1,
+                }}
+                onMouseEnter={(e) => {
+                  if (safeCurrentPage !== 1) {
+                    e.currentTarget.style.background = 'rgba(0, 217, 255, 0.1)';
+                    e.currentTarget.style.borderColor = 'rgba(0, 217, 255, 0.4)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
+                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
+                }}
+              >
+                ← Précédent
+              </button>
+
+              {(() => {
+                const pages: (number | string)[] = [];
+                const maxVisible = isMobile ? 3 : 7;
+
+                if (totalPages <= maxVisible + 2) {
+                  for (let i = 1; i <= totalPages; i++) pages.push(i);
+                } else {
+                  if (safeCurrentPage <= 4) {
+                    for (let i = 1; i <= maxVisible; i++) pages.push(i);
+                    pages.push('...');
+                    pages.push(totalPages);
+                  } else if (safeCurrentPage >= totalPages - 3) {
+                    pages.push(1);
+                    pages.push('...');
+                    for (let i = totalPages - maxVisible + 1; i <= totalPages; i++) pages.push(i);
+                  } else {
+                    pages.push(1);
+                    pages.push('...');
+                    for (let i = safeCurrentPage - 2; i <= safeCurrentPage + 2; i++) pages.push(i);
+                    pages.push('...');
+                    pages.push(totalPages);
+                  }
+                }
+
+                return pages.map((p, idx) => {
+                  if (p === '...') {
+                    return (
+                      <span
+                        key={`ellipsis-${idx}`}
+                        style={{
+                          padding: '8px 6px',
+                          color: 'rgba(255,255,255,0.3)',
+                          fontFamily: 'monospace',
+                          fontSize: '0.75rem',
+                        }}
+                      >
+                        ...
+                      </span>
+                    );
+                  }
+
+                  const isActive = p === safeCurrentPage;
+                  return (
+                    <button
+                      key={p}
+                      onClick={() => setCurrentPage(p as number)}
+                      style={{
+                        minWidth: 36,
+                        padding: '8px 10px',
+                        background: isActive
+                          ? 'linear-gradient(135deg, #00d9ff, #0088ff)'
+                          : 'rgba(255,255,255,0.03)',
+                        border: isActive
+                          ? '1px solid #00d9ff'
+                          : '1px solid rgba(255,255,255,0.1)',
+                        borderRadius: 6,
+                        color: isActive ? '#000' : 'rgba(255,255,255,0.7)',
+                        fontFamily: 'monospace',
+                        fontSize: '0.75rem',
+                        fontWeight: isActive ? 800 : 600,
+                        cursor: 'pointer',
+                        transition: 'all 0.15s',
+                        boxShadow: isActive ? '0 0 12px rgba(0, 217, 255, 0.4)' : 'none',
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isActive) {
+                          e.currentTarget.style.background = 'rgba(0, 217, 255, 0.1)';
+                          e.currentTarget.style.borderColor = 'rgba(0, 217, 255, 0.4)';
+                          e.currentTarget.style.color = '#00d9ff';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isActive) {
+                          e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
+                          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
+                          e.currentTarget.style.color = 'rgba(255,255,255,0.7)';
+                        }
+                      }}
+                    >
+                      {p}
+                    </button>
+                  );
+                });
+              })()}
+
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={safeCurrentPage === totalPages}
+                style={{
+                  padding: '8px 12px',
+                  background: 'rgba(255,255,255,0.03)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: 6,
+                  color: safeCurrentPage === totalPages ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.7)',
+                  fontFamily: 'monospace',
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  cursor: safeCurrentPage === totalPages ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.15s',
+                  opacity: safeCurrentPage === totalPages ? 0.4 : 1,
+                }}
+                onMouseEnter={(e) => {
+                  if (safeCurrentPage !== totalPages) {
+                    e.currentTarget.style.background = 'rgba(0, 217, 255, 0.1)';
+                    e.currentTarget.style.borderColor = 'rgba(0, 217, 255, 0.4)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
+                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
+                }}
+              >
+                Suivant →
+              </button>
+            </div>
+          )}
+
+          {!loading && totalPages > 1 && (
+            <div style={{
+              textAlign: 'center',
+              marginTop: 12,
+              fontSize: '0.7rem',
+              color: 'rgba(255,255,255,0.4)',
+              fontFamily: 'monospace',
+              letterSpacing: '0.5px',
+            }}>
+              Page {safeCurrentPage} sur {totalPages} · {visibleTracks.length} morceaux
+            </div>
+          )}
         </main>
       </div>
     </div>

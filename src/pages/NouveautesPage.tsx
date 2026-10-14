@@ -26,11 +26,44 @@ interface Track {
 }
 
 const PREDEFINED_GENRES = [
-  'Techno', 'Melodic Techno', 'Tech House', 'House', 'Deep House',
-  'Afro House', 'Progressive', 'Minimal', 'Trance', 'Psytrance',
-  'Hardstyle', 'Hardcore', 'Drum & Bass', 'Dubstep', 'Bass House',
-  'Electro', 'Disco', 'Funk', 'Hip-Hop', 'Trap', 'Reggaeton',
-  'Ambient', 'Chillout', 'Breakbeat', 'Inconnu',
+  'Afro House',
+  'Amapiano',
+  'Ambient',
+  'Bass House / UK Garage',
+  'Big Room / Mainstage',
+  'Breakbeat',
+  'Chillout / Downtempo',
+  'Club House',
+  'Dance / Electro Pop',
+  'Deep House',
+  'Disco / Nu Disco',
+  'Drum & Bass',
+  'Dubstep',
+  'Electro',
+  'Electro House',
+  'Electronica',
+  'Funky House',
+  'Future House',
+  'Hard Techno',
+  'Hardcore',
+  'Hardstyle',
+  'Hip-Hop',
+  'House',
+  'Indie Dance',
+  'Jackin House',
+  'Latin / Afro House',
+  'Melodic House & Techno',
+  'Minimal / Deep Tech',
+  'Organic House / Downtempo',
+  'Progressive House',
+  'Psytrance',
+  'Reggaeton',
+  'Tech House',
+  'Techno',
+  'Trance',
+  'Trap',
+  'Vocal House',
+  'Inconnu',
 ];
 
 const formatTime = (sec: number): string => {
@@ -128,36 +161,55 @@ interface ExtractedMetadata {
 
 const normalizeGenre = (rawGenre: string): string => {
   const lower = rawGenre.toLowerCase();
+
   const mappings: { keywords: string[]; genre: string }[] = [
-    { keywords: ['melodic techno'], genre: 'Melodic Techno' },
+    { keywords: ['melodic techno', 'melodic house & techno', 'melodic house and techno'], genre: 'Melodic House & Techno' },
+    { keywords: ['progressive house', 'progressive'], genre: 'Progressive House' },
     { keywords: ['tech house', 'techhouse'], genre: 'Tech House' },
+    { keywords: ['jackin', 'jackin house'], genre: 'Jackin House' },
+    { keywords: ['vocal house'], genre: 'Vocal House' },
+    { keywords: ['funky house'], genre: 'Funky House' },
+    { keywords: ['electro house'], genre: 'Electro House' },
+    { keywords: ['future house'], genre: 'Future House' },
+    { keywords: ['bass house', 'uk garage', 'bassline', 'garage'], genre: 'Bass House / UK Garage' },
     { keywords: ['deep house'], genre: 'Deep House' },
     { keywords: ['afro house', 'afrohouse'], genre: 'Afro House' },
-    { keywords: ['bass house'], genre: 'Bass House' },
-    { keywords: ['hardstyle'], genre: 'Hardstyle' },
-    { keywords: ['hardcore', 'hard core'], genre: 'Hardcore' },
+    { keywords: ['latin house', 'latin', 'brazilian'], genre: 'Latin / Afro House' },
+    { keywords: ['club house'], genre: 'Club House' },
+    { keywords: ['organic house', 'organic'], genre: 'Organic House / Downtempo' },
+    { keywords: ['downtempo'], genre: 'Organic House / Downtempo' },
+    { keywords: ['hard techno'], genre: 'Hard Techno' },
+    { keywords: ['minimal', 'deep tech'], genre: 'Minimal / Deep Tech' },
+    { keywords: ['techno'], genre: 'Techno' },
+    { keywords: ['psytrance', 'psy trance', 'psy-trance'], genre: 'Psytrance' },
+    { keywords: ['vocal trance'], genre: 'Trance' },
+    { keywords: ['trance'], genre: 'Trance' },
     { keywords: ['drum and bass', 'drum & bass', 'dnb', 'd&b'], genre: 'Drum & Bass' },
     { keywords: ['dubstep'], genre: 'Dubstep' },
-    { keywords: ['psytrance', 'psy trance'], genre: 'Psytrance' },
-    { keywords: ['trance'], genre: 'Trance' },
-    { keywords: ['progressive'], genre: 'Progressive' },
-    { keywords: ['minimal'], genre: 'Minimal' },
-    { keywords: ['techno'], genre: 'Techno' },
+    { keywords: ['hardstyle'], genre: 'Hardstyle' },
+    { keywords: ['hardcore', 'hard core'], genre: 'Hardcore' },
+    { keywords: ['electronica'], genre: 'Electronica' },
+    { keywords: ['indie dance'], genre: 'Indie Dance' },
+    { keywords: ['big room', 'mainstage'], genre: 'Big Room / Mainstage' },
     { keywords: ['electro'], genre: 'Electro' },
-    { keywords: ['reggaeton'], genre: 'Reggaeton' },
+    { keywords: ['club / dance', 'dance / club', 'dance/electro', 'electro pop', 'dance pop'], genre: 'Dance / Electro Pop' },
+    { keywords: ['club', 'dance'], genre: 'Dance / Electro Pop' },
     { keywords: ['hip hop', 'hip-hop', 'hiphop', 'rap'], genre: 'Hip-Hop' },
     { keywords: ['trap'], genre: 'Trap' },
-    { keywords: ['breakbeat', 'break beat'], genre: 'Breakbeat' },
+    { keywords: ['reggaeton'], genre: 'Reggaeton' },
+    { keywords: ['amapiano'], genre: 'Amapiano' },
+    { keywords: ['breakbeat', 'break beat', 'breaks'], genre: 'Breakbeat' },
+    { keywords: ['nu disco', 'disco house', 'disco'], genre: 'Disco / Nu Disco' },
+    { keywords: ['funk'], genre: 'Funky House' },
+    { keywords: ['chillout', 'chill out', 'lounge'], genre: 'Chillout / Downtempo' },
     { keywords: ['ambient'], genre: 'Ambient' },
-    { keywords: ['chillout', 'chill out', 'lounge'], genre: 'Chillout' },
-    { keywords: ['disco'], genre: 'Disco' },
-    { keywords: ['funk'], genre: 'Funk' },
-    { keywords: ['dance', 'club'], genre: 'House' },
     { keywords: ['house'], genre: 'House' },
   ];
+
   for (const m of mappings) {
     if (m.keywords.some((kw) => lower.includes(kw))) return m.genre;
   }
+
   return rawGenre.length > 30 ? rawGenre.substring(0, 30) : rawGenre;
 };
 
@@ -207,7 +259,7 @@ interface WaveformProps {
 }
 
 const Waveform: React.FC<WaveformProps> = ({
-  peaks, progress, onSeek, height = 56, duration = 0, compact = false,
+  peaks, progress, onSeek, height = 36, duration = 0, compact = false,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -245,7 +297,7 @@ const Waveform: React.FC<WaveformProps> = ({
       const h = (displayPeaks[i] / 100) * (height * 0.42);
       const isPlayed = x < progressX;
       ctx.fillStyle = isPlayed ? 'rgba(0, 217, 255, 0.10)' : 'rgba(0, 217, 255, 0.04)';
-      ctx.fillRect(x, midY + 1, Math.max(1, barWidth - 0.5), Math.min(h * 0.4, 5));
+      ctx.fillRect(x, midY + 1, Math.max(1, barWidth - 0.5), Math.min(h * 0.4, 4));
     }
 
     for (let i = 0; i < displayPeaks.length; i++) {
@@ -262,7 +314,7 @@ const Waveform: React.FC<WaveformProps> = ({
         grad.addColorStop(1, '#0088ff');
         ctx.fillStyle = grad;
         ctx.shadowColor = 'rgba(0, 217, 255, 0.6)';
-        ctx.shadowBlur = h > height * 0.3 ? 8 : 5;
+        ctx.shadowBlur = h > height * 0.3 ? 6 : 4;
       } else if (isHovered) {
         grad.addColorStop(0, 'rgba(0, 217, 255, 0.75)');
         grad.addColorStop(1, 'rgba(0, 136, 255, 0.4)');
@@ -283,30 +335,21 @@ const Waveform: React.FC<WaveformProps> = ({
     ctx.fillRect(0, midY - 0.5, width, 1);
 
     if (progress > 0 && progress < 1) {
-      const haloGrad = ctx.createLinearGradient(progressX - 8, 0, progressX + 8, 0);
+      const haloGrad = ctx.createLinearGradient(progressX - 6, 0, progressX + 6, 0);
       haloGrad.addColorStop(0, 'rgba(0, 217, 255, 0)');
       haloGrad.addColorStop(0.5, 'rgba(0, 217, 255, 0.15)');
       haloGrad.addColorStop(1, 'rgba(0, 217, 255, 0)');
       ctx.fillStyle = haloGrad;
-      ctx.fillRect(progressX - 8, 0, 16, height);
+      ctx.fillRect(progressX - 6, 0, 12, height);
 
       ctx.fillStyle = '#fff';
       ctx.shadowColor = '#00d9ff';
-      ctx.shadowBlur = 12;
+      ctx.shadowBlur = 10;
       ctx.fillRect(progressX - 1, 0, 2, height);
 
       ctx.beginPath();
-      ctx.arc(progressX, 4, 3.5, 0, Math.PI * 2);
+      ctx.arc(progressX, 3, 2.5, 0, Math.PI * 2);
       ctx.fillStyle = '#fff';
-      ctx.shadowBlur = 14;
-      ctx.fill();
-
-      ctx.beginPath();
-      ctx.moveTo(progressX - 3, height - 1);
-      ctx.lineTo(progressX + 3, height - 1);
-      ctx.lineTo(progressX, height - 5);
-      ctx.closePath();
-      ctx.fillStyle = '#00d9ff';
       ctx.shadowBlur = 10;
       ctx.fill();
     }
@@ -342,7 +385,7 @@ const Waveform: React.FC<WaveformProps> = ({
         height,
         cursor: onSeek ? 'pointer' : 'default',
         position: 'relative',
-        borderRadius: 8,
+        borderRadius: 6,
         background: 'linear-gradient(180deg, rgba(0, 217, 255, 0.04) 0%, rgba(0, 0, 0, 0.15) 50%, rgba(0, 217, 255, 0.03) 100%)',
         padding: '2px 0',
         overflow: 'hidden',
@@ -354,13 +397,13 @@ const Waveform: React.FC<WaveformProps> = ({
           style={{
             position: 'absolute',
             left: `${hoverRatio * 100}%`,
-            top: -24,
+            top: -22,
             transform: 'translateX(-50%)',
             background: 'rgba(0, 0, 0, 0.95)',
             border: '1px solid rgba(0, 217, 255, 0.5)',
             borderRadius: 4,
-            padding: '2px 7px',
-            fontSize: 10,
+            padding: '2px 6px',
+            fontSize: 9,
             fontFamily: 'monospace',
             color: '#00d9ff',
             fontWeight: 700,
@@ -389,8 +432,8 @@ interface IconButtonProps {
 const IconButton: React.FC<IconButtonProps> = ({
   onClick, disabled, title, active, color = '#fff', children, size = 'normal',
 }) => {
-  const padding = size === 'small' ? '4px 8px' : '5px 10px';
-  const fontSize = size === 'small' ? '0.75rem' : '0.8rem';
+  const padding = size === 'small' ? '3px 7px' : '4px 9px';
+  const fontSize = size === 'small' ? '0.7rem' : '0.75rem';
 
   return (
     <button
@@ -768,8 +811,8 @@ export const NouveautesPage: React.FC = () => {
 
   const containerPadding = isMobile ? '12px' : '20px';
   const titleSize = isMobile ? '1.5rem' : '2rem';
-  const cardPadding = isMobile ? '12px' : '15px';
-  const coverSize = isMobile ? 56 : 70;
+  const cardPadding = '10px';
+  const coverSize = isMobile ? 44 : 50;
 
   return (
     <div style={{ padding: containerPadding, fontFamily: 'monospace', color: '#fff', paddingBottom: isMobile ? 140 : 20 }}>
@@ -790,26 +833,26 @@ export const NouveautesPage: React.FC = () => {
       <input type="file" accept="audio/*" ref={replaceInputRef} onChange={handleReplaceChange} style={{ display: 'none' }} />
 
       <GlassCard style={{
-        padding: isMobile ? '14px' : '20px',
-        marginBottom: isMobile ? 14 : 20,
+        padding: isMobile ? '14px' : '16px',
+        marginBottom: isMobile ? 12 : 16,
         borderStyle: 'dashed',
         borderColor: '#00d9ff',
       }}>
-        <h2 style={{ fontSize: isMobile ? '1rem' : '1.2rem', marginBottom: 8 }}>
+        <h2 style={{ fontSize: isMobile ? '1rem' : '1.1rem', marginBottom: 8 }}>
           Partager un nouveau son
         </h2>
         {!isMobile && (
-          <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.9rem', marginBottom: '15px' }}>
+          <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem', marginBottom: '12px' }}>
             Titre, artiste, genre, BPM, duree et pochette extraits des tags ID3 automatiquement.
           </p>
         )}
         <button onClick={handleUploadClick} disabled={uploading} style={{
-          padding: isMobile ? '10px 14px' : '8px 16px',
+          padding: isMobile ? '10px 14px' : '8px 14px',
           background: uploading ? '#666' : '#00d9ff', color: '#000',
           border: 'none', borderRadius: '6px',
           cursor: uploading ? 'wait' : 'pointer',
           fontWeight: 'bold',
-          fontSize: isMobile ? '0.85rem' : '0.9rem',
+          fontSize: isMobile ? '0.85rem' : '0.85rem',
           width: isMobile ? '100%' : 'auto',
         }}>
           {uploading ? uploadStatus || 'Traitement...' : '+ Uploader un morceau'}
@@ -818,23 +861,23 @@ export const NouveautesPage: React.FC = () => {
 
       {!loading && genreStats.length > 0 && (
         <div style={{
-          display: 'flex', gap: 8, overflowX: 'auto',
-          paddingBottom: 8, marginBottom: 12,
+          display: 'flex', gap: 6, overflowX: 'auto',
+          paddingBottom: 6, marginBottom: 10,
           scrollbarWidth: 'thin',
           WebkitOverflowScrolling: 'touch',
         }}>
           <button onClick={() => setSelectedGenre(null)} className="genre-tab" style={{
-            flexShrink: 0, padding: isMobile ? '6px 12px' : '8px 14px',
+            flexShrink: 0, padding: isMobile ? '5px 10px' : '6px 12px',
             background: selectedGenre === null ? 'linear-gradient(135deg, rgba(0, 217, 255, 0.25), rgba(0, 136, 255, 0.1))' : 'rgba(255, 255, 255, 0.03)',
             border: selectedGenre === null ? '1px solid rgba(0, 217, 255, 0.7)' : '1px solid rgba(255, 255, 255, 0.08)',
             borderRadius: 20, color: selectedGenre === null ? '#00d9ff' : 'rgba(255,255,255,0.75)',
-            fontFamily: 'monospace', fontSize: '0.8rem', fontWeight: selectedGenre === null ? 800 : 600,
-            cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: 6,
-            boxShadow: selectedGenre === null ? '0 0 16px rgba(0, 217, 255, 0.35)' : 'none',
+            fontFamily: 'monospace', fontSize: '0.75rem', fontWeight: selectedGenre === null ? 800 : 600,
+            cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: 5,
+            boxShadow: selectedGenre === null ? '0 0 12px rgba(0, 217, 255, 0.35)' : 'none',
           }}>
             <span>Tout</span>
             <span style={{
-              fontSize: '0.7rem', padding: '1px 7px', borderRadius: 10,
+              fontSize: '0.65rem', padding: '1px 6px', borderRadius: 10,
               background: selectedGenre === null ? 'rgba(0, 217, 255, 0.25)' : 'rgba(255,255,255,0.08)',
               color: selectedGenre === null ? '#00d9ff' : 'rgba(255,255,255,0.5)', fontWeight: 700,
             }}>{tracks.length}</span>
@@ -844,17 +887,17 @@ export const NouveautesPage: React.FC = () => {
             const isActive = selectedGenre === genre;
             return (
               <button key={genre} onClick={() => setSelectedGenre(genre)} className="genre-tab" style={{
-                flexShrink: 0, padding: isMobile ? '6px 12px' : '8px 14px',
+                flexShrink: 0, padding: isMobile ? '5px 10px' : '6px 12px',
                 background: isActive ? 'linear-gradient(135deg, rgba(0, 217, 255, 0.25), rgba(0, 136, 255, 0.1))' : 'rgba(255, 255, 255, 0.03)',
                 border: isActive ? '1px solid rgba(0, 217, 255, 0.7)' : '1px solid rgba(255, 255, 255, 0.08)',
                 borderRadius: 20, color: isActive ? '#00d9ff' : 'rgba(255,255,255,0.75)',
-                fontFamily: 'monospace', fontSize: '0.8rem', fontWeight: isActive ? 800 : 600,
-                cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: 6,
-                boxShadow: isActive ? '0 0 16px rgba(0, 217, 255, 0.35)' : 'none',
+                fontFamily: 'monospace', fontSize: '0.75rem', fontWeight: isActive ? 800 : 600,
+                cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: 5,
+                boxShadow: isActive ? '0 0 12px rgba(0, 217, 255, 0.35)' : 'none',
               }}>
                 <span>{genre}</span>
                 <span style={{
-                  fontSize: '0.7rem', padding: '1px 7px', borderRadius: 10,
+                  fontSize: '0.65rem', padding: '1px 6px', borderRadius: 10,
                   background: isActive ? 'rgba(0, 217, 255, 0.25)' : 'rgba(255,255,255,0.08)',
                   color: isActive ? '#00d9ff' : 'rgba(255,255,255,0.5)', fontWeight: 700,
                 }}>{count}</span>
@@ -864,7 +907,7 @@ export const NouveautesPage: React.FC = () => {
         </div>
       )}
 
-      <GlassCard style={{ padding: isMobile ? '12px' : '15px', marginBottom: 14 }}>
+      <GlassCard style={{ padding: '10px', marginBottom: 12 }}>
         <div style={{
           display: 'flex',
           gap: isMobile ? 8 : 10,
@@ -874,9 +917,9 @@ export const NouveautesPage: React.FC = () => {
         }}>
           <input type="text" placeholder="Rechercher..."
             value={search} onChange={(e) => setSearch(e.target.value)}
-            style={{ ...INPUT_STYLE, flex: isMobile ? 'unset' : '2 1 200px' }} />
+            style={{ ...INPUT_STYLE, padding: '6px 10px', fontSize: '0.8rem', flex: isMobile ? 'unset' : '2 1 200px' }} />
           <select value={sortBy} onChange={(e) => setSortBy(e.target.value as any)}
-            style={{ ...INPUT_STYLE, flex: isMobile ? 'unset' : '1 1 160px', cursor: 'pointer' }}>
+            style={{ ...INPUT_STYLE, padding: '6px 10px', fontSize: '0.8rem', flex: isMobile ? 'unset' : '1 1 160px', cursor: 'pointer' }}>
             <option style={OPTION_STYLE} value="recent">Plus recents</option>
             <option style={OPTION_STYLE} value="likes">Plus aimes</option>
             <option style={OPTION_STYLE} value="bpm">BPM (eleve)</option>
@@ -886,7 +929,7 @@ export const NouveautesPage: React.FC = () => {
             display: 'flex', alignItems: 'center', gap: 8,
             flex: isMobile ? 'unset' : '1 1 150px',
           }}>
-            <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)' }}>Vol</span>
+            <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)' }}>Vol</span>
             <input type="range" min="0" max="1" step="0.01" value={volume}
               onChange={(e) => setVolume(parseFloat(e.target.value))}
               style={{ flex: 1, accentColor: '#00d9ff' }} />
@@ -894,7 +937,7 @@ export const NouveautesPage: React.FC = () => {
         </div>
       </GlassCard>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 10 : 15 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 8 : 10 }}>
         {loading && <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.4)', padding: '20px' }}>Chargement...</div>}
 
         {!loading && visibleTracks.length === 0 && (
@@ -917,228 +960,229 @@ export const NouveautesPage: React.FC = () => {
             <GlassCard key={track.id} className="track-card" style={{
               padding: cardPadding,
               borderColor: isThisPlaying ? '#00d9ff' : undefined,
-              boxShadow: isThisPlaying ? '0 0 20px rgba(0, 217, 255, 0.3)' : undefined,
+              boxShadow: isThisPlaying ? '0 0 16px rgba(0, 217, 255, 0.3)' : undefined,
               animationDelay: `${Math.min(index * 40, 400)}ms`,
               opacity: isReplacing ? 0.6 : 1, transition: 'opacity 0.2s',
             }}>
               {isEditing ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   <input type="text" placeholder="Titre" value={editForm.title}
-                    onChange={(e) => setEditForm({ ...editForm, title: e.target.value })} style={INPUT_STYLE} />
+                    onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                    style={{ ...INPUT_STYLE, padding: '6px 10px', fontSize: '0.8rem' }} />
                   <input type="text" placeholder="Artiste" value={editForm.artist}
-                    onChange={(e) => setEditForm({ ...editForm, artist: e.target.value })} style={INPUT_STYLE} />
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    onChange={(e) => setEditForm({ ...editForm, artist: e.target.value })}
+                    style={{ ...INPUT_STYLE, padding: '6px 10px', fontSize: '0.8rem' }} />
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                     <select value={editForm.genre}
                       onChange={(e) => setEditForm({ ...editForm, genre: e.target.value })}
-                      style={{ ...INPUT_STYLE, flex: '1 1 140px', cursor: 'pointer' }}>
-                      <option style={OPTION_STYLE} value="Inconnu">-- Genre --</option>
+                      style={{ ...INPUT_STYLE, padding: '6px 10px', fontSize: '0.8rem', flex: '1 1 200px', cursor: 'pointer' }}>
+                      <option style={OPTION_STYLE} value="Inconnu">-- Choisir un genre --</option>
                       {PREDEFINED_GENRES.map((g) => (
                         <option key={g} value={g} style={OPTION_STYLE}>{g}</option>
                       ))}
                     </select>
                     <input type="number" placeholder="BPM" value={editForm.bpm}
                       onChange={(e) => setEditForm({ ...editForm, bpm: parseInt(e.target.value) || 0 })}
-                      style={{ ...INPUT_STYLE, flex: '0 0 90px' }} />
+                      style={{ ...INPUT_STYLE, padding: '6px 10px', fontSize: '0.8rem', flex: '0 0 80px' }} />
                   </div>
-                  <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                  <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
                     <button onClick={cancelEdit} style={{
-                      padding: '8px 14px', background: 'transparent',
+                      padding: '5px 12px', background: 'transparent',
                       border: '1px solid rgba(255,255,255,0.2)', color: '#fff',
-                      borderRadius: '6px', cursor: 'pointer', fontFamily: 'monospace',
+                      borderRadius: '4px', cursor: 'pointer', fontFamily: 'monospace', fontSize: '0.75rem',
                     }}>Annuler</button>
                     <button onClick={saveEdit} style={{
-                      padding: '8px 14px', background: '#00d9ff', color: '#000',
-                      border: 'none', borderRadius: '6px', cursor: 'pointer',
-                      fontWeight: 'bold', fontFamily: 'monospace',
+                      padding: '5px 12px', background: '#00d9ff', color: '#000',
+                      border: 'none', borderRadius: '4px', cursor: 'pointer',
+                      fontWeight: 'bold', fontFamily: 'monospace', fontSize: '0.75rem',
                     }}>Enregistrer</button>
                   </div>
                 </div>
               ) : (
-                <div style={{
-                  display: 'flex',
-                  flexDirection: isMobile ? 'column' : 'row',
-                  gap: isMobile ? 10 : 14,
-                  alignItems: 'flex-start',
-                }}>
+                <>
+                  {/* Ligne du haut : Pochette + Infos + Boutons */}
                   <div style={{
                     display: 'flex',
-                    gap: isMobile ? 10 : 14,
-                    width: '100%',
-                    alignItems: 'flex-start',
+                    flexDirection: isMobile ? 'column' : 'row',
+                    gap: isMobile ? 8 : 10,
+                    alignItems: isMobile ? 'stretch' : 'center',
                   }}>
-                    <div onClick={() => !isReplacing && handleCoverClick(track.id)}
-                      title="Cliquez pour changer la pochette"
-                      style={{
-                        width: coverSize, height: coverSize, flexShrink: 0, borderRadius: 8,
-                        background: track.cover_url
-                          ? `url(${track.cover_url}) center/cover`
-                          : 'linear-gradient(135deg, rgba(0,217,255,0.2), rgba(124,92,255,0.15))',
-                        border: '1px solid rgba(0, 217, 255, 0.3)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        cursor: isReplacing ? 'wait' : 'pointer',
-                        position: 'relative', overflow: 'hidden',
-                      }}
-                    >
-                      {!track.cover_url && <span style={{ fontSize: 22, opacity: 0.6 }}>🎵</span>}
-                      {isReplacing && (
-                        <div style={{
-                          position: 'absolute', inset: 0, background: 'rgba(0, 0, 0, 0.75)',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2,
-                        }}>
-                          <div style={{
-                            width: 20, height: 20, border: '2px solid rgba(0, 217, 255, 0.3)',
-                            borderTop: '2px solid #00d9ff', borderRadius: '50%',
-                            animation: 'spin 0.8s linear infinite',
-                          }} />
-                        </div>
-                      )}
-                    </div>
-
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{
-                        display: 'flex', alignItems: 'center', gap: 6,
-                        marginBottom: 4, flexWrap: 'wrap',
-                      }}>
-                        {fresh && (
-                          <span className="new-badge" style={{
-                            fontSize: '0.55rem', padding: '2px 5px',
-                            background: 'linear-gradient(135deg, #ff5c5c, #ff8c00)',
-                            color: '#fff', borderRadius: 4, fontWeight: 800,
-                            letterSpacing: '0.5px', flexShrink: 0,
-                          }}>NOUVEAU</span>
-                        )}
-                        <h3 style={{
-                          margin: 0, fontSize: isMobile ? '0.95rem' : '1.05rem',
-                          overflow: 'hidden', textOverflow: 'ellipsis',
-                          whiteSpace: isMobile ? 'normal' : 'nowrap',
-                          lineHeight: 1.3, flex: 1, minWidth: 0,
-                        }}>
-                          <span style={{ color: '#fff' }}>{track.title}</span>
-                          <span style={{ color: 'rgba(255,255,255,0.5)' }}> - </span>
-                          {track.user_id ? (
-                            <Link to={`/profil/${track.user_id}`} style={{
-                              color: '#00d9ff', textDecoration: 'none',
-                              borderBottom: '1px dotted rgba(0, 217, 255, 0.5)',
-                            }}>{track.artist}</Link>
-                          ) : (
-                            <span style={{ color: '#00d9ff' }}>{track.artist}</span>
-                          )}
-                        </h3>
-                      </div>
-
-                      <div style={{
-                        fontSize: isMobile ? '0.72rem' : '0.8rem',
-                        color: '#00d9ff',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                        lineHeight: 1.4,
-                      }}>
-                        {track.genre} · {track.bpm} BPM
-                        {track.duration ? ' · ' + formatTime(track.duration) : ''}
-                        {' · ⬇️ ' + (track.downloads || 0)}
-                        {isReplacing && replaceStatus && (
-                          <span style={{ color: '#ffd43b' }}> · {replaceStatus}</span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div style={{
-                    display: 'flex',
-                    gap: 6,
-                    flexShrink: 0,
-                    width: isMobile ? '100%' : 'auto',
-                    overflowX: isMobile ? 'auto' : 'visible',
-                    paddingBottom: isMobile ? 4 : 0,
-                    WebkitOverflowScrolling: 'touch',
-                    scrollbarWidth: 'thin',
-                  }}>
-                    <IconButton
-                      onClick={() => handlePlayTrack(track)}
-                      disabled={isReplacing}
-                      active={isThisPlaying}
-                      size={isMobile ? 'small' : 'normal'}
-                    >
-                      {isThisPlaying ? '⏸' : isThisCurrent ? '▶' : '▶ Écouter'}
-                    </IconButton>
-
-                    <IconButton
-                      onClick={() => toggleComments(track.id)}
-                      active={showComments}
-                      size={isMobile ? 'small' : 'normal'}
-                    >
-                      💬
-                    </IconButton>
-
-                    <IconButton
-                      onClick={() => handleDownload(track)}
-                      disabled={isDownloading}
-                      title={user ? 'Télécharger' : 'Connectez-vous'}
-                      color={user ? '#00ff88' : 'rgba(255,255,255,0.4)'}
-                      size={isMobile ? 'small' : 'normal'}
-                    >
-                      {isDownloading ? '...' : user ? '⬇️' : '🔒'}
-                    </IconButton>
-
-                    <IconButton
-                      onClick={() => handleLike(track.id)}
-                      size={isMobile ? 'small' : 'normal'}
-                    >
-                      ♥ {track.likes}
-                    </IconButton>
-
-                    <IconButton
-                      onClick={() => handleReplaceClick(track.id)}
-                      disabled={isReplacing}
-                      title="Remplacer"
-                      color="#ffd43b"
-                      size={isMobile ? 'small' : 'normal'}
-                    >
-                      {isReplacing ? '...' : '🔄'}
-                    </IconButton>
-
-                    <IconButton
-                      onClick={() => startEdit(track)}
-                      disabled={isReplacing}
-                      size={isMobile ? 'small' : 'normal'}
-                    >
-                      ✏️
-                    </IconButton>
-
-                    <IconButton
-                      onClick={() => handleDelete(track.id)}
-                      disabled={isReplacing}
-                      color="#ff5c5c"
-                      size={isMobile ? 'small' : 'normal'}
-                    >
-                      🗑️
-                    </IconButton>
-                  </div>
-                </div>
-              )}
-
-              {!isEditing && track.peaks && track.peaks.length > 0 && (
-                <div style={{ marginTop: isMobile ? 8 : 10 }}>
-                  <Waveform
-                    peaks={track.peaks}
-                    progress={progress}
-                    onSeek={isThisCurrent && !isReplacing ? handleSeekRatio : undefined}
-                    height={isMobile ? 42 : 56}
-                    duration={track.duration}
-                    compact={isMobile}
-                  />
-                  {isThisCurrent && (
+                    {/* Pochette + Infos */}
                     <div style={{
-                      display: 'flex', justifyContent: 'space-between',
-                      fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)',
-                      marginTop: 4,
+                      display: 'flex',
+                      gap: 10,
+                      flex: 1,
+                      minWidth: 0,
+                      alignItems: 'center',
                     }}>
-                      <span>{formatTime(currentTime)}</span>
-                      <span>{formatTime(duration)}</span>
+                      <div onClick={() => !isReplacing && handleCoverClick(track.id)}
+                        title="Cliquez pour changer la pochette"
+                        style={{
+                          width: coverSize, height: coverSize, flexShrink: 0, borderRadius: 6,
+                          background: track.cover_url
+                            ? `url(${track.cover_url}) center/cover`
+                            : 'linear-gradient(135deg, rgba(0,217,255,0.2), rgba(124,92,255,0.15))',
+                          border: '1px solid rgba(0, 217, 255, 0.3)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          cursor: isReplacing ? 'wait' : 'pointer',
+                          position: 'relative', overflow: 'hidden',
+                        }}
+                      >
+                        {!track.cover_url && <span style={{ fontSize: 18, opacity: 0.6 }}>🎵</span>}
+                        {isReplacing && (
+                          <div style={{
+                            position: 'absolute', inset: 0, background: 'rgba(0, 0, 0, 0.75)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2,
+                          }}>
+                            <div style={{
+                              width: 16, height: 16, border: '2px solid rgba(0, 217, 255, 0.3)',
+                              borderTop: '2px solid #00d9ff', borderRadius: '50%',
+                              animation: 'spin 0.8s linear infinite',
+                            }} />
+                          </div>
+                        )}
+                      </div>
+
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{
+                          display: 'flex', alignItems: 'center', gap: 5,
+                          marginBottom: 2, flexWrap: 'wrap',
+                        }}>
+                          {fresh && (
+                            <span className="new-badge" style={{
+                              fontSize: '0.5rem', padding: '1px 4px',
+                              background: 'linear-gradient(135deg, #ff5c5c, #ff8c00)',
+                              color: '#fff', borderRadius: 3, fontWeight: 800,
+                              letterSpacing: '0.5px', flexShrink: 0,
+                            }}>NEW</span>
+                          )}
+                          <h3 style={{
+                            margin: 0, fontSize: isMobile ? '0.85rem' : '0.9rem',
+                            overflow: 'hidden', textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                            lineHeight: 1.3, flex: 1, minWidth: 0,
+                            fontWeight: 700,
+                          }}>
+                            <span style={{ color: '#fff' }}>{track.title}</span>
+                            <span style={{ color: 'rgba(255,255,255,0.5)' }}> - </span>
+                            {track.user_id ? (
+                              <Link to={`/profil/${track.user_id}`} style={{
+                                color: '#00d9ff', textDecoration: 'none',
+                                borderBottom: '1px dotted rgba(0, 217, 255, 0.5)',
+                                fontWeight: 600,
+                              }}>{track.artist}</Link>
+                            ) : (
+                              <span style={{ color: '#00d9ff', fontWeight: 600 }}>{track.artist}</span>
+                            )}
+                          </h3>
+                        </div>
+
+                        <div style={{
+                          fontSize: isMobile ? '0.68rem' : '0.72rem',
+                          color: 'rgba(0, 217, 255, 0.8)',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          lineHeight: 1.3,
+                        }}>
+                          {track.genre} · {track.bpm} BPM
+                          {track.duration ? ' · ' + formatTime(track.duration) : ''}
+                          {' · ⬇️ ' + (track.downloads || 0)}
+                          {isReplacing && replaceStatus && (
+                            <span style={{ color: '#ffd43b' }}> · {replaceStatus}</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Boutons */}
+                    <div style={{
+                      display: 'flex',
+                      gap: 5,
+                      flexShrink: 0,
+                      width: isMobile ? '100%' : 'auto',
+                      overflowX: isMobile ? 'auto' : 'visible',
+                      paddingBottom: isMobile ? 2 : 0,
+                      WebkitOverflowScrolling: 'touch',
+                      scrollbarWidth: 'thin',
+                    }}>
+                      <IconButton
+                        onClick={() => handlePlayTrack(track)}
+                        disabled={isReplacing}
+                        active={isThisPlaying}
+                        size={isMobile ? 'small' : 'small'}
+                      >
+                        {isThisPlaying ? '⏸' : isThisCurrent ? '▶' : '▶ Écouter'}
+                      </IconButton>
+
+                      <IconButton
+                        onClick={() => toggleComments(track.id)}
+                        active={showComments}
+                        size="small"
+                      >
+                        💬
+                      </IconButton>
+
+                      <IconButton
+                        onClick={() => handleDownload(track)}
+                        disabled={isDownloading}
+                        title={user ? 'Télécharger' : 'Connectez-vous'}
+                        color={user ? '#00ff88' : 'rgba(255,255,255,0.4)'}
+                        size="small"
+                      >
+                        {isDownloading ? '...' : user ? '⬇️' : '🔒'}
+                      </IconButton>
+
+                      <IconButton
+                        onClick={() => handleLike(track.id)}
+                        size="small"
+                      >
+                        ♥ {track.likes}
+                      </IconButton>
+
+                      <IconButton
+                        onClick={() => handleReplaceClick(track.id)}
+                        disabled={isReplacing}
+                        title="Remplacer"
+                        color="#ffd43b"
+                        size="small"
+                      >
+                        {isReplacing ? '...' : '🔄'}
+                      </IconButton>
+
+                      <IconButton
+                        onClick={() => startEdit(track)}
+                        disabled={isReplacing}
+                        size="small"
+                      >
+                        ✏️
+                      </IconButton>
+
+                      <IconButton
+                        onClick={() => handleDelete(track.id)}
+                        disabled={isReplacing}
+                        color="#ff5c5c"
+                        size="small"
+                      >
+                        🗑️
+                      </IconButton>
+                    </div>
+                  </div>
+
+                  {/* Waveform en dessous */}
+                  {track.peaks && track.peaks.length > 0 && (
+                    <div style={{ marginTop: 6 }}>
+                      <Waveform
+                        peaks={track.peaks}
+                        progress={progress}
+                        onSeek={isThisCurrent && !isReplacing ? handleSeekRatio : undefined}
+                        height={isMobile ? 24 : 32}
+                        duration={track.duration}
+                        compact={isMobile}
+                      />
                     </div>
                   )}
-                </div>
+                </>
               )}
 
               {showComments && !isEditing && <CommentSection trackId={track.id} />}

@@ -213,7 +213,7 @@ const uploadCoverToSupabase = async (blob: Blob, baseName: string): Promise<stri
 };
 
 // ═══════════════════════════════════════════════════════════
-// WAVEFORM (fine, style barre)
+// WAVEFORM DRAGGABLE (avec curseur visible + support tactile)
 // ═══════════════════════════════════════════════════════════
 interface WaveformProps {
   peaks: number[];
@@ -229,6 +229,7 @@ const Waveform: React.FC<WaveformProps> = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [hoverRatio, setHoverRatio] = useState<number | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   const displayPeaks = useMemo(() => downsamplePeaks(peaks, 240), [peaks]);
 
@@ -254,6 +255,7 @@ const Waveform: React.FC<WaveformProps> = ({
     const progressX = progress * width;
     const barWidth = width / displayPeaks.length;
 
+    // Barres
     for (let i = 0; i < displayPeaks.length; i++) {
       const x = i * barWidth;
       const h = (displayPeaks[i] / 100) * (height * 0.85);
@@ -263,48 +265,130 @@ const Waveform: React.FC<WaveformProps> = ({
       if (isPlayed) {
         ctx.fillStyle = '#00d9ff';
       } else {
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.22)';
+        ctx.fillStyle = hoverRatio !== null && i / displayPeaks.length <= hoverRatio
+          ? 'rgba(255, 255, 255, 0.4)'
+          : 'rgba(255, 255, 255, 0.22)';
       }
       ctx.fillRect(x, y, Math.max(1, barWidth - 0.5), h);
     }
 
-    if (progress > 0 && progress < 1) {
-      ctx.fillStyle = '#fff';
-      ctx.fillRect(progressX - 0.5, 0, 1.5, height);
-    }
-
+    // Ligne hover
     if (hoverRatio !== null && onSeek) {
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
       ctx.fillRect(hoverRatio * width - 0.5, 0, 1, height);
     }
-  }, [displayPeaks, progress, height, hoverRatio, onSeek]);
 
-  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!onSeek || !containerRef.current) return;
+    // ✅ Curseur visible TOUJOURS
+    if (onSeek || progress > 0) {
+      const cursorX = Math.max(2, Math.min(width - 2, progressX));
+
+      // Halo
+      const haloGrad = ctx.createRadialGradient(cursorX, midY, 0, cursorX, midY, 14);
+      haloGrad.addColorStop(0, 'rgba(0, 217, 255, 0.4)');
+      haloGrad.addColorStop(1, 'rgba(0, 217, 255, 0)');
+      ctx.fillStyle = haloGrad;
+      ctx.fillRect(cursorX - 14, 0, 28, height);
+
+      // Ligne blanche verticale
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(cursorX - 1, 0, 2, height);
+
+      // ✅ Point draggable visible
+      const dotY = midY;
+      const dotR = isDragging ? 8 : hoverRatio !== null ? 7 : 5;
+
+      ctx.beginPath();
+      ctx.arc(cursorX, dotY, dotR + 2, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(0, 217, 255, 0.3)';
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(cursorX, dotY, dotR, 0, Math.PI * 2);
+      ctx.fillStyle = '#fff';
+      ctx.shadowColor = '#00d9ff';
+      ctx.shadowBlur = 10;
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(cursorX, dotY, dotR * 0.5, 0, Math.PI * 2);
+      ctx.fillStyle = '#00d9ff';
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+  }, [displayPeaks, progress, height, hoverRatio, onSeek, isDragging]);
+
+  const getRatioFromEvent = (clientX: number): number | null => {
+    if (!containerRef.current) return null;
     const rect = containerRef.current.getBoundingClientRect();
-    onSeek(Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width)));
+    return Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+  };
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!onSeek) return;
+    const ratio = getRatioFromEvent(e.clientX);
+    if (ratio === null) return;
+    setIsDragging(true);
+    onSeek(ratio);
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!containerRef.current) return;
-    const rect = containerRef.current.getBoundingClientRect();
-    setHoverRatio(Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width)));
+    const ratio = getRatioFromEvent(e.clientX);
+    if (ratio === null) return;
+    setHoverRatio(ratio);
+    if (isDragging && onSeek) onSeek(ratio);
   };
+
+  const handleMouseUp = () => setIsDragging(false);
+
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (!onSeek) return;
+    const touch = e.touches[0];
+    const ratio = getRatioFromEvent(touch.clientX);
+    if (ratio === null) return;
+    setIsDragging(true);
+    onSeek(ratio);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (!onSeek) return;
+    e.preventDefault();
+    const touch = e.touches[0];
+    const ratio = getRatioFromEvent(touch.clientX);
+    if (ratio !== null) onSeek(ratio);
+  };
+
+  const handleTouchEnd = () => setIsDragging(false);
+
+  useEffect(() => {
+    const handleGlobalMouseUp = () => setIsDragging(false);
+    window.addEventListener('mouseup', handleGlobalMouseUp);
+    return () => window.removeEventListener('mouseup', handleGlobalMouseUp);
+  }, []);
 
   return (
     <div
       ref={containerRef}
-      onClick={handleClick}
+      onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
-      onMouseLeave={() => setHoverRatio(null)}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={() => {
+        setHoverRatio(null);
+        setIsDragging(false);
+      }}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
       style={{
         width: '100%',
         height,
-        cursor: onSeek ? 'pointer' : 'default',
+        cursor: onSeek ? (isDragging ? 'grabbing' : 'grab') : 'default',
         position: 'relative',
         background: 'rgba(0, 0, 0, 0.3)',
         borderRadius: 4,
         overflow: 'hidden',
+        userSelect: 'none',
+        WebkitUserSelect: 'none',
+        touchAction: 'none',
       }}
     >
       <canvas ref={canvasRef} style={{ display: 'block' }} />
@@ -336,7 +420,7 @@ const Waveform: React.FC<WaveformProps> = ({
 };
 
 // ═══════════════════════════════════════════════════════════
-// BOUTON PLAY CIRCULAIRE (cyan, style site)
+// BOUTON PLAY CIRCULAIRE (cyan)
 // ═══════════════════════════════════════════════════════════
 const PlayButton: React.FC<{
   isPlaying: boolean;
@@ -755,7 +839,6 @@ export const NouveautesPage: React.FC = () => {
       <input type="file" accept="image/*" ref={coverInputRef} onChange={handleCoverChange} style={{ display: 'none' }} />
       <input type="file" accept="audio/*" ref={replaceInputRef} onChange={handleReplaceChange} style={{ display: 'none' }} />
 
-      {/* UPLOAD */}
       <GlassCard style={{ padding: '14px', marginBottom: 16, borderStyle: 'dashed', borderColor: '#00d9ff' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
           <div>
@@ -779,13 +862,11 @@ export const NouveautesPage: React.FC = () => {
         </div>
       </GlassCard>
 
-      {/* LAYOUT 2 COLONNES */}
       <div style={{
         display: 'flex',
         gap: 20,
         flexDirection: isMobile ? 'column' : 'row',
       }}>
-        {/* ═══════════ SIDEBAR GENRES ═══════════ */}
         {!isMobile && (
           <aside style={{ width: 220, flexShrink: 0 }}>
             <div style={{
@@ -893,7 +974,6 @@ export const NouveautesPage: React.FC = () => {
           </aside>
         )}
 
-        {/* ═══════════ CONTENU PRINCIPAL ═══════════ */}
         <main style={{ flex: 1, minWidth: 0 }}>
           <div style={{
             display: 'flex',
@@ -1041,7 +1121,6 @@ export const NouveautesPage: React.FC = () => {
                       gap: 12,
                       flexDirection: isMobile ? 'column' : 'row',
                     }}>
-                      {/* COVER */}
                       <div
                         onClick={() => !isReplacing && handleCoverClick(track.id)}
                         title="Cliquez pour changer la pochette"
@@ -1079,9 +1158,7 @@ export const NouveautesPage: React.FC = () => {
                         )}
                       </div>
 
-                      {/* CONTENU */}
                       <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                        {/* TITRE + HEART */}
                         <div style={{
                           display: 'flex',
                           alignItems: 'flex-start',
@@ -1183,7 +1260,6 @@ export const NouveautesPage: React.FC = () => {
                           </div>
                         </div>
 
-                        {/* WAVEFORM + PLAY */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                           <PlayButton
                             isPlaying={isThisPlaying}
@@ -1211,7 +1287,6 @@ export const NouveautesPage: React.FC = () => {
                           </div>
                         </div>
 
-                        {/* DOWNLOAD + MÉTADONNÉES */}
                         <div style={{
                           display: 'flex',
                           alignItems: 'center',

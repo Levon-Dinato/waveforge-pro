@@ -36,7 +36,7 @@ const downsamplePeaks = (peaks: number[], targetCount: number): number[] => {
 };
 
 // ═══════════════════════════════════════════════════════════
-// WAVEFORM PROGRESS BAR
+// WAVEFORM DRAGGABLE
 // ═══════════════════════════════════════════════════════════
 interface WaveProgressProps {
   peaks: number[];
@@ -52,39 +52,77 @@ const WaveProgress: React.FC<WaveProgressProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [hoverRatio, setHoverRatio] = useState<number | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
-  // Moins de barres en compact
-  const displayPeaks = downsamplePeaks(peaks, compact ? 44 : 68);
+  const displayPeaks = downsamplePeaks(peaks, compact ? 60 : 100);
 
-  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!containerRef.current) return;
+  const getRatio = (clientX: number): number | null => {
+    if (!containerRef.current) return null;
     const rect = containerRef.current.getBoundingClientRect();
-    const ratio = (e.clientX - rect.left) / rect.width;
-    onSeek(Math.max(0, Math.min(1, ratio)));
+    return Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+  };
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    const ratio = getRatio(e.clientX);
+    if (ratio === null) return;
+    setIsDragging(true);
+    onSeek(ratio);
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!containerRef.current || compact) return;
-    const rect = containerRef.current.getBoundingClientRect();
-    const ratio = (e.clientX - rect.left) / rect.width;
-    setHoverRatio(Math.max(0, Math.min(1, ratio)));
+    const ratio = getRatio(e.clientX);
+    if (ratio === null) return;
+    setHoverRatio(ratio);
+    if (isDragging) onSeek(ratio);
   };
+
+  const handleMouseUp = () => setIsDragging(false);
+
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    const touch = e.touches[0];
+    const ratio = getRatio(touch.clientX);
+    if (ratio === null) return;
+    setIsDragging(true);
+    onSeek(ratio);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const touch = e.touches[0];
+    const ratio = getRatio(touch.clientX);
+    if (ratio !== null) onSeek(ratio);
+  };
+
+  const handleTouchEnd = () => setIsDragging(false);
+
+  useEffect(() => {
+    const handler = () => setIsDragging(false);
+    window.addEventListener('mouseup', handler);
+    return () => window.removeEventListener('mouseup', handler);
+  }, []);
 
   return (
     <div
       ref={containerRef}
-      onClick={handleClick}
+      onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
-      onMouseLeave={() => setHoverRatio(null)}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={() => { setHoverRatio(null); setIsDragging(false); }}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
       style={{
         width: '100%',
         height,
-        cursor: 'pointer',
+        cursor: isDragging ? 'grabbing' : 'grab',
         position: 'relative',
         display: 'flex',
         alignItems: 'center',
-        gap: compact ? 1 : 2,
+        gap: compact ? 1 : 1.5,
         padding: '2px 0',
+        userSelect: 'none',
+        WebkitUserSelect: 'none',
+        touchAction: 'none',
       }}
     >
       {displayPeaks.map((peak, i) => {
@@ -92,7 +130,6 @@ const WaveProgress: React.FC<WaveProgressProps> = ({
         const isPlayed = barRatio <= progress;
         const isHovered = hoverRatio !== null && barRatio <= hoverRatio;
         const h = Math.max(3, (peak / 100) * height);
-        const isTall = h > height * 0.7;
 
         return (
           <div
@@ -107,9 +144,7 @@ const WaveProgress: React.FC<WaveProgressProps> = ({
                 ? 'rgba(0, 217, 255, 0.55)'
                 : 'rgba(255, 255, 255, 0.18)',
               boxShadow: isPlayed
-                ? isTall
-                  ? '0 0 6px rgba(0, 217, 255, 0.9), 0 0 12px rgba(0, 217, 255, 0.4)'
-                  : '0 0 3px rgba(0, 217, 255, 0.6)'
+                ? '0 0 4px rgba(0, 217, 255, 0.6)'
                 : 'none',
               transition: 'background 0.08s, box-shadow 0.08s',
             }}
@@ -117,24 +152,26 @@ const WaveProgress: React.FC<WaveProgressProps> = ({
         );
       })}
 
+      {/* Curseur point */}
       {progress > 0 && progress < 1 && !compact && (
         <div
           style={{
             position: 'absolute',
             left: `${progress * 100}%`,
-            top: -1,
-            bottom: -1,
-            width: 2,
+            top: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: 10,
+            height: 10,
+            borderRadius: '50%',
             background: '#fff',
-            boxShadow: '0 0 10px #00d9ff, 0 0 5px #fff',
-            borderRadius: 2,
-            transform: 'translateX(-1px)',
+            boxShadow: '0 0 10px #00d9ff, 0 0 3px #fff',
             pointerEvents: 'none',
             zIndex: 2,
           }}
         />
       )}
 
+      {/* Tooltip hover */}
       {hoverRatio !== null && duration > 0 && !compact && (
         <div
           style={{
@@ -166,7 +203,8 @@ const WaveProgress: React.FC<WaveProgressProps> = ({
 // ═══════════════════════════════════════════════════════════
 // ÉGALISEUR ANIMÉ
 // ═══════════════════════════════════════════════════════════
-const EqualizerBars: React.FC<{ isPlaying: boolean }> = ({ isPlaying }) => {
+const EqualizerBars: React.FC<{ isPlaying: boolean; small?: boolean }> = ({ isPlaying, small }) => {
+  const h = small ? 10 : 14;
   return (
     <div
       style={{
@@ -174,7 +212,7 @@ const EqualizerBars: React.FC<{ isPlaying: boolean }> = ({ isPlaying }) => {
         bottom: 3,
         left: 3,
         right: 3,
-        height: 14,
+        height: h,
         display: 'flex',
         alignItems: 'flex-end',
         justifyContent: 'center',
@@ -203,7 +241,7 @@ const EqualizerBars: React.FC<{ isPlaying: boolean }> = ({ isPlaying }) => {
       <style>{`
         @keyframes eqBar {
           0%, 100% { height: 3px; opacity: 0.7; }
-          50% { height: 13px; opacity: 1; }
+          50% { height: ${small ? '9' : '13'}px; opacity: 1; }
         }
       `}</style>
     </div>
@@ -215,15 +253,8 @@ const EqualizerBars: React.FC<{ isPlaying: boolean }> = ({ isPlaying }) => {
 // ═══════════════════════════════════════════════════════════
 export const GlobalPlayer: React.FC = () => {
   const {
-    currentTrack,
-    isPlaying,
-    currentTime,
-    duration,
-    volume,
-    togglePlay,
-    stop,
-    seek,
-    setVolume,
+    currentTrack, isPlaying, currentTime, duration, volume,
+    togglePlay, stop, seek, setVolume,
   } = usePlayer();
   const isMobile = useIsMobile(768);
   const [isMuted, setIsMuted] = useState(false);
@@ -236,9 +267,7 @@ export const GlobalPlayer: React.FC = () => {
   useEffect(() => {
     if (titleRef.current) {
       const el = titleRef.current;
-      setTimeout(() => {
-        setShouldMarquee(el.scrollWidth > el.clientWidth + 2);
-      }, 50);
+      setTimeout(() => setShouldMarquee(el.scrollWidth > el.clientWidth + 2), 50);
     }
   }, [currentTrack?.title]);
 
@@ -260,30 +289,30 @@ export const GlobalPlayer: React.FC = () => {
   const volumeIcon = isMuted || volume === 0 ? '🔇' : volume < 0.4 ? '🔉' : '🔊';
 
   // ═══════════════════════════════════════════════════════════
-  // VERSION MOBILE — BARRE COMPACTE (style Spotify)
+  // MOBILE — BARRE COMPACTE AU-DESSUS DE LA NAV
   // ═══════════════════════════════════════════════════════════
   if (isMobile) {
     return (
       <div
         style={{
           position: 'fixed',
-          bottom: 78, // juste au-dessus de la nav bottom (80px de haut)
-          left: 8,
-          right: 8,
+          bottom: 78,
+          left: 0,
+          right: 0,
           zIndex: 9999,
-          background: 'linear-gradient(135deg, rgba(15, 18, 28, 0.98) 0%, rgba(10, 12, 20, 0.99) 100%)',
-          backdropFilter: 'blur(24px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(24px) saturate(180%)',
-          border: '1px solid rgba(0, 217, 255, 0.35)',
-          borderRadius: 12,
-          padding: '8px 10px',
-          boxShadow: '0 12px 40px rgba(0, 0, 0, 0.7), 0 0 24px rgba(0, 217, 255, 0.25)',
+          background: 'linear-gradient(180deg, rgba(15, 18, 28, 0.98) 0%, rgba(10, 12, 20, 1) 100%)',
+          borderTop: '1px solid rgba(0, 217, 255, 0.4)',
+          borderBottom: '1px solid rgba(0, 217, 255, 0.15)',
+          boxShadow: '0 -8px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 217, 255, 0.15)',
+          backdropFilter: 'blur(24px)',
+          WebkitBackdropFilter: 'blur(24px)',
           fontFamily: 'monospace',
           color: '#fff',
-          animation: 'playerSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+          padding: '8px 10px 6px',
           display: 'flex',
           flexDirection: 'column',
-          gap: 6,
+          gap: 4,
+          animation: 'playerSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
         }}
       >
         <style>{`
@@ -297,26 +326,23 @@ export const GlobalPlayer: React.FC = () => {
           }
         `}</style>
 
-        {/* Ligne 1 : Waveform fine + progression */}
-        <div style={{ marginBottom: 2 }}>
-          <WaveProgress
-            peaks={currentTrack.peaks || []}
-            progress={progress}
-            onSeek={seek}
-            height={14}
-            duration={duration}
-            compact={true}
-          />
-        </div>
+        {/* Waveform fine */}
+        <WaveProgress
+          peaks={currentTrack.peaks || []}
+          progress={progress}
+          onSeek={seek}
+          height={12}
+          duration={duration}
+          compact={true}
+        />
 
-        {/* Ligne 2 : Pochette + Titre + Play + Fermer */}
+        {/* Ligne compacte */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          {/* Pochette */}
           <Link
             to={currentTrack.user_id ? `/profil/${currentTrack.user_id}` : '#'}
             style={{
-              width: 38,
-              height: 38,
+              width: 36,
+              height: 36,
               borderRadius: 6,
               flexShrink: 0,
               position: 'relative',
@@ -330,94 +356,72 @@ export const GlobalPlayer: React.FC = () => {
               textDecoration: 'none',
               fontSize: 14,
               overflow: 'hidden',
-              boxShadow: isPlaying
-                ? '0 0 12px rgba(0, 217, 255, 0.5)'
-                : 'none',
+              boxShadow: isPlaying ? '0 0 12px rgba(0, 217, 255, 0.5)' : 'none',
             }}
           >
             {!currentTrack.cover_url && '🎵'}
-            <EqualizerBars isPlaying={isPlaying} />
+            <EqualizerBars isPlaying={isPlaying} small />
           </Link>
 
-          {/* Titre + Artiste */}
           <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
             <div
               style={{
+                fontSize: '0.76rem',
+                fontWeight: 700,
+                color: '#fff',
+                whiteSpace: 'nowrap',
                 overflow: 'hidden',
+                textOverflow: 'ellipsis',
                 marginBottom: 1,
-                position: 'relative',
               }}
             >
-              <div
-                ref={titleRef}
-                style={{
-                  fontSize: '0.78rem',
-                  fontWeight: 700,
-                  color: '#fff',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: shouldMarquee ? 'clip' : 'ellipsis',
-                  animation: shouldMarquee
-                    ? 'marqueeScrollMobile 14s linear infinite'
-                    : 'none',
-                  display: shouldMarquee ? 'inline-block' : 'block',
-                  paddingRight: shouldMarquee ? 40 : 0,
-                }}
-              >
-                {shouldMarquee
-                  ? `${currentTrack.title}\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0${currentTrack.title}`
-                  : currentTrack.title}
-              </div>
+              {currentTrack.title}
             </div>
             <div
               style={{
-                fontSize: '0.65rem',
+                fontSize: '0.62rem',
                 color: 'rgba(255,255,255,0.55)',
+                whiteSpace: 'nowrap',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
               }}
             >
               {currentTrack.artist} · {formatTime(currentTime)} / {formatTime(duration)}
             </div>
           </div>
 
-          {/* Bouton Play/Pause compact */}
           <button
             onClick={togglePlay}
             style={{
-              width: 36,
-              height: 36,
+              width: 34,
+              height: 34,
               borderRadius: '50%',
               background: 'linear-gradient(135deg, #00d9ff, #0088ff)',
               color: '#000',
               border: 'none',
-              fontSize: 14,
+              fontSize: 13,
               fontWeight: 900,
               flexShrink: 0,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
-              boxShadow: isPlaying
-                ? '0 0 16px rgba(0, 217, 255, 0.7)'
-                : '0 0 10px rgba(0, 217, 255, 0.5)',
+              boxShadow: isPlaying ? '0 0 14px rgba(0, 217, 255, 0.7)' : '0 0 10px rgba(0, 217, 255, 0.5)',
             }}
           >
             {isPlaying ? '⏸' : '▶'}
           </button>
 
-          {/* Bouton Fermer */}
           <button
             onClick={stop}
             style={{
-              width: 28,
-              height: 28,
+              width: 26,
+              height: 26,
               borderRadius: '50%',
               background: 'rgba(255, 60, 60, 0.1)',
               border: '1px solid rgba(255, 60, 60, 0.3)',
               color: '#ff5c5c',
-              fontSize: 11,
+              fontSize: 10,
               flexShrink: 0,
               display: 'flex',
               alignItems: 'center',
@@ -433,7 +437,7 @@ export const GlobalPlayer: React.FC = () => {
   }
 
   // ═══════════════════════════════════════════════════════════
-  // VERSION DESKTOP — LE GROS PLAYER PREMIUM
+  // DESKTOP — BARRE DE TÂCHE PLEINE LARGEUR (style Spotify)
   // ═══════════════════════════════════════════════════════════
   return (
     <div
@@ -441,33 +445,33 @@ export const GlobalPlayer: React.FC = () => {
       onMouseLeave={() => setIsHovered(false)}
       style={{
         position: 'fixed',
-        bottom: 20,
-        right: 20,
-        width: 440,
-        maxWidth: 'calc(100vw - 40px)',
-        background: 'linear-gradient(135deg, rgba(15, 18, 28, 0.96) 0%, rgba(10, 12, 20, 0.98) 100%)',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: 84,
+        zIndex: 9999,
+        background: 'linear-gradient(180deg, rgba(15, 18, 28, 0.97) 0%, rgba(10, 12, 20, 0.99) 100%)',
+        borderTop: `1px solid ${isHovered ? 'rgba(0, 217, 255, 0.6)' : 'rgba(0, 217, 255, 0.35)'}`,
+        boxShadow: isHovered
+          ? '0 -12px 50px rgba(0, 0, 0, 0.7), 0 0 40px rgba(0, 217, 255, 0.2)'
+          : '0 -8px 40px rgba(0, 0, 0, 0.6), 0 0 25px rgba(0, 217, 255, 0.12)',
         backdropFilter: 'blur(24px) saturate(180%)',
         WebkitBackdropFilter: 'blur(24px) saturate(180%)',
-        border: `1px solid ${isHovered ? 'rgba(0, 217, 255, 0.55)' : 'rgba(0, 217, 255, 0.28)'}`,
-        borderRadius: 18,
-        padding: 14,
-        zIndex: 9999,
-        boxShadow: isHovered
-          ? '0 24px 70px rgba(0, 0, 0, 0.7), 0 0 40px rgba(0, 217, 255, 0.35), inset 0 1px 0 rgba(255,255,255,0.08)'
-          : '0 20px 60px rgba(0, 0, 0, 0.6), 0 0 25px rgba(0, 217, 255, 0.18), inset 0 1px 0 rgba(255,255,255,0.06)',
+        transition: 'all 0.25s ease',
+        display: 'grid',
+        gridTemplateColumns: '1fr 2fr 1fr',
+        alignItems: 'center',
+        padding: '0 24px',
+        gap: 24,
         fontFamily: 'monospace',
         color: '#fff',
-        transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
         animation: 'playerSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 12,
       }}
     >
       <style>{`
         @keyframes playerSlideUp {
-          from { opacity: 0; transform: translateY(24px) scale(0.96); }
-          to { opacity: 1; transform: translateY(0) scale(1); }
+          from { opacity: 0; transform: translateY(30px); }
+          to { opacity: 1; transform: translateY(0); }
         }
         @keyframes marqueeScroll {
           from { transform: translateX(0); }
@@ -489,8 +493,8 @@ export const GlobalPlayer: React.FC = () => {
         .player-btn:active { transform: scale(0.95); }
       `}</style>
 
-      {/* HAUT : Pochette + Titre + Artiste + Fermer */}
-      <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+      {/* ═══ GAUCHE : Pochette + Titre + Artiste ═══ */}
+      <div style={{ display: 'flex', gap: 12, alignItems: 'center', minWidth: 0 }}>
         <Link
           to={currentTrack.user_id ? `/profil/${currentTrack.user_id}` : '#'}
           style={{
@@ -510,11 +514,11 @@ export const GlobalPlayer: React.FC = () => {
             fontSize: 22,
             overflow: 'hidden',
             boxShadow: isPlaying
-              ? '0 0 20px rgba(0, 217, 255, 0.5), inset 0 0 12px rgba(255,255,255,0.15)'
-              : '0 0 12px rgba(0, 217, 255, 0.2)',
+              ? '0 0 24px rgba(0, 217, 255, 0.55), inset 0 0 12px rgba(255,255,255,0.15)'
+              : '0 0 14px rgba(0, 217, 255, 0.25)',
             transition: 'transform 0.25s ease',
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.08)'; }}
+          onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.06)'; }}
           onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
         >
           {!currentTrack.cover_url && '🎵'}
@@ -522,18 +526,27 @@ export const GlobalPlayer: React.FC = () => {
         </Link>
 
         <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
-          <div style={{
-            fontSize: 9, color: 'rgba(0, 217, 255, 0.6)',
-            fontWeight: 800, letterSpacing: '1.5px', marginBottom: 3,
-          }}>
+          <div
+            style={{
+              fontSize: 9,
+              color: 'rgba(0, 217, 255, 0.7)',
+              fontWeight: 800,
+              letterSpacing: '1.5px',
+              marginBottom: 3,
+            }}
+          >
             {isPlaying ? '▶ EN LECTURE' : '⏸ EN PAUSE'}
           </div>
-          <div style={{ overflow: 'hidden', marginBottom: 3, position: 'relative' }}>
+
+          <div style={{ overflow: 'hidden', marginBottom: 3 }}>
             <div
               ref={titleRef}
               style={{
-                fontSize: '0.85rem', fontWeight: 700, color: '#fff',
-                whiteSpace: 'nowrap', overflow: 'hidden',
+                fontSize: '0.85rem',
+                fontWeight: 700,
+                color: '#fff',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
                 textOverflow: shouldMarquee ? 'clip' : 'ellipsis',
                 animation: shouldMarquee ? 'marqueeScroll 14s linear infinite' : 'none',
                 display: shouldMarquee ? 'inline-block' : 'block',
@@ -545,13 +558,18 @@ export const GlobalPlayer: React.FC = () => {
                 : currentTrack.title}
             </div>
           </div>
+
           <Link
             to={currentTrack.user_id ? `/profil/${currentTrack.user_id}` : '#'}
             style={{
-              fontSize: '0.7rem', color: 'rgba(255,255,255,0.6)',
-              textDecoration: 'none', display: 'block',
-              overflow: 'hidden', textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap', transition: 'color 0.2s',
+              fontSize: '0.7rem',
+              color: 'rgba(255,255,255,0.6)',
+              textDecoration: 'none',
+              display: 'block',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              transition: 'color 0.2s',
             }}
             onMouseEnter={(e) => { e.currentTarget.style.color = '#00d9ff'; }}
             onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.6)'; }}
@@ -559,78 +577,24 @@ export const GlobalPlayer: React.FC = () => {
             🎧 {currentTrack.artist}
           </Link>
         </div>
-
-        <button
-          className="player-btn"
-          onClick={stop}
-          title="Fermer le player"
-          style={{
-            width: 26, height: 26, borderRadius: '50%',
-            background: 'rgba(255, 60, 60, 0.08)',
-            border: '1px solid rgba(255, 60, 60, 0.3)',
-            color: '#ff5c5c', fontSize: 11, flexShrink: 0,
-          }}
-        >
-          ✕
-        </button>
       </div>
 
-      {/* MILIEU : Waveform + Temps */}
-      <div>
-        <WaveProgress
-          peaks={currentTrack.peaks || []}
-          progress={progress}
-          onSeek={seek}
-          height={30}
-          duration={duration}
-          compact={false}
-        />
-        <div style={{
-          display: 'flex', justifyContent: 'space-between',
-          fontSize: 10, color: 'rgba(255,255,255,0.55)',
-          marginTop: 4, fontWeight: 600,
-        }}>
-          <span style={{ color: '#00d9ff' }}>{formatTime(currentTime)}</span>
-          <span>{formatTime(duration)}</span>
-        </div>
-      </div>
-
-      {/* BAS : Volume + Play/Pause */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: '0 0 auto', width: 90 }}>
-          <button
-            className="player-btn"
-            onClick={handleVolumeToggle}
-            title={isMuted ? 'Activer le son' : 'Couper le son'}
-            style={{
-              background: 'transparent', border: 'none',
-              color: 'rgba(255,255,255,0.7)',
-              fontSize: 14, padding: 0, width: 20,
-            }}
-          >
-            {volumeIcon}
-          </button>
-          <input
-            type="range" min="0" max="1" step="0.01"
-            value={isMuted ? 0 : volume}
-            onChange={(e) => {
-              const v = parseFloat(e.target.value);
-              setVolume(v);
-              if (v > 0) setIsMuted(false);
-            }}
-            onClick={(e) => e.stopPropagation()}
-            style={{ flex: 1, accentColor: '#00d9ff', cursor: 'pointer', height: 4 }}
-          />
-        </div>
-
+      {/* ═══ CENTRE : Waveform + Contrôles ═══ */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16, minWidth: 0 }}>
+        {/* Play/Pause */}
         <button
           className="player-btn"
           onClick={togglePlay}
           title={isPlaying ? 'Pause' : 'Lecture'}
           style={{
-            width: 46, height: 46, borderRadius: '50%',
+            width: 44,
+            height: 44,
+            borderRadius: '50%',
             background: 'linear-gradient(135deg, #00d9ff, #0088ff)',
-            color: '#000', border: 'none', fontSize: 17, fontWeight: 900,
+            color: '#000',
+            border: 'none',
+            fontSize: 16,
+            fontWeight: 900,
             flexShrink: 0,
             boxShadow: isPlaying
               ? '0 0 24px rgba(0, 217, 255, 0.8), inset 0 0 12px rgba(255,255,255,0.4)'
@@ -640,7 +604,107 @@ export const GlobalPlayer: React.FC = () => {
           {isPlaying ? '⏸' : '▶'}
         </button>
 
-        <div style={{ width: 90 }} />
+        {/* Waveform + temps */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span
+              style={{
+                fontSize: 10,
+                color: '#00d9ff',
+                fontWeight: 700,
+                fontFamily: 'monospace',
+                width: 36,
+                textAlign: 'right',
+                flexShrink: 0,
+              }}
+            >
+              {formatTime(currentTime)}
+            </span>
+
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <WaveProgress
+                peaks={currentTrack.peaks || []}
+                progress={progress}
+                onSeek={seek}
+                height={28}
+                duration={duration}
+              />
+            </div>
+
+            <span
+              style={{
+                fontSize: 10,
+                color: 'rgba(255,255,255,0.55)',
+                fontWeight: 600,
+                fontFamily: 'monospace',
+                width: 36,
+                flexShrink: 0,
+              }}
+            >
+              {formatTime(duration)}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* ═══ DROITE : Volume + Fermer ═══ */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12 }}>
+        {/* Volume */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 140 }}>
+          <button
+            className="player-btn"
+            onClick={handleVolumeToggle}
+            title={isMuted ? 'Activer le son' : 'Couper le son'}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: 'rgba(255,255,255,0.7)',
+              fontSize: 15,
+              padding: 0,
+              width: 22,
+            }}
+          >
+            {volumeIcon}
+          </button>
+          <input
+            type="range"
+            min="0"
+            max="1"
+            step="0.01"
+            value={isMuted ? 0 : volume}
+            onChange={(e) => {
+              const v = parseFloat(e.target.value);
+              setVolume(v);
+              if (v > 0) setIsMuted(false);
+            }}
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              flex: 1,
+              accentColor: '#00d9ff',
+              cursor: 'pointer',
+              height: 4,
+            }}
+          />
+        </div>
+
+        {/* Fermer */}
+        <button
+          className="player-btn"
+          onClick={stop}
+          title="Fermer le player"
+          style={{
+            width: 30,
+            height: 30,
+            borderRadius: '50%',
+            background: 'rgba(255, 60, 60, 0.08)',
+            border: '1px solid rgba(255, 60, 60, 0.3)',
+            color: '#ff5c5c',
+            fontSize: 12,
+            flexShrink: 0,
+          }}
+        >
+          ✕
+        </button>
       </div>
     </div>
   );

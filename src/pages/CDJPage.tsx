@@ -7,13 +7,14 @@ import {
   type VocalSection,
 } from '../utils/djAnalyzer';
 import {
-  downloadRekordboxXML,
-  type RekordboxTrack,
-} from '../utils/rekordboxExporter';
-import {
-  exportSeratoMP3,
-  downloadSeratoMP3,
-} from '../utils/seratoExporter';
+  formatAnalysisAsText,
+  generateAnalysisImage,
+  downloadAnalysisImage,
+  copyAnalysisToClipboard,
+} from '../utils/analysisSheet';
+import { useToast } from '../components/ui/Toast';
+import { GlassCard } from '../components/ui/GlassCard';
+import { SectionTitle } from '../components/ui/SectionTitle';
 
 interface HotCue {
   name: string;
@@ -29,6 +30,7 @@ const HOT_CUE_COLORS = [
 export const CDJPage: React.FC = () => {
   const engine = useAudioEngineContext();
   const audioContext = engine.audioContext;
+  const { showToast } = useToast();
 
   const [buffer, setBuffer] = useState<AudioBuffer | null>(null);
   const [fileName, setFileName] = useState('');
@@ -42,9 +44,6 @@ export const CDJPage: React.FC = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [tempo, setTempo] = useState(0);
-  const [basePath, setBasePath] = useState(
-    () => localStorage.getItem('waveforge-base-path') || 'C:/Users/NATO/Music/'
-  );
 
   const sourceRef = useRef<AudioBufferSourceNode | null>(null);
   const gainRef = useRef<GainNode | null>(null);
@@ -55,11 +54,6 @@ export const CDJPage: React.FC = () => {
 
   const duration = buffer?.duration ?? 0;
   const bpm = analysis?.bpm ?? 120;
-
-  // Sauvegarde du chemin
-  useEffect(() => {
-    localStorage.setItem('waveforge-base-path', basePath);
-  }, [basePath]);
 
   // ============================================================
   // CHARGEMENT + ANALYSE
@@ -100,14 +94,16 @@ export const CDJPage: React.FC = () => {
           }
         });
         setHotCues(newCues);
+
+        showToast('Analyse terminée ✓', 'success');
       } catch (err) {
         console.error('Erreur analyse:', err);
-        alert("Erreur lors de l'analyse du fichier");
+        showToast("Erreur lors de l'analyse du fichier", 'error');
       } finally {
         setIsAnalyzing(false);
       }
     },
-    [audioContext]
+    [audioContext, showToast]
   );
 
   // ============================================================
@@ -199,90 +195,35 @@ export const CDJPage: React.FC = () => {
   };
 
   // ============================================================
-  // EXPORTS
+  // COPIE ANALYSE (TEXTE)
   // ============================================================
-  const handleExportRekordbox = () => {
+  const handleCopyAnalysis = async () => {
+    if (!analysis) return;
+
+    const text = formatAnalysisAsText(fileName, analysis);
+    const success = await copyAnalysisToClipboard(text);
+
+    if (success) {
+      showToast('📋 Analyse copiée dans le presse-papiers', 'success');
+    } else {
+      showToast('Impossible de copier. Copie manuellement.', 'error');
+    }
+  };
+
+  // ============================================================
+  // EXPORT FICHE PNG
+  // ============================================================
+  const handleExportImage = async () => {
     if (!analysis || !buffer) return;
 
-    const activeCues = hotCues
-      .filter((c): c is HotCue => c !== null)
-      .map((c) => ({
-        name: c.name,
-        position: c.position,
-        color: c.color,
-      }));
-
-    const normalizedBase = basePath.endsWith('/') ? basePath : `${basePath}/`;
-
-    const track: RekordboxTrack = {
-      name: fileName.replace(/\.[^.]+$/, ''),
-      artist: 'Unknown',
-      filePath: `${normalizedBase}${fileName}`,
-      bpm: analysis.bpm,
-      key: analysis.camelot,
-      duration: analysis.duration,
-      hotCues: activeCues,
-    };
-
-    downloadRekordboxXML([track]);
-  };
-
-  const handleExportJSON = () => {
-    if (!analysis) return;
-    const data = {
-      fileName,
-      analysis,
-      hotCues: hotCues.filter(Boolean),
-    };
-    const blob = new Blob([JSON.stringify(data, null, 2)], {
-      type: 'application/json',
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${fileName.replace(/\.[^.]+$/, '')}-waveforge.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const handleExportSerato = async () => {
-    if (!analysis || !buffer || !fileName) return;
-
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.mp3,audio/mpeg';
-    input.onchange = async (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (!file) return;
-
-      if (!file.name.toLowerCase().endsWith('.mp3')) {
-        alert('⚠️ Serato ne supporte les tags que pour les MP3.\nUtilise un fichier MP3.');
-        return;
-      }
-
-      try {
-        const activeCues = hotCues
-          .filter((c): c is HotCue => c !== null)
-          .map((c) => ({
-            name: c.name,
-            position: c.position,
-            color: c.color,
-          }));
-
-        const blob = await exportSeratoMP3({
-          audioFile: file,
-          bpm: analysis.bpm,
-          key: analysis.key,
-          cues: activeCues,
-        });
-
-        downloadSeratoMP3(blob, file.name);
-      } catch (err) {
-        console.error('Erreur export Serato:', err);
-        alert('Erreur lors de la génération du MP3 Serato.');
-      }
-    };
-    input.click();
+    try {
+      const blob = await generateAnalysisImage(fileName, buffer, analysis);
+      downloadAnalysisImage(blob, fileName);
+      showToast('🖼️ Fiche PNG téléchargée', 'success');
+    } catch (err) {
+      console.error('Erreur export image:', err);
+      showToast('Erreur lors de la génération de la fiche', 'error');
+    }
   };
 
   // ============================================================
@@ -309,25 +250,23 @@ export const CDJPage: React.FC = () => {
   // ============================================================
   return (
     <div
+      className="wf-fade-in"
       style={{
         padding: 20,
-        minHeight: '100vh',
-        background:
-          'radial-gradient(ellipse at center top, #14141f 0%, #050505 100%)',
         color: '#fff',
         fontFamily: '"Inter", -apple-system, sans-serif',
       }}
     >
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-        {/* HEADER */}
+        {/* HEADER V3 */}
         <div
           style={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'flex-start',
-            marginBottom: 20,
-            paddingBottom: 16,
-            borderBottom: '1px solid rgba(255,255,255,0.08)',
+            marginBottom: 24,
+            paddingBottom: 20,
+            borderBottom: '1px solid rgba(255,255,255,0.06)',
             gap: 16,
             flexWrap: 'wrap',
           }}
@@ -336,15 +275,25 @@ export const CDJPage: React.FC = () => {
             <h1
               style={{
                 margin: 0,
-                fontSize: 20,
-                fontWeight: 700,
-                letterSpacing: '0.5px',
+                fontSize: 22,
+                fontWeight: 800,
+                letterSpacing: '-0.5px',
               }}
             >
-              🎛️ DJ Prep{' '}
+              🎛️{' '}
               <span
                 style={{
-                  fontSize: 10,
+                  background: 'linear-gradient(135deg, #00d9ff, #7c5cff)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                }}
+              >
+                DJ PREP
+              </span>
+              <span
+                style={{
+                  fontSize: 9,
                   color: '#ff5cf0',
                   marginLeft: 10,
                   padding: '3px 8px',
@@ -353,109 +302,62 @@ export const CDJPage: React.FC = () => {
                   borderRadius: 10,
                   verticalAlign: 'middle',
                   fontWeight: 700,
+                  letterSpacing: '1px',
                 }}
               >
                 EXPERT
               </span>
             </h1>
-            <p style={{ margin: '4px 0 0', fontSize: 11, color: '#666' }}>
-              Charge · Analyse auto · Cue points · Export Serato / Rekordbox
-            </p>
-
-            <div
+            <p
               style={{
-                marginTop: 10,
-                display: 'flex',
-                gap: 8,
-                alignItems: 'center',
-                flexWrap: 'wrap',
+                margin: '6px 0 0',
+                fontSize: 10,
+                color: 'rgba(255,255,255,0.4)',
+                letterSpacing: '1.5px',
+                fontWeight: 600,
               }}
             >
-              <span
-                style={{
-                  fontSize: 9,
-                  color: '#666',
-                  fontWeight: 700,
-                  letterSpacing: '1px',
-                }}
-              >
-                📁 DOSSIER MUSIQUE
-              </span>
-              <input
-                type="text"
-                placeholder="D:/Musics/House Music - Tech House/House/"
-                value={basePath}
-                onChange={(e) => setBasePath(e.target.value)}
-                style={{
-                  flex: 1,
-                  maxWidth: 500,
-                  minWidth: 240,
-                  padding: '6px 10px',
-                  background: 'rgba(0, 217, 255, 0.05)',
-                  border: '1px solid rgba(0, 217, 255, 0.3)',
-                  borderRadius: 4,
-                  color: '#00d9ff',
-                  fontSize: 10,
-                  fontFamily: 'monospace',
-                  outline: 'none',
-                }}
-              />
-              <span style={{ fontSize: 8, color: '#666' }}>
-                (slash / à la fin · sauvegardé auto)
-              </span>
-            </div>
+              ANALYSE BPM · KEY · CUE POINTS · VOCALS · FICHE À COPIER
+            </p>
           </div>
 
           {buffer && (
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               <button
-                onClick={handleExportSerato}
+                onClick={handleCopyAnalysis}
+                style={{
+                  padding: '10px 16px',
+                  background: 'linear-gradient(135deg, #00d9ff, #0088ff)',
+                  border: 'none',
+                  borderRadius: 10,
+                  color: '#000',
+                  fontSize: 11,
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  letterSpacing: '0.5px',
+                  boxShadow: '0 6px 20px rgba(0, 217, 255, 0.4)',
+                  transition: 'all 0.2s',
+                }}
+              >
+                📋 COPIER
+              </button>
+              <button
+                onClick={handleExportImage}
                 style={{
                   padding: '10px 16px',
                   background: 'linear-gradient(135deg, #ff5cf0, #d63fb8)',
                   border: 'none',
-                  borderRadius: 6,
+                  borderRadius: 10,
                   color: '#fff',
                   fontSize: 11,
-                  fontWeight: 700,
+                  fontWeight: 800,
                   cursor: 'pointer',
                   letterSpacing: '0.5px',
-                  boxShadow: '0 4px 16px rgba(255, 92, 240, 0.4)',
+                  boxShadow: '0 6px 20px rgba(255, 92, 240, 0.4)',
+                  transition: 'all 0.2s',
                 }}
               >
-                🎧 EXPORT SERATO
-              </button>
-              <button
-                onClick={handleExportRekordbox}
-                style={{
-                  padding: '10px 16px',
-                  background: 'linear-gradient(135deg, #00ff88, #00a850)',
-                  border: 'none',
-                  borderRadius: 6,
-                  color: '#000',
-                  fontSize: 11,
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  letterSpacing: '0.5px',
-                  boxShadow: '0 4px 16px rgba(0, 255, 136, 0.4)',
-                }}
-              >
-                📁 EXPORT REKORDBOX
-              </button>
-              <button
-                onClick={handleExportJSON}
-                style={{
-                  padding: '10px 16px',
-                  background: 'rgba(124, 92, 255, 0.15)',
-                  border: '1px solid #7c5cff',
-                  borderRadius: 6,
-                  color: '#7c5cff',
-                  fontSize: 11,
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                }}
-              >
-                💾 JSON
+                🖼️ FICHE PNG
               </button>
             </div>
           )}
@@ -468,9 +370,11 @@ export const CDJPage: React.FC = () => {
             onDragOver={(e) => {
               e.preventDefault();
               e.currentTarget.style.borderColor = '#00d9ff';
+              e.currentTarget.style.background = 'rgba(0, 217, 255, 0.06)';
             }}
             onDragLeave={(e) => {
               e.currentTarget.style.borderColor = 'rgba(0, 217, 255, 0.3)';
+              e.currentTarget.style.background = 'rgba(0, 217, 255, 0.03)';
             }}
             onDrop={(e) => {
               e.preventDefault();
@@ -482,19 +386,35 @@ export const CDJPage: React.FC = () => {
               textAlign: 'center',
               background: 'rgba(0, 217, 255, 0.03)',
               border: '2px dashed rgba(0, 217, 255, 0.3)',
-              borderRadius: 16,
+              borderRadius: 20,
               cursor: 'pointer',
               transition: 'all 0.3s',
+              backdropFilter: 'blur(10px)',
             }}
           >
-            <div style={{ fontSize: 72, marginBottom: 16 }}>🎵</div>
-            <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>
+            <div
+              style={{
+                fontSize: 72,
+                marginBottom: 16,
+                filter: 'drop-shadow(0 0 20px rgba(0, 217, 255, 0.6))',
+              }}
+            >
+              🎵
+            </div>
+            <div
+              style={{
+                fontSize: 20,
+                fontWeight: 800,
+                marginBottom: 8,
+                letterSpacing: '-0.3px',
+              }}
+            >
               Charger un morceau
             </div>
             <div
               style={{
                 fontSize: 12,
-                color: '#888',
+                color: 'rgba(255,255,255,0.5)',
                 lineHeight: 1.6,
                 maxWidth: 400,
                 margin: '0 auto',
@@ -502,7 +422,7 @@ export const CDJPage: React.FC = () => {
             >
               Clique ou glisse un fichier audio ici
               <br />
-              <span style={{ fontSize: 10, color: '#666' }}>
+              <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)' }}>
                 Analyse auto BPM · Tonalité · Cue points · Vocals
               </span>
             </div>
@@ -523,68 +443,70 @@ export const CDJPage: React.FC = () => {
 
         {/* PROGRESS */}
         {isAnalyzing && (
-          <div
-            style={{
-              padding: 60,
-              textAlign: 'center',
-              background: 'rgba(0, 217, 255, 0.03)',
-              border: '1px solid rgba(0, 217, 255, 0.2)',
-              borderRadius: 12,
-            }}
-          >
-            <div
-              style={{
-                width: 60,
-                height: 60,
-                border: '3px solid rgba(0, 217, 255, 0.2)',
-                borderTop: '3px solid #00d9ff',
-                borderRadius: '50%',
-                margin: '0 auto 20px',
-                animation: 'spin 0.8s linear infinite',
-              }}
-            />
-            <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 8 }}>
-              {analyzeStep}
-            </div>
-            <div
-              style={{
-                width: '60%',
-                height: 4,
-                background: 'rgba(255,255,255,0.05)',
-                borderRadius: 2,
-                margin: '20px auto 0',
-                overflow: 'hidden',
-              }}
-            >
+          <GlassCard padding={60} glow="#00d9ff">
+            <div style={{ textAlign: 'center' }}>
               <div
                 style={{
-                  height: '100%',
-                  width: `${progress}%`,
-                  background: 'linear-gradient(90deg, #00d9ff, #7c5cff)',
-                  transition: 'width 0.3s',
+                  width: 60,
+                  height: 60,
+                  border: '3px solid rgba(0, 217, 255, 0.2)',
+                  borderTop: '3px solid #00d9ff',
+                  borderRadius: '50%',
+                  margin: '0 auto 20px',
+                  animation: 'spin 0.8s linear infinite',
+                  boxShadow: '0 0 30px rgba(0, 217, 255, 0.5)',
                 }}
               />
+              <div
+                style={{
+                  fontSize: 14,
+                  fontWeight: 700,
+                  marginBottom: 8,
+                  letterSpacing: '0.5px',
+                }}
+              >
+                {analyzeStep}
+              </div>
+              <div
+                style={{
+                  width: '60%',
+                  height: 4,
+                  background: 'rgba(255,255,255,0.05)',
+                  borderRadius: 2,
+                  margin: '20px auto 0',
+                  overflow: 'hidden',
+                }}
+              >
+                <div
+                  style={{
+                    height: '100%',
+                    width: `${progress}%`,
+                    background: 'linear-gradient(90deg, #00d9ff, #7c5cff)',
+                    transition: 'width 0.3s',
+                    boxShadow: '0 0 12px #00d9ff',
+                  }}
+                />
+              </div>
+              <div
+                style={{
+                  fontSize: 10,
+                  color: 'rgba(255,255,255,0.4)',
+                  marginTop: 12,
+                  fontFamily: 'monospace',
+                  letterSpacing: '1px',
+                }}
+              >
+                {progress}%
+              </div>
             </div>
-            <div style={{ fontSize: 10, color: '#666', marginTop: 12 }}>
-              {progress}%
-            </div>
-          </div>
+          </GlassCard>
         )}
 
         {/* INTERFACE */}
         {buffer && analysis && (
           <>
             {/* TRACK INFO */}
-            <div
-              style={{
-                background:
-                  'linear-gradient(180deg, #14141f 0%, #0d0d15 100%)',
-                borderRadius: 12,
-                padding: 20,
-                marginBottom: 16,
-                border: '1px solid rgba(255,255,255,0.06)',
-              }}
-            >
+            <GlassCard padding={20} glow="#00d9ff" style={{ marginBottom: 16 }}>
               <div
                 style={{
                   display: 'flex',
@@ -599,40 +521,46 @@ export const CDJPage: React.FC = () => {
                   <div
                     style={{
                       fontSize: 9,
-                      color: '#666',
+                      color: 'rgba(255,255,255,0.4)',
                       letterSpacing: '1.5px',
-                      fontWeight: 700,
-                      marginBottom: 4,
+                      fontWeight: 800,
+                      marginBottom: 6,
                     }}
                   >
                     MORCEAU CHARGÉ
                   </div>
                   <div
                     style={{
-                      fontSize: 16,
-                      fontWeight: 700,
+                      fontSize: 17,
+                      fontWeight: 800,
                       color: '#fff',
                       whiteSpace: 'nowrap',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
-                      marginBottom: 4,
+                      marginBottom: 6,
+                      letterSpacing: '-0.3px',
                     }}
                   >
                     {fileName.replace(/\.[^.]+$/, '')}
                   </div>
-                  <div style={{ fontSize: 11, color: '#888' }}>
+                  <div
+                    style={{
+                      fontSize: 11,
+                      color: 'rgba(255,255,255,0.5)',
+                      fontFamily: 'monospace',
+                    }}
+                  >
                     {formatTime(duration)} ·{' '}
                     {(buffer.sampleRate / 1000).toFixed(1)} kHz ·{' '}
                     {buffer.numberOfChannels}ch
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
-                  <BPMEditor
-                    bpm={analysis.bpm}
-                    onChange={(newBpm) =>
-                      setAnalysis({ ...analysis, bpm: newBpm })
-                    }
+                <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
+                  <StatBox
+                    label="BPM"
+                    value={analysis.bpm.toFixed(1)}
+                    color="#00d9ff"
                   />
                   <StatBox label="KEY" value={analysis.key} color="#ff5cf0" />
                   <StatBox
@@ -643,7 +571,7 @@ export const CDJPage: React.FC = () => {
                   <StatBox
                     label="VOCALS"
                     value={analysis.vocalSections.length.toString()}
-                    color="#ff5cf0"
+                    color="#00ff88"
                   />
                   <StatBox
                     label="DURÉE"
@@ -653,13 +581,13 @@ export const CDJPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Waveform + Bandes vocales */}
+              {/* Waveform */}
               <div
                 style={{
                   height: 90,
                   background: '#050505',
-                  borderRadius: 6,
-                  border: '1px solid #1a1a1a',
+                  borderRadius: 10,
+                  border: '1px solid rgba(255,255,255,0.06)',
                   position: 'relative',
                   overflow: 'hidden',
                 }}
@@ -708,7 +636,7 @@ export const CDJPage: React.FC = () => {
                   gap: 16,
                   marginTop: 8,
                   fontSize: 9,
-                  color: '#666',
+                  color: 'rgba(255,255,255,0.4)',
                   justifyContent: 'flex-end',
                 }}
               >
@@ -752,7 +680,7 @@ export const CDJPage: React.FC = () => {
                   height: 6,
                   background: 'rgba(255,255,255,0.05)',
                   borderRadius: 3,
-                  marginTop: 8,
+                  marginTop: 10,
                   cursor: 'pointer',
                 }}
               >
@@ -767,6 +695,7 @@ export const CDJPage: React.FC = () => {
                     }%`,
                     background: 'linear-gradient(90deg, #00d9ff, #7c5cff)',
                     borderRadius: 3,
+                    boxShadow: '0 0 10px rgba(0, 217, 255, 0.6)',
                   }}
                 />
               </div>
@@ -776,155 +705,140 @@ export const CDJPage: React.FC = () => {
                   display: 'flex',
                   justifyContent: 'space-between',
                   fontSize: 10,
-                  color: '#666',
+                  color: 'rgba(255,255,255,0.4)',
                   fontFamily: 'monospace',
-                  marginTop: 6,
+                  marginTop: 8,
+                  fontWeight: 600,
                 }}
               >
                 <span>{formatTime(currentTime)}</span>
-                <span style={{ color: '#ff5cf0' }}>
+                <span style={{ color: '#ff5cf0', fontWeight: 700 }}>
                   {timeToBarBeat(currentTime)}
                 </span>
                 <span>-{formatTime(Math.max(0, duration - currentTime))}</span>
                 <span>{formatTime(duration)}</span>
               </div>
-            </div>
+            </GlassCard>
 
             {/* PLAYBACK */}
-            <div
-              style={{
-                background:
-                  'linear-gradient(180deg, #14141f 0%, #0d0d15 100%)',
-                borderRadius: 12,
-                padding: 16,
-                marginBottom: 16,
-                border: '1px solid rgba(255,255,255,0.06)',
-                display: 'flex',
-                gap: 12,
-                alignItems: 'center',
-                flexWrap: 'wrap',
-              }}
-            >
-              <button
-                onClick={handlePlayPause}
-                style={{
-                  width: 64,
-                  height: 64,
-                  borderRadius: '50%',
-                  background: isPlaying
-                    ? 'linear-gradient(135deg, #00ff88, #00a850)'
-                    : 'linear-gradient(135deg, #1a1a24, #0d0d15)',
-                  border: `2px solid ${
-                    isPlaying ? '#00ff88' : 'rgba(255,255,255,0.1)'
-                  }`,
-                  color: isPlaying ? '#000' : '#fff',
-                  fontSize: 22,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: isPlaying
-                    ? '0 0 30px rgba(0, 255, 136, 0.6)'
-                    : 'none',
-                  transition: 'all 0.2s',
-                }}
-              >
-                {isPlaying ? '❚❚' : '▶'}
-              </button>
-
-              <button
-                onClick={() => {
-                  stopSource();
-                  setIsPlaying(false);
-                  setCurrentTime(0);
-                }}
-                style={{
-                  width: 64,
-                  height: 64,
-                  borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #1a1a24, #0d0d15)',
-                  border: '2px solid rgba(255, 136, 0, 0.5)',
-                  color: '#ff8800',
-                  fontSize: 11,
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                }}
-              >
-                CUE
-              </button>
-
-              <div style={{ flex: 1 }} />
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div
-                  style={{
-                    fontSize: 9,
-                    color: '#666',
-                    letterSpacing: '1px',
-                    fontWeight: 700,
-                  }}
-                >
-                  TEMPO
-                </div>
-                <input
-                  type="range"
-                  min={-16}
-                  max={16}
-                  step={0.1}
-                  value={tempo}
-                  onChange={(e) => setTempo(parseFloat(e.target.value))}
-                  style={{ width: 140, accentColor: '#00d9ff' }}
-                />
-                <div
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 700,
-                    fontFamily: 'monospace',
-                    color:
-                      tempo === 0 ? '#fff' : tempo > 0 ? '#00ff88' : '#ff3366',
-                    minWidth: 50,
-                    textAlign: 'right',
-                  }}
-                >
-                  {tempo > 0 ? '+' : ''}
-                  {tempo.toFixed(1)}%
-                </div>
-              </div>
-            </div>
-
-            {/* HOT CUES */}
-            <div
-              style={{
-                background:
-                  'linear-gradient(180deg, #14141f 0%, #0d0d15 100%)',
-                borderRadius: 12,
-                padding: 16,
-                marginBottom: 16,
-                border: '1px solid rgba(255,255,255,0.06)',
-              }}
+            <GlassCard
+              padding={16}
+              glow="#00ff88"
+              style={{ marginBottom: 16 }}
             >
               <div
                 style={{
                   display: 'flex',
-                  justifyContent: 'space-between',
+                  gap: 12,
                   alignItems: 'center',
-                  marginBottom: 12,
+                  flexWrap: 'wrap',
                 }}
               >
-                <div
+                <button
+                  onClick={handlePlayPause}
                   style={{
-                    fontSize: 10,
-                    color: '#666',
-                    letterSpacing: '1.5px',
-                    fontWeight: 700,
+                    width: 64,
+                    height: 64,
+                    borderRadius: '50%',
+                    background: isPlaying
+                      ? 'linear-gradient(135deg, #00ff88, #00a850)'
+                      : 'linear-gradient(135deg, #1a1a24, #0d0d15)',
+                    border: `2px solid ${
+                      isPlaying ? '#00ff88' : 'rgba(255,255,255,0.1)'
+                    }`,
+                    color: isPlaying ? '#000' : '#fff',
+                    fontSize: 22,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: isPlaying
+                      ? '0 0 30px rgba(0, 255, 136, 0.6)'
+                      : 'none',
+                    transition: 'all 0.2s',
                   }}
                 >
-                  HOT CUES · {hotCues.filter(Boolean).length}/8
-                </div>
-                <div style={{ fontSize: 9, color: '#666' }}>
-                  Clic gauche = placer/rappel · Clic droit = supprimer
+                  {isPlaying ? '❚❚' : '▶'}
+                </button>
+
+                <button
+                  onClick={() => {
+                    stopSource();
+                    setIsPlaying(false);
+                    setCurrentTime(0);
+                  }}
+                  style={{
+                    width: 64,
+                    height: 64,
+                    borderRadius: '50%',
+                    background: 'linear-gradient(135deg, #1a1a24, #0d0d15)',
+                    border: '2px solid rgba(255, 136, 0, 0.5)',
+                    color: '#ff8800',
+                    fontSize: 11,
+                    fontWeight: 800,
+                    cursor: 'pointer',
+                  }}
+                >
+                  CUE
+                </button>
+
+                <div style={{ flex: 1 }} />
+
+                <div
+                  style={{ display: 'flex', alignItems: 'center', gap: 10 }}
+                >
+                  <div
+                    style={{
+                      fontSize: 9,
+                      color: 'rgba(255,255,255,0.4)',
+                      letterSpacing: '1.5px',
+                      fontWeight: 800,
+                    }}
+                  >
+                    TEMPO
+                  </div>
+                  <input
+                    type="range"
+                    min={-16}
+                    max={16}
+                    step={0.1}
+                    value={tempo}
+                    onChange={(e) => setTempo(parseFloat(e.target.value))}
+                    style={{ width: 140, accentColor: '#00d9ff' }}
+                  />
+                  <div
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 800,
+                      fontFamily: 'monospace',
+                      color:
+                        tempo === 0
+                          ? '#fff'
+                          : tempo > 0
+                          ? '#00ff88'
+                          : '#ff3366',
+                      minWidth: 50,
+                      textAlign: 'right',
+                    }}
+                  >
+                    {tempo > 0 ? '+' : ''}
+                    {tempo.toFixed(1)}%
+                  </div>
                 </div>
               </div>
+            </GlassCard>
+
+            {/* HOT CUES */}
+            <GlassCard
+              padding={16}
+              glow="#ff5cf0"
+              style={{ marginBottom: 16 }}
+            >
+              <SectionTitle
+                icon="🔥"
+                title="HOT CUES"
+                subtitle={`${hotCues.filter(Boolean).length}/8 · Clic gauche = placer/rappel · Clic droit = supprimer`}
+              />
 
               <div
                 style={{
@@ -949,10 +863,10 @@ export const CDJPage: React.FC = () => {
                       border: `1.5px solid ${
                         cue ? cue.color : 'rgba(255,255,255,0.08)'
                       }`,
-                      borderRadius: 8,
-                      color: cue ? '#fff' : '#666',
+                      borderRadius: 10,
+                      color: cue ? '#fff' : 'rgba(255,255,255,0.4)',
                       fontSize: 12,
-                      fontWeight: 700,
+                      fontWeight: 800,
                       fontFamily: 'monospace',
                       cursor: 'pointer',
                       transition: 'all 0.15s',
@@ -976,140 +890,164 @@ export const CDJPage: React.FC = () => {
                         {timeToBarBeat(cue.position)}
                       </div>
                     ) : (
-                      <div style={{ fontSize: 8, color: '#444' }}>—</div>
+                      <div
+                        style={{
+                          fontSize: 8,
+                          color: 'rgba(255,255,255,0.2)',
+                        }}
+                      >
+                        —
+                      </div>
                     )}
                   </button>
                 ))}
               </div>
-            </div>
+            </GlassCard>
 
-            {/* EXPORT */}
+            {/* EXPORT V3 */}
             <div
               style={{
+                position: 'relative',
                 background:
-                  'linear-gradient(135deg, rgba(0, 255, 136, 0.08), rgba(124, 92, 255, 0.05))',
-                borderRadius: 12,
-                padding: 20,
-                border: '1px solid rgba(0, 255, 136, 0.3)',
+                  'linear-gradient(135deg, rgba(0, 217, 255, 0.08), rgba(255, 92, 240, 0.05))',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                borderRadius: 16,
+                padding: 24,
+                border: '1px solid rgba(0, 217, 255, 0.3)',
+                boxShadow:
+                  '0 12px 40px rgba(0, 0, 0, 0.5), 0 0 40px rgba(0, 217, 255, 0.15)',
+                overflow: 'hidden',
               }}
             >
               <div
                 style={{
-                  fontSize: 14,
-                  fontWeight: 700,
-                  color: '#00ff88',
-                  marginBottom: 8,
-                  letterSpacing: '0.5px',
+                  position: 'absolute',
+                  top: -80,
+                  right: -80,
+                  width: 240,
+                  height: 240,
+                  borderRadius: '50%',
+                  background:
+                    'radial-gradient(circle, rgba(0, 217, 255, 0.2) 0%, transparent 70%)',
+                  pointerEvents: 'none',
+                  filter: 'blur(40px)',
                 }}
-              >
-                ✅ Analyse terminée · Prêt à exporter
-              </div>
-              <div
-                style={{
-                  fontSize: 11,
-                  color: '#aaa',
-                  lineHeight: 1.6,
-                  marginBottom: 16,
-                }}
-              >
-                <strong style={{ color: '#00d9ff' }}>
-                  {analysis.bpm.toFixed(1)} BPM
-                </strong>{' '}
-                ·{' '}
-                <strong style={{ color: '#ff5cf0' }}>
-                  {analysis.key} ({analysis.camelot})
-                </strong>{' '}
-                ·{' '}
-                <strong style={{ color: '#ff5cf0' }}>
-                  {analysis.vocalSections.length} sections vocales
-                </strong>{' '}
-                ·{' '}
-                <strong style={{ color: '#00ff88' }}>
-                  {hotCues.filter(Boolean).length} cue points
-                </strong>
-                <br />
-                <span style={{ color: '#666', fontSize: 10 }}>
-                  ⚠️ Vérifie que ton <strong>DOSSIER MUSIQUE</strong> (en haut)
-                  correspond au chemin où se trouvent tes MP3
-                </span>
-              </div>
+              />
+              <div style={{ position: 'relative' }}>
+                <div
+                  style={{
+                    fontSize: 15,
+                    fontWeight: 800,
+                    color: '#00d9ff',
+                    marginBottom: 10,
+                    letterSpacing: '-0.2px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                  }}
+                >
+                  ✅ Analyse terminée · Récupère tes infos
+                </div>
+                <div
+                  style={{
+                    fontSize: 11,
+                    color: 'rgba(255,255,255,0.7)',
+                    lineHeight: 1.7,
+                    marginBottom: 18,
+                  }}
+                >
+                  <strong style={{ color: '#00d9ff' }}>
+                    {analysis.bpm.toFixed(1)} BPM
+                  </strong>{' '}
+                  ·{' '}
+                  <strong style={{ color: '#ff5cf0' }}>
+                    {analysis.key} ({analysis.camelot})
+                  </strong>{' '}
+                  ·{' '}
+                  <strong style={{ color: '#00ff88' }}>
+                    {hotCues.filter(Boolean).length} cue points
+                  </strong>{' '}
+                  ·{' '}
+                  <strong style={{ color: '#00ff88' }}>
+                    {analysis.vocalSections.length} section(s) vocal
+                  </strong>
+                  <br />
+                  <br />
+                  <strong style={{ color: '#00d9ff' }}>📋 COPIER</strong> :
+                  copie le texte formaté dans ton presse-papiers → colle dans
+                  tes notes.
+                  <br />
+                  <strong style={{ color: '#ff5cf0' }}>🖼️ FICHE PNG</strong> :
+                  télécharge une image avec tout dessus → garde-la pour placer
+                  tes cue points dans Serato/Rekordbox.
+                </div>
 
-              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                <button
-                  onClick={handleExportSerato}
-                  style={{
-                    flex: 1,
-                    minWidth: 220,
-                    padding: '14px 20px',
-                    background: 'linear-gradient(135deg, #ff5cf0, #d63fb8)',
-                    border: 'none',
-                    borderRadius: 8,
-                    color: '#fff',
-                    fontSize: 13,
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    letterSpacing: '1px',
-                    boxShadow: '0 6px 20px rgba(255, 92, 240, 0.4)',
-                  }}
-                >
-                  🎧 EXPORT SERATO MP3
-                </button>
-                <button
-                  onClick={handleExportRekordbox}
-                  style={{
-                    flex: 1,
-                    minWidth: 220,
-                    padding: '14px 20px',
-                    background: 'linear-gradient(135deg, #00ff88, #00a850)',
-                    border: 'none',
-                    borderRadius: 8,
-                    color: '#000',
-                    fontSize: 13,
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    letterSpacing: '1px',
-                    boxShadow: '0 6px 20px rgba(0, 255, 136, 0.4)',
-                  }}
-                >
-                  📁 EXPORT REKORDBOX XML
-                </button>
-                <button
-                  onClick={handleExportJSON}
-                  style={{
-                    padding: '14px 20px',
-                    background: 'rgba(124, 92, 255, 0.15)',
-                    border: '1px solid #7c5cff',
-                    borderRadius: 8,
-                    color: '#7c5cff',
-                    fontSize: 12,
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                  }}
-                >
-                  💾 JSON
-                </button>
-                <button
-                  onClick={() => {
-                    setBuffer(null);
-                    setAnalysis(null);
-                    setFileName('');
-                    setHotCues(new Array(8).fill(null));
-                    stopSource();
-                    setIsPlaying(false);
-                  }}
-                  style={{
-                    padding: '14px 20px',
-                    background: 'rgba(255, 51, 102, 0.1)',
-                    border: '1px solid #ff3366',
-                    borderRadius: 8,
-                    color: '#ff3366',
-                    fontSize: 12,
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                  }}
-                >
-                  🔄 NOUVEAU
-                </button>
+                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                  <button
+                    onClick={handleCopyAnalysis}
+                    style={{
+                      flex: 1,
+                      minWidth: 200,
+                      padding: '14px 20px',
+                      background: 'linear-gradient(135deg, #00d9ff, #0088ff)',
+                      border: 'none',
+                      borderRadius: 10,
+                      color: '#000',
+                      fontSize: 13,
+                      fontWeight: 800,
+                      cursor: 'pointer',
+                      letterSpacing: '1px',
+                      boxShadow: '0 6px 20px rgba(0, 217, 255, 0.4)',
+                      transition: 'all 0.2s',
+                    }}
+                  >
+                    📋 COPIER L'ANALYSE
+                  </button>
+                  <button
+                    onClick={handleExportImage}
+                    style={{
+                      flex: 1,
+                      minWidth: 200,
+                      padding: '14px 20px',
+                      background: 'linear-gradient(135deg, #ff5cf0, #d63fb8)',
+                      border: 'none',
+                      borderRadius: 10,
+                      color: '#fff',
+                      fontSize: 13,
+                      fontWeight: 800,
+                      cursor: 'pointer',
+                      letterSpacing: '1px',
+                      boxShadow: '0 6px 20px rgba(255, 92, 240, 0.4)',
+                      transition: 'all 0.2s',
+                    }}
+                  >
+                    🖼️ EXPORT FICHE PNG
+                  </button>
+                  <button
+                    onClick={() => {
+                      setBuffer(null);
+                      setAnalysis(null);
+                      setFileName('');
+                      setHotCues(new Array(8).fill(null));
+                      stopSource();
+                      setIsPlaying(false);
+                    }}
+                    style={{
+                      padding: '14px 20px',
+                      background: 'rgba(255, 51, 102, 0.1)',
+                      border: '1px solid #ff3366',
+                      borderRadius: 10,
+                      color: '#ff3366',
+                      fontSize: 12,
+                      fontWeight: 800,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                    }}
+                  >
+                    🔄 NOUVEAU
+                  </button>
+                </div>
               </div>
             </div>
           </>
@@ -1126,7 +1064,7 @@ export const CDJPage: React.FC = () => {
 };
 
 // ============================================================
-// WAVEFORM CANVAS (avec bandes vocales)
+// WAVEFORM CANVAS
 // ============================================================
 const WaveformCanvas: React.FC<{
   buffer: AudioBuffer;
@@ -1156,7 +1094,6 @@ const WaveformCanvas: React.FC<{
     ctx.fillStyle = '#050505';
     ctx.fillRect(0, 0, W, H);
 
-    // BANDES VOCALES
     vocalSections.forEach((section) => {
       const x1 = (section.start / duration) * W;
       const x2 = (section.end / duration) * W;
@@ -1182,7 +1119,6 @@ const WaveformCanvas: React.FC<{
       }
     });
 
-    // WAVEFORM
     const channelData = buffer.getChannelData(0);
     const samplesPerPixel = Math.floor(channelData.length / W);
     const midY = H / 2;
@@ -1199,11 +1135,12 @@ const WaveformCanvas: React.FC<{
       }
       const h = Math.max(1, (max - min) * midY * 0.9);
       const intensity = Math.min(1, h / (midY * 0.9));
-      ctx.fillStyle = `hsl(${200 - intensity * 100}, 80%, ${30 + intensity * 40}%)`;
+      ctx.fillStyle = `hsl(${200 - intensity * 100}, 80%, ${
+        30 + intensity * 40
+      }%)`;
       ctx.fillRect(x, midY - h / 2, 1, h);
     }
 
-    // BEAT GRID
     if (bpm > 0) {
       const beatDur = 60 / bpm;
       const pixelsPerBeat = (beatDur / duration) * W;
@@ -1234,7 +1171,7 @@ const WaveformCanvas: React.FC<{
 };
 
 // ============================================================
-// STAT BOX
+// STAT BOX V3
 // ============================================================
 const StatBox: React.FC<{
   label: string;
@@ -1245,21 +1182,21 @@ const StatBox: React.FC<{
     <div
       style={{
         fontSize: 8,
-        color: '#666',
+        color: 'rgba(255,255,255,0.4)',
         letterSpacing: '1.5px',
-        fontWeight: 700,
-        marginBottom: 4,
+        fontWeight: 800,
+        marginBottom: 6,
       }}
     >
       {label}
     </div>
     <div
       style={{
-        fontSize: 16,
-        fontWeight: 700,
+        fontSize: 17,
+        fontWeight: 800,
         color,
         fontFamily: 'monospace',
-        textShadow: `0 0 10px ${color}66`,
+        textShadow: `0 0 12px ${color}80`,
         letterSpacing: '0.5px',
       }}
     >
@@ -1267,186 +1204,3 @@ const StatBox: React.FC<{
     </div>
   </div>
 );
-
-// ============================================================
-// BPM EDITOR
-// ============================================================
-const BPMEditor: React.FC<{
-  bpm: number;
-  onChange: (bpm: number) => void;
-}> = ({ bpm, onChange }) => {
-  const [isEditing, setIsEditing] = useState(false);
-  const [inputValue, setInputValue] = useState(bpm.toFixed(1));
-
-  useEffect(() => {
-    setInputValue(bpm.toFixed(1));
-  }, [bpm]);
-
-  const handleSave = () => {
-    const parsed = parseFloat(inputValue.replace(',', '.'));
-    if (!isNaN(parsed) && parsed >= 40 && parsed <= 220) {
-      onChange(Math.round(parsed * 10) / 10);
-    } else {
-      setInputValue(bpm.toFixed(1));
-    }
-    setIsEditing(false);
-  };
-
-  const isHouse = bpm >= 120 && bpm <= 130;
-  const isDance = bpm >= 110 && bpm <= 145;
-  const isTooSlow = bpm < 100;
-  const isTooFast = bpm > 160;
-
-  let rangeLabel = '⚠ À VÉRIFIER';
-  let rangeColor = '#ffd43b';
-  if (isHouse) {
-    rangeLabel = '✓ HOUSE';
-    rangeColor = '#00ff88';
-  } else if (isDance) {
-    rangeLabel = '✓ DANCE';
-    rangeColor = '#00ff88';
-  } else if (isTooSlow) {
-    rangeLabel = '↓ TROP LENT';
-    rangeColor = '#ff3366';
-  } else if (isTooFast) {
-    rangeLabel = '↑ TROP RAPIDE';
-    rangeColor = '#ff3366';
-  }
-
-  return (
-    <div style={{ textAlign: 'center' }}>
-      <div
-        style={{
-          fontSize: 8,
-          color: '#666',
-          letterSpacing: '1.5px',
-          fontWeight: 700,
-          marginBottom: 4,
-        }}
-      >
-        BPM
-      </div>
-
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 4,
-          justifyContent: 'center',
-        }}
-      >
-        <button
-          onClick={() => onChange(Math.round((bpm / 2) * 10) / 10)}
-          title="Diviser par 2"
-          style={{
-            width: 26,
-            height: 26,
-            background: 'rgba(255, 51, 102, 0.15)',
-            border: '1px solid rgba(255, 51, 102, 0.5)',
-            borderRadius: 4,
-            color: '#ff3366',
-            fontSize: 10,
-            fontWeight: 700,
-            cursor: 'pointer',
-            fontFamily: 'monospace',
-          }}
-        >
-          ÷2
-        </button>
-
-        {isEditing ? (
-          <input
-            type="text"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onBlur={handleSave}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') handleSave();
-              if (e.key === 'Escape') {
-                setInputValue(bpm.toFixed(1));
-                setIsEditing(false);
-              }
-            }}
-            autoFocus
-            style={{
-              fontSize: 22,
-              fontWeight: 700,
-              color: '#00d9ff',
-              fontFamily: 'monospace',
-              letterSpacing: '0.5px',
-              width: 80,
-              background: 'rgba(0, 217, 255, 0.1)',
-              border: '2px solid #00d9ff',
-              borderRadius: 4,
-              padding: '2px 6px',
-              outline: 'none',
-              textAlign: 'center',
-            }}
-          />
-        ) : (
-          <div
-            onClick={() => setIsEditing(true)}
-            title="Cliquer pour modifier manuellement"
-            style={{
-              fontSize: 24,
-              fontWeight: 700,
-              color: '#00d9ff',
-              fontFamily: 'monospace',
-              textShadow: '0 0 10px #00d9ff66',
-              letterSpacing: '0.5px',
-              minWidth: 78,
-              cursor: 'pointer',
-              padding: '2px 6px',
-              border: '2px solid transparent',
-              borderRadius: 4,
-              transition: 'all 0.2s',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(0, 217, 255, 0.1)';
-              e.currentTarget.style.borderColor = 'rgba(0, 217, 255, 0.5)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'transparent';
-              e.currentTarget.style.borderColor = 'transparent';
-            }}
-          >
-            {bpm.toFixed(1)}
-          </div>
-        )}
-
-        <button
-          onClick={() => onChange(Math.round(bpm * 2 * 10) / 10)}
-          title="Multiplier par 2"
-          style={{
-            width: 26,
-            height: 26,
-            background: 'rgba(0, 217, 255, 0.15)',
-            border: '1px solid rgba(0, 217, 255, 0.5)',
-            borderRadius: 4,
-            color: '#00d9ff',
-            fontSize: 10,
-            fontWeight: 700,
-            cursor: 'pointer',
-            fontFamily: 'monospace',
-          }}
-        >
-          ×2
-        </button>
-      </div>
-
-      <div
-        style={{
-          fontSize: 7,
-          marginTop: 3,
-          fontWeight: 700,
-          letterSpacing: '0.5px',
-          color: rangeColor,
-        }}
-      >
-        {isEditing
-          ? '↵ ENTRÉE · ESC ANNULER'
-          : `${rangeLabel} · CLIC POUR ÉDITER`}
-      </div>
-    </div>
-  );
-};

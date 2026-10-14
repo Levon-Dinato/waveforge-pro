@@ -52,17 +52,14 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
   const [eqBands, setEqBands] = useState<EQBand[]>(DEFAULT_EQ_BANDS);
   const [showEQ, setShowEQ] = useState(true);
 
-  // Mono-Maker
   const [monoMakerEnabled, setMonoMakerEnabled] = useState(false);
   const [monoMakerFreq, setMonoMakerFreq] = useState(120);
 
-  // Imager
   const [imagerEnabled, setImagerEnabled] = useState(false);
   const [imagerLow, setImagerLow] = useState(0);
   const [imagerMid, setImagerMid] = useState(0);
   const [imagerHigh, setImagerHigh] = useState(0);
 
-  // Scope
   const [showScope, setShowScope] = useState(true);
   const [showCorrelation, setShowCorrelation] = useState(true);
   const [analyserNode, setAnalyserNode] = useState<AnalyserNode | null>(null);
@@ -74,20 +71,10 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
   // INITIALISATION
   // ============================================================
   useEffect(() => {
-    if (!audioContext) {
-      console.warn('⚠️ MasteringPanel : audioContext est null');
-      return;
-    }
-
-    console.log('🎚️ Initialisation de la chaîne de mastering...');
+    if (!audioContext) return;
 
     const chain = new MasteringChain(audioContext);
-    if (sourceNode) {
-      chain.connect(sourceNode);
-      console.log('🔌 sourceNode connecté');
-    } else {
-      console.log('⏳ sourceNode null, connecté plus tard');
-    }
+    if (sourceNode) chain.connect(sourceNode);
     chainRef.current = chain;
 
     const analyzer = new AudioAnalyzer(audioContext);
@@ -110,13 +97,11 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
     };
   }, [audioContext]);
 
-  // Reconnexion sourceNode
   useEffect(() => {
     if (!chainRef.current || !sourceNode) return;
     chainRef.current.connect(sourceNode);
   }, [sourceNode]);
 
-  // Analyse
   useEffect(() => {
     if (!analyzerRef.current) return;
     if (isAnalyzing) {
@@ -129,7 +114,6 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
     };
   }, [isAnalyzing]);
 
-  // Paramètres
   useEffect(() => {
     const chain = chainRef.current;
     if (!chain) return;
@@ -139,7 +123,6 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
     chain.setSaturation(saturation);
   }, [loudness, presence, width, saturation]);
 
-  // Preset
   useEffect(() => {
     const chain = chainRef.current;
     if (!chain) {
@@ -177,7 +160,6 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
     setMonoMakerFreq(120);
   }, [preset, audioContext]);
 
-  // Bypass
   useEffect(() => {
     const chain = chainRef.current;
     if (!chain) return;
@@ -225,7 +207,6 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
     [monoMakerEnabled]
   );
 
-  // Imager handlers
   const handleImagerToggle = useCallback(
     (enabled: boolean) => {
       setImagerEnabled(enabled);
@@ -262,10 +243,7 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
     [imagerEnabled, imagerLow, imagerMid]
   );
 
-  // Charger un preset utilisateur
   const handleLoadUserPreset = useCallback((userPreset: UserMasteringPreset) => {
-    console.log('📂 Chargement preset:', userPreset.name);
-
     setLoudness(userPreset.loudness);
     setPresence(userPreset.presence);
     setWidth(userPreset.width);
@@ -295,7 +273,6 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
     }
   }, []);
 
-  // Export WAV
   const handleExport = useCallback(async () => {
     if (!sourceBuffer) {
       alert("Veuillez d'abord charger un fichier audio.");
@@ -326,102 +303,224 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
   }, [sourceBuffer, preset, loudness, presence, width, saturation, onExport]);
 
   // ============================================================
-  // RENDUS INTERNES
+  // SOUS-COMPOSANTS
   // ============================================================
-  const renderMetric = (label: string, value: number, unit: string, color: string) => (
+  const MetricCard: React.FC<{
+    label: string;
+    value: number;
+    unit: string;
+    color: string;
+  }> = ({ label, value, unit, color }) => (
     <div
       style={{
         flex: 1,
         textAlign: 'center',
-        padding: '8px',
-        backgroundColor: '#1a1a1a',
-        borderRadius: '6px',
-        border: '1px solid #2a2a2a',
+        padding: '14px 10px',
+        background: 'rgba(255, 255, 255, 0.02)',
+        borderRadius: 12,
+        border: `1px solid ${color}25`,
+        position: 'relative',
+        overflow: 'hidden',
       }}
     >
       <div
         style={{
-          fontSize: '10px',
-          color: '#666',
+          position: 'absolute',
+          top: -20,
+          right: -20,
+          width: 60,
+          height: 60,
+          borderRadius: '50%',
+          background: `radial-gradient(circle, ${color}20 0%, transparent 70%)`,
+          pointerEvents: 'none',
+        }}
+      />
+      <div
+        style={{
+          fontSize: 9,
+          color: 'rgba(255,255,255,0.4)',
           textTransform: 'uppercase',
-          letterSpacing: '1px',
+          letterSpacing: '1.5px',
+          fontWeight: 700,
+          marginBottom: 6,
         }}
       >
         {label}
       </div>
       <div
         style={{
-          fontSize: '22px',
-          fontWeight: 700,
+          fontSize: 24,
+          fontWeight: 800,
           color,
-          fontVariantNumeric: 'tabular-nums',
+          fontFamily: 'var(--font-mono)',
+          letterSpacing: '-0.5px',
         }}
       >
         {isFinite(value) ? value.toFixed(1) : '-∞'}
       </div>
-      <div style={{ fontSize: '9px', color: '#444' }}>{unit}</div>
+      <div
+        style={{
+          fontSize: 8,
+          color: 'rgba(255,255,255,0.3)',
+          letterSpacing: '1px',
+          fontWeight: 600,
+          marginTop: 2,
+        }}
+      >
+        {unit}
+      </div>
     </div>
   );
 
-  const renderPresetButton = (p: MasteringPreset, label: string) => (
-    <button
-      key={p}
-      onClick={() => setPreset(p)}
-      style={{
-        flex: 1,
-        padding: '10px 8px',
-        borderRadius: '6px',
-        border: preset === p ? '1px solid #00d9ff' : '1px solid #2a2a2a',
-        backgroundColor: preset === p ? 'rgba(0, 217, 255, 0.15)' : '#1a1a1a',
-        color: preset === p ? '#00d9ff' : '#888',
-        cursor: 'pointer',
-        fontWeight: preset === p ? 600 : 400,
-        fontSize: '12px',
-        transition: 'all 0.2s ease',
-        textTransform: 'uppercase',
-        letterSpacing: '0.5px',
-      }}
-    >
-      {label}
-    </button>
-  );
+  const PresetButton: React.FC<{
+    p: MasteringPreset;
+    label: string;
+    color: string;
+    icon: string;
+  }> = ({ p, label, color, icon }) => {
+    const active = preset === p;
+    return (
+      <button
+        onClick={() => setPreset(p)}
+        style={{
+          flex: 1,
+          padding: '14px 10px',
+          borderRadius: 12,
+          border: active
+            ? `1.5px solid ${color}`
+            : '1px solid rgba(255,255,255,0.06)',
+          background: active
+            ? `linear-gradient(135deg, ${color}25, ${color}08)`
+            : 'rgba(255,255,255,0.02)',
+          color: active ? color : 'rgba(255,255,255,0.6)',
+          cursor: 'pointer',
+          fontWeight: active ? 800 : 600,
+          fontSize: 11,
+          transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+          textTransform: 'uppercase',
+          letterSpacing: '0.8px',
+          boxShadow: active ? `0 8px 24px ${color}30` : 'none',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 4,
+        }}
+      >
+        <span style={{ fontSize: 16 }}>{icon}</span>
+        <span>{label}</span>
+      </button>
+    );
+  };
 
   // ============================================================
   // RENDU PRINCIPAL
   // ============================================================
   return (
     <div
+      className="wf-fade-in"
       style={{
-        backgroundColor: '#0d0d0d',
+        position: 'relative',
+        background: 'rgba(20, 20, 30, 0.6)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
         color: '#fff',
-        padding: '20px',
-        borderRadius: '12px',
+        padding: 24,
+        borderRadius: 20,
         fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
-        maxWidth: '620px',
+        maxWidth: 700,
         margin: '0 auto',
-        border: '1px solid #1f1f1f',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.6)',
+        border: '1px solid rgba(255, 255, 255, 0.08)',
+        boxShadow:
+          '0 24px 64px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.04) inset',
+        overflow: 'hidden',
       }}
     >
-      {/* HEADER */}
+      {/* AURA DÉCORATIVE */}
+      <div
+        style={{
+          position: 'absolute',
+          top: -100,
+          right: -100,
+          width: 300,
+          height: 300,
+          borderRadius: '50%',
+          background:
+            'radial-gradient(circle, rgba(124, 92, 255, 0.15) 0%, transparent 70%)',
+          pointerEvents: 'none',
+          filter: 'blur(40px)',
+        }}
+      />
+      <div
+        style={{
+          position: 'absolute',
+          bottom: -100,
+          left: -100,
+          width: 300,
+          height: 300,
+          borderRadius: '50%',
+          background:
+            'radial-gradient(circle, rgba(0, 217, 255, 0.12) 0%, transparent 70%)',
+          pointerEvents: 'none',
+          filter: 'blur(40px)',
+        }}
+      />
+
+      {/* HEADER V3 */}
       <div
         style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          marginBottom: '20px',
+          marginBottom: 24,
+          paddingBottom: 20,
+          borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
+          position: 'relative',
         }}
       >
         <div>
-          <h2 style={{ margin: 0, fontSize: '16px', fontWeight: 700, letterSpacing: '1px' }}>
-            WAVEFORGE <span style={{ color: '#00d9ff' }}>MASTERING</span>
+          <h2
+            style={{
+              margin: 0,
+              fontSize: 20,
+              fontWeight: 800,
+              letterSpacing: '-0.5px',
+            }}
+          >
+            WAVEFORGE{' '}
+            <span
+              style={{
+                background: 'linear-gradient(135deg, #7c5cff, #00d9ff)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+              }}
+            >
+              MASTERING
+            </span>
+            <span
+              style={{
+                fontSize: 9,
+                color: '#7c5cff',
+                marginLeft: 10,
+                padding: '3px 8px',
+                background: 'rgba(124, 92, 255, 0.15)',
+                border: '1px solid rgba(124, 92, 255, 0.4)',
+                borderRadius: 10,
+                verticalAlign: 'middle',
+                fontWeight: 700,
+                letterSpacing: '1px',
+              }}
+            >
+              PRO
+            </span>
           </h2>
           <div
             style={{
-              fontSize: '10px',
-              color: '#444',
-              marginTop: '2px',
+              fontSize: 9,
+              color: 'rgba(255,255,255,0.35)',
+              marginTop: 4,
               letterSpacing: '2px',
+              fontWeight: 600,
             }}
           >
             PROFESSIONAL AUDIO PROCESSING
@@ -429,38 +528,41 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
         </div>
         <div
           style={{
-            width: '8px',
-            height: '8px',
+            width: 10,
+            height: 10,
             borderRadius: '50%',
-            backgroundColor: isAnalyzing ? '#00ff88' : '#333',
-            boxShadow: isAnalyzing ? '0 0 8px #00ff88' : 'none',
+            backgroundColor: isAnalyzing ? '#00ff88' : 'rgba(255,255,255,0.15)',
+            boxShadow: isAnalyzing
+              ? '0 0 16px #00ff88, 0 0 32px #00ff8880'
+              : 'none',
             transition: 'all 0.3s',
           }}
         />
       </div>
 
-      {/* PRESETS OFFICIELS */}
-      <div style={{ marginBottom: '20px' }}>
+      {/* PRESETS OFFICIELS V3 */}
+      <div style={{ marginBottom: 24 }}>
         <div
           style={{
-            fontSize: '10px',
-            color: '#666',
-            marginBottom: '8px',
-            letterSpacing: '1px',
+            fontSize: 10,
+            color: 'rgba(255,255,255,0.4)',
+            marginBottom: 10,
+            letterSpacing: '1.5px',
+            fontWeight: 700,
           }}
         >
-          🎨 PRESET OFFICIEL
+          🎨 PRESETS OFFICIELS
         </div>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          {renderPresetButton('warm', 'Warm')}
-          {renderPresetButton('balanced', 'Balanced')}
-          {renderPresetButton('open', 'Open')}
-          {renderPresetButton('master', 'Master')}
+        <div style={{ display: 'flex', gap: 8 }}>
+          <PresetButton p="warm" label="Warm" color="#ffb800" icon="🔥" />
+          <PresetButton p="balanced" label="Balanced" color="#00d9ff" icon="⚖️" />
+          <PresetButton p="open" label="Open" color="#00ff88" icon="🌊" />
+          <PresetButton p="master" label="Master" color="#888" icon="🎯" />
         </div>
       </div>
 
       {/* PRESETS UTILISATEUR */}
-      <div style={{ marginBottom: '20px' }}>
+      <div style={{ marginBottom: 24 }}>
         <PresetManager
           currentValues={{
             loudness,
@@ -480,29 +582,37 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
       </div>
 
       {/* EQ 5 BANDES */}
-      <div style={{ marginBottom: '20px' }}>
+      <div style={{ marginBottom: 24 }}>
         <div
           style={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            marginBottom: '10px',
+            marginBottom: 12,
           }}
         >
-          <div style={{ fontSize: '10px', color: '#666', letterSpacing: '1px' }}>
+          <div
+            style={{
+              fontSize: 10,
+              color: 'rgba(255,255,255,0.4)',
+              letterSpacing: '1.5px',
+              fontWeight: 700,
+            }}
+          >
             🎛️ ÉGALISEUR 5 BANDES
           </div>
           <button
             onClick={() => setShowEQ(!showEQ)}
             style={{
               background: 'transparent',
-              border: '1px solid #2a2a2a',
-              borderRadius: 4,
-              color: showEQ ? '#00d9ff' : '#666',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: 8,
+              color: showEQ ? '#00d9ff' : 'rgba(255,255,255,0.5)',
               fontSize: 10,
               cursor: 'pointer',
-              padding: '2px 8px',
-              fontWeight: 600,
+              padding: '4px 10px',
+              fontWeight: 700,
+              letterSpacing: '0.5px',
             }}
           >
             {showEQ ? '▼ MASQUER' : '▶ AFFICHER'}
@@ -519,7 +629,7 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
       </div>
 
       {/* MONO-MAKER */}
-      <div style={{ marginBottom: '20px' }}>
+      <div style={{ marginBottom: 24 }}>
         <MonoMakerPanel
           enabled={monoMakerEnabled}
           frequency={monoMakerFreq}
@@ -529,7 +639,7 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
       </div>
 
       {/* IMAGER 3 BANDES */}
-      <div style={{ marginBottom: '20px' }}>
+      <div style={{ marginBottom: 24 }}>
         <ImagerPanel
           enabled={imagerEnabled}
           lowAmount={imagerLow}
@@ -543,29 +653,37 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
       </div>
 
       {/* VECTOR SCOPE */}
-      <div style={{ marginBottom: '20px' }}>
+      <div style={{ marginBottom: 24 }}>
         <div
           style={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            marginBottom: '10px',
+            marginBottom: 12,
           }}
         >
-          <div style={{ fontSize: '10px', color: '#666', letterSpacing: '1px' }}>
-            🌌 VECTOR SCOPE (STÉRÉO)
+          <div
+            style={{
+              fontSize: 10,
+              color: 'rgba(255,255,255,0.4)',
+              letterSpacing: '1.5px',
+              fontWeight: 700,
+            }}
+          >
+            🌌 VECTOR SCOPE
           </div>
           <button
             onClick={() => setShowScope(!showScope)}
             style={{
               background: 'transparent',
-              border: '1px solid #2a2a2a',
-              borderRadius: 4,
-              color: showScope ? '#00d9ff' : '#666',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: 8,
+              color: showScope ? '#00d9ff' : 'rgba(255,255,255,0.5)',
               fontSize: 10,
               cursor: 'pointer',
-              padding: '2px 8px',
-              fontWeight: 600,
+              padding: '4px 10px',
+              fontWeight: 700,
+              letterSpacing: '0.5px',
             }}
           >
             {showScope ? '▼ MASQUER' : '▶ AFFICHER'}
@@ -574,10 +692,10 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
         {showScope && (
           <div
             style={{
-              padding: 16,
+              padding: 20,
               background: 'rgba(0, 0, 0, 0.3)',
-              border: '1px solid #1f1f1f',
-              borderRadius: 8,
+              border: '1px solid rgba(255,255,255,0.06)',
+              borderRadius: 16,
               display: 'flex',
               justifyContent: 'center',
             }}
@@ -592,30 +710,38 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
         )}
       </div>
 
-            {/* CORRELATION METER */}
-      <div style={{ marginBottom: '20px' }}>
+      {/* CORRELATION METER */}
+      <div style={{ marginBottom: 24 }}>
         <div
           style={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            marginBottom: '10px',
+            marginBottom: 12,
           }}
         >
-          <div style={{ fontSize: '10px', color: '#666', letterSpacing: '1px' }}>
+          <div
+            style={{
+              fontSize: 10,
+              color: 'rgba(255,255,255,0.4)',
+              letterSpacing: '1.5px',
+              fontWeight: 700,
+            }}
+          >
             📊 CORRELATION METER
           </div>
           <button
             onClick={() => setShowCorrelation(!showCorrelation)}
             style={{
               background: 'transparent',
-              border: '1px solid #2a2a2a',
-              borderRadius: 4,
-              color: showCorrelation ? '#00d9ff' : '#666',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: 8,
+              color: showCorrelation ? '#00d9ff' : 'rgba(255,255,255,0.5)',
               fontSize: 10,
               cursor: 'pointer',
-              padding: '2px 8px',
-              fontWeight: 600,
+              padding: '4px 10px',
+              fontWeight: 700,
+              letterSpacing: '0.5px',
             }}
           >
             {showCorrelation ? '▼ MASQUER' : '▶ AFFICHER'}
@@ -630,33 +756,44 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
         )}
       </div>
 
-      {/* MÉTRIQUES */}
-      <div style={{ marginBottom: '20px' }}>
+      {/* MÉTRIQUES V3 */}
+      <div style={{ marginBottom: 24 }}>
         <div
           style={{
-            fontSize: '10px',
-            color: '#666',
-            marginBottom: '8px',
-            letterSpacing: '1px',
+            fontSize: 10,
+            color: 'rgba(255,255,255,0.4)',
+            marginBottom: 10,
+            letterSpacing: '1.5px',
+            fontWeight: 700,
           }}
         >
           📊 LIVE METRICS
         </div>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          {renderMetric('LUFS', metrics.lufs, 'INTEGRATED', '#00d9ff')}
-          {renderMetric('True Peak', metrics.truePeak, 'dBTP', '#ff6b6b')}
-          {renderMetric('DR', metrics.dr, 'dB', '#51cf66')}
+        <div style={{ display: 'flex', gap: 10 }}>
+          <MetricCard label="LUFS" value={metrics.lufs} unit="INTEGRATED" color="#00d9ff" />
+          <MetricCard label="True Peak" value={metrics.truePeak} unit="dBTP" color="#ff6b6b" />
+          <MetricCard label="DR" value={metrics.dr} unit="dB" color="#51cf66" />
         </div>
       </div>
 
-      {/* KNOBS */}
-      <div style={{ marginBottom: '20px' }}>
+      {/* KNOBS V3 */}
+      <div
+        style={{
+          marginBottom: 24,
+          padding: 20,
+          background: 'rgba(0, 0, 0, 0.2)',
+          borderRadius: 16,
+          border: '1px solid rgba(255,255,255,0.06)',
+        }}
+      >
         <div
           style={{
-            fontSize: '10px',
-            color: '#666',
-            marginBottom: '12px',
-            letterSpacing: '1px',
+            fontSize: 10,
+            color: 'rgba(255,255,255,0.4)',
+            marginBottom: 16,
+            letterSpacing: '1.5px',
+            fontWeight: 700,
+            textAlign: 'center',
           }}
         >
           🎚️ PARAMETERS
@@ -675,22 +812,27 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
         </div>
       </div>
 
-      {/* ACTIONS */}
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
+      {/* ACTIONS V3 */}
+      <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
         <button
           onClick={() => setIsBypassed(!isBypassed)}
           style={{
             flex: 1,
-            padding: '12px',
-            borderRadius: '6px',
-            border: '1px solid #2a2a2a',
-            backgroundColor: isBypassed ? '#ff6b6b' : '#1a1a1a',
-            color: isBypassed ? '#fff' : '#888',
+            padding: '14px',
+            borderRadius: 12,
+            border: isBypassed
+              ? '1px solid #ff6b6b'
+              : '1px solid rgba(255,255,255,0.08)',
+            background: isBypassed
+              ? 'linear-gradient(135deg, #ff6b6b, #cc1144)'
+              : 'rgba(255, 255, 255, 0.03)',
+            color: isBypassed ? '#fff' : 'rgba(255,255,255,0.6)',
             cursor: 'pointer',
-            fontWeight: 600,
-            fontSize: '11px',
+            fontWeight: 800,
+            fontSize: 11,
             letterSpacing: '1px',
             transition: 'all 0.2s',
+            boxShadow: isBypassed ? '0 6px 24px rgba(255, 107, 107, 0.4)' : 'none',
           }}
         >
           {isBypassed ? '● BYPASS ACTIF' : 'A/B BYPASS'}
@@ -699,53 +841,73 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
           onClick={() => setIsAnalyzing(!isAnalyzing)}
           style={{
             flex: 1,
-            padding: '12px',
-            borderRadius: '6px',
-            border: '1px solid #2a2a2a',
-            backgroundColor: isAnalyzing ? 'rgba(0, 217, 255, 0.15)' : '#1a1a1a',
-            color: isAnalyzing ? '#00d9ff' : '#888',
+            padding: '14px',
+            borderRadius: 12,
+            border: isAnalyzing
+              ? '1px solid #00d9ff'
+              : '1px solid rgba(255,255,255,0.08)',
+            background: isAnalyzing
+              ? 'linear-gradient(135deg, rgba(0, 217, 255, 0.2), rgba(0, 217, 255, 0.05))'
+              : 'rgba(255, 255, 255, 0.03)',
+            color: isAnalyzing ? '#00d9ff' : 'rgba(255,255,255,0.6)',
             cursor: 'pointer',
-            fontWeight: 600,
-            fontSize: '11px',
+            fontWeight: 800,
+            fontSize: 11,
             letterSpacing: '1px',
             transition: 'all 0.2s',
+            boxShadow: isAnalyzing ? '0 6px 24px rgba(0, 217, 255, 0.3)' : 'none',
           }}
         >
           {isAnalyzing ? '■ STOP ANALYSE' : '▶ ANALYSER'}
         </button>
       </div>
 
-      {/* EXPORT WAV */}
+      {/* EXPORT V3 */}
       <button
         onClick={handleExport}
         disabled={isExporting || !sourceBuffer}
         style={{
           width: '100%',
-          padding: '14px',
-          borderRadius: '6px',
+          padding: '16px',
+          borderRadius: 12,
           border: 'none',
           background: isExporting
-            ? 'linear-gradient(135deg, #666 0%, #444 100%)'
-            : !sourceBuffer
             ? 'linear-gradient(135deg, #333 0%, #222 100%)'
-            : 'linear-gradient(135deg, #00d9ff 0%, #0088ff 100%)',
-          color: isExporting || !sourceBuffer ? '#888' : '#000',
+            : !sourceBuffer
+            ? 'linear-gradient(135deg, #1a1a1a 0%, #111 100%)'
+            : 'linear-gradient(135deg, #7c5cff 0%, #00d9ff 100%)',
+          color: isExporting || !sourceBuffer ? 'rgba(255,255,255,0.4)' : '#000',
           cursor: isExporting ? 'wait' : !sourceBuffer ? 'not-allowed' : 'pointer',
-          fontWeight: 700,
-          fontSize: '12px',
+          fontWeight: 800,
+          fontSize: 12,
           letterSpacing: '2px',
           textTransform: 'uppercase',
-          boxShadow: !sourceBuffer ? 'none' : '0 4px 16px rgba(0, 217, 255, 0.3)',
+          boxShadow: !sourceBuffer
+            ? 'none'
+            : '0 8px 32px rgba(124, 92, 255, 0.4)',
           transition: 'all 0.2s',
           position: 'relative',
           overflow: 'hidden',
+        }}
+        onMouseEnter={(e) => {
+          if (!isExporting && sourceBuffer) {
+            e.currentTarget.style.transform = 'translateY(-2px)';
+            e.currentTarget.style.boxShadow =
+              '0 12px 40px rgba(124, 92, 255, 0.5)';
+          }
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'translateY(0)';
+          e.currentTarget.style.boxShadow = !sourceBuffer
+            ? 'none'
+            : '0 8px 32px rgba(124, 92, 255, 0.4)';
         }}
       >
         {isExporting
           ? `EXPORT EN COURS... ${(exportProgress * 100).toFixed(0)}%`
           : !sourceBuffer
           ? "CHARGE UN AUDIO D'ABORD"
-          : 'EXPORT WAV MASTERISÉ'}
+          : '⬇️ EXPORT WAV MASTERISÉ'}
         {isExporting && (
           <div
             style={{
@@ -756,21 +918,24 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
               width: `${exportProgress * 100}%`,
               backgroundColor: '#00d9ff',
               transition: 'width 0.1s linear',
+              boxShadow: '0 0 12px #00d9ff',
             }}
           />
         )}
       </button>
 
+      {/* FOOTER */}
       <div
         style={{
-          marginTop: '15px',
-          fontSize: '9px',
-          color: '#333',
+          marginTop: 20,
+          fontSize: 9,
+          color: 'rgba(255,255,255,0.2)',
           textAlign: 'center',
-          letterSpacing: '1px',
+          letterSpacing: '1.5px',
+          fontWeight: 600,
         }}
       >
-        WAVEFORGE PRO · MASTERING ENGINE v1.6 · EQ + MONO + IMAGER + SCOPE + PRESETS
+        WAVEFORGE PRO · MASTERING ENGINE v1.8 · EQ + MONO + IMAGER + SCOPE + CORRELATION
       </div>
     </div>
   );

@@ -1,11 +1,13 @@
 // src/layouts/MainLayout.tsx
 import React, { useState } from 'react';
-import { Outlet, NavLink } from 'react-router-dom';
+import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { VideoBackground } from '../components/VideoBackground';
 import { VUMeter } from '../components/VUMeter';
 import { SessionPanel } from '../components/SessionPanel';
 import { InstallButton } from '../components/InstallButton';
+import { GlobalPlayer } from '../components/GlobalPlayer';
 import { useAudioEngineContext } from '../contexts/AudioEngineContext';
+import { useAuth } from '../contexts/AuthContext';
 import { useIsMobile } from '../hooks/useIsMobile';
 
 interface NavItem {
@@ -18,22 +20,25 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { path: '/',          label: 'Accueil',       shortLabel: 'Accueil',  icon: '🏠', color: '#888' },
+  { path: '/nouveautes',label: 'Nouveautés',    shortLabel: 'Nouveau',  icon: '🔥', color: '#ff8c00' },
   { path: '/studio',    label: 'Studio',        shortLabel: 'Studio',   icon: '🎹', color: '#00d9ff' },
   { path: '/stems',     label: 'Stems',         shortLabel: 'Stems',    icon: '🎤', color: '#00ff88' },
   { path: '/mastering', label: 'Mastering',     shortLabel: 'Master',   icon: '🎚️', color: '#7c5cff' },
   { path: '/generator', label: 'Générateur',    shortLabel: 'Généro',   icon: '🎼', color: '#ffd43b' },
   { path: '/musicgen',  label: 'Génération IA', shortLabel: 'Gén.IA',   icon: '🎵', color: '#00ff88' },
   { path: '/video',     label: 'Clip vidéo',    shortLabel: 'Vidéo',    icon: '🎬', color: '#ff5cf0' },
-  { path: '/cdj',       label: 'DJ Prep PRO',      shortLabel: 'CDJ',      icon: '🎛️', color: '#00d9ff' },
-  //{ path: '/mixer',     label: 'Mixer',         shortLabel: 'Mixer',    icon: '🎚️', color: '#7c5cff' },//
+  { path: '/cdj',       label: 'DJ Prep',       shortLabel: 'DJ',       icon: '🎛️', color: '#00d9ff' },
   { path: '/help',      label: 'Guide',         shortLabel: 'Guide',    icon: '📖', color: '#00d9ff' },
   { path: '/settings',  label: 'Réglages',      shortLabel: 'Réglages', icon: '⚙️', color: '#888' },
 ];
 
 export const MainLayout: React.FC = () => {
   const engine = useAudioEngineContext();
+  const { user, username, signOut } = useAuth();
+  const navigate = useNavigate();
   const isMobile = useIsMobile(768);
   const [showSessions, setShowSessions] = useState(false);
+  const [hoveredPath, setHoveredPath] = useState<string | null>(null);
 
   // ============================================================
   // VERSION MOBILE
@@ -51,19 +56,20 @@ export const MainLayout: React.FC = () => {
             zIndex: 1,
             display: 'flex',
             flexDirection: 'column',
-            paddingBottom: 72,
+            paddingBottom: 80,
           }}
         >
           {/* HEADER MOBILE */}
           <header
             style={{
-              padding: '12px 16px',
+              padding: '14px 16px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              borderBottom: '1px solid var(--border)',
-              background: 'rgba(10, 10, 10, 0.85)',
-              backdropFilter: 'blur(10px)',
+              borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+              background: 'rgba(10, 10, 15, 0.7)',
+              backdropFilter: 'blur(16px)',
+              WebkitBackdropFilter: 'blur(16px)',
               position: 'sticky',
               top: 0,
               zIndex: 50,
@@ -72,15 +78,15 @@ export const MainLayout: React.FC = () => {
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <div
                 style={{
-                  width: 30,
-                  height: 30,
-                  borderRadius: 6,
+                  width: 32,
+                  height: 32,
+                  borderRadius: 10,
                   background: 'linear-gradient(135deg, #00d9ff, #0088ff)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: 14,
-                  boxShadow: '0 0 12px rgba(0, 217, 255, 0.4)',
+                  fontSize: 16,
+                  boxShadow: '0 0 16px rgba(0, 217, 255, 0.5)',
                 }}
               >
                 🎹
@@ -88,34 +94,85 @@ export const MainLayout: React.FC = () => {
               <div>
                 <div
                   style={{
-                    fontSize: 12,
-                    fontWeight: 700,
-                    letterSpacing: '0.02em',
+                    fontSize: 13,
+                    fontWeight: 800,
+                    letterSpacing: '-0.2px',
                     color: '#fff',
                   }}
                 >
                   WAVEFORGE{' '}
-                  <span style={{ color: 'var(--cyan)', fontWeight: 300 }}>
+                  <span
+                    style={{
+                      background: 'linear-gradient(135deg, #00d9ff, #7c5cff)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      backgroundClip: 'text',
+                      fontWeight: 700,
+                    }}
+                  >
                     PRO
                   </span>
                 </div>
                 <div
-                  className="label-uppercase"
-                  style={{ fontSize: 7, color: '#666', letterSpacing: '1px' }}
+                  style={{
+                    fontSize: 8,
+                    color: 'rgba(255,255,255,0.4)',
+                    letterSpacing: '1.5px',
+                    textTransform: 'uppercase',
+                    fontWeight: 600,
+                    marginTop: 1,
+                  }}
                 >
-                  Audio → MIDI Studio
+                  Audio → Video Studio
                 </div>
               </div>
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              {user ? (
+                <NavLink
+                  to={`/profil/${user.id}`}
+                  style={{
+                    padding: '8px 12px',
+                    background: 'rgba(0, 217, 255, 0.1)',
+                    border: '1px solid rgba(0, 217, 255, 0.3)',
+                    borderRadius: 10,
+                    color: '#00d9ff',
+                    fontSize: 11,
+                    fontWeight: 700,
+                    textDecoration: 'none',
+                    maxWidth: 100,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  🎧 {username}
+                </NavLink>
+              ) : (
+                <NavLink
+                  to="/auth"
+                  style={{
+                    padding: '8px 12px',
+                    background: 'rgba(0, 217, 255, 0.15)',
+                    border: '1px solid rgba(0, 217, 255, 0.4)',
+                    borderRadius: 10,
+                    color: '#00d9ff',
+                    fontSize: 11,
+                    fontWeight: 700,
+                    textDecoration: 'none',
+                  }}
+                >
+                  🔐
+                </NavLink>
+              )}
               <button
                 onClick={() => setShowSessions(true)}
                 style={{
-                  padding: '6px 10px',
-                  background: 'var(--bg-1)',
-                  border: '1px solid var(--border)',
-                  borderRadius: 6,
+                  padding: '8px 12px',
+                  background: 'rgba(255, 255, 255, 0.04)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: 10,
                   color: '#00d9ff',
                   fontSize: 14,
                   cursor: 'pointer',
@@ -123,18 +180,12 @@ export const MainLayout: React.FC = () => {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
+                  backdropFilter: 'blur(10px)',
                 }}
                 title="Sessions sauvegardées"
               >
                 💾
               </button>
-              <div style={{ transform: 'scale(0.7)', transformOrigin: 'right center' }}>
-                <VUMeter
-                  audioBuffer={engine.audioBuffer}
-                  isPlaying={engine.isPlaying}
-                  currentTime={engine.currentTime}
-                />
-              </div>
             </div>
           </header>
 
@@ -143,20 +194,6 @@ export const MainLayout: React.FC = () => {
             <Outlet />
           </main>
 
-          {/* FOOTER */}
-          <footer
-            style={{
-              padding: '12px 16px',
-              textAlign: 'center',
-              fontSize: 9,
-              color: '#444',
-              letterSpacing: '0.05em',
-              borderTop: '1px solid var(--border)',
-            }}
-          >
-            WAVEFORGE PRO · v1.0
-          </footer>
-
           {/* NAV BOTTOM */}
           <nav
             style={{
@@ -164,16 +201,18 @@ export const MainLayout: React.FC = () => {
               bottom: 0,
               left: 0,
               right: 0,
-              background: 'rgba(10, 10, 10, 0.95)',
-              backdropFilter: 'blur(12px)',
-              borderTop: '1px solid var(--border)',
+              background: 'rgba(10, 10, 15, 0.85)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+              borderTop: '1px solid rgba(255, 255, 255, 0.08)',
               display: 'flex',
               justifyContent: 'space-around',
               alignItems: 'center',
-              padding: '8px 4px',
+              padding: '8px 6px',
               zIndex: 100,
               paddingBottom: 'max(8px, env(safe-area-inset-bottom))',
               overflowX: 'auto',
+              gap: 2,
             }}
           >
             {NAV_ITEMS.map((item) => (
@@ -187,15 +226,18 @@ export const MainLayout: React.FC = () => {
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: 3,
-                  padding: '6px 2px',
-                  borderRadius: 8,
+                  padding: '8px 6px',
+                  borderRadius: 10,
                   textDecoration: 'none',
-                  flex: 1,
-                  minWidth: 0,
-                  transition: 'all 0.2s',
+                  flex: '0 0 auto',
+                  minWidth: 58,
+                  transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
                   background: isActive
-                    ? `rgba(${hexToRgb(item.color)}, 0.15)`
+                    ? `linear-gradient(180deg, ${item.color}20, ${item.color}05)`
                     : 'transparent',
+                  border: isActive
+                    ? `1px solid ${item.color}50`
+                    : '1px solid transparent',
                 })}
               >
                 {({ isActive }) => (
@@ -205,8 +247,8 @@ export const MainLayout: React.FC = () => {
                         fontSize: 18,
                         lineHeight: 1,
                         filter: isActive
-                          ? 'none'
-                          : 'grayscale(0.5) opacity(0.7)',
+                          ? `drop-shadow(0 0 6px ${item.color})`
+                          : 'grayscale(1) opacity(0.5)',
                       }}
                     >
                       {item.icon}
@@ -214,13 +256,10 @@ export const MainLayout: React.FC = () => {
                     <span
                       style={{
                         fontSize: 9,
-                        color: isActive ? item.color : '#666',
-                        fontWeight: isActive ? 600 : 400,
+                        color: isActive ? item.color : 'rgba(255,255,255,0.45)',
+                        fontWeight: isActive ? 700 : 500,
                         whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        maxWidth: '100%',
-                        textAlign: 'center',
+                        letterSpacing: '0.2px',
                       }}
                     >
                       {item.shortLabel}
@@ -232,8 +271,11 @@ export const MainLayout: React.FC = () => {
           </nav>
         </div>
 
-        {/* ✅ BANDEAU D'INSTALLATION (mobile) */}
+        {/* Bandeau d'installation */}
         <InstallButton variant="banner" />
+
+        {/* ✅ PLAYER GLOBAL PERSISTANT (mobile) */}
+        <GlobalPlayer />
 
         <SessionPanel isOpen={showSessions} onClose={() => setShowSessions(false)} />
       </>
@@ -241,7 +283,7 @@ export const MainLayout: React.FC = () => {
   }
 
   // ============================================================
-  // VERSION DESKTOP
+  // VERSION DESKTOP V3
   // ============================================================
   return (
     <>
@@ -258,43 +300,50 @@ export const MainLayout: React.FC = () => {
       >
         <div
           style={{
-            maxWidth: 1400,
+            maxWidth: 1480,
             margin: '0 auto',
             display: 'flex',
-            gap: 20,
+            gap: 24,
           }}
         >
-          {/* SIDEBAR */}
+          {/* SIDEBAR V3 GLASS */}
           <aside
             style={{
-              width: 220,
+              width: 240,
               flexShrink: 0,
               display: 'flex',
               flexDirection: 'column',
               gap: 20,
+              position: 'sticky',
+              top: 20,
+              height: 'fit-content',
+              maxHeight: 'calc(100vh - 40px)',
+              overflowY: 'auto',
+              paddingRight: 4,
             }}
           >
-            {/* Logo */}
+            {/* LOGO */}
             <div
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: 12,
-                paddingBottom: 16,
-                borderBottom: '1px solid var(--border)',
+                padding: '4px 0 20px',
+                borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
               }}
             >
               <div
                 style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: 8,
+                  width: 40,
+                  height: 40,
+                  borderRadius: 12,
                   background: 'linear-gradient(135deg, #00d9ff, #0088ff)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: 18,
-                  boxShadow: '0 0 20px rgba(0, 217, 255, 0.4)',
+                  fontSize: 20,
+                  boxShadow:
+                    '0 0 24px rgba(0, 217, 255, 0.5), inset 0 1px 0 rgba(255,255,255,0.3)',
                 }}
               >
                 🎹
@@ -303,62 +352,118 @@ export const MainLayout: React.FC = () => {
                 <h1
                   style={{
                     margin: 0,
-                    fontSize: 14,
-                    fontWeight: 700,
-                    letterSpacing: '0.02em',
+                    fontSize: 15,
+                    fontWeight: 800,
+                    letterSpacing: '-0.3px',
                     color: '#fff',
+                    lineHeight: 1.1,
                   }}
                 >
                   WAVEFORGE{' '}
-                  <span style={{ color: 'var(--cyan)', fontWeight: 300 }}>
+                  <span
+                    style={{
+                      background: 'linear-gradient(135deg, #00d9ff, #7c5cff)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      backgroundClip: 'text',
+                      fontWeight: 700,
+                    }}
+                  >
                     PRO
                   </span>
                 </h1>
                 <p
-                  className="label-uppercase"
-                  style={{ margin: 0, fontSize: 8, color: '#666' }}
+                  style={{
+                    margin: 0,
+                    fontSize: 8,
+                    color: 'rgba(255,255,255,0.4)',
+                    letterSpacing: '1.5px',
+                    textTransform: 'uppercase',
+                    fontWeight: 700,
+                    marginTop: 3,
+                  }}
                 >
-                  Audio → MIDI Studio
+                  Audio → Video Studio
                 </p>
               </div>
             </div>
 
-            {/* Navigation */}
-            <nav style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {/* NAVIGATION V3 */}
+            <nav style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
               {NAV_ITEMS.map((item) => (
                 <NavLink
                   key={item.path}
                   to={item.path}
                   end={item.path === '/'}
-                  style={({ isActive }: { isActive: boolean }) => ({
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 10,
-                    padding: '10px 12px',
-                    borderRadius: 6,
-                    textDecoration: 'none',
-                    fontSize: 12,
-                    fontWeight: isActive ? 600 : 400,
-                    color: isActive ? item.color : '#888',
-                    background: isActive
-                      ? `rgba(${hexToRgb(item.color)}, 0.1)`
-                      : 'transparent',
-                    border: isActive
-                      ? `1px solid ${item.color}`
-                      : '1px solid transparent',
-                    transition: 'all 0.15s ease',
-                  })}
+                  onMouseEnter={() => setHoveredPath(item.path)}
+                  onMouseLeave={() => setHoveredPath(null)}
+                  style={({ isActive }: { isActive: boolean }) => {
+                    const hovered = hoveredPath === item.path;
+                    return {
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 12,
+                      padding: '11px 14px',
+                      borderRadius: 10,
+                      textDecoration: 'none',
+                      fontSize: 13,
+                      fontWeight: isActive ? 700 : 500,
+                      color: isActive
+                        ? item.color
+                        : hovered
+                        ? '#fff'
+                        : 'rgba(255,255,255,0.6)',
+                      background: isActive
+                        ? `linear-gradient(135deg, ${item.color}18, ${item.color}05)`
+                        : hovered
+                        ? 'rgba(255, 255, 255, 0.04)'
+                        : 'transparent',
+                      border: isActive
+                        ? `1px solid ${item.color}50`
+                        : '1px solid transparent',
+                      transition: 'all 0.18s cubic-bezier(0.16, 1, 0.3, 1)',
+                      position: 'relative',
+                      overflow: 'hidden',
+                    };
+                  }}
                 >
-                  <span style={{ fontSize: 14 }}>{item.icon}</span>
-                  <span>{item.label}</span>
+                  <span
+                    style={{
+                      fontSize: 15,
+                      lineHeight: 1,
+                      filter: 'none',
+                      transition: 'transform 0.18s ease',
+                    }}
+                  >
+                    {item.icon}
+                  </span>
+                  <span
+                    style={{
+                      flex: 1,
+                      letterSpacing: '-0.1px',
+                    }}
+                  >
+                    {item.label}
+                  </span>
+                  {window.location.pathname === item.path && (
+                    <span
+                      style={{
+                        width: 4,
+                        height: 4,
+                        borderRadius: '50%',
+                        background: item.color,
+                        boxShadow: `0 0 8px ${item.color}`,
+                      }}
+                    />
+                  )}
                 </NavLink>
               ))}
             </nav>
 
-            {/* ✅ BOUTON D'INSTALLATION (desktop) */}
+            {/* BOUTON INSTALL */}
             <InstallButton variant="sidebar" />
 
-            {/* Bouton Sessions */}
+            {/* BOUTON SESSIONS V3 */}
             <button
               onClick={() => setShowSessions(true)}
               style={{
@@ -366,36 +471,155 @@ export const MainLayout: React.FC = () => {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: 8,
-                padding: '10px 12px',
+                gap: 10,
+                padding: '12px 16px',
                 background:
                   'linear-gradient(135deg, rgba(0, 217, 255, 0.1), rgba(0, 136, 255, 0.05))',
-                border: '1px solid rgba(0, 217, 255, 0.3)',
-                borderRadius: 8,
+                border: '1px solid rgba(0, 217, 255, 0.25)',
+                borderRadius: 12,
                 color: '#00d9ff',
                 fontSize: 11,
-                fontWeight: 700,
+                fontWeight: 800,
                 cursor: 'pointer',
-                letterSpacing: '0.5px',
-                transition: 'all 0.2s',
+                letterSpacing: '1px',
+                transition: 'all 0.2s ease',
+                backdropFilter: 'blur(10px)',
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.background =
                   'linear-gradient(135deg, rgba(0, 217, 255, 0.2), rgba(0, 136, 255, 0.1))';
+                e.currentTarget.style.transform = 'translateY(-1px)';
+                e.currentTarget.style.boxShadow =
+                  '0 8px 24px rgba(0, 217, 255, 0.25)';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.background =
                   'linear-gradient(135deg, rgba(0, 217, 255, 0.1), rgba(0, 136, 255, 0.05))';
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = 'none';
               }}
             >
               💾 SESSIONS
             </button>
 
-            {/* VU Mètre */}
-            <div style={{ paddingTop: 16 }}>
+            {/* BLOC MON PROFIL */}
+            {user && (
+              <NavLink
+                to={`/profil/${user.id}`}
+                style={({ isActive }) => ({
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                  padding: '10px 12px',
+                  background: isActive
+                    ? 'rgba(0, 217, 255, 0.15)'
+                    : 'rgba(255, 255, 255, 0.03)',
+                  border: isActive
+                    ? '1px solid rgba(0, 217, 255, 0.5)'
+                    : '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: 10,
+                  color: isActive ? '#00d9ff' : 'rgba(255,255,255,0.8)',
+                  fontSize: 11,
+                  fontWeight: 700,
+                  letterSpacing: '1px',
+                  textDecoration: 'none',
+                  fontFamily: 'monospace',
+                  transition: 'all 0.2s',
+                })}
+              >
+                👤 MON PROFIL
+              </NavLink>
+            )}
+
+            {/* BLOC UTILISATEUR */}
+            <div
+              style={{
+                paddingTop: 16,
+                borderTop: '1px solid rgba(255, 255, 255, 0.06)',
+              }}
+            >
+              {user ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <NavLink
+                    to={`/profil/${user.id}`}
+                    style={{
+                      fontSize: 11,
+                      color: '#00d9ff',
+                      fontWeight: 700,
+                      letterSpacing: '0.5px',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      textDecoration: 'none',
+                      display: 'block',
+                    }}
+                  >
+                    🎧 {username}
+                  </NavLink>
+                  <button
+                    onClick={async () => {
+                      await signOut();
+                      navigate('/');
+                    }}
+                    style={{
+                      padding: '8px 12px',
+                      background: 'rgba(255, 60, 60, 0.08)',
+                      border: '1px solid rgba(255, 60, 60, 0.3)',
+                      borderRadius: 8,
+                      color: '#ff8c8c',
+                      fontSize: 10,
+                      fontWeight: 700,
+                      fontFamily: 'monospace',
+                      cursor: 'pointer',
+                      letterSpacing: '1px',
+                    }}
+                  >
+                    DÉCONNEXION
+                  </button>
+                </div>
+              ) : (
+                <NavLink
+                  to="/auth"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8,
+                    padding: '10px 12px',
+                    background:
+                      'linear-gradient(135deg, rgba(0, 217, 255, 0.15), rgba(0, 136, 255, 0.05))',
+                    border: '1px solid rgba(0, 217, 255, 0.4)',
+                    borderRadius: 10,
+                    color: '#00d9ff',
+                    fontSize: 11,
+                    fontWeight: 800,
+                    letterSpacing: '1px',
+                    textDecoration: 'none',
+                    fontFamily: 'monospace',
+                  }}
+                >
+                  🔐 CONNEXION
+                </NavLink>
+              )}
+            </div>
+
+            {/* VU METER */}
+            <div
+              style={{
+                paddingTop: 16,
+                borderTop: '1px solid rgba(255, 255, 255, 0.06)',
+              }}
+            >
               <div
-                className="label-uppercase"
-                style={{ fontSize: 8, color: '#444', marginBottom: 8 }}
+                style={{
+                  fontSize: 9,
+                  color: 'rgba(255,255,255,0.4)',
+                  marginBottom: 10,
+                  letterSpacing: '1.5px',
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                }}
               >
                 Sortie Audio
               </div>
@@ -420,32 +644,28 @@ export const MainLayout: React.FC = () => {
           </main>
         </div>
 
+        {/* FOOTER V3 */}
         <footer
           style={{
-            marginTop: 32,
-            paddingTop: 16,
-            borderTop: '1px solid var(--border)',
+            maxWidth: 1480,
+            margin: '40px auto 0',
+            paddingTop: 24,
+            borderTop: '1px solid rgba(255, 255, 255, 0.06)',
             textAlign: 'center',
             fontSize: 10,
-            color: '#555',
-            letterSpacing: '0.05em',
-            maxWidth: 1400,
-            margin: '32px auto 0',
+            color: 'rgba(255,255,255,0.3)',
+            letterSpacing: '1.5px',
+            fontWeight: 600,
           }}
         >
           WAVEFORGE PRO · YIN · TONE.JS · DEMUCS · BASIC PITCH · v1.0
         </footer>
       </div>
 
+      {/* ✅ PLAYER GLOBAL PERSISTANT (desktop) */}
+      <GlobalPlayer />
+
       <SessionPanel isOpen={showSessions} onClose={() => setShowSessions(false)} />
     </>
   );
 };
-
-function hexToRgb(hex: string): string {
-  const clean = hex.replace('#', '');
-  const r = parseInt(clean.substring(0, 2), 16);
-  const g = parseInt(clean.substring(2, 4), 16);
-  const b = parseInt(clean.substring(4, 6), 16);
-  return `${r}, ${g}, ${b}`;
-}

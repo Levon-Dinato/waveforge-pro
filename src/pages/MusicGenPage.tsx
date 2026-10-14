@@ -8,18 +8,37 @@ import { audioTransfer } from '../utils/audioTransfer';
 import { isProduction, LOCAL_SERVER_MESSAGE } from '../utils/env';
 import { AudioPlayer } from '../components/AudioPlayer';
 import { useIsMobile } from '../hooks/useIsMobile';
+import { useToast } from '../components/ui/Toast';
+import { GlassCard } from '../components/ui/GlassCard';
+import { SectionTitle } from '../components/ui/SectionTitle';
+import { useAudioEngineContext } from '../contexts/AudioEngineContext';
+import { addVocalPadToBlob, type VocalVowel } from '../audio/vocalPad';
 
-const PRESETS = [
-  { id: 'lofi', label: 'Lo-Fi', prompt: 'lofi hip hop beat, chill, jazzy, warm piano, vinyl crackle', color: '#ffd43b' },
-  { id: 'trap', label: 'Trap', prompt: 'trap beat, dark, 808 bass, hi-hats, atmospheric', color: '#ff3366' },
-  { id: 'house', label: 'House', prompt: 'deep house, groovy, piano chords, four on the floor, club', color: '#00d9ff' },
-  { id: 'ambient', label: 'Ambient', prompt: 'ambient soundscape, calm, atmospheric, pad, cinematic', color: '#7c5cff' },
-  { id: 'edm', label: 'EDM', prompt: 'edm, festival, big room, energetic, synth lead, drop', color: '#ff5cf0' },
-  { id: 'jazz', label: 'Jazz', prompt: 'smooth jazz, saxophone, piano trio, lounge, relaxed', color: '#00ff88' },
-  { id: 'synthwave', label: 'Synthwave', prompt: 'synthwave, retro 80s, neon, drum machine, analog synth', color: '#ec4899' },
-  { id: 'cinematic', label: 'Cinematic', prompt: 'cinematic orchestral, epic, strings, brass, emotional', color: '#f59e0b' },
-  { id: 'techno', label: 'Techno', prompt: 'techno, dark, industrial, driving kick, hypnotic', color: '#06b6d4' },
-  { id: 'reggaeton', label: 'Reggaeton', prompt: 'reggaeton, latin, dembow, catchy, dance', color: '#10b981' },
+// ============================================================
+// PRESETS (avec mode VOIX/INST)
+// ============================================================
+interface Preset {
+  id: string;
+  label: string;
+  prompt: string;
+  color: string;
+  mode: 'instrumental' | 'vocal' | 'both';
+}
+
+const PRESETS: Preset[] = [
+  { id: 'lofi',      label: 'Lo-Fi',      prompt: 'lofi hip hop beat, chill, jazzy, warm piano, vinyl crackle', color: '#ffd43b', mode: 'instrumental' },
+  { id: 'trap',      label: 'Trap',       prompt: 'trap beat, dark, 808 bass, hi-hats, atmospheric',            color: '#ff3366', mode: 'instrumental' },
+  { id: 'house',     label: 'House',      prompt: 'deep house, groovy, piano chords, four on the floor, club',   color: '#00d9ff', mode: 'instrumental' },
+  { id: 'ambient',   label: 'Ambient',    prompt: 'ambient soundscape, calm, atmospheric, pad, cinematic',       color: '#7c5cff', mode: 'instrumental' },
+  { id: 'edm',       label: 'EDM',        prompt: 'edm, festival, big room, energetic, synth lead, drop',        color: '#ff5cf0', mode: 'instrumental' },
+  { id: 'jazz',      label: 'Jazz',       prompt: 'smooth jazz, saxophone, piano trio, lounge, relaxed',         color: '#00ff88', mode: 'instrumental' },
+  { id: 'synthwave', label: 'Synthwave',  prompt: 'synthwave, retro 80s, neon, drum machine, analog synth',      color: '#ec4899', mode: 'instrumental' },
+  { id: 'cinematic', label: 'Cinematic',  prompt: 'cinematic orchestral, epic, strings, brass, emotional',       color: '#f59e0b', mode: 'instrumental' },
+  { id: 'techno',    label: 'Techno',     prompt: 'techno, dark, industrial, driving kick, hypnotic',            color: '#06b6d4', mode: 'instrumental' },
+  { id: 'reggaeton', label: 'Reggaeton',  prompt: 'reggaeton, latin, dembow, catchy, dance',                     color: '#10b981', mode: 'instrumental' },
+  { id: 'vocal-pop',  label: '🎤 Pop',   prompt: 'pop song with vocals, catchy chorus, emotional, radio hit',   color: '#ff1493', mode: 'vocal' },
+  { id: 'vocal-rap',  label: '🎤 Rap',   prompt: 'hip hop rap with vocals, punchy delivery, deep beat',         color: '#ff4500', mode: 'vocal' },
+  { id: 'vocal-soul', label: '🎤 Soul',  prompt: 'soulful R&B with vocals, warm chords, groove',               color: '#daa520', mode: 'vocal' },
 ];
 
 type SortOption = 'recent' | 'old' | 'duration' | 'az';
@@ -30,13 +49,21 @@ const SORT_OPTIONS: { value: SortOption; label: string; icon: string }[] = [
   { value: 'az', label: 'A-Z', icon: '🔤' },
 ];
 
+const DURATION_OPTIONS = [30, 60, 90, 120];
+
 export const MusicGenPage: React.FC = () => {
   const isMobile = useIsMobile(768);
   const navigate = useNavigate();
+  const { showToast } = useToast();
+  const engine = useAudioEngineContext();
+
   const [isOnline, setIsOnline] = useState<boolean | null>(null);
   const [prompt, setPrompt] = useState('');
-  const [duration, setDuration] = useState(8);
+  const [duration, setDuration] = useState(30);
   const [temperature, setTemperature] = useState(1.0);
+  const [withVocals, setWithVocals] = useState(false);
+  const [vocalKey, setVocalKey] = useState('Am');
+  const [vocalVowel, setVocalVowel] = useState<VocalVowel>('ah');
   const [isGenerating, setIsGenerating] = useState(false);
   const [status, setStatus] = useState('');
   const [progress, setProgress] = useState(0);
@@ -50,8 +77,6 @@ export const MusicGenPage: React.FC = () => {
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [sortBy, setSortBy] = useState<SortOption>('recent');
   const [showSortMenu, setShowSortMenu] = useState(false);
-
-  // ✅ État pour le MIDI
   const [transcribingId, setTranscribingId] = useState<string | null>(null);
   const [transcribeStatus, setTranscribeStatus] = useState('');
   const [midiSuccess, setMidiSuccess] = useState<{ id: string; count: number } | null>(null);
@@ -103,9 +128,7 @@ export const MusicGenPage: React.FC = () => {
         return title.includes(q) || prmpt.includes(q);
       });
     }
-    if (showFavoritesOnly) {
-      result = result.filter((h) => favorites.has(h.id));
-    }
+    if (showFavoritesOnly) result = result.filter((h) => favorites.has(h.id));
     switch (sortBy) {
       case 'recent': result.sort((a, b) => b.timestamp - a.timestamp); break;
       case 'old': result.sort((a, b) => a.timestamp - b.timestamp); break;
@@ -121,15 +144,19 @@ export const MusicGenPage: React.FC = () => {
     return result;
   }, [history, searchQuery, showFavoritesOnly, favorites, sortBy]);
 
-  const estimatedTime = duration * 8;
+  const estimatedTime = useMemo(() => {
+    const base = duration * 8;
+    const vocalCost = withVocals ? duration * 4 : 0;
+    return Math.round(base + vocalCost);
+  }, [duration, withVocals]);
 
   const handleGenerate = async () => {
     if (!prompt.trim()) {
-      alert('Écris une description du morceau.');
+      showToast('Écris une description du morceau.', 'warning');
       return;
     }
     if (isProduction()) {
-      alert("La génération MusicGen nécessite le serveur Python local.");
+      showToast('La génération MusicGen nécessite le serveur Python local.', 'warning');
       return;
     }
     const controller = new AbortController();
@@ -148,11 +175,36 @@ export const MusicGenPage: React.FC = () => {
 
     try {
       const res = await generateMusic(
-        { prompt: prompt.trim(), duration, temperature },
+        {
+          prompt: prompt.trim(),
+          duration,
+          temperature,
+          withVocals,
+        },
         setStatus
       );
       setProgress(100);
-      const blob = await fetch(res.audioUrl).then((r) => r.blob());
+
+      let blob = await fetch(res.audioUrl).then((r) => r.blob());
+
+      if (withVocals) {
+        if (!engine.audioContext) {
+          showToast('Audio non initialisé — voix ignorée', 'warning');
+        } else {
+          setStatus('Ajout du chœur vocal...');
+          try {
+            blob = await addVocalPadToBlob(engine.audioContext, blob, {
+              key: vocalKey,
+              vowel: vocalVowel,
+              level: 0.35,
+            });
+          } catch (err) {
+            console.error('Erreur pad vocal:', err);
+            showToast("Erreur lors de l'ajout de la voix", 'error');
+          }
+        }
+      }
+
       const entry: MusicGenHistoryEntry = {
         id: `mg-${Date.now()}`,
         prompt: prompt.trim(),
@@ -164,10 +216,11 @@ export const MusicGenPage: React.FC = () => {
       };
       await musicgenHistory.add(entry);
       await loadHistory();
+      showToast('✅ Morceau généré avec succès', 'success');
     } catch (e: any) {
       if (e.name !== 'AbortError') {
         console.error(e);
-        alert(`Erreur : ${e.message}`);
+        showToast(`Erreur : ${e.message}`, 'error');
       }
     } finally {
       setIsGenerating(false);
@@ -184,6 +237,7 @@ export const MusicGenPage: React.FC = () => {
     setStatus('');
     setProgress(0);
     if (timerRef.current) clearInterval(timerRef.current);
+    showToast('Génération annulée', 'info');
   };
 
   const handleDownload = (url: string, name: string) => {
@@ -206,34 +260,25 @@ export const MusicGenPage: React.FC = () => {
   const handleTransfer = async (entry: MusicGenHistoryEntry, target: 'studio' | 'mastering') => {
     const filename = `${(entry.title || entry.prompt).replace(/[^a-z0-9]/gi, '-').slice(0, 40)}.wav`;
     await audioTransfer.save(entry.audioBlob, filename, target);
+    showToast(`Envoyé vers ${target === 'studio' ? 'Studio' : 'Mastering'}`, 'success');
     navigate(target === 'studio' ? '/studio' : '/mastering');
   };
 
-  // ✅ NOUVEAU : Extraction MIDI via Basic Pitch
   const handleExtractMidi = async (entry: MusicGenHistoryEntry) => {
-    if (transcribingId) return; // Évite les double-clics
-
+    if (transcribingId) return;
     setTranscribingId(entry.id);
     setTranscribeStatus('Préparation...');
     setMidiSuccess(null);
-
     try {
-      const bpm = 120; // BPM par défaut pour la transcription
+      const bpm = 120;
       const result = await transcribeToMidi(entry.audioBlob, bpm, setTranscribeStatus);
-
-      // Télécharge le fichier MIDI
       downloadMidi(result.midiBlob, result.fileName);
-
-      // Affiche la confirmation
       setMidiSuccess({ id: entry.id, count: result.noteCount });
-
-      console.log(`✅ ${result.noteCount} notes transcrites en ${result.duration.toFixed(1)}s`);
-
-      // Efface le succès après 4 secondes
+      showToast(`🎼 ${result.noteCount} notes extraites en MIDI`, 'success');
       setTimeout(() => setMidiSuccess(null), 4000);
     } catch (e: any) {
       console.error('Erreur transcription MIDI:', e);
-      alert(`Erreur : ${e.message}`);
+      showToast(`Erreur MIDI : ${e.message}`, 'error');
     } finally {
       setTranscribingId(null);
       setTranscribeStatus('');
@@ -241,15 +286,17 @@ export const MusicGenPage: React.FC = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Supprimer ce morceau ?')) return;
+    if (!window.confirm('Supprimer ce morceau ?')) return;
     await musicgenHistory.delete(id);
     await loadHistory();
+    showToast('Morceau supprimé', 'info');
   };
 
   const handleClearHistory = async () => {
-    if (!confirm("Effacer TOUT l'historique ?")) return;
+    if (!window.confirm("Effacer TOUT l'historique ?")) return;
     await musicgenHistory.clear();
     await loadHistory();
+    showToast('Historique effacé', 'info');
   };
 
   const startEditing = (id: string, currentTitle: string) => {
@@ -259,9 +306,7 @@ export const MusicGenPage: React.FC = () => {
 
   const saveTitle = async (id: string) => {
     const newTitle = editingTitle.trim();
-    if (newTitle) {
-      await musicgenHistory.update(id, { title: newTitle });
-    }
+    if (newTitle) await musicgenHistory.update(id, { title: newTitle });
     setEditingId(null);
     setEditingTitle('');
     await loadHistory();
@@ -274,33 +319,32 @@ export const MusicGenPage: React.FC = () => {
 
   return (
     <div
-      className="fade-in"
+      className="wf-fade-in"
       style={{
         padding: isMobile ? 12 : 20,
         display: 'grid',
-        gridTemplateColumns: isMobile ? '1fr' : 'minmax(280px, 340px) 1fr',
+        gridTemplateColumns: isMobile ? '1fr' : 'minmax(300px, 360px) 1fr',
         gap: isMobile ? 16 : 20,
         alignItems: 'start',
         minHeight: isMobile ? 'auto' : 'calc(100vh - 40px)',
       }}
     >
       {/* COLONNE GAUCHE : CRÉATION */}
-      <div
-        className="panel"
+      <GlassCard
+        padding={0}
+        glow="#00ff88"
         style={{
-          padding: 0,
           position: isMobile ? 'relative' : 'sticky',
           top: isMobile ? 'auto' : 20,
           display: 'flex',
           flexDirection: 'column',
           maxHeight: isMobile ? 'none' : 'calc(100vh - 40px)',
-          overflow: 'hidden',
         }}
       >
         <div
           style={{
             padding: 16,
-            borderBottom: '1px solid var(--border)',
+            borderBottom: '1px solid rgba(255,255,255,0.06)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
@@ -308,12 +352,26 @@ export const MusicGenPage: React.FC = () => {
         >
           <div>
             <div
-              className="label-uppercase"
-              style={{ fontSize: 10, color: '#666', letterSpacing: '1px', marginBottom: 4 }}
+              style={{
+                fontSize: 10,
+                color: 'rgba(255,255,255,0.4)',
+                letterSpacing: '1.5px',
+                marginBottom: 4,
+                fontWeight: 800,
+              }}
             >
               CRÉATION
             </div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>
+            <div
+              style={{
+                fontSize: 14,
+                fontWeight: 800,
+                background: 'linear-gradient(135deg, #00ff88, #00b866)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+              }}
+            >
               🎵 Nouveau morceau
             </div>
           </div>
@@ -336,9 +394,9 @@ export const MusicGenPage: React.FC = () => {
                   ? 'rgba(0, 255, 136, 0.3)'
                   : 'rgba(255, 51, 102, 0.3)'
               }`,
-              borderRadius: 6,
+              borderRadius: 8,
               fontSize: 9,
-              fontWeight: 700,
+              fontWeight: 800,
               letterSpacing: '0.5px',
               color: isGenerating ? '#00d9ff' : isOnline ? '#00ff88' : '#ff3366',
             }}
@@ -349,7 +407,11 @@ export const MusicGenPage: React.FC = () => {
                 height: 6,
                 borderRadius: '50%',
                 background: isGenerating ? '#00d9ff' : isOnline ? '#00ff88' : '#ff3366',
-                boxShadow: isGenerating ? '0 0 8px #00d9ff' : isOnline ? '0 0 8px #00ff88' : 'none',
+                boxShadow: isGenerating
+                  ? '0 0 8px #00d9ff'
+                  : isOnline
+                  ? '0 0 8px #00ff88'
+                  : 'none',
               }}
             />
             {isGenerating ? 'CALCUL' : isOnline === null ? '...' : isOnline ? 'ONLINE' : 'OFFLINE'}
@@ -369,7 +431,7 @@ export const MusicGenPage: React.FC = () => {
                     ? 'rgba(255, 212, 59, 0.3)'
                     : 'rgba(255, 51, 102, 0.3)'
                 }`,
-                borderRadius: 8,
+                borderRadius: 10,
                 fontSize: 10,
                 color: isProduction() ? '#ffd43b' : '#ff3366',
                 marginBottom: 16,
@@ -378,15 +440,15 @@ export const MusicGenPage: React.FC = () => {
             >
               {isProduction() ? (
                 <>
-                  <div style={{ fontSize: 11, fontWeight: 600, marginBottom: 6 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, marginBottom: 6 }}>
                     ⚠️ Serveur local requis
                   </div>
-                  <div style={{ color: '#888' }}>{LOCAL_SERVER_MESSAGE}</div>
+                  <div style={{ color: 'rgba(255,255,255,0.5)' }}>{LOCAL_SERVER_MESSAGE}</div>
                 </>
               ) : (
                 <>
                   ⚠️ Serveur MusicGen hors ligne.
-                  <div style={{ color: '#888', marginTop: 6 }}>
+                  <div style={{ color: 'rgba(255,255,255,0.5)', marginTop: 6 }}>
                     Lance le serveur avec <strong>start-all.bat</strong>.
                   </div>
                 </>
@@ -395,12 +457,7 @@ export const MusicGenPage: React.FC = () => {
           )}
 
           <div style={{ marginBottom: 16 }}>
-            <div
-              className="label-uppercase"
-              style={{ fontSize: 9, color: '#666', letterSpacing: '1px', marginBottom: 8 }}
-            >
-              STYLE RAPIDE
-            </div>
+            <SectionTitle icon="🎨" title="STYLE RAPIDE" />
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
               {PRESETS.map((p) => (
                 <button
@@ -408,17 +465,21 @@ export const MusicGenPage: React.FC = () => {
                   onClick={() => {
                     setPrompt(p.prompt);
                     setSelectedPreset(p.id);
+                    setWithVocals(p.mode === 'vocal');
                   }}
                   disabled={isGenerating}
                   style={{
-                    padding: '5px 10px',
-                    background: selectedPreset === p.id ? `${p.color}20` : 'var(--bg-1)',
-                    border: `1px solid ${selectedPreset === p.id ? p.color : 'var(--border)'}`,
+                    padding: '6px 10px',
+                    background:
+                      selectedPreset === p.id ? `${p.color}20` : 'rgba(255,255,255,0.03)',
+                    border: `1px solid ${
+                      selectedPreset === p.id ? p.color : 'rgba(255,255,255,0.08)'
+                    }`,
                     borderRadius: 12,
-                    color: selectedPreset === p.id ? p.color : '#ccc',
+                    color: selectedPreset === p.id ? p.color : 'rgba(255,255,255,0.7)',
                     fontSize: 10,
                     cursor: isGenerating ? 'not-allowed' : 'pointer',
-                    fontWeight: selectedPreset === p.id ? 600 : 400,
+                    fontWeight: selectedPreset === p.id ? 700 : 500,
                     transition: 'all 0.15s',
                   }}
                 >
@@ -429,12 +490,7 @@ export const MusicGenPage: React.FC = () => {
           </div>
 
           <div style={{ marginBottom: 16 }}>
-            <div
-              className="label-uppercase"
-              style={{ fontSize: 9, color: '#666', letterSpacing: '1px', marginBottom: 8 }}
-            >
-              DESCRIPTION
-            </div>
+            <SectionTitle icon="✍️" title="DESCRIPTION" />
             <textarea
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
@@ -444,75 +500,218 @@ export const MusicGenPage: React.FC = () => {
               style={{
                 width: '100%',
                 padding: 10,
-                background: 'var(--bg-1)',
-                border: '1px solid var(--border)',
-                borderRadius: 6,
+                background: 'rgba(0,0,0,0.3)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: 10,
                 color: '#fff',
                 fontSize: 11,
                 fontFamily: 'inherit',
                 resize: 'vertical',
                 boxSizing: 'border-box',
                 opacity: isGenerating ? 0.5 : 1,
+                outline: 'none',
               }}
             />
           </div>
 
           <div style={{ marginBottom: 16 }}>
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: 6,
-              }}
-            >
-              <div className="label-uppercase" style={{ fontSize: 9, color: '#666', letterSpacing: '1px' }}>
-                DURÉE
-              </div>
-              <span className="mono" style={{ fontSize: 11, color: '#00ff88', fontWeight: 700 }}>
-                {duration}s
-              </span>
+            <SectionTitle
+              icon="⏱️"
+              title="DURÉE"
+              action={
+                <span
+                  style={{
+                    fontSize: 12,
+                    color: '#00ff88',
+                    fontWeight: 800,
+                    fontFamily: 'monospace',
+                  }}
+                >
+                  {duration}s
+                </span>
+              }
+            />
+            <div style={{ display: 'flex', gap: 6 }}>
+              {DURATION_OPTIONS.map((d) => (
+                <button
+                  key={d}
+                  onClick={() => setDuration(d)}
+                  disabled={isGenerating}
+                  style={{
+                    flex: 1,
+                    padding: '8px 4px',
+                    background:
+                      duration === d
+                        ? 'linear-gradient(135deg, rgba(0,255,136,0.2), rgba(0,184,102,0.05))'
+                        : 'rgba(255,255,255,0.03)',
+                    border: `1px solid ${
+                      duration === d ? '#00ff88' : 'rgba(255,255,255,0.08)'
+                    }`,
+                    borderRadius: 8,
+                    color: duration === d ? '#00ff88' : 'rgba(255,255,255,0.6)',
+                    fontSize: 11,
+                    fontWeight: 700,
+                    cursor: isGenerating ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  {d}s
+                </button>
+              ))}
             </div>
-            <input
-              type="range"
-              min={4}
-              max={30}
-              step={1}
-              value={duration}
-              onChange={(e) => setDuration(parseInt(e.target.value))}
+            {duration > 30 && (
+              <div
+                style={{
+                  fontSize: 9,
+                  color: 'rgba(255,212,59,0.7)',
+                  marginTop: 6,
+                  fontStyle: 'italic',
+                }}
+              >
+                ⚠️ Durées &gt; 30s = génération en plusieurs passes (sliding window)
+              </div>
+            )}
+          </div>
+
+          <div style={{ marginBottom: 16 }}>
+            <SectionTitle icon="🎤" title="VOIX" />
+            <button
+              onClick={() => setWithVocals(!withVocals)}
               disabled={isGenerating}
-              style={{ width: '100%', accentColor: '#00ff88' }}
-            />
-            <div
               style={{
+                width: '100%',
+                padding: '12px 14px',
+                background: withVocals
+                  ? 'linear-gradient(135deg, rgba(255,20,147,0.15), rgba(255,69,0,0.05))'
+                  : 'rgba(255,255,255,0.03)',
+                border: `1px solid ${
+                  withVocals ? '#ff1493' : 'rgba(255,255,255,0.08)'
+                }`,
+                borderRadius: 10,
+                color: withVocals ? '#ff1493' : 'rgba(255,255,255,0.6)',
+                fontSize: 11,
+                fontWeight: 700,
+                cursor: isGenerating ? 'not-allowed' : 'pointer',
                 display: 'flex',
+                alignItems: 'center',
                 justifyContent: 'space-between',
-                fontSize: 8,
-                color: '#666',
-                marginTop: 2,
+                transition: 'all 0.15s',
               }}
             >
-              <span>4s</span>
-              <span>30s</span>
-            </div>
+              <span>{withVocals ? '🎤 AVEC VOIX' : '🎹 INSTRUMENTAL'}</span>
+              <span style={{ fontSize: 9, opacity: 0.7 }}>
+                {withVocals ? 'ON' : 'OFF'}
+              </span>
+            </button>
+
+            {withVocals && (
+              <div style={{ marginTop: 10, display: 'flex', gap: 8 }}>
+                <div style={{ flex: 1 }}>
+                  <div
+                    style={{
+                      fontSize: 9,
+                      color: 'rgba(255,255,255,0.4)',
+                      letterSpacing: '1px',
+                      fontWeight: 700,
+                      marginBottom: 4,
+                    }}
+                  >
+                    TONALITÉ
+                  </div>
+                  <select
+                    value={vocalKey}
+                    onChange={(e) => setVocalKey(e.target.value)}
+                    disabled={isGenerating}
+                    style={{
+                      width: '100%',
+                      padding: '8px 10px',
+                      background: 'rgba(0,0,0,0.3)',
+                      border: '1px solid rgba(255, 20, 147, 0.3)',
+                      borderRadius: 8,
+                      color: '#fff',
+                      fontSize: 11,
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      outline: 'none',
+                    }}
+                  >
+                    <optgroup label="Minor">
+                      <option value="Am">A minor</option>
+                      <option value="Bm">B minor</option>
+                      <option value="Cm">C minor</option>
+                      <option value="Dm">D minor</option>
+                      <option value="Em">E minor</option>
+                      <option value="Fm">F minor</option>
+                      <option value="Gm">G minor</option>
+                    </optgroup>
+                    <optgroup label="Major">
+                      <option value="C">C major</option>
+                      <option value="D">D major</option>
+                      <option value="E">E major</option>
+                      <option value="F">F major</option>
+                      <option value="G">G major</option>
+                      <option value="A">A major</option>
+                      <option value="B">B major</option>
+                    </optgroup>
+                  </select>
+                </div>
+
+                <div style={{ flex: 1 }}>
+                  <div
+                    style={{
+                      fontSize: 9,
+                      color: 'rgba(255,255,255,0.4)',
+                      letterSpacing: '1px',
+                      fontWeight: 700,
+                      marginBottom: 4,
+                    }}
+                  >
+                    VOYELLE
+                  </div>
+                  <select
+                    value={vocalVowel}
+                    onChange={(e) => setVocalVowel(e.target.value as VocalVowel)}
+                    disabled={isGenerating}
+                    style={{
+                      width: '100%',
+                      padding: '8px 10px',
+                      background: 'rgba(0,0,0,0.3)',
+                      border: '1px solid rgba(255, 20, 147, 0.3)',
+                      borderRadius: 8,
+                      color: '#fff',
+                      fontSize: 11,
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      outline: 'none',
+                    }}
+                  >
+                    <option value="ah">Ah (ouvert)</option>
+                    <option value="oh">Oh (rond)</option>
+                    <option value="ooh">Ooh (doux)</option>
+                    <option value="ee">Ee (clair)</option>
+                  </select>
+                </div>
+              </div>
+            )}
           </div>
 
           <div style={{ marginBottom: 16 }}>
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: 6,
-              }}
-            >
-              <div className="label-uppercase" style={{ fontSize: 9, color: '#666', letterSpacing: '1px' }}>
-                CRÉATIVITÉ
-              </div>
-              <span className="mono" style={{ fontSize: 11, color: '#00d9ff', fontWeight: 700 }}>
-                {temperature.toFixed(1)}
-              </span>
-            </div>
+            <SectionTitle
+              icon="🎲"
+              title="CRÉATIVITÉ"
+              action={
+                <span
+                  style={{
+                    fontSize: 12,
+                    color: '#00d9ff',
+                    fontWeight: 800,
+                    fontFamily: 'monospace',
+                  }}
+                >
+                  {temperature.toFixed(1)}
+                </span>
+              }
+            />
             <input
               type="range"
               min={0.3}
@@ -527,8 +726,8 @@ export const MusicGenPage: React.FC = () => {
               style={{
                 display: 'flex',
                 justifyContent: 'space-between',
-                fontSize: 8,
-                color: '#666',
+                fontSize: 9,
+                color: 'rgba(255,255,255,0.4)',
                 marginTop: 2,
               }}
             >
@@ -544,7 +743,7 @@ export const MusicGenPage: React.FC = () => {
                 padding: 12,
                 background: 'rgba(0, 255, 136, 0.05)',
                 border: '1px solid rgba(0, 255, 136, 0.2)',
-                borderRadius: 8,
+                borderRadius: 10,
               }}
             >
               <div
@@ -555,15 +754,20 @@ export const MusicGenPage: React.FC = () => {
                   marginBottom: 8,
                 }}
               >
-                <span style={{ color: '#00ff88', fontWeight: 600 }}>⏳ {status}</span>
-                <span className="mono" style={{ color: '#666' }}>
+                <span style={{ color: '#00ff88', fontWeight: 700 }}>⏳ {status}</span>
+                <span
+                  style={{
+                    color: 'rgba(255,255,255,0.5)',
+                    fontFamily: 'monospace',
+                  }}
+                >
                   {elapsed}s / ~{estimatedTime}s
                 </span>
               </div>
               <div
                 style={{
                   height: 4,
-                  background: 'var(--bg-1)',
+                  background: 'rgba(255,255,255,0.05)',
                   borderRadius: 2,
                   overflow: 'hidden',
                 }}
@@ -574,6 +778,7 @@ export const MusicGenPage: React.FC = () => {
                     width: `${progress}%`,
                     background: 'linear-gradient(90deg, #00ff88, #00b866)',
                     transition: 'width 0.2s linear',
+                    boxShadow: '0 0 10px #00ff88',
                   }}
                 />
               </div>
@@ -584,8 +789,8 @@ export const MusicGenPage: React.FC = () => {
         <div
           style={{
             padding: 16,
-            borderTop: '1px solid var(--border)',
-            background: 'var(--bg-0)',
+            borderTop: '1px solid rgba(255,255,255,0.06)',
+            background: 'rgba(0,0,0,0.2)',
           }}
         >
           <div style={{ display: 'flex', gap: 8 }}>
@@ -596,20 +801,20 @@ export const MusicGenPage: React.FC = () => {
                 flex: 1,
                 padding: '14px 20px',
                 border: 'none',
-                borderRadius: 10,
+                borderRadius: 12,
                 background:
                   isGenerating || isOnline !== true
-                    ? 'var(--bg-2)'
+                    ? 'rgba(255,255,255,0.05)'
                     : 'linear-gradient(135deg, #00ff88, #00b866)',
-                color: isGenerating || isOnline !== true ? '#666' : '#000',
-                fontWeight: 700,
+                color: isGenerating || isOnline !== true ? 'rgba(255,255,255,0.4)' : '#000',
+                fontWeight: 800,
                 fontSize: 12,
                 letterSpacing: '1px',
                 cursor: isGenerating || isOnline !== true ? 'not-allowed' : 'pointer',
                 boxShadow:
                   isGenerating || isOnline !== true
                     ? 'none'
-                    : '0 4px 20px rgba(0, 255, 136, 0.4)',
+                    : '0 6px 24px rgba(0, 255, 136, 0.4)',
                 transition: 'all 0.2s',
               }}
             >
@@ -625,12 +830,13 @@ export const MusicGenPage: React.FC = () => {
                 style={{
                   padding: '14px 16px',
                   border: 'none',
-                  borderRadius: 10,
-                  background: '#ff3366',
+                  borderRadius: 12,
+                  background: 'linear-gradient(135deg, #ff3366, #cc1144)',
                   color: '#fff',
                   fontSize: 12,
-                  fontWeight: 700,
+                  fontWeight: 800,
                   cursor: 'pointer',
+                  boxShadow: '0 6px 20px rgba(255, 51, 102, 0.4)',
                 }}
               >
                 ⏹
@@ -638,7 +844,7 @@ export const MusicGenPage: React.FC = () => {
             )}
           </div>
         </div>
-      </div>
+      </GlassCard>
 
       {/* COLONNE DROITE : LISTE */}
       <div style={{ minWidth: 0 }}>
@@ -653,13 +859,38 @@ export const MusicGenPage: React.FC = () => {
           }}
         >
           <div>
-            <h2 style={{ fontSize: isMobile ? 16 : 20, fontWeight: 700, margin: 0 }}>
-              🎵 <span style={{ color: '#00ff88' }}>Génération IA</span>
+            <h2
+              style={{
+                fontSize: isMobile ? 18 : 22,
+                fontWeight: 800,
+                margin: 0,
+                letterSpacing: '-0.5px',
+              }}
+            >
+              🎵{' '}
+              <span
+                style={{
+                  background: 'linear-gradient(135deg, #00ff88, #00b866)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                }}
+              >
+                GÉNÉRATION IA
+              </span>
             </h2>
-            <p style={{ color: '#888', fontSize: 11, margin: '4px 0 0' }}>
-              MusicGen (Meta) · 100% local · {history.length} morceau{history.length > 1 ? 'x' : ''}
+            <p
+              style={{
+                color: 'rgba(255,255,255,0.4)',
+                fontSize: 10,
+                margin: '6px 0 0',
+                letterSpacing: '1px',
+                fontWeight: 600,
+              }}
+            >
+              MUSICGEN · 100% LOCAL · {history.length} MORCEAU{history.length > 1 ? 'X' : ''}
               {filteredHistory.length !== history.length &&
-                ` · ${filteredHistory.length} affiché${filteredHistory.length > 1 ? 's' : ''}`}
+                ` · ${filteredHistory.length} AFFICHÉ${filteredHistory.length > 1 ? 'S' : ''}`}
             </p>
           </div>
 
@@ -668,12 +899,12 @@ export const MusicGenPage: React.FC = () => {
               onClick={handleClearHistory}
               style={{
                 padding: '6px 12px',
-                background: 'transparent',
+                background: 'rgba(255, 51, 102, 0.08)',
                 border: '1px solid rgba(255, 51, 102, 0.3)',
-                borderRadius: 6,
+                borderRadius: 8,
                 color: '#ff3366',
                 fontSize: 10,
-                fontWeight: 600,
+                fontWeight: 700,
                 cursor: 'pointer',
                 letterSpacing: '0.5px',
               }}
@@ -684,10 +915,9 @@ export const MusicGenPage: React.FC = () => {
         </div>
 
         {history.length > 0 && (
-          <div
-            className="panel"
+          <GlassCard
+            padding={10}
             style={{
-              padding: 10,
               marginBottom: 12,
               display: 'flex',
               gap: 8,
@@ -704,13 +934,14 @@ export const MusicGenPage: React.FC = () => {
                 style={{
                   width: '100%',
                   padding: '8px 30px 8px 12px',
-                  background: 'var(--bg-1)',
-                  border: '1px solid var(--border)',
-                  borderRadius: 6,
+                  background: 'rgba(0,0,0,0.3)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: 8,
                   color: '#fff',
                   fontSize: 11,
                   fontFamily: 'inherit',
                   boxSizing: 'border-box',
+                  outline: 'none',
                 }}
               />
               {searchQuery && (
@@ -723,12 +954,11 @@ export const MusicGenPage: React.FC = () => {
                     transform: 'translateY(-50%)',
                     background: 'transparent',
                     border: 'none',
-                    color: '#666',
+                    color: 'rgba(255,255,255,0.4)',
                     fontSize: 14,
                     cursor: 'pointer',
                     padding: 2,
                   }}
-                  title="Effacer"
                 >
                   ✕
                 </button>
@@ -739,19 +969,18 @@ export const MusicGenPage: React.FC = () => {
               onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
               style={{
                 padding: '8px 12px',
-                background: showFavoritesOnly ? 'rgba(255, 51, 102, 0.15)' : 'var(--bg-1)',
-                border: `1px solid ${showFavoritesOnly ? '#ff3366' : 'var(--border)'}`,
-                borderRadius: 6,
-                color: showFavoritesOnly ? '#ff3366' : '#ccc',
+                background: showFavoritesOnly ? 'rgba(255, 51, 102, 0.15)' : 'rgba(255,255,255,0.03)',
+                border: `1px solid ${showFavoritesOnly ? '#ff3366' : 'rgba(255,255,255,0.08)'}`,
+                borderRadius: 8,
+                color: showFavoritesOnly ? '#ff3366' : 'rgba(255,255,255,0.7)',
                 fontSize: 11,
-                fontWeight: 600,
+                fontWeight: 700,
                 cursor: 'pointer',
                 whiteSpace: 'nowrap',
                 display: 'flex',
                 alignItems: 'center',
                 gap: 6,
               }}
-              title="Afficher uniquement les favoris"
             >
               {showFavoritesOnly ? '❤️' : '🤍'} Favoris
             </button>
@@ -761,12 +990,12 @@ export const MusicGenPage: React.FC = () => {
                 onClick={() => setShowSortMenu(!showSortMenu)}
                 style={{
                   padding: '8px 12px',
-                  background: 'var(--bg-1)',
-                  border: '1px solid var(--border)',
-                  borderRadius: 6,
-                  color: '#ccc',
+                  background: 'rgba(255,255,255,0.03)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: 8,
+                  color: 'rgba(255,255,255,0.7)',
                   fontSize: 11,
-                  fontWeight: 600,
+                  fontWeight: 700,
                   cursor: 'pointer',
                   whiteSpace: 'nowrap',
                   display: 'flex',
@@ -790,13 +1019,14 @@ export const MusicGenPage: React.FC = () => {
                       position: 'absolute',
                       top: 'calc(100% + 4px)',
                       right: 0,
-                      background: '#0d0d14',
-                      border: '1px solid var(--border)',
-                      borderRadius: 6,
+                      background: 'rgba(20,20,30,0.95)',
+                      backdropFilter: 'blur(20px)',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                      borderRadius: 10,
                       minWidth: 140,
                       overflow: 'hidden',
                       zIndex: 51,
-                      boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
+                      boxShadow: '0 8px 32px rgba(0,0,0,0.7)',
                     }}
                   >
                     {SORT_OPTIONS.map((opt) => (
@@ -812,13 +1042,14 @@ export const MusicGenPage: React.FC = () => {
                           gap: 8,
                           width: '100%',
                           padding: '8px 12px',
-                          background: sortBy === opt.value ? 'rgba(0, 255, 136, 0.1)' : 'transparent',
+                          background:
+                            sortBy === opt.value ? 'rgba(0, 255, 136, 0.1)' : 'transparent',
                           border: 'none',
-                          color: sortBy === opt.value ? '#00ff88' : '#ccc',
+                          color: sortBy === opt.value ? '#00ff88' : 'rgba(255,255,255,0.7)',
                           fontSize: 11,
                           cursor: 'pointer',
                           textAlign: 'left',
-                          fontWeight: sortBy === opt.value ? 600 : 400,
+                          fontWeight: sortBy === opt.value ? 700 : 500,
                         }}
                       >
                         {opt.icon} {opt.label}
@@ -829,27 +1060,25 @@ export const MusicGenPage: React.FC = () => {
                 </>
               )}
             </div>
-          </div>
+          </GlassCard>
         )}
 
         {history.length === 0 && !isGenerating && (
-          <div
-            className="panel"
+          <GlassCard
+            padding={isMobile ? 32 : 48}
             style={{
-              padding: isMobile ? 32 : 48,
               textAlign: 'center',
               borderStyle: 'dashed',
-              borderColor: 'rgba(0, 255, 136, 0.2)',
             }}
           >
             <div style={{ fontSize: isMobile ? 48 : 64, marginBottom: 16 }}>🎵</div>
-            <div style={{ fontSize: 15, color: '#fff', fontWeight: 600, marginBottom: 8 }}>
+            <div style={{ fontSize: 15, color: '#fff', fontWeight: 700, marginBottom: 8 }}>
               Aucun morceau pour le moment
             </div>
             <div
               style={{
                 fontSize: 12,
-                color: '#888',
+                color: 'rgba(255,255,255,0.5)',
                 maxWidth: 400,
                 margin: '0 auto',
                 lineHeight: 1.6,
@@ -858,24 +1087,16 @@ export const MusicGenPage: React.FC = () => {
               Choisis un style dans le panneau, décris ce que tu veux, puis clique sur{' '}
               <strong style={{ color: '#00ff88' }}>GÉNÉRER</strong>.
             </div>
-          </div>
+          </GlassCard>
         )}
 
         {history.length > 0 && filteredHistory.length === 0 && (
-          <div
-            className="panel"
-            style={{
-              padding: 32,
-              textAlign: 'center',
-              borderStyle: 'dashed',
-              borderColor: 'rgba(255, 212, 59, 0.3)',
-            }}
-          >
+          <GlassCard padding={32} style={{ textAlign: 'center', borderStyle: 'dashed' }}>
             <div style={{ fontSize: 48, marginBottom: 12 }}>🔍</div>
-            <div style={{ fontSize: 13, color: '#ffd43b', fontWeight: 600, marginBottom: 6 }}>
+            <div style={{ fontSize: 13, color: '#ffd43b', fontWeight: 700, marginBottom: 6 }}>
               Aucun résultat
             </div>
-            <div style={{ fontSize: 11, color: '#888', marginBottom: 16 }}>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 16 }}>
               {showFavoritesOnly
                 ? 'Aucun favori ne correspond à ta recherche.'
                 : 'Aucun morceau ne correspond à ta recherche.'}
@@ -885,12 +1106,20 @@ export const MusicGenPage: React.FC = () => {
                 setSearchQuery('');
                 setShowFavoritesOnly(false);
               }}
-              className="btn-action"
-              style={{ fontSize: 11 }}
+              style={{
+                padding: '8px 16px',
+                background: 'rgba(0, 217, 255, 0.1)',
+                border: '1px solid rgba(0, 217, 255, 0.3)',
+                borderRadius: 8,
+                color: '#00d9ff',
+                fontSize: 11,
+                fontWeight: 700,
+                cursor: 'pointer',
+              }}
             >
               🔄 Réinitialiser les filtres
             </button>
-          </div>
+          </GlassCard>
         )}
 
         <div style={{ display: 'grid', gap: 12 }}>
@@ -899,7 +1128,8 @@ export const MusicGenPage: React.FC = () => {
             const isEditing = editingId === h.id;
             const isTranscribing = transcribingId === h.id;
             const isMidiJustExtracted = midiSuccess?.id === h.id;
-            const isNewest = index === 0 && sortBy === 'recent' && !searchQuery && !showFavoritesOnly;
+            const isNewest =
+              index === 0 && sortBy === 'recent' && !searchQuery && !showFavoritesOnly;
             const date = new Date(h.timestamp);
             const dateStr = date.toLocaleString('fr-FR', {
               day: '2-digit',
@@ -909,22 +1139,16 @@ export const MusicGenPage: React.FC = () => {
             });
 
             return (
-              <div
+              <GlassCard
                 key={h.id}
-                className="panel"
+                padding={14}
+                glow={isMidiJustExtracted ? '#7c5cff' : isNewest ? '#00ff88' : undefined}
                 style={{
-                  padding: 14,
-                  border: isMidiJustExtracted
-                    ? '1px solid rgba(124, 92, 255, 0.5)'
+                  borderColor: isMidiJustExtracted
+                    ? 'rgba(124, 92, 255, 0.5)'
                     : isNewest && !isGenerating
-                    ? '1px solid rgba(0, 255, 136, 0.3)'
-                    : '1px solid var(--border)',
-                  background: isMidiJustExtracted
-                    ? 'linear-gradient(135deg, rgba(124, 92, 255, 0.08), transparent)'
-                    : isNewest && !isGenerating
-                    ? 'linear-gradient(135deg, rgba(0, 255, 136, 0.03), transparent)'
+                    ? 'rgba(0, 255, 136, 0.3)'
                     : undefined,
-                  transition: 'all 0.2s',
                 }}
               >
                 <div
@@ -940,18 +1164,18 @@ export const MusicGenPage: React.FC = () => {
                     style={{
                       width: isMobile ? 32 : 36,
                       height: isMobile ? 32 : 36,
-                      borderRadius: 8,
+                      borderRadius: 10,
                       background: isMidiJustExtracted
                         ? 'rgba(124, 92, 255, 0.15)'
                         : isNewest && !isGenerating
                         ? 'rgba(0, 255, 136, 0.15)'
-                        : 'var(--bg-1)',
+                        : 'rgba(255,255,255,0.04)',
                       border: `1px solid ${
                         isMidiJustExtracted
                           ? 'rgba(124, 92, 255, 0.5)'
                           : isNewest && !isGenerating
                           ? 'rgba(0, 255, 136, 0.4)'
-                          : 'var(--border)'
+                          : 'rgba(255,255,255,0.08)'
                       }`,
                       display: 'flex',
                       alignItems: 'center',
@@ -962,8 +1186,8 @@ export const MusicGenPage: React.FC = () => {
                         ? '#7c5cff'
                         : isNewest && !isGenerating
                         ? '#00ff88'
-                        : '#888',
-                      fontWeight: 700,
+                        : 'rgba(255,255,255,0.4)',
+                      fontWeight: 800,
                     }}
                   >
                     {isMidiJustExtracted ? '🎼' : isNewest && !isGenerating ? '★' : index + 1}
@@ -971,7 +1195,14 @@ export const MusicGenPage: React.FC = () => {
 
                   <div style={{ flex: 1, minWidth: 0 }}>
                     {isEditing ? (
-                      <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 4 }}>
+                      <div
+                        style={{
+                          display: 'flex',
+                          gap: 6,
+                          alignItems: 'center',
+                          marginBottom: 4,
+                        }}
+                      >
                         <input
                           type="text"
                           value={editingTitle}
@@ -985,9 +1216,9 @@ export const MusicGenPage: React.FC = () => {
                           style={{
                             flex: 1,
                             padding: '4px 8px',
-                            background: 'var(--bg-1)',
+                            background: 'rgba(0,0,0,0.3)',
                             border: '1px solid #00ff88',
-                            borderRadius: 4,
+                            borderRadius: 6,
                             color: '#fff',
                             fontSize: isMobile ? 11 : 12,
                             fontFamily: 'inherit',
@@ -1001,13 +1232,12 @@ export const MusicGenPage: React.FC = () => {
                             padding: '4px 8px',
                             background: '#00ff88',
                             border: 'none',
-                            borderRadius: 4,
+                            borderRadius: 6,
                             color: '#000',
                             fontSize: 10,
-                            fontWeight: 700,
+                            fontWeight: 800,
                             cursor: 'pointer',
                           }}
-                          title="Enregistrer"
                         >
                           ✓
                         </button>
@@ -1016,13 +1246,12 @@ export const MusicGenPage: React.FC = () => {
                           style={{
                             padding: '4px 8px',
                             background: 'transparent',
-                            border: '1px solid var(--border)',
-                            borderRadius: 4,
-                            color: '#888',
+                            border: '1px solid rgba(255,255,255,0.1)',
+                            borderRadius: 6,
+                            color: 'rgba(255,255,255,0.5)',
                             fontSize: 10,
                             cursor: 'pointer',
                           }}
-                          title="Annuler"
                         >
                           ✕
                         </button>
@@ -1037,13 +1266,12 @@ export const MusicGenPage: React.FC = () => {
                           cursor: 'pointer',
                           marginBottom: 4,
                         }}
-                        title="Clique pour renommer"
                       >
                         <div
                           style={{
                             fontSize: isMobile ? 11 : 12,
                             color: '#fff',
-                            fontWeight: 600,
+                            fontWeight: 700,
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
                             whiteSpace: 'nowrap',
@@ -1056,8 +1284,7 @@ export const MusicGenPage: React.FC = () => {
                         <span
                           style={{
                             fontSize: 10,
-                            color: '#666',
-                            opacity: 0.6,
+                            color: 'rgba(255,255,255,0.3)',
                             flexShrink: 0,
                           }}
                         >
@@ -1070,7 +1297,7 @@ export const MusicGenPage: React.FC = () => {
                       <div
                         style={{
                           fontSize: 9,
-                          color: '#666',
+                          color: 'rgba(255,255,255,0.4)',
                           fontStyle: 'italic',
                           overflow: 'hidden',
                           textOverflow: 'ellipsis',
@@ -1087,8 +1314,8 @@ export const MusicGenPage: React.FC = () => {
                         display: 'flex',
                         gap: 10,
                         fontSize: 9,
-                        color: '#666',
-                        fontFamily: 'var(--font-mono)',
+                        color: 'rgba(255,255,255,0.4)',
+                        fontFamily: 'monospace',
                         flexWrap: 'wrap',
                       }}
                     >
@@ -1097,14 +1324,13 @@ export const MusicGenPage: React.FC = () => {
                       <span>⚡ {h.generationTime}s</span>
                     </div>
 
-                    {/* Status de transcription */}
                     {isTranscribing && (
                       <div
                         style={{
                           marginTop: 6,
                           fontSize: 10,
                           color: '#7c5cff',
-                          fontWeight: 600,
+                          fontWeight: 700,
                           display: 'flex',
                           alignItems: 'center',
                           gap: 6,
@@ -1124,14 +1350,13 @@ export const MusicGenPage: React.FC = () => {
                       </div>
                     )}
 
-                    {/* Succès MIDI */}
                     {isMidiJustExtracted && midiSuccess && (
                       <div
                         style={{
                           marginTop: 6,
                           fontSize: 10,
                           color: '#7c5cff',
-                          fontWeight: 600,
+                          fontWeight: 700,
                         }}
                       >
                         ✅ {midiSuccess.count} notes extraites · MIDI téléchargé
@@ -1148,172 +1373,108 @@ export const MusicGenPage: React.FC = () => {
                       justifyContent: 'flex-end',
                     }}
                   >
-                    {/* 🎼 EXTRAIRE MIDI */}
-                    <button
-                      onClick={() => handleExtractMidi(h)}
-                      disabled={isTranscribing || !!transcribingId}
-                      style={{
-                        width: isMobile ? 28 : 32,
-                        height: isMobile ? 28 : 32,
-                        borderRadius: 6,
-                        border: '1px solid rgba(124, 92, 255, 0.3)',
-                        background: isMidiJustExtracted
-                          ? 'rgba(124, 92, 255, 0.2)'
-                          : 'rgba(124, 92, 255, 0.05)',
+                    {[
+                      {
+                        onClick: () => handleExtractMidi(h),
+                        icon: isTranscribing ? '⏳' : '🎼',
                         color: '#7c5cff',
-                        fontSize: 14,
-                        cursor: isTranscribing ? 'wait' : 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        opacity: transcribingId && !isTranscribing ? 0.4 : 1,
-                      }}
-                      title="Extraire les notes MIDI (Basic Pitch)"
-                    >
-                      {isTranscribing ? '⏳' : '🎼'}
-                    </button>
-
-                    <button
-                      onClick={() => handleTransfer(h, 'studio')}
-                      disabled={isTranscribing}
-                      style={{
-                        width: isMobile ? 28 : 32,
-                        height: isMobile ? 28 : 32,
-                        borderRadius: 6,
-                        border: '1px solid rgba(0, 217, 255, 0.3)',
-                        background: 'rgba(0, 217, 255, 0.05)',
+                        title: 'Extraire MIDI (Basic Pitch)',
+                        disabled: isTranscribing || !!transcribingId,
+                      },
+                      {
+                        onClick: () => handleTransfer(h, 'studio'),
+                        icon: '🎹',
                         color: '#00d9ff',
-                        fontSize: 14,
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        opacity: isTranscribing ? 0.4 : 1,
-                      }}
-                      title="Envoyer au Studio"
-                    >
-                      🎹
-                    </button>
-                    <button
-                      onClick={() => handleTransfer(h, 'mastering')}
-                      disabled={isTranscribing}
-                      style={{
-                        width: isMobile ? 28 : 32,
-                        height: isMobile ? 28 : 32,
-                        borderRadius: 6,
-                        border: '1px solid rgba(124, 92, 255, 0.3)',
-                        background: 'rgba(124, 92, 255, 0.05)',
+                        title: 'Envoyer au Studio',
+                        disabled: isTranscribing,
+                      },
+                      {
+                        onClick: () => handleTransfer(h, 'mastering'),
+                        icon: '🎚️',
                         color: '#7c5cff',
-                        fontSize: 14,
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        opacity: isTranscribing ? 0.4 : 1,
-                      }}
-                      title="Envoyer au Mastering"
-                    >
-                      🎚️
-                    </button>
-                    <button
-                      onClick={() => toggleFavorite(h.id)}
-                      disabled={isTranscribing}
-                      style={{
-                        width: isMobile ? 28 : 32,
-                        height: isMobile ? 28 : 32,
-                        borderRadius: 6,
-                        border: '1px solid var(--border)',
-                        background: isFav ? 'rgba(255, 51, 102, 0.1)' : 'transparent',
-                        color: isFav ? '#ff3366' : '#666',
-                        fontSize: 14,
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        opacity: isTranscribing ? 0.4 : 1,
-                      }}
-                      title={isFav ? 'Retirer des favoris' : 'Ajouter aux favoris'}
-                    >
-                      {isFav ? '❤️' : '🤍'}
-                    </button>
-                    <button
-                      onClick={() => handleDownload(h.audioUrl, `musicgen-${h.id}.wav`)}
-                      disabled={isTranscribing}
-                      style={{
-                        width: isMobile ? 28 : 32,
-                        height: isMobile ? 28 : 32,
-                        borderRadius: 6,
-                        border: '1px solid var(--border)',
-                        background: 'transparent',
+                        title: 'Envoyer au Mastering',
+                        disabled: isTranscribing,
+                      },
+                      {
+                        onClick: () => toggleFavorite(h.id),
+                        icon: isFav ? '❤️' : '🤍',
+                        color: isFav ? '#ff3366' : 'rgba(255,255,255,0.5)',
+                        title: isFav ? 'Retirer favori' : 'Ajouter favori',
+                        disabled: isTranscribing,
+                      },
+                      {
+                        onClick: () => handleDownload(h.audioUrl, `musicgen-${h.id}.wav`),
+                        icon: '💾',
                         color: '#00ff88',
-                        fontSize: 14,
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        opacity: isTranscribing ? 0.4 : 1,
-                      }}
-                      title="Télécharger WAV"
-                    >
-                      💾
-                    </button>
-                    <button
-                      onClick={() => handleDelete(h.id)}
-                      disabled={isTranscribing}
-                      style={{
-                        width: isMobile ? 28 : 32,
-                        height: isMobile ? 28 : 32,
-                        borderRadius: 6,
-                        border: '1px solid rgba(255, 51, 102, 0.3)',
-                        background: 'transparent',
+                        title: 'Télécharger WAV',
+                        disabled: isTranscribing,
+                      },
+                      {
+                        onClick: () => handleDelete(h.id),
+                        icon: '✕',
                         color: '#ff3366',
-                        fontSize: 14,
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        opacity: isTranscribing ? 0.4 : 1,
-                      }}
-                      title="Supprimer"
-                    >
-                      ✕
-                    </button>
+                        title: 'Supprimer',
+                        disabled: isTranscribing,
+                      },
+                    ].map((btn, i) => (
+                      <button
+                        key={i}
+                        onClick={btn.onClick}
+                        disabled={btn.disabled}
+                        style={{
+                          width: isMobile ? 28 : 32,
+                          height: isMobile ? 28 : 32,
+                          borderRadius: 8,
+                          border: `1px solid ${btn.color}33`,
+                          background: `${btn.color}10`,
+                          color: btn.color,
+                          fontSize: 14,
+                          cursor: btn.disabled ? 'wait' : 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          opacity: btn.disabled ? 0.4 : 1,
+                          transition: 'all 0.15s',
+                        }}
+                        title={btn.title}
+                      >
+                        {btn.icon}
+                      </button>
+                    ))}
                   </div>
                 </div>
 
                 <AudioPlayer src={h.audioUrl} color="#00ff88" compact />
-              </div>
+              </GlassCard>
             );
           })}
         </div>
 
         {isGenerating && (
-          <div
-            className="panel"
+          <GlassCard
+            padding={isMobile ? 16 : 20}
+            glow="#00d9ff"
             style={{
               marginTop: 12,
-              padding: isMobile ? 16 : 20,
-              borderStyle: 'dashed',
-              borderColor: 'rgba(0, 217, 255, 0.3)',
               textAlign: 'center',
-              background: 'linear-gradient(135deg, rgba(0, 217, 255, 0.03), transparent)',
+              borderStyle: 'dashed',
             }}
           >
             <div style={{ fontSize: 24, marginBottom: 8 }}>🎵</div>
-            <div style={{ fontSize: 12, color: '#00d9ff', fontWeight: 600 }}>
+            <div style={{ fontSize: 12, color: '#00d9ff', fontWeight: 700 }}>
               Génération en cours... {Math.floor(progress)}%
             </div>
             <div
               style={{
                 fontSize: 10,
-                color: '#666',
+                color: 'rgba(255,255,255,0.4)',
                 marginTop: 4,
-                fontFamily: 'var(--font-mono)',
+                fontFamily: 'monospace',
               }}
             >
               {elapsed}s / ~{estimatedTime}s
             </div>
-          </div>
+          </GlassCard>
         )}
       </div>
 

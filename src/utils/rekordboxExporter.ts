@@ -19,27 +19,41 @@ export interface RekordboxTrack {
 }
 
 // ============================================================
-// ✅ Convertit un chemin Windows en URL file:// valide
-// D:\Musics\House Music\file.mp3
-//   → file:///D:/Musics/House%20Music/file.mp3
+// ✅ Conversion chemin Windows → URL file:// valide
+// D:\Musics\House\file.mp3
+//   → file:///D:/Musics/House/file.mp3
+// ⚠️ NE PAS encoder le ":" du disque (D:)
 // ============================================================
 function toFileUrl(path: string): string {
-  // 1. Normalise les backslashes en slashes
-  const normalized = path.replace(/\\/g, '/');
+  // Normalise les backslashes
+  let normalized = path.replace(/\\/g, '/');
 
-  // 2. Encode chaque segment (préserve les slashes et le : du disque)
-  const encoded = normalized
+  // Retire le "file:///" s'il est déjà présent
+  normalized = normalized.replace(/^file:\/\/\/?/, '');
+
+  // Sépare le nom de disque (D:) du reste
+  const driveMatch = normalized.match(/^([A-Za-z]):/);
+  let drive = '';
+  let rest = normalized;
+  if (driveMatch) {
+    drive = driveMatch[1] + ':';   // garde "D:" tel quel
+    rest = normalized.slice(drive.length).replace(/^\/+/, '');
+  }
+
+  // Encode chaque segment (sauf le disque)
+  const encodedRest = rest
     .split('/')
+    .filter((seg) => seg.length > 0)
     .map((seg) => encodeURIComponent(seg))
     .join('/');
 
-  // 3. Format Windows : file:///D:/...  (3 slashes, pas de host)
-  return `file:///${encoded}`;
+  // Assemble : file:///D:/Musics/...
+  return `file:///${drive}/${encodedRest}`;
 }
 
-/**
- * Génère un XML compatible Rekordbox 6 pour l'import de tracks + cue points.
- */
+// ============================================================
+// Génération du XML Rekordbox
+// ============================================================
 export function generateRekordboxXML(tracks: RekordboxTrack[]): string {
   const tracksXml = tracks
     .map((track, idx) => {
@@ -56,8 +70,10 @@ export function generateRekordboxXML(tracks: RekordboxTrack[]): string {
         ? `<POSITION_MARK Name="Loop" Type="4" Start="${track.loop.start.toFixed(3)}" End="${track.loop.end.toFixed(3)}" Num="-1"/>`
         : '';
 
-      // ✅ Utilise toFileUrl pour un chemin valide
       const fileUrl = toFileUrl(track.filePath);
+
+      // ✅ Log pour debug
+      console.log('🔍 Chemin généré :', fileUrl);
 
       return `      <TRACK TrackID="${trackId}" Name="${escapeXml(track.name)}" Artist="${escapeXml(track.artist || '')}" Kind="MP3 File" Size="0" TotalTime="${Math.floor(track.duration)}" AverageBpm="${track.bpm.toFixed(2)}" Tonality="${track.key}" Location="${escapeXml(fileUrl)}">
         <TEMPO Inizio="0.000" Bpm="${track.bpm.toFixed(2)}" Metro="4/4" Battito="1"/>
@@ -107,9 +123,6 @@ function hexToB(hex: string): string {
   return String(parseInt(c.substring(4, 6), 16));
 }
 
-/**
- * Télécharge un fichier XML
- */
 export function downloadRekordboxXML(
   tracks: RekordboxTrack[],
   filename?: string

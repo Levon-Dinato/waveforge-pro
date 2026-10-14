@@ -2,6 +2,9 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AudioEngineProvider } from './contexts/AudioEngineContext';
+import { AuthProvider } from './contexts/AuthContext';
+import { PlayerProvider } from './contexts/PlayerContext';
+import { ToastProvider } from './components/ui/Toast';
 import { MainLayout } from './layouts/MainLayout';
 import './styles.css';
 
@@ -29,14 +32,23 @@ const VideoPage = lazy(() =>
 const CDJPage = lazy(() =>
   import('./pages/CDJPage').then((m) => ({ default: m.CDJPage }))
 );
-const MixerPage = lazy(() =>
-  import('./pages/MixerPage').then((m) => ({ default: m.MixerPage }))
-);
 const HelpPage = lazy(() =>
   import('./pages/HelpPage').then((m) => ({ default: m.HelpPage }))
 );
 const SettingsPage = lazy(() =>
   import('./pages/SettingsPage').then((m) => ({ default: m.SettingsPage }))
+);
+const NouveautesPage = lazy(() =>
+  import('./pages/NouveautesPage').then((m) => ({ default: m.NouveautesPage }))
+);
+const AuthPage = lazy(() =>
+  import('./pages/AuthPage').then((m) => ({ default: m.AuthPage }))
+);
+const ResetPasswordPage = lazy(() =>
+  import('./pages/ResetPasswordPage').then((m) => ({ default: m.ResetPasswordPage }))
+);
+const ProfilePage = lazy(() =>
+  import('./pages/ProfilePage').then((m) => ({ default: m.ProfilePage }))
 );
 
 const PageLoader = () => (
@@ -80,26 +92,35 @@ const PageLoader = () => (
 
 export default function App() {
   return (
-    <AudioEngineProvider>
-      <BrowserRouter>
-        <Suspense fallback={<PageLoader />}>
-          <Routes>
-            <Route path="/" element={<MainLayout />}>
-              <Route index element={<HomePage />} />
-              <Route path="studio" element={<StudioPage />} />
-              <Route path="stems" element={<StemsPage />} />
-              <Route path="mastering" element={<MasteringPage />} />
-              <Route path="musicgen" element={<MusicGenPage />} />
-              <Route path="generator" element={<GeneratorPage />} />
-              <Route path="video" element={<VideoPage />} />
-              <Route path="cdj" element={<CDJPage />} />
-              <Route path="mixer" element={<MixerPage />} />
-              <Route path="help" element={<HelpPage />} />
-              <Route path="settings" element={<SettingsPage />} />
-            </Route>
-          </Routes>
-        </Suspense>
-      </BrowserRouter>
-    </AudioEngineProvider>
+    <ToastProvider>
+      <AuthProvider>
+        <PlayerProvider>
+          <AudioEngineProvider>
+            <BrowserRouter>
+              <Suspense fallback={<PageLoader />}>
+                <Routes>
+                  <Route path="/" element={<MainLayout />}>
+                    <Route index element={<HomePage />} />
+                    <Route path="studio" element={<StudioPage />} />
+                    <Route path="stems" element={<StemsPage />} />
+                    <Route path="mastering" element={<MasteringPage />} />
+                    <Route path="musicgen" element={<MusicGenPage />} />
+                    <Route path="generator" element={<GeneratorPage />} />
+                    <Route path="video" element={<VideoPage />} />
+                    <Route path="cdj" element={<CDJPage />} />
+                    <Route path="help" element={<HelpPage />} />
+                    <Route path="settings" element={<SettingsPage />} />
+                    <Route path="nouveautes" element={<NouveautesPage />} />
+                    <Route path="auth" element={<AuthPage />} />
+                    <Route path="reset-password" element={<ResetPasswordPage />} />
+                    <Route path="profil/:userId" element={<ProfilePage />} />
+                  </Route>
+                </Routes>
+              </Suspense>
+            </BrowserRouter>
+          </AudioEngineProvider>
+        </PlayerProvider>
+      </AuthProvider>
+    </ToastProvider>
   );
 }

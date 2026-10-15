@@ -6,7 +6,7 @@ import { SpectrumVisualizer } from '../components/SpectrumVisualizer';
 import { useAudioEngineContext } from '../contexts/AudioEngineContext';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { audioTransfer } from '../utils/audioTransfer';
-import type { MasteringChain } from '../audio/masteringChain';
+import type { MasteringChain, MasteringPreset } from '../audio/masteringChain';
 
 interface MasteredExport {
   id: string;
@@ -22,10 +22,10 @@ const PRESET_INFO: Record<
   string,
   { name: string; description: string; color: string; values: string }
 > = {
-  warm: { name: 'WARM', description: 'Chaud et chaleureux', color: '#ffb800', values: '+2dB · -1dB · 1.1x · 12%' },
-  balanced: { name: 'BALANCED', description: 'Neutre et équilibré', color: '#00d9ff', values: '0dB · 0dB · 1.0x · 8%' },
-  open: { name: 'OPEN', description: 'Aérien et large', color: '#00ff88', values: '-1dB · +2.5dB · 1.3x · 5%' },
-  master: { name: 'MASTER', description: 'Neutre (fichiers déjà masterisés)', color: '#888', values: '0dB · 0dB · 1.0x · 0%' },
+  warm: { name: 'WARM', description: 'Chaud et chaleureux', color: '#ffb800', values: '+5dB · -1dB · 1.4x · 50%' },
+  balanced: { name: 'BALANCED', description: 'Neutre et équilibré', color: '#00d9ff', values: '+4dB · +2dB · 1.3x · 35%' },
+  open: { name: 'OPEN', description: 'Aérien et large', color: '#00ff88', values: '+5dB · +5dB · 1.6x · 25%' },
+  master: { name: 'MASTER', description: 'Neutre (fichiers déjà masterisés)', color: '#888', values: '+1dB · +1dB · 1.1x · 10%' },
 };
 
 export const MasteringPage: React.FC = () => {
@@ -34,7 +34,7 @@ export const MasteringPage: React.FC = () => {
   const hasAudio = !!engine.audioBuffer;
 
   const [presetIntensity, setPresetIntensity] = useState(100);
-  const [activePreset, setActivePreset] = useState<string>('balanced');
+  const [activePreset, setActivePreset] = useState<string>('warm');
   const [abMode, setAbMode] = useState<'original' | 'mastered'>('original');
   const [isPlayingAB, setIsPlayingAB] = useState(false);
   const [abAnalyser, setAbAnalyser] = useState<AnalyserNode | null>(null);
@@ -43,6 +43,28 @@ export const MasteringPage: React.FC = () => {
   const sourceRef = useRef<AudioBufferSourceNode | null>(null);
   const chainRef = useRef<MasteringChain | null>(null);
   const tapAnalyserRef = useRef<AnalyserNode | null>(null);
+
+  // ✅ Callback STABLE
+  const handleChainReady = useCallback((chain: MasteringChain | null) => {
+    chainRef.current = chain;
+    console.log('✅ Chain ready:', chain ? 'OK' : 'NULLE');
+  }, []);
+
+  // ✅ Applique un preset depuis l'UI de gauche
+  const handlePresetClick = useCallback((key: string) => {
+    setActivePreset(key);
+    const chain = chainRef.current;
+    if (chain) {
+      try {
+        chain.applyPreset(key as MasteringPreset);
+        console.log('🎨 Preset appliqué à la chaîne:', key);
+      } catch (e) {
+        console.error('❌ Erreur applyPreset:', e);
+      }
+    } else {
+      console.warn('⚠️ Chain NULLE — preset non appliqué');
+    }
+  }, []);
 
   useEffect(() => {
     try {
@@ -74,6 +96,9 @@ export const MasteringPage: React.FC = () => {
     localStorage.setItem('waveforge-mastering-exports', JSON.stringify(list));
   };
 
+  // ============================================================
+  // HANDLE PLAY A/B
+  // ============================================================
   const handlePlayAB = useCallback(() => {
     if (!engine.audioBuffer || !engine.audioContext) return;
     const ctx = engine.audioContext;
@@ -82,8 +107,6 @@ export const MasteringPage: React.FC = () => {
       try { sourceRef.current.stop(); } catch {}
       sourceRef.current = null;
     }
-
-    // Déconnecte l'ancien tap analyser
     if (tapAnalyserRef.current) {
       try { tapAnalyserRef.current.disconnect(); } catch {}
       tapAnalyserRef.current = null;
@@ -92,32 +115,34 @@ export const MasteringPage: React.FC = () => {
     const source = ctx.createBufferSource();
     source.buffer = engine.audioBuffer;
 
-    if (chainRef.current) {
-      const chainInput = chainRef.current.getInputNode();
-      const chainOutput = chainRef.current.getOutputNode();
+    const analyser = ctx.createAnalyser();
+    analyser.fftSize = 2048;
+    analyser.smoothingTimeConstant = 0.82;
 
-      // Source → entrée de la chaîne
+    const chain = chainRef.current;
+    console.log('🎬 handlePlayAB | abMode:', abMode, '| chain:', chain ? 'PRÉSENTE' : 'NULLE');
+
+    if (abMode === 'mastered' && chain) {
+      try {
+        chain.applyPreset(activePreset as MasteringPreset);
+        console.log('🎨 Preset appliqué au play:', activePreset);
+      } catch (e) { console.warn(e); }
+
+      const chainInput = chain.getInputNode();
+      const chainOutput = chain.getOutputNode();
+
       source.connect(chainInput);
-      console.log('🔌 Source connectée à la chaîne de mastering');
-
-      // ✅ Tap analyser sur la SORTIE de la chaîne (pour le Spectrum)
-      const analyser = ctx.createAnalyser();
-      analyser.fftSize = 2048;
-      analyser.smoothingTimeConstant = 0.82;
       chainOutput.connect(analyser);
-      tapAnalyserRef.current = analyser;
-      setAbAnalyser(analyser);
+      analyser.connect(ctx.destination);
+      console.log('🔌 Mode MASTERED : Source → Chaîne → Analyser → Destination');
     } else {
-      // Pas de chaîne → lecture directe
-      const analyser = ctx.createAnalyser();
-      analyser.fftSize = 2048;
-      analyser.smoothingTimeConstant = 0.82;
       source.connect(analyser);
       analyser.connect(ctx.destination);
-      tapAnalyserRef.current = analyser;
-      setAbAnalyser(analyser);
-      console.warn('⚠️ Pas de chaîne, lecture directe');
+      console.log('🔌 Mode ORIGINAL : Source → Analyser → Destination (bypass)');
     }
+
+    tapAnalyserRef.current = analyser;
+    setAbAnalyser(analyser);
 
     source.start(0);
     sourceRef.current = source;
@@ -132,7 +157,7 @@ export const MasteringPage: React.FC = () => {
         tapAnalyserRef.current = null;
       }
     };
-  }, [engine]);
+  }, [engine, abMode, activePreset]);
 
   const handleStopAB = useCallback(() => {
     if (sourceRef.current) {
@@ -192,7 +217,7 @@ export const MasteringPage: React.FC = () => {
             </span>
           </h2>
           <p style={{ color: '#888', fontSize: 11, margin: 0 }}>
-            Chaîne complète : EQ 5 bandes · Mono-Maker · Vector Scope · Limiteur · Export WAV
+            Chaîne complète : EQ 5 bandes · Compresseur · Exciter · Sub-Bass · Limiteur · Export WAV
           </p>
         </div>
 
@@ -271,8 +296,8 @@ export const MasteringPage: React.FC = () => {
         </div>
       )}
 
-      {/* INTERFACE */}
-      {hasAudio && (
+      {/* INTERFACE — cache le contenu sans démonter les composants */}
+      <div style={{ display: hasAudio ? 'contents' : 'none' }}>
         <>
           {/* A/B + INTENSITÉ */}
           <div
@@ -389,19 +414,6 @@ export const MasteringPage: React.FC = () => {
                 onChange={(e) => setPresetIntensity(parseInt(e.target.value))}
                 style={{ width: '100%', accentColor: '#7c5cff' }}
               />
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  fontSize: 8,
-                  color: '#666',
-                  marginTop: 2,
-                }}
-              >
-                <span>0%</span>
-                <span>50%</span>
-                <span>100%</span>
-              </div>
             </div>
           </div>
 
@@ -470,7 +482,6 @@ export const MasteringPage: React.FC = () => {
                 top: isMobile ? 'auto' : 20,
               }}
             >
-              {/* Fichier source */}
               <div className="panel" style={{ padding: 16 }}>
                 <div
                   className="label-uppercase"
@@ -519,32 +530,6 @@ export const MasteringPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Chaîne */}
-              <div
-                className="panel"
-                style={{
-                  padding: 16,
-                  borderColor: 'rgba(124, 92, 255, 0.2)',
-                  background: 'linear-gradient(135deg, rgba(124, 92, 255, 0.03), transparent)',
-                }}
-              >
-                <div
-                  className="label-uppercase"
-                  style={{ fontSize: 10, color: '#7c5cff', marginBottom: 12, letterSpacing: '1px' }}
-                >
-                  ⚙️ CHAÎNE DE TRAITEMENT
-                </div>
-                <div style={{ display: 'grid', gap: 6, fontSize: 11 }}>
-                  <ChainStep icon="🎛️" label="EQ 5 bandes" />
-                  <ChainStep icon="📊" label="Compression" />
-                  <ChainStep icon="🔥" label="Saturation" />
-                  <ChainStep icon="🌌" label="Stéréo Widener" />
-                  <ChainStep icon="🎵" label="Mono-Maker" />
-                  <ChainStep icon="🛡️" label="Limiteur brickwall" />
-                </div>
-              </div>
-
-              {/* Presets */}
               <div className="panel" style={{ padding: 16 }}>
                 <div
                   className="label-uppercase"
@@ -561,36 +546,20 @@ export const MasteringPage: React.FC = () => {
                       color={info.color}
                       values={info.values}
                       isActive={activePreset === key}
-                      onClick={() => setActivePreset(key)}
+                      onClick={() => handlePresetClick(key)}
                     />
                   ))}
                 </div>
               </div>
-
-              {/* Astuce */}
-              <div
-                className="panel"
-                style={{ padding: 12, background: 'var(--bg-1)', borderColor: 'var(--border)' }}
-              >
-                <div style={{ fontSize: 10, color: '#666', display: 'flex', alignItems: 'center', gap: 6 }}>
-                  💡 <strong style={{ color: '#888' }}>Astuce :</strong>
-                </div>
-                <div style={{ fontSize: 10, color: '#666', marginTop: 6, lineHeight: 1.5 }}>
-                  Fichier déjà masterisé ? Utilise le preset <strong style={{ color: '#888' }}>MASTER</strong> pour éviter le clipping.
-                </div>
-              </div>
             </div>
 
-            {/* COLONNE DROITE */}
+            {/* COLONNE DROITE : MasteringPanel */}
             <div>
               <MasteringPanel
                 audioContext={engine.audioContext}
                 sourceNode={null}
                 sourceBuffer={engine.audioBuffer}
-                onChainReady={(chain) => {
-                  chainRef.current = chain;
-                  console.log('✅ Chaîne de mastering prête');
-                }}
+                onChainReady={handleChainReady}
               />
             </div>
           </div>
@@ -608,17 +577,6 @@ export const MasteringPage: React.FC = () => {
               <div className="label-uppercase" style={{ fontSize: 10, color: '#666', letterSpacing: '1px' }}>
                 📦 HISTORIQUE · {exports.length}
               </div>
-              {exports.length > 0 && (
-                <button
-                  onClick={() => {
-                    if (confirm("Effacer tout l'historique des exports ?")) saveExports([]);
-                  }}
-                  className="btn-action"
-                  style={{ padding: '4px 10px', fontSize: 10, color: '#ff3366' }}
-                >
-                  🗑️ TOUT EFFACER
-                </button>
-              )}
             </div>
 
             {exports.length === 0 ? (
@@ -649,12 +607,11 @@ export const MasteringPage: React.FC = () => {
             )}
           </div>
         </>
-      )}
+      </div>
     </div>
   );
 };
 
-/* SOUS-COMPOSANTS */
 const InfoBox: React.FC<{ label: string; value: string; color: string }> = ({ label, value, color }) => (
   <div
     style={{
@@ -674,23 +631,6 @@ const InfoBox: React.FC<{ label: string; value: string; color: string }> = ({ la
   </div>
 );
 
-const ChainStep: React.FC<{ icon: string; label: string }> = ({ icon, label }) => (
-  <div
-    style={{
-      display: 'flex',
-      alignItems: 'center',
-      gap: 8,
-      padding: '4px 8px',
-      background: 'var(--bg-1)',
-      borderRadius: 4,
-      color: '#ccc',
-    }}
-  >
-    <span style={{ fontSize: 12 }}>{icon}</span>
-    <span style={{ fontSize: 10 }}>{label}</span>
-  </div>
-);
-
 const PresetInfo: React.FC<{
   name: string;
   description: string;
@@ -698,40 +638,45 @@ const PresetInfo: React.FC<{
   values: string;
   isActive: boolean;
   onClick: () => void;
-}> = ({ name, description, color, values, isActive, onClick }) => (
-  <div
-    onClick={onClick}
-    style={{
-      padding: '8px 10px',
-      background: isActive ? `${color}10` : 'var(--bg-1)',
-      borderRadius: 6,
-      borderLeft: `3px solid ${color}`,
-      cursor: 'pointer',
-      transition: 'all 0.2s',
-      border: isActive ? `1px solid ${color}40` : undefined,
-      borderLeftWidth: 3,
-      borderLeftColor: color,
-    }}
-  >
+}> = ({ name, description, color, values, isActive, onClick }) => {
+  // ✅ Style sans conflit (pas de mélange border/borderLeft)
+  const activeBorder = isActive ? `1px solid ${color}40` : '1px solid transparent';
+
+  return (
     <div
+      onClick={onClick}
       style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 2,
+        padding: '8px 10px',
+        background: isActive ? `${color}10` : 'var(--bg-1)',
+        borderRadius: 6,
+        borderTop: activeBorder,
+        borderRight: activeBorder,
+        borderBottom: activeBorder,
+        borderLeft: `3px solid ${color}`,
+        cursor: 'pointer',
+        transition: 'all 0.2s',
       }}
     >
-      <span style={{ color, fontWeight: 700, fontSize: 11, letterSpacing: '0.5px' }}>
-        {name}
-        {isActive && <span style={{ marginLeft: 6, fontSize: 9 }}>✓</span>}
-      </span>
-      <span className="mono" style={{ fontSize: 8, color: '#666' }}>
-        {values}
-      </span>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: 2,
+        }}
+      >
+        <span style={{ color, fontWeight: 700, fontSize: 11, letterSpacing: '0.5px' }}>
+          {name}
+          {isActive && <span style={{ marginLeft: 6, fontSize: 9 }}>✓</span>}
+        </span>
+        <span className="mono" style={{ fontSize: 8, color: '#666' }}>
+          {values}
+        </span>
+      </div>
+      <div style={{ fontSize: 9, color: '#666' }}>{description}</div>
     </div>
-    <div style={{ fontSize: 9, color: '#666' }}>{description}</div>
-  </div>
-);
+  );
+};
 
 const ExportCard: React.FC<{ exportItem: MasteredExport; onDelete: () => void }> = ({ exportItem, onDelete }) => {
   const date = new Date(exportItem.timestamp);

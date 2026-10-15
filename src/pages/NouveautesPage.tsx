@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { GlassCard } from '../components/ui/GlassCard';
 import { CommentSection } from '../components/CommentSection';
 import { OnlineUsersWidget } from '../components/OnlineUsersWidget';
+import { ShareButton } from '../components/ShareButton';
 import { supabase, AUDIO_BUCKET } from '../lib/supabase';
 import { detectBPM } from '../audio/bpmDetector';
 import { detectKey, getCamelotColor, ALL_KEYS } from '../audio/keyDetector';
@@ -132,6 +133,7 @@ interface ExtractedMetadata {
   artist: string | null;
   genre: string | null;
   key: { key: string; camelot: string } | null;
+  bpm: number | null;
   coverBlob: Blob | null;
 }
 
@@ -230,7 +232,7 @@ function normalizeKeyFromTag(rawKey: string): { key: string; camelot: string } |
 
 const extractMetadataFromMp3 = async (file: File): Promise<ExtractedMetadata> => {
   const result: ExtractedMetadata = {
-    title: null, artist: null, genre: null, key: null, coverBlob: null,
+    title: null, artist: null, genre: null, key: null, bpm: null, coverBlob: null,
   };
   try {
     const metadata = await parseBlob(file);
@@ -239,11 +241,21 @@ const extractMetadataFromMp3 = async (file: File): Promise<ExtractedMetadata> =>
     if (metadata.common.genre && metadata.common.genre.length > 0) {
       result.genre = normalizeGenre(metadata.common.genre[0].trim());
     }
+
+    if (metadata.common.bpm) {
+      const tagBpm = Math.round(Number(metadata.common.bpm));
+      if (tagBpm > 0 && tagBpm < 300) {
+        console.log('🎯 BPM ID3 trouvé :', tagBpm);
+        result.bpm = tagBpm;
+      }
+    }
+
     if (metadata.common.key) {
       const rawKey = metadata.common.key.trim();
-      console.log('🎼 Clé trouvée dans les tags ID3 :', rawKey);
+      console.log('🎼 Clé ID3 trouvée :', rawKey);
       result.key = normalizeKeyFromTag(rawKey);
     }
+
     const pictures = metadata.common.picture;
     if (pictures && pictures.length > 0) {
       const pic = pictures[0];
@@ -592,12 +604,26 @@ export const NouveautesPage: React.FC = () => {
 
       const arrayBuffer = await file.arrayBuffer();
 
+      setUploadStatus('Extraction des tags ID3...');
+      const metadata = await extractMetadataFromMp3(file);
+
       try {
+        setUploadStatus('Analyse audio en cours...');
         const analysis = await analyzeAudioFile(file);
-        bpm = analysis.bpm;
         detectedDuration = analysis.duration;
         peaks = analysis.peaks;
-      } catch (e) { console.warn(e); }
+
+        if (metadata.bpm) {
+          bpm = metadata.bpm;
+          console.log(`🎯 BPM final : ${bpm} (depuis tag ID3)`);
+        } else {
+          bpm = analysis.bpm;
+          console.log(`🎯 BPM final : ${bpm} (auto-detection)`);
+        }
+      } catch (e) {
+        console.warn('Analyse audio échouée:', e);
+        if (metadata.bpm) bpm = metadata.bpm;
+      }
 
       setUploadStatus('Upload en cours...');
       const cleanName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
@@ -607,8 +633,6 @@ export const NouveautesPage: React.FC = () => {
 
       const { data: urlData } = supabase.storage.from(AUDIO_BUCKET).getPublicUrl(fileName);
 
-      setUploadStatus('Extraction des tags ID3...');
-      const metadata = await extractMetadataFromMp3(file);
       let coverUrl: string | null = null;
       if (metadata.coverBlob) {
         const baseName = fileName.replace(/\.[^/.]+$/, '');
@@ -744,7 +768,6 @@ export const NouveautesPage: React.FC = () => {
     }
   };
 
-  // ✅ Détection AUTO via Meyda (fallback)
   const handleAutoDetectKey = async (track: Track) => {
     setDetectingKey(track.id);
     try {
@@ -781,7 +804,6 @@ export const NouveautesPage: React.FC = () => {
     }
   };
 
-  // ✅ Sélection MANUELLE d'une clé
   const handleSelectKey = async (trackId: string, key: string, camelot: string) => {
     try {
       const { error } = await supabase
@@ -820,12 +842,25 @@ export const NouveautesPage: React.FC = () => {
     setReplaceStatus('Analyse...');
 
     try {
-      let bpm = track.bpm, newDuration = track.duration;
+      let newDuration = track.duration;
       let peaks: number[] = track.peaks;
+      let bpm = track.bpm;
+      let newKey = track.song_key;
+      let newCamelot = track.camelot;
+
+      const metadata = await extractMetadataFromMp3(file);
+
       try {
         const analysis = await analyzeAudioFile(file);
-        bpm = analysis.bpm; newDuration = analysis.duration; peaks = analysis.peaks;
+        newDuration = analysis.duration;
+        peaks = analysis.peaks;
+        bpm = metadata.bpm || analysis.bpm;
       } catch (e) { console.warn(e); }
+
+      if (metadata.key) {
+        newKey = metadata.key.key;
+        newCamelot = metadata.key.camelot;
+      }
 
       setReplaceStatus('Upload...');
       const cleanName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
@@ -835,8 +870,6 @@ export const NouveautesPage: React.FC = () => {
 
       const { data: urlData } = supabase.storage.from(AUDIO_BUCKET).getPublicUrl(newFileName);
 
-      setReplaceStatus('Tags ID3...');
-      const metadata = await extractMetadataFromMp3(file);
       let newCoverUrl: string | null = track.cover_url;
       if (metadata.coverBlob) {
         const baseName = newFileName.replace(/\.[^/.]+$/, '');
@@ -847,8 +880,6 @@ export const NouveautesPage: React.FC = () => {
       const newTitle = metadata.title || track.title;
       const newArtist = metadata.artist || track.artist;
       const newGenre = metadata.genre || track.genre;
-      const newKey = metadata.key?.key || track.song_key;
-      const newCamelot = metadata.key?.camelot || track.camelot;
 
       setReplaceStatus('Mise à jour...');
       const { error: updateError } = await supabase.from('tracks').update({
@@ -1033,7 +1064,7 @@ export const NouveautesPage: React.FC = () => {
               Partager un nouveau son
             </div>
             <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)' }}>
-              Tags ID3 · BPM · Tonalité détectés automatiquement
+              Tags ID3 (BPM + Key) · Analyse audio · Détection auto
             </div>
           </div>
           <button onClick={handleUploadClick} disabled={uploading} style={{
@@ -1385,7 +1416,16 @@ export const NouveautesPage: React.FC = () => {
                             </div>
                           </div>
 
-                          <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+                          <div style={{ display: 'flex', gap: 4, flexShrink: 0, alignItems: 'center' }}>
+                            <ShareButton
+                              url={`${window.location.origin}/nouveautes?track=${track.id}`}
+                              title={`${track.title} — ${track.artist}`}
+                              text={`Écoute "${track.title}" par ${track.artist} sur WaveForge PRO 🎵`}
+                              variant="icon"
+                              size="small"
+                              label="Partager"
+                              position="top"
+                            />
                             <button
                               onClick={() => handleLike(track.id)}
                               title="Like"
@@ -1706,7 +1746,7 @@ export const NouveautesPage: React.FC = () => {
         </main>
       </div>
 
-      {/* POPUP CORRECTION BPM */}
+      {/* POPUP BPM */}
       {bpmCandidates && (
         <div
           onClick={() => setBpmCandidates(null)}
@@ -1800,7 +1840,7 @@ export const NouveautesPage: React.FC = () => {
         </div>
       )}
 
-      {/* POPUP SÉLECTION KEY */}
+      {/* POPUP KEY */}
       {keyPicker && (
         <div
           onClick={() => setKeyPicker(null)}
@@ -1849,7 +1889,6 @@ export const NouveautesPage: React.FC = () => {
               </button>
             </div>
 
-            {/* Bouton auto-detect */}
             <button
               onClick={() => {
                 const track = tracks.find((t) => t.id === keyPicker);
@@ -1874,14 +1913,9 @@ export const NouveautesPage: React.FC = () => {
                 gap: 8,
               }}
             >
-              {detectingKey === keyPicker ? (
-                <>⏳ Analyse en cours...</>
-              ) : (
-                <>🎼 Détection automatique (Meyda)</>
-              )}
+              {detectingKey === keyPicker ? '⏳ Analyse en cours...' : '🎼 Détection automatique (Meyda)'}
             </button>
 
-            {/* Majeurs */}
             <div style={{ marginBottom: 16 }}>
               <div style={{
                 fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)',
@@ -1920,7 +1954,6 @@ export const NouveautesPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Mineurs */}
             <div>
               <div style={{
                 fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)',

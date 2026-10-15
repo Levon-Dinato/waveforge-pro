@@ -30,14 +30,26 @@ export const DEFAULT_EQ_BANDS: EQBand[] = [
 ];
 
 export class MasteringChain {
-  // EQ
   private inputGain: GainNode;
   private eqBands: BiquadFilterNode[] = [];
   private eqMid: BiquadFilterNode;
   private saturator: WaveShaperNode;
-  private stereoWidener: StereoPannerNode;
 
-  // Mono-Maker
+  private widenerInput: GainNode;
+  private widenerOutput: GainNode;
+  private widenerSplitter: ChannelSplitterNode;
+  private widenerMerger: ChannelMergerNode;
+  private widenerMidL: GainNode;
+  private widenerMidR: GainNode;
+  private widenerMidSum: GainNode;
+  private widenerSideL: GainNode;
+  private widenerSideR: GainNode;
+  private widenerSideSum: GainNode;
+  private widenerMidToL: GainNode;
+  private widenerMidToR: GainNode;
+  private widenerSideToL: GainNode;
+  private widenerSideToR: GainNode;
+
   private monoMakerInput: GainNode;
   private monoMakerOutput: GainNode;
   private monoMakerSplitter: ChannelSplitterNode;
@@ -56,12 +68,10 @@ export class MasteringChain {
   private monoMakerFreq = 120;
   private monoMakerEnabled = false;
 
-  // Imager 3 bandes
   private imagerInput: GainNode;
   private imagerOutput: GainNode;
   private imagerWetGain: GainNode;
   private imagerDryGain: GainNode;
-  // Basses
   private imagerLowFilter: BiquadFilterNode;
   private imagerLowSplitter: ChannelSplitterNode;
   private imagerLowMerger: ChannelMergerNode;
@@ -69,7 +79,6 @@ export class MasteringChain {
   private imagerLowDryR: GainNode;
   private imagerLowMonoSum: GainNode;
   private imagerLowMonoGain: GainNode;
-  // Mids
   private imagerMidFilter: BiquadFilterNode;
   private imagerMidSplitter: ChannelSplitterNode;
   private imagerMidMerger: ChannelMergerNode;
@@ -77,7 +86,6 @@ export class MasteringChain {
   private imagerMidDryR: GainNode;
   private imagerMidMonoSum: GainNode;
   private imagerMidMonoGain: GainNode;
-  // Aigus
   private imagerHighFilter: BiquadFilterNode;
   private imagerHighSplitter: ChannelSplitterNode;
   private imagerHighMerger: ChannelMergerNode;
@@ -85,9 +93,20 @@ export class MasteringChain {
   private imagerHighDryR: GainNode;
   private imagerHighMonoSum: GainNode;
   private imagerHighMonoGain: GainNode;
-  // ✅ SUPPRIMÉ : private imagerEnabled = false;  (jamais lu)
 
-  // Limiteur & sortie
+  private compressor: DynamicsCompressorNode;
+  private compressorMakeup: GainNode;
+
+  private exciterHighShelf: BiquadFilterNode;
+  private exciterDrive: WaveShaperNode;
+  private exciterWetGain: GainNode;
+  private exciterDryGain: GainNode;
+
+  private subBassFilter: BiquadFilterNode;
+  private bassShelf: BiquadFilterNode;
+  private subBassGain: GainNode;
+  private airShelf: BiquadFilterNode;
+
   private limiter: DynamicsCompressorNode;
   private bypassGain: GainNode;
   private processedGain: GainNode;
@@ -98,15 +117,9 @@ export class MasteringChain {
   constructor(context: BaseAudioContext) {
     this.context = context;
 
-    // ============================================================
-    // 1. Gain d'entrée
-    // ============================================================
     this.inputGain = context.createGain();
     this.inputGain.gain.value = 1;
 
-    // ============================================================
-    // 2. EQ 5 bandes
-    // ============================================================
     for (const band of DEFAULT_EQ_BANDS) {
       const filter = context.createBiquadFilter();
       filter.type = band.type;
@@ -116,28 +129,63 @@ export class MasteringChain {
       this.eqBands.push(filter);
     }
 
-    // EQ Mid legacy
     this.eqMid = context.createBiquadFilter();
     this.eqMid.type = 'peaking';
     this.eqMid.frequency.value = 1000;
     this.eqMid.Q.value = 1;
     this.eqMid.gain.value = 0;
 
-    // ============================================================
-    // 3. Saturateur
-    // ============================================================
     this.saturator = context.createWaveShaper();
-    this.saturator.curve = this.makeDistortionCurve(0) as Float32Array<ArrayBuffer>;
+    this.saturator.curve = this.makeDistortionCurve(0) as any;
+    this.saturator.oversample = '4x';
 
-    // ============================================================
-    // 4. Stéréo Widener
-    // ============================================================
-    this.stereoWidener = context.createStereoPanner();
-    this.stereoWidener.pan.value = 0;
+    this.widenerInput = context.createGain();
+    this.widenerOutput = context.createGain();
+    this.widenerSplitter = context.createChannelSplitter(2);
+    this.widenerMerger = context.createChannelMerger(2);
 
-    // ============================================================
-    // 5. IMAGER 3 BANDES
-    // ============================================================
+    this.widenerMidL = context.createGain();
+    this.widenerMidL.gain.value = 0.5;
+    this.widenerMidR = context.createGain();
+    this.widenerMidR.gain.value = 0.5;
+    this.widenerMidSum = context.createGain();
+    this.widenerMidSum.gain.value = 1;
+
+    this.widenerSideL = context.createGain();
+    this.widenerSideL.gain.value = 0.5;
+    this.widenerSideR = context.createGain();
+    this.widenerSideR.gain.value = -0.5;
+    this.widenerSideSum = context.createGain();
+    this.widenerSideSum.gain.value = 1;
+
+    this.widenerMidToL = context.createGain();
+    this.widenerMidToL.gain.value = 1;
+    this.widenerMidToR = context.createGain();
+    this.widenerMidToR.gain.value = 1;
+    this.widenerSideToL = context.createGain();
+    this.widenerSideToL.gain.value = 0;
+    this.widenerSideToR = context.createGain();
+    this.widenerSideToR.gain.value = 0;
+
+    this.widenerInput.connect(this.widenerSplitter);
+    this.widenerSplitter.connect(this.widenerMidL, 0);
+    this.widenerSplitter.connect(this.widenerMidR, 1);
+    this.widenerMidL.connect(this.widenerMidSum);
+    this.widenerMidR.connect(this.widenerMidSum);
+    this.widenerSplitter.connect(this.widenerSideL, 0);
+    this.widenerSplitter.connect(this.widenerSideR, 1);
+    this.widenerSideL.connect(this.widenerSideSum);
+    this.widenerSideR.connect(this.widenerSideSum);
+    this.widenerMidSum.connect(this.widenerMidToL);
+    this.widenerMidSum.connect(this.widenerMidToR);
+    this.widenerMidToL.connect(this.widenerMerger, 0, 0);
+    this.widenerMidToR.connect(this.widenerMerger, 0, 1);
+    this.widenerSideSum.connect(this.widenerSideToL);
+    this.widenerSideSum.connect(this.widenerSideToR);
+    this.widenerSideToL.connect(this.widenerMerger, 0, 0);
+    this.widenerSideToR.connect(this.widenerMerger, 0, 1);
+    this.widenerMerger.connect(this.widenerOutput);
+
     this.imagerInput = context.createGain();
     this.imagerOutput = context.createGain();
     this.imagerWetGain = context.createGain();
@@ -145,7 +193,6 @@ export class MasteringChain {
     this.imagerDryGain = context.createGain();
     this.imagerDryGain.gain.value = 1;
 
-    // Basses (lowpass 200Hz)
     this.imagerLowFilter = context.createBiquadFilter();
     this.imagerLowFilter.type = 'lowpass';
     this.imagerLowFilter.frequency.value = 200;
@@ -161,7 +208,6 @@ export class MasteringChain {
     this.imagerLowMonoGain = context.createGain();
     this.imagerLowMonoGain.gain.value = 0;
 
-    // Mids (bandpass ~1kHz)
     this.imagerMidFilter = context.createBiquadFilter();
     this.imagerMidFilter.type = 'bandpass';
     this.imagerMidFilter.frequency.value = 1000;
@@ -177,7 +223,6 @@ export class MasteringChain {
     this.imagerMidMonoGain = context.createGain();
     this.imagerMidMonoGain.gain.value = 0;
 
-    // Aigus (highpass 4kHz)
     this.imagerHighFilter = context.createBiquadFilter();
     this.imagerHighFilter.type = 'highpass';
     this.imagerHighFilter.frequency.value = 4000;
@@ -193,11 +238,9 @@ export class MasteringChain {
     this.imagerHighMonoGain = context.createGain();
     this.imagerHighMonoGain.gain.value = 0;
 
-    // Connexions Imager
     this.imagerInput.connect(this.imagerDryGain);
     this.imagerDryGain.connect(this.imagerOutput);
 
-    // Basses
     this.imagerInput.connect(this.imagerLowFilter);
     this.imagerLowFilter.connect(this.imagerLowSplitter);
     this.imagerLowSplitter.connect(this.imagerLowDryL, 0);
@@ -211,7 +254,6 @@ export class MasteringChain {
     this.imagerLowMonoGain.connect(this.imagerLowMerger, 0, 1);
     this.imagerLowMerger.connect(this.imagerWetGain);
 
-    // Mids
     this.imagerInput.connect(this.imagerMidFilter);
     this.imagerMidFilter.connect(this.imagerMidSplitter);
     this.imagerMidSplitter.connect(this.imagerMidDryL, 0);
@@ -225,7 +267,6 @@ export class MasteringChain {
     this.imagerMidMonoGain.connect(this.imagerMidMerger, 0, 1);
     this.imagerMidMerger.connect(this.imagerWetGain);
 
-    // Aigus
     this.imagerInput.connect(this.imagerHighFilter);
     this.imagerHighFilter.connect(this.imagerHighSplitter);
     this.imagerHighSplitter.connect(this.imagerHighDryL, 0);
@@ -239,12 +280,8 @@ export class MasteringChain {
     this.imagerHighMonoGain.connect(this.imagerHighMerger, 0, 1);
     this.imagerHighMerger.connect(this.imagerWetGain);
 
-    // Wet → Output
     this.imagerWetGain.connect(this.imagerOutput);
 
-    // ============================================================
-    // 6. MONO-MAKER
-    // ============================================================
     this.monoMakerInput = context.createGain();
     this.monoMakerOutput = context.createGain();
     this.monoMakerSplitter = context.createChannelSplitter(2);
@@ -288,7 +325,6 @@ export class MasteringChain {
     this.monoMakerDryGain = context.createGain();
     this.monoMakerDryGain.gain.value = 1;
 
-    // Connexions Mono-Maker
     this.monoMakerInput.connect(this.monoMakerSplitter);
     this.monoMakerInput.connect(this.monoMakerDryGain);
     this.monoMakerDryGain.connect(this.monoMakerOutput);
@@ -316,28 +352,62 @@ export class MasteringChain {
     this.monoMakerMerger.connect(this.monoMakerWetGain);
     this.monoMakerWetGain.connect(this.monoMakerOutput);
 
-    // ============================================================
-    // 7. Limiteur
-    // ============================================================
+    this.compressor = context.createDynamicsCompressor();
+    this.compressor.threshold.value = -18;
+    this.compressor.knee.value = 6;
+    this.compressor.ratio.value = 4;
+    this.compressor.attack.value = 0.01;
+    this.compressor.release.value = 0.25;
+
+    this.compressorMakeup = context.createGain();
+    this.compressorMakeup.gain.value = 1.25;
+
+    this.exciterHighShelf = context.createBiquadFilter();
+    this.exciterHighShelf.type = 'highshelf';
+    this.exciterHighShelf.frequency.value = 3000;
+    this.exciterHighShelf.gain.value = 3;
+
+    this.exciterDrive = context.createWaveShaper();
+    this.exciterDrive.curve = this.makeExciterCurve(2.5) as any;
+    this.exciterDrive.oversample = '4x';
+
+    this.exciterWetGain = context.createGain();
+    this.exciterWetGain.gain.value = 0.35;
+    this.exciterDryGain = context.createGain();
+    this.exciterDryGain.gain.value = 0.75;
+
+    this.subBassFilter = context.createBiquadFilter();
+    this.subBassFilter.type = 'peaking';
+    this.subBassFilter.frequency.value = 60;
+    this.subBassFilter.Q.value = 1.2;
+    this.subBassFilter.gain.value = 3;
+
+    this.bassShelf = context.createBiquadFilter();
+    this.bassShelf.type = 'lowshelf';
+    this.bassShelf.frequency.value = 120;
+    this.bassShelf.gain.value = 2;
+
+    this.subBassGain = context.createGain();
+    this.subBassGain.gain.value = 1;
+
+    this.airShelf = context.createBiquadFilter();
+    this.airShelf.type = 'highshelf';
+    this.airShelf.frequency.value = 14000;
+    this.airShelf.gain.value = 4;
+
     this.limiter = context.createDynamicsCompressor();
-    this.limiter.threshold.value = -1;
+    this.limiter.threshold.value = -3.0;
     this.limiter.knee.value = 0;
     this.limiter.ratio.value = 20;
-    this.limiter.attack.value = 0.003;
+    this.limiter.attack.value = 0.001;
     this.limiter.release.value = 0.1;
 
-    // ============================================================
-    // 8. Bypass & gains
-    // ============================================================
     this.bypassGain = context.createGain();
     this.bypassGain.gain.value = 0;
     this.processedGain = context.createGain();
     this.processedGain.gain.value = 1;
     this.outputGain = context.createGain();
 
-    // ============================================================
-    // 9. Chaîne principale
-    // ============================================================
     let prev: AudioNode = this.inputGain;
     for (const band of this.eqBands) {
       prev.connect(band);
@@ -345,22 +415,35 @@ export class MasteringChain {
     }
     prev.connect(this.eqMid);
     this.eqMid.connect(this.saturator);
-    this.saturator.connect(this.stereoWidener);
-    this.stereoWidener.connect(this.imagerInput);
+    this.saturator.connect(this.widenerInput);
+    this.widenerOutput.connect(this.imagerInput);
     this.imagerOutput.connect(this.monoMakerInput);
-    this.monoMakerOutput.connect(this.limiter);
+
+    this.monoMakerOutput.connect(this.subBassFilter);
+    this.subBassFilter.connect(this.subBassGain);
+    this.subBassGain.connect(this.bassShelf);
+    this.bassShelf.connect(this.compressor);
+    this.compressor.connect(this.compressorMakeup);
+
+    this.compressorMakeup.connect(this.exciterHighShelf);
+    this.exciterHighShelf.connect(this.exciterWetGain);
+    this.exciterWetGain.connect(this.exciterDrive);
+    this.exciterDrive.connect(this.airShelf);
+    this.exciterHighShelf.connect(this.exciterDryGain);
+    this.exciterDryGain.connect(this.airShelf);
+
+    this.airShelf.connect(this.limiter);
     this.limiter.connect(this.processedGain);
     this.processedGain.connect(this.outputGain);
 
-    // Bypass complet
     this.inputGain.connect(this.bypassGain);
     this.bypassGain.connect(this.outputGain);
   }
 
-  private makeDistortionCurve(amount: number): Float32Array<ArrayBuffer> {
+  private makeDistortionCurve(amount: number): Float32Array {
     const samples = 44100;
-    const curve = new Float32Array(samples) as Float32Array<ArrayBuffer>;
-    const k = amount * 5;
+    const curve = new Float32Array(samples);
+    const k = amount * 4;
     for (let i = 0; i < samples; i++) {
       const x = (i * 2) / samples - 1;
       if (k < 0.001) {
@@ -372,9 +455,21 @@ export class MasteringChain {
     return curve;
   }
 
+  private makeExciterCurve(drive: number): Float32Array {
+    const samples = 44100;
+    const curve = new Float32Array(samples);
+    for (let i = 0; i < samples; i++) {
+      const x = (i * 2) / samples - 1;
+      const pos = Math.tanh(drive * x) / Math.tanh(drive);
+      const neg = Math.tanh(drive * 0.7 * x) / Math.tanh(drive * 0.7);
+      curve[i] = x >= 0 ? pos : neg * 0.9;
+    }
+    return curve;
+  }
+
   connect(source: AudioNode): void {
     if (this.inputNode) {
-      this.inputNode.disconnect(this.inputGain);
+      try { this.inputNode.disconnect(this.inputGain); } catch {}
     }
     this.inputNode = source;
     source.connect(this.inputGain);
@@ -383,9 +478,6 @@ export class MasteringChain {
   getOutputNode(): AudioNode { return this.outputGain; }
   getInputNode(): AudioNode { return this.inputGain; }
 
-  // ============================================================
-  // CONTRÔLES PRINCIPAUX
-  // ============================================================
   setLoudness(value: number): void {
     this.inputGain.gain.value = Math.pow(10, value / 20);
   }
@@ -395,11 +487,17 @@ export class MasteringChain {
   }
 
   setWidth(value: number): void {
-    this.stereoWidener.pan.value = Math.max(-1, Math.min(1, value - 1));
+    const sideGain = Math.max(0, value - 1);
+    const midGain = 1 - Math.min(0.5, sideGain * 0.3);
+    const now = this.context.currentTime;
+    this.widenerSideToL.gain.setTargetAtTime(sideGain, now, 0.02);
+    this.widenerSideToR.gain.setTargetAtTime(-sideGain, now, 0.02);
+    this.widenerMidToL.gain.setTargetAtTime(midGain, now, 0.02);
+    this.widenerMidToR.gain.setTargetAtTime(midGain, now, 0.02);
   }
 
   setSaturation(value: number): void {
-    this.saturator.curve = this.makeDistortionCurve(value) as Float32Array<ArrayBuffer>;
+    this.saturator.curve = this.makeDistortionCurve(value) as any;
   }
 
   setBypass(bypass: boolean): void {
@@ -407,9 +505,6 @@ export class MasteringChain {
     this.processedGain.gain.value = bypass ? 0 : 1;
   }
 
-  // ============================================================
-  // EQ 5 BANDES
-  // ============================================================
   setEQBand(index: number, frequency: number, gain: number, q?: number): void {
     const band = this.eqBands[index];
     if (!band) return;
@@ -420,9 +515,6 @@ export class MasteringChain {
 
   getEQBandCount(): number { return this.eqBands.length; }
 
-  // ============================================================
-  // MONO-MAKER
-  // ============================================================
   setMonoMaker(enabled: boolean, frequency?: number): void {
     this.monoMakerEnabled = enabled;
     if (frequency !== undefined) {
@@ -432,7 +524,6 @@ export class MasteringChain {
       this.monoMakerHighL.frequency.value = frequency;
       this.monoMakerHighR.frequency.value = frequency;
     }
-
     const now = this.context.currentTime;
     if (enabled) {
       this.monoMakerWetGain.gain.setTargetAtTime(1, now, 0.02);
@@ -446,12 +537,7 @@ export class MasteringChain {
   isMonoMakerEnabled(): boolean { return this.monoMakerEnabled; }
   getMonoMakerFrequency(): number { return this.monoMakerFreq; }
 
-  // ============================================================
-  // IMAGER 3 BANDES
-  // ============================================================
   setImager(enabled: boolean, lowAmount?: number, midAmount?: number, highAmount?: number): void {
-    // ✅ SUPPRIMÉ : this.imagerEnabled = enabled;  (jamais lu)
-
     if (lowAmount !== undefined) {
       this.imagerLowDryL.gain.value = 1 - lowAmount;
       this.imagerLowDryR.gain.value = 1 - lowAmount;
@@ -467,7 +553,6 @@ export class MasteringChain {
       this.imagerHighDryR.gain.value = 1 - highAmount;
       this.imagerHighMonoGain.gain.value = highAmount;
     }
-
     const now = this.context.currentTime;
     if (enabled) {
       this.imagerWetGain.gain.setTargetAtTime(1, now, 0.02);
@@ -478,9 +563,6 @@ export class MasteringChain {
     }
   }
 
-  // ============================================================
-  // PRESETS
-  // ============================================================
   applyPreset(preset: MasteringPreset): void {
     const values = this.getPresetValues(preset);
     this.setLoudness(values.loudness);
@@ -502,10 +584,10 @@ export class MasteringChain {
 
   getPresetValues(preset: MasteringPreset): PresetValues {
     switch (preset) {
-      case 'warm':     return { loudness: -1, presence: -1, width: 1.1, saturation: 0.15 };
-      case 'balanced': return { loudness: -2, presence: 0, width: 1.0, saturation: 0.08 };
-      case 'open':     return { loudness: -3, presence: 2.5, width: 1.3, saturation: 0.05 };
-      case 'master':   return { loudness: 0, presence: 0, width: 1.0, saturation: 0 };
+      case 'warm':     return { loudness: +3, presence: -1, width: 1.3, saturation: 0.18 };
+      case 'balanced': return { loudness: +2, presence: +1, width: 1.2, saturation: 0.12 };
+      case 'open':     return { loudness: +3, presence: +4, width: 1.4, saturation: 0.10 };
+      case 'master':   return { loudness: 0,  presence: 0,  width: 1.1, saturation: 0.05 };
     }
   }
 
@@ -513,95 +595,104 @@ export class MasteringChain {
     switch (preset) {
       case 'warm':
         return [
-          { frequency: 80, gain: 2, q: 0.7 },
-          { frequency: 250, gain: 1, q: 1 },
-          { frequency: 1000, gain: -0.5, q: 1 },
-          { frequency: 4000, gain: 0, q: 1 },
-          { frequency: 12000, gain: -1.5, q: 0.7 },
+          { frequency: 80,    gain: +3.5, q: 0.7 },
+          { frequency: 250,   gain: +1.5, q: 1   },
+          { frequency: 1000,  gain: -1.0, q: 1   },
+          { frequency: 4000,  gain: -0.5, q: 1   },
+          { frequency: 12000, gain: -2.0, q: 0.7 },
         ];
       case 'balanced':
         return [
-          { frequency: 80, gain: 0, q: 0.7 },
-          { frequency: 250, gain: 0, q: 1 },
-          { frequency: 1000, gain: 0, q: 1 },
-          { frequency: 4000, gain: 0, q: 1 },
-          { frequency: 12000, gain: 0, q: 0.7 },
+          { frequency: 80,    gain: +2.0, q: 0.7 },
+          { frequency: 250,   gain: +0.5, q: 1   },
+          { frequency: 1000,  gain: 0,    q: 1   },
+          { frequency: 4000,  gain: +1.0, q: 1   },
+          { frequency: 12000, gain: +1.5, q: 0.7 },
         ];
       case 'open':
         return [
-          { frequency: 80, gain: -1, q: 0.7 },
-          { frequency: 250, gain: -0.5, q: 1 },
-          { frequency: 1000, gain: 0, q: 1 },
-          { frequency: 4000, gain: 1.5, q: 1 },
-          { frequency: 12000, gain: 2.5, q: 0.7 },
+          { frequency: 80,    gain: -1.5, q: 0.7 },
+          { frequency: 250,   gain: -1.0, q: 1   },
+          { frequency: 1000,  gain: 0,    q: 1   },
+          { frequency: 4000,  gain: +2.5, q: 1   },
+          { frequency: 12000, gain: +4.0, q: 0.7 },
         ];
       case 'master':
         return [
-          { frequency: 80, gain: 0, q: 0.7 },
-          { frequency: 250, gain: 0, q: 1 },
-          { frequency: 1000, gain: 0, q: 1 },
-          { frequency: 4000, gain: 0, q: 1 },
+          { frequency: 80,    gain: 0, q: 0.7 },
+          { frequency: 250,   gain: 0, q: 1   },
+          { frequency: 1000,  gain: 0, q: 1   },
+          { frequency: 4000,  gain: 0, q: 1   },
           { frequency: 12000, gain: 0, q: 0.7 },
         ];
     }
   }
 
   destroy(): void {
-    // EQ
-    this.inputGain.disconnect();
-    this.eqBands.forEach((b) => b.disconnect());
-    this.eqMid.disconnect();
-    this.saturator.disconnect();
-    this.stereoWidener.disconnect();
+    try { this.inputGain.disconnect(); } catch {}
+    this.eqBands.forEach((b) => { try { b.disconnect(); } catch {} });
+    try { this.eqMid.disconnect(); } catch {}
+    try { this.saturator.disconnect(); } catch {}
 
-    // Imager
-    this.imagerInput.disconnect();
-    this.imagerOutput.disconnect();
-    this.imagerWetGain.disconnect();
-    this.imagerDryGain.disconnect();
-    this.imagerLowFilter.disconnect();
-    this.imagerLowSplitter.disconnect();
-    this.imagerLowMerger.disconnect();
-    this.imagerLowDryL.disconnect();
-    this.imagerLowDryR.disconnect();
-    this.imagerLowMonoSum.disconnect();
-    this.imagerLowMonoGain.disconnect();
-    this.imagerMidFilter.disconnect();
-    this.imagerMidSplitter.disconnect();
-    this.imagerMidMerger.disconnect();
-    this.imagerMidDryL.disconnect();
-    this.imagerMidDryR.disconnect();
-    this.imagerMidMonoSum.disconnect();
-    this.imagerMidMonoGain.disconnect();
-    this.imagerHighFilter.disconnect();
-    this.imagerHighSplitter.disconnect();
-    this.imagerHighMerger.disconnect();
-    this.imagerHighDryL.disconnect();
-    this.imagerHighDryR.disconnect();
-    this.imagerHighMonoSum.disconnect();
-    this.imagerHighMonoGain.disconnect();
+    const widenerNodes = [
+      this.widenerInput, this.widenerOutput, this.widenerSplitter, this.widenerMerger,
+      this.widenerMidL, this.widenerMidR, this.widenerMidSum,
+      this.widenerSideL, this.widenerSideR, this.widenerSideSum,
+      this.widenerMidToL, this.widenerMidToR, this.widenerSideToL, this.widenerSideToR,
+    ];
+    widenerNodes.forEach((n) => { try { n.disconnect(); } catch {} });
 
-    // Mono-Maker
-    this.monoMakerInput.disconnect();
-    this.monoMakerOutput.disconnect();
-    this.monoMakerSplitter.disconnect();
-    this.monoMakerMerger.disconnect();
-    this.monoMakerBassL.disconnect();
-    this.monoMakerBassR.disconnect();
-    this.monoMakerHighL.disconnect();
-    this.monoMakerHighR.disconnect();
-    this.monoMakerBassGainL.disconnect();
-    this.monoMakerBassGainR.disconnect();
-    this.monoMakerBassMono.disconnect();
-    this.monoMakerMixL.disconnect();
-    this.monoMakerMixR.disconnect();
-    this.monoMakerWetGain.disconnect();
-    this.monoMakerDryGain.disconnect();
+    const imagerNodes = [
+      this.imagerInput, this.imagerOutput, this.imagerWetGain, this.imagerDryGain,
+      this.imagerLowFilter, this.imagerLowSplitter, this.imagerLowMerger,
+      this.imagerLowDryL, this.imagerLowDryR, this.imagerLowMonoSum, this.imagerLowMonoGain,
+      this.imagerMidFilter, this.imagerMidSplitter, this.imagerMidMerger,
+      this.imagerMidDryL, this.imagerMidDryR, this.imagerMidMonoSum, this.imagerMidMonoGain,
+      this.imagerHighFilter, this.imagerHighSplitter, this.imagerHighMerger,
+      this.imagerHighDryL, this.imagerHighDryR, this.imagerHighMonoSum, this.imagerHighMonoGain,
+    ];
+    imagerNodes.forEach((n) => { try { n.disconnect(); } catch {} });
 
-    // Limiteur & sortie
-    this.limiter.disconnect();
-    this.bypassGain.disconnect();
-    this.processedGain.disconnect();
-    this.outputGain.disconnect();
+    const monoNodes = [
+      this.monoMakerInput, this.monoMakerOutput, this.monoMakerSplitter, this.monoMakerMerger,
+      this.monoMakerBassL, this.monoMakerBassR, this.monoMakerHighL, this.monoMakerHighR,
+      this.monoMakerBassGainL, this.monoMakerBassGainR, this.monoMakerBassMono,
+      this.monoMakerMixL, this.monoMakerMixR, this.monoMakerWetGain, this.monoMakerDryGain,
+    ];
+    monoNodes.forEach((n) => { try { n.disconnect(); } catch {} });
+
+    const extraNodes = [
+      this.compressor, this.compressorMakeup,
+      this.exciterHighShelf, this.exciterDrive, this.exciterWetGain, this.exciterDryGain,
+      this.subBassFilter, this.bassShelf, this.subBassGain, this.airShelf,
+    ];
+    extraNodes.forEach((n) => { try { n.disconnect(); } catch {} });
+
+    try { this.limiter.disconnect(); } catch {}
+    try { this.bypassGain.disconnect(); } catch {}
+    try { this.processedGain.disconnect(); } catch {}
+    try { this.outputGain.disconnect(); } catch {}
   }
+}
+
+// ============================================================
+// SINGLETON — la chaîne survit aux mount/unmount React
+// ============================================================
+let _singletonChain: MasteringChain | null = null;
+let _singletonCtx: AudioContext | null = null;
+
+export function getMasteringChainSingleton(ctx: AudioContext): MasteringChain {
+  if (_singletonChain && _singletonCtx === ctx) {
+    console.log('🔒 Réutilisation du singleton MasteringChain');
+    return _singletonChain;
+  }
+  if (_singletonChain) {
+    try { _singletonChain.destroy(); } catch {}
+    _singletonChain = null;
+    _singletonCtx = null;
+  }
+  _singletonChain = new MasteringChain(ctx);
+  _singletonCtx = ctx;
+  console.log('🔒 Nouveau singleton MasteringChain créé');
+  return _singletonChain;
 }

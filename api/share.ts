@@ -65,7 +65,6 @@ export default async function handler(req: any, res: any) {
     <meta name="twitter:title" content="${safeTitle} — ${safeArtist}" />
     <meta name="twitter:description" content="Écoute ${safeTitle} par ${safeArtist} sur WaveForge PRO 🎵" />
     <meta name="twitter:image" content="${coverUrl}" />
-    <!-- ✅ PAS de http-equiv refresh : Facebook le suivrait -->
   </head>
   <body style="background:#000;color:#fff;font-family:monospace;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;">
     <div style="text-align:center;">
@@ -73,7 +72,6 @@ export default async function handler(req: any, res: any) {
       <a href="${redirectUrl}" style="color:#00d9ff;">Clique ici si rien ne se passe</a>
     </div>
     <script>
-      // ✅ Redirection JS uniquement — Facebook NE suit PAS le JS
       setTimeout(function() {
         window.location.href = "${redirectUrl}";
       }, 100);

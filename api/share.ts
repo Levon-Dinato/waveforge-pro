@@ -7,9 +7,8 @@ export default async function handler(req: any, res: any) {
     return res.status(400).send('Missing track id');
   }
 
-  // ✅ TES VRAIES VALEURS
   const supabaseUrl = 'https://ivusrxkufajugvkbpcia.supabase.co';
-  const supabaseKey = 'sb_publishable_kXVwp7N6xNtvP_iQFWDI1Q_FmA7zGbT';
+  const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml2dXNyeGt1ZmFqdWd2a2JwY2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE5MzU1MDUsImV4cCI6MjEwNzUxMTUwNX0.iwjZ-9Lm8vRazk6KR7zi0BLmZ1RYRUP9dIwfyiW83_U';
 
   let title = 'WaveForge PRO';
   let artist = 'Studio DJ & Mastering';
@@ -17,7 +16,6 @@ export default async function handler(req: any, res: any) {
   let audioUrl = '';
 
   try {
-    console.log('🔍 Fetch Supabase:', `${supabaseUrl}/rest/v1/tracks?id=eq.${trackId}`);
     const r = await fetch(
       `${supabaseUrl}/rest/v1/tracks?id=eq.${trackId}&select=title,artist,cover_url,audio_url`,
       {
@@ -27,9 +25,7 @@ export default async function handler(req: any, res: any) {
         },
       }
     );
-    console.log('📡 Supabase status:', r.status);
     const data = await r.json();
-    console.log('📦 Supabase data:', JSON.stringify(data).substring(0, 200));
     if (Array.isArray(data) && data[0]) {
       title = data[0].title || title;
       artist = data[0].artist || artist;
@@ -37,7 +33,7 @@ export default async function handler(req: any, res: any) {
       audioUrl = data[0].audio_url || '';
     }
   } catch (e) {
-    console.error('❌ Supabase fetch error:', e);
+    console.error('Supabase fetch error:', e);
   }
 
   const safeTitle = String(title).replace(/"/g, '&quot;').replace(/</g, '&lt;');

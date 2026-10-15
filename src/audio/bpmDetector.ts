@@ -14,6 +14,7 @@ const FRAME = 2048;
 /**
  * Détection BPM par autocorrélation de l'enveloppe d'onsets.
  * Beaucoup plus robuste que la méthode par histogramme d'intervalles.
+ * ✅ Inclut une préférence élargie 120-180 pour le hardcore/uptempo.
  */
 export async function detectBPM(audioBuffer: AudioBuffer): Promise<BPMResult> {
   const sr = audioBuffer.sampleRate;
@@ -33,9 +34,9 @@ export async function detectBPM(audioBuffer: AudioBuffer): Promise<BPMResult> {
   // 2. Autocorrélation
   const acf = autocorrelate(env);
 
-  // 3. Comb-filter sur plage 70-200 BPM
+  // 3. Comb-filter sur plage 70-220 BPM (élargi pour hardcore)
   const MIN_BPM = 70;
-  const MAX_BPM = 200;
+  const MAX_BPM = 220;
   const minLag = Math.max(1, Math.floor((60 / MAX_BPM) / hopTime));
   const maxLag = Math.min(acf.length - 1, Math.floor((60 / MIN_BPM) / hopTime));
 
@@ -53,19 +54,23 @@ export async function detectBPM(audioBuffer: AudioBuffer): Promise<BPMResult> {
 
   candidates.sort((a, b) => b.score - a.score);
 
-  // 4. Normalisation dans [90, 180] + bonus sur la plage DJ
-  const normalized = candidates.slice(0, 20).map((c) => {
+  // 4. Normalisation dans [85, 200] + bonus pondéré (élargi hardcore)
+  const normalized = candidates.slice(0, 30).map((c) => {
     let b = c.bpm;
-    while (b < 90) b *= 2;
-    while (b > 180) b /= 2;
+    // ✅ Plage élargie à [85, 200] (au lieu de [90, 180])
+    while (b < 85) b *= 2;
+    while (b > 200) b /= 2;
     const nb = Math.round(b);
 
-    // Bonus pondéré : la house/techno est presque toujours dans 120-132
+    // ✅ Bonus pondéré — inclut maintenant le hardcore 140-180
     let bonus = 0;
-    if (nb >= 120 && nb <= 132) bonus += 0.6;
-    else if (nb >= 115 && nb <= 140) bonus += 0.3;
-    else if (nb >= 100 && nb <= 145) bonus += 0.1;
-    else if (nb < 95 || nb > 175) bonus -= 0.3;
+    // Zone "dance floor" moderne : on booste plus large
+    if (nb >= 118 && nb <= 132) bonus += 0.6;       // House/Techno classique
+    else if (nb >= 133 && nb <= 155) bonus += 0.55; // Tech/Hard House
+    else if (nb >= 156 && nb <= 180) bonus += 0.5;  // Hardcore/Hardstyle/Uptempo
+    else if (nb >= 100 && nb <= 117) bonus += 0.2;  // Minimal/Deep
+    else if (nb >= 181 && nb <= 200) bonus += 0.3;  // Uptempo extrême
+    else if (nb < 95 || nb > 200) bonus -= 0.3;
 
     return { ...c, normalizedBpm: nb, finalScore: c.score + bonus };
   });
@@ -79,6 +84,26 @@ export async function detectBPM(audioBuffer: AudioBuffer): Promise<BPMResult> {
   }
 
   const finalList = Object.values(byBpm).sort((a, b) => b.finalScore - a.finalScore);
+
+  // ✅ 6. Règle anti-erreur : si 120 et un candidat 140-185 sont proches,
+  //     on préfère le candidat élevé (cas typique hardcore / 3:4 ambiguity)
+  const top = finalList[0];
+  if (top && top.normalizedBpm <= 135) {
+    // Cherche un candidat dans la plage hardcore
+    const higherAlt = finalList.find(
+      (f) => f.normalizedBpm >= 140 && f.normalizedBpm <= 185
+    );
+    if (higherAlt && higherAlt.finalScore >= top.finalScore * 0.75) {
+      console.log(
+        `🔧 Anti-erreur : ${top.normalizedBpm} BPM (score ${top.finalScore.toFixed(2)}) → ${higherAlt.normalizedBpm} BPM (score ${higherAlt.finalScore.toFixed(2)})`
+      );
+      // Remonte le candidat hardcore au top
+      const idx = finalList.indexOf(higherAlt);
+      finalList.splice(idx, 1);
+      finalList.unshift(higherAlt);
+    }
+  }
+
   const best = finalList[0];
   const second = finalList[1];
 
@@ -115,8 +140,8 @@ async function computeOnsetEnvelope(
   data: Float32Array,
   sr: number
 ): Promise<Float32Array> {
-  // Passe-bande 100 Hz – 8 kHz : retire le DC et le bruit haute fréquence
-  const filtered = bandpass(data, sr, 100, 8000);
+  // ✅ Passe-bande élargi côté bas (60 Hz) pour mieux capter les kicks hardcore
+  const filtered = bandpass(data, sr, 60, 8000);
 
   const numFrames = Math.floor((filtered.length - FRAME) / HOP) + 1;
   const env = new Float32Array(numFrames);

@@ -5,6 +5,7 @@ import { CommentSection } from '../components/CommentSection';
 import { OnlineUsersWidget } from '../components/OnlineUsersWidget';
 import { supabase, AUDIO_BUCKET } from '../lib/supabase';
 import { detectBPM } from '../audio/bpmDetector';
+import { detectKey, getCamelotColor, ALL_KEYS } from '../audio/keyDetector';
 import { parseBlob } from 'music-metadata';
 import { useAuth } from '../contexts/AuthContext';
 import { usePlayer } from '../contexts/PlayerContext';
@@ -16,6 +17,8 @@ interface Track {
   artist: string;
   genre: string;
   bpm: number;
+  song_key: string | null;
+  camelot: string | null;
   likes: number;
   downloads: number;
   audio_url: string;
@@ -128,6 +131,7 @@ interface ExtractedMetadata {
   title: string | null;
   artist: string | null;
   genre: string | null;
+  key: { key: string; camelot: string } | null;
   coverBlob: Blob | null;
 }
 
@@ -180,14 +184,65 @@ const normalizeGenre = (rawGenre: string): string => {
   return rawGenre.length > 30 ? rawGenre.substring(0, 30) : rawGenre;
 };
 
+function normalizeKeyFromTag(rawKey: string): { key: string; camelot: string } | null {
+  if (!rawKey) return null;
+  const cleaned = rawKey.trim().toUpperCase();
+
+  const camelotMatch = cleaned.match(/^(\d{1,2})([AB])$/);
+  if (camelotMatch) {
+    const camelot = `${camelotMatch[1]}${camelotMatch[2]}`;
+    const camelotToKey: Record<string, string> = {
+      '1A': 'G#m', '1B': 'B', '2A': 'D#m', '2B': 'F#',
+      '3A': 'A#m', '3B': 'C#', '4A': 'Fm', '4B': 'G#',
+      '5A': 'Cm', '5B': 'D#', '6A': 'Gm', '6B': 'A#',
+      '7A': 'Dm', '7B': 'F', '8A': 'Am', '8B': 'C',
+      '9A': 'Em', '9B': 'G', '10A': 'Bm', '10B': 'D',
+      '11A': 'F#m', '11B': 'A', '12A': 'C#m', '12B': 'E',
+    };
+    return { key: camelotToKey[camelot] || camelot, camelot };
+  }
+
+  const keyMatch = cleaned.match(/^([A-G][#B]?)\s*(M|MIN|MINOR|MAJ|MAJOR)?/);
+  if (keyMatch) {
+    const note = keyMatch[1].replace('B', 'b');
+    const isMinor = keyMatch[2] === 'M' || keyMatch[2] === 'MIN' || keyMatch[2] === 'MINOR';
+    const musicalKey = isMinor ? `${note}m` : note;
+
+    const keyToCamelot: Record<string, string> = {
+      'C': '8B', 'Cm': '5A',
+      'C#': '3B', 'C#m': '12A', 'Db': '3B', 'Dbm': '12A',
+      'D': '10B', 'Dm': '7A',
+      'D#': '5B', 'D#m': '2A', 'Eb': '5B', 'Ebm': '2A',
+      'E': '12B', 'Em': '9A',
+      'F': '7B', 'Fm': '4A',
+      'F#': '2B', 'F#m': '11A', 'Gb': '2B', 'Gbm': '11A',
+      'G': '9B', 'Gm': '6A',
+      'G#': '4B', 'G#m': '1A', 'Ab': '4B', 'Abm': '1A',
+      'A': '11B', 'Am': '8A',
+      'A#': '6B', 'A#m': '3A', 'Bb': '6B', 'Bbm': '3A',
+      'B': '1B', 'Bm': '10A',
+    };
+    const camelot = keyToCamelot[musicalKey] || '?';
+    return { key: musicalKey, camelot };
+  }
+  return null;
+}
+
 const extractMetadataFromMp3 = async (file: File): Promise<ExtractedMetadata> => {
-  const result: ExtractedMetadata = { title: null, artist: null, genre: null, coverBlob: null };
+  const result: ExtractedMetadata = {
+    title: null, artist: null, genre: null, key: null, coverBlob: null,
+  };
   try {
     const metadata = await parseBlob(file);
     if (metadata.common.title) result.title = metadata.common.title.trim();
     if (metadata.common.artist) result.artist = metadata.common.artist.trim();
     if (metadata.common.genre && metadata.common.genre.length > 0) {
       result.genre = normalizeGenre(metadata.common.genre[0].trim());
+    }
+    if (metadata.common.key) {
+      const rawKey = metadata.common.key.trim();
+      console.log('🎼 Clé trouvée dans les tags ID3 :', rawKey);
+      result.key = normalizeKeyFromTag(rawKey);
     }
     const pictures = metadata.common.picture;
     if (pictures && pictures.length > 0) {
@@ -214,7 +269,7 @@ const uploadCoverToSupabase = async (blob: Blob, baseName: string): Promise<stri
 };
 
 // ═══════════════════════════════════════════════════════════
-// WAVEFORM DRAGGABLE
+// WAVEFORM
 // ═══════════════════════════════════════════════════════════
 interface WaveformProps {
   peaks: number[];
@@ -279,7 +334,6 @@ const Waveform: React.FC<WaveformProps> = ({
 
     if (onSeek || progress > 0) {
       const cursorX = Math.max(2, Math.min(width - 2, progressX));
-
       const haloGrad = ctx.createRadialGradient(cursorX, midY, 0, cursorX, midY, 14);
       haloGrad.addColorStop(0, 'rgba(0, 217, 255, 0.4)');
       haloGrad.addColorStop(1, 'rgba(0, 217, 255, 0)');
@@ -388,25 +442,23 @@ const Waveform: React.FC<WaveformProps> = ({
     >
       <canvas ref={canvasRef} style={{ display: 'block' }} />
       {hoverRatio !== null && duration > 0 && (
-        <div
-          style={{
-            position: 'absolute',
-            left: `${hoverRatio * 100}%`,
-            top: -26,
-            transform: 'translateX(-50%)',
-            background: 'rgba(0, 0, 0, 0.95)',
-            border: '1px solid rgba(0, 217, 255, 0.5)',
-            borderRadius: 4,
-            padding: '2px 7px',
-            fontSize: 10,
-            fontFamily: 'monospace',
-            color: '#00d9ff',
-            fontWeight: 700,
-            pointerEvents: 'none',
-            whiteSpace: 'nowrap',
-            zIndex: 5,
-          }}
-        >
+        <div style={{
+          position: 'absolute',
+          left: `${hoverRatio * 100}%`,
+          top: -26,
+          transform: 'translateX(-50%)',
+          background: 'rgba(0, 0, 0, 0.95)',
+          border: '1px solid rgba(0, 217, 255, 0.5)',
+          borderRadius: 4,
+          padding: '2px 7px',
+          fontSize: 10,
+          fontFamily: 'monospace',
+          color: '#00d9ff',
+          fontWeight: 700,
+          pointerEvents: 'none',
+          whiteSpace: 'nowrap',
+          zIndex: 5,
+        }}>
           {formatTime(hoverRatio * duration)}
         </div>
       )}
@@ -415,7 +467,7 @@ const Waveform: React.FC<WaveformProps> = ({
 };
 
 // ═══════════════════════════════════════════════════════════
-// BOUTON PLAY CIRCULAIRE
+// BOUTON PLAY
 // ═══════════════════════════════════════════════════════════
 const PlayButton: React.FC<{
   isPlaying: boolean;
@@ -431,29 +483,12 @@ const PlayButton: React.FC<{
     <button
       onClick={onClick}
       style={{
-        width: size,
-        height: size,
-        borderRadius: '50%',
-        background: bg,
-        border: 'none',
-        cursor: 'pointer',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        flexShrink: 0,
-        fontSize: size * 0.4,
-        color: '#000',
-        fontWeight: 900,
+        width: size, height: size, borderRadius: '50%',
+        background: bg, border: 'none', cursor: 'pointer',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        flexShrink: 0, fontSize: size * 0.4, color: '#000', fontWeight: 900,
         boxShadow: '0 4px 16px rgba(0, 217, 255, 0.4)',
         transition: 'all 0.15s ease',
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.transform = 'scale(1.08)';
-        e.currentTarget.style.boxShadow = '0 6px 24px rgba(0, 217, 255, 0.6)';
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.transform = 'scale(1)';
-        e.currentTarget.style.boxShadow = '0 4px 16px rgba(0, 217, 255, 0.4)';
       }}
     >
       {isCurrent && isPlaying ? '⏸' : '▶'}
@@ -482,6 +517,11 @@ export const NouveautesPage: React.FC = () => {
   const [replacingId, setReplacingId] = useState<string | null>(null);
   const [, setReplaceStatus] = useState('');
 
+  const [bpmCandidates, setBpmCandidates] = useState<{ trackId: string; candidates: number[]; current: number } | null>(null);
+  const [detectingBpm, setDetectingBpm] = useState<string | null>(null);
+  const [detectingKey, setDetectingKey] = useState<string | null>(null);
+  const [keyPicker, setKeyPicker] = useState<string | null>(null);
+
   const [coverTargetId, setCoverTargetId] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
@@ -493,7 +533,6 @@ export const NouveautesPage: React.FC = () => {
   const [editForm, setEditForm] = useState({ title: '', artist: '', genre: '', bpm: 0 });
   const [openComments, setOpenComments] = useState<Set<string>>(new Set());
 
-  // ✅ PAGINATION
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 10;
 
@@ -513,6 +552,8 @@ export const NouveautesPage: React.FC = () => {
         cover_url: t.cover_url || null,
         user_id: t.user_id || null,
         downloads: t.downloads || 0,
+        song_key: t.song_key || null,
+        camelot: t.camelot || null,
       }));
       setTracks(normalized);
     }
@@ -546,6 +587,11 @@ export const NouveautesPage: React.FC = () => {
     try {
       let bpm = 0, detectedDuration = 0;
       let peaks: number[] = [];
+      let detectedKey: string | null = null;
+      let detectedCamelot: string | null = null;
+
+      const arrayBuffer = await file.arrayBuffer();
+
       try {
         const analysis = await analyzeAudioFile(file);
         bpm = analysis.bpm;
@@ -573,10 +619,31 @@ export const NouveautesPage: React.FC = () => {
       const finalArtist = metadata.artist || user?.email?.split('@')[0] || 'Anonyme';
       const finalGenre = metadata.genre || 'Inconnu';
 
+      if (metadata.key) {
+        detectedKey = metadata.key.key;
+        detectedCamelot = metadata.key.camelot;
+        console.log(`🎼 Clé depuis ID3 : ${detectedKey} (${detectedCamelot})`);
+      } else {
+        try {
+          setUploadStatus('Détection tonalité (Meyda)...');
+          const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+          const audioCtx = new AudioCtx();
+          const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer.slice(0));
+          const keyResult = await detectKey(audioBuffer);
+          detectedKey = keyResult.key;
+          detectedCamelot = keyResult.camelot;
+          await audioCtx.close();
+        } catch (e) {
+          console.warn('Détection clé échouée:', e);
+        }
+      }
+
       setUploadStatus('Enregistrement...');
       const { data: inserted, error: insertError } = await supabase.from('tracks').insert({
         title: finalTitle, artist: finalArtist, user_id: user?.id || null,
-        genre: finalGenre, bpm, likes: 0, downloads: 0,
+        genre: finalGenre, bpm,
+        song_key: detectedKey, camelot: detectedCamelot,
+        likes: 0, downloads: 0,
         audio_url: urlData.publicUrl, duration: detectedDuration, peaks, cover_url: coverUrl,
       }).select().single();
       if (insertError) throw insertError;
@@ -629,6 +696,110 @@ export const NouveautesPage: React.FC = () => {
     }
   };
 
+  const handleDetectBpm = async (track: Track) => {
+    setDetectingBpm(track.id);
+    try {
+      const response = await fetch(track.audio_url);
+      if (!response.ok) throw new Error('Impossible de charger le fichier');
+      const arrayBuffer = await response.arrayBuffer();
+
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      const audioCtx = new AudioCtx();
+      let audioBuffer: AudioBuffer;
+      try {
+        audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+      } finally {
+        await audioCtx.close();
+      }
+
+      const result = await detectBPM(audioBuffer);
+
+      const uniqueCandidates = Array.from(new Set([
+        result.bpm,
+        ...result.candidates.slice(0, 8),
+      ])).filter((b) => b >= 60 && b <= 250).slice(0, 6);
+
+      setBpmCandidates({
+        trackId: track.id,
+        candidates: uniqueCandidates,
+        current: track.bpm,
+      });
+    } catch (err: any) {
+      console.error('Erreur détection BPM:', err);
+      alert('Erreur analyse BPM : ' + (err.message || err));
+    } finally {
+      setDetectingBpm(null);
+    }
+  };
+
+  const handleSelectBpm = async (trackId: string, bpm: number) => {
+    try {
+      const { error } = await supabase.from('tracks').update({ bpm }).eq('id', trackId);
+      if (error) throw error;
+      setTracks((prev) => prev.map((t) => (t.id === trackId ? { ...t, bpm } : t)));
+      setBpmCandidates(null);
+    } catch (err: any) {
+      console.error('Erreur sauvegarde BPM:', err);
+      alert('Erreur : ' + (err.message || err));
+    }
+  };
+
+  // ✅ Détection AUTO via Meyda (fallback)
+  const handleAutoDetectKey = async (track: Track) => {
+    setDetectingKey(track.id);
+    try {
+      const response = await fetch(track.audio_url);
+      if (!response.ok) throw new Error('Impossible de charger le fichier');
+      const arrayBuffer = await response.arrayBuffer();
+
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      const audioCtx = new AudioCtx();
+      let audioBuffer: AudioBuffer;
+      try {
+        audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+      } finally {
+        await audioCtx.close();
+      }
+
+      const result = await detectKey(audioBuffer);
+
+      const { error } = await supabase.from('tracks').update({
+        song_key: result.key,
+        camelot: result.camelot,
+      }).eq('id', track.id);
+      if (error) throw error;
+
+      setTracks((prev) => prev.map((t) => t.id === track.id
+        ? { ...t, song_key: result.key, camelot: result.camelot }
+        : t));
+      setKeyPicker(null);
+    } catch (err: any) {
+      console.error('Erreur détection key:', err);
+      alert('Erreur analyse key : ' + (err.message || err));
+    } finally {
+      setDetectingKey(null);
+    }
+  };
+
+  // ✅ Sélection MANUELLE d'une clé
+  const handleSelectKey = async (trackId: string, key: string, camelot: string) => {
+    try {
+      const { error } = await supabase
+        .from('tracks')
+        .update({ song_key: key, camelot })
+        .eq('id', trackId);
+      if (error) throw error;
+
+      setTracks((prev) => prev.map((t) => t.id === trackId
+        ? { ...t, song_key: key, camelot }
+        : t));
+      setKeyPicker(null);
+    } catch (err: any) {
+      console.error('Erreur sauvegarde Key:', err);
+      alert('Erreur : ' + (err.message || err));
+    }
+  };
+
   const handleReplaceClick = (trackId: string) => {
     setReplaceTargetId(trackId);
     replaceInputRef.current?.click();
@@ -676,11 +847,14 @@ export const NouveautesPage: React.FC = () => {
       const newTitle = metadata.title || track.title;
       const newArtist = metadata.artist || track.artist;
       const newGenre = metadata.genre || track.genre;
+      const newKey = metadata.key?.key || track.song_key;
+      const newCamelot = metadata.key?.camelot || track.camelot;
 
       setReplaceStatus('Mise à jour...');
       const { error: updateError } = await supabase.from('tracks').update({
         audio_url: urlData.publicUrl, duration: newDuration, peaks, bpm,
         title: newTitle, artist: newArtist, genre: newGenre, cover_url: newCoverUrl,
+        song_key: newKey, camelot: newCamelot,
       }).eq('id', targetId);
       if (updateError) throw updateError;
 
@@ -692,6 +866,7 @@ export const NouveautesPage: React.FC = () => {
       setTracks((prev) => prev.map((t) => t.id === targetId ? {
         ...t, audio_url: urlData.publicUrl, duration: newDuration, peaks, bpm,
         title: newTitle, artist: newArtist, genre: newGenre, cover_url: newCoverUrl,
+        song_key: newKey, camelot: newCamelot,
       } : t));
       setReplaceStatus('');
     } catch (err: any) {
@@ -801,12 +976,10 @@ export const NouveautesPage: React.FC = () => {
     return list;
   }, [tracks, search, sortBy, selectedGenre]);
 
-  // ✅ Reset page quand les filtres changent
   useEffect(() => {
     setCurrentPage(1);
   }, [search, sortBy, selectedGenre]);
 
-  // ✅ Calcul pagination
   const totalPages = Math.max(1, Math.ceil(visibleTracks.length / ITEMS_PER_PAGE));
   const safeCurrentPage = Math.min(currentPage, totalPages);
   const paginatedTracks = useMemo(() => {
@@ -842,6 +1015,8 @@ export const NouveautesPage: React.FC = () => {
           padding-left: 14px !important;
         }
         .track-row { animation: fadeIn 0.3s ease; }
+        .key-btn { transition: all 0.15s ease; }
+        .key-btn:hover { transform: scale(1.05); }
         select option { background: #0a0c14 !important; color: #fff !important; padding: 8px !important; }
       `}</style>
 
@@ -858,7 +1033,7 @@ export const NouveautesPage: React.FC = () => {
               Partager un nouveau son
             </div>
             <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)' }}>
-              Tags ID3 (titre, artiste, genre) + BPM détectés automatiquement
+              Tags ID3 · BPM · Tonalité détectés automatiquement
             </div>
           </div>
           <button onClick={handleUploadClick} disabled={uploading} style={{
@@ -1261,6 +1436,37 @@ export const NouveautesPage: React.FC = () => {
                               {isReplacing ? '...' : '🔄'}
                             </button>
                             <button
+                              onClick={() => handleDetectBpm(track)}
+                              disabled={detectingBpm === track.id || isReplacing}
+                              style={{
+                                background: 'transparent',
+                                border: 'none',
+                                color: detectingBpm === track.id ? '#ffd43b' : '#00ff88',
+                                cursor: detectingBpm === track.id ? 'wait' : 'pointer',
+                                fontSize: '0.85rem',
+                                padding: 4,
+                                opacity: detectingBpm === track.id ? 0.6 : 1,
+                              }}
+                              title="Corriger le BPM"
+                            >
+                              {detectingBpm === track.id ? '⏳' : '🎯'}
+                            </button>
+                            <button
+                              onClick={() => setKeyPicker(track.id)}
+                              disabled={isReplacing}
+                              style={{
+                                background: 'transparent',
+                                border: 'none',
+                                color: '#7c5cff',
+                                cursor: 'pointer',
+                                fontSize: '0.85rem',
+                                padding: 4,
+                              }}
+                              title="Choisir la tonalité"
+                            >
+                              🎼
+                            </button>
+                            <button
                               onClick={() => handleDelete(track.id)}
                               disabled={isReplacing}
                               style={{
@@ -1348,6 +1554,18 @@ export const NouveautesPage: React.FC = () => {
                               🎵 {track.genre}
                             </span>
                             <span>⚡ {track.bpm} BPM</span>
+                            {track.camelot && track.camelot !== '?' && (
+                              <span style={{
+                                display: 'flex', alignItems: 'center', gap: 3,
+                                padding: '2px 6px',
+                                background: `${getCamelotColor(track.camelot)}20`,
+                                borderRadius: 3,
+                                color: getCamelotColor(track.camelot),
+                                fontWeight: 700,
+                              }}>
+                                🎼 {track.camelot}
+                              </span>
+                            )}
                             <span>⬇ {track.downloads}</span>
                           </div>
                         </div>
@@ -1365,7 +1583,6 @@ export const NouveautesPage: React.FC = () => {
             })}
           </div>
 
-          {/* ✅ PAGINATION */}
           {!loading && totalPages > 1 && (
             <div style={{
               display: 'flex',
@@ -1390,18 +1607,7 @@ export const NouveautesPage: React.FC = () => {
                   fontSize: '0.75rem',
                   fontWeight: 700,
                   cursor: safeCurrentPage === 1 ? 'not-allowed' : 'pointer',
-                  transition: 'all 0.15s',
                   opacity: safeCurrentPage === 1 ? 0.4 : 1,
-                }}
-                onMouseEnter={(e) => {
-                  if (safeCurrentPage !== 1) {
-                    e.currentTarget.style.background = 'rgba(0, 217, 255, 0.1)';
-                    e.currentTarget.style.borderColor = 'rgba(0, 217, 255, 0.4)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
-                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
                 }}
               >
                 ← Précédent
@@ -1434,20 +1640,11 @@ export const NouveautesPage: React.FC = () => {
                 return pages.map((p, idx) => {
                   if (p === '...') {
                     return (
-                      <span
-                        key={`ellipsis-${idx}`}
-                        style={{
-                          padding: '8px 6px',
-                          color: 'rgba(255,255,255,0.3)',
-                          fontFamily: 'monospace',
-                          fontSize: '0.75rem',
-                        }}
-                      >
+                      <span key={`e-${idx}`} style={{ padding: '8px 6px', color: 'rgba(255,255,255,0.3)', fontFamily: 'monospace', fontSize: '0.75rem' }}>
                         ...
                       </span>
                     );
                   }
-
                   const isActive = p === safeCurrentPage;
                   return (
                     <button
@@ -1456,34 +1653,15 @@ export const NouveautesPage: React.FC = () => {
                       style={{
                         minWidth: 36,
                         padding: '8px 10px',
-                        background: isActive
-                          ? 'linear-gradient(135deg, #00d9ff, #0088ff)'
-                          : 'rgba(255,255,255,0.03)',
-                        border: isActive
-                          ? '1px solid #00d9ff'
-                          : '1px solid rgba(255,255,255,0.1)',
+                        background: isActive ? 'linear-gradient(135deg, #00d9ff, #0088ff)' : 'rgba(255,255,255,0.03)',
+                        border: isActive ? '1px solid #00d9ff' : '1px solid rgba(255,255,255,0.1)',
                         borderRadius: 6,
                         color: isActive ? '#000' : 'rgba(255,255,255,0.7)',
                         fontFamily: 'monospace',
                         fontSize: '0.75rem',
                         fontWeight: isActive ? 800 : 600,
                         cursor: 'pointer',
-                        transition: 'all 0.15s',
                         boxShadow: isActive ? '0 0 12px rgba(0, 217, 255, 0.4)' : 'none',
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!isActive) {
-                          e.currentTarget.style.background = 'rgba(0, 217, 255, 0.1)';
-                          e.currentTarget.style.borderColor = 'rgba(0, 217, 255, 0.4)';
-                          e.currentTarget.style.color = '#00d9ff';
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!isActive) {
-                          e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
-                          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
-                          e.currentTarget.style.color = 'rgba(255,255,255,0.7)';
-                        }
                       }}
                     >
                       {p}
@@ -1505,18 +1683,7 @@ export const NouveautesPage: React.FC = () => {
                   fontSize: '0.75rem',
                   fontWeight: 700,
                   cursor: safeCurrentPage === totalPages ? 'not-allowed' : 'pointer',
-                  transition: 'all 0.15s',
                   opacity: safeCurrentPage === totalPages ? 0.4 : 1,
-                }}
-                onMouseEnter={(e) => {
-                  if (safeCurrentPage !== totalPages) {
-                    e.currentTarget.style.background = 'rgba(0, 217, 255, 0.1)';
-                    e.currentTarget.style.borderColor = 'rgba(0, 217, 255, 0.4)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
-                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
                 }}
               >
                 Suivant →
@@ -1538,6 +1705,271 @@ export const NouveautesPage: React.FC = () => {
           )}
         </main>
       </div>
+
+      {/* POPUP CORRECTION BPM */}
+      {bpmCandidates && (
+        <div
+          onClick={() => setBpmCandidates(null)}
+          style={{
+            position: 'fixed', inset: 0,
+            background: 'rgba(0, 0, 0, 0.75)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            zIndex: 10000,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: 20,
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: 'linear-gradient(135deg, rgba(15, 18, 28, 0.98) 0%, rgba(10, 12, 20, 0.99) 100%)',
+              border: '1px solid rgba(0, 217, 255, 0.4)',
+              borderRadius: 14, padding: 24,
+              maxWidth: 480, width: '100%',
+              boxShadow: '0 24px 70px rgba(0, 0, 0, 0.8)',
+              fontFamily: 'monospace', color: '#fff',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <div>
+                <div style={{ fontSize: '0.75rem', color: 'rgba(0, 217, 255, 0.7)', fontWeight: 800, letterSpacing: '1.5px', marginBottom: 4 }}>
+                  🎯 CORRECTION BPM
+                </div>
+                <div style={{ fontSize: '1rem', fontWeight: 700 }}>
+                  Choisis le bon tempo
+                </div>
+              </div>
+              <button
+                onClick={() => setBpmCandidates(null)}
+                style={{
+                  width: 30, height: 30, borderRadius: '50%',
+                  background: 'rgba(255, 60, 60, 0.08)',
+                  border: '1px solid rgba(255, 60, 60, 0.3)',
+                  color: '#ff5c5c', cursor: 'pointer', fontSize: 12,
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', marginBottom: 16 }}>
+              BPM actuel : <span style={{ color: '#ffd43b', fontWeight: 700 }}>{bpmCandidates.current}</span>
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: 10,
+              marginBottom: 16,
+            }}>
+              {bpmCandidates.candidates.map((bpm) => {
+                const isCurrent = bpm === bpmCandidates.current;
+                return (
+                  <button
+                    key={bpm}
+                    onClick={() => handleSelectBpm(bpmCandidates.trackId, bpm)}
+                    style={{
+                      padding: '14px 8px',
+                      background: isCurrent
+                        ? 'linear-gradient(135deg, rgba(255, 212, 59, 0.25), rgba(255, 140, 0, 0.1))'
+                        : 'rgba(255, 255, 255, 0.03)',
+                      border: isCurrent
+                        ? '1px solid rgba(255, 212, 59, 0.6)'
+                        : '1px solid rgba(0, 217, 255, 0.3)',
+                      borderRadius: 8,
+                      color: isCurrent ? '#ffd43b' : '#00d9ff',
+                      fontFamily: 'monospace',
+                      fontSize: '1.1rem',
+                      fontWeight: 800,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {bpm}
+                    <div style={{ fontSize: '0.6rem', opacity: 0.6, marginTop: 4 }}>BPM</div>
+                    {isCurrent && <div style={{ fontSize: '0.55rem', marginTop: 2 }}>ACTUEL</div>}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>
+              Si aucun BPM ne correspond, clique sur le plus proche puis corrige via ✏️ Edit.
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* POPUP SÉLECTION KEY */}
+      {keyPicker && (
+        <div
+          onClick={() => setKeyPicker(null)}
+          style={{
+            position: 'fixed', inset: 0,
+            background: 'rgba(0, 0, 0, 0.8)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            zIndex: 10000,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: 20,
+            overflow: 'auto',
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: 'linear-gradient(135deg, rgba(15, 18, 28, 0.98) 0%, rgba(10, 12, 20, 0.99) 100%)',
+              border: '1px solid rgba(124, 92, 255, 0.4)',
+              borderRadius: 14, padding: 24,
+              maxWidth: 640, width: '100%',
+              maxHeight: '90vh', overflowY: 'auto',
+              boxShadow: '0 24px 70px rgba(0, 0, 0, 0.8), 0 0 40px rgba(124, 92, 255, 0.2)',
+              fontFamily: 'monospace', color: '#fff',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <div>
+                <div style={{ fontSize: '0.75rem', color: 'rgba(124, 92, 255, 0.9)', fontWeight: 800, letterSpacing: '1.5px', marginBottom: 4 }}>
+                  🎼 TONALITÉ
+                </div>
+                <div style={{ fontSize: '1rem', fontWeight: 700 }}>
+                  Choisis la tonalité du morceau
+                </div>
+              </div>
+              <button
+                onClick={() => setKeyPicker(null)}
+                style={{
+                  width: 30, height: 30, borderRadius: '50%',
+                  background: 'rgba(255, 60, 60, 0.08)',
+                  border: '1px solid rgba(255, 60, 60, 0.3)',
+                  color: '#ff5c5c', cursor: 'pointer', fontSize: 12,
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Bouton auto-detect */}
+            <button
+              onClick={() => {
+                const track = tracks.find((t) => t.id === keyPicker);
+                if (track) handleAutoDetectKey(track);
+              }}
+              disabled={detectingKey === keyPicker}
+              style={{
+                width: '100%',
+                padding: '12px',
+                marginBottom: 20,
+                background: 'rgba(0, 217, 255, 0.08)',
+                border: '1px dashed rgba(0, 217, 255, 0.4)',
+                borderRadius: 8,
+                color: '#00d9ff',
+                fontFamily: 'monospace',
+                fontSize: '0.8rem',
+                fontWeight: 700,
+                cursor: detectingKey === keyPicker ? 'wait' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+              }}
+            >
+              {detectingKey === keyPicker ? (
+                <>⏳ Analyse en cours...</>
+              ) : (
+                <>🎼 Détection automatique (Meyda)</>
+              )}
+            </button>
+
+            {/* Majeurs */}
+            <div style={{ marginBottom: 16 }}>
+              <div style={{
+                fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)',
+                marginBottom: 8, letterSpacing: '1px', fontWeight: 700,
+              }}>
+                MAJEURS (B)
+              </div>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(85px, 1fr))',
+                gap: 8,
+              }}>
+                {ALL_KEYS.filter((k) => !k.isMinor).map((k) => {
+                  const color = getCamelotColor(k.camelot);
+                  return (
+                    <button
+                      key={k.key}
+                      className="key-btn"
+                      onClick={() => handleSelectKey(keyPicker, k.key, k.camelot)}
+                      style={{
+                        padding: '10px 6px',
+                        background: `${color}15`,
+                        border: `1px solid ${color}60`,
+                        borderRadius: 6,
+                        color: color,
+                        fontFamily: 'monospace',
+                        cursor: 'pointer',
+                        textAlign: 'center',
+                      }}
+                    >
+                      <div style={{ fontSize: '1rem', fontWeight: 800 }}>{k.key}</div>
+                      <div style={{ fontSize: '0.6rem', opacity: 0.7, marginTop: 2 }}>{k.camelot}</div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Mineurs */}
+            <div>
+              <div style={{
+                fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)',
+                marginBottom: 8, letterSpacing: '1px', fontWeight: 700,
+              }}>
+                MINEURS (A)
+              </div>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(85px, 1fr))',
+                gap: 8,
+              }}>
+                {ALL_KEYS.filter((k) => k.isMinor).map((k) => {
+                  const color = getCamelotColor(k.camelot);
+                  return (
+                    <button
+                      key={k.key}
+                      className="key-btn"
+                      onClick={() => handleSelectKey(keyPicker, k.key, k.camelot)}
+                      style={{
+                        padding: '10px 6px',
+                        background: `${color}15`,
+                        border: `1px solid ${color}60`,
+                        borderRadius: 6,
+                        color: color,
+                        fontFamily: 'monospace',
+                        cursor: 'pointer',
+                        textAlign: 'center',
+                      }}
+                    >
+                      <div style={{ fontSize: '1rem', fontWeight: 800 }}>{k.key}</div>
+                      <div style={{ fontSize: '0.6rem', opacity: 0.7, marginTop: 2 }}>{k.camelot}</div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div style={{
+              marginTop: 16, paddingTop: 12,
+              borderTop: '1px solid rgba(255,255,255,0.08)',
+              fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)',
+              textAlign: 'center',
+            }}>
+              Astuce : Serato / Mixed In Key affichent la clé exacte de tes morceaux.
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

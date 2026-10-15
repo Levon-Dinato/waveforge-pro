@@ -1418,7 +1418,7 @@ export const NouveautesPage: React.FC = () => {
 
                           <div style={{ display: 'flex', gap: 4, flexShrink: 0, alignItems: 'center' }}>
                             <ShareButton
-                              url={`${window.location.origin}/nouveautes?track=${track.id}`}
+                              url={`${window.location.origin}/share/${track.id}`}
                               title={`${track.title} — ${track.artist}`}
                               text={`Écoute "${track.title}" par ${track.artist} sur WaveForge PRO 🎵`}
                               variant="icon"

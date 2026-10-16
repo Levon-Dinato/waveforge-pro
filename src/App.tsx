@@ -6,6 +6,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { PlayerProvider } from './contexts/PlayerContext';
 import { ToastProvider } from './components/ui/Toast';
 import { MainLayout } from './layouts/MainLayout';
+import { PrivateRoute } from './components/PrivateRoute';
 import './styles.css';
 
 const HomePage = lazy(() =>
@@ -100,20 +101,93 @@ export default function App() {
               <Suspense fallback={<PageLoader />}>
                 <Routes>
                   <Route path="/" element={<MainLayout />}>
+                    {/* 🌐 Public */}
                     <Route index element={<HomePage />} />
-                    <Route path="studio" element={<StudioPage />} />
-                    <Route path="stems" element={<StemsPage />} />
-                    <Route path="mastering" element={<MasteringPage />} />
-                    <Route path="musicgen" element={<MusicGenPage />} />
-                    <Route path="generator" element={<GeneratorPage />} />
-                    <Route path="video" element={<VideoPage />} />
-                    <Route path="cdj" element={<CDJPage />} />
-                    <Route path="help" element={<HelpPage />} />
-                    <Route path="settings" element={<SettingsPage />} />
-                    <Route path="nouveautes" element={<NouveautesPage />} />
                     <Route path="auth" element={<AuthPage />} />
                     <Route path="reset-password" element={<ResetPasswordPage />} />
-                    <Route path="profil/:userId" element={<ProfilePage />} />
+                    <Route path="help" element={<HelpPage />} />
+
+                    {/* 🔒 Protégées — accessible uniquement si connecté */}
+                    <Route
+                      path="studio"
+                      element={
+                        <PrivateRoute>
+                          <StudioPage />
+                        </PrivateRoute>
+                      }
+                    />
+                    <Route
+                      path="stems"
+                      element={
+                        <PrivateRoute>
+                          <StemsPage />
+                        </PrivateRoute>
+                      }
+                    />
+                    <Route
+                      path="mastering"
+                      element={
+                        <PrivateRoute>
+                          <MasteringPage />
+                        </PrivateRoute>
+                      }
+                    />
+                    <Route
+                      path="musicgen"
+                      element={
+                        <PrivateRoute>
+                          <MusicGenPage />
+                        </PrivateRoute>
+                      }
+                    />
+                    <Route
+                      path="generator"
+                      element={
+                        <PrivateRoute>
+                          <GeneratorPage />
+                        </PrivateRoute>
+                      }
+                    />
+                    <Route
+                      path="video"
+                      element={
+                        <PrivateRoute>
+                          <VideoPage />
+                        </PrivateRoute>
+                      }
+                    />
+                    <Route
+                      path="cdj"
+                      element={
+                        <PrivateRoute>
+                          <CDJPage />
+                        </PrivateRoute>
+                      }
+                    />
+                    <Route
+                      path="settings"
+                      element={
+                        <PrivateRoute>
+                          <SettingsPage />
+                        </PrivateRoute>
+                      }
+                    />
+                    <Route
+                      path="nouveautes"
+                      element={
+                        <PrivateRoute>
+                          <NouveautesPage />
+                        </PrivateRoute>
+                      }
+                    />
+                    <Route
+                      path="profil/:userId"
+                      element={
+                        <PrivateRoute>
+                          <ProfilePage />
+                        </PrivateRoute>
+                      }
+                    />
                   </Route>
                 </Routes>
               </Suspense>

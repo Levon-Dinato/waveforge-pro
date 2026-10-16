@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAudioEngineContext } from '../contexts/AudioEngineContext';
 import { useIsMobile } from '../hooks/useIsMobile';
+import { ShareButton } from '../components/ShareButton';
 import { historyStore } from '../remix/historyStore';
 import type { RemixEntry } from '../remix/types';
 
@@ -250,7 +251,7 @@ export const HomePage: React.FC = () => {
             </span>
           </p>
 
-          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 44 }}>
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 44, alignItems: 'center' }}>
             <Link
               to="/cdj"
               className="wf-btn wf-btn-primary"
@@ -294,6 +295,17 @@ export const HomePage: React.FC = () => {
             >
               🎚️ Mastering
             </Link>
+
+            {/* ✅ BOUTON PARTAGE DANS LE HERO */}
+            <ShareButton
+              url="https://waveforge-pro-one.vercel.app/"
+              title="WaveForge PRO · Studio DJ & Mastering"
+              text="Découvre WaveForge PRO — Le studio DJ tout-en-un dans ton navigateur 🎧"
+              variant="button"
+              size="medium"
+              label="Partager"
+              position="bottom"
+            />
           </div>
 
           <div
@@ -556,7 +568,6 @@ export const HomePage: React.FC = () => {
                 e.currentTarget.style.boxShadow = 'none';
               }}
             >
-              {/* Numéro géant en arrière-plan */}
               <div
                 style={{
                   position: 'absolute',
@@ -744,6 +755,78 @@ export const HomePage: React.FC = () => {
       )}
 
       {/* ═══════════════════════════════════════════ */}
+      {/* SECTION PARTAGE */}
+      {/* ═══════════════════════════════════════════ */}
+      <div
+        className="wf-glass"
+        style={{
+          padding: isMobile ? '32px 20px' : '48px 40px',
+          textAlign: 'center',
+          background: `
+            radial-gradient(ellipse at center, rgba(0, 217, 255, 0.08) 0%, transparent 70%),
+            linear-gradient(135deg, rgba(20, 20, 30, 0.6), rgba(15, 15, 25, 0.7))
+          `,
+          border: '1px solid rgba(0, 217, 255, 0.2)',
+        }}
+      >
+        <div
+          style={{
+            fontSize: isMobile ? 32 : 42,
+            marginBottom: 14,
+          }}
+        >
+          🎧
+        </div>
+        <h3
+          style={{
+            margin: 0,
+            marginBottom: 10,
+            fontSize: isMobile ? 20 : 26,
+            fontWeight: 800,
+            color: '#fff',
+            letterSpacing: '-0.5px',
+          }}
+        >
+          Fais découvrir{' '}
+          <span
+            style={{
+              background: 'linear-gradient(120deg, #00d9ff 0%, #7c5cff 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}
+          >
+            WaveForge PRO
+          </span>
+        </h3>
+        <p
+          style={{
+            margin: 0,
+            marginBottom: 26,
+            fontSize: isMobile ? 12 : 14,
+            color: 'rgba(255,255,255,0.6)',
+            maxWidth: 480,
+            marginLeft: 'auto',
+            marginRight: 'auto',
+            lineHeight: 1.6,
+          }}
+        >
+          Partage WaveForge PRO avec tes amis DJ et producteurs. Le studio audio qui tourne dans le navigateur.
+        </p>
+        <div style={{ display: 'inline-block' }}>
+          <ShareButton
+            url="https://waveforge-pro-one.vercel.app/"
+            title="WaveForge PRO · Studio DJ & Mastering"
+            text="Découvre WaveForge PRO — Le studio DJ tout-en-un dans ton navigateur 🎧"
+            variant="button"
+            size="large"
+            label="Partager WaveForge"
+            position="bottom"
+          />
+        </div>
+      </div>
+
+      {/* ═══════════════════════════════════════════ */}
       {/* FOOTER */}
       {/* ═══════════════════════════════════════════ */}
       <footer
@@ -761,7 +844,6 @@ export const HomePage: React.FC = () => {
             marginBottom: 32,
           }}
         >
-          {/* Colonne 1 : Branding */}
           <div>
             <div
               style={{
@@ -826,7 +908,6 @@ export const HomePage: React.FC = () => {
             </p>
           </div>
 
-          {/* Colonne 2 : Produits */}
           <div>
             <div
               style={{
@@ -849,7 +930,6 @@ export const HomePage: React.FC = () => {
             </div>
           </div>
 
-          {/* Colonne 3 : Communauté */}
           <div>
             <div
               style={{
@@ -871,7 +951,6 @@ export const HomePage: React.FC = () => {
             </div>
           </div>
 
-          {/* Colonne 4 : Info */}
           <div>
             <div
               style={{
@@ -899,7 +978,6 @@ export const HomePage: React.FC = () => {
           </div>
         </div>
 
-        {/* Technos utilisées */}
         <div
           style={{
             padding: '18px 0',
@@ -931,7 +1009,6 @@ export const HomePage: React.FC = () => {
           ))}
         </div>
 
-        {/* Copyright bottom */}
         <div
           style={{
             paddingTop: 18,

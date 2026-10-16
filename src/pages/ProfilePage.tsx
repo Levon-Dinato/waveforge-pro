@@ -113,7 +113,7 @@ const Waveform: React.FC<WaveformProps> = ({ peaks, progress, onSeek, height = 3
 };
 
 // ============================================================
-// BADGE COMPONENT
+// BADGE
 // ============================================================
 const Badge: React.FC<{ icon: string; label: string; color: string }> = ({ icon, label, color }) => (
   <span
@@ -139,7 +139,7 @@ const Badge: React.FC<{ icon: string; label: string; color: string }> = ({ icon,
 );
 
 // ============================================================
-// STAT CARD COMPONENT
+// STAT CARD
 // ============================================================
 const StatCard: React.FC<{
   icon: string;
@@ -181,13 +181,7 @@ const StatCard: React.FC<{
         pointerEvents: 'none',
       }}
     />
-    <div
-      style={{
-        fontSize: 22,
-        marginBottom: 8,
-        filter: `drop-shadow(0 0 8px ${color}60)`,
-      }}
-    >
+    <div style={{ fontSize: 22, marginBottom: 8, filter: `drop-shadow(0 0 8px ${color}60)` }}>
       {icon}
     </div>
     <div
@@ -237,6 +231,10 @@ export const ProfilePage: React.FC = () => {
   const [editUsername, setEditUsername] = useState('');
   const [editBio, setEditBio] = useState('');
   const [saving, setSaving] = useState(false);
+
+  // ✅ NOUVEAU : Avatar
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   const isOwnProfile = user?.id === userId;
 
@@ -308,6 +306,75 @@ export const ProfilePage: React.FC = () => {
     }
   };
 
+  // ✅ UPLOAD AVATAR
+  const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !user || !isOwnProfile) return;
+
+    if (!file.type.startsWith('image/')) {
+      alert('Le fichier doit être une image');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image trop grande (max 5 MB)');
+      return;
+    }
+
+    setUploadingAvatar(true);
+    try {
+      const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+      const fileName = `${user.id}_${Date.now()}.${ext}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, file, { upsert: true });
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(fileName);
+
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: urlData.publicUrl })
+        .eq('id', user.id);
+      if (updateError) throw updateError;
+
+      setProfile((prev) => (prev ? { ...prev, avatar_url: urlData.publicUrl } : prev));
+    } catch (err: any) {
+      console.error('Erreur upload avatar:', err);
+      alert('Erreur upload : ' + (err.message || err));
+    } finally {
+      setUploadingAvatar(false);
+      event.target.value = '';
+    }
+  };
+
+  // ✅ SUPPRIMER AVATAR
+  const handleRemoveAvatar = async () => {
+    if (!user || !isOwnProfile || !profile?.avatar_url) return;
+    if (!window.confirm('Supprimer ta photo de profil ?')) return;
+
+    setUploadingAvatar(true);
+    try {
+      const urlParts = profile.avatar_url.split('/avatars/');
+      if (urlParts[1]) {
+        await supabase.storage.from('avatars').remove([urlParts[1]]);
+      }
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({ avatar_url: null })
+        .eq('id', user.id);
+      if (error) throw error;
+
+      setProfile((prev) => (prev ? { ...prev, avatar_url: null } : prev));
+    } catch (err: any) {
+      console.error('Erreur suppression avatar:', err);
+      alert('Erreur : ' + (err.message || err));
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
   const handlePlayTrack = (track: Track) => {
     const playerTrack: PlayerTrack = {
       id: track.id,
@@ -367,7 +434,14 @@ export const ProfilePage: React.FC = () => {
 
   if (loading) {
     return (
-      <div style={{ padding: '40px', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace' }}>
+      <div
+        style={{
+          padding: '40px',
+          textAlign: 'center',
+          color: 'rgba(255,255,255,0.4)',
+          fontFamily: 'monospace',
+        }}
+      >
         {t('profile.loading')}
       </div>
     );
@@ -381,7 +455,14 @@ export const ProfilePage: React.FC = () => {
           <h2 style={{ fontSize: '1.1rem', marginBottom: 8, fontFamily: 'monospace' }}>
             {t('profile.not_found')}
           </h2>
-          <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem', marginBottom: 20, fontFamily: 'monospace' }}>
+          <p
+            style={{
+              color: 'rgba(255,255,255,0.5)',
+              fontSize: '0.85rem',
+              marginBottom: 20,
+              fontFamily: 'monospace',
+            }}
+          >
             {t('profile.not_found_desc')}
           </p>
           <button
@@ -411,7 +492,15 @@ export const ProfilePage: React.FC = () => {
   const isTopDj = totalLikes >= 100;
 
   return (
-    <div style={{ padding: '20px', fontFamily: 'monospace', color: '#fff', maxWidth: 1200, margin: '0 auto' }}>
+    <div
+      style={{
+        padding: '20px',
+        fontFamily: 'monospace',
+        color: '#fff',
+        maxWidth: 1200,
+        margin: '0 auto',
+      }}
+    >
       <style>{`
         @keyframes profileBanner {
           0% { background-position: 0% 50%; }
@@ -425,6 +514,9 @@ export const ProfilePage: React.FC = () => {
         @keyframes bannerWave {
           0% { transform: translateX(0); }
           100% { transform: translateX(-50%); }
+        }
+        @keyframes spin {
+          to { transform: rotate(360deg); }
         }
       `}</style>
 
@@ -441,7 +533,7 @@ export const ProfilePage: React.FC = () => {
           boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
         }}
       >
-        {/* BANNIÈRE GRADIENT */}
+        {/* BANNIÈRE */}
         <div
           style={{
             height: 140,
@@ -455,11 +547,17 @@ export const ProfilePage: React.FC = () => {
             position: 'relative',
           }}
         >
-          {/* Motif waveform SVG */}
           <svg
             viewBox="0 0 1200 140"
             preserveAspectRatio="none"
-            style={{ position: 'absolute', inset: 0, width: '200%', height: '100%', opacity: 0.15, animation: 'bannerWave 20s linear infinite' }}
+            style={{
+              position: 'absolute',
+              inset: 0,
+              width: '200%',
+              height: '100%',
+              opacity: 0.15,
+              animation: 'bannerWave 20s linear infinite',
+            }}
           >
             <path
               d="M0,70 Q50,20 100,70 T200,70 T300,70 T400,70 T500,70 T600,70 T700,70 T800,70 T900,70 T1000,70 T1100,70 T1200,70"
@@ -480,33 +578,123 @@ export const ProfilePage: React.FC = () => {
         <div
           style={{
             padding: '0 24px 24px',
-            background: 'linear-gradient(180deg, rgba(15, 18, 28, 0.95) 0%, rgba(10, 12, 20, 0.98) 100%)',
+            background:
+              'linear-gradient(180deg, rgba(15, 18, 28, 0.95) 0%, rgba(10, 12, 20, 0.98) 100%)',
             backdropFilter: 'blur(20px)',
             position: 'relative',
           }}
         >
-          {/* AVATAR */}
+          {/* AVATAR — cliquable pour changer */}
           <div
             style={{
+              position: 'relative',
               width: 110,
               height: 110,
-              borderRadius: '50%',
               marginTop: -55,
               marginBottom: 16,
               flexShrink: 0,
-              background: profile?.avatar_url
-                ? `url(${profile.avatar_url}) center/cover`
-                : 'linear-gradient(135deg, #00d9ff, #7c5cff)',
-              border: '3px solid rgba(10, 12, 20, 0.98)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 44,
-              animation: 'avatarGlow 3s ease-in-out infinite',
-              position: 'relative',
             }}
           >
-            {!profile?.avatar_url && '🎧'}
+            {isOwnProfile && (
+              <input
+                ref={avatarInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarChange}
+                style={{ display: 'none' }}
+              />
+            )}
+
+            <div
+              onClick={() => isOwnProfile && !uploadingAvatar && avatarInputRef.current?.click()}
+              title={isOwnProfile ? 'Clique pour changer ta photo' : ''}
+              style={{
+                width: '100%',
+                height: '100%',
+                borderRadius: '50%',
+                background: profile?.avatar_url
+                  ? `url(${profile.avatar_url}) center/cover`
+                  : 'linear-gradient(135deg, #00d9ff, #7c5cff)',
+                border: '3px solid rgba(10, 12, 20, 0.98)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 44,
+                animation: 'avatarGlow 3s ease-in-out infinite',
+                cursor: isOwnProfile ? 'pointer' : 'default',
+                transition: 'all 0.2s',
+                position: 'relative',
+                overflow: 'hidden',
+              }}
+              onMouseEnter={(e) => {
+                if (isOwnProfile) e.currentTarget.style.transform = 'scale(1.03)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'scale(1)';
+              }}
+            >
+              {!profile?.avatar_url && '🎧'}
+
+              {/* Overlay caméra au survol */}
+              {isOwnProfile && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    background: 'rgba(0, 0, 0, 0.6)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexDirection: 'column',
+                    gap: 4,
+                    opacity: 0,
+                    transition: 'opacity 0.2s',
+                    fontSize: 24,
+                    pointerEvents: 'none',
+                  }}
+                  className="avatar-overlay"
+                >
+                  📷
+                  <span
+                    style={{
+                      fontSize: 9,
+                      fontFamily: 'monospace',
+                      fontWeight: 700,
+                      color: '#00d9ff',
+                    }}
+                  >
+                    CHANGER
+                  </span>
+                </div>
+              )}
+
+              {/* Loader pendant upload */}
+              {uploadingAvatar && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    background: 'rgba(0, 0, 0, 0.8)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 2,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 24,
+                      height: 24,
+                      border: '2px solid rgba(0, 217, 255, 0.3)',
+                      borderTop: '2px solid #00d9ff',
+                      borderRadius: '50%',
+                      animation: 'spin 0.8s linear infinite',
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+
             {/* Ring gradient */}
             <div
               style={{
@@ -517,8 +705,45 @@ export const ProfilePage: React.FC = () => {
                 zIndex: -1,
                 opacity: 0.6,
                 filter: 'blur(4px)',
+                pointerEvents: 'none',
               }}
             />
+
+            {/* Bouton supprimer */}
+            {isOwnProfile && profile?.avatar_url && !uploadingAvatar && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleRemoveAvatar();
+                }}
+                title="Supprimer la photo"
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  right: 0,
+                  width: 26,
+                  height: 26,
+                  borderRadius: '50%',
+                  background: 'rgba(255, 60, 60, 0.9)',
+                  border: '2px solid rgba(10, 12, 20, 0.98)',
+                  color: '#fff',
+                  cursor: 'pointer',
+                  fontSize: 12,
+                  fontWeight: 800,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  zIndex: 3,
+                  transition: 'all 0.15s',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = '#ff3366')}
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.background = 'rgba(255, 60, 60, 0.9)')
+                }
+              >
+                ✕
+              </button>
+            )}
           </div>
 
           {/* INFO + ÉDITION */}
@@ -595,7 +820,6 @@ export const ProfilePage: React.FC = () => {
             </div>
           ) : (
             <>
-              {/* NOM + BADGES */}
               <div
                 style={{
                   display: 'flex',
@@ -627,7 +851,6 @@ export const ProfilePage: React.FC = () => {
                 </div>
               </div>
 
-              {/* BIO */}
               <p
                 style={{
                   margin: '0 0 18px 0',
@@ -637,11 +860,9 @@ export const ProfilePage: React.FC = () => {
                   maxWidth: 800,
                 }}
               >
-                {profile?.bio ||
-                  (isOwnProfile ? t('profile.add_bio') : t('profile.no_bio'))}
+                {profile?.bio || (isOwnProfile ? t('profile.add_bio') : t('profile.no_bio'))}
               </p>
 
-              {/* STATS BENTO */}
               <div
                 style={{
                   display: 'grid',
@@ -651,9 +872,28 @@ export const ProfilePage: React.FC = () => {
                   maxWidth: 700,
                 }}
               >
-                <StatCard icon="🎵" value={tracks.length} label={t('profile.stats_tracks')} color="#00d9ff" />
-                <StatCard icon="❤️" value={totalLikes} label={t('profile.stats_likes')} color="#ff5c5c" />
-                <StatCard icon="🎧" value={tracks.reduce((s, t) => s + (t.bpm || 0), 0) > 0 ? Math.round(tracks.reduce((s, t) => s + t.bpm, 0) / tracks.length) : 0} label={t('profile.stats_avg_bpm')} color="#7c5cff" />
+                <StatCard
+                  icon="🎵"
+                  value={tracks.length}
+                  label={t('profile.stats_tracks')}
+                  color="#00d9ff"
+                />
+                <StatCard
+                  icon="❤️"
+                  value={totalLikes}
+                  label={t('profile.stats_likes')}
+                  color="#ff5c5c"
+                />
+                <StatCard
+                  icon="🎧"
+                  value={
+                    tracks.reduce((s, t) => s + (t.bpm || 0), 0) > 0
+                      ? Math.round(tracks.reduce((s, t) => s + t.bpm, 0) / tracks.length)
+                      : 0
+                  }
+                  label={t('profile.stats_avg_bpm')}
+                  color="#7c5cff"
+                />
                 <StatCard
                   icon="📅"
                   value={joinDate.toLocaleDateString(undefined, { month: 'short', year: '2-digit' })}
@@ -662,7 +902,6 @@ export const ProfilePage: React.FC = () => {
                 />
               </div>
 
-              {/* ACTIONS */}
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                 <ShareButton
                   url={`https://waveforge-pro-one.vercel.app/profil/${userId}`}
@@ -707,18 +946,9 @@ export const ProfilePage: React.FC = () => {
         </div>
       </div>
 
-      {/* ═══════════════════════════════════════════════ */}
       {/* TRACKS */}
-      {/* ═══════════════════════════════════════════════ */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-        <h2
-          style={{
-            fontSize: '1.2rem',
-            margin: 0,
-            fontWeight: 800,
-            letterSpacing: '-0.3px',
-          }}
-        >
+        <h2 style={{ fontSize: '1.2rem', margin: 0, fontWeight: 800, letterSpacing: '-0.3px' }}>
           🎵 {isOwnProfile ? t('profile.my_tracks') : t('profile.shared_tracks')}
         </h2>
         <span
@@ -740,9 +970,7 @@ export const ProfilePage: React.FC = () => {
       {tracks.length === 0 ? (
         <GlassCard style={{ padding: '40px', textAlign: 'center', color: 'rgba(255,255,255,0.4)' }}>
           <div style={{ fontSize: 40, marginBottom: 12, opacity: 0.5 }}>🎵</div>
-          <div style={{ fontFamily: 'monospace', fontSize: 13 }}>
-            {t('profile.no_tracks')}
-          </div>
+          <div style={{ fontFamily: 'monospace', fontSize: 13 }}>{t('profile.no_tracks')}</div>
         </GlassCard>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -820,19 +1048,16 @@ export const ProfilePage: React.FC = () => {
                         </div>
                       </div>
 
-                      <div
-                        style={{
-                          display: 'flex',
-                          gap: 6,
-                          flexShrink: 0,
-                          alignItems: 'center',
-                        }}
-                      >
+                      <div style={{ display: 'flex', gap: 6, flexShrink: 0, alignItems: 'center' }}>
                         <button
                           onClick={() => handlePlayTrack(track)}
                           style={{
-                            background: isThisPlaying ? 'rgba(0, 217, 255, 0.15)' : 'rgba(0, 217, 255, 0.08)',
-                            border: isThisPlaying ? '1px solid #00d9ff' : '1px solid rgba(0, 217, 255, 0.3)',
+                            background: isThisPlaying
+                              ? 'rgba(0, 217, 255, 0.15)'
+                              : 'rgba(0, 217, 255, 0.08)',
+                            border: isThisPlaying
+                              ? '1px solid #00d9ff'
+                              : '1px solid rgba(0, 217, 255, 0.3)',
                             color: isThisPlaying ? '#00d9ff' : '#fff',
                             padding: '6px 12px',
                             borderRadius: 6,
@@ -843,7 +1068,11 @@ export const ProfilePage: React.FC = () => {
                             transition: 'all 0.2s',
                           }}
                         >
-                          {isThisPlaying ? '⏸ Pause' : isThisCurrent ? '▶ Reprendre' : '▶ ' + t('profile.listen')}
+                          {isThisPlaying
+                            ? '⏸ Pause'
+                            : isThisCurrent
+                            ? '▶ Reprendre'
+                            : '▶ ' + t('profile.listen')}
                         </button>
 
                         <span

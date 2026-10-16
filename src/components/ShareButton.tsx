@@ -66,7 +66,15 @@ export const ShareButton: React.FC<ShareButtonProps> = ({
   const [menuOpen, setMenuOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [hovered, setHovered] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -80,12 +88,26 @@ export const ShareButton: React.FC<ShareButtonProps> = ({
   }, [menuOpen]);
 
   const handleShare = async () => {
-    if (navigator.share && /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)) {
+    // ✅ MOBILE : utilise UNIQUEMENT le partage natif
+    if (isMobile) {
+      if (navigator.share) {
+        try {
+          await navigator.share({ title, text, url });
+          return;
+        } catch (e) {
+          // utilisateur a annulé ou pas supporté
+        }
+      }
+      // Fallback mobile (si pas de navigator.share) : copie le lien
       try {
-        await navigator.share({ title, text, url });
-        return;
+        await navigator.clipboard.writeText(url);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
       } catch (e) {}
+      return;
     }
+
+    // ✅ DESKTOP : ouvre notre menu custom
     setMenuOpen(!menuOpen);
   };
 
@@ -155,19 +177,13 @@ export const ShareButton: React.FC<ShareButtonProps> = ({
           50% { transform: scale(1.15); }
           100% { transform: scale(1); opacity: 1; }
         }
-        .share-btn-hover {
-          transition: all 0.15s ease;
-        }
+        .share-btn-hover { transition: all 0.15s ease; }
         .share-btn-hover:hover {
           transform: translateY(-2px);
           box-shadow: 0 8px 24px rgba(0, 217, 255, 0.35);
         }
-        .share-platform-item {
-          transition: all 0.15s ease;
-        }
-        .share-platform-item:hover {
-          transform: translateX(4px);
-        }
+        .share-platform-item { transition: all 0.15s ease; }
+        .share-platform-item:hover { transform: translateX(4px); }
       `}</style>
 
       <button
@@ -192,24 +208,31 @@ export const ShareButton: React.FC<ShareButtonProps> = ({
           fontWeight: 700,
         }}
       >
-        <svg width={s.iconFont} height={s.iconFont} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="18" cy="5" r="3" />
-          <circle cx="6" cy="12" r="3" />
-          <circle cx="18" cy="19" r="3" />
-          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
-          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
-        </svg>
-        {variant === 'button' && <span>{label}</span>}
+        {copied && isMobile ? (
+          <svg width={s.iconFont} height={s.iconFont} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+        ) : (
+          <svg width={s.iconFont} height={s.iconFont} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="18" cy="5" r="3" />
+            <circle cx="6" cy="12" r="3" />
+            <circle cx="18" cy="19" r="3" />
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+          </svg>
+        )}
+        {variant === 'button' && <span>{copied && isMobile ? 'Copié !' : label}</span>}
       </button>
 
-      {menuOpen && (
+      {/* ✅ Menu UNIQUEMENT sur desktop */}
+      {menuOpen && !isMobile && (
         <div
           style={{
             position: 'absolute',
             [position === 'bottom' ? 'top' : 'bottom']: '100%',
-            [position === 'bottom' ? 'marginTop' : 'marginBottom']: -30,
+            [position === 'bottom' ? 'marginTop' : 'marginBottom']: 8,
             right: 0,
-            marginRight: window.innerWidth < 768 ? 0 : 220,
+            marginRight: 60,
             background: 'linear-gradient(135deg, rgba(15, 18, 28, 0.98), rgba(10, 12, 20, 0.99))',
             border: '1px solid rgba(0, 217, 255, 0.3)',
             borderRadius: 12,

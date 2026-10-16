@@ -1424,7 +1424,7 @@ export const NouveautesPage: React.FC = () => {
                               variant="icon"
                               size="small"
                               label="Partager"
-                              position="top"
+                              position="bottom"
                             />
                             <button
                               onClick={() => handleLike(track.id)}

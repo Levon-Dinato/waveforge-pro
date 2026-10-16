@@ -11,7 +11,6 @@ interface ShareButtonProps {
   position?: 'top' | 'bottom';
 }
 
-// 🎨 Icônes SVG des plateformes
 const SocialIcons = {
   facebook: (
     <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
@@ -148,7 +147,7 @@ export const ShareButton: React.FC<ShareButtonProps> = ({
     <div ref={menuRef} style={{ position: 'relative', display: 'inline-block' }}>
       <style>{`
         @keyframes shareMenuIn {
-          from { opacity: 0; transform: translateY(6px) scale(0.96); }
+          from { opacity: 0; transform: translateY(-6px) scale(0.96); }
           to { opacity: 1; transform: translateY(0) scale(1); }
         }
         @keyframes checkPop {
@@ -208,15 +207,16 @@ export const ShareButton: React.FC<ShareButtonProps> = ({
           style={{
             position: 'absolute',
             [position === 'bottom' ? 'top' : 'bottom']: '100%',
-            [position === 'bottom' ? 'marginTop' : 'marginBottom']: 10,
+            [position === 'bottom' ? 'marginTop' : 'marginBottom']: -30,
             right: 0,
+            marginRight: 50,
             background: 'linear-gradient(135deg, rgba(15, 18, 28, 0.98), rgba(10, 12, 20, 0.99))',
             border: '1px solid rgba(0, 217, 255, 0.3)',
             borderRadius: 12,
             padding: 8,
             minWidth: 240,
             boxShadow: '0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(0, 217, 255, 0.15)',
-            zIndex: 1000,
+            zIndex: 9999,
             fontFamily: 'monospace',
             backdropFilter: 'blur(20px)',
             WebkitBackdropFilter: 'blur(20px)',

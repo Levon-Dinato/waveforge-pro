@@ -230,9 +230,9 @@ export const ShareButton: React.FC<ShareButtonProps> = ({
           style={{
             position: 'absolute',
             [position === 'bottom' ? 'top' : 'bottom']: '100%',
-            [position === 'bottom' ? 'marginTop' : 'marginBottom']: 8,
+            [position === 'bottom' ? 'marginTop' : 'marginBottom']: -30,
             right: 0,
-            marginRight: 60,
+            marginRight: 50,
             background: 'linear-gradient(135deg, rgba(15, 18, 28, 0.98), rgba(10, 12, 20, 0.99))',
             border: '1px solid rgba(0, 217, 255, 0.3)',
             borderRadius: 12,

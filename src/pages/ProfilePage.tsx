@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { GlassCard } from '../components/ui/GlassCard';
+import { ShareButton } from '../components/ShareButton';
 import { supabase, AUDIO_BUCKET } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { usePlayer, type PlayerTrack } from '../contexts/PlayerContext';
@@ -110,19 +112,121 @@ const Waveform: React.FC<WaveformProps> = ({ peaks, progress, onSeek, height = 3
   );
 };
 
+// ============================================================
+// BADGE COMPONENT
+// ============================================================
+const Badge: React.FC<{ icon: string; label: string; color: string }> = ({ icon, label, color }) => (
+  <span
+    style={{
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: 5,
+      padding: '4px 10px',
+      background: `${color}15`,
+      border: `1px solid ${color}50`,
+      borderRadius: 9999,
+      fontSize: 10,
+      fontWeight: 800,
+      color,
+      letterSpacing: '0.5px',
+      fontFamily: 'monospace',
+      textShadow: `0 0 8px ${color}40`,
+    }}
+  >
+    <span style={{ fontSize: 11 }}>{icon}</span>
+    {label}
+  </span>
+);
+
+// ============================================================
+// STAT CARD COMPONENT
+// ============================================================
+const StatCard: React.FC<{
+  icon: string;
+  value: string | number;
+  label: string;
+  color: string;
+}> = ({ icon, value, label, color }) => (
+  <div
+    style={{
+      position: 'relative',
+      padding: '16px 14px',
+      background: `linear-gradient(135deg, ${color}10, ${color}03)`,
+      border: `1px solid ${color}30`,
+      borderRadius: 12,
+      overflow: 'hidden',
+      transition: 'all 0.25s ease',
+      cursor: 'default',
+    }}
+    onMouseEnter={(e) => {
+      e.currentTarget.style.transform = 'translateY(-3px)';
+      e.currentTarget.style.borderColor = `${color}60`;
+      e.currentTarget.style.boxShadow = `0 8px 24px ${color}25`;
+    }}
+    onMouseLeave={(e) => {
+      e.currentTarget.style.transform = 'translateY(0)';
+      e.currentTarget.style.borderColor = `${color}30`;
+      e.currentTarget.style.boxShadow = 'none';
+    }}
+  >
+    <div
+      style={{
+        position: 'absolute',
+        top: -30,
+        right: -30,
+        width: 90,
+        height: 90,
+        borderRadius: '50%',
+        background: `radial-gradient(circle, ${color}25 0%, transparent 70%)`,
+        pointerEvents: 'none',
+      }}
+    />
+    <div
+      style={{
+        fontSize: 22,
+        marginBottom: 8,
+        filter: `drop-shadow(0 0 8px ${color}60)`,
+      }}
+    >
+      {icon}
+    </div>
+    <div
+      style={{
+        fontSize: 24,
+        fontWeight: 900,
+        color,
+        fontFamily: 'monospace',
+        lineHeight: 1,
+        marginBottom: 6,
+        letterSpacing: '-1px',
+        textShadow: `0 0 16px ${color}40`,
+      }}
+    >
+      {value}
+    </div>
+    <div
+      style={{
+        fontSize: 9,
+        color: 'rgba(255,255,255,0.5)',
+        letterSpacing: '1.2px',
+        fontWeight: 700,
+        textTransform: 'uppercase',
+      }}
+    >
+      {label}
+    </div>
+  </div>
+);
+
+// ============================================================
+// COMPOSANT PRINCIPAL
+// ============================================================
 export const ProfilePage: React.FC = () => {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { user } = useAuth();
-  const {
-    currentTrack,
-    isPlaying,
-    currentTime,
-    duration,
-    play,
-    seek,
-    stop,
-  } = usePlayer();
+  const { currentTrack, isPlaying, currentTime, duration, play, seek, stop } = usePlayer();
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [tracks, setTracks] = useState<Track[]>([]);
@@ -224,7 +328,7 @@ export const ProfilePage: React.FC = () => {
 
   const handleDelete = async (track: Track) => {
     if (!isOwnProfile) return;
-    if (!window.confirm('Supprimer "' + track.title + '" ?')) return;
+    if (!window.confirm(t('profile.confirm_delete', { title: track.title }))) return;
 
     if (currentTrack?.id === track.id) {
       stop();
@@ -250,21 +354,21 @@ export const ProfilePage: React.FC = () => {
       if (error) throw error;
 
       if (!deleted || deleted.length === 0) {
-        alert('Suppression bloquee par la securite Supabase.');
+        alert(t('profile.delete_blocked'));
         return;
       }
 
       setTracks((prev) => prev.filter((t) => t.id !== track.id));
     } catch (err: any) {
       console.error('Erreur suppression:', err);
-      alert('Erreur suppression : ' + (err.message || err));
+      alert(t('profile.delete_error') + (err.message || err));
     }
   };
 
   if (loading) {
     return (
-      <div style={{ padding: '40px', textAlign: 'center', color: 'rgba(255,255,255,0.4)' }}>
-        Chargement du profil...
+      <div style={{ padding: '40px', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace' }}>
+        {t('profile.loading')}
       </div>
     );
   }
@@ -274,9 +378,11 @@ export const ProfilePage: React.FC = () => {
       <div style={{ padding: '40px', textAlign: 'center' }}>
         <GlassCard style={{ padding: '40px', maxWidth: 400, margin: '0 auto' }}>
           <div style={{ fontSize: 40, marginBottom: 16 }}>👻</div>
-          <h2 style={{ fontSize: '1.1rem', marginBottom: 8 }}>Profil introuvable</h2>
-          <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem', marginBottom: 20 }}>
-            Cet utilisateur n'existe pas ou a ete supprime.
+          <h2 style={{ fontSize: '1.1rem', marginBottom: 8, fontFamily: 'monospace' }}>
+            {t('profile.not_found')}
+          </h2>
+          <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem', marginBottom: 20, fontFamily: 'monospace' }}>
+            {t('profile.not_found_desc')}
           </p>
           <button
             onClick={() => navigate('/nouveautes')}
@@ -291,7 +397,7 @@ export const ProfilePage: React.FC = () => {
               cursor: 'pointer',
             }}
           >
-            ← Retour aux nouveautes
+            {t('profile.back')}
           </button>
         </GlassCard>
       </div>
@@ -299,178 +405,344 @@ export const ProfilePage: React.FC = () => {
   }
 
   const totalLikes = tracks.reduce((sum, t) => sum + t.likes, 0);
+  const joinDate = new Date(profile?.created_at || '');
+  const isEarlyMember = joinDate < new Date('2025-06-01');
+  const isProDj = tracks.length >= 50;
+  const isTopDj = totalLikes >= 100;
 
   return (
-    <div style={{ padding: '20px', fontFamily: 'monospace', color: '#fff' }}>
-      <GlassCard
+    <div style={{ padding: '20px', fontFamily: 'monospace', color: '#fff', maxWidth: 1200, margin: '0 auto' }}>
+      <style>{`
+        @keyframes profileBanner {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+        @keyframes avatarGlow {
+          0%, 100% { box-shadow: 0 0 30px rgba(0, 217, 255, 0.4), 0 0 60px rgba(124, 92, 255, 0.2); }
+          50% { box-shadow: 0 0 50px rgba(0, 217, 255, 0.6), 0 0 80px rgba(124, 92, 255, 0.4); }
+        }
+        @keyframes bannerWave {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+      `}</style>
+
+      {/* ═══════════════════════════════════════════════ */}
+      {/* BANNIÈRE + PROFIL */}
+      {/* ═══════════════════════════════════════════════ */}
+      <div
         style={{
-          padding: '24px',
-          marginBottom: '20px',
-          borderColor: 'rgba(0, 217, 255, 0.3)',
+          position: 'relative',
+          borderRadius: 20,
+          overflow: 'hidden',
+          marginBottom: 24,
+          border: '1px solid rgba(0, 217, 255, 0.25)',
+          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
         }}
       >
-        <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+        {/* BANNIÈRE GRADIENT */}
+        <div
+          style={{
+            height: 140,
+            background: `
+              radial-gradient(ellipse at 20% 50%, rgba(0, 217, 255, 0.4) 0%, transparent 60%),
+              radial-gradient(ellipse at 80% 50%, rgba(124, 92, 255, 0.4) 0%, transparent 60%),
+              linear-gradient(90deg, #0a0f1a 0%, #1a1f30 50%, #0a0f1a 100%)
+            `,
+            backgroundSize: '200% 200%, 200% 200%, 200% 100%',
+            animation: 'profileBanner 15s ease-in-out infinite',
+            position: 'relative',
+          }}
+        >
+          {/* Motif waveform SVG */}
+          <svg
+            viewBox="0 0 1200 140"
+            preserveAspectRatio="none"
+            style={{ position: 'absolute', inset: 0, width: '200%', height: '100%', opacity: 0.15, animation: 'bannerWave 20s linear infinite' }}
+          >
+            <path
+              d="M0,70 Q50,20 100,70 T200,70 T300,70 T400,70 T500,70 T600,70 T700,70 T800,70 T900,70 T1000,70 T1100,70 T1200,70"
+              stroke="#00d9ff"
+              strokeWidth="2"
+              fill="none"
+            />
+            <path
+              d="M0,80 Q50,120 100,80 T200,80 T300,80 T400,80 T500,80 T600,80 T700,80 T800,80 T900,80 T1000,80 T1100,80 T1200,80"
+              stroke="#7c5cff"
+              strokeWidth="2"
+              fill="none"
+            />
+          </svg>
+        </div>
+
+        {/* CONTENU PROFIL */}
+        <div
+          style={{
+            padding: '0 24px 24px',
+            background: 'linear-gradient(180deg, rgba(15, 18, 28, 0.95) 0%, rgba(10, 12, 20, 0.98) 100%)',
+            backdropFilter: 'blur(20px)',
+            position: 'relative',
+          }}
+        >
+          {/* AVATAR */}
           <div
             style={{
-              width: 90,
-              height: 90,
+              width: 110,
+              height: 110,
               borderRadius: '50%',
+              marginTop: -55,
+              marginBottom: 16,
               flexShrink: 0,
               background: profile?.avatar_url
                 ? `url(${profile.avatar_url}) center/cover`
                 : 'linear-gradient(135deg, #00d9ff, #7c5cff)',
-              border: '2px solid rgba(0, 217, 255, 0.5)',
+              border: '3px solid rgba(10, 12, 20, 0.98)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: 36,
-              boxShadow: '0 0 30px rgba(0, 217, 255, 0.3)',
+              fontSize: 44,
+              animation: 'avatarGlow 3s ease-in-out infinite',
+              position: 'relative',
             }}
           >
             {!profile?.avatar_url && '🎧'}
+            {/* Ring gradient */}
+            <div
+              style={{
+                position: 'absolute',
+                inset: -6,
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg, #00d9ff, #7c5cff)',
+                zIndex: -1,
+                opacity: 0.6,
+                filter: 'blur(4px)',
+              }}
+            />
           </div>
 
-          <div style={{ flex: 1, minWidth: 200 }}>
-            {editing ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <input
-                  type="text"
-                  value={editUsername}
-                  onChange={(e) => setEditUsername(e.target.value)}
-                  placeholder="Pseudo"
+          {/* INFO + ÉDITION */}
+          {editing ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 500 }}>
+              <input
+                type="text"
+                value={editUsername}
+                onChange={(e) => setEditUsername(e.target.value)}
+                placeholder={t('profile.username')}
+                style={{
+                  padding: '12px 14px',
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(0,255,255,0.3)',
+                  borderRadius: 8,
+                  color: '#fff',
+                  fontFamily: 'monospace',
+                  fontSize: '1.1rem',
+                  fontWeight: 700,
+                  outline: 'none',
+                }}
+              />
+              <textarea
+                value={editBio}
+                onChange={(e) => setEditBio(e.target.value)}
+                placeholder={t('profile.bio_placeholder')}
+                rows={3}
+                style={{
+                  padding: '12px 14px',
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(0,255,255,0.3)',
+                  borderRadius: 8,
+                  color: '#fff',
+                  fontFamily: 'monospace',
+                  fontSize: '0.85rem',
+                  outline: 'none',
+                  resize: 'vertical',
+                }}
+              />
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button
+                  onClick={handleSaveProfile}
+                  disabled={saving}
                   style={{
-                    padding: '10px 12px',
-                    background: 'rgba(255,255,255,0.05)',
-                    border: '1px solid rgba(0,255,255,0.3)',
-                    borderRadius: 6,
-                    color: '#fff',
+                    padding: '8px 18px',
+                    background: 'linear-gradient(135deg, #00d9ff, #0088ff)',
+                    color: '#000',
+                    border: 'none',
+                    borderRadius: 8,
                     fontFamily: 'monospace',
-                    fontSize: '1.1rem',
-                    fontWeight: 700,
-                    outline: 'none',
+                    fontWeight: 800,
+                    cursor: saving ? 'wait' : 'pointer',
+                    fontSize: 12,
                   }}
-                />
-                <textarea
-                  value={editBio}
-                  onChange={(e) => setEditBio(e.target.value)}
-                  placeholder="Bio (DJ, producteur, styles...)"
-                  rows={2}
+                >
+                  {saving ? t('common.saving') : t('common.save')}
+                </button>
+                <button
+                  onClick={() => setEditing(false)}
                   style={{
-                    padding: '10px 12px',
-                    background: 'rgba(255,255,255,0.05)',
-                    border: '1px solid rgba(0,255,255,0.3)',
-                    borderRadius: 6,
+                    padding: '8px 18px',
+                    background: 'transparent',
+                    border: '1px solid rgba(255,255,255,0.2)',
                     color: '#fff',
+                    borderRadius: 8,
                     fontFamily: 'monospace',
-                    fontSize: '0.85rem',
-                    outline: 'none',
-                    resize: 'vertical',
+                    cursor: 'pointer',
+                    fontSize: 12,
                   }}
-                />
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <button
-                    onClick={handleSaveProfile}
-                    disabled={saving}
-                    style={{
-                      padding: '6px 14px',
-                      background: '#00d9ff',
-                      color: '#000',
-                      border: 'none',
-                      borderRadius: 6,
-                      fontFamily: 'monospace',
-                      fontWeight: 800,
-                      cursor: saving ? 'wait' : 'pointer',
-                    }}
-                  >
-                    {saving ? 'Enregistrement...' : 'Enregistrer'}
-                  </button>
-                  <button
-                    onClick={() => setEditing(false)}
-                    style={{
-                      padding: '6px 14px',
-                      background: 'transparent',
-                      border: '1px solid rgba(255,255,255,0.2)',
-                      color: '#fff',
-                      borderRadius: 6,
-                      fontFamily: 'monospace',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    Annuler
-                  </button>
+                >
+                  {t('common.cancel')}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* NOM + BADGES */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 12,
+                  flexWrap: 'wrap',
+                  marginBottom: 10,
+                }}
+              >
+                <h1
+                  style={{
+                    margin: 0,
+                    fontSize: '1.8rem',
+                    fontWeight: 900,
+                    letterSpacing: '-0.5px',
+                    background: 'linear-gradient(135deg, #fff 0%, #00d9ff 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                  }}
+                >
+                  {profile?.username || t('profile.anonymous')}
+                </h1>
+
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  {isProDj && <Badge icon="⭐" label="PRO DJ" color="#ffd43b" />}
+                  {isTopDj && <Badge icon="🏆" label="TOP 10" color="#ff8c00" />}
+                  {isEarlyMember && <Badge icon="💎" label="EARLY" color="#00ff88" />}
                 </div>
               </div>
-            ) : (
-              <>
-                <h1 style={{ margin: '0 0 6px 0', fontSize: '1.6rem', fontWeight: 800 }}>
-                  {profile?.username || 'Anonyme'}
-                </h1>
-                <p
-                  style={{
-                    margin: '0 0 12px 0',
-                    color: 'rgba(255,255,255,0.6)',
-                    fontSize: '0.85rem',
-                  }}
-                >
-                  {profile?.bio ||
-                    (isOwnProfile ? 'Ajoutez une bio en cliquant sur Modifier' : 'Pas de bio')}
-                </p>
-                <div
-                  style={{
-                    display: 'flex',
-                    gap: 20,
-                    fontSize: '0.8rem',
-                    color: 'rgba(255,255,255,0.5)',
-                    flexWrap: 'wrap',
-                  }}
-                >
-                  <span>
-                    🎵 <strong style={{ color: '#00d9ff' }}>{tracks.length}</strong> morceaux
-                  </span>
-                  <span>
-                    ♥ <strong style={{ color: '#00d9ff' }}>{totalLikes}</strong> likes
-                  </span>
-                  <span>
-                    📅 Membre depuis{' '}
-                    {new Date(profile?.created_at || '').toLocaleDateString('fr-FR', {
-                      month: 'short',
-                      year: 'numeric',
-                    })}
-                  </span>
-                </div>
+
+              {/* BIO */}
+              <p
+                style={{
+                  margin: '0 0 18px 0',
+                  color: 'rgba(255,255,255,0.7)',
+                  fontSize: '0.9rem',
+                  lineHeight: 1.6,
+                  maxWidth: 800,
+                }}
+              >
+                {profile?.bio ||
+                  (isOwnProfile ? t('profile.add_bio') : t('profile.no_bio'))}
+              </p>
+
+              {/* STATS BENTO */}
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
+                  gap: 12,
+                  marginBottom: 18,
+                  maxWidth: 700,
+                }}
+              >
+                <StatCard icon="🎵" value={tracks.length} label={t('profile.stats_tracks')} color="#00d9ff" />
+                <StatCard icon="❤️" value={totalLikes} label={t('profile.stats_likes')} color="#ff5c5c" />
+                <StatCard icon="🎧" value={tracks.reduce((s, t) => s + (t.bpm || 0), 0) > 0 ? Math.round(tracks.reduce((s, t) => s + t.bpm, 0) / tracks.length) : 0} label={t('profile.stats_avg_bpm')} color="#7c5cff" />
+                <StatCard
+                  icon="📅"
+                  value={joinDate.toLocaleDateString(undefined, { month: 'short', year: '2-digit' })}
+                  label={t('profile.stats_member')}
+                  color="#ffd43b"
+                />
+              </div>
+
+              {/* ACTIONS */}
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                <ShareButton
+                  url={`https://waveforge-pro-one.vercel.app/profil/${userId}`}
+                  title={`${profile?.username || 'DJ'} — WaveForge PRO`}
+                  text={`Découvre le profil de ${profile?.username || 'DJ'} sur WaveForge PRO 🎧`}
+                  variant="button"
+                  size="medium"
+                  label={t('profile.share')}
+                  position="bottom"
+                />
 
                 {isOwnProfile && (
                   <button
                     onClick={() => setEditing(true)}
                     style={{
-                      marginTop: 14,
-                      padding: '6px 14px',
+                      padding: '8px 18px',
                       background: 'transparent',
                       border: '1px solid rgba(0, 217, 255, 0.4)',
                       color: '#00d9ff',
-                      borderRadius: 6,
+                      borderRadius: 8,
                       fontFamily: 'monospace',
                       fontSize: '0.8rem',
                       fontWeight: 700,
                       cursor: 'pointer',
+                      transition: 'all 0.2s',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'rgba(0, 217, 255, 0.1)';
+                      e.currentTarget.style.borderColor = '#00d9ff';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'transparent';
+                      e.currentTarget.style.borderColor = 'rgba(0, 217, 255, 0.4)';
                     }}
                   >
-                    ✏️ Modifier mon profil
+                    ✏️ {t('profile.edit')}
                   </button>
                 )}
-              </>
-            )}
-          </div>
+              </div>
+            </>
+          )}
         </div>
-      </GlassCard>
+      </div>
 
-      <h2 style={{ fontSize: '1.1rem', marginBottom: 14, color: '#00d9ff' }}>
-        {isOwnProfile ? '🎵 Mes morceaux' : '🎵 Morceaux partages'}
-      </h2>
+      {/* ═══════════════════════════════════════════════ */}
+      {/* TRACKS */}
+      {/* ═══════════════════════════════════════════════ */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+        <h2
+          style={{
+            fontSize: '1.2rem',
+            margin: 0,
+            fontWeight: 800,
+            letterSpacing: '-0.3px',
+          }}
+        >
+          🎵 {isOwnProfile ? t('profile.my_tracks') : t('profile.shared_tracks')}
+        </h2>
+        <span
+          style={{
+            padding: '3px 10px',
+            background: 'rgba(0, 217, 255, 0.1)',
+            border: '1px solid rgba(0, 217, 255, 0.3)',
+            borderRadius: 9999,
+            fontSize: 11,
+            fontWeight: 700,
+            color: '#00d9ff',
+            fontFamily: 'monospace',
+          }}
+        >
+          {tracks.length}
+        </span>
+      </div>
 
       {tracks.length === 0 ? (
-        <GlassCard style={{ padding: '30px', textAlign: 'center', color: 'rgba(255,255,255,0.4)' }}>
-          Aucun morceau pour le moment.
+        <GlassCard style={{ padding: '40px', textAlign: 'center', color: 'rgba(255,255,255,0.4)' }}>
+          <div style={{ fontSize: 40, marginBottom: 12, opacity: 0.5 }}>🎵</div>
+          <div style={{ fontFamily: 'monospace', fontSize: 13 }}>
+            {t('profile.no_tracks')}
+          </div>
         </GlassCard>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -485,17 +757,16 @@ export const ProfilePage: React.FC = () => {
                 style={{
                   padding: '14px',
                   borderColor: isThisPlaying ? '#00d9ff' : undefined,
-                  boxShadow: isThisPlaying
-                    ? '0 0 20px rgba(0, 217, 255, 0.3)'
-                    : undefined,
+                  boxShadow: isThisPlaying ? '0 0 24px rgba(0, 217, 255, 0.3)' : undefined,
+                  transition: 'all 0.25s ease',
                 }}
               >
                 <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
                   <div
                     style={{
-                      width: 56,
-                      height: 56,
-                      borderRadius: 6,
+                      width: 60,
+                      height: 60,
+                      borderRadius: 8,
                       flexShrink: 0,
                       background: track.cover_url
                         ? `url(${track.cover_url}) center/cover`
@@ -504,7 +775,8 @@ export const ProfilePage: React.FC = () => {
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      fontSize: 20,
+                      fontSize: 22,
+                      boxShadow: isThisPlaying ? '0 0 20px rgba(0, 217, 255, 0.4)' : 'none',
                     }}
                   >
                     {!track.cover_url && '🎵'}
@@ -525,6 +797,7 @@ export const ProfilePage: React.FC = () => {
                           style={{
                             margin: '0 0 4px 0',
                             fontSize: '1rem',
+                            fontWeight: 700,
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
                             whiteSpace: 'nowrap',
@@ -532,9 +805,19 @@ export const ProfilePage: React.FC = () => {
                         >
                           {track.title}
                         </h3>
-                        <span style={{ fontSize: '0.75rem', color: '#00d9ff' }}>
-                          {track.genre} | {track.bpm} BPM | {formatTime(track.duration)}
-                        </span>
+                        <div
+                          style={{
+                            display: 'flex',
+                            gap: 8,
+                            fontSize: '0.72rem',
+                            color: 'rgba(255,255,255,0.55)',
+                            flexWrap: 'wrap',
+                          }}
+                        >
+                          <span style={{ color: '#00d9ff' }}>🎵 {track.genre}</span>
+                          <span>⚡ {track.bpm} BPM</span>
+                          <span>⏱️ {formatTime(track.duration)}</span>
+                        </div>
                       </div>
 
                       <div
@@ -548,31 +831,26 @@ export const ProfilePage: React.FC = () => {
                         <button
                           onClick={() => handlePlayTrack(track)}
                           style={{
-                            background: isThisPlaying
-                              ? 'rgba(0, 217, 255, 0.15)'
-                              : 'transparent',
-                            border: isThisPlaying
-                              ? '1px solid #00d9ff'
-                              : '1px solid rgba(255,255,255,0.2)',
+                            background: isThisPlaying ? 'rgba(0, 217, 255, 0.15)' : 'rgba(0, 217, 255, 0.08)',
+                            border: isThisPlaying ? '1px solid #00d9ff' : '1px solid rgba(0, 217, 255, 0.3)',
                             color: isThisPlaying ? '#00d9ff' : '#fff',
-                            padding: '5px 10px',
-                            borderRadius: 4,
+                            padding: '6px 12px',
+                            borderRadius: 6,
                             cursor: 'pointer',
                             fontSize: '0.75rem',
                             fontFamily: 'monospace',
+                            fontWeight: 700,
+                            transition: 'all 0.2s',
                           }}
                         >
-                          {isThisPlaying
-                            ? '⏸ Pause'
-                            : isThisCurrent
-                            ? '▶ Reprendre'
-                            : '▶ Écouter'}
+                          {isThisPlaying ? '⏸ Pause' : isThisCurrent ? '▶ Reprendre' : '▶ ' + t('profile.listen')}
                         </button>
 
                         <span
                           style={{
                             fontSize: '0.8rem',
                             color: 'rgba(255,255,255,0.6)',
+                            fontFamily: 'monospace',
                           }}
                         >
                           ♥ {track.likes}
@@ -581,13 +859,13 @@ export const ProfilePage: React.FC = () => {
                         {isOwnProfile && (
                           <button
                             onClick={() => handleDelete(track)}
-                            title="Supprimer"
+                            title={t('common.delete')}
                             style={{
                               background: 'transparent',
                               border: '1px solid rgba(255, 60, 60, 0.4)',
                               color: '#ff5c5c',
-                              padding: '5px 10px',
-                              borderRadius: 4,
+                              padding: '6px 10px',
+                              borderRadius: 6,
                               cursor: 'pointer',
                               fontSize: '0.75rem',
                               fontFamily: 'monospace',
@@ -615,6 +893,7 @@ export const ProfilePage: React.FC = () => {
                               fontSize: '0.7rem',
                               color: 'rgba(255,255,255,0.5)',
                               marginTop: 4,
+                              fontFamily: 'monospace',
                             }}
                           >
                             <span>{formatTime(currentTime)}</span>

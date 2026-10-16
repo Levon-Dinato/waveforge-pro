@@ -1,0 +1,78 @@
+{
+  "nav": {
+    "home": "Home",
+    "nouveautes": "New Releases",
+    "studio": "Studio",
+    "stems": "Stems",
+    "mastering": "Mastering",
+    "generator": "Generator",
+    "musicgen": "AI Generation",
+    "video": "Music Video",
+    "cdj": "DJ Prep",
+    "help": "Guide",
+    "settings": "Settings",
+    "install": "INSTALL APP",
+    "sessions": "SESSIONS",
+    "profile": "MY PROFILE",
+    "logout": "LOG OUT",
+    "output": "AUDIO OUTPUT"
+  },
+  "home": {
+    "hero_badge": "WAVEFORGE PRO · V1.0",
+    "hero_title_1": "Your studio.",
+    "hero_title_2": "Reinvented.",
+    "hero_desc": "Audio analysis, pro mastering, stem separation, AI generation, video clips and DJ Prep. All in your browser.",
+    "cta_cdj": "DJ Prep Pro",
+    "cta_studio": "Studio",
+    "cta_mastering": "Mastering",
+    "share": "Share",
+    "session_active": "CURRENT SESSION",
+    "no_audio": "No audio loaded — ready to start?",
+    "start": "Get started",
+    "activity": "GLOBAL ACTIVITY",
+    "modules": "MODULES",
+    "how_it_works": "HOW IT WORKS",
+    "how_it_works_title": "3 steps, zero friction.",
+    "recent": "RECENT ACTIVITY",
+    "see_all": "SEE ALL",
+    "discover_title": "Share the love",
+    "discover_desc": "Share WaveForge PRO with your DJ and producer friends. The audio studio that runs in your browser.",
+    "share_waveforge": "Share WaveForge"
+  },
+  "auth": {
+    "login_tab": "Sign In",
+    "signup_tab": "Sign Up",
+    "email": "Email",
+    "password": "Password",
+    "forgot": "Forgot password?",
+    "login_btn": "Sign in",
+    "signup_btn": "Sign up",
+    "login_title": "Sign In",
+    "login_subtitle": "Access your tracks and the community",
+    "required_message": "🔒 Sign in to access this page"
+  },
+  "share": {
+    "title": "SHARE VIA",
+    "copy": "Copy link",
+    "copied": "Link copied!",
+    "facebook": "Facebook",
+    "twitter": "Twitter / X",
+    "whatsapp": "WhatsApp",
+    "telegram": "Telegram",
+    "reddit": "Reddit"
+  },
+  "language": {
+    "select": "Language",
+    "fr": "Français",
+    "en": "English"
+  },
+  "common": {
+    "loading": "LOADING...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "close": "Close",
+    "back": "Back"
+  }
+}

@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import { ToastProvider } from './components/ui/Toast';
+import './i18n';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
@@ -10,6 +11,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     </ToastProvider>
   </React.StrictMode>
 );
+
 // Enregistrement du Service Worker (PWA)
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', () => {

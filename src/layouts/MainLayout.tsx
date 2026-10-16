@@ -1,38 +1,41 @@
 // src/layouts/MainLayout.tsx
 import React, { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { VideoBackground } from '../components/VideoBackground';
 import { VUMeter } from '../components/VUMeter';
 import { SessionPanel } from '../components/SessionPanel';
 import { InstallButton } from '../components/InstallButton';
 import { GlobalPlayer } from '../components/GlobalPlayer';
+import { LanguageSwitcher } from '../components/LanguageSwitcher';
 import { useAudioEngineContext } from '../contexts/AudioEngineContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useIsMobile } from '../hooks/useIsMobile';
 
 interface NavItem {
   path: string;
-  label: string;
-  shortLabel: string;
+  labelKey: string;      // ✅ Clé de traduction
+  shortLabelKey: string; // ✅ Clé courte
   icon: string;
   color: string;
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { path: '/',          label: 'Accueil',       shortLabel: 'Accueil',  icon: '🏠', color: '#888' },
-  { path: '/nouveautes',label: 'Nouveautés',    shortLabel: 'Nouveau',  icon: '🔥', color: '#ff8c00' },
-  { path: '/studio',    label: 'Studio',        shortLabel: 'Studio',   icon: '🎹', color: '#00d9ff' },
-  { path: '/stems',     label: 'Stems',         shortLabel: 'Stems',    icon: '🎤', color: '#00ff88' },
-  { path: '/mastering', label: 'Mastering',     shortLabel: 'Master',   icon: '🎚️', color: '#7c5cff' },
-  { path: '/generator', label: 'Générateur',    shortLabel: 'Généro',   icon: '🎼', color: '#ffd43b' },
-  { path: '/musicgen',  label: 'Génération IA', shortLabel: 'Gén.IA',   icon: '🎵', color: '#00ff88' },
-  { path: '/video',     label: 'Clip vidéo',    shortLabel: 'Vidéo',    icon: '🎬', color: '#ff5cf0' },
-  { path: '/cdj',       label: 'DJ Prep',       shortLabel: 'DJ',       icon: '🎛️', color: '#00d9ff' },
-  { path: '/help',      label: 'Guide',         shortLabel: 'Guide',    icon: '📖', color: '#00d9ff' },
-  { path: '/settings',  label: 'Réglages',      shortLabel: 'Réglages', icon: '⚙️', color: '#888' },
+  { path: '/',           labelKey: 'nav.home',        shortLabelKey: 'nav.home',        icon: '🏠', color: '#888' },
+  { path: '/nouveautes', labelKey: 'nav.nouveautes',  shortLabelKey: 'nav.nouveautes',  icon: '🔥', color: '#ff8c00' },
+  { path: '/studio',     labelKey: 'nav.studio',      shortLabelKey: 'nav.studio',      icon: '🎹', color: '#00d9ff' },
+  { path: '/stems',      labelKey: 'nav.stems',       shortLabelKey: 'nav.stems',       icon: '🎤', color: '#00ff88' },
+  { path: '/mastering',  labelKey: 'nav.mastering',   shortLabelKey: 'nav.mastering',   icon: '🎚️', color: '#7c5cff' },
+  { path: '/generator',  labelKey: 'nav.generator',   shortLabelKey: 'nav.generator',   icon: '🎼', color: '#ffd43b' },
+  { path: '/musicgen',   labelKey: 'nav.musicgen',    shortLabelKey: 'nav.musicgen',    icon: '🎵', color: '#00ff88' },
+  { path: '/video',      labelKey: 'nav.video',       shortLabelKey: 'nav.video',       icon: '🎬', color: '#ff5cf0' },
+  { path: '/cdj',        labelKey: 'nav.cdj',         shortLabelKey: 'nav.cdj',         icon: '🎛️', color: '#00d9ff' },
+  { path: '/help',       labelKey: 'nav.help',        shortLabelKey: 'nav.help',        icon: '📖', color: '#00d9ff' },
+  { path: '/settings',   labelKey: 'nav.settings',    shortLabelKey: 'nav.settings',    icon: '⚙️', color: '#888' },
 ];
 
 export const MainLayout: React.FC = () => {
+  const { t } = useTranslation();
   const engine = useAudioEngineContext();
   const { user, username, signOut } = useAuth();
   const navigate = useNavigate();
@@ -129,6 +132,9 @@ export const MainLayout: React.FC = () => {
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              {/* ✅ SELECTEUR LANGUE MOBILE */}
+              <LanguageSwitcher />
+
               {user ? (
                 <NavLink
                   to={`/profil/${user.id}`}
@@ -189,7 +195,6 @@ export const MainLayout: React.FC = () => {
             </div>
           </header>
 
-          {/* CONTENU */}
           <main style={{ flex: 1, minWidth: 0, overflow: 'auto' }}>
             <Outlet />
           </main>
@@ -262,7 +267,7 @@ export const MainLayout: React.FC = () => {
                         letterSpacing: '0.2px',
                       }}
                     >
-                      {item.shortLabel}
+                      {t(item.shortLabelKey)}
                     </span>
                   </>
                 )}
@@ -271,12 +276,8 @@ export const MainLayout: React.FC = () => {
           </nav>
         </div>
 
-        {/* Bandeau d'installation */}
         <InstallButton variant="banner" />
-
-        {/* ✅ PLAYER GLOBAL PERSISTANT (mobile) */}
         <GlobalPlayer />
-
         <SessionPanel isOpen={showSessions} onClose={() => setShowSessions(false)} />
       </>
     );
@@ -443,7 +444,7 @@ export const MainLayout: React.FC = () => {
                       letterSpacing: '-0.1px',
                     }}
                   >
-                    {item.label}
+                    {t(item.labelKey)}
                   </span>
                   {window.location.pathname === item.path && (
                     <span
@@ -499,7 +500,7 @@ export const MainLayout: React.FC = () => {
                 e.currentTarget.style.boxShadow = 'none';
               }}
             >
-              💾 SESSIONS
+              💾 {t('nav.sessions')}
             </button>
 
             {/* BLOC MON PROFIL */}
@@ -528,7 +529,7 @@ export const MainLayout: React.FC = () => {
                   transition: 'all 0.2s',
                 })}
               >
-                👤 MON PROFIL
+                👤 {t('nav.profile')}
               </NavLink>
             )}
 
@@ -575,7 +576,7 @@ export const MainLayout: React.FC = () => {
                       letterSpacing: '1px',
                     }}
                   >
-                    DÉCONNEXION
+                    {t('nav.logout')}
                   </button>
                 </div>
               ) : (
@@ -599,9 +600,21 @@ export const MainLayout: React.FC = () => {
                     fontFamily: 'monospace',
                   }}
                 >
-                  🔐 CONNEXION
+                  🔐 {t('auth.login_tab').toUpperCase()}
                 </NavLink>
               )}
+            </div>
+
+            {/* ✅ SELECTEUR LANGUE DESKTOP */}
+            <div
+              style={{
+                paddingTop: 16,
+                borderTop: '1px solid rgba(255, 255, 255, 0.06)',
+                display: 'flex',
+                justifyContent: 'center',
+              }}
+            >
+              <LanguageSwitcher />
             </div>
 
             {/* VU METER */}
@@ -621,7 +634,7 @@ export const MainLayout: React.FC = () => {
                   textTransform: 'uppercase',
                 }}
               >
-                Sortie Audio
+                {t('nav.output')}
               </div>
               <VUMeter
                 audioBuffer={engine.audioBuffer}
@@ -631,7 +644,6 @@ export const MainLayout: React.FC = () => {
             </div>
           </aside>
 
-          {/* CONTENU PRINCIPAL */}
           <main
             style={{
               flex: 1,
@@ -644,7 +656,6 @@ export const MainLayout: React.FC = () => {
           </main>
         </div>
 
-        {/* FOOTER V3 */}
         <footer
           style={{
             maxWidth: 1480,
@@ -662,9 +673,7 @@ export const MainLayout: React.FC = () => {
         </footer>
       </div>
 
-      {/* ✅ PLAYER GLOBAL PERSISTANT (desktop) */}
       <GlobalPlayer />
-
       <SessionPanel isOpen={showSessions} onClose={() => setShowSessions(false)} />
     </>
   );

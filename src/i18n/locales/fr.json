@@ -1,0 +1,78 @@
+{
+  "nav": {
+    "home": "Accueil",
+    "nouveautes": "Nouveautés",
+    "studio": "Studio",
+    "stems": "Stems",
+    "mastering": "Mastering",
+    "generator": "Générateur",
+    "musicgen": "Génération IA",
+    "video": "Clip vidéo",
+    "cdj": "DJ Prep",
+    "help": "Guide",
+    "settings": "Réglages",
+    "install": "INSTALLER L'APP",
+    "sessions": "SESSIONS",
+    "profile": "MON PROFIL",
+    "logout": "DÉCONNEXION",
+    "output": "SORTIE AUDIO"
+  },
+  "home": {
+    "hero_badge": "WAVEFORGE PRO · V1.0",
+    "hero_title_1": "Ton studio.",
+    "hero_title_2": "Réinventé.",
+    "hero_desc": "Analyse audio, mastering pro, séparation de stems, génération IA, clips vidéo et DJ Prep. Le tout dans ton navigateur.",
+    "cta_cdj": "DJ Prep Pro",
+    "cta_studio": "Studio",
+    "cta_mastering": "Mastering",
+    "share": "Partager",
+    "session_active": "SESSION ACTUELLE",
+    "no_audio": "Aucun audio chargé — prêt à démarrer ?",
+    "start": "Commencer",
+    "activity": "ACTIVITÉ GLOBALE",
+    "modules": "MODULES",
+    "how_it_works": "COMMENT ÇA MARCHE",
+    "how_it_works_title": "3 étapes, zéro friction.",
+    "recent": "ACTIVITÉ RÉCENTE",
+    "see_all": "VOIR TOUT",
+    "discover_title": "Fais découvrir",
+    "discover_desc": "Partage WaveForge PRO avec tes amis DJ et producteurs. Le studio audio qui tourne dans le navigateur.",
+    "share_waveforge": "Partager WaveForge"
+  },
+  "auth": {
+    "login_tab": "Connexion",
+    "signup_tab": "Inscription",
+    "email": "Email",
+    "password": "Mot de passe",
+    "forgot": "Mot de passe oublié ?",
+    "login_btn": "Se connecter",
+    "signup_btn": "S'inscrire",
+    "login_title": "Connexion",
+    "login_subtitle": "Accédez à vos morceaux et à la communauté",
+    "required_message": "🔒 Connecte-toi pour accéder à cette page"
+  },
+  "share": {
+    "title": "PARTAGER VIA",
+    "copy": "Copier le lien",
+    "copied": "Lien copié !",
+    "facebook": "Facebook",
+    "twitter": "Twitter / X",
+    "whatsapp": "WhatsApp",
+    "telegram": "Telegram",
+    "reddit": "Reddit"
+  },
+  "language": {
+    "select": "Langue",
+    "fr": "Français",
+    "en": "English"
+  },
+  "common": {
+    "loading": "CHARGEMENT...",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "confirm": "Confirmer",
+    "close": "Fermer",
+    "back": "Retour"
+  }
+}

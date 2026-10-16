@@ -42,7 +42,7 @@ interface Track {
 // ============================================================
 // SOCIAL ICONS
 // ============================================================
-const SOCIAL_ICONS: Record<string, { svg: JSX.Element; color: string; name: string }> = {
+const SOCIAL_ICONS: Record<string, { svg: React.ReactNode; color: string; name: string }> = {
   soundcloud: {
     name: 'SoundCloud',
     color: '#FF5500',

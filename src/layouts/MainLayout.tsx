@@ -14,8 +14,8 @@ import { useIsMobile } from '../hooks/useIsMobile';
 
 interface NavItem {
   path: string;
-  labelKey: string;      // ✅ Clé de traduction
-  shortLabelKey: string; // ✅ Clé courte
+  labelKey: string;
+  shortLabelKey: string;
   icon: string;
   color: string;
 }
@@ -62,7 +62,6 @@ export const MainLayout: React.FC = () => {
             paddingBottom: 80,
           }}
         >
-          {/* HEADER MOBILE */}
           <header
             style={{
               padding: '14px 16px',
@@ -95,14 +94,7 @@ export const MainLayout: React.FC = () => {
                 🎹
               </div>
               <div>
-                <div
-                  style={{
-                    fontSize: 13,
-                    fontWeight: 800,
-                    letterSpacing: '-0.2px',
-                    color: '#fff',
-                  }}
-                >
+                <div style={{ fontSize: 13, fontWeight: 800, letterSpacing: '-0.2px', color: '#fff' }}>
                   WAVEFORGE{' '}
                   <span
                     style={{
@@ -132,9 +124,7 @@ export const MainLayout: React.FC = () => {
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              {/* ✅ SELECTEUR LANGUE MOBILE */}
               <LanguageSwitcher />
-
               {user ? (
                 <NavLink
                   to={`/profil/${user.id}`}
@@ -199,7 +189,6 @@ export const MainLayout: React.FC = () => {
             <Outlet />
           </main>
 
-          {/* NAV BOTTOM */}
           <nav
             style={{
               position: 'fixed',
@@ -284,11 +273,28 @@ export const MainLayout: React.FC = () => {
   }
 
   // ============================================================
-  // VERSION DESKTOP V3
+  // VERSION DESKTOP V3 — COMPACTE
   // ============================================================
   return (
     <>
       <VideoBackground />
+
+      {/* ✅ SCROLLBAR FINE ET DISCRÈTE */}
+      <style>{`
+        aside::-webkit-scrollbar {
+          width: 5px;
+        }
+        aside::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        aside::-webkit-scrollbar-thumb {
+          background: rgba(0, 217, 255, 0.15);
+          border-radius: 3px;
+        }
+        aside::-webkit-scrollbar-thumb:hover {
+          background: rgba(0, 217, 255, 0.4);
+        }
+      `}</style>
 
       <div
         className="studio-grid"
@@ -307,20 +313,22 @@ export const MainLayout: React.FC = () => {
             gap: 24,
           }}
         >
-          {/* SIDEBAR V3 GLASS */}
+          {/* SIDEBAR COMPACTE */}
           <aside
             style={{
               width: 240,
               flexShrink: 0,
               display: 'flex',
               flexDirection: 'column',
-              gap: 20,
+              gap: 10,
               position: 'sticky',
               top: 20,
               height: 'fit-content',
               maxHeight: 'calc(100vh - 40px)',
               overflowY: 'auto',
               paddingRight: 4,
+              scrollbarWidth: 'thin',
+              scrollbarColor: 'rgba(0, 217, 255, 0.2) transparent',
             }}
           >
             {/* LOGO */}
@@ -329,22 +337,21 @@ export const MainLayout: React.FC = () => {
                 display: 'flex',
                 alignItems: 'center',
                 gap: 12,
-                padding: '4px 0 20px',
+                padding: '2px 0 14px',
                 borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
               }}
             >
               <div
                 style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 12,
+                  width: 38,
+                  height: 38,
+                  borderRadius: 11,
                   background: 'linear-gradient(135deg, #00d9ff, #0088ff)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: 20,
-                  boxShadow:
-                    '0 0 24px rgba(0, 217, 255, 0.5), inset 0 1px 0 rgba(255,255,255,0.3)',
+                  fontSize: 19,
+                  boxShadow: '0 0 20px rgba(0, 217, 255, 0.5), inset 0 1px 0 rgba(255,255,255,0.3)',
                 }}
               >
                 🎹
@@ -353,7 +360,7 @@ export const MainLayout: React.FC = () => {
                 <h1
                   style={{
                     margin: 0,
-                    fontSize: 15,
+                    fontSize: 14,
                     fontWeight: 800,
                     letterSpacing: '-0.3px',
                     color: '#fff',
@@ -381,7 +388,7 @@ export const MainLayout: React.FC = () => {
                     letterSpacing: '1.5px',
                     textTransform: 'uppercase',
                     fontWeight: 700,
-                    marginTop: 3,
+                    marginTop: 2,
                   }}
                 >
                   Audio → Video Studio
@@ -389,8 +396,8 @@ export const MainLayout: React.FC = () => {
               </div>
             </div>
 
-            {/* NAVIGATION V3 */}
-            <nav style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            {/* NAVIGATION COMPACTE */}
+            <nav style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               {NAV_ITEMS.map((item) => (
                 <NavLink
                   key={item.path}
@@ -403,11 +410,11 @@ export const MainLayout: React.FC = () => {
                     return {
                       display: 'flex',
                       alignItems: 'center',
-                      gap: 12,
-                      padding: '11px 14px',
-                      borderRadius: 10,
+                      gap: 11,
+                      padding: '8px 12px',
+                      borderRadius: 8,
                       textDecoration: 'none',
-                      fontSize: 13,
+                      fontSize: 12.5,
                       fontWeight: isActive ? 700 : 500,
                       color: isActive
                         ? item.color
@@ -430,7 +437,7 @@ export const MainLayout: React.FC = () => {
                 >
                   <span
                     style={{
-                      fontSize: 15,
+                      fontSize: 14,
                       lineHeight: 1,
                       filter: 'none',
                       transition: 'transform 0.18s ease',
@@ -464,20 +471,19 @@ export const MainLayout: React.FC = () => {
             {/* BOUTON INSTALL */}
             <InstallButton variant="sidebar" />
 
-            {/* BOUTON SESSIONS V3 */}
+            {/* BOUTON SESSIONS COMPACT */}
             <button
               onClick={() => setShowSessions(true)}
               style={{
-                marginTop: 'auto',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: 10,
-                padding: '12px 16px',
+                gap: 8,
+                padding: '10px 14px',
                 background:
                   'linear-gradient(135deg, rgba(0, 217, 255, 0.1), rgba(0, 136, 255, 0.05))',
                 border: '1px solid rgba(0, 217, 255, 0.25)',
-                borderRadius: 12,
+                borderRadius: 10,
                 color: '#00d9ff',
                 fontSize: 11,
                 fontWeight: 800,
@@ -490,8 +496,7 @@ export const MainLayout: React.FC = () => {
                 e.currentTarget.style.background =
                   'linear-gradient(135deg, rgba(0, 217, 255, 0.2), rgba(0, 136, 255, 0.1))';
                 e.currentTarget.style.transform = 'translateY(-1px)';
-                e.currentTarget.style.boxShadow =
-                  '0 8px 24px rgba(0, 217, 255, 0.25)';
+                e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 217, 255, 0.25)';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.background =
@@ -512,7 +517,7 @@ export const MainLayout: React.FC = () => {
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: 8,
-                  padding: '10px 12px',
+                  padding: '9px 12px',
                   background: isActive
                     ? 'rgba(0, 217, 255, 0.15)'
                     : 'rgba(255, 255, 255, 0.03)',
@@ -536,16 +541,16 @@ export const MainLayout: React.FC = () => {
             {/* BLOC UTILISATEUR */}
             <div
               style={{
-                paddingTop: 16,
+                paddingTop: 10,
                 borderTop: '1px solid rgba(255, 255, 255, 0.06)',
               }}
             >
               {user ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <NavLink
                     to={`/profil/${user.id}`}
                     style={{
-                      fontSize: 11,
+                      fontSize: 10,
                       color: '#00d9ff',
                       fontWeight: 700,
                       letterSpacing: '0.5px',
@@ -564,10 +569,10 @@ export const MainLayout: React.FC = () => {
                       navigate('/');
                     }}
                     style={{
-                      padding: '8px 12px',
+                      padding: '7px 10px',
                       background: 'rgba(255, 60, 60, 0.08)',
                       border: '1px solid rgba(255, 60, 60, 0.3)',
-                      borderRadius: 8,
+                      borderRadius: 7,
                       color: '#ff8c8c',
                       fontSize: 10,
                       fontWeight: 700,
@@ -587,7 +592,7 @@ export const MainLayout: React.FC = () => {
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: 8,
-                    padding: '10px 12px',
+                    padding: '9px 12px',
                     background:
                       'linear-gradient(135deg, rgba(0, 217, 255, 0.15), rgba(0, 136, 255, 0.05))',
                     border: '1px solid rgba(0, 217, 255, 0.4)',
@@ -605,10 +610,11 @@ export const MainLayout: React.FC = () => {
               )}
             </div>
 
-            {/* ✅ SELECTEUR LANGUE DESKTOP */}
+            {/* ✅ SÉLECTEUR LANGUE */}
             <div
               style={{
-                paddingTop: 16,
+                paddingTop: 10,
+                paddingBottom: 4,
                 borderTop: '1px solid rgba(255, 255, 255, 0.06)',
                 display: 'flex',
                 justifyContent: 'center',
@@ -620,7 +626,7 @@ export const MainLayout: React.FC = () => {
             {/* VU METER */}
             <div
               style={{
-                paddingTop: 16,
+                paddingTop: 10,
                 borderTop: '1px solid rgba(255, 255, 255, 0.06)',
               }}
             >
@@ -628,7 +634,7 @@ export const MainLayout: React.FC = () => {
                 style={{
                   fontSize: 9,
                   color: 'rgba(255,255,255,0.4)',
-                  marginBottom: 10,
+                  marginBottom: 8,
                   letterSpacing: '1.5px',
                   fontWeight: 700,
                   textTransform: 'uppercase',

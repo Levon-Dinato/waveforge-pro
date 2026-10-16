@@ -5,6 +5,7 @@ import { GlassCard } from '../components/ui/GlassCard';
 import { ShareButton } from '../components/ShareButton';
 import { supabase, AUDIO_BUCKET } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { useIsMobile } from '../hooks/useIsMobile';
 import { usePlayer, type PlayerTrack } from '../contexts/PlayerContext';
 
 interface Profile {
@@ -117,7 +118,6 @@ const SocialLinksBar: React.FC<{
   setEditSocials: (v: Record<string, string>) => void;
 }> = ({ profile, editing, editSocials, setEditSocials }) => {
   if (editing) {
-    // Mode édition : inputs URL
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 16 }}>
         <div
@@ -172,7 +172,6 @@ const SocialLinksBar: React.FC<{
     );
   }
 
-  // Mode affichage : icônes cliquables
   const activeLinks = Object.entries(SOCIAL_ICONS).filter(
     ([key]) => profile[key as keyof Profile]
   );
@@ -421,6 +420,7 @@ export const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { user } = useAuth();
+  const isMobile = useIsMobile(768);
   const { currentTrack, isPlaying, currentTime, duration, play, seek, stop } = usePlayer();
 
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -539,7 +539,6 @@ export const ProfilePage: React.FC = () => {
     }
   };
 
-  // ✅ UPLOAD AVATAR
   const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file || !user || !isOwnProfile) return;
@@ -607,7 +606,6 @@ export const ProfilePage: React.FC = () => {
     }
   };
 
-  // ✅ UPLOAD BANNIÈRE
   const handleBannerChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file || !user || !isOwnProfile) return;
@@ -839,13 +837,13 @@ export const ProfilePage: React.FC = () => {
           boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
         }}
       >
-        {/* BANNIÈRE — cliquable pour changer */}
+        {/* BANNIÈRE — 240px desktop / 140px mobile */}
         <div
           onClick={() => isOwnProfile && !uploadingBanner && bannerInputRef.current?.click()}
           className="banner-container"
           title={isOwnProfile ? 'Clique pour changer la bannière' : ''}
           style={{
-            height: 160,
+            height: isMobile ? 140 : 240,
             background: profile?.banner_url
               ? `url(${profile.banner_url}) center/cover`
               : `
@@ -854,6 +852,7 @@ export const ProfilePage: React.FC = () => {
                 linear-gradient(90deg, #0a0f1a 0%, #1a1f30 50%, #0a0f1a 100%)
               `,
             backgroundSize: 'cover, cover, 200% 100%',
+            backgroundPosition: 'center',
             animation: profile?.banner_url ? 'none' : 'profileBanner 15s ease-in-out infinite',
             position: 'relative',
             cursor: isOwnProfile ? 'pointer' : 'default',
@@ -870,10 +869,9 @@ export const ProfilePage: React.FC = () => {
             />
           )}
 
-          {/* Motif waveform SVG (visible seulement si pas de bannière custom) */}
           {!profile?.banner_url && (
             <svg
-              viewBox="0 0 1200 160"
+              viewBox="0 0 1200 240"
               preserveAspectRatio="none"
               style={{
                 position: 'absolute',
@@ -886,13 +884,13 @@ export const ProfilePage: React.FC = () => {
               }}
             >
               <path
-                d="M0,80 Q50,30 100,80 T200,80 T300,80 T400,80 T500,80 T600,80 T700,80 T800,80 T900,80 T1000,80 T1100,80 T1200,80"
+                d="M0,120 Q50,70 100,120 T200,120 T300,120 T400,120 T500,120 T600,120 T700,120 T800,120 T900,120 T1000,120 T1100,120 T1200,120"
                 stroke="#00d9ff"
                 strokeWidth="2"
                 fill="none"
               />
               <path
-                d="M0,90 Q50,130 100,90 T200,90 T300,90 T400,90 T500,90 T600,90 T700,90 T800,90 T900,90 T1000,90 T1100,90 T1200,90"
+                d="M0,130 Q50,180 100,130 T200,130 T300,130 T400,130 T500,130 T600,130 T700,130 T800,130 T900,130 T1000,130 T1100,130 T1200,130"
                 stroke="#7c5cff"
                 strokeWidth="2"
                 fill="none"
@@ -900,7 +898,6 @@ export const ProfilePage: React.FC = () => {
             </svg>
           )}
 
-          {/* Overlay "changer" au survol */}
           {isOwnProfile && (
             <div
               className="banner-overlay"
@@ -919,10 +916,10 @@ export const ProfilePage: React.FC = () => {
                 backdropFilter: 'blur(4px)',
               }}
             >
-              <div style={{ fontSize: 28 }}>🖼️</div>
+              <div style={{ fontSize: 32 }}>🖼️</div>
               <div
                 style={{
-                  fontSize: 11,
+                  fontSize: 12,
                   fontWeight: 800,
                   color: '#00d9ff',
                   letterSpacing: '1.5px',
@@ -930,13 +927,12 @@ export const ProfilePage: React.FC = () => {
               >
                 CHANGER LA BANNIÈRE
               </div>
-              <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.6)' }}>
-                1200 × 300 recommandé
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.6)' }}>
+                1200 × 400 recommandé
               </div>
             </div>
           )}
 
-          {/* Loader upload bannière */}
           {uploadingBanner && (
             <div
               style={{
@@ -962,7 +958,6 @@ export const ProfilePage: React.FC = () => {
             </div>
           )}
 
-          {/* Bouton supprimer bannière */}
           {isOwnProfile && profile?.banner_url && !uploadingBanner && (
             <button
               onClick={(e) => {
@@ -1287,7 +1282,6 @@ export const ProfilePage: React.FC = () => {
                 {profile?.bio || (isOwnProfile ? t('profile.add_bio') : t('profile.no_bio'))}
               </p>
 
-              {/* RÉSEAUX SOCIAUX */}
               <SocialLinksBar
                 profile={profile!}
                 editing={false}

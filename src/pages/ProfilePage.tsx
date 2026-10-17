@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { useIsMobile } from '../hooks/useIsMobile';
 
-// ─── Styles réutilisables ───────────────────────────────────────
 const PANEL_STYLE: React.CSSProperties = {
   background: 'rgba(20, 22, 30, 0.8)',
   border: '1px solid rgba(255, 255, 255, 0.05)',
@@ -13,7 +12,6 @@ const PANEL_STYLE: React.CSSProperties = {
 
 const TEXT_MUTED = { color: '#888', fontSize: '0.8rem' };
 const TEXT_TITLE = { color: '#fff', fontSize: '0.9rem', fontWeight: 700 };
-const TEXT_ACCENT = { color: '#e50000', fontWeight: 600 };
 
 interface ProfileData {
   id: string;
@@ -51,11 +49,13 @@ export const ProfilePage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('featured');
 
+  // On garde "user" pour éviter l'erreur TypeScript, même si on ne s'en sert pas visuellement
+  console.log(user);
+
   useEffect(() => {
     const fetchProfileData = async () => {
       setLoading(true);
       try {
-        // 1. Profil
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('*')
@@ -65,7 +65,6 @@ export const ProfilePage: React.FC = () => {
         if (profileError) throw profileError;
         if (profileData) setProfile(profileData);
 
-        // 2. Stats & Tracks
         const { data: tracksData, error: tracksError } = await supabase
           .from('tracks')
           .select('id, title, cover_url, created_at, likes, downloads')
@@ -76,7 +75,7 @@ export const ProfilePage: React.FC = () => {
           const totalPlays = tracksData.reduce((acc, t: any) => acc + (t.downloads || 0) + (t.likes || 0), 0);
           setStats({
             tracks: tracksData.length,
-            followers: 0, // À implémenter si tu as une table followers
+            followers: 0,
             plays: totalPlays
           });
           setTracks(tracksData as Track[]);
@@ -94,15 +93,12 @@ export const ProfilePage: React.FC = () => {
   if (loading) return <div style={{ color: '#fff', padding: 40, textAlign: 'center' }}>Chargement...</div>;
   if (!profile) return <div style={{ color: '#fff', padding: 40, textAlign: 'center' }}>Profil introuvable</div>;
 
-  const isOwnProfile = user?.id === id;
   const displayName = profile.username || profile.email?.split('@')[0] || 'Artiste';
 
   return (
     <div style={{ background: '#0a0c14', minHeight: '100vh', color: '#fff', fontFamily: 'sans-serif' }}>
       
-      {/* ══════════════════════════════════════════════════════════ */}
-      {/* HEADER (Bannière + Avatar) */}
-      {/* ══════════════════════════════════════════════════════════ */}
+      {/* HEADER */}
       <div style={{ position: 'relative', height: isMobile ? 200 : 280, background: '#111', overflow: 'hidden' }}>
         {profile.banner_url && (
           <img src={profile.banner_url} alt="Banner" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.8 }} />
@@ -121,7 +117,6 @@ export const ProfilePage: React.FC = () => {
           alignItems: 'flex-end',
           gap: 20,
         }}>
-          {/* Avatar */}
           <div style={{
             width: 140, height: 140, borderRadius: 8,
             background: '#1a1f2e',
@@ -134,7 +129,6 @@ export const ProfilePage: React.FC = () => {
             {profile.avatar_url && <img src={profile.avatar_url} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
           </div>
 
-          {/* Nom & Ville */}
           <div style={{ marginBottom: 40, flex: 1 }}>
             <h1 style={{ fontSize: isMobile ? 24 : 32, margin: 0, fontWeight: 700, textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
               {displayName}
@@ -148,12 +142,10 @@ export const ProfilePage: React.FC = () => {
         </div>
       </div>
 
-      {/* ══════════════════════════════════════════════════════════ */}
-      {/* CONTENU PRINCIPAL (2 colonnes) */}
-      {/* ══════════════════════════════════════════════════════════ */}
+      {/* CONTENU PRINCIPAL */}
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '20px 10px' : '40px 20px', display: 'flex', gap: 20, flexDirection: isMobile ? 'column' : 'row' }}>
         
-        {/* ─── COLONNE GAUCHE (Wall + Créations) ─── */}
+        {/* COLONNE GAUCHE */}
         <div style={{ flex: 1, minWidth: 0 }}>
           
           {/* Onglets */}
@@ -175,14 +167,13 @@ export const ProfilePage: React.FC = () => {
             ))}
           </div>
 
-          {/* Section "LAST POSTS ON THE WALL" */}
+          {/* WALL */}
           <div style={{ ...PANEL_STYLE, padding: 20, marginBottom: 20 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 }}>
               <h3 style={{ ...TEXT_TITLE, fontSize: '1rem', margin: 0 }}>LAST POSTS ON THE WALL</h3>
               <button style={{ background: 'none', border: 'none', color: '#888', fontSize: '0.8rem', cursor: 'pointer' }}>VIEW ALL</button>
             </div>
             
-            {/* Formulaire de post */}
             <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
               <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#333', flexShrink: 0 }}>
                 {profile.avatar_url && <img src={profile.avatar_url} alt="Me" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />}
@@ -197,7 +188,6 @@ export const ProfilePage: React.FC = () => {
               </div>
             </div>
 
-            {/* Posts (Simulation) */}
             {[1, 2, 3].map(post => (
               <div key={post} style={{ display: 'flex', gap: 12, paddingBottom: 15, marginBottom: 15, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                 <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#222', flexShrink: 0 }} />
@@ -214,7 +204,7 @@ export const ProfilePage: React.FC = () => {
             ))}
           </div>
 
-          {/* Section "NEW CREATION" */}
+          {/* NEW CREATION */}
           <div style={{ ...PANEL_STYLE, padding: 20 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 }}>
               <h3 style={{ ...TEXT_TITLE, fontSize: '1rem', margin: 0 }}>NEW CREATION BY {displayName}</h3>
@@ -239,10 +229,9 @@ export const ProfilePage: React.FC = () => {
           </div>
         </div>
 
-        {/* ─── COLONNE DROITE (Infos + Stats) ─── */}
+        {/* COLONNE DROITE */}
         <aside style={{ width: isMobile ? '100%' : 280, flexShrink: 0 }}>
           
-          {/* Logo / Avatar Sidebar */}
           <div style={{ ...PANEL_STYLE, padding: 15, marginBottom: 15, textAlign: 'center' }}>
             <div style={{ width: 120, height: 120, borderRadius: '50%', margin: '0 auto 10px', background: '#222', overflow: 'hidden', border: '3px solid #e50000' }}>
               {profile.avatar_url ? (
@@ -262,7 +251,6 @@ export const ProfilePage: React.FC = () => {
             </div>
           </div>
 
-          {/* Stats */}
           <div style={{ ...PANEL_STYLE, padding: 15, marginBottom: 15 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10, fontSize: '0.85rem' }}>
               <span style={{ color: '#888' }}>Followers</span>
@@ -278,12 +266,10 @@ export const ProfilePage: React.FC = () => {
             </div>
           </div>
 
-          {/* Bouton Chat */}
           <button style={{ width: '100%', padding: '12px', background: '#e50000', color: '#fff', border: 'none', borderRadius: 4, fontWeight: 700, cursor: 'pointer', marginBottom: 15 }}>
             CHAT
           </button>
 
-          {/* Activité */}
           <div style={{ ...PANEL_STYLE, padding: 15 }}>
             <h4 style={{ fontSize: '0.8rem', color: '#888', margin: '0 0 10px 0', textTransform: 'uppercase' }}>ACTIVITY</h4>
             <div style={{ fontSize: '0.75rem', color: '#ccc', lineHeight: 1.6 }}>

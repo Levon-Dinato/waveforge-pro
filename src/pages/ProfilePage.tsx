@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { usePlayer } from '../contexts/PlayerContext';
@@ -52,9 +51,8 @@ interface WallPost {
 
 export const ProfilePage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { user } = useAuth();
   const isMobile = useIsMobile(768);
-  const { play } = usePlayer(); // ✅ Importation du lecteur
+  const { play } = usePlayer();
   
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [stats, setStats] = useState<Stats>({ tracks: 0, followers: 0, plays: 0 });
@@ -62,7 +60,6 @@ export const ProfilePage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('featured');
 
-  // ✅ État pour le mur de publications
   const [wallPosts, setWallPosts] = useState<WallPost[]>([
     { id: '1', content: `Découvrez mes derniers sets sur soundcloud.com/levon`, date: 'il y a 5 ans' },
     { id: '2', content: `Découvrez mes derniers sets sur soundcloud.com/levon`, date: 'il y a 5 ans' },
@@ -74,7 +71,6 @@ export const ProfilePage: React.FC = () => {
     const fetchProfileData = async () => {
       setLoading(true);
       try {
-        // 1. Profil
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('*')
@@ -84,7 +80,6 @@ export const ProfilePage: React.FC = () => {
         if (profileError) throw profileError;
         if (profileData) setProfile(profileData);
 
-        // 2. Stats & Tracks (avec l'audio_url pour le player)
         const { data: tracksData, error: tracksError } = await supabase
           .from('tracks')
           .select('id, title, cover_url, audio_url, duration, peaks, artist, user_id, created_at, likes, downloads')
@@ -110,7 +105,6 @@ export const ProfilePage: React.FC = () => {
     if (id) fetchProfileData();
   }, [id]);
 
-  // ✅ Fonction pour poster un message sur le mur
   const handlePostSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newPost.trim()) return;
@@ -125,7 +119,6 @@ export const ProfilePage: React.FC = () => {
     setNewPost('');
   };
 
-  // ✅ Fonction pour lancer une track
   const handlePlayTrack = (track: Track) => {
     play({
       id: track.id,
@@ -211,7 +204,6 @@ export const ProfilePage: React.FC = () => {
               <button style={{ background: 'none', border: 'none', color: '#888', fontSize: '0.8rem', cursor: 'pointer' }}>VIEW ALL</button>
             </div>
             
-            {/* ✅ Formulaire de post fonctionnel */}
             <form onSubmit={handlePostSubmit} style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
               <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#333', flexShrink: 0 }}>
                 {profile.avatar_url && <img src={profile.avatar_url} alt="Me" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />}
@@ -230,7 +222,6 @@ export const ProfilePage: React.FC = () => {
               </div>
             </form>
 
-            {/* Liste des posts */}
             {wallPosts.map(post => (
               <div key={post.id} style={{ display: 'flex', gap: 12, paddingBottom: 15, marginBottom: 15, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                 <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#222', flexShrink: 0, overflow: 'hidden' }}>
@@ -255,7 +246,6 @@ export const ProfilePage: React.FC = () => {
             </div>
             
             <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: 15 }}>
-              {/* ✅ Pochettes cliquables qui lancent la musique */}
               {tracks.slice(0, 4).map((track) => (
                 <div 
                   key={track.id} 
@@ -278,7 +268,6 @@ export const ProfilePage: React.FC = () => {
                     ) : (
                       <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, color: '#444' }}>🎵</div>
                     )}
-                    {/* Overlay Play au survol */}
                     <div className="play-overlay" style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0, transition: 'opacity 0.2s' }}>
                       <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#e50000', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', color: '#fff', paddingLeft: 3 }}>▶</div>
                     </div>

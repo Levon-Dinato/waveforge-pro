@@ -521,7 +521,6 @@ export const NouveautesPage: React.FC = () => {
   const [uploadStatus, setUploadStatus] = useState('');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const coverInputRef = useRef<HTMLInputElement>(null);
   const replaceInputRef = useRef<HTMLInputElement>(null);
   const [replaceTargetId, setReplaceTargetId] = useState<string | null>(null);
   const [replacingId, setReplacingId] = useState<string | null>(null);
@@ -532,7 +531,6 @@ export const NouveautesPage: React.FC = () => {
   const [detectingKey, setDetectingKey] = useState<string | null>(null);
   const [keyPicker, setKeyPicker] = useState<string | null>(null);
 
-  // ✅ SUPPRESSION DE coverTargetId ICI
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   const [search, setSearch] = useState('');
@@ -904,8 +902,6 @@ export const NouveautesPage: React.FC = () => {
     }
   };
 
-  // ✅ SUPPRESSION DE handleCoverClick ICI
-
   const handlePlayTrack = (track: Track) => {
     play({
       id: track.id, title: track.title, artist: track.artist,
@@ -1035,7 +1031,7 @@ export const NouveautesPage: React.FC = () => {
         <p style={{ color: '#888', fontSize: 12, marginTop: 6 }}>Découvrez les derniers sons partagés par la communauté.</p>
       </div>
 
-            <input type="file" accept="audio/*" ref={fileInputRef} onChange={handleFileChange} style={{ display: 'none' }} />
+      <input type="file" accept="audio/*" ref={fileInputRef} onChange={handleFileChange} style={{ display: 'none' }} />
       <input type="file" accept="audio/*" ref={replaceInputRef} onChange={handleReplaceChange} style={{ display: 'none' }} />
 
       <GlassCard style={{ padding: '16px', marginBottom: 20, borderStyle: 'dashed', borderColor: 'rgba(0, 217, 255, 0.4)' }}>

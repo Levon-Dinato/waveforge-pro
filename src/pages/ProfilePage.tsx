@@ -204,10 +204,6 @@ export const ProfilePage: React.FC = () => {
     await supabase.from('posts').update({ likes: currentLikes + 1 }).eq('id', postId);
   };
 
-  const handlePlayTrack = (track: Track) => {
-    play({ id: track.id, title: track.title, artist: track.artist, audio_url: track.audio_url, cover_url: track.cover_url, user_id: track.user_id, duration: track.duration, peaks: track.peaks });
-  };
-
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();

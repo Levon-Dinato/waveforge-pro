@@ -180,8 +180,9 @@ export default function App() {
                         </PrivateRoute>
                       }
                     />
+                    {/* ✅ CORRECTION ICI : :id au lieu de :userId */}
                     <Route
-                      path="profil/:userId"
+                      path="profil/:id"
                       element={
                         <PrivateRoute>
                           <ProfilePage />

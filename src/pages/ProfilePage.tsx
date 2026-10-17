@@ -13,61 +13,116 @@ const PANEL_STYLE: React.CSSProperties = {
   boxShadow: '0 12px 40px rgba(0, 0, 0, 0.4)',
 };
 
-interface ProfileData {
-  id: string;
-  email: string;
-  bio: string;
-  banner_url: string;
-  avatar_url: string;
-  username: string;
-  created_at: string;
-}
-
-export const ProfilPage: React.FC = () => {
+export const ProfilePage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const isMobile = useIsMobile(768);
   
-  const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [profile, setProfile] = useState<any>(null);
+  const [stats, setStats] = useState({ tracks: 0, likes: 0, downloads: 0 });
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({ tracks: 0, likes: 0, bpm: 0 });
-  const [isEditing, setIsEditing] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchProfile = async () => {
+    const fetchProfileData = async () => {
       setLoading(true);
+      setErrorMsg(null);
+      
+      if (!id) {
+        setErrorMsg("Aucun ID de profil fourni dans l'URL.");
+        setLoading(false);
+        return;
+      }
+
       try {
-        const { data, error } = await supabase
+        console.log("🔍 Recherche du profil avec l'ID :", id);
+        
+        // 1. Récupérer le profil
+        const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', id)
-          .single();
+          .maybeSingle(); // maybeSingle évite les erreurs si 0 résultat
         
-        if (data) {
-          setProfile(data);
-          // Simulation de stats (à remplacer par tes vraies requêtes si besoin)
-          setStats({ tracks: 83, likes: 2, bpm: 128 });
+        if (profileError) {
+          console.error("❌ Erreur Supabase (profiles):", profileError);
+          throw new Error("Erreur base de données : " + profileError.message);
         }
-      } catch (err) {
-        console.error(err);
+        
+        if (profileData) {
+          console.log("✅ Profil trouvé :", profileData);
+          setProfile(profileData);
+        } else {
+          console.warn("⚠️ Aucun profil trouvé avec cet ID.");
+          // On crée un profil "virtuel" pour ne pas bloquer l'affichage
+          setProfile({ 
+            id, 
+            username: 'Utilisateur inconnu', 
+            email: 'inconnu@waveforge.com', 
+            bio: "Ce profil n'existe pas encore dans la base de données.",
+            created_at: new Date().toISOString()
+          });
+        }
+
+        // 2. Récupérer les stats
+        const { data: tracksData, error: tracksError } = await supabase
+          .from('tracks')
+          .select('likes, downloads')
+          .eq('user_id', id);
+
+        if (tracksError) {
+          console.warn("⚠️ Erreur chargement tracks (stats non disponibles) :", tracksError.message);
+        } else if (tracksData) {
+          const totalLikes = tracksData.reduce((acc, t) => acc + (t.likes || 0), 0);
+          const totalDownloads = tracksData.reduce((acc, t) => acc + (t.downloads || 0), 0);
+          setStats({
+            tracks: tracksData.length,
+            likes: totalLikes,
+            downloads: totalDownloads
+          });
+        }
+
+      } catch (err: any) {
+        console.error("🔥 Erreur fatale :", err);
+        setErrorMsg(err.message || "Une erreur inconnue est survenue.");
       } finally {
         setLoading(false);
       }
     };
-    if (id) fetchProfile();
+    
+    fetchProfileData();
   }, [id]);
+
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#0a0c14', color: '#fff', fontFamily: 'monospace', gap: 16 }}>
+        <div style={{ width: 40, height: 40, border: '3px solid rgba(0, 217, 255, 0.2)', borderTop: '3px solid #00d9ff', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+        <div>Chargement du profil...</div>
+      </div>
+    );
+  }
+
+  if (errorMsg) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#0a0c14', color: '#fff', fontFamily: 'monospace', padding: 20, textAlign: 'center' }}>
+        <div style={{ fontSize: 48, marginBottom: 16 }}>⚠️</div>
+        <h2 style={{ color: '#ff5c5c', marginBottom: 8 }}>Erreur de chargement</h2>
+        <p style={{ color: '#888', maxWidth: 500 }}>{errorMsg}</p>
+        <p style={{ color: '#666', fontSize: 12, marginTop: 16 }}>Vérifie la console (F12) pour plus de détails.</p>
+        <Link to="/nouveautes" style={{ marginTop: 24, color: '#00d9ff', textDecoration: 'underline' }}>← Retour</Link>
+      </div>
+    );
+  }
+
+  if (!profile) return null;
 
   const isOwnProfile = user?.id === id;
 
-  if (loading) return <div style={{ color: '#fff', textAlign: 'center', padding: 50 }}>Chargement...</div>;
-  if (!profile) return <div style={{ color: '#fff', textAlign: 'center', padding: 50 }}>Profil introuvable</div>;
-
   return (
-    <div style={{ padding: isMobile ? 16 : 32, maxWidth: 1000, margin: '0 auto', fontFamily: 'monospace', color: '#fff' }}>
+    <div style={{ padding: isMobile ? 16 : 32, maxWidth: 1000, margin: '0 auto', fontFamily: 'monospace', color: '#fff', minHeight: '100vh', background: '#0a0c14' }}>
       
-      {/* HEADER PROFIL (Bannière + Avatar + Nom) */}
+      {/* HEADER PROFIL */}
       <div style={{ position: 'relative', marginBottom: 60 }}>
-        {/* Bannière */}
         <div style={{
           height: isMobile ? 160 : 240,
           borderRadius: 16,
@@ -81,11 +136,10 @@ export const ProfilPage: React.FC = () => {
           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(10,12,20,0.9) 0%, transparent 100%)' }} />
         </div>
 
-        {/* Avatar & Infos */}
         <div style={{ 
           position: 'absolute', 
           bottom: -40, 
-          left: 32, 
+          left: isMobile ? 16 : 32, 
           display: 'flex', 
           alignItems: 'flex-end', 
           gap: 20,
@@ -103,8 +157,8 @@ export const ProfilPage: React.FC = () => {
           </div>
           
           <div style={{ marginBottom: 8 }}>
-            <h1 style={{ fontSize: 28, margin: 0, fontWeight: 900, display: 'flex', alignItems: 'center', gap: 10 }}>
-              {profile.username || profile.email.split('@')[0]}
+            <h1 style={{ fontSize: isMobile ? 22 : 28, margin: 0, fontWeight: 900, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+              {profile.username || profile.email?.split('@')[0] || 'Artiste'}
               <span style={{ fontSize: 10, background: 'rgba(0, 217, 255, 0.15)', color: '#00d9ff', padding: '2px 8px', borderRadius: 4, border: '1px solid rgba(0, 217, 255, 0.3)' }}>
                 PRO DJ
               </span>
@@ -121,8 +175,8 @@ export const ProfilPage: React.FC = () => {
         {[
           { label: 'TRACKS', value: stats.tracks, icon: '🎵', color: '#7c5cff' },
           { label: 'LIKES', value: stats.likes, icon: '❤️', color: '#ff5c5c' },
-          { label: 'BPM MOYEN', value: stats.bpm, icon: '🎧', color: '#00d9ff' },
-          { label: 'MEMBRE', value: '2026', icon: '📅', color: '#ffd43b' },
+          { label: 'DOWNLOADS', value: stats.downloads, icon: '⬇️', color: '#00d9ff' },
+          { label: 'MEMBRE', value: new Date(profile.created_at).getFullYear(), icon: '📅', color: '#ffd43b' },
         ].map((stat, i) => (
           <div key={i} style={{ ...PANEL_STYLE, padding: 20, display: 'flex', flexDirection: 'column', gap: 8 }}>
             <div style={{ fontSize: 18 }}>{stat.icon}</div>
@@ -141,9 +195,9 @@ export const ProfilPage: React.FC = () => {
       </div>
 
       {/* ACTIONS */}
-      <div style={{ display: 'flex', gap: 12 }}>
+      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
         {isOwnProfile ? (
-          <button onClick={() => setIsEditing(true)} style={{ 
+          <button style={{ 
             padding: '12px 24px', background: '#00d9ff', color: '#000', 
             border: 'none', borderRadius: 8, fontWeight: 800, cursor: 'pointer',
             boxShadow: '0 4px 16px rgba(0, 217, 255, 0.3)'
@@ -158,6 +212,15 @@ export const ProfilPage: React.FC = () => {
             🔗 Partager le profil
           </button>
         )}
+        
+        <Link to="/nouveautes" style={{ textDecoration: 'none' }}>
+          <button style={{ 
+            padding: '12px 24px', background: 'transparent', color: '#fff', 
+            border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, fontWeight: 800, cursor: 'pointer'
+          }}>
+            ← Retour aux nouveautés
+          </button>
+        </Link>
       </div>
 
     </div>

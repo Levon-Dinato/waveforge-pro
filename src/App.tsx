@@ -51,9 +51,13 @@ const ResetPasswordPage = lazy(() =>
 const ProfilePage = lazy(() =>
   import('./pages/ProfilePage').then((m) => ({ default: m.ProfilePage }))
 );
-// ✅ Nouvel import pour la page Genres
+// ✅ Import page Genres
 const GenresPage = lazy(() =>
   import('./pages/GenresPage').then((m) => ({ default: m.GenresPage }))
+);
+// ✅ Import page Artistes
+const ArtistsPage = lazy(() =>
+  import('./pages/ArtistsPage').then((m) => ({ default: m.ArtistsPage }))
 );
 
 const PageLoader = () => (
@@ -122,8 +126,10 @@ export default function App() {
                     <Route path="settings" element={<PrivateRoute><SettingsPage /></PrivateRoute>} />
                     <Route path="nouveautes" element={<PrivateRoute><NouveautesPage /></PrivateRoute>} />
                     <Route path="profil/:id" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
-                    {/* ✅ Nouvelle route Genres */}
+                    
+                    {/* ✅ Nouvelles routes */}
                     <Route path="genres" element={<PrivateRoute><GenresPage /></PrivateRoute>} />
+                    <Route path="artists" element={<PrivateRoute><ArtistsPage /></PrivateRoute>} />
                   </Route>
                 </Routes>
               </Suspense>

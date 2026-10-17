@@ -69,6 +69,13 @@ interface WallPost {
   likes: number;
 }
 
+interface Playlist {
+  id: string;
+  title: string;
+  description?: string;
+  playlist_tracks: { track_id: string; tracks: Track | null }[];
+}
+
 export const ProfilePage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
@@ -89,16 +96,23 @@ export const ProfilePage: React.FC = () => {
   const [isFollowing, setIsFollowing] = useState(false);
   const [followersCount, setFollowersCount] = useState(0);
 
-  const [creationPage, setCreationPage] = useState(1);
-  const [photosPage, setPhotosPage] = useState(1);
-  const ITEMS_PER_PAGE = 12;
-
-  // ✅ ÉTATS POUR L'ÉDITION
+  // États pour l'édition du profil
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({ username: '', city: '', country: '', bio: '' });
   const [uploadingImage, setUploadingImage] = useState(false);
   const bannerInputRef = useRef<HTMLInputElement>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
+
+  // États pour les playlists
+  const [playlists, setPlaylists] = useState<Playlist[]>([]);
+  const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
+  const [newPlaylistTitle, setNewPlaylistTitle] = useState('');
+  const [newPlaylistDesc, setNewPlaylistDesc] = useState('');
+  const [selectedTracks, setSelectedTracks] = useState<string[]>([]);
+
+  const [creationPage, setCreationPage] = useState(1);
+  const [photosPage, setPhotosPage] = useState(1);
+  const ITEMS_PER_PAGE = 12;
 
   useEffect(() => {
     const fetchProfileData = async () => {
@@ -140,6 +154,18 @@ export const ProfilePage: React.FC = () => {
           .order('created_at', { ascending: false });
 
         if (!postsError && postsData) setWallPosts(postsData);
+
+        // Récupérer les playlists
+        const { data: playlistsData } = await supabase
+          .from('playlists')
+          .select(`
+            *,
+            playlist_tracks (track_id, tracks (*))
+          `)
+          .eq('user_id', id)
+          .order('created_at', { ascending: false });
+
+        if (playlistsData) setPlaylists(playlistsData as Playlist[]);
       } catch (err) {
         console.error("Erreur chargement profil:", err);
       } finally {
@@ -150,7 +176,6 @@ export const ProfilePage: React.FC = () => {
     if (id) fetchProfileData();
   }, [id]);
 
-  // ✅ SUIVI (Follow)
   useEffect(() => {
     const fetchFollowStatus = async () => {
       if (!id) return;
@@ -206,29 +231,19 @@ export const ProfilePage: React.FC = () => {
     return `il y a ${Math.floor(diffInMinutes / 1440)} j`;
   };
 
-  // ✅ UPLOAD D'IMAGE (Bannière ou Avatar)
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'banner' | 'avatar') => {
     const file = e.target.files?.[0];
     if (!file || !id) return;
     setUploadingImage(true);
-
     try {
       const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
       const fileName = `${type}s/${id}_${Date.now()}.${ext}`;
-      
-      // Upload dans Supabase Storage
       const { error: uploadError } = await supabase.storage.from(AUDIO_BUCKET).upload(fileName, file, { upsert: true });
       if (uploadError) throw uploadError;
-
-      // Récupérer l'URL publique
       const { data: urlData } = supabase.storage.from(AUDIO_BUCKET).getPublicUrl(fileName);
-      
-      // Mettre à jour la table profiles
       const updateField = type === 'banner' ? 'banner_url' : 'avatar_url';
       const { error: updateError } = await supabase.from('profiles').update({ [updateField]: urlData.publicUrl }).eq('id', id);
       if (updateError) throw updateError;
-
-      // Mettre à jour l'état local
       setProfile(prev => prev ? { ...prev, [updateField]: urlData.publicUrl } : prev);
     } catch (err: any) {
       console.error("Erreur upload image:", err);
@@ -239,7 +254,6 @@ export const ProfilePage: React.FC = () => {
     }
   };
 
-  // ✅ SAUVEGARDER LES INFOS DU PROFIL (Nom, Ville, Bio)
   const handleSaveProfile = async () => {
     if (!id) return;
     try {
@@ -250,13 +264,47 @@ export const ProfilePage: React.FC = () => {
         bio: editForm.bio,
       }).eq('id', id);
       if (error) throw error;
-      
       setProfile(prev => prev ? { ...prev, ...editForm } : prev);
       setIsEditing(false);
     } catch (err: any) {
       console.error("Erreur sauvegarde profil:", err);
       alert("Erreur : " + err.message);
     }
+  };
+
+  const handleCreatePlaylist = async () => {
+    if (!newPlaylistTitle.trim() || !user || !id) return;
+    
+    const { data, error } = await supabase
+      .from('playlists')
+      .insert({ user_id: id, title: newPlaylistTitle, description: newPlaylistDesc })
+      .select()
+      .single();
+      
+    if (error || !data) {
+      alert("Erreur création playlist : " + error?.message);
+      return;
+    }
+
+    if (selectedTracks.length > 0) {
+      await supabase.from('playlist_tracks').insert(
+        selectedTracks.map(trackId => ({ playlist_id: data.id, track_id: trackId }))
+      );
+    }
+
+    setNewPlaylistTitle('');
+    setNewPlaylistDesc('');
+    setSelectedTracks([]);
+    setIsPlaylistModalOpen(false);
+
+    // Rafraîchir la liste des playlists
+    const { data: updatedPlaylists } = await supabase
+      .from('playlists')
+      .select(`*, playlist_tracks (track_id, tracks (*))`)
+      .eq('user_id', id)
+      .order('created_at', { ascending: false });
+    
+    if (updatedPlaylists) setPlaylists(updatedPlaylists as Playlist[]);
   };
 
   if (loading) return <div style={{ color: '#fff', padding: 40, textAlign: 'center', background: '#0a0c14', minHeight: '100vh' }}>Chargement...</div>;
@@ -332,7 +380,6 @@ export const ProfilePage: React.FC = () => {
   return (
     <div style={{ background: '#0a0c14', minHeight: '100vh', color: '#fff', fontFamily: 'sans-serif' }}>
       
-      {/* INPUTS CACHÉS POUR L'UPLOAD */}
       <input type="file" accept="image/*" ref={bannerInputRef} onChange={(e) => handleImageUpload(e, 'banner')} style={{ display: 'none' }} />
       <input type="file" accept="image/*" ref={avatarInputRef} onChange={(e) => handleImageUpload(e, 'avatar')} style={{ display: 'none' }} />
 
@@ -341,7 +388,6 @@ export const ProfilePage: React.FC = () => {
         {profile.banner_url && <img src={profile.banner_url} alt="Banner" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.8 }} />}
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #0a0c14 0%, transparent 100%)' }} />
         
-        {/* Bouton Modifier Bannière (si propriétaire) */}
         {isOwnProfile && (
           <button onClick={() => bannerInputRef.current?.click()} style={{ position: 'absolute', top: 20, right: 20, background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.3)', color: '#fff', padding: '8px 16px', borderRadius: 20, fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, backdropFilter: 'blur(10px)' }}>
             🖼️ Changer la bannière
@@ -353,7 +399,6 @@ export const ProfilePage: React.FC = () => {
             <div style={{ width: 140, height: 140, borderRadius: 8, background: '#1a1f2e', border: '4px solid #0a0c14', overflow: 'hidden', flexShrink: 0, transform: 'translateY(30px)', boxShadow: '0 4px 20px rgba(0,0,0,0.5)' }}>
               {profile.avatar_url && <img src={profile.avatar_url} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
             </div>
-            {/* Bouton Modifier Avatar */}
             {isOwnProfile && (
               <button onClick={() => avatarInputRef.current?.click()} style={{ position: 'absolute', bottom: 26, right: -10, width: 36, height: 36, borderRadius: '50%', background: '#00d9ff', color: '#000', border: '2px solid #0a0c14', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', zIndex: 2 }}>
                 📷
@@ -368,7 +413,6 @@ export const ProfilePage: React.FC = () => {
         </div>
       </div>
 
-      {/* BOUTON MODIFIER PROFIL */}
       {isOwnProfile && (
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '60px 20px 0', display: 'flex', justifyContent: 'flex-end' }}>
           <button onClick={() => setIsEditing(true)} style={{ background: 'transparent', border: '1px solid #00d9ff', color: '#00d9ff', padding: '8px 16px', borderRadius: 6, fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>
@@ -392,7 +436,40 @@ export const ProfilePage: React.FC = () => {
 
           {activeTab === 'creation' && (<div style={{ ...PANEL_STYLE, padding: 20 }}><div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 }}><h3 style={{ ...TEXT_TITLE, fontSize: '1rem', margin: 0 }}>TOUTES LES CRÉATIONS ({tracks.length})</h3></div><TrackGrid tracksToDisplay={paginatedCreationTracks} /><Pagination currentPage={safeCreationPage} totalPages={totalCreationPages} onPageChange={setCreationPage} /></div>)}
 
-          {activeTab === 'playlists' && (<div style={{ ...PANEL_STYLE, padding: 40, textAlign: 'center' }}><div style={{ fontSize: 40, marginBottom: 10 }}>📁</div><h3 style={{ ...TEXT_TITLE, fontSize: '1.1rem' }}>Playlists</h3><div style={{ ...TEXT_MUTED, marginTop: 8 }}>Les playlists arrivent bientôt !</div></div>)}
+          {activeTab === 'playlists' && (
+            <div style={{ ...PANEL_STYLE, padding: 20 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                <h3 style={{ ...TEXT_TITLE, fontSize: '1rem', margin: 0 }}>PLAYLISTS ({playlists.length})</h3>
+                {isOwnProfile && (
+                  <button onClick={() => setIsPlaylistModalOpen(true)} style={{ background: '#e50000', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: 6, fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer' }}>+ Créer une playlist</button>
+                )}
+              </div>
+              
+              {playlists.length === 0 ? (
+                <div style={{ ...TEXT_MUTED, textAlign: 'center', padding: 40 }}>Aucune playlist pour le moment.</div>
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: 15 }}>
+                  {playlists.map(pl => {
+                    const cover = pl.playlist_tracks?.[0]?.tracks?.cover_url;
+                    return (
+                      <div key={pl.id} style={{ cursor: 'pointer' }}>
+                        <div style={{ aspectRatio: '1/1', background: '#222', borderRadius: 6, overflow: 'hidden', marginBottom: 8, position: 'relative' }}>
+                          {cover ? (
+                            <img src={cover} alt={pl.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          ) : (
+                            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40 }}>📁</div>
+                          )}
+                          <div style={{ position: 'absolute', bottom: 8, left: 8, background: 'rgba(0,0,0,0.8)', padding: '4px 8px', borderRadius: 4, fontSize: '0.75rem' }}>{pl.playlist_tracks?.length || 0} tracks</div>
+                        </div>
+                        <div style={{ ...TEXT_TITLE, fontSize: '0.9rem' }}>{pl.title}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
           {activeTab === 'comments' && (<div style={{ ...PANEL_STYLE, padding: 40, textAlign: 'center' }}><div style={{ fontSize: 40, marginBottom: 10 }}>💬</div><h3 style={{ ...TEXT_TITLE, fontSize: '1.1rem' }}>Commentaires</h3><div style={{ ...TEXT_MUTED, marginTop: 8 }}>Aucun commentaire pour le moment.</div></div>)}
           {activeTab === 'wall' && (<WallSection />)}
           {activeTab === 'journal' && (<div style={{ ...PANEL_STYLE, padding: 24 }}><h3 style={{ ...TEXT_TITLE, fontSize: '1rem', marginBottom: 15 }}>JOURNAL</h3><div style={{ ...TEXT_MUTED, lineHeight: 1.8, fontSize: '0.9rem' }}>{profile.bio || "Aucune biographie pour le moment."}</div></div>)}
@@ -440,7 +517,7 @@ export const ProfilePage: React.FC = () => {
         </aside>
       </div>
 
-      {/* ✅ MODALE D'ÉDITION DU PROFIL */}
+      {/* MODALE D'ÉDITION DU PROFIL */}
       {isEditing && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
           <div style={{ background: '#151821', border: '1px solid #333', borderRadius: 12, padding: 30, width: '100%', maxWidth: 500, maxHeight: '90vh', overflowY: 'auto' }}>
@@ -473,6 +550,49 @@ export const ProfilePage: React.FC = () => {
                 <button onClick={() => setIsEditing(false)} style={{ flex: 1, padding: 12, background: 'transparent', border: '1px solid #333', color: '#fff', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>Annuler</button>
                 <button onClick={handleSaveProfile} disabled={uploadingImage} style={{ flex: 1, padding: 12, background: '#e50000', border: 'none', color: '#fff', borderRadius: 6, cursor: uploadingImage ? 'wait' : 'pointer', fontWeight: 600 }}>{uploadingImage ? 'Upload...' : 'Enregistrer'}</button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODALE DE CRÉATION DE PLAYLIST */}
+      {isPlaylistModalOpen && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div style={{ background: '#151821', border: '1px solid #333', borderRadius: 12, padding: 30, width: '100%', maxWidth: 500, maxHeight: '90vh', overflowY: 'auto' }}>
+            <h2 style={{ marginTop: 0 }}>Créer une playlist</h2>
+            
+            <div style={{ marginBottom: 15 }}>
+              <label style={{ display: 'block', fontSize: '0.8rem', color: '#888', marginBottom: 5 }}>Titre</label>
+              <input type="text" value={newPlaylistTitle} onChange={(e) => setNewPlaylistTitle(e.target.value)} style={{ width: '100%', padding: 10, background: '#0a0c14', border: '1px solid #333', borderRadius: 6, color: '#fff', outline: 'none' }} placeholder="Ma super playlist" />
+            </div>
+            
+            <div style={{ marginBottom: 15 }}>
+              <label style={{ display: 'block', fontSize: '0.8rem', color: '#888', marginBottom: 5 }}>Description</label>
+              <textarea value={newPlaylistDesc} onChange={(e) => setNewPlaylistDesc(e.target.value)} rows={2} style={{ width: '100%', padding: 10, background: '#0a0c14', border: '1px solid #333', borderRadius: 6, color: '#fff', outline: 'none' }} placeholder="Ma sélection du moment..." />
+            </div>
+
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ display: 'block', fontSize: '0.8rem', color: '#888', marginBottom: 5 }}>Ajouter des tracks</label>
+              <div style={{ maxHeight: 200, overflowY: 'auto', border: '1px solid #333', borderRadius: 6, padding: 10, background: '#0a0c14' }}>
+                {tracks.map(t => (
+                  <label key={t.id} style={{ display: 'flex', gap: 10, alignItems: 'center', padding: 8, cursor: 'pointer', color: '#ccc' }}>
+                    <input 
+                      type="checkbox" 
+                      checked={selectedTracks.includes(t.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) setSelectedTracks([...selectedTracks, t.id]);
+                        else setSelectedTracks(selectedTracks.filter(tid => tid !== t.id));
+                      }} 
+                    />
+                    {t.title}
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button onClick={() => setIsPlaylistModalOpen(false)} style={{ flex: 1, padding: 12, background: 'transparent', border: '1px solid #333', color: '#fff', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>Annuler</button>
+              <button onClick={handleCreatePlaylist} style={{ flex: 1, padding: 12, background: '#e50000', border: 'none', color: '#fff', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>Créer</button>
             </div>
           </div>
         </div>

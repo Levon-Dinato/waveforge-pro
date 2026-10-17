@@ -5,6 +5,8 @@ import { useIsMobile } from '../hooks/useIsMobile';
 import { usePlayer } from '../contexts/PlayerContext';
 import { useAuth } from '../contexts/AuthContext';
 import { ChatWidget } from '../components/ChatWidget';
+import { TrackGrid } from '../components/TrackGrid';
+import type { Track } from '../components/TrackGrid';
 
 const PANEL_STYLE: React.CSSProperties = {
   background: 'rgba(20, 22, 30, 0.8)',
@@ -49,18 +51,6 @@ interface Stats {
   plays: number;
 }
 
-interface Track {
-  id: string;
-  title: string;
-  cover_url: string | null;
-  audio_url: string;
-  duration: number;
-  peaks: number[];
-  artist: string;
-  user_id: string | null;
-  created_at: string;
-}
-
 interface WallPost {
   id: string;
   content: string;
@@ -96,14 +86,12 @@ export const ProfilePage: React.FC = () => {
   const [isFollowing, setIsFollowing] = useState(false);
   const [followersCount, setFollowersCount] = useState(0);
 
-  // États pour l'édition du profil
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({ username: '', city: '', country: '', bio: '' });
   const [uploadingImage, setUploadingImage] = useState(false);
   const bannerInputRef = useRef<HTMLInputElement>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
-  // États pour les playlists
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
   const [newPlaylistTitle, setNewPlaylistTitle] = useState('');
@@ -155,7 +143,6 @@ export const ProfilePage: React.FC = () => {
 
         if (!postsError && postsData) setWallPosts(postsData);
 
-        // Récupérer les playlists
         const { data: playlistsData } = await supabase
           .from('playlists')
           .select(`
@@ -297,7 +284,6 @@ export const ProfilePage: React.FC = () => {
     setSelectedTracks([]);
     setIsPlaylistModalOpen(false);
 
-    // Rafraîchir la liste des playlists
     const { data: updatedPlaylists } = await supabase
       .from('playlists')
       .select(`*, playlist_tracks (track_id, tracks (*))`)
@@ -334,21 +320,6 @@ export const ProfilePage: React.FC = () => {
       </div>
     );
   };
-
-  const TrackGrid = ({ tracksToDisplay }: { tracksToDisplay: Track[] }) => (
-    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: 15, width: '100%' }}>
-      {tracksToDisplay.map((track) => (
-        <div key={track.id} onClick={() => handlePlayTrack(track)} style={{ cursor: 'pointer', transition: 'transform 0.2s', position: 'relative', width: '100%' }} onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.02)'; const overlay = e.currentTarget.querySelector('.play-overlay') as HTMLElement; if (overlay) overlay.style.opacity = '1'; }} onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; const overlay = e.currentTarget.querySelector('.play-overlay') as HTMLElement; if (overlay) overlay.style.opacity = '0'; }}>
-          <div style={{ width: '100%', aspectRatio: '1 / 1', background: '#222', borderRadius: 4, overflow: 'hidden', marginBottom: 8, position: 'relative' }}>
-            {track.cover_url ? <img src={track.cover_url} alt={track.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, color: '#444' }}>🎵</div>}
-            <div className="play-overlay" style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0, transition: 'opacity 0.2s' }}><div style={{ width: 40, height: 40, borderRadius: '50%', background: '#e50000', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', color: '#fff', paddingLeft: 3 }}>▶</div></div>
-          </div>
-          <div style={{ ...TEXT_TITLE, fontSize: '0.8rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.title}</div>
-        </div>
-      ))}
-      {tracksToDisplay.length === 0 && <div style={{ ...TEXT_MUTED, gridColumn: '1 / -1', textAlign: 'center', padding: 20 }}>Aucun morceau.</div>}
-    </div>
-  );
 
   const WallSection = () => (
     <div style={{ ...PANEL_STYLE, padding: 20, marginBottom: 20 }}>
@@ -432,9 +403,9 @@ export const ProfilePage: React.FC = () => {
             ))}
           </div>
 
-          {activeTab === 'featured' && (<><WallSection /><div style={{ ...PANEL_STYLE, padding: 20 }}><div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 }}><h3 style={{ ...TEXT_TITLE, fontSize: '1rem', margin: 0 }}>NEW CREATION BY {displayName}</h3><Link to="/nouveautes" style={{ color: '#888', fontSize: '0.8rem', textDecoration: 'none' }}>VIEW ALL</Link></div><TrackGrid tracksToDisplay={tracks.slice(0, 4)} /></div></>)}
+          {activeTab === 'featured' && (<><WallSection /><div style={{ ...PANEL_STYLE, padding: 20 }}><div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 }}><h3 style={{ ...TEXT_TITLE, fontSize: '1rem', margin: 0 }}>NEW CREATION BY {displayName}</h3><Link to="/nouveautes" style={{ color: '#888', fontSize: '0.8rem', textDecoration: 'none' }}>VIEW ALL</Link></div><TrackGrid tracks={tracks.slice(0, 4)} /></div></>)}
 
-          {activeTab === 'creation' && (<div style={{ ...PANEL_STYLE, padding: 20 }}><div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 }}><h3 style={{ ...TEXT_TITLE, fontSize: '1rem', margin: 0 }}>TOUTES LES CRÉATIONS ({tracks.length})</h3></div><TrackGrid tracksToDisplay={paginatedCreationTracks} /><Pagination currentPage={safeCreationPage} totalPages={totalCreationPages} onPageChange={setCreationPage} /></div>)}
+          {activeTab === 'creation' && (<div style={{ ...PANEL_STYLE, padding: 20 }}><div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 }}><h3 style={{ ...TEXT_TITLE, fontSize: '1rem', margin: 0 }}>TOUTES LES CRÉATIONS ({tracks.length})</h3></div><TrackGrid tracks={paginatedCreationTracks} /><Pagination currentPage={safeCreationPage} totalPages={totalCreationPages} onPageChange={setCreationPage} /></div>)}
 
           {activeTab === 'playlists' && (
             <div style={{ ...PANEL_STYLE, padding: 20 }}>
@@ -453,13 +424,16 @@ export const ProfilePage: React.FC = () => {
                     const cover = pl.playlist_tracks?.[0]?.tracks?.cover_url;
                     return (
                       <div key={pl.id} style={{ cursor: 'pointer' }}>
-                        <div style={{ aspectRatio: '1/1', background: '#222', borderRadius: 6, overflow: 'hidden', marginBottom: 8, position: 'relative' }}>
+                        <div style={{
+                          position: 'relative', width: '100%', aspectRatio: '1/1',
+                          background: '#1a1a24', borderRadius: 6, overflow: 'hidden', marginBottom: 8
+                        }}>
                           {cover ? (
-                            <img src={cover} alt={pl.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            <img src={cover} alt={pl.title} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
                           ) : (
-                            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40 }}>📁</div>
+                            <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40 }}>📁</div>
                           )}
-                          <div style={{ position: 'absolute', bottom: 8, left: 8, background: 'rgba(0,0,0,0.8)', padding: '4px 8px', borderRadius: 4, fontSize: '0.75rem' }}>{pl.playlist_tracks?.length || 0} tracks</div>
+                          <div style={{ position: 'absolute', bottom: 8, left: 8, background: 'rgba(0,0,0,0.8)', padding: '4px 8px', borderRadius: 4, fontSize: '0.75rem', zIndex: 2 }}>{pl.playlist_tracks?.length || 0} tracks</div>
                         </div>
                         <div style={{ ...TEXT_TITLE, fontSize: '0.9rem' }}>{pl.title}</div>
                       </div>
@@ -474,7 +448,7 @@ export const ProfilePage: React.FC = () => {
           {activeTab === 'wall' && (<WallSection />)}
           {activeTab === 'journal' && (<div style={{ ...PANEL_STYLE, padding: 24 }}><h3 style={{ ...TEXT_TITLE, fontSize: '1rem', marginBottom: 15 }}>JOURNAL</h3><div style={{ ...TEXT_MUTED, lineHeight: 1.8, fontSize: '0.9rem' }}>{profile.bio || "Aucune biographie pour le moment."}</div></div>)}
 
-          {activeTab === 'photos' && (<div style={{ ...PANEL_STYLE, padding: 20 }}><div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 }}><h3 style={{ ...TEXT_TITLE, fontSize: '1rem', margin: 0 }}>PHOTOS</h3></div><div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: 15, width: '100%' }}>{paginatedPhotos.map((track) => (<div key={track.id} style={{ width: '100%', aspectRatio: '1 / 1', background: '#222', borderRadius: 4, overflow: 'hidden' }}><img src={track.cover_url!} alt={track.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></div>))}{paginatedPhotos.length === 0 && (<div style={{ ...TEXT_MUTED, gridColumn: '1 / -1', textAlign: 'center', padding: 20 }}>Aucune photo pour le moment.</div>)}</div><Pagination currentPage={safePhotosPage} totalPages={totalPhotosPages} onPageChange={setPhotosPage} /></div>)}
+          {activeTab === 'photos' && (<div style={{ ...PANEL_STYLE, padding: 20 }}><div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 }}><h3 style={{ ...TEXT_TITLE, fontSize: '1rem', margin: 0 }}>PHOTOS</h3></div><div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: 15, width: '100%' }}>{paginatedPhotos.map((track) => (<div key={track.id} style={{ position: 'relative', width: '100%', aspectRatio: '1/1', background: '#1a1a24', borderRadius: 6, overflow: 'hidden' }}><img src={track.cover_url!} alt={track.title} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }} /></div>))}{paginatedPhotos.length === 0 && (<div style={{ ...TEXT_MUTED, gridColumn: '1 / -1', textAlign: 'center', padding: 20 }}>Aucune photo pour le moment.</div>)}</div><Pagination currentPage={safePhotosPage} totalPages={totalPhotosPages} onPageChange={setPhotosPage} /></div>)}
           {activeTab === 'video' && (<div style={{ ...PANEL_STYLE, padding: 40, textAlign: 'center' }}><div style={{ fontSize: 40, marginBottom: 10 }}>🎥</div><h3 style={{ ...TEXT_TITLE, fontSize: '1.1rem' }}>Vidéos</h3><div style={{ ...TEXT_MUTED, marginTop: 8 }}>Aucune vidéo disponible pour le moment.</div></div>)}
         </div>
 

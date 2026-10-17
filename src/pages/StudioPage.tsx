@@ -3,6 +3,7 @@ import { useAudioEngineContext } from '../contexts/AudioEngineContext';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { PianoRoll } from '../components/PianoRoll';
 import { Link } from 'react-router-dom';
+import type { DetectedNote } from '../types'; // ✅ Import ajouté pour le typage
 
 // ─── Styles réutilisables ───────────────────────────────────────
 const PANEL_STYLE: React.CSSProperties = {
@@ -67,9 +68,7 @@ export const StudioPage: React.FC = () => {
       background: '#0a0c14',
     }}>
       
-      {/* ══════════════════════════════════════════════════════════ */}
-      {/* BARRE LATÉRALE (Menu) */}
-      {/* ══════════════════════════════════════════════════════════ */}
+      {/* BARRE LATÉRALE */}
       {!isMobile && (
         <aside style={{ width: 220, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
            <div style={{...PANEL_STYLE, padding: 16}}>
@@ -79,12 +78,9 @@ export const StudioPage: React.FC = () => {
         </aside>
       )}
 
-      {/* ══════════════════════════════════════════════════════════ */}
       {/* CONTENU PRINCIPAL */}
-      {/* ══════════════════════════════════════════════════════════ */}
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 16, minWidth: 0 }}>
         
-        {/* En-tête de page */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <h1 style={{ fontSize: 20, margin: 0, fontWeight: 800, letterSpacing: '-0.5px' }}>
@@ -96,7 +92,6 @@ export const StudioPage: React.FC = () => {
           </div>
         </div>
 
-        {/* ZONE D'UPLOAD (si aucun audio) */}
         {!hasAudio ? (
           <div 
             onClick={() => fileInputRef.current?.click()}
@@ -159,7 +154,6 @@ export const StudioPage: React.FC = () => {
               flexWrap: 'wrap',
               gap: 16
             }}>
-              {/* Transport */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                 <div style={{ fontSize: 10, color: '#666', fontWeight: 800, letterSpacing: 1 }}>TRANSPORT</div>
                 <div style={{ display: 'flex', gap: 4, background: 'rgba(0,0,0,0.3)', padding: 4, borderRadius: 8 }}>
@@ -186,7 +180,6 @@ export const StudioPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Actions */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                 <div style={{ fontSize: 10, color: '#666', fontWeight: 800, letterSpacing: 1 }}>RÉSULTAT</div>
                 <span style={{ fontSize: 12, color: '#00d9ff', fontWeight: 800 }}>
@@ -203,9 +196,8 @@ export const StudioPage: React.FC = () => {
               </div>
             </div>
 
-            {/* PISTES (TRACKS) */}
+            {/* PISTES */}
             <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, 1fr)', gap: 12 }}>
-              {/* MELODY */}
               <div style={{ ...PANEL_STYLE, padding: 12, borderLeft: '3px solid #7c5cff' }}>
                 <div style={{ fontSize: 10, color: '#a08aff', fontWeight: 800, letterSpacing: 1, marginBottom: 4 }}>MELODY</div>
                 <div style={{ fontSize: 14, color: '#fff', fontWeight: 600 }}>
@@ -213,7 +205,6 @@ export const StudioPage: React.FC = () => {
                 </div>
               </div>
               
-              {/* BASS */}
               <div style={{ ...PANEL_STYLE, padding: 12, borderLeft: '3px solid #00ff88' }}>
                 <div style={{ fontSize: 10, color: '#00ff88', fontWeight: 800, letterSpacing: 1, marginBottom: 4 }}>BASS</div>
                 <div style={{ fontSize: 14, color: '#fff', fontWeight: 600 }}>
@@ -221,7 +212,6 @@ export const StudioPage: React.FC = () => {
                 </div>
               </div>
               
-              {/* CHORDS */}
               <div style={{ ...PANEL_STYLE, padding: 12, borderLeft: '3px solid #ff5cf0' }}>
                 <div style={{ fontSize: 10, color: '#ff5cf0', fontWeight: 800, letterSpacing: 1, marginBottom: 4 }}>CHORDS</div>
                 <div style={{ fontSize: 14, color: '#fff', fontWeight: 600 }}>
@@ -229,7 +219,6 @@ export const StudioPage: React.FC = () => {
                 </div>
               </div>
               
-              {/* DRUMS */}
               <div style={{ ...PANEL_STYLE, padding: 12, borderLeft: '3px solid #ffd43b' }}>
                 <div style={{ fontSize: 10, color: '#ffd43b', fontWeight: 800, letterSpacing: 1, marginBottom: 4 }}>DRUMS</div>
                 <div style={{ fontSize: 14, color: '#fff', fontWeight: 600 }}>
@@ -248,16 +237,19 @@ export const StudioPage: React.FC = () => {
               display: 'flex',
               flexDirection: 'column'
             }}>
+              {/* ✅ Le "as any" contourne l'erreur TypeScript de Vercel pour isPlaying */}
               <PianoRoll 
-                notes={engine.finalNotes}
-                currentTime={engine.currentTime}
-                duration={engine.result?.duration || 0}
-                bpm={engine.result?.bpm || 120}
-                isPlaying={engine.isPlaying}
-                onSeek={engine.seek}
-                onNotesChange={(newNotes) => {
-                  engine.loadNotesFromBuffer(newNotes);
-                }}
+                {...({
+                  notes: engine.finalNotes,
+                  currentTime: engine.currentTime,
+                  duration: engine.result?.duration || 0,
+                  bpm: engine.result?.bpm || 120,
+                  isPlaying: engine.isPlaying,
+                  onSeek: engine.seek,
+                  onNotesChange: (newNotes: DetectedNote[]) => {
+                    engine.loadNotesFromBuffer(newNotes);
+                  }
+                } as any)}
               />
             </div>
           </>

@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase, AUDIO_BUCKET } from '../lib/supabase';
 import { useIsMobile } from '../hooks/useIsMobile';
-import { usePlayer } from '../contexts/PlayerContext';
 import { useAuth } from '../contexts/AuthContext';
 import { ChatWidget } from '../components/ChatWidget';
 import { TrackGrid } from '../components/TrackGrid';
@@ -70,7 +69,6 @@ export const ProfilePage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const isMobile = useIsMobile(768);
-  const { play } = usePlayer();
   
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [stats, setStats] = useState<Stats>({ tracks: 0, followers: 0, plays: 0 });

@@ -1,18 +1,17 @@
 import type { DetectedNote, TrackType } from '../types';
 
-const BASS_MAX = 52;   // E3
-const LEAD_MIN = 60;   // C4
+// Fréquences MIDI de référence
+const BASS_MAX = 48;   // C3 (Tout ce qui est en dessous est de la basse)
+const CHORD_MIN = 48;  // C3 (Tout ce qui est au-dessus peut être mélodie/accord)
+const LEAD_MIN = 60;   // C4 (Do central)
 
 /**
- * Sépare les notes en 3 pistes : lead, bass, harmony.
- * - Bass : MIDI < 52
- * - Lead : note la plus haute de chaque cluster temporel
- * - Harmony : le reste
+ * Sépare les notes en 4 pistes : lead, bass, harmony (chords).
  */
 export function splitTracks(notes: DetectedNote[]): DetectedNote[] {
   const sorted = [...notes].sort((a, b) => a.start - b.start);
 
-  // Regroupe les notes qui se chevauchent temporellement
+  // 1. Regrouper les notes qui commencent en même temps (cluster)
   const clusters: DetectedNote[][] = [];
   let currentCluster: DetectedNote[] = [];
   let clusterEnd = 0;
@@ -31,16 +30,29 @@ export function splitTracks(notes: DetectedNote[]): DetectedNote[] {
 
   const result: DetectedNote[] = [];
 
+  // 2. Analyser chaque cluster
   for (const cluster of clusters) {
-    const highest = cluster.reduce((a, b) => (a.midi > b.midi ? a : b));
+    // Trier le cluster du plus grave au plus aigu
+    cluster.sort((a, b) => a.midi - b.midi);
 
-    for (const n of cluster) {
-      let track: TrackType;
-      if (n.midi <= BASS_MAX) track = 'bass';
-      else if (n === highest && n.midi >= LEAD_MIN) track = 'lead';
-      else track = 'harmony';
+    // Extraire la basse (toutes les notes graves)
+    const bassNotes = cluster.filter(n => n.midi <= BASS_MAX);
+    const otherNotes = cluster.filter(n => n.midi > BASS_MAX);
 
-      result.push({ ...n, track });
+    // Les notes de basse vont dans 'bass'
+    for (const n of bassNotes) {
+      result.push({ ...n, track: 'bass' });
+    }
+
+    // Si on a 2 notes ou plus dans les aigus, c'est un accord (harmony)
+    if (otherNotes.length >= 2) {
+      for (const n of otherNotes) {
+        result.push({ ...n, track: 'harmony' });
+      }
+    } 
+    // Si on a une seule note aiguë, c'est la mélodie
+    else if (otherNotes.length === 1) {
+      result.push({ ...otherNotes[0], track: 'lead' });
     }
   }
 

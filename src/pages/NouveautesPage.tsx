@@ -245,14 +245,12 @@ const extractMetadataFromMp3 = async (file: File): Promise<ExtractedMetadata> =>
     if (metadata.common.bpm) {
       const tagBpm = Math.round(Number(metadata.common.bpm));
       if (tagBpm > 0 && tagBpm < 300) {
-        console.log('🎯 BPM ID3 trouvé :', tagBpm);
         result.bpm = tagBpm;
       }
     }
 
     if (metadata.common.key) {
       const rawKey = metadata.common.key.trim();
-      console.log('🎼 Clé ID3 trouvée :', rawKey);
       result.key = normalizeKeyFromTag(rawKey);
     }
 
@@ -1027,12 +1025,24 @@ export const NouveautesPage: React.FC = () => {
     });
   };
 
+  // ─── STYLE GLOBAL PANEL ───
+  const PANEL_STYLE: React.CSSProperties = {
+    background: 'rgba(15, 18, 28, 0.65)',
+    backdropFilter: 'blur(12px)',
+    WebkitBackdropFilter: 'blur(12px)',
+    border: '1px solid rgba(255, 255, 255, 0.06)',
+    borderRadius: 12,
+    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+  };
+
   return (
     <div style={{
-      padding: isMobile ? '12px' : '20px',
+      padding: isMobile ? '12px' : '24px',
       fontFamily: 'monospace',
       color: '#fff',
       paddingBottom: isMobile ? 140 : 80,
+      background: '#0a0c14',
+      minHeight: '100vh'
     }}>
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -1040,156 +1050,73 @@ export const NouveautesPage: React.FC = () => {
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         .new-badge { animation: pulse 2s ease-in-out infinite; }
         .genre-item { transition: all 0.15s; }
-        .genre-item:hover {
-          background: rgba(0, 217, 255, 0.08) !important;
-          color: #00d9ff !important;
-          padding-left: 14px !important;
-        }
+        .genre-item:hover { background: rgba(0, 217, 255, 0.08) !important; color: #00d9ff !important; padding-left: 14px !important; }
         .track-row { animation: fadeIn 0.3s ease; }
         .key-btn { transition: all 0.15s ease; }
         .key-btn:hover { transform: scale(1.05); }
         select option { background: #0a0c14 !important; color: #fff !important; padding: 8px !important; }
       `}</style>
 
-      <h1 style={{ fontSize: isMobile ? '1.5rem' : '2rem', marginBottom: 16 }}>Nouveautes DJ</h1>
+      <div style={{ marginBottom: 24 }}>
+        <h1 style={{ fontSize: isMobile ? '1.5rem' : '2rem', fontWeight: 900, margin: 0 }}>Nouveautés <span style={{ color: '#00d9ff' }}>DJ</span></h1>
+        <p style={{ color: '#888', fontSize: 12, marginTop: 6 }}>Découvrez les derniers sons partagés par la communauté.</p>
+      </div>
 
       <input type="file" accept="audio/*" ref={fileInputRef} onChange={handleFileChange} style={{ display: 'none' }} />
       <input type="file" accept="image/*" ref={coverInputRef} onChange={handleCoverChange} style={{ display: 'none' }} />
       <input type="file" accept="audio/*" ref={replaceInputRef} onChange={handleReplaceChange} style={{ display: 'none' }} />
 
-      <GlassCard style={{ padding: '14px', marginBottom: 16, borderStyle: 'dashed', borderColor: '#00d9ff' }}>
+      <GlassCard style={{ padding: '16px', marginBottom: 20, borderStyle: 'dashed', borderColor: 'rgba(0, 217, 255, 0.4)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
           <div>
-            <div style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: 4 }}>
-              Partager un nouveau son
-            </div>
-            <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)' }}>
-              Tags ID3 (BPM + Key) · Analyse audio · Détection auto
-            </div>
+            <div style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: 4 }}>Partager un nouveau son</div>
+            <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)' }}>Tags ID3 (BPM + Key) · Analyse audio · Détection auto</div>
           </div>
           <button onClick={handleUploadClick} disabled={uploading} style={{
-            padding: '10px 18px',
-            background: uploading ? '#666' : 'linear-gradient(135deg, #00d9ff, #0088ff)',
-            color: '#000', border: 'none', borderRadius: '6px',
-            cursor: uploading ? 'wait' : 'pointer',
-            fontWeight: 800, fontSize: '0.85rem',
-            fontFamily: 'monospace',
+            padding: '10px 20px', background: uploading ? '#666' : 'linear-gradient(135deg, #00d9ff, #0088ff)',
+            color: '#000', border: 'none', borderRadius: '8px', cursor: uploading ? 'wait' : 'pointer',
+            fontWeight: 800, fontSize: '0.85rem', fontFamily: 'monospace', boxShadow: '0 4px 16px rgba(0, 217, 255, 0.3)',
           }}>
             {uploading ? uploadStatus || 'Traitement...' : '+ UPLOADER'}
           </button>
         </div>
       </GlassCard>
 
-      <div style={{
-        display: 'flex',
-        gap: 20,
-        flexDirection: isMobile ? 'column' : 'row',
-      }}>
+      <div style={{ display: 'flex', gap: 20, flexDirection: isMobile ? 'column' : 'row' }}>
         {!isMobile && (
           <aside style={{ width: 220, flexShrink: 0 }}>
-            <div style={{
-              background: 'rgba(255,255,255,0.02)',
-              border: '1px solid rgba(255,255,255,0.06)',
-              borderRadius: 8,
-              padding: '14px 0',
-              position: 'sticky',
-              top: 20,
-            }}>
-              <h3 style={{
-                fontSize: '0.75rem', fontWeight: 800, letterSpacing: '1px',
-                padding: '0 14px 10px',
-                margin: 0,
-                color: 'rgba(255,255,255,0.7)',
-                borderBottom: '1px solid rgba(255,255,255,0.06)',
-              }}>
+            <div style={{ ...PANEL_STYLE, padding: '16px 0', position: 'sticky', top: 20 }}>
+              <h3 style={{ fontSize: '0.75rem', fontWeight: 800, letterSpacing: '1px', padding: '0 16px 12px', margin: 0, color: 'rgba(255,255,255,0.7)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                 🎵 MUSIC CATEGORY
               </h3>
-
-              <div
-                onClick={() => setSelectedGenre(null)}
-                className="genre-item"
-                style={{
-                  display: 'flex', justifyContent: 'space-between',
-                  padding: '7px 14px', fontSize: '0.78rem',
-                  cursor: 'pointer',
-                  background: selectedGenre === null ? 'rgba(0, 217, 255, 0.1)' : 'transparent',
-                  color: selectedGenre === null ? '#00d9ff' : 'rgba(255,255,255,0.7)',
-                  borderLeft: selectedGenre === null ? '2px solid #00d9ff' : '2px solid transparent',
-                  fontWeight: selectedGenre === null ? 700 : 500,
-                }}
-              >
+              <div onClick={() => setSelectedGenre(null)} className="genre-item" style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 16px', fontSize: '0.78rem', cursor: 'pointer', background: selectedGenre === null ? 'rgba(0, 217, 255, 0.1)' : 'transparent', color: selectedGenre === null ? '#00d9ff' : 'rgba(255,255,255,0.7)', borderLeft: selectedGenre === null ? '2px solid #00d9ff' : '2px solid transparent', fontWeight: selectedGenre === null ? 700 : 500 }}>
                 <span>Tous les sons</span>
                 <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.72rem' }}>{tracks.length}</span>
               </div>
-
               {genreStats.map(([genre, count]) => {
                 const isActive = selectedGenre === genre;
                 return (
-                  <div
-                    key={genre}
-                    onClick={() => setSelectedGenre(genre)}
-                    className="genre-item"
-                    style={{
-                      display: 'flex', justifyContent: 'space-between',
-                      padding: '7px 14px', fontSize: '0.78rem',
-                      cursor: 'pointer',
-                      background: isActive ? 'rgba(0, 217, 255, 0.1)' : 'transparent',
-                      color: isActive ? '#00d9ff' : 'rgba(255,255,255,0.7)',
-                      borderLeft: isActive ? '2px solid #00d9ff' : '2px solid transparent',
-                      fontWeight: isActive ? 700 : 500,
-                    }}
-                  >
-                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: 8 }}>
-                      {genre}
-                    </span>
-                    <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.72rem', flexShrink: 0 }}>
-                      {count}
-                    </span>
+                  <div key={genre} onClick={() => setSelectedGenre(genre)} className="genre-item" style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 16px', fontSize: '0.78rem', cursor: 'pointer', background: isActive ? 'rgba(0, 217, 255, 0.1)' : 'transparent', color: isActive ? '#00d9ff' : 'rgba(255,255,255,0.7)', borderLeft: isActive ? '2px solid #00d9ff' : '2px solid transparent', fontWeight: isActive ? 700 : 500 }}>
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: 8 }}>{genre}</span>
+                    <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.72rem', flexShrink: 0 }}>{count}</span>
                   </div>
                 );
               })}
-
               {top10.length > 0 && (
                 <>
-                  <h3 style={{
-                    fontSize: '0.75rem', fontWeight: 800, letterSpacing: '1px',
-                    padding: '14px 14px 10px',
-                    margin: 0,
-                    marginTop: 10,
-                    color: 'rgba(255,255,255,0.7)',
-                    borderTop: '1px solid rgba(255,255,255,0.06)',
-                  }}>
+                  <h3 style={{ fontSize: '0.75rem', fontWeight: 800, letterSpacing: '1px', padding: '16px 16px 12px', margin: 0, marginTop: 10, color: 'rgba(255,255,255,0.7)', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
                     ⭐ TOP 10 LIKES
                   </h3>
                   {top10.map((t, idx) => (
-                    <div
-                      key={t.id}
-                      onClick={() => handlePlayTrack(t)}
-                      className="genre-item"
-                      style={{
-                        display: 'flex', gap: 8, alignItems: 'center',
-                        padding: '6px 14px', fontSize: '0.72rem',
-                        cursor: 'pointer',
-                        color: 'rgba(255,255,255,0.7)',
-                      }}
-                    >
-                      <span style={{ color: '#00d9ff', fontWeight: 800, flexShrink: 0, width: 16 }}>
-                        {idx + 1}
-                      </span>
-                      <div style={{
-                        width: 28, height: 28, borderRadius: 4, flexShrink: 0,
-                        background: t.cover_url ? `url(${t.cover_url}) center/cover` : 'linear-gradient(135deg, #00d9ff, #7c5cff)',
-                        border: '1px solid rgba(0, 217, 255, 0.2)',
-                      }} />
-                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {t.title}
-                      </span>
+                    <div key={t.id} onClick={() => handlePlayTrack(t)} className="genre-item" style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '6px 16px', fontSize: '0.72rem', cursor: 'pointer', color: 'rgba(255,255,255,0.7)' }}>
+                      <span style={{ color: '#00d9ff', fontWeight: 800, flexShrink: 0, width: 16 }}>{idx + 1}</span>
+                      <div style={{ width: 28, height: 28, borderRadius: 4, flexShrink: 0, background: t.cover_url ? `url(${t.cover_url}) center/cover` : 'linear-gradient(135deg, #00d9ff, #7c5cff)', border: '1px solid rgba(0, 217, 255, 0.2)' }} />
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.title}</span>
                     </div>
                   ))}
                 </>
               )}
-
-              <div style={{ padding: '0 14px' }}>
+              <div style={{ padding: '0 16px', marginTop: 12 }}>
                 <OnlineUsersWidget />
               </div>
             </div>
@@ -1197,25 +1124,10 @@ export const NouveautesPage: React.FC = () => {
         )}
 
         <main style={{ flex: 1, minWidth: 0 }}>
-          <div style={{
-            display: 'flex',
-            gap: 8,
-            marginBottom: 14,
-            flexWrap: 'wrap',
-            alignItems: 'center',
-          }}>
-            <input
-              type="text"
-              placeholder="Rechercher..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              style={{ ...INPUT_STYLE, flex: '1 1 200px', minWidth: 0 }}
-            />
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as any)}
-              style={{ ...INPUT_STYLE, flex: '0 1 160px', cursor: 'pointer' }}
-            >
+          {/* FILTRES */}
+          <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
+            <input type="text" placeholder="Rechercher..." value={search} onChange={(e) => setSearch(e.target.value)} style={{ ...INPUT_STYLE, flex: '1 1 200px', minWidth: 0 }} />
+            <select value={sortBy} onChange={(e) => setSortBy(e.target.value as any)} style={{ ...INPUT_STYLE, flex: '0 1 160px', cursor: 'pointer' }}>
               <option style={OPTION_STYLE} value="recent">Plus recents</option>
               <option style={OPTION_STYLE} value="likes">Plus aimes</option>
               <option style={OPTION_STYLE} value="bpm">BPM (eleve)</option>
@@ -1223,56 +1135,22 @@ export const NouveautesPage: React.FC = () => {
             </select>
           </div>
 
+          {/* GENRES MOBILE */}
           {isMobile && genreStats.length > 0 && (
-            <div style={{
-              display: 'flex', gap: 6, overflowX: 'auto',
-              paddingBottom: 6, marginBottom: 12,
-              WebkitOverflowScrolling: 'touch',
-            }}>
-              <button
-                onClick={() => setSelectedGenre(null)}
-                style={{
-                  flexShrink: 0, padding: '5px 10px',
-                  background: selectedGenre === null ? 'rgba(0, 217, 255, 0.2)' : 'rgba(255,255,255,0.03)',
-                  border: selectedGenre === null ? '1px solid #00d9ff' : '1px solid rgba(255,255,255,0.1)',
-                  borderRadius: 20,
-                  color: selectedGenre === null ? '#00d9ff' : 'rgba(255,255,255,0.7)',
-                  fontSize: '0.72rem', fontWeight: 700,
-                  fontFamily: 'monospace', cursor: 'pointer',
-                }}
-              >
-                Tous {tracks.length}
-              </button>
+            <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 8, marginBottom: 16, WebkitOverflowScrolling: 'touch' }}>
+              <button onClick={() => setSelectedGenre(null)} style={{ flexShrink: 0, padding: '6px 12px', background: selectedGenre === null ? 'rgba(0, 217, 255, 0.2)' : 'rgba(255,255,255,0.03)', border: selectedGenre === null ? '1px solid #00d9ff' : '1px solid rgba(255,255,255,0.1)', borderRadius: 20, color: selectedGenre === null ? '#00d9ff' : 'rgba(255,255,255,0.7)', fontSize: '0.72rem', fontWeight: 700, fontFamily: 'monospace', cursor: 'pointer' }}>Tous {tracks.length}</button>
               {genreStats.map(([genre, count]) => {
                 const isActive = selectedGenre === genre;
                 return (
-                  <button
-                    key={genre}
-                    onClick={() => setSelectedGenre(genre)}
-                    style={{
-                      flexShrink: 0, padding: '5px 10px',
-                      background: isActive ? 'rgba(0, 217, 255, 0.2)' : 'rgba(255,255,255,0.03)',
-                      border: isActive ? '1px solid #00d9ff' : '1px solid rgba(255,255,255,0.1)',
-                      borderRadius: 20,
-                      color: isActive ? '#00d9ff' : 'rgba(255,255,255,0.7)',
-                      fontSize: '0.72rem', fontWeight: isActive ? 700 : 500,
-                      fontFamily: 'monospace', cursor: 'pointer',
-                    }}
-                  >
-                    {genre} {count}
-                  </button>
+                  <button key={genre} onClick={() => setSelectedGenre(genre)} style={{ flexShrink: 0, padding: '6px 12px', background: isActive ? 'rgba(0, 217, 255, 0.2)' : 'rgba(255,255,255,0.03)', border: isActive ? '1px solid #00d9ff' : '1px solid rgba(255,255,255,0.1)', borderRadius: 20, color: isActive ? '#00d9ff' : 'rgba(255,255,255,0.7)', fontSize: '0.72rem', fontWeight: isActive ? 700 : 500, fontFamily: 'monospace', cursor: 'pointer' }}>{genre} {count}</button>
                 );
               })}
             </div>
           )}
 
+          {/* LISTE DES TRACKS */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {loading && (
-              <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.4)', padding: 40 }}>
-                Chargement...
-              </div>
-            )}
-
+            {loading && <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.4)', padding: 40 }}>Chargement...</div>}
             {!loading && visibleTracks.length === 0 && (
               <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.4)', padding: 40, fontSize: '0.9rem' }}>
                 {tracks.length === 0 ? 'Aucun morceau.' : selectedGenre ? `Aucun morceau dans "${selectedGenre}".` : 'Aucun resultat.'}
@@ -1290,331 +1168,102 @@ export const NouveautesPage: React.FC = () => {
               const showComments = openComments.has(track.id);
 
               return (
-                <div
-                  key={track.id}
-                  className="track-row"
-                  style={{
-                    background: 'rgba(255,255,255,0.02)',
-                    border: isThisPlaying ? '1px solid rgba(0, 217, 255, 0.5)' : '1px solid rgba(255,255,255,0.06)',
-                    borderRadius: 8,
-                    padding: isMobile ? 10 : 12,
-                    boxShadow: isThisPlaying ? '0 0 20px rgba(0, 217, 255, 0.15)' : 'none',
-                    opacity: isReplacing ? 0.6 : 1,
-                    transition: 'all 0.2s',
-                  }}
-                >
+                <div key={track.id} className="track-row" style={{
+                  ...PANEL_STYLE,
+                  padding: isMobile ? 12 : 16,
+                  border: isThisPlaying ? '1px solid rgba(0, 217, 255, 0.5)' : '1px solid rgba(255, 255, 255, 0.06)',
+                  boxShadow: isThisPlaying ? '0 0 20px rgba(0, 217, 255, 0.15)' : '0 8px 32px rgba(0, 0, 0, 0.3)',
+                  opacity: isReplacing ? 0.6 : 1,
+                  transition: 'all 0.2s',
+                }}>
                   {isEditing ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      <input type="text" placeholder="Titre" value={editForm.title}
-                        onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
-                        style={{ ...INPUT_STYLE, fontSize: '0.85rem' }} />
-                      <input type="text" placeholder="Artiste" value={editForm.artist}
-                        onChange={(e) => setEditForm({ ...editForm, artist: e.target.value })}
-                        style={{ ...INPUT_STYLE, fontSize: '0.85rem' }} />
+                      <input type="text" placeholder="Titre" value={editForm.title} onChange={(e) => setEditForm({ ...editForm, title: e.target.value })} style={{ ...INPUT_STYLE, fontSize: '0.85rem' }} />
+                      <input type="text" placeholder="Artiste" value={editForm.artist} onChange={(e) => setEditForm({ ...editForm, artist: e.target.value })} style={{ ...INPUT_STYLE, fontSize: '0.85rem' }} />
                       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                        <select value={editForm.genre}
-                          onChange={(e) => setEditForm({ ...editForm, genre: e.target.value })}
-                          style={{ ...INPUT_STYLE, fontSize: '0.85rem', flex: '1 1 200px', cursor: 'pointer' }}>
+                        <select value={editForm.genre} onChange={(e) => setEditForm({ ...editForm, genre: e.target.value })} style={{ ...INPUT_STYLE, fontSize: '0.85rem', flex: '1 1 200px', cursor: 'pointer' }}>
                           <option style={OPTION_STYLE} value="Inconnu">-- Genre --</option>
-                          {PREDEFINED_GENRES.map((g) => (
-                            <option key={g} value={g} style={OPTION_STYLE}>{g}</option>
-                          ))}
+                          {PREDEFINED_GENRES.map((g) => (<option key={g} value={g} style={OPTION_STYLE}>{g}</option>))}
                         </select>
-                        <input type="number" placeholder="BPM" value={editForm.bpm}
-                          onChange={(e) => setEditForm({ ...editForm, bpm: parseInt(e.target.value) || 0 })}
-                          style={{ ...INPUT_STYLE, fontSize: '0.85rem', flex: '0 0 90px' }} />
+                        <input type="number" placeholder="BPM" value={editForm.bpm} onChange={(e) => setEditForm({ ...editForm, bpm: parseInt(e.target.value) || 0 })} style={{ ...INPUT_STYLE, fontSize: '0.85rem', flex: '0 0 90px' }} />
                       </div>
                       <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-                        <button onClick={cancelEdit} style={{
-                          padding: '6px 14px', background: 'transparent',
-                          border: '1px solid rgba(255,255,255,0.2)', color: '#fff',
-                          borderRadius: 4, cursor: 'pointer', fontSize: '0.78rem',
-                        }}>Annuler</button>
-                        <button onClick={saveEdit} style={{
-                          padding: '6px 14px', background: '#00d9ff', color: '#000',
-                          border: 'none', borderRadius: 4, cursor: 'pointer',
-                          fontWeight: 800, fontSize: '0.78rem',
-                        }}>Enregistrer</button>
+                        <button onClick={cancelEdit} style={{ padding: '6px 14px', background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', borderRadius: 4, cursor: 'pointer', fontSize: '0.78rem' }}>Annuler</button>
+                        <button onClick={saveEdit} style={{ padding: '6px 14px', background: '#00d9ff', color: '#000', border: 'none', borderRadius: 4, cursor: 'pointer', fontWeight: 800, fontSize: '0.78rem' }}>Enregistrer</button>
                       </div>
                     </div>
                   ) : (
-                    <div style={{
-                      display: 'flex',
-                      gap: 12,
-                      flexDirection: isMobile ? 'column' : 'row',
-                    }}>
-                      <div
-                        onClick={() => !isReplacing && handleCoverClick(track.id)}
-                        title="Cliquez pour changer la pochette"
-                        style={{
-                          width: isMobile ? '100%' : 120,
-                          height: isMobile ? 140 : 120,
-                          flexShrink: 0,
-                          borderRadius: 6,
-                          background: track.cover_url
-                            ? `url(${track.cover_url}) center/cover`
-                            : 'linear-gradient(135deg, rgba(0,217,255,0.2), rgba(124,92,255,0.15))',
-                          border: '1px solid rgba(0, 217, 255, 0.25)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          cursor: isReplacing ? 'wait' : 'pointer',
-                          position: 'relative',
-                          overflow: 'hidden',
-                        }}
-                      >
-                        {!track.cover_url && <span style={{ fontSize: 32, opacity: 0.5 }}>🎵</span>}
+                    <div style={{ display: 'flex', gap: isMobile ? 12 : 16, flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'stretch' : 'center' }}>
+                      
+                      {/* POCHETTE + OVERLAY PLAY */}
+                      <div style={{ position: 'relative', flexShrink: 0, width: isMobile ? '100%' : 80, height: isMobile ? 120 : 80, borderRadius: 8, overflow: 'hidden', background: track.cover_url ? `url(${track.cover_url}) center/cover` : 'linear-gradient(135deg, rgba(0,217,255,0.2), rgba(124,92,255,0.15))', border: '1px solid rgba(0, 217, 255, 0.2)' }}>
+                        {!track.cover_url && <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, opacity: 0.5 }}>🎵</div>}
+                        <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: isThisPlaying ? 1 : 0, transition: 'opacity 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.opacity = '1'} onMouseLeave={(e) => e.currentTarget.style.opacity = isThisPlaying ? '1' : '0'}>
+                          <PlayButton isPlaying={isThisPlaying} isCurrent={isThisCurrent} onClick={() => handlePlayTrack(track)} size={isMobile ? 48 : 36} />
+                        </div>
                         {isReplacing && (
-                          <div style={{
-                            position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.75)',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2,
-                          }}>
-                            <div style={{
-                              width: 24, height: 24,
-                              border: '2px solid rgba(0, 217, 255, 0.3)',
-                              borderTop: '2px solid #00d9ff',
-                              borderRadius: '50%',
-                              animation: 'spin 0.8s linear infinite',
-                            }} />
+                          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>
+                            <div style={{ width: 24, height: 24, border: '2px solid rgba(0, 217, 255, 0.3)', borderTop: '2px solid #00d9ff', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
                           </div>
                         )}
                       </div>
 
+                      {/* INFOS & WAVEFORM */}
                       <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                        <div style={{
-                          display: 'flex',
-                          alignItems: 'flex-start',
-                          justifyContent: 'space-between',
-                          gap: 8,
-                        }}>
+                        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                              {fresh && (
-                                <span className="new-badge" style={{
-                                  fontSize: '0.55rem', padding: '1px 5px',
-                                  background: 'linear-gradient(135deg, #00d9ff, #7c5cff)',
-                                  color: '#fff', borderRadius: 3,
-                                  fontWeight: 800, letterSpacing: '0.5px',
-                                }}>NEW</span>
-                              )}
-                              <h3 style={{
-                                margin: 0, fontSize: isMobile ? '0.9rem' : '0.95rem',
-                                fontWeight: 700, lineHeight: 1.3,
-                                overflow: 'hidden', textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap',
-                              }}>
+                              {fresh && <span className="new-badge" style={{ fontSize: '0.55rem', padding: '1px 5px', background: 'linear-gradient(135deg, #00d9ff, #7c5cff)', color: '#fff', borderRadius: 3, fontWeight: 800, letterSpacing: '0.5px' }}>NEW</span>}
+                              <h3 style={{ margin: 0, fontSize: isMobile ? '0.9rem' : '0.95rem', fontWeight: 700, lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                 <span style={{ color: '#fff' }}>{track.title}</span>
                                 <span style={{ color: 'rgba(255,255,255,0.4)' }}> - </span>
-                                {track.user_id ? (
-                                  <Link to={`/profil/${track.user_id}`} style={{
-                                    color: '#00d9ff', textDecoration: 'none',
-                                  }}>{track.artist}</Link>
-                                ) : (
-                                  <span style={{ color: '#00d9ff' }}>{track.artist}</span>
-                                )}
+                                {track.user_id ? <Link to={`/profil/${track.user_id}`} style={{ color: '#00d9ff', textDecoration: 'none' }}>{track.artist}</Link> : <span style={{ color: '#00d9ff' }}>{track.artist}</span>}
                               </h3>
                             </div>
-                          </div>
-
-                          <div style={{ display: 'flex', gap: 4, flexShrink: 0, alignItems: 'center' }}>
-                            <ShareButton
-                              url={`${window.location.origin}/share/${track.id}`}
-                              title={`${track.title} — ${track.artist}`}
-                              text={`Écoute "${track.title}" par ${track.artist} sur WaveForge PRO 🎵`}
-                              variant="icon"
-                              size="small"
-                              label="Partager"
-                              position="bottom"
-                            />
-                            <button
-                              onClick={() => handleLike(track.id)}
-                              title="Like"
-                              style={{
-                                background: 'transparent', border: 'none',
-                                color: track.likes > 0 ? '#ff5c5c' : 'rgba(255,255,255,0.4)',
-                                cursor: 'pointer', fontSize: '1rem',
-                                padding: 4,
-                              }}
-                            >
-                              {track.likes > 0 ? '♥' : '♡'}
-                            </button>
-                            <button
-                              onClick={() => toggleComments(track.id)}
-                              style={{
-                                background: 'transparent', border: 'none',
-                                color: showComments ? '#00d9ff' : 'rgba(255,255,255,0.4)',
-                                cursor: 'pointer', fontSize: '0.9rem',
-                                padding: 4,
-                              }}
-                              title="Commenter"
-                            >
-                              💬
-                            </button>
-                            <button
-                              onClick={() => startEdit(track)}
-                              disabled={isReplacing}
-                              style={{
-                                background: 'transparent', border: 'none',
-                                color: 'rgba(255,255,255,0.4)',
-                                cursor: 'pointer', fontSize: '0.85rem',
-                                padding: 4,
-                              }}
-                              title="Modifier"
-                            >
-                              ✏️
-                            </button>
-                            <button
-                              onClick={() => handleReplaceClick(track.id)}
-                              disabled={isReplacing}
-                              style={{
-                                background: 'transparent', border: 'none',
-                                color: '#00d9ff', cursor: 'pointer', fontSize: '0.85rem',
-                                padding: 4,
-                              }}
-                              title="Remplacer"
-                            >
-                              {isReplacing ? '...' : '🔄'}
-                            </button>
-                            <button
-                              onClick={() => handleDetectBpm(track)}
-                              disabled={detectingBpm === track.id || isReplacing}
-                              style={{
-                                background: 'transparent',
-                                border: 'none',
-                                color: detectingBpm === track.id ? '#ffd43b' : '#00ff88',
-                                cursor: detectingBpm === track.id ? 'wait' : 'pointer',
-                                fontSize: '0.85rem',
-                                padding: 4,
-                                opacity: detectingBpm === track.id ? 0.6 : 1,
-                              }}
-                              title="Corriger le BPM"
-                            >
-                              {detectingBpm === track.id ? '⏳' : '🎯'}
-                            </button>
-                            <button
-                              onClick={() => setKeyPicker(track.id)}
-                              disabled={isReplacing}
-                              style={{
-                                background: 'transparent',
-                                border: 'none',
-                                color: '#7c5cff',
-                                cursor: 'pointer',
-                                fontSize: '0.85rem',
-                                padding: 4,
-                              }}
-                              title="Choisir la tonalité"
-                            >
-                              🎼
-                            </button>
-                            <button
-                              onClick={() => handleDelete(track.id)}
-                              disabled={isReplacing}
-                              style={{
-                                background: 'transparent', border: 'none',
-                                color: 'rgba(255, 100, 100, 0.6)',
-                                cursor: 'pointer', fontSize: '0.85rem',
-                                padding: 4,
-                              }}
-                              title="Supprimer"
-                            >
-                              🗑️
-                            </button>
                           </div>
                         </div>
 
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                          <PlayButton
-                            isPlaying={isThisPlaying}
-                            isCurrent={isThisCurrent}
-                            onClick={() => handlePlayTrack(track)}
-                            size={isMobile ? 42 : 52}
-                          />
-
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
-                              <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)' }}>
-                                {isThisCurrent ? formatTime(currentTime) : '0:00'}
-                              </span>
-                              <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)' }}>
-                                {formatTime(track.duration)}
-                              </span>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                              <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.5)' }}>{isThisCurrent ? formatTime(currentTime) : '0:00'}</span>
+                              <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.5)' }}>{formatTime(track.duration)}</span>
                             </div>
-                            <Waveform
-                              peaks={track.peaks}
-                              progress={progress}
-                              onSeek={isThisCurrent ? handleSeekRatio : undefined}
-                              height={isMobile ? 32 : 42}
-                              duration={track.duration}
-                            />
+                            <Waveform peaks={track.peaks} progress={progress} onSeek={isThisCurrent ? handleSeekRatio : undefined} height={isMobile ? 28 : 36} duration={track.duration} />
                           </div>
                         </div>
 
-                        <div style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 10,
-                          flexWrap: 'wrap',
-                        }}>
-                          <button
-                            onClick={() => handleDownload(track)}
-                            disabled={isDownloading}
-                            style={{
-                              display: 'flex', alignItems: 'center', gap: 6,
-                              padding: '7px 14px',
-                              background: 'linear-gradient(135deg, #00d9ff, #0088ff)',
-                              color: '#000',
-                              border: 'none',
-                              borderRadius: 4,
-                              cursor: isDownloading ? 'wait' : 'pointer',
-                              fontSize: '0.75rem',
-                              fontWeight: 800,
-                              fontFamily: 'monospace',
-                              flexShrink: 0,
-                              boxShadow: '0 2px 8px rgba(0, 217, 255, 0.3)',
-                            }}
-                          >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                          <button onClick={() => handleDownload(track)} disabled={isDownloading} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', background: 'linear-gradient(135deg, #00d9ff, #0088ff)', color: '#000', border: 'none', borderRadius: 6, cursor: isDownloading ? 'wait' : 'pointer', fontSize: '0.7rem', fontWeight: 800, fontFamily: 'monospace', flexShrink: 0, boxShadow: '0 2px 8px rgba(0, 217, 255, 0.3)' }}>
                             {isDownloading ? '...' : user ? '⬇ Download' : '🔒 Download'}
                           </button>
-
-                          <div style={{
-                            display: 'flex',
-                            gap: 8,
-                            fontSize: '0.7rem',
-                            color: 'rgba(255,255,255,0.55)',
-                            flexWrap: 'wrap',
-                            alignItems: 'center',
-                          }}>
-                            <span style={{
-                              display: 'flex', alignItems: 'center', gap: 3,
-                              padding: '2px 6px',
-                              background: 'rgba(0, 217, 255, 0.08)',
-                              borderRadius: 3,
-                              color: '#00d9ff',
-                            }}>
-                              🎵 {track.genre}
-                            </span>
-                            <span>⚡ {track.bpm} BPM</span>
+                          <div style={{ display: 'flex', gap: 6, fontSize: '0.65rem', color: 'rgba(255,255,255,0.55)', flexWrap: 'wrap', alignItems: 'center' }}>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: 3, padding: '3px 8px', background: 'rgba(0, 217, 255, 0.08)', borderRadius: 4, color: '#00d9ff' }}>🎵 {track.genre}</span>
+                            <span style={{ padding: '3px 8px', background: 'rgba(255,255,255,0.05)', borderRadius: 4 }}>⚡ {track.bpm} BPM</span>
                             {track.camelot && track.camelot !== '?' && (
-                              <span style={{
-                                display: 'flex', alignItems: 'center', gap: 3,
-                                padding: '2px 6px',
-                                background: `${getCamelotColor(track.camelot)}20`,
-                                borderRadius: 3,
-                                color: getCamelotColor(track.camelot),
-                                fontWeight: 700,
-                              }}>
-                                🎼 {track.camelot}
-                              </span>
+                              <span style={{ display: 'flex', alignItems: 'center', gap: 3, padding: '3px 8px', background: `${getCamelotColor(track.camelot)}20`, borderRadius: 4, color: getCamelotColor(track.camelot), fontWeight: 700 }}>🎼 {track.camelot}</span>
                             )}
-                            <span>⬇ {track.downloads}</span>
+                            <span style={{ padding: '3px 8px', background: 'rgba(255,255,255,0.05)', borderRadius: 4 }}>⬇ {track.downloads}</span>
                           </div>
                         </div>
+                      </div>
+
+                      {/* ACTIONS DROITE */}
+                      <div style={{ display: 'flex', gap: 2, flexShrink: 0, alignSelf: isMobile ? 'flex-end' : 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                        <ShareButton url={`${window.location.origin}/share/${track.id}`} title={`${track.title} — ${track.artist}`} text={`Écoute "${track.title}" par ${track.artist} sur WaveForge PRO 🎵`} variant="icon" size="small" label="Partager" position="bottom" />
+                        <button onClick={() => handleLike(track.id)} title="Like" style={{ background: 'transparent', border: 'none', color: track.likes > 0 ? '#ff5c5c' : 'rgba(255,255,255,0.4)', cursor: 'pointer', fontSize: '1rem', padding: 4 }}>{track.likes > 0 ? '♥' : '♡'}</button>
+                        <button onClick={() => toggleComments(track.id)} style={{ background: 'transparent', border: 'none', color: showComments ? '#00d9ff' : 'rgba(255,255,255,0.4)', cursor: 'pointer', fontSize: '0.9rem', padding: 4 }} title="Commenter">💬</button>
+                        <button onClick={() => startEdit(track)} disabled={isReplacing} style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', fontSize: '0.85rem', padding: 4 }} title="Modifier">✏️</button>
+                        <button onClick={() => handleReplaceClick(track.id)} disabled={isReplacing} style={{ background: 'transparent', border: 'none', color: '#00d9ff', cursor: 'pointer', fontSize: '0.85rem', padding: 4 }} title="Remplacer">{isReplacing ? '...' : '🔄'}</button>
+                        <button onClick={() => handleDetectBpm(track)} disabled={detectingBpm === track.id || isReplacing} style={{ background: 'transparent', border: 'none', color: detectingBpm === track.id ? '#ffd43b' : '#00ff88', cursor: detectingBpm === track.id ? 'wait' : 'pointer', fontSize: '0.85rem', padding: 4, opacity: detectingBpm === track.id ? 0.6 : 1 }} title="Corriger le BPM">{detectingBpm === track.id ? '⏳' : '🎯'}</button>
+                        <button onClick={() => setKeyPicker(track.id)} disabled={isReplacing} style={{ background: 'transparent', border: 'none', color: '#7c5cff', cursor: 'pointer', fontSize: '0.85rem', padding: 4 }} title="Choisir la tonalité">🎼</button>
+                        <button onClick={() => handleDelete(track.id)} disabled={isReplacing} style={{ background: 'transparent', border: 'none', color: 'rgba(255, 100, 100, 0.6)', cursor: 'pointer', fontSize: '0.85rem', padding: 4 }} title="Supprimer">🗑️</button>
                       </div>
                     </div>
                   )}
 
                   {showComments && !isEditing && (
-                    <div style={{ marginTop: 10 }}>
+                    <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
                       <CommentSection trackId={track.id} />
                     </div>
                   )}
@@ -1623,40 +1272,14 @@ export const NouveautesPage: React.FC = () => {
             })}
           </div>
 
+          {/* PAGINATION MODERNE */}
           {!loading && totalPages > 1 && (
-            <div style={{
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              gap: 6,
-              marginTop: 20,
-              paddingTop: 20,
-              borderTop: '1px solid rgba(255,255,255,0.06)',
-              flexWrap: 'wrap',
-            }}>
-              <button
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={safeCurrentPage === 1}
-                style={{
-                  padding: '8px 12px',
-                  background: 'rgba(255,255,255,0.03)',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  borderRadius: 6,
-                  color: safeCurrentPage === 1 ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.7)',
-                  fontFamily: 'monospace',
-                  fontSize: '0.75rem',
-                  fontWeight: 700,
-                  cursor: safeCurrentPage === 1 ? 'not-allowed' : 'pointer',
-                  opacity: safeCurrentPage === 1 ? 0.4 : 1,
-                }}
-              >
-                ← Précédent
-              </button>
-
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, marginTop: 32, paddingBottom: 16 }}>
+              <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={safeCurrentPage === 1} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: safeCurrentPage === 1 ? '#444' : '#fff', padding: '8px 16px', borderRadius: 8, cursor: safeCurrentPage === 1 ? 'not-allowed' : 'pointer', fontSize: '0.75rem', fontWeight: 700 }}>← Précédent</button>
+              
               {(() => {
                 const pages: (number | string)[] = [];
                 const maxVisible = isMobile ? 3 : 7;
-
                 if (totalPages <= maxVisible + 2) {
                   for (let i = 1; i <= totalPages; i++) pages.push(i);
                 } else {
@@ -1676,70 +1299,21 @@ export const NouveautesPage: React.FC = () => {
                     pages.push(totalPages);
                   }
                 }
-
                 return pages.map((p, idx) => {
-                  if (p === '...') {
-                    return (
-                      <span key={`e-${idx}`} style={{ padding: '8px 6px', color: 'rgba(255,255,255,0.3)', fontFamily: 'monospace', fontSize: '0.75rem' }}>
-                        ...
-                      </span>
-                    );
-                  }
+                  if (p === '...') return <span key={`e-${idx}`} style={{ color: '#666', fontSize: '0.75rem' }}>...</span>;
                   const isActive = p === safeCurrentPage;
                   return (
-                    <button
-                      key={p}
-                      onClick={() => setCurrentPage(p as number)}
-                      style={{
-                        minWidth: 36,
-                        padding: '8px 10px',
-                        background: isActive ? 'linear-gradient(135deg, #00d9ff, #0088ff)' : 'rgba(255,255,255,0.03)',
-                        border: isActive ? '1px solid #00d9ff' : '1px solid rgba(255,255,255,0.1)',
-                        borderRadius: 6,
-                        color: isActive ? '#000' : 'rgba(255,255,255,0.7)',
-                        fontFamily: 'monospace',
-                        fontSize: '0.75rem',
-                        fontWeight: isActive ? 800 : 600,
-                        cursor: 'pointer',
-                        boxShadow: isActive ? '0 0 12px rgba(0, 217, 255, 0.4)' : 'none',
-                      }}
-                    >
-                      {p}
-                    </button>
+                    <button key={p} onClick={() => setCurrentPage(p as number)} style={{ background: isActive ? '#00d9ff' : 'transparent', border: isActive ? 'none' : '1px solid rgba(255,255,255,0.1)', color: isActive ? '#000' : '#888', width: 34, height: 34, borderRadius: '50%', fontWeight: 800, fontSize: '0.75rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}>{p}</button>
                   );
                 });
               })()}
 
-              <button
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                disabled={safeCurrentPage === totalPages}
-                style={{
-                  padding: '8px 12px',
-                  background: 'rgba(255,255,255,0.03)',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  borderRadius: 6,
-                  color: safeCurrentPage === totalPages ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.7)',
-                  fontFamily: 'monospace',
-                  fontSize: '0.75rem',
-                  fontWeight: 700,
-                  cursor: safeCurrentPage === totalPages ? 'not-allowed' : 'pointer',
-                  opacity: safeCurrentPage === totalPages ? 0.4 : 1,
-                }}
-              >
-                Suivant →
-              </button>
+              <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={safeCurrentPage === totalPages} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: safeCurrentPage === totalPages ? '#444' : '#fff', padding: '8px 16px', borderRadius: 8, cursor: safeCurrentPage === totalPages ? 'not-allowed' : 'pointer', fontSize: '0.75rem', fontWeight: 700 }}>Suivant →</button>
             </div>
           )}
 
           {!loading && totalPages > 1 && (
-            <div style={{
-              textAlign: 'center',
-              marginTop: 12,
-              fontSize: '0.7rem',
-              color: 'rgba(255,255,255,0.4)',
-              fontFamily: 'monospace',
-              letterSpacing: '0.5px',
-            }}>
+            <div style={{ textAlign: 'center', fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace', letterSpacing: '0.5px', marginBottom: 20 }}>
               Page {safeCurrentPage} sur {totalPages} · {visibleTracks.length} morceaux
             </div>
           )}
@@ -1748,83 +1322,21 @@ export const NouveautesPage: React.FC = () => {
 
       {/* POPUP BPM */}
       {bpmCandidates && (
-        <div
-          onClick={() => setBpmCandidates(null)}
-          style={{
-            position: 'fixed', inset: 0,
-            background: 'rgba(0, 0, 0, 0.75)',
-            backdropFilter: 'blur(8px)',
-            WebkitBackdropFilter: 'blur(8px)',
-            zIndex: 10000,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            padding: 20,
-          }}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              background: 'linear-gradient(135deg, rgba(15, 18, 28, 0.98) 0%, rgba(10, 12, 20, 0.99) 100%)',
-              border: '1px solid rgba(0, 217, 255, 0.4)',
-              borderRadius: 14, padding: 24,
-              maxWidth: 480, width: '100%',
-              boxShadow: '0 24px 70px rgba(0, 0, 0, 0.8)',
-              fontFamily: 'monospace', color: '#fff',
-            }}
-          >
+        <div onClick={() => setBpmCandidates(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0, 0, 0, 0.75)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ background: 'linear-gradient(135deg, rgba(15, 18, 28, 0.98) 0%, rgba(10, 12, 20, 0.99) 100%)', border: '1px solid rgba(0, 217, 255, 0.4)', borderRadius: 16, padding: 24, maxWidth: 480, width: '100%', boxShadow: '0 24px 70px rgba(0, 0, 0, 0.8)', fontFamily: 'monospace', color: '#fff' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <div>
-                <div style={{ fontSize: '0.75rem', color: 'rgba(0, 217, 255, 0.7)', fontWeight: 800, letterSpacing: '1.5px', marginBottom: 4 }}>
-                  🎯 CORRECTION BPM
-                </div>
-                <div style={{ fontSize: '1rem', fontWeight: 700 }}>
-                  Choisis le bon tempo
-                </div>
+                <div style={{ fontSize: '0.75rem', color: 'rgba(0, 217, 255, 0.7)', fontWeight: 800, letterSpacing: '1.5px', marginBottom: 4 }}>🎯 CORRECTION BPM</div>
+                <div style={{ fontSize: '1rem', fontWeight: 700 }}>Choisis le bon tempo</div>
               </div>
-              <button
-                onClick={() => setBpmCandidates(null)}
-                style={{
-                  width: 30, height: 30, borderRadius: '50%',
-                  background: 'rgba(255, 60, 60, 0.08)',
-                  border: '1px solid rgba(255, 60, 60, 0.3)',
-                  color: '#ff5c5c', cursor: 'pointer', fontSize: 12,
-                }}
-              >
-                ✕
-              </button>
+              <button onClick={() => setBpmCandidates(null)} style={{ width: 30, height: 30, borderRadius: '50%', background: 'rgba(255, 60, 60, 0.08)', border: '1px solid rgba(255, 60, 60, 0.3)', color: '#ff5c5c', cursor: 'pointer', fontSize: 12 }}>✕</button>
             </div>
-
-            <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', marginBottom: 16 }}>
-              BPM actuel : <span style={{ color: '#ffd43b', fontWeight: 700 }}>{bpmCandidates.current}</span>
-            </div>
-
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: 10,
-              marginBottom: 16,
-            }}>
+            <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', marginBottom: 16 }}>BPM actuel : <span style={{ color: '#ffd43b', fontWeight: 700 }}>{bpmCandidates.current}</span></div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 16 }}>
               {bpmCandidates.candidates.map((bpm) => {
                 const isCurrent = bpm === bpmCandidates.current;
                 return (
-                  <button
-                    key={bpm}
-                    onClick={() => handleSelectBpm(bpmCandidates.trackId, bpm)}
-                    style={{
-                      padding: '14px 8px',
-                      background: isCurrent
-                        ? 'linear-gradient(135deg, rgba(255, 212, 59, 0.25), rgba(255, 140, 0, 0.1))'
-                        : 'rgba(255, 255, 255, 0.03)',
-                      border: isCurrent
-                        ? '1px solid rgba(255, 212, 59, 0.6)'
-                        : '1px solid rgba(0, 217, 255, 0.3)',
-                      borderRadius: 8,
-                      color: isCurrent ? '#ffd43b' : '#00d9ff',
-                      fontFamily: 'monospace',
-                      fontSize: '1.1rem',
-                      fontWeight: 800,
-                      cursor: 'pointer',
-                    }}
-                  >
+                  <button key={bpm} onClick={() => handleSelectBpm(bpmCandidates.trackId, bpm)} style={{ padding: '14px 8px', background: isCurrent ? 'linear-gradient(135deg, rgba(255, 212, 59, 0.25), rgba(255, 140, 0, 0.1))' : 'rgba(255, 255, 255, 0.03)', border: isCurrent ? '1px solid rgba(255, 212, 59, 0.6)' : '1px solid rgba(0, 217, 255, 0.3)', borderRadius: 8, color: isCurrent ? '#ffd43b' : '#00d9ff', fontFamily: 'monospace', fontSize: '1.1rem', fontWeight: 800, cursor: 'pointer' }}>
                     {bpm}
                     <div style={{ fontSize: '0.6rem', opacity: 0.6, marginTop: 4 }}>BPM</div>
                     {isCurrent && <div style={{ fontSize: '0.55rem', marginTop: 2 }}>ACTUEL</div>}
@@ -1832,120 +1344,34 @@ export const NouveautesPage: React.FC = () => {
                 );
               })}
             </div>
-
-            <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>
-              Si aucun BPM ne correspond, clique sur le plus proche puis corrige via ✏️ Edit.
-            </div>
+            <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>Si aucun BPM ne correspond, clique sur le plus proche puis corrige via ✏️ Edit.</div>
           </div>
         </div>
       )}
 
       {/* POPUP KEY */}
       {keyPicker && (
-        <div
-          onClick={() => setKeyPicker(null)}
-          style={{
-            position: 'fixed', inset: 0,
-            background: 'rgba(0, 0, 0, 0.8)',
-            backdropFilter: 'blur(8px)',
-            WebkitBackdropFilter: 'blur(8px)',
-            zIndex: 10000,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            padding: 20,
-            overflow: 'auto',
-          }}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              background: 'linear-gradient(135deg, rgba(15, 18, 28, 0.98) 0%, rgba(10, 12, 20, 0.99) 100%)',
-              border: '1px solid rgba(124, 92, 255, 0.4)',
-              borderRadius: 14, padding: 24,
-              maxWidth: 640, width: '100%',
-              maxHeight: '90vh', overflowY: 'auto',
-              boxShadow: '0 24px 70px rgba(0, 0, 0, 0.8), 0 0 40px rgba(124, 92, 255, 0.2)',
-              fontFamily: 'monospace', color: '#fff',
-            }}
-          >
+        <div onClick={() => setKeyPicker(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0, 0, 0, 0.8)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, overflow: 'auto' }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ background: 'linear-gradient(135deg, rgba(15, 18, 28, 0.98) 0%, rgba(10, 12, 20, 0.99) 100%)', border: '1px solid rgba(124, 92, 255, 0.4)', borderRadius: 16, padding: 24, maxWidth: 640, width: '100%', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 24px 70px rgba(0, 0, 0, 0.8), 0 0 40px rgba(124, 92, 255, 0.2)', fontFamily: 'monospace', color: '#fff' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
               <div>
-                <div style={{ fontSize: '0.75rem', color: 'rgba(124, 92, 255, 0.9)', fontWeight: 800, letterSpacing: '1.5px', marginBottom: 4 }}>
-                  🎼 TONALITÉ
-                </div>
-                <div style={{ fontSize: '1rem', fontWeight: 700 }}>
-                  Choisis la tonalité du morceau
-                </div>
+                <div style={{ fontSize: '0.75rem', color: 'rgba(124, 92, 255, 0.9)', fontWeight: 800, letterSpacing: '1.5px', marginBottom: 4 }}>🎼 TONALITÉ</div>
+                <div style={{ fontSize: '1rem', fontWeight: 700 }}>Choisis la tonalité du morceau</div>
               </div>
-              <button
-                onClick={() => setKeyPicker(null)}
-                style={{
-                  width: 30, height: 30, borderRadius: '50%',
-                  background: 'rgba(255, 60, 60, 0.08)',
-                  border: '1px solid rgba(255, 60, 60, 0.3)',
-                  color: '#ff5c5c', cursor: 'pointer', fontSize: 12,
-                }}
-              >
-                ✕
-              </button>
+              <button onClick={() => setKeyPicker(null)} style={{ width: 30, height: 30, borderRadius: '50%', background: 'rgba(255, 60, 60, 0.08)', border: '1px solid rgba(255, 60, 60, 0.3)', color: '#ff5c5c', cursor: 'pointer', fontSize: 12 }}>✕</button>
             </div>
 
-            <button
-              onClick={() => {
-                const track = tracks.find((t) => t.id === keyPicker);
-                if (track) handleAutoDetectKey(track);
-              }}
-              disabled={detectingKey === keyPicker}
-              style={{
-                width: '100%',
-                padding: '12px',
-                marginBottom: 20,
-                background: 'rgba(0, 217, 255, 0.08)',
-                border: '1px dashed rgba(0, 217, 255, 0.4)',
-                borderRadius: 8,
-                color: '#00d9ff',
-                fontFamily: 'monospace',
-                fontSize: '0.8rem',
-                fontWeight: 700,
-                cursor: detectingKey === keyPicker ? 'wait' : 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 8,
-              }}
-            >
+            <button onClick={() => { const track = tracks.find((t) => t.id === keyPicker); if (track) handleAutoDetectKey(track); }} disabled={detectingKey === keyPicker} style={{ width: '100%', padding: '12px', marginBottom: 20, background: 'rgba(0, 217, 255, 0.08)', border: '1px dashed rgba(0, 217, 255, 0.4)', borderRadius: 8, color: '#00d9ff', fontFamily: 'monospace', fontSize: '0.8rem', fontWeight: 700, cursor: detectingKey === keyPicker ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
               {detectingKey === keyPicker ? '⏳ Analyse en cours...' : '🎼 Détection automatique (Meyda)'}
             </button>
 
             <div style={{ marginBottom: 16 }}>
-              <div style={{
-                fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)',
-                marginBottom: 8, letterSpacing: '1px', fontWeight: 700,
-              }}>
-                MAJEURS (B)
-              </div>
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(85px, 1fr))',
-                gap: 8,
-              }}>
+              <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)', marginBottom: 8, letterSpacing: '1px', fontWeight: 700 }}>MAJEURS (B)</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(85px, 1fr))', gap: 8 }}>
                 {ALL_KEYS.filter((k) => !k.isMinor).map((k) => {
                   const color = getCamelotColor(k.camelot);
                   return (
-                    <button
-                      key={k.key}
-                      className="key-btn"
-                      onClick={() => handleSelectKey(keyPicker, k.key, k.camelot)}
-                      style={{
-                        padding: '10px 6px',
-                        background: `${color}15`,
-                        border: `1px solid ${color}60`,
-                        borderRadius: 6,
-                        color: color,
-                        fontFamily: 'monospace',
-                        cursor: 'pointer',
-                        textAlign: 'center',
-                      }}
-                    >
+                    <button key={k.key} className="key-btn" onClick={() => handleSelectKey(keyPicker, k.key, k.camelot)} style={{ padding: '10px 6px', background: `${color}15`, border: `1px solid ${color}60`, borderRadius: 6, color: color, fontFamily: 'monospace', cursor: 'pointer', textAlign: 'center' }}>
                       <div style={{ fontSize: '1rem', fontWeight: 800 }}>{k.key}</div>
                       <div style={{ fontSize: '0.6rem', opacity: 0.7, marginTop: 2 }}>{k.camelot}</div>
                     </button>
@@ -1955,35 +1381,12 @@ export const NouveautesPage: React.FC = () => {
             </div>
 
             <div>
-              <div style={{
-                fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)',
-                marginBottom: 8, letterSpacing: '1px', fontWeight: 700,
-              }}>
-                MINEURS (A)
-              </div>
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(85px, 1fr))',
-                gap: 8,
-              }}>
+              <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)', marginBottom: 8, letterSpacing: '1px', fontWeight: 700 }}>MINEURS (A)</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(85px, 1fr))', gap: 8 }}>
                 {ALL_KEYS.filter((k) => k.isMinor).map((k) => {
                   const color = getCamelotColor(k.camelot);
                   return (
-                    <button
-                      key={k.key}
-                      className="key-btn"
-                      onClick={() => handleSelectKey(keyPicker, k.key, k.camelot)}
-                      style={{
-                        padding: '10px 6px',
-                        background: `${color}15`,
-                        border: `1px solid ${color}60`,
-                        borderRadius: 6,
-                        color: color,
-                        fontFamily: 'monospace',
-                        cursor: 'pointer',
-                        textAlign: 'center',
-                      }}
-                    >
+                    <button key={k.key} className="key-btn" onClick={() => handleSelectKey(keyPicker, k.key, k.camelot)} style={{ padding: '10px 6px', background: `${color}15`, border: `1px solid ${color}60`, borderRadius: 6, color: color, fontFamily: 'monospace', cursor: 'pointer', textAlign: 'center' }}>
                       <div style={{ fontSize: '1rem', fontWeight: 800 }}>{k.key}</div>
                       <div style={{ fontSize: '0.6rem', opacity: 0.7, marginTop: 2 }}>{k.camelot}</div>
                     </button>
@@ -1992,12 +1395,7 @@ export const NouveautesPage: React.FC = () => {
               </div>
             </div>
 
-            <div style={{
-              marginTop: 16, paddingTop: 12,
-              borderTop: '1px solid rgba(255,255,255,0.08)',
-              fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)',
-              textAlign: 'center',
-            }}>
+            <div style={{ marginTop: 16, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.08)', fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>
               Astuce : Serato / Mixed In Key affichent la clé exacte de tes morceaux.
             </div>
           </div>

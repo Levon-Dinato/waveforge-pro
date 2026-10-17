@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { useIsMobile } from '../hooks/useIsMobile';
+import { usePlayer } from '../contexts/PlayerContext';
 
 const PANEL_STYLE: React.CSSProperties = {
   background: 'rgba(20, 22, 30, 0.8)',
@@ -35,13 +36,25 @@ interface Track {
   id: string;
   title: string;
   cover_url: string | null;
+  audio_url: string;
+  duration: number;
+  peaks: number[];
+  artist: string;
+  user_id: string | null;
   created_at: string;
+}
+
+interface WallPost {
+  id: string;
+  content: string;
+  date: string;
 }
 
 export const ProfilePage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const isMobile = useIsMobile(768);
+  const { play } = usePlayer(); // ✅ Importation du lecteur
   
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [stats, setStats] = useState<Stats>({ tracks: 0, followers: 0, plays: 0 });
@@ -49,13 +62,19 @@ export const ProfilePage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('featured');
 
-  // On garde "user" pour éviter l'erreur TypeScript, même si on ne s'en sert pas visuellement
-  console.log(user);
+  // ✅ État pour le mur de publications
+  const [wallPosts, setWallPosts] = useState<WallPost[]>([
+    { id: '1', content: `Découvrez mes derniers sets sur soundcloud.com/levon`, date: 'il y a 5 ans' },
+    { id: '2', content: `Découvrez mes derniers sets sur soundcloud.com/levon`, date: 'il y a 5 ans' },
+    { id: '3', content: `Découvrez mes derniers sets sur soundcloud.com/levon`, date: 'il y a 5 ans' },
+  ]);
+  const [newPost, setNewPost] = useState('');
 
   useEffect(() => {
     const fetchProfileData = async () => {
       setLoading(true);
       try {
+        // 1. Profil
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('*')
@@ -65,9 +84,10 @@ export const ProfilePage: React.FC = () => {
         if (profileError) throw profileError;
         if (profileData) setProfile(profileData);
 
+        // 2. Stats & Tracks (avec l'audio_url pour le player)
         const { data: tracksData, error: tracksError } = await supabase
           .from('tracks')
-          .select('id, title, cover_url, created_at, likes, downloads')
+          .select('id, title, cover_url, audio_url, duration, peaks, artist, user_id, created_at, likes, downloads')
           .eq('user_id', id)
           .order('created_at', { ascending: false });
 
@@ -90,8 +110,37 @@ export const ProfilePage: React.FC = () => {
     if (id) fetchProfileData();
   }, [id]);
 
-  if (loading) return <div style={{ color: '#fff', padding: 40, textAlign: 'center' }}>Chargement...</div>;
-  if (!profile) return <div style={{ color: '#fff', padding: 40, textAlign: 'center' }}>Profil introuvable</div>;
+  // ✅ Fonction pour poster un message sur le mur
+  const handlePostSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newPost.trim()) return;
+    
+    const post: WallPost = {
+      id: Date.now().toString(),
+      content: newPost,
+      date: "à l'instant"
+    };
+    
+    setWallPosts([post, ...wallPosts]);
+    setNewPost('');
+  };
+
+  // ✅ Fonction pour lancer une track
+  const handlePlayTrack = (track: Track) => {
+    play({
+      id: track.id,
+      title: track.title,
+      artist: track.artist,
+      audio_url: track.audio_url,
+      cover_url: track.cover_url,
+      user_id: track.user_id,
+      duration: track.duration,
+      peaks: track.peaks,
+    });
+  };
+
+  if (loading) return <div style={{ color: '#fff', padding: 40, textAlign: 'center', background: '#0a0c14', minHeight: '100vh' }}>Chargement...</div>;
+  if (!profile) return <div style={{ color: '#fff', padding: 40, textAlign: 'center', background: '#0a0c14', minHeight: '100vh' }}>Profil introuvable</div>;
 
   const displayName = profile.username || profile.email?.split('@')[0] || 'Artiste';
 
@@ -106,25 +155,13 @@ export const ProfilePage: React.FC = () => {
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #0a0c14 0%, transparent 100%)' }} />
         
         <div style={{ 
-          position: 'absolute', 
-          bottom: 0, 
-          left: '50%', 
-          transform: 'translateX(-50%)', 
-          width: '100%', 
-          maxWidth: 1200, 
-          padding: '0 20px',
-          display: 'flex',
-          alignItems: 'flex-end',
-          gap: 20,
+          position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)', 
+          width: '100%', maxWidth: 1200, padding: '0 20px',
+          display: 'flex', alignItems: 'flex-end', gap: 20,
         }}>
           <div style={{
-            width: 140, height: 140, borderRadius: 8,
-            background: '#1a1f2e',
-            border: '4px solid #0a0c14',
-            overflow: 'hidden',
-            flexShrink: 0,
-            transform: 'translateY(30px)',
-            boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
+            width: 140, height: 140, borderRadius: 8, background: '#1a1f2e', border: '4px solid #0a0c14',
+            overflow: 'hidden', flexShrink: 0, transform: 'translateY(30px)', boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
           }}>
             {profile.avatar_url && <img src={profile.avatar_url} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
           </div>
@@ -174,7 +211,8 @@ export const ProfilePage: React.FC = () => {
               <button style={{ background: 'none', border: 'none', color: '#888', fontSize: '0.8rem', cursor: 'pointer' }}>VIEW ALL</button>
             </div>
             
-            <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
+            {/* ✅ Formulaire de post fonctionnel */}
+            <form onSubmit={handlePostSubmit} style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
               <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#333', flexShrink: 0 }}>
                 {profile.avatar_url && <img src={profile.avatar_url} alt="Me" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />}
               </div>
@@ -182,23 +220,28 @@ export const ProfilePage: React.FC = () => {
                 <input 
                   type="text" 
                   placeholder="Post on the wall" 
+                  value={newPost}
+                  onChange={(e) => setNewPost(e.target.value)}
                   style={{ width: '100%', padding: '10px 40px 10px 15px', background: '#111', border: '1px solid #333', borderRadius: 4, color: '#fff', outline: 'none' }} 
                 />
-                <button style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#888', cursor: 'pointer' }}>➤</button>
+                <button type="submit" style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: newPost ? '#e50000' : '#888', cursor: 'pointer', fontSize: '1rem' }}>
+                  ➤
+                </button>
               </div>
-            </div>
+            </form>
 
-            {[1, 2, 3].map(post => (
-              <div key={post} style={{ display: 'flex', gap: 12, paddingBottom: 15, marginBottom: 15, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#222', flexShrink: 0 }} />
+            {/* Liste des posts */}
+            {wallPosts.map(post => (
+              <div key={post.id} style={{ display: 'flex', gap: 12, paddingBottom: 15, marginBottom: 15, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#222', flexShrink: 0, overflow: 'hidden' }}>
+                  {profile.avatar_url && <img src={profile.avatar_url} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
+                </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>{displayName} <span style={{ color: '#666', fontWeight: 400, marginLeft: 8 }}>il y a 5 ans</span></div>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>{displayName} <span style={{ color: '#666', fontWeight: 400, marginLeft: 8 }}>{post.date}</span></div>
                     <div style={{ color: '#666', fontSize: '0.8rem' }}>👍 0</div>
                   </div>
-                  <div style={{ ...TEXT_MUTED, marginTop: 4, lineHeight: 1.5 }}>
-                    Découvrez mes derniers sets sur soundcloud.com/{displayName.toLowerCase().replace(/\s/g, '')}
-                  </div>
+                  <div style={{ ...TEXT_MUTED, marginTop: 4, lineHeight: 1.5 }}>{post.content}</div>
                 </div>
               </div>
             ))}
@@ -208,18 +251,37 @@ export const ProfilePage: React.FC = () => {
           <div style={{ ...PANEL_STYLE, padding: 20 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 }}>
               <h3 style={{ ...TEXT_TITLE, fontSize: '1rem', margin: 0 }}>NEW CREATION BY {displayName}</h3>
-              <button style={{ background: 'none', border: 'none', color: '#888', fontSize: '0.8rem', cursor: 'pointer' }}>VIEW ALL</button>
+              <Link to="/nouveautes" style={{ color: '#888', fontSize: '0.8rem', textDecoration: 'none' }}>VIEW ALL</Link>
             </div>
             
             <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: 15 }}>
-              {tracks.slice(0, 4).map(track => (
-                <div key={track.id} style={{ cursor: 'pointer' }}>
+              {/* ✅ Pochettes cliquables qui lancent la musique */}
+              {tracks.slice(0, 4).map((track) => (
+                <div 
+                  key={track.id} 
+                  onClick={() => handlePlayTrack(track)} 
+                  style={{ cursor: 'pointer', transition: 'transform 0.2s', position: 'relative' }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'scale(1.02)';
+                    const overlay = e.currentTarget.querySelector('.play-overlay') as HTMLElement;
+                    if (overlay) overlay.style.opacity = '1';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'scale(1)';
+                    const overlay = e.currentTarget.querySelector('.play-overlay') as HTMLElement;
+                    if (overlay) overlay.style.opacity = '0';
+                  }}
+                >
                   <div style={{ aspectRatio: '1', background: '#222', borderRadius: 4, overflow: 'hidden', marginBottom: 8, position: 'relative' }}>
                     {track.cover_url ? (
                       <img src={track.cover_url} alt={track.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : (
                       <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, color: '#444' }}>🎵</div>
                     )}
+                    {/* Overlay Play au survol */}
+                    <div className="play-overlay" style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0, transition: 'opacity 0.2s' }}>
+                      <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#e50000', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', color: '#fff', paddingLeft: 3 }}>▶</div>
+                    </div>
                   </div>
                   <div style={{ ...TEXT_TITLE, fontSize: '0.8rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.title}</div>
                 </div>
@@ -231,7 +293,6 @@ export const ProfilePage: React.FC = () => {
 
         {/* COLONNE DROITE */}
         <aside style={{ width: isMobile ? '100%' : 280, flexShrink: 0 }}>
-          
           <div style={{ ...PANEL_STYLE, padding: 15, marginBottom: 15, textAlign: 'center' }}>
             <div style={{ width: 120, height: 120, borderRadius: '50%', margin: '0 auto 10px', background: '#222', overflow: 'hidden', border: '3px solid #e50000' }}>
               {profile.avatar_url ? (
@@ -266,7 +327,10 @@ export const ProfilePage: React.FC = () => {
             </div>
           </div>
 
-          <button style={{ width: '100%', padding: '12px', background: '#e50000', color: '#fff', border: 'none', borderRadius: 4, fontWeight: 700, cursor: 'pointer', marginBottom: 15 }}>
+          <button 
+            onClick={() => alert("Le chat arrive bientôt ! 🚀")} 
+            style={{ width: '100%', padding: '12px', background: '#e50000', color: '#fff', border: 'none', borderRadius: 4, fontWeight: 700, cursor: 'pointer', marginBottom: 15 }}
+          >
             CHAT
           </button>
 
@@ -277,7 +341,6 @@ export const ProfilePage: React.FC = () => {
               <div style={{ marginTop: 8 }}>A publié {stats.tracks} morceaux</div>
             </div>
           </div>
-
         </aside>
       </div>
     </div>

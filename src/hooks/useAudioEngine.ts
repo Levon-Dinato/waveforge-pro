@@ -6,6 +6,11 @@ import { splitTracks } from '../audio/noteSplitter';
 import { quantizeNotes } from '../audio/quantizer';
 import type { DetectedNote, AnalysisResult, EngineSettings } from '../types';
 
+// ✅ Force le CPU pour toute l'application (évite les conflits avec le Worker)
+import * as tf from '@tensorflow/tfjs';
+import '@tensorflow/tfjs-backend-cpu';
+tf.setBackend('cpu').catch(console.error);
+
 const DEFAULT_SETTINGS: EngineSettings = {
   sensitivity: 0.5,
   minDuration: 0.05,
@@ -31,12 +36,10 @@ export function useAudioEngine() {
   const [settings, setSettings] = useState<EngineSettings>(DEFAULT_SETTINGS);
   const [sourceFile, setSourceFile] = useState<File | null>(null);
 
-  // Infos du fichier importé
   const [fileName, setFileName] = useState<string>('');
   const [fileSize, setFileSize] = useState<number>(0);
   const [fileFormat, setFileFormat] = useState<string>('');
 
-  // ✅ AudioContext (Tone.js rawContext) exposé pour le mastering
   const audioContext = useMemo(
     () => (Tone.getContext().rawContext as AudioContext) || null,
     []
@@ -52,7 +55,6 @@ export function useAudioEngine() {
 
     if (settings.splitTracks) notes = splitTracks(notes);
 
-    // 🎯 Quantize avec le BPM RÉEL du morceau
     notes = quantizeNotes(notes, result.bpm, settings.quantize);
 
     return notes;
@@ -75,9 +77,7 @@ export function useAudioEngine() {
       setResult(null);
       setRawNotes([]);
 
-      // ✅ Stockage du fichier source (nécessaire pour le module Remix)
       setSourceFile(file);
-
       setFileName(file.name);
       setFileSize(file.size);
       const ext = file.name.split('.').pop()?.toUpperCase() ?? '';
@@ -91,22 +91,29 @@ export function useAudioEngine() {
         const audioBuffer = await ctx.decodeAudioData(buf.slice(0));
         audioBufferRef.current = audioBuffer;
 
-        console.log(
-          `📥 Audio chargé : ${audioBuffer.duration.toFixed(2)}s @ ${audioBuffer.sampleRate} Hz`
-        );
+        console.log(`📥 Audio chargé : ${audioBuffer.duration.toFixed(2)}s @ ${audioBuffer.sampleRate} Hz`);
 
-        // 🥁 Détection du BPM PRO (essentia.js)
+        // 🥁 BPM
         const bpmResult = await detectBPMPro(audioBuffer);
         const bpm = bpmResult.bpm;
-        console.log(
-          `🥁 BPM détecté : ${bpm} BPM (confiance ${(bpmResult.confidence * 100).toFixed(0)}%)`
+        console.log(`🥁 BPM détecté : ${bpm} BPM (confiance ${(bpmResult.confidence * 100).toFixed(0)}%)`);
+
+        // ✅ Analyse avec progression
+        console.log(`🎼 Analyse en cours sur ${audioBuffer.duration.toFixed(1)}s...`);
+        
+        const notes = await analyzePolyphonic(
+          audioBuffer, 
+          settings.sensitivity,
+          (progress) => {
+            // Affiche la progression dans la console tous les 20%
+            if (Math.round(progress * 100) % 20 === 0) {
+              console.log(`⏳ Progression : ${Math.round(progress * 100)}%`);
+            }
+          }
         );
 
-        // Analyse YIN (limitée à 30 sec)
-        const notes = await analyzePolyphonic(audioBuffer, settings.sensitivity);
-
         const elapsed = ((performance.now() - startTime) / 1000).toFixed(2);
-        console.log(`⚡ Analyse YIN terminée en ${elapsed}s (${notes.length} notes)`);
+        console.log(`⚡ Analyse terminée en ${elapsed}s (${notes.length} notes)`);
 
         setRawNotes(notes);
         setResult({
@@ -230,7 +237,7 @@ export function useAudioEngine() {
     stopAll,
     seek,
     audioBuffer: audioBufferRef.current,
-    sourceFile,        // ✅ Exposé pour le RemixPanel
-    audioContext,      // ✅ Exposé pour le MasteringPanel
+    sourceFile,
+    audioContext,
   };
 }

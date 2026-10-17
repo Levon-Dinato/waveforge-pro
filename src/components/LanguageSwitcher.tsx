@@ -63,13 +63,13 @@ export const LanguageSwitcher: React.FC = () => {
         <span style={{ fontSize: 10, opacity: 0.6 }}>▼</span>
       </button>
 
-      {open && (
+              {open && (
         <div
           style={{
             position: 'absolute',
-            top: '100%',
+            bottom: '100%',
             left: 0,
-            marginTop: 6,
+            marginBottom: 6,
             background: 'linear-gradient(135deg, rgba(15, 18, 28, 0.98), rgba(10, 12, 20, 0.99))',
             border: '1px solid rgba(0, 217, 255, 0.35)',
             borderRadius: 10,
@@ -77,6 +77,7 @@ export const LanguageSwitcher: React.FC = () => {
             minWidth: 160,
             boxShadow: '0 10px 30px rgba(0, 0, 0, 0.7)',
             zIndex: 1000,
+            whiteSpace: 'nowrap',
           }}
         >
           {LANGS.map((lang) => {

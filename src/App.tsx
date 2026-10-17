@@ -59,6 +59,10 @@ const GenresPage = lazy(() =>
 const ArtistsPage = lazy(() =>
   import('./pages/ArtistsPage').then((m) => ({ default: m.ArtistsPage }))
 );
+// ✅ Import page Recherche
+const SearchPage = lazy(() =>
+  import('./pages/SearchPage').then((m) => ({ default: m.SearchPage }))
+);
 
 const PageLoader = () => (
   <div
@@ -130,6 +134,7 @@ export default function App() {
                     {/* ✅ Nouvelles routes */}
                     <Route path="genres" element={<PrivateRoute><GenresPage /></PrivateRoute>} />
                     <Route path="artists" element={<PrivateRoute><ArtistsPage /></PrivateRoute>} />
+                    <Route path="search" element={<PrivateRoute><SearchPage /></PrivateRoute>} />
                   </Route>
                 </Routes>
               </Suspense>

@@ -110,6 +110,12 @@ export const MainLayout: React.FC = () => {
               </div>
             </div>
             <nav style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              {/* ✅ LIEN RECHERCHE */}
+              <NavLink to="/search" style={({ isActive }) => ({ display: 'flex', alignItems: 'center', gap: 11, padding: '8px 12px', borderRadius: 8, textDecoration: 'none', fontSize: 12.5, fontWeight: isActive ? 700 : 500, color: isActive ? '#ffd43b' : 'rgba(255,255,255,0.6)', background: isActive ? 'rgba(255, 212, 59, 0.1)' : 'transparent', border: isActive ? '1px solid rgba(255, 212, 59, 0.3)' : '1px solid transparent', transition: 'all 0.18s ease', marginBottom: 4 })}>
+                <span style={{ fontSize: 14 }}>🔍</span>
+                <span style={{ flex: 1 }}>Recherche</span>
+              </NavLink>
+              
               {NAV_ITEMS.map((item) => (
                 <NavLink key={item.path} to={item.path} end={item.path === '/'} onMouseEnter={() => setHoveredPath(item.path)} onMouseLeave={() => setHoveredPath(null)} style={({ isActive }: { isActive: boolean }) => {
                   const hovered = hoveredPath === item.path;

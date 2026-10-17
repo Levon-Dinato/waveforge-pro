@@ -48,10 +48,12 @@ const AuthPage = lazy(() =>
 const ResetPasswordPage = lazy(() =>
   import('./pages/ResetPasswordPage').then((m) => ({ default: m.ResetPasswordPage }))
 );
-
-// ✅ Import sécurisé pour ProfilePage
 const ProfilePage = lazy(() =>
   import('./pages/ProfilePage').then((m) => ({ default: m.ProfilePage }))
+);
+// ✅ Nouvel import pour la page Genres
+const GenresPage = lazy(() =>
+  import('./pages/GenresPage').then((m) => ({ default: m.GenresPage }))
 );
 
 const PageLoader = () => (
@@ -119,9 +121,9 @@ export default function App() {
                     <Route path="cdj" element={<PrivateRoute><CDJPage /></PrivateRoute>} />
                     <Route path="settings" element={<PrivateRoute><SettingsPage /></PrivateRoute>} />
                     <Route path="nouveautes" element={<PrivateRoute><NouveautesPage /></PrivateRoute>} />
-                    
-                    {/* ✅ Route du profil */}
                     <Route path="profil/:id" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
+                    {/* ✅ Nouvelle route Genres */}
+                    <Route path="genres" element={<PrivateRoute><GenresPage /></PrivateRoute>} />
                   </Route>
                 </Routes>
               </Suspense>

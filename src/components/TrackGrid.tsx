@@ -48,8 +48,9 @@ export const TrackGrid: React.FC<TrackGridProps> = ({
   return (
     <div style={{ 
       display: 'grid', 
+      // ✅ GRILLE AUTOMATIQUE : s'adapte à la largeur de l'écran
       gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', 
-      gap: 15, 
+      gap: 20, 
       width: '100%' 
     }}>
       {tracks.map((track, index) => (
@@ -64,6 +65,7 @@ export const TrackGrid: React.FC<TrackGridProps> = ({
           onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-3px)'; }} 
           onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; }}
         >
+          {/* ✅ CARRÉ FORCÉ AVEC aspect-ratio */}
           <div style={{ 
             width: '100%', 
             aspectRatio: '1 / 1', 

@@ -35,26 +35,19 @@ export const ProfilePage: React.FC = () => {
       }
 
       try {
-        console.log("🔍 Recherche du profil avec l'ID :", id);
-        
-        // 1. Récupérer le profil
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', id)
-          .maybeSingle(); // maybeSingle évite les erreurs si 0 résultat
+          .maybeSingle();
         
         if (profileError) {
-          console.error("❌ Erreur Supabase (profiles):", profileError);
           throw new Error("Erreur base de données : " + profileError.message);
         }
         
         if (profileData) {
-          console.log("✅ Profil trouvé :", profileData);
           setProfile(profileData);
         } else {
-          console.warn("⚠️ Aucun profil trouvé avec cet ID.");
-          // On crée un profil "virtuel" pour ne pas bloquer l'affichage
           setProfile({ 
             id, 
             username: 'Utilisateur inconnu', 
@@ -64,15 +57,12 @@ export const ProfilePage: React.FC = () => {
           });
         }
 
-        // 2. Récupérer les stats
         const { data: tracksData, error: tracksError } = await supabase
           .from('tracks')
           .select('likes, downloads')
           .eq('user_id', id);
 
-        if (tracksError) {
-          console.warn("⚠️ Erreur chargement tracks (stats non disponibles) :", tracksError.message);
-        } else if (tracksData) {
+        if (!tracksError && tracksData) {
           const totalLikes = tracksData.reduce((acc, t) => acc + (t.likes || 0), 0);
           const totalDownloads = tracksData.reduce((acc, t) => acc + (t.downloads || 0), 0);
           setStats({
@@ -83,7 +73,6 @@ export const ProfilePage: React.FC = () => {
         }
 
       } catch (err: any) {
-        console.error("🔥 Erreur fatale :", err);
         setErrorMsg(err.message || "Une erreur inconnue est survenue.");
       } finally {
         setLoading(false);
@@ -108,7 +97,6 @@ export const ProfilePage: React.FC = () => {
         <div style={{ fontSize: 48, marginBottom: 16 }}>⚠️</div>
         <h2 style={{ color: '#ff5c5c', marginBottom: 8 }}>Erreur de chargement</h2>
         <p style={{ color: '#888', maxWidth: 500 }}>{errorMsg}</p>
-        <p style={{ color: '#666', fontSize: 12, marginTop: 16 }}>Vérifie la console (F12) pour plus de détails.</p>
         <Link to="/nouveautes" style={{ marginTop: 24, color: '#00d9ff', textDecoration: 'underline' }}>← Retour</Link>
       </div>
     );
@@ -136,15 +124,15 @@ export const ProfilePage: React.FC = () => {
           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(10,12,20,0.9) 0%, transparent 100%)' }} />
         </div>
 
+        {/* ✅ CORRECTION ICI : Suppression du doublon alignItems */}
         <div style={{ 
           position: 'absolute', 
           bottom: -40, 
           left: isMobile ? 16 : 32, 
           display: 'flex', 
-          alignItems: 'flex-end', 
+          alignItems: isMobile ? 'flex-start' : 'flex-end',
           gap: 20,
           flexDirection: isMobile ? 'column' : 'row',
-          alignItems: isMobile ? 'flex-start' : 'flex-end',
         }}>
           <div style={{
             width: 100, height: 100, borderRadius: '50%',

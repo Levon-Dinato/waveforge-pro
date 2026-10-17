@@ -532,7 +532,7 @@ export const NouveautesPage: React.FC = () => {
   const [detectingKey, setDetectingKey] = useState<string | null>(null);
   const [keyPicker, setKeyPicker] = useState<string | null>(null);
 
-  const [coverTargetId, setCoverTargetId] = useState<string | null>(null);
+  // ✅ SUPPRESSION DE coverTargetId ICI
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   const [search, setSearch] = useState('');
@@ -613,10 +613,8 @@ export const NouveautesPage: React.FC = () => {
 
         if (metadata.bpm) {
           bpm = metadata.bpm;
-          console.log(`🎯 BPM final : ${bpm} (depuis tag ID3)`);
         } else {
           bpm = analysis.bpm;
-          console.log(`🎯 BPM final : ${bpm} (auto-detection)`);
         }
       } catch (e) {
         console.warn('Analyse audio échouée:', e);
@@ -644,7 +642,6 @@ export const NouveautesPage: React.FC = () => {
       if (metadata.key) {
         detectedKey = metadata.key.key;
         detectedCamelot = metadata.key.camelot;
-        console.log(`🎼 Clé depuis ID3 : ${detectedKey} (${detectedCamelot})`);
       } else {
         try {
           setUploadStatus('Détection tonalité (Meyda)...');
@@ -907,31 +904,7 @@ export const NouveautesPage: React.FC = () => {
     }
   };
 
-  const handleCoverClick = (trackId: string) => {
-    setCoverTargetId(trackId);
-    coverInputRef.current?.click();
-  };
-
-  const handleCoverChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    const targetId = coverTargetId;
-    if (!file || !targetId) return;
-    try {
-      const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
-      const fileName = `covers/${Date.now()}_${targetId}.${ext}`;
-      const { error: uploadError } = await supabase.storage.from(AUDIO_BUCKET).upload(fileName, file, { upsert: true });
-      if (uploadError) throw uploadError;
-      const { data: urlData } = supabase.storage.from(AUDIO_BUCKET).getPublicUrl(fileName);
-      const { error: updateError } = await supabase.from('tracks').update({ cover_url: urlData.publicUrl }).eq('id', targetId);
-      if (updateError) throw updateError;
-      setTracks((prev) => prev.map((t) => t.id === targetId ? { ...t, cover_url: urlData.publicUrl } : t));
-    } catch (err: any) {
-      console.error(err);
-      alert('Erreur pochette : ' + (err.message || err));
-    } finally {
-      setCoverTargetId(null); event.target.value = '';
-    }
-  };
+  // ✅ SUPPRESSION DE handleCoverClick ICI
 
   const handlePlayTrack = (track: Track) => {
     play({
@@ -1062,8 +1035,7 @@ export const NouveautesPage: React.FC = () => {
         <p style={{ color: '#888', fontSize: 12, marginTop: 6 }}>Découvrez les derniers sons partagés par la communauté.</p>
       </div>
 
-      <input type="file" accept="audio/*" ref={fileInputRef} onChange={handleFileChange} style={{ display: 'none' }} />
-      <input type="file" accept="image/*" ref={coverInputRef} onChange={handleCoverChange} style={{ display: 'none' }} />
+            <input type="file" accept="audio/*" ref={fileInputRef} onChange={handleFileChange} style={{ display: 'none' }} />
       <input type="file" accept="audio/*" ref={replaceInputRef} onChange={handleReplaceChange} style={{ display: 'none' }} />
 
       <GlassCard style={{ padding: '16px', marginBottom: 20, borderStyle: 'dashed', borderColor: 'rgba(0, 217, 255, 0.4)' }}>

@@ -3,6 +3,8 @@ import { useParams, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { usePlayer } from '../contexts/PlayerContext';
+import { useAuth } from '../contexts/AuthContext';
+import { ChatWidget } from '../components/ChatWidget';
 
 const PANEL_STYLE: React.CSSProperties = {
   background: 'rgba(20, 22, 30, 0.8)',
@@ -46,11 +48,14 @@ interface Track {
 interface WallPost {
   id: string;
   content: string;
-  date: string;
+  author_name: string;
+  created_at: string;
+  likes: number;
 }
 
 export const ProfilePage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
   const isMobile = useIsMobile(768);
   const { play } = usePlayer();
   
@@ -60,12 +65,12 @@ export const ProfilePage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('featured');
 
-  const [wallPosts, setWallPosts] = useState<WallPost[]>([
-    { id: '1', content: `Découvrez mes derniers sets sur soundcloud.com/levon`, date: 'il y a 5 ans' },
-    { id: '2', content: `Découvrez mes derniers sets sur soundcloud.com/levon`, date: 'il y a 5 ans' },
-    { id: '3', content: `Découvrez mes derniers sets sur soundcloud.com/levon`, date: 'il y a 5 ans' },
-  ]);
+  const [wallPosts, setWallPosts] = useState<WallPost[]>([]);
   const [newPost, setNewPost] = useState('');
+  const [posting, setPosting] = useState(false);
+
+  // ✅ État pour le chat
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   useEffect(() => {
     const fetchProfileData = async () => {
@@ -95,6 +100,17 @@ export const ProfilePage: React.FC = () => {
           });
           setTracks(tracksData as Track[]);
         }
+
+        const { data: postsData, error: postsError } = await supabase
+          .from('posts')
+          .select('*')
+          .eq('profile_id', id)
+          .order('created_at', { ascending: false });
+
+        if (!postsError && postsData) {
+          setWallPosts(postsData);
+        }
+
       } catch (err) {
         console.error("Erreur chargement profil:", err);
       } finally {
@@ -105,18 +121,34 @@ export const ProfilePage: React.FC = () => {
     if (id) fetchProfileData();
   }, [id]);
 
-  const handlePostSubmit = (e: React.FormEvent) => {
+  const handlePostSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newPost.trim()) return;
+    if (!newPost.trim() || !user || !id) return;
     
-    const post: WallPost = {
-      id: Date.now().toString(),
-      content: newPost,
-      date: "à l'instant"
-    };
-    
-    setWallPosts([post, ...wallPosts]);
-    setNewPost('');
+    setPosting(true);
+    const displayName = user.user_metadata?.username || user.email?.split('@')[0] || 'Anonyme';
+
+    const { data, error } = await supabase
+      .from('posts')
+      .insert({
+        profile_id: id,
+        author_id: user.id,
+        author_name: displayName,
+        content: newPost.trim()
+      })
+      .select()
+      .single();
+
+    if (!error && data) {
+      setWallPosts([data, ...wallPosts]);
+      setNewPost('');
+    }
+    setPosting(false);
+  };
+
+  const handleLikePost = async (postId: string, currentLikes: number) => {
+    setWallPosts(posts => posts.map(p => p.id === postId ? { ...p, likes: p.likes + 1 } : p));
+    await supabase.from('posts').update({ likes: currentLikes + 1 }).eq('id', postId);
   };
 
   const handlePlayTrack = (track: Track) => {
@@ -130,6 +162,16 @@ export const ProfilePage: React.FC = () => {
       duration: track.duration,
       peaks: track.peaks,
     });
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / 60000);
+    if (diffInMinutes < 1) return "à l'instant";
+    if (diffInMinutes < 60) return `il y a ${diffInMinutes} min`;
+    if (diffInMinutes < 1440) return `il y a ${Math.floor(diffInMinutes / 60)} h`;
+    return `il y a ${Math.floor(diffInMinutes / 1440)} j`;
   };
 
   if (loading) return <div style={{ color: '#fff', padding: 40, textAlign: 'center', background: '#0a0c14', minHeight: '100vh' }}>Chargement...</div>;
@@ -205,8 +247,12 @@ export const ProfilePage: React.FC = () => {
             </div>
             
             <form onSubmit={handlePostSubmit} style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
-              <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#333', flexShrink: 0 }}>
-                {profile.avatar_url && <img src={profile.avatar_url} alt="Me" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />}
+              <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#333', flexShrink: 0, overflow: 'hidden' }}>
+                {user?.user_metadata?.avatar_url ? (
+                  <img src={user.user_metadata.avatar_url} alt="Me" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>👤</div>
+                )}
               </div>
               <div style={{ flex: 1, position: 'relative' }}>
                 <input 
@@ -214,28 +260,39 @@ export const ProfilePage: React.FC = () => {
                   placeholder="Post on the wall" 
                   value={newPost}
                   onChange={(e) => setNewPost(e.target.value)}
-                  style={{ width: '100%', padding: '10px 40px 10px 15px', background: '#111', border: '1px solid #333', borderRadius: 4, color: '#fff', outline: 'none' }} 
+                  disabled={!user || posting}
+                  style={{ width: '100%', padding: '10px 40px 10px 15px', background: '#111', border: '1px solid #333', borderRadius: 4, color: '#fff', outline: 'none', opacity: (!user || posting) ? 0.5 : 1 }} 
                 />
-                <button type="submit" style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: newPost ? '#e50000' : '#888', cursor: 'pointer', fontSize: '1rem' }}>
-                  ➤
+                <button type="submit" disabled={!user || posting} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: newPost ? '#e50000' : '#888', cursor: (!user || posting) ? 'default' : 'pointer', fontSize: '1rem' }}>
+                  {posting ? '...' : '➤'}
                 </button>
               </div>
             </form>
+            
+            {!user && <div style={{ fontSize: '0.75rem', color: '#ff5c5c', marginBottom: 15 }}>* Connecte-toi pour laisser un message.</div>}
 
             {wallPosts.map(post => (
               <div key={post.id} style={{ display: 'flex', gap: 12, paddingBottom: 15, marginBottom: 15, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                 <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#222', flexShrink: 0, overflow: 'hidden' }}>
-                  {profile.avatar_url && <img src={profile.avatar_url} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
+                  <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>👤</div>
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>{displayName} <span style={{ color: '#666', fontWeight: 400, marginLeft: 8 }}>{post.date}</span></div>
-                    <div style={{ color: '#666', fontSize: '0.8rem' }}>👍 0</div>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>
+                      {post.author_name} <span style={{ color: '#666', fontWeight: 400, marginLeft: 8 }}>{formatDate(post.created_at)}</span>
+                    </div>
+                    <button 
+                      onClick={() => handleLikePost(post.id, post.likes)} 
+                      style={{ background: 'none', border: 'none', color: post.likes > 0 ? '#e50000' : '#666', fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+                    >
+                      👍 {post.likes}
+                    </button>
                   </div>
                   <div style={{ ...TEXT_MUTED, marginTop: 4, lineHeight: 1.5 }}>{post.content}</div>
                 </div>
               </div>
             ))}
+            {wallPosts.length === 0 && <div style={{ ...TEXT_MUTED, textAlign: 'center', padding: 20 }}>Aucun message pour le moment.</div>}
           </div>
 
           {/* NEW CREATION */}
@@ -316,8 +373,9 @@ export const ProfilePage: React.FC = () => {
             </div>
           </div>
 
+          {/* ✅ Bouton CHAT branché sur le widget */}
           <button 
-            onClick={() => alert("Le chat arrive bientôt ! 🚀")} 
+            onClick={() => setIsChatOpen(true)} 
             style={{ width: '100%', padding: '12px', background: '#e50000', color: '#fff', border: 'none', borderRadius: 4, fontWeight: 700, cursor: 'pointer', marginBottom: 15 }}
           >
             CHAT
@@ -332,6 +390,16 @@ export const ProfilePage: React.FC = () => {
           </div>
         </aside>
       </div>
+
+      {/* ✅ COMPOSANT CHAT AFFICHÉ PAR-DESSUS */}
+      {profile && (
+        <ChatWidget
+          receiverId={profile.id}
+          receiverName={displayName}
+          isOpen={isChatOpen}
+          onClose={() => setIsChatOpen(false)}
+        />
+      )}
     </div>
   );
 };

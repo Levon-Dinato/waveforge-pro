@@ -48,6 +48,8 @@ const AuthPage = lazy(() =>
 const ResetPasswordPage = lazy(() =>
   import('./pages/ResetPasswordPage').then((m) => ({ default: m.ResetPasswordPage }))
 );
+
+// ✅ Import sécurisé pour ProfilePage
 const ProfilePage = lazy(() =>
   import('./pages/ProfilePage').then((m) => ({ default: m.ProfilePage }))
 );
@@ -107,88 +109,19 @@ export default function App() {
                     <Route path="reset-password" element={<ResetPasswordPage />} />
                     <Route path="help" element={<HelpPage />} />
 
-                    {/* 🔒 Protégées — accessible uniquement si connecté */}
-                    <Route
-                      path="studio"
-                      element={
-                        <PrivateRoute>
-                          <StudioPage />
-                        </PrivateRoute>
-                      }
-                    />
-                    <Route
-                      path="stems"
-                      element={
-                        <PrivateRoute>
-                          <StemsPage />
-                        </PrivateRoute>
-                      }
-                    />
-                    <Route
-                      path="mastering"
-                      element={
-                        <PrivateRoute>
-                          <MasteringPage />
-                        </PrivateRoute>
-                      }
-                    />
-                    <Route
-                      path="musicgen"
-                      element={
-                        <PrivateRoute>
-                          <MusicGenPage />
-                        </PrivateRoute>
-                      }
-                    />
-                    <Route
-                      path="generator"
-                      element={
-                        <PrivateRoute>
-                          <GeneratorPage />
-                        </PrivateRoute>
-                      }
-                    />
-                    <Route
-                      path="video"
-                      element={
-                        <PrivateRoute>
-                          <VideoPage />
-                        </PrivateRoute>
-                      }
-                    />
-                    <Route
-                      path="cdj"
-                      element={
-                        <PrivateRoute>
-                          <CDJPage />
-                        </PrivateRoute>
-                      }
-                    />
-                    <Route
-                      path="settings"
-                      element={
-                        <PrivateRoute>
-                          <SettingsPage />
-                        </PrivateRoute>
-                      }
-                    />
-                    <Route
-                      path="nouveautes"
-                      element={
-                        <PrivateRoute>
-                          <NouveautesPage />
-                        </PrivateRoute>
-                      }
-                    />
-                    {/* ✅ CORRECTION ICI : :id au lieu de :userId */}
-                    <Route
-                      path="profil/:id"
-                      element={
-                        <PrivateRoute>
-                          <ProfilePage />
-                        </PrivateRoute>
-                      }
-                    />
+                    {/* 🔒 Protégées */}
+                    <Route path="studio" element={<PrivateRoute><StudioPage /></PrivateRoute>} />
+                    <Route path="stems" element={<PrivateRoute><StemsPage /></PrivateRoute>} />
+                    <Route path="mastering" element={<PrivateRoute><MasteringPage /></PrivateRoute>} />
+                    <Route path="musicgen" element={<PrivateRoute><MusicGenPage /></PrivateRoute>} />
+                    <Route path="generator" element={<PrivateRoute><GeneratorPage /></PrivateRoute>} />
+                    <Route path="video" element={<PrivateRoute><VideoPage /></PrivateRoute>} />
+                    <Route path="cdj" element={<PrivateRoute><CDJPage /></PrivateRoute>} />
+                    <Route path="settings" element={<PrivateRoute><SettingsPage /></PrivateRoute>} />
+                    <Route path="nouveautes" element={<PrivateRoute><NouveautesPage /></PrivateRoute>} />
+                    
+                    {/* ✅ Route du profil */}
+                    <Route path="profil/:id" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
                   </Route>
                 </Routes>
               </Suspense>

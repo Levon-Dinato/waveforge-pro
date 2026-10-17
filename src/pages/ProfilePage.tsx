@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
+import { supabase, AUDIO_BUCKET } from '../lib/supabase';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { usePlayer } from '../contexts/PlayerContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -86,13 +86,19 @@ export const ProfilePage: React.FC = () => {
   const [posting, setPosting] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
 
-  // ✅ NOUVEAUX ÉTATS POUR LE FOLLOW
   const [isFollowing, setIsFollowing] = useState(false);
   const [followersCount, setFollowersCount] = useState(0);
 
   const [creationPage, setCreationPage] = useState(1);
   const [photosPage, setPhotosPage] = useState(1);
   const ITEMS_PER_PAGE = 12;
+
+  // ✅ ÉTATS POUR L'ÉDITION
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState({ username: '', city: '', country: '', bio: '' });
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const fetchProfileData = async () => {
@@ -105,7 +111,15 @@ export const ProfilePage: React.FC = () => {
           .maybeSingle();
         
         if (profileError) throw profileError;
-        if (profileData) setProfile(profileData);
+        if (profileData) {
+          setProfile(profileData);
+          setEditForm({
+            username: profileData.username || '',
+            city: profileData.city || '',
+            country: profileData.country || '',
+            bio: profileData.bio || '',
+          });
+        }
 
         const { data: tracksData, error: tracksError } = await supabase
           .from('tracks')
@@ -115,11 +129,7 @@ export const ProfilePage: React.FC = () => {
 
         if (!tracksError && tracksData) {
           const totalPlays = tracksData.reduce((acc, t: any) => acc + (t.downloads || 0) + (t.likes || 0), 0);
-          setStats({
-            tracks: tracksData.length,
-            followers: 0,
-            plays: totalPlays
-          });
+          setStats({ tracks: tracksData.length, followers: 0, plays: totalPlays });
           setTracks(tracksData as Track[]);
         }
 
@@ -129,9 +139,7 @@ export const ProfilePage: React.FC = () => {
           .eq('profile_id', id)
           .order('created_at', { ascending: false });
 
-        if (!postsError && postsData) {
-          setWallPosts(postsData);
-        }
+        if (!postsError && postsData) setWallPosts(postsData);
       } catch (err) {
         console.error("Erreur chargement profil:", err);
       } finally {
@@ -142,28 +150,14 @@ export const ProfilePage: React.FC = () => {
     if (id) fetchProfileData();
   }, [id]);
 
-  // ✅ CHARGEMENT DU STATUT FOLLOW (indépendant du profil)
+  // ✅ SUIVI (Follow)
   useEffect(() => {
     const fetchFollowStatus = async () => {
       if (!id) return;
-      
-      // Compter les followers
-      const { count } = await supabase
-        .from('followers')
-        .select('*', { count: 'exact', head: true })
-        .eq('following_id', id);
-      
+      const { count } = await supabase.from('followers').select('*', { count: 'exact', head: true }).eq('following_id', id);
       setFollowersCount(count || 0);
-
-      // Vérifier si je suis déjà abonné
       if (user) {
-        const { data } = await supabase
-          .from('followers')
-          .select('id')
-          .eq('follower_id', user.id)
-          .eq('following_id', id)
-          .maybeSingle();
-        
+        const { data } = await supabase.from('followers').select('id').eq('follower_id', user.id).eq('following_id', id).maybeSingle();
         setIsFollowing(!!data);
       }
     };
@@ -171,25 +165,13 @@ export const ProfilePage: React.FC = () => {
   }, [id, user]);
 
   const handleFollowToggle = async () => {
-    if (!user || !id) {
-      alert("Connecte-toi pour suivre cet artiste.");
-      return;
-    }
-    
+    if (!user || !id) { alert("Connecte-toi pour suivre cet artiste."); return; }
     if (isFollowing) {
-      // Se désabonner
-      await supabase
-        .from('followers')
-        .delete()
-        .eq('follower_id', user.id)
-        .eq('following_id', id);
+      await supabase.from('followers').delete().eq('follower_id', user.id).eq('following_id', id);
       setIsFollowing(false);
       setFollowersCount(prev => Math.max(0, prev - 1));
     } else {
-      // S'abonner
-      await supabase
-        .from('followers')
-        .insert({ follower_id: user.id, following_id: id });
+      await supabase.from('followers').insert({ follower_id: user.id, following_id: id });
       setIsFollowing(true);
       setFollowersCount(prev => prev + 1);
     }
@@ -198,25 +180,10 @@ export const ProfilePage: React.FC = () => {
   const handlePostSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newPost.trim() || !user || !id) return;
-    
     setPosting(true);
     const displayName = user.user_metadata?.username || user.email?.split('@')[0] || 'Anonyme';
-
-    const { data, error } = await supabase
-      .from('posts')
-      .insert({
-        profile_id: id,
-        author_id: user.id,
-        author_name: displayName,
-        content: newPost.trim()
-      })
-      .select()
-      .single();
-
-    if (!error && data) {
-      setWallPosts([data, ...wallPosts]);
-      setNewPost('');
-    }
+    const { data, error } = await supabase.from('posts').insert({ profile_id: id, author_id: user.id, author_name: displayName, content: newPost.trim() }).select().single();
+    if (!error && data) { setWallPosts([data, ...wallPosts]); setNewPost(''); }
     setPosting(false);
   };
 
@@ -226,16 +193,7 @@ export const ProfilePage: React.FC = () => {
   };
 
   const handlePlayTrack = (track: Track) => {
-    play({
-      id: track.id,
-      title: track.title,
-      artist: track.artist,
-      audio_url: track.audio_url,
-      cover_url: track.cover_url,
-      user_id: track.user_id,
-      duration: track.duration,
-      peaks: track.peaks,
-    });
+    play({ id: track.id, title: track.title, artist: track.artist, audio_url: track.audio_url, cover_url: track.cover_url, user_id: track.user_id, duration: track.duration, peaks: track.peaks });
   };
 
   const formatDate = (dateString: string) => {
@@ -248,10 +206,64 @@ export const ProfilePage: React.FC = () => {
     return `il y a ${Math.floor(diffInMinutes / 1440)} j`;
   };
 
+  // ✅ UPLOAD D'IMAGE (Bannière ou Avatar)
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'banner' | 'avatar') => {
+    const file = e.target.files?.[0];
+    if (!file || !id) return;
+    setUploadingImage(true);
+
+    try {
+      const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+      const fileName = `${type}s/${id}_${Date.now()}.${ext}`;
+      
+      // Upload dans Supabase Storage
+      const { error: uploadError } = await supabase.storage.from(AUDIO_BUCKET).upload(fileName, file, { upsert: true });
+      if (uploadError) throw uploadError;
+
+      // Récupérer l'URL publique
+      const { data: urlData } = supabase.storage.from(AUDIO_BUCKET).getPublicUrl(fileName);
+      
+      // Mettre à jour la table profiles
+      const updateField = type === 'banner' ? 'banner_url' : 'avatar_url';
+      const { error: updateError } = await supabase.from('profiles').update({ [updateField]: urlData.publicUrl }).eq('id', id);
+      if (updateError) throw updateError;
+
+      // Mettre à jour l'état local
+      setProfile(prev => prev ? { ...prev, [updateField]: urlData.publicUrl } : prev);
+    } catch (err: any) {
+      console.error("Erreur upload image:", err);
+      alert("Erreur lors de l'upload : " + err.message);
+    } finally {
+      setUploadingImage(false);
+      e.target.value = '';
+    }
+  };
+
+  // ✅ SAUVEGARDER LES INFOS DU PROFIL (Nom, Ville, Bio)
+  const handleSaveProfile = async () => {
+    if (!id) return;
+    try {
+      const { error } = await supabase.from('profiles').update({
+        username: editForm.username,
+        city: editForm.city,
+        country: editForm.country,
+        bio: editForm.bio,
+      }).eq('id', id);
+      if (error) throw error;
+      
+      setProfile(prev => prev ? { ...prev, ...editForm } : prev);
+      setIsEditing(false);
+    } catch (err: any) {
+      console.error("Erreur sauvegarde profil:", err);
+      alert("Erreur : " + err.message);
+    }
+  };
+
   if (loading) return <div style={{ color: '#fff', padding: 40, textAlign: 'center', background: '#0a0c14', minHeight: '100vh' }}>Chargement...</div>;
   if (!profile) return <div style={{ color: '#fff', padding: 40, textAlign: 'center', background: '#0a0c14', minHeight: '100vh' }}>Profil introuvable</div>;
 
   const displayName = profile.username || profile.email?.split('@')[0] || 'Artiste';
+  const isOwnProfile = user?.id === profile.id;
 
   const totalCreationPages = Math.max(1, Math.ceil(tracks.length / ITEMS_PER_PAGE));
   const safeCreationPage = Math.min(creationPage, totalCreationPages);
@@ -320,14 +332,35 @@ export const ProfilePage: React.FC = () => {
   return (
     <div style={{ background: '#0a0c14', minHeight: '100vh', color: '#fff', fontFamily: 'sans-serif' }}>
       
+      {/* INPUTS CACHÉS POUR L'UPLOAD */}
+      <input type="file" accept="image/*" ref={bannerInputRef} onChange={(e) => handleImageUpload(e, 'banner')} style={{ display: 'none' }} />
+      <input type="file" accept="image/*" ref={avatarInputRef} onChange={(e) => handleImageUpload(e, 'avatar')} style={{ display: 'none' }} />
+
       {/* HEADER */}
       <div style={{ position: 'relative', height: isMobile ? 200 : 280, background: '#111', overflow: 'hidden' }}>
         {profile.banner_url && <img src={profile.banner_url} alt="Banner" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.8 }} />}
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #0a0c14 0%, transparent 100%)' }} />
+        
+        {/* Bouton Modifier Bannière (si propriétaire) */}
+        {isOwnProfile && (
+          <button onClick={() => bannerInputRef.current?.click()} style={{ position: 'absolute', top: 20, right: 20, background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.3)', color: '#fff', padding: '8px 16px', borderRadius: 20, fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, backdropFilter: 'blur(10px)' }}>
+            🖼️ Changer la bannière
+          </button>
+        )}
+
         <div style={{ position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: 1200, padding: '0 20px', display: 'flex', alignItems: 'flex-end', gap: 20 }}>
-          <div style={{ width: 140, height: 140, borderRadius: 8, background: '#1a1f2e', border: '4px solid #0a0c14', overflow: 'hidden', flexShrink: 0, transform: 'translateY(30px)', boxShadow: '0 4px 20px rgba(0,0,0,0.5)' }}>
-            {profile.avatar_url && <img src={profile.avatar_url} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
+          <div style={{ position: 'relative' }}>
+            <div style={{ width: 140, height: 140, borderRadius: 8, background: '#1a1f2e', border: '4px solid #0a0c14', overflow: 'hidden', flexShrink: 0, transform: 'translateY(30px)', boxShadow: '0 4px 20px rgba(0,0,0,0.5)' }}>
+              {profile.avatar_url && <img src={profile.avatar_url} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
+            </div>
+            {/* Bouton Modifier Avatar */}
+            {isOwnProfile && (
+              <button onClick={() => avatarInputRef.current?.click()} style={{ position: 'absolute', bottom: 26, right: -10, width: 36, height: 36, borderRadius: '50%', background: '#00d9ff', color: '#000', border: '2px solid #0a0c14', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', zIndex: 2 }}>
+                📷
+              </button>
+            )}
           </div>
+
           <div style={{ marginBottom: 40, flex: 1 }}>
             <h1 style={{ fontSize: isMobile ? 24 : 32, margin: 0, fontWeight: 700, textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>{displayName}</h1>
             {profile.city && <div style={{ ...TEXT_MUTED, marginTop: 4 }}>{profile.city}, {profile.country || 'France'}</div>}
@@ -335,12 +368,20 @@ export const ProfilePage: React.FC = () => {
         </div>
       </div>
 
+      {/* BOUTON MODIFIER PROFIL */}
+      {isOwnProfile && (
+        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '60px 20px 0', display: 'flex', justifyContent: 'flex-end' }}>
+          <button onClick={() => setIsEditing(true)} style={{ background: 'transparent', border: '1px solid #00d9ff', color: '#00d9ff', padding: '8px 16px', borderRadius: 6, fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>
+            ✏️ Modifier le profil
+          </button>
+        </div>
+      )}
+
       {/* CONTENU PRINCIPAL */}
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '20px 10px' : '40px 20px', display: 'flex', gap: 20, flexDirection: isMobile ? 'column' : 'row' }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '20px 10px' : '20px 20px 40px', display: 'flex', gap: 20, flexDirection: isMobile ? 'column' : 'row' }}>
         
         {/* COLONNE GAUCHE */}
         <div style={{ flex: 1, minWidth: 0 }}>
-          
           <div style={{ display: 'flex', gap: 20, borderBottom: '1px solid rgba(255,255,255,0.1)', marginBottom: 20, overflowX: 'auto' }}>
             {['Featured', 'Creation', 'Playlists', 'Comments', 'Wall', 'Journal', 'Photos', 'Video'].map(tab => (
               <button key={tab} onClick={() => setActiveTab(tab.toLowerCase())} style={{ background: 'none', border: 'none', padding: '10px 0', color: activeTab === tab.toLowerCase() ? '#fff' : '#888', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer', borderBottom: activeTab === tab.toLowerCase() ? '2px solid #e50000' : '2px solid transparent', whiteSpace: 'nowrap' }}>{tab}</button>
@@ -381,23 +422,15 @@ export const ProfilePage: React.FC = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}><span style={{ color: '#888' }}>Tracks</span><span style={{ fontWeight: 600 }}>{stats.tracks}</span></div>
           </div>
 
-          {/* ✅ BOUTONS FOLLOW + CHAT */}
           <div style={{ display: 'flex', gap: 10, marginBottom: 15 }}>
-            {user?.id !== profile.id && (
-              <button 
-                onClick={handleFollowToggle}
-                style={{ 
-                  flex: 1, padding: '12px', 
-                  background: isFollowing ? 'transparent' : '#e50000', 
-                  color: isFollowing ? '#888' : '#fff', 
-                  border: isFollowing ? '1px solid #333' : 'none', 
-                  borderRadius: 4, fontWeight: 700, cursor: 'pointer' 
-                }}
-              >
+            {!isOwnProfile && (
+              <button onClick={handleFollowToggle} style={{ flex: 1, padding: '12px', background: isFollowing ? 'transparent' : '#e50000', color: isFollowing ? '#888' : '#fff', border: isFollowing ? '1px solid #333' : 'none', borderRadius: 4, fontWeight: 700, cursor: 'pointer' }}>
                 {isFollowing ? '✓ Abonné' : '+ SUIVRE'}
               </button>
             )}
-            <button onClick={() => setIsChatOpen(true)} style={{ flex: 1, padding: '12px', background: '#333', color: '#fff', border: 'none', borderRadius: 4, fontWeight: 700, cursor: 'pointer' }}>CHAT</button>
+            {!isOwnProfile && (
+              <button onClick={() => setIsChatOpen(true)} style={{ flex: 1, padding: '12px', background: '#333', color: '#fff', border: 'none', borderRadius: 4, fontWeight: 700, cursor: 'pointer' }}>CHAT</button>
+            )}
           </div>
 
           <div style={{ ...PANEL_STYLE, padding: 15 }}>
@@ -406,6 +439,44 @@ export const ProfilePage: React.FC = () => {
           </div>
         </aside>
       </div>
+
+      {/* ✅ MODALE D'ÉDITION DU PROFIL */}
+      {isEditing && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div style={{ background: '#151821', border: '1px solid #333', borderRadius: 12, padding: 30, width: '100%', maxWidth: 500, maxHeight: '90vh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <h2 style={{ margin: 0, fontSize: '1.2rem' }}>Modifier mon profil</h2>
+              <button onClick={() => setIsEditing(false)} style={{ background: 'none', border: 'none', color: '#888', fontSize: '1.5rem', cursor: 'pointer' }}>✕</button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 15 }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', color: '#888', marginBottom: 5 }}>Nom d'artiste</label>
+                <input type="text" value={editForm.username} onChange={(e) => setEditForm({ ...editForm, username: e.target.value })} style={{ width: '100%', padding: 10, background: '#0a0c14', border: '1px solid #333', borderRadius: 6, color: '#fff', outline: 'none' }} />
+              </div>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: '0.8rem', color: '#888', marginBottom: 5 }}>Ville</label>
+                  <input type="text" value={editForm.city} onChange={(e) => setEditForm({ ...editForm, city: e.target.value })} style={{ width: '100%', padding: 10, background: '#0a0c14', border: '1px solid #333', borderRadius: 6, color: '#fff', outline: 'none' }} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: '0.8rem', color: '#888', marginBottom: 5 }}>Pays</label>
+                  <input type="text" value={editForm.country} onChange={(e) => setEditForm({ ...editForm, country: e.target.value })} style={{ width: '100%', padding: 10, background: '#0a0c14', border: '1px solid #333', borderRadius: 6, color: '#fff', outline: 'none' }} />
+                </div>
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', color: '#888', marginBottom: 5 }}>Biographie</label>
+                <textarea value={editForm.bio} onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })} rows={4} style={{ width: '100%', padding: 10, background: '#0a0c14', border: '1px solid #333', borderRadius: 6, color: '#fff', outline: 'none', resize: 'vertical' }} placeholder="Parle de toi, de ton style musical, de tes influences..." />
+              </div>
+
+              <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
+                <button onClick={() => setIsEditing(false)} style={{ flex: 1, padding: 12, background: 'transparent', border: '1px solid #333', color: '#fff', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>Annuler</button>
+                <button onClick={handleSaveProfile} disabled={uploadingImage} style={{ flex: 1, padding: 12, background: '#e50000', border: 'none', color: '#fff', borderRadius: 6, cursor: uploadingImage ? 'wait' : 'pointer', fontWeight: 600 }}>{uploadingImage ? 'Upload...' : 'Enregistrer'}</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {profile && <ChatWidget receiverId={profile.id} receiverName={displayName} isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />}
     </div>

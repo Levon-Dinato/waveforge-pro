@@ -1,6 +1,5 @@
 // src/components/TrackGrid.tsx
 import { Link } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
 
 export interface Track {
   id: string;
@@ -17,6 +16,7 @@ export interface Track {
   likes?: number;
   created_at?: string;
   user_id?: string;
+  peaks?: any;
 }
 
 interface TrackGridProps {
@@ -72,7 +72,6 @@ export const TrackGrid = ({ tracks }: TrackGridProps) => {
             e.currentTarget.style.transform = 'translateY(0)';
           }}
         >
-          {/* Pochette carrée */}
           <div style={{
             width: '100%',
             aspectRatio: '1',
@@ -95,7 +94,6 @@ export const TrackGrid = ({ tracks }: TrackGridProps) => {
             )}
           </div>
 
-          {/* Infos */}
           <div>
             <div style={{
               fontSize: 14,

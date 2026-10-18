@@ -1,3 +1,4 @@
+// src/pages/ProfilePage.tsx
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase, AUDIO_BUCKET } from '../lib/supabase';
@@ -121,9 +122,10 @@ export const ProfilePage: React.FC = () => {
           });
         }
 
+        // ✅ AJOUT DE bpm, song_key, camelot, genre dans le select
         const { data: tracksData, error: tracksError } = await supabase
           .from('tracks')
-          .select('id, title, cover_url, audio_url, duration, peaks, artist, user_id, created_at, likes, downloads')
+          .select('id, title, cover_url, audio_url, duration, peaks, artist, user_id, created_at, likes, downloads, bpm, song_key, camelot, genre')
           .eq('user_id', id)
           .order('created_at', { ascending: false });
 

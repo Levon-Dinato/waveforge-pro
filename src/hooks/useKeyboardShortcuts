@@ -1,0 +1,95 @@
+import { useEffect } from 'react';
+
+interface ShortcutHandlers {
+  onPlayAll: () => void;
+  onPauseAll: () => void;
+  onSetCue: (deck: 'A' | 'B', index: number) => void;
+  onClearCue: (deck: 'A' | 'B', index: number) => void;
+  onPitchUp: (deck: 'A' | 'B') => void;
+  onPitchDown: (deck: 'A' | 'B') => void;
+  onNudgeLeft: (deck: 'A' | 'B') => void;
+  onNudgeRight: (deck: 'A' | 'B') => void;
+  onToggleLoop: (deck: 'A' | 'B', size: number) => void;
+}
+
+export const useMixerShortcuts = (handlers: ShortcutHandlers) => {
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Éviter les raccourcis si on tape dans un input
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
+
+      const key = e.key;
+      const lowerKey = key.toLowerCase();
+      
+      // ✅ ESPACE : Play/Pause sur les 2 decks
+      if (key === ' ') {
+        e.preventDefault();
+        if (e.shiftKey) {
+          handlers.onPauseAll();
+        } else {
+          handlers.onPlayAll();
+        }
+        return;
+      }
+
+      // ✅ CHIFFRES 1-8 : Poser un CUE (Shift+Chiffre = effacer)
+      if (/^[1-8]$/.test(key)) {
+        e.preventDefault();
+        const index = parseInt(key) - 1;
+        // Shift + chiffre = effacer, sinon = poser
+        if (e.shiftKey) {
+          // On détermine quel deck (le deck A par défaut, ou avec Alt = deck B)
+          handlers.onClearCue(e.altKey ? 'B' : 'A', index);
+        } else {
+          handlers.onSetCue(e.altKey ? 'B' : 'A', index);
+        }
+        return;
+      }
+
+      // ✅ A / S : Pitch - / +
+      if (lowerKey === 'a') {
+        e.preventDefault();
+        handlers.onPitchDown(e.altKey ? 'B' : 'A');
+        return;
+      }
+      if (lowerKey === 's') {
+        e.preventDefault();
+        handlers.onPitchUp(e.altKey ? 'B' : 'A');
+        return;
+      }
+
+      // ✅ Q / W : Nudge - / +
+      if (lowerKey === 'q') {
+        e.preventDefault();
+        handlers.onNudgeLeft(e.altKey ? 'B' : 'A');
+        return;
+      }
+      if (lowerKey === 'w') {
+        e.preventDefault();
+        handlers.onNudgeRight(e.altKey ? 'B' : 'A');
+        return;
+      }
+
+      // ✅ R : Boucle 4 temps (1, 2, 3 pour les autres tailles)
+      if (lowerKey === 'r') {
+        e.preventDefault();
+        handlers.onToggleLoop(e.altKey ? 'B' : 'A', 4);
+        return;
+      }
+      if (lowerKey === 't') {
+        e.preventDefault();
+        handlers.onToggleLoop(e.altKey ? 'B' : 'A', 8);
+        return;
+      }
+      if (lowerKey === 'y') {
+        e.preventDefault();
+        handlers.onToggleLoop(e.altKey ? 'B' : 'A', 16);
+        return;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handlers]);
+};

@@ -1,0 +1,486 @@
+
+/* =========================================================
+   WAVEFORGE PRO — DJ MIXER SKIN
+   Compatible avec MixerPage.tsx existant
+   ========================================================= */
+
+.mixer-root {
+  --wf-bg: #111114;
+  --wf-panel: #242428;
+  --wf-panel-hover: #2e2e35;
+  --wf-border: #404047;
+  --wf-blue: #7194ff;
+  --wf-cyan: #35dcff;
+  --wf-text: #f2f3f8;
+  --wf-muted: #999ba9;
+
+  min-height: 100vh;
+  width: 100%;
+  color: var(--wf-text);
+  background: var(--wf-bg);
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+  font-size: 12px;
+  overflow-x: hidden;
+}
+
+.mixer-root *,
+.mixer-root *::before,
+.mixer-root *::after {
+  box-sizing: border-box;
+}
+
+/* ================= HEADER ================= */
+
+.mixer-root .tn-header {
+  min-height: 43px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 14px;
+  background: #d9d9dc;
+  color: #20232c;
+  border-bottom: 1px solid #aaaab2;
+}
+
+.mixer-root .tn-title {
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: 2px;
+}
+
+.mixer-root .tn-menu {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.mixer-root .tn-menu a,
+.mixer-root .tn-menu button {
+  color: #343b4c;
+  font-size: 10px;
+  font-weight: 700;
+  text-decoration: none;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  padding: 8px 0;
+}
+
+.mixer-root .tn-menu a:hover,
+.mixer-root .tn-menu button:hover {
+  color: #315fe0;
+}
+
+/* ================= WAVEFORM / TIMELINE ================= */
+
+.mixer-root .mixer-timeline-panel {
+  position: relative;
+  margin: 8px;
+  padding: 12px;
+  background: #252529;
+  border: 1px solid #414149;
+  border-radius: 5px;
+  box-shadow: 0 4px 14px #00000020;
+}
+
+.mixer-root .mixer-timeline-panel canvas {
+  display: block;
+  width: 100% !important;
+  height: clamp(110px, 13vw, 180px) !important;
+  background: #030406 !important;
+  border: 1px solid #252832;
+  border-radius: 3px;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+/* Curseurs de zoom et de crossfader */
+
+.mixer-root input[type="range"] {
+  accent-color: var(--wf-blue);
+  cursor: pointer;
+}
+
+.mixer-root input[type="range"]:focus-visible {
+  outline: 2px solid var(--wf-cyan);
+  outline-offset: 3px;
+}
+
+/* ================= DECKS A / B ================= */
+
+.mixer-root .mixer-decks-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+  margin: 8px;
+}
+
+.mixer-root .mixer-deck-panel {
+  min-width: 0;
+  min-height: 290px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--wf-panel);
+  border: 1px solid var(--wf-border);
+  border-radius: 5px;
+  transition: border-color 160ms ease;
+}
+
+.mixer-root .mixer-deck-panel:hover {
+  border-color: #555765;
+}
+
+.mixer-root .mixer-deck-title {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+}
+
+.mixer-root .mixer-track-info {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 10px;
+  padding: 2px 0 8px;
+}
+
+.mixer-root .mixer-track-cover {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  background-color: #101014;
+  background-position: center;
+  background-size: cover;
+  border: 1px solid #484850;
+  border-radius: 4px;
+}
+
+.mixer-root .mixer-track-meta {
+  min-width: 0;
+  flex: 1;
+}
+
+.mixer-root .mixer-track-title {
+  overflow: hidden;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 750;
+  line-height: 1.5;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mixer-root .mixer-track-artist {
+  margin-top: 2px;
+  overflow: hidden;
+  color: var(--wf-muted);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ================= BOUTONS ================= */
+
+.mixer-root .tn-btn,
+.mixer-root .mixer-load-a,
+.mixer-root .mixer-load-b {
+  min-height: 30px;
+  padding: 0 12px;
+  color: #fff;
+  background: #383840;
+  border: 1px solid #555560;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    background 150ms ease,
+    border-color 150ms ease,
+    transform 100ms ease;
+}
+
+.mixer-root .tn-btn:hover,
+.mixer-root .mixer-load-a:hover,
+.mixer-root .mixer-load-b:hover {
+  filter: brightness(1.15);
+  border-color: var(--wf-blue);
+}
+
+.mixer-root .tn-btn:active,
+.mixer-root .mixer-load-a:active,
+.mixer-root .mixer-load-b:active {
+  transform: scale(0.97);
+}
+
+.mixer-root .tn-btn-accent,
+.mixer-root .mixer-load-a {
+  color: #fff;
+  background: #5279ef;
+  border-color: #7795ff;
+}
+
+.mixer-root .mixer-load-b {
+  color: #fff;
+  background: #373944;
+}
+
+/* ================= CUE / LOOP ================= */
+
+.mixer-root .mixer-knob-label {
+  color: #a8caff;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.7px;
+}
+
+.mixer-root .mixer-cue-btn,
+.mixer-root .mixer-loop-btn {
+  min-width: 0;
+  min-height: 27px;
+  border-radius: 3px;
+  font-size: 11px;
+  cursor: pointer;
+  transition:
+    background 120ms ease,
+    border-color 120ms ease,
+    transform 100ms ease;
+}
+
+.mixer-root .mixer-cue-btn:hover,
+.mixer-root .mixer-loop-btn:hover {
+  border-color: var(--wf-blue) !important;
+  filter: brightness(1.15);
+}
+
+.mixer-root .mixer-cue-btn:active,
+.mixer-root .mixer-loop-btn:active {
+  transform: scale(0.97);
+}
+
+/* ================= KNOBS ================= */
+
+.mixer-root .mixer-knob {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  min-width: 38px;
+}
+
+.mixer-root .mixer-knob-label {
+  white-space: nowrap;
+}
+
+.mixer-root .mixer-knob-dial {
+  position: relative;
+  width: 29px;
+  height: 29px;
+  flex: 0 0 29px;
+  background: linear-gradient(145deg, #33333d, #141419);
+  border: 2px solid #44444e;
+  border-radius: 50%;
+  box-shadow:
+    inset 0 1px 3px #ffffff12,
+    0 2px 4px #00000050;
+  cursor: ns-resize;
+}
+
+.mixer-root .mixer-knob-marker {
+  position: absolute;
+  top: 3px;
+  left: 50%;
+  width: 2px;
+  height: 8px;
+  background: currentColor;
+  border-radius: 2px;
+  transform: translateX(-50%);
+}
+
+.mixer-root .mixer-knob-value {
+  font-size: 9px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ================= CROSSFADER ================= */
+
+.mixer-root .mixer-crossfader-panel {
+  min-height: 48px;
+  margin: 0 8px 8px;
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  background: var(--wf-panel);
+  border: 1px solid var(--wf-border);
+  border-radius: 5px;
+}
+
+/* ================= BIBLIOTHÈQUE ================= */
+
+.mixer-root .mixer-library {
+  margin-top: 8px;
+  background: #211f25;
+  border-top: 1px solid #414149;
+}
+
+.mixer-root .mixer-library-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+}
+
+.mixer-root .mixer-library-filters input,
+.mixer-root .mixer-library-filters select {
+  min-height: 30px;
+  max-width: 100%;
+  padding: 6px 9px;
+  color: #f2f3f8;
+  background: #09090c !important;
+  border: 1px solid #41414a !important;
+  border-radius: 4px;
+  font: inherit;
+}
+
+.mixer-root .mixer-library-filters input {
+  flex: 1 1 240px;
+  width: auto !important;
+}
+
+.mixer-root .mixer-library-filters select {
+  flex: 0 1 200px;
+  width: auto !important;
+}
+
+.mixer-root .mixer-library-filters input:focus,
+.mixer-root .mixer-library-filters select:focus {
+  outline: 1px solid var(--wf-blue);
+  border-color: var(--wf-blue) !important;
+}
+
+.mixer-root .mixer-library-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: auto;
+  font-size: 11px;
+}
+
+.mixer-root .mixer-library-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #303035;
+}
+
+.mixer-root .mixer-library-table th {
+  padding: 10px;
+  color: #e8eaf2;
+  text-align: left;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid #4b4b54;
+}
+
+.mixer-root .mixer-library-table td {
+  padding: 7px 10px;
+  border-bottom: 1px solid #37333b;
+}
+
+.mixer-root .mixer-library-table tbody tr {
+  background: #29232c;
+  transition: background 120ms ease;
+}
+
+.mixer-root .mixer-library-table tbody tr:nth-child(even) {
+  background: #25252b;
+}
+
+.mixer-root .mixer-library-table tbody tr:hover {
+  background: #353544;
+}
+
+/* ================= ACCESSIBILITÉ ================= */
+
+.mixer-root button:focus-visible {
+  outline: 2px solid var(--wf-cyan);
+  outline-offset: 2px;
+}
+
+/* ================= RESPONSIVE ================= */
+
+@media (max-width: 900px) {
+  .mixer-root .tn-header {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 10px 12px;
+  }
+
+  .mixer-root .tn-menu {
+    justify-content: flex-start;
+    gap: 14px;
+  }
+
+  .mixer-root .mixer-decks-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .mixer-root .mixer-deck-panel {
+    min-height: 0;
+  }
+}
+
+@media (max-width: 560px) {
+  .mixer-root .mixer-timeline-panel {
+    margin: 5px;
+    padding: 7px;
+  }
+
+  .mixer-root .mixer-timeline-panel canvas {
+    height: 130px !important;
+  }
+
+  .mixer-root .mixer-decks-row {
+    margin: 5px;
+    gap: 6px;
+  }
+
+  .mixer-root .mixer-deck-panel {
+    padding: 9px;
+  }
+
+  .mixer-root .mixer-crossfader-panel {
+    margin: 5px;
+    gap: 8px;
+  }
+
+  .mixer-root .mixer-crossfader-panel input[type="range"] {
+    width: auto !important;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .mixer-root .mixer-library {
+    overflow-x: auto;
+  }
+
+  .mixer-root .mixer-library-table {
+    min-width: 650px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mixer-root *,
+  .mixer-root *::before,
+  .mixer-root *::after {
+    transition: none !important;
+  }
+}

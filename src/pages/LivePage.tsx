@@ -90,7 +90,7 @@ export const LivePage = () => {
           gap: 16,
           transition: 'all 0.3s ease',
         }}>
-          {/* LECTEUR TVIPLY AVEC MASQUE TRANSPARENT */}
+          {/* LECTEUR TVIPLY - SANS MASQUE */}
           <div style={{
             width: '100%',
             aspectRatio: '16 / 9',
@@ -116,19 +116,9 @@ export const LivePage = () => {
                 border: 'none',
                 overflow: 'hidden',
                 display: 'block',
-                pointerEvents: 'none',
               }}
               allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
             />
-            
-            {/* Masque transparent pour bloquer les clics */}
-            <div style={{
-              position: 'absolute',
-              inset: 0,
-              zIndex: 10,
-              cursor: 'not-allowed',
-              background: 'transparent',
-            }} />
           </div>
 
           {/* CHAT */}

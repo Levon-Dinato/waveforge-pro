@@ -184,7 +184,7 @@ export const MainLayout: React.FC = () => {
             <Outlet />
           </main>
 
-          {/* NAV BOTTOM MOBILE */}
+          {/* NAV BOTTOM MOBILE (5 items + bouton "Plus") */}
           <nav style={{ 
             position: 'fixed', 
             bottom: 0, 
@@ -203,6 +203,7 @@ export const MainLayout: React.FC = () => {
             overflowX: 'auto', 
             gap: 2 
           }}>
+            {/* 5 premiers items */}
             {NAV_ITEMS.slice(0, 5).map((item) => (
               <NavLink 
                 key={item.path} 
@@ -218,7 +219,7 @@ export const MainLayout: React.FC = () => {
                   borderRadius: 10, 
                   textDecoration: 'none', 
                   flex: '0 0 auto', 
-                  minWidth: 60,
+                  minWidth: 56,
                   background: isActive ? `linear-gradient(180deg, ${item.color}20, ${item.color}05)` : 'transparent',
                   border: isActive ? `1px solid ${item.color}50` : '1px solid transparent'
                 })}
@@ -231,6 +232,30 @@ export const MainLayout: React.FC = () => {
                 )}
               </NavLink>
             ))}
+
+            {/* ✅ 6ème bouton "Plus" qui ouvre le menu hamburger */}
+            <button
+              onClick={() => setSidebarOpen(true)}
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 3,
+                padding: '8px 6px',
+                borderRadius: 10,
+                background: 'transparent',
+                border: '1px solid transparent',
+                cursor: 'pointer',
+                flex: '0 0 auto',
+                minWidth: 56,
+              }}
+            >
+              <span style={{ fontSize: 18, color: '#888' }}>⋯</span>
+              <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.45)', fontWeight: 500 }}>
+                Plus
+              </span>
+            </button>
           </nav>
         </div>
         <InstallButton variant="banner" />

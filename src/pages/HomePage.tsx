@@ -73,7 +73,7 @@ export const HomePage = () => {
       paddingBottom: 60,
     }}>
 
-      {/* ============ HERO REDESIGNÉ ============ */}
+      {/* ============ HERO ============ */}
       <section style={{
         position: 'relative',
         borderRadius: isMobile ? 20 : 28,
@@ -126,7 +126,6 @@ export const HomePage = () => {
 
           {/* COLONNE GAUCHE : TEXTE */}
           <div>
-            {/* Badge */}
             <div style={{
               display: 'inline-flex',
               alignItems: 'center',
@@ -153,7 +152,6 @@ export const HomePage = () => {
               Nouvelle génération
             </div>
 
-            {/* Titre */}
             <h1 style={{
               fontFamily: 'Space Grotesk, sans-serif',
               fontSize: isMobile ? 40 : 68,
@@ -174,7 +172,6 @@ export const HomePage = () => {
               pour DJs.
             </h1>
 
-            {/* Sous-titre */}
             <p style={{
               fontSize: isMobile ? 15 : 17,
               color: 'rgba(255, 255, 255, 0.55)',
@@ -186,7 +183,6 @@ export const HomePage = () => {
               Mixez, masterisez, séparez les stems et générez des clips vidéo. Le tout dans ton navigateur, sans installation.
             </p>
 
-            {/* Boutons */}
             <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 12 }}>
               <Link to="/studio" style={{
                 display: 'inline-flex',
@@ -201,7 +197,6 @@ export const HomePage = () => {
                 fontWeight: 700,
                 textDecoration: 'none',
                 boxShadow: '0 4px 16px rgba(0, 217, 255, 0.35)',
-                transition: 'all 0.2s ease',
               }}>
                 🎹 Lancer le Studio
               </Link>
@@ -218,13 +213,11 @@ export const HomePage = () => {
                 fontSize: 14,
                 fontWeight: 600,
                 textDecoration: 'none',
-                transition: 'all 0.2s ease',
               }}>
                 🎛️ Ouvrir le Mixer
               </Link>
             </div>
 
-            {/* Petite stat sous les boutons */}
             <div style={{
               display: 'flex',
               gap: 24,
@@ -250,71 +243,65 @@ export const HomePage = () => {
           </div>
 
           {/* COLONNE DROITE : VISUEL */}
-          {!isMobile && (
+          {!isMobile && featured && (
             <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-              {/* Pochette featured en grand */}
-              {featured && (
+              <div style={{
+                width: '100%',
+                maxWidth: 380,
+                aspectRatio: '1',
+                borderRadius: 20,
+                background: featured.cover_url ? `url(${featured.cover_url}) center/cover` : '#1a1c24',
+                boxShadow: '0 30px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05)',
+                position: 'relative',
+                transform: 'rotate(-2deg)',
+              }}>
                 <div style={{
-                  width: '100%',
-                  maxWidth: 380,
-                  aspectRatio: '1',
-                  borderRadius: 20,
-                  background: featured.cover_url ? `url(${featured.cover_url}) center/cover` : '#1a1c24',
-                  boxShadow: '0 30px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05)',
-                  position: 'relative',
-                  transform: 'rotate(-2deg)',
+                  position: 'absolute',
+                  top: 16,
+                  left: 16,
+                  padding: '6px 12px',
+                  background: 'rgba(0, 0, 0, 0.7)',
+                  backdropFilter: 'blur(10px)',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  borderRadius: 100,
+                  fontSize: 10,
+                  fontWeight: 700,
+                  color: '#fff',
+                  letterSpacing: '1px',
                 }}>
-                  {/* Badge "À la une" sur la pochette */}
+                  🔥 À LA UNE
+                </div>
+
+                <div style={{
+                  position: 'absolute',
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  padding: 20,
+                  background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, transparent 100%)',
+                  borderRadius: '0 0 20px 20px',
+                }}>
+                  <div style={{ fontSize: 11, color: '#00d9ff', fontWeight: 700, letterSpacing: '1px', marginBottom: 4 }}>
+                    {featured.bpm || 128} BPM
+                  </div>
                   <div style={{
-                    position: 'absolute',
-                    top: 16,
-                    left: 16,
-                    padding: '6px 12px',
-                    background: 'rgba(0, 0, 0, 0.7)',
-                    backdropFilter: 'blur(10px)',
-                    border: '1px solid rgba(255, 255, 255, 0.15)',
-                    borderRadius: 100,
-                    fontSize: 10,
+                    fontFamily: 'Space Grotesk, sans-serif',
+                    fontSize: 20,
                     fontWeight: 700,
                     color: '#fff',
-                    letterSpacing: '1px',
+                    marginBottom: 2,
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
                   }}>
-                    🔥 À LA UNE
+                    {featured.title}
                   </div>
-
-                  {/* Infos en bas de la pochette */}
-                  <div style={{
-                    position: 'absolute',
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    padding: 20,
-                    background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, transparent 100%)',
-                    borderRadius: '0 0 20px 20px',
-                  }}>
-                    <div style={{ fontSize: 11, color: '#00d9ff', fontWeight: 700, letterSpacing: '1px', marginBottom: 4 }}>
-                      {featured.bpm || 128} BPM
-                    </div>
-                    <div style={{
-                      fontFamily: 'Space Grotesk, sans-serif',
-                      fontSize: 20,
-                      fontWeight: 700,
-                      color: '#fff',
-                      marginBottom: 2,
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                    }}>
-                      {featured.title}
-                    </div>
-                    <div style={{ fontSize: 13, color: 'rgba(255, 255, 255, 0.6)' }}>
-                      {featured.artist}
-                    </div>
+                  <div style={{ fontSize: 13, color: 'rgba(255, 255, 255, 0.6)' }}>
+                    {featured.artist}
                   </div>
                 </div>
-              )}
+              </div>
 
-              {/* Décoration : petits cercles flottants */}
               <div style={{
                 position: 'absolute',
                 top: '10%',
@@ -344,53 +331,79 @@ export const HomePage = () => {
         </div>
       </section>
 
-      {/* ============ LE RESTE RESTE IDENTIQUE ============ */}
-      
-      {/* FEATURED TRACK (seulement si pas déjà dans le hero) */}
-      {isMobile && featured && (
-        <section>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
-            <div style={{ width: 4, height: 24, background: 'linear-gradient(180deg, #00d9ff, #7c5cff)', borderRadius: 2 }} />
-            <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 24, fontWeight: 700, margin: 0, letterSpacing: '-1px' }}>
-              À la une
-            </h2>
+      {/* ============ BANDEAU "EN DIRECT" VERS /live ============ */}
+      <section>
+        <Link
+          to="/live"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: isMobile ? 20 : 28,
+            background: 'linear-gradient(135deg, rgba(255, 51, 102, 0.1), rgba(255, 92, 240, 0.05))',
+            border: '1px solid rgba(255, 51, 102, 0.25)',
+            borderRadius: 20,
+            textDecoration: 'none',
+            color: '#fff',
+            transition: 'all 0.2s ease',
+            gap: 16,
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <div style={{
+              width: isMobile ? 40 : 48,
+              height: isMobile ? 40 : 48,
+              borderRadius: '50%',
+              background: 'linear-gradient(135deg, #ff3366, #ff5cf0)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: isMobile ? 16 : 20,
+              boxShadow: '0 0 20px rgba(255, 51, 102, 0.5)',
+              flexShrink: 0,
+            }}>
+              🔴
+            </div>
+            <div>
+              <div style={{
+                fontSize: 10,
+                color: '#ff3366',
+                fontWeight: 700,
+                letterSpacing: '1.5px',
+                textTransform: 'uppercase',
+                marginBottom: 4,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+              }}>
+                <span style={{
+                  width: 5,
+                  height: 5,
+                  borderRadius: '50%',
+                  background: '#ff3366',
+                  boxShadow: '0 0 8px #ff3366',
+                  animation: 'pulse 1.5s infinite',
+                }} />
+                En direct
+              </div>
+              <div style={{
+                fontFamily: 'Space Grotesk, sans-serif',
+                fontSize: isMobile ? 16 : 22,
+                fontWeight: 700,
+              }}>
+                DJ Control Radio
+              </div>
+            </div>
           </div>
           <div style={{
-            padding: 20,
-            background: 'linear-gradient(135deg, rgba(0, 217, 255, 0.08), rgba(124, 92, 255, 0.05))',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
-            borderRadius: 20,
-          }}>
-            <div style={{
-              aspectRatio: '1',
-              borderRadius: 16,
-              background: featured.cover_url ? `url(${featured.cover_url}) center/cover` : '#1a1c24',
-              marginBottom: 16,
-            }} />
-            <h3 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 24, fontWeight: 700, margin: '0 0 4px 0' }}>
-              {featured.title}
-            </h3>
-            <p style={{ fontSize: 14, color: 'rgba(255, 255, 255, 0.6)', margin: '0 0 16px 0' }}>
-              {featured.artist}
-            </p>
-            <button style={{
-              width: '100%',
-              padding: '12px',
-              background: 'linear-gradient(135deg, #00d9ff, #0088ff)',
-              color: '#000',
-              border: 'none',
-              borderRadius: 10,
-              fontSize: 14,
-              fontWeight: 700,
-              cursor: 'pointer',
-            }}>
-              ▶ Écouter
-            </button>
-          </div>
-        </section>
-      )}
+            fontSize: isMobile ? 20 : 24,
+            opacity: 0.5,
+            display: isMobile ? 'none' : 'block',
+          }}>→</div>
+        </Link>
+      </section>
 
-      {/* TOP TRACKS */}
+      {/* ============ TOP TRACKS ============ */}
       <section>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -406,7 +419,7 @@ export const HomePage = () => {
         <TrackGrid tracks={topTracks} />
       </section>
 
-      {/* ARTISTES */}
+      {/* ============ ARTISTES ============ */}
       {artists.length > 0 && (
         <section>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
@@ -450,7 +463,7 @@ export const HomePage = () => {
         </section>
       )}
 
-      {/* NOUVEAUTÉS */}
+      {/* ============ NOUVEAUTÉS ============ */}
       <section>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>

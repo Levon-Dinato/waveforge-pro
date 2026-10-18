@@ -25,7 +25,6 @@ const NAV_ITEMS: NavItem[] = [
   { path: '/nouveautes', labelKey: 'nav.nouveautes',  shortLabelKey: 'nav.nouveautes',  icon: '🔥', color: '#ff8c00' },
   { path: '/genres',     labelKey: 'nav.genres',      shortLabelKey: 'nav.genres',      icon: '🎵', color: '#e50000' },
   { path: '/artists',    labelKey: 'nav.artists',     shortLabelKey: 'nav.artists',     icon: '🎤', color: '#00d9ff' },
-  { path: '/mixer',      labelKey: 'nav.mixer',       shortLabelKey: 'nav.mixer',       icon: '🎛️', color: '#ff5cf0' }, // ✅ NOUVEAU
   { path: '/studio',     labelKey: 'nav.studio',      shortLabelKey: 'nav.studio',      icon: '🎹', color: '#00d9ff' },
   { path: '/stems',      labelKey: 'nav.stems',       shortLabelKey: 'nav.stems',       icon: '🎤', color: '#00ff88' },
   { path: '/mastering',  labelKey: 'nav.mastering',   shortLabelKey: 'nav.mastering',   icon: '🎚️', color: '#7c5cff' },
@@ -111,6 +110,7 @@ export const MainLayout: React.FC = () => {
               </div>
             </div>
             <nav style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              {/* ✅ LIEN RECHERCHE */}
               <NavLink to="/search" style={({ isActive }) => ({ display: 'flex', alignItems: 'center', gap: 11, padding: '8px 12px', borderRadius: 8, textDecoration: 'none', fontSize: 12.5, fontWeight: isActive ? 700 : 500, color: isActive ? '#ffd43b' : 'rgba(255,255,255,0.6)', background: isActive ? 'rgba(255, 212, 59, 0.1)' : 'transparent', border: isActive ? '1px solid rgba(255, 212, 59, 0.3)' : '1px solid transparent', transition: 'all 0.18s ease', marginBottom: 4 })}>
                 <span style={{ fontSize: 14 }}>🔍</span>
                 <span style={{ flex: 1 }}>Recherche</span>

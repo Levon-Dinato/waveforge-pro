@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { TrackGrid } from '../components/TrackGrid';
 import type { Track } from '../components/TrackGrid';
 
 export const GenresPage: React.FC = () => {
-  const navigate = useNavigate();
 
   const [tracks, setTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(true);

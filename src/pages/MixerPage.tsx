@@ -165,7 +165,8 @@ const Knob: React.FC<{
 // COMPOSANT PRINCIPAL
 // ============================================================
 export const MixerPage: React.FC = () => {
-  const isMobile = useIsMobile(768);
+// On commente cette ligne car on ne l'utilise pas pour l'instant
+// const isMobile = useIsMobile(768);
   const navigate = useNavigate();
 
   const [tracks, setTracks] = useState<Track[]>([]);

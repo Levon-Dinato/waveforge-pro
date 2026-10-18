@@ -81,7 +81,7 @@ export const WindowsProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
 const DraggableWindow: React.FC<{ win: WindowInstance }> = ({ win }) => {
   const ctx = useContext(WindowsContext)!;
-  const [dragOffset, setDragOffset] = useState<{ dx: number; dy: number } | null>(null);
+  const [, setDragOffset] = useState<{ dx: number; dy: number } | null>(null);
 
   const onMouseDownHeader = (e: React.MouseEvent) => {
     e.preventDefault();

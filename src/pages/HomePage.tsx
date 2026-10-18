@@ -1,5 +1,5 @@
 // src/pages/HomePage.tsx
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { TrackGrid } from '../components/TrackGrid';
@@ -12,12 +12,11 @@ export const HomePage = () => {
   useEffect(() => {
     const fetchTracks = async () => {
       try {
-        // ✅ On récupère 30 morceaux au lieu de 10
         const { data, error } = await supabase
           .from('tracks')
           .select('*')
           .order('created_at', { ascending: false })
-          .limit(30);
+          .limit(10);
 
         if (error) throw error;
         if (data) setTracks(data as Track[]);
@@ -37,10 +36,6 @@ export const HomePage = () => {
       </div>
     );
   }
-
-  // On sépare les morceaux pour chaque section
-  const topTracks = tracks.slice(0, 15);   // 15 pour "Top Tracks"
-  const newTracks = tracks.slice(15, 30);  // 15 pour "Nouveautés"
 
   return (
     <div className="wf-main-content">
@@ -64,12 +59,12 @@ export const HomePage = () => {
       </section>
 
       {/* TOP TRACKS */}
-      <section style={{ marginBottom: 40 }}>
+      <section>
         <h2 className="wf-section-title">
           <span style={{ fontSize: 20 }}>🔥</span> Top Tracks
         </h2>
         <p className="wf-section-subtitle">Les morceaux les plus likés de la semaine</p>
-        <TrackGrid tracks={topTracks} />
+        <TrackGrid tracks={tracks.slice(0, 5)} />
       </section>
 
       {/* NOUVEAUTÉS */}
@@ -78,7 +73,7 @@ export const HomePage = () => {
           <span style={{ fontSize: 20 }}>✨</span> Nouveautés
         </h2>
         <p className="wf-section-subtitle">Les derniers sons ajoutés</p>
-        <TrackGrid tracks={newTracks} />
+        <TrackGrid tracks={tracks.slice(5, 10)} />
       </section>
 
     </div>

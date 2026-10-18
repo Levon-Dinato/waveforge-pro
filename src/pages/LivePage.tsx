@@ -7,13 +7,16 @@ export const LivePage = () => {
   const isMobile = useIsMobile(768);
   const [chatVisible, setChatVisible] = useState(true);
 
-  // ✅ Tes infos RTMP (récupérées de Tviply)
+  // ✅ Tes infos RTMP (à mettre à jour si Tviply te donne une nouvelle clé)
   const rtmpUrl = 'rtmp://live.tviply.com/stream';
   const streamKey = '6n9kjjb7qw4ko4w4ock';
 
+  // ✅ Nouvelle URL Tviply pour WaveForgePro
+  const tviplyEmbedUrl = 'https://tviply.com/waveforgepro/embed';
+  const tviplyChannelUrl = 'https://tviply.com/waveforgepro';
+
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    // Petit feedback visuel optionnel
     alert('Copié dans le presse-papiers !');
   };
 
@@ -66,7 +69,7 @@ export const LivePage = () => {
             background: 'linear-gradient(135deg, #ff3366, #ff5cf0)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
-          }}>DJ Control Radio</span>
+          }}>WaveForge Pro</span>
         </h1>
         <p style={{
           fontSize: isMobile ? 14 : 16,
@@ -87,7 +90,7 @@ export const LivePage = () => {
           gap: 16,
           transition: 'all 0.3s ease',
         }}>
-          {/* LECTEUR TVIPLY - SANS SCROLL */}
+          {/* LECTEUR TVIPLY AVEC MASQUE TRANSPARENT */}
           <div style={{
             width: '100%',
             aspectRatio: '16 / 9',
@@ -98,12 +101,12 @@ export const LivePage = () => {
             position: 'relative',
           }}>
             <iframe
-              src="https://tviply.com/dinatoiprod/embed?t=0:33"
+              src={tviplyEmbedUrl}
               width="100%"
               height="100%"
               frameBorder="0"
               allowFullScreen
-              title="DJ Control Radio - Live"
+              title="WaveForge Pro - Live"
               scrolling="no"
               style={{
                 position: 'absolute',
@@ -113,9 +116,19 @@ export const LivePage = () => {
                 border: 'none',
                 overflow: 'hidden',
                 display: 'block',
+                pointerEvents: 'none',
               }}
               allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
             />
+            
+            {/* Masque transparent pour bloquer les clics */}
+            <div style={{
+              position: 'absolute',
+              inset: 0,
+              zIndex: 10,
+              cursor: 'not-allowed',
+              background: 'transparent',
+            }} />
           </div>
 
           {/* CHAT */}
@@ -126,7 +139,7 @@ export const LivePage = () => {
               display: 'flex',
               flexDirection: 'column',
             }}>
-              <LiveChat roomId="djcontrolradio" />
+              <LiveChat roomId="waveforgepro" />
             </div>
           )}
         </div>
@@ -161,6 +174,21 @@ export const LivePage = () => {
                 {chatVisible ? '💬 Masquer le chat' : '💬 Afficher le chat'}
               </button>
             )}
+            <a
+              href={tviplyChannelUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                fontSize: 13,
+                color: '#00d9ff',
+                textDecoration: 'none',
+                fontWeight: 600,
+                display: 'inline-flex',
+                alignItems: 'center',
+              }}
+            >
+              Ouvrir sur Tviply →
+            </a>
           </div>
         </div>
       </section>

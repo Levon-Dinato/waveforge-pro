@@ -44,7 +44,6 @@ export const MainLayout: React.FC = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile(768);
   const [showSessions, setShowSessions] = useState(false);
-  const [hoveredPath, setHoveredPath] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // ============================================================
@@ -97,10 +96,8 @@ export const MainLayout: React.FC = () => {
               }}>
                 🎹
               </div>
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 800, letterSpacing: '-0.2px', color: '#fff' }}>
-                  WAVEFORGE <span style={{ color: '#00d9ff' }}>PRO</span>
-                </div>
+              <div style={{ fontSize: 13, fontWeight: 800, color: '#fff' }}>
+                WAVEFORGE <span style={{ color: '#00d9ff' }}>PRO</span>
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

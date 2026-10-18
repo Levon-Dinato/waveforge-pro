@@ -145,12 +145,12 @@ html, body {
 }
 
 /* ============================================================
-   CONTENU PRINCIPAL — PLEINE LARGEUR
+   CONTENU PRINCIPAL
    ============================================================ */
 
 .wf-main {
   margin-left: 260px;
-  width: calc(100% - 260px); /* ✅ Force la largeur restante */
+  width: calc(100% - 260px);
   min-height: 100vh;
   padding: 40px 48px;
   background-image: 
@@ -160,7 +160,6 @@ html, body {
   box-sizing: border-box;
 }
 
-/* Tous les enfants prennent 100% de la largeur */
 .wf-main > * {
   width: 100% !important;
   max-width: 100% !important;
@@ -171,7 +170,6 @@ html, body {
   max-width: 100% !important;
 }
 
-/* ✅ Le Hero prend toute la largeur */
 .wf-hero {
   position: relative;
   width: 100%;
@@ -268,10 +266,9 @@ html, body {
 }
 
 /* ============================================================
-   GRILLE DES CARTES — PLEINE LARGEUR
+   GRILLE DES CARTES
    ============================================================ */
 
-/* ✅ La grille prend toute la largeur et se répartit équitablement */
 .wf-main .wf-grid,
 .wf-main-content .wf-grid,
 .wf-main > section > div {
@@ -357,6 +354,334 @@ html, body {
   transition: transform 0.15s ease;
 }
 .wf-card-play-btn:hover { transform: scale(1.1); }
+
+/* ============================================================
+   MIXER SPÉCIFIQUE (ISOLÉ AVEC .mixer-root)
+   ============================================================ */
+
+.mixer-root {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 100vh;
+  background: var(--wf-bg);
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+/* Header du Mixer (style différent du site global) */
+.mixer-root .tn-header {
+  width: 100%;
+  height: 48px;
+  background-color: #d0d0d0;
+  border-bottom: 1px solid #888;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.mixer-root .tn-title {
+  color: #666;
+  font-size: 24px;
+  padding-left: 5px;
+  letter-spacing: 2px;
+  font-weight: 600;
+}
+
+.mixer-root .tn-menu {
+  padding-right: 23px;
+  display: flex;
+  gap: 20px;
+}
+
+.mixer-root .tn-menu a,
+.mixer-root .tn-menu button {
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-size: 12px;
+  color: #595959;
+  text-decoration: none;
+  text-transform: uppercase;
+  cursor: pointer;
+  padding: 0;
+}
+
+.mixer-root .tn-menu a:hover,
+.mixer-root .tn-menu button:hover { color: #000; }
+
+/* Boutons du Mixer */
+.mixer-root .tn-btn {
+  display: inline-block;
+  height: 40px;
+  padding: 0 16px;
+  border: 1px solid black;
+  border-radius: 5px;
+  background-color: #323232;
+  color: #ccc;
+  line-height: 38px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.mixer-root .tn-btn:hover { background-color: #3d3d3d; }
+.mixer-root .tn-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.mixer-root .tn-btn-accent {
+  background-color: #7497ff;
+  color: #000;
+  border-color: #7497ff;
+}
+
+.mixer-root .tn-btn-accent:hover { filter: brightness(1.1); }
+
+/* Timeline du Mixer */
+.mixer-root .mixer-timeline-panel {
+  background: #323232;
+  border-radius: 5px;
+  padding: 10px;
+  margin-bottom: 20px;
+  border: 1px solid #444;
+}
+
+/* Decks du Mixer */
+.mixer-root .mixer-decks-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.mixer-root .mixer-deck-panel {
+  flex: 1;
+  background: #323232;
+  border-radius: 5px;
+  padding: 12px;
+  border: 1px solid #444;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mixer-root .mixer-deck-title {
+  font-weight: 800;
+  font-size: 0.85rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.mixer-root .mixer-track-info {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.mixer-root .mixer-track-cover {
+  width: 60px;
+  height: 60px;
+  border-radius: 4px;
+  background: #111 center/cover no-repeat;
+  flex-shrink: 0;
+}
+
+.mixer-root .mixer-track-meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.mixer-root .mixer-track-title {
+  font-weight: 700;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mixer-root .mixer-track-artist {
+  font-size: 0.75rem;
+  color: #888;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* CUE / BOUCLE du Mixer */
+.mixer-root .mixer-cue-row {
+  display: flex;
+  gap: 4px;
+}
+
+.mixer-root .mixer-cue-btn {
+  flex: 1;
+  padding: 6px 0;
+  font-size: 0.75rem;
+  font-weight: 800;
+  border: 1px solid #555;
+  border-radius: 3px;
+  cursor: pointer;
+  background: #3a3a3a;
+  color: #ccc;
+  font-family: inherit;
+  transition: background 0.15s, border 0.15s, color 0.15s;
+}
+
+.mixer-root .mixer-cue-btn.set { color: #000; }
+
+.mixer-root .mixer-loop-row {
+  display: flex;
+  gap: 4px;
+}
+
+.mixer-root .mixer-loop-btn {
+  flex: 1;
+  padding: 5px 0;
+  font-size: 0.75rem;
+  font-weight: 800;
+  border: 1px solid #555;
+  border-radius: 3px;
+  background: #3a3a3a;
+  color: #ccc;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, border 0.15s, color 0.15s;
+}
+
+.mixer-root .mixer-loop-btn.active { color: #000; }
+
+/* Knobs du Mixer */
+.mixer-root .mixer-knob {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  user-select: none;
+}
+
+.mixer-root .mixer-knob-label {
+  font-size: 0.55rem;
+  color: #888;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.mixer-root .mixer-knob-dial {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #2a2a35, #1a1a24);
+  border: 2px solid #444;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: ns-resize;
+}
+
+.mixer-root .mixer-knob-marker {
+  width: 2px;
+  height: 10px;
+  background: currentColor;
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.mixer-root .mixer-knob-value {
+  font-size: 0.55rem;
+  font-weight: 700;
+}
+
+/* Crossfader du Mixer */
+.mixer-root .mixer-crossfader-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  background: #323232;
+  padding: 12px;
+  margin-bottom: 20px;
+  border-radius: 5px;
+  border: 1px solid #444;
+}
+
+/* Bibliothèque du Mixer */
+.mixer-root .mixer-library {
+  flex: 1;
+  min-height: 220px;
+  background: #2e242e;
+  border-top: 1px solid #444;
+  overflow-y: auto;
+  border-radius: 5px;
+}
+
+.mixer-root .mixer-library-filters {
+  padding: 10px 20px;
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  justify-content: flex-start;
+  position: sticky;
+  top: 0;
+  background: #2e242e;
+  z-index: 2;
+  border-bottom: 1px solid #444;
+}
+
+.mixer-root .mixer-library-table {
+  width: 100%;
+  font-size: 0.85rem;
+}
+
+.mixer-root .mixer-library-table thead {
+  position: sticky;
+  top: 49px;
+  background: #323232;
+  color: #888;
+  text-align: left;
+  font-size: 0.7rem;
+  z-index: 1;
+}
+
+.mixer-root .mixer-library-table td {
+  padding: 8px 10px;
+}
+
+.mixer-root .mixer-library-table tr {
+  border-bottom: 1px solid #1a1a1a;
+}
+
+.mixer-root .mixer-library-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.mixer-root .mixer-load-a,
+.mixer-root .mixer-load-b {
+  padding: 4px 8px;
+  border: none;
+  border-radius: 3px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.mixer-root .mixer-load-a {
+  background: #7497ff;
+  color: #000;
+  margin-right: 5px;
+}
+
+.mixer-root .mixer-load-b {
+  background: #c0c0c0;
+  color: #000;
+}
 
 /* ============================================================
    RESPONSIVE

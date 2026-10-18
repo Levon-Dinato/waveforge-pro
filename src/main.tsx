@@ -1,8 +1,12 @@
+// src/main.tsx
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import { ToastProvider } from './components/ui/Toast';
 import './i18n';
+
+// ✅ Ordre IMPORTANT : designSystem d'abord (styles globaux), transitions en dernier (Mixer)
+import './styles/designSystem.css';
 import './styles/transitions.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

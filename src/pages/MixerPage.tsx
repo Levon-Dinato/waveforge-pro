@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { useIsMobile } from '../hooks/useIsMobile';
 import { DialogOverlay } from '../components/DialogOverlay';
 import type { DialogOptions } from '../components/DialogOverlay';
 import { ShortcutsOverlay } from '../components/ShortcutsOverlay';
@@ -165,8 +164,6 @@ const Knob: React.FC<{
 // COMPOSANT PRINCIPAL
 // ============================================================
 export const MixerPage: React.FC = () => {
-// On commente cette ligne car on ne l'utilise pas pour l'instant
-// const isMobile = useIsMobile(768);
   const navigate = useNavigate();
 
   const [tracks, setTracks] = useState<Track[]>([]);
@@ -196,8 +193,6 @@ export const MixerPage: React.FC = () => {
   const isDraggingRef = useRef(false);
   const animationRef = useRef<number>(0);
 
-  // ✅ NOUVEAU : On utilise une ref pour stocker le dernier temps affiché
-  // et éviter trop de re-rendus (ce qui cause le clignotement)
   const lastTimeA = useRef(0);
   const lastTimeB = useRef(0);
 
@@ -215,14 +210,12 @@ export const MixerPage: React.FC = () => {
   }, []);
 
   // ============================================================
-  // ✅ BOUCLE D'ANIMATION CORRIGÉE (pour éviter le clignotement)
+  // BOUCLE D'ANIMATION (30 FPS pour éviter le clignotement)
   // ============================================================
   useEffect(() => {
     let lastUpdate = performance.now();
 
     const updateTime = (now: number) => {
-      // On ne met à jour que toutes les ~33ms (30 FPS), ce qui est suffisant
-      // et empêche le canvas de clignoter
       if (now - lastUpdate < 33) {
         animationRef.current = requestAnimationFrame(updateTime);
         return;
@@ -246,7 +239,6 @@ export const MixerPage: React.FC = () => {
             }
           }
 
-          // On ne met à jour que si le changement est visible à l'écran
           const diff = Math.abs(elapsed - lastTimeA.current);
           if (diff > 0.05) {
             lastTimeA.current = elapsed;
@@ -638,7 +630,7 @@ export const MixerPage: React.FC = () => {
   };
 
   // ============================================================
-  // WAVEFORM COMPONENT (sans scintillement)
+  // WAVEFORM COMPONENT
   // ============================================================
   const UnifiedWaveform = () => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -869,7 +861,7 @@ export const MixerPage: React.FC = () => {
             </div>
           </div>
 
-          {/* KNOBS (HIGH / MID / LOW / VOL) */}
+          {/* KNOBS */}
           <div style={{ display: 'flex', gap: 20, justifyContent: 'center', marginTop: 4 }}>
             <Knob label="HIGH" value={state.eqHigh} onChange={(v) => (deck === 'A' ? setDeckA((p) => ({ ...p, eqHigh: v })) : setDeckB((p) => ({ ...p, eqHigh: v })))} color={color} min={-12} max={12} />
             <Knob label="MID" value={state.eqMid} onChange={(v) => (deck === 'A' ? setDeckA((p) => ({ ...p, eqMid: v })) : setDeckB((p) => ({ ...p, eqMid: v })))} color={color} min={-12} max={12} />

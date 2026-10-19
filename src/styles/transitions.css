@@ -39,7 +39,7 @@ html, body {
 }
 
 /* ============================================================
-   SIDEBAR
+   SIDEBAR (CORRIGÉ POUR FLEXBOX)
    ============================================================ */
 
 .wf-sidebar {
@@ -56,11 +56,13 @@ html, body {
   display: flex;
   flex-direction: column;
   z-index: 100;
+  overflow: hidden; /* Empêche la sidebar entière de scroller */
 }
 
 .wf-sidebar-nav {
-  flex: 1;
-  overflow-y: auto;
+  flex: 1;             /* Prend tout l'espace disponible */
+  min-height: 0;       /* ✅ L'ASTUCE : Permet le scroll interne sans déborder */
+  overflow-y: auto;    /* Scroll uniquement dans cette zone */
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -72,7 +74,7 @@ html, body {
 .wf-sidebar-nav::-webkit-scrollbar-thumb { background: var(--wf-border); border-radius: 3px; }
 
 .wf-sidebar-footer {
-  flex-shrink: 0;
+  flex-shrink: 0;      /* ✅ Le footer ne se compresse jamais */
   display: flex;
   flex-direction: column;
   gap: 8px;

@@ -1,3 +1,4 @@
+// src/components/GlobalPlayer.tsx
 import React, { useRef, useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { usePlayer } from '../contexts/PlayerContext';

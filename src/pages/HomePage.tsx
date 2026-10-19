@@ -73,6 +73,42 @@ export const HomePage = () => {
       paddingBottom: 60,
     }}>
 
+      {/* ✅ BANDEAU FOMO (Fear Of Missing Out) */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 12,
+        padding: '12px 20px',
+        background: 'rgba(0, 217, 255, 0.05)',
+        border: '1px solid rgba(0, 217, 255, 0.15)',
+        borderRadius: 16,
+        overflow: 'hidden',
+        whiteSpace: 'nowrap',
+        marginTop: -20,
+        marginBottom: -40,
+      }}>
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 8,
+          fontSize: 11, fontWeight: 700, color: '#00d9ff',
+          letterSpacing: '1px', textTransform: 'uppercase',
+          flexShrink: 0,
+        }}>
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#00ff88', boxShadow: '0 0 10px #00ff88', animation: 'pulse 1.5s infinite' }} />
+          En direct
+        </div>
+        <div style={{ width: 1, height: 16, background: 'rgba(255,255,255,0.1)', flexShrink: 0 }} />
+        <div style={{ 
+          display: 'flex', gap: 32, fontSize: 13, color: 'rgba(255,255,255,0.6)',
+          animation: 'marquee 25s linear infinite',
+        }}>
+          <span>🔥 <strong style={{color:'#fff'}}>Matieu</strong> vient de liker "Uptown Funk"</span>
+          <span>🎧 <strong style={{color:'#fff'}}>34 auditeurs</strong> sur le Live</span>
+          <span>🚀 <strong style={{color:'#fff'}}>Sarah</strong> a atteint le niveau Pro</span>
+          <span>🎵 <strong style={{color:'#fff'}}>DJ Snake</strong> a ajouté un nouveau remix</span>
+          <span>🔥 <strong style={{color:'#fff'}}>Lucas</strong> a téléchargé 3 stems</span>
+        </div>
+      </div>
+
       {/* ============ HERO ============ */}
       <section style={{
         position: 'relative',
@@ -80,11 +116,11 @@ export const HomePage = () => {
         overflow: 'hidden',
         background: '#0a0a12',
         border: '1px solid rgba(255, 255, 255, 0.08)',
+        marginTop: 20,
       }}>
         {/* Grille de fond subtile */}
         <div style={{
-          position: 'absolute',
-          inset: 0,
+          position: 'absolute', inset: 0,
           backgroundImage: `
             linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
             linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px)
@@ -95,24 +131,14 @@ export const HomePage = () => {
 
         {/* Halos lumineux */}
         <div style={{
-          position: 'absolute',
-          top: '-40%',
-          right: '10%',
-          width: '500px',
-          height: '500px',
+          position: 'absolute', top: '-40%', right: '10%', width: '500px', height: '500px',
           background: 'radial-gradient(circle, rgba(0, 217, 255, 0.2) 0%, transparent 70%)',
-          filter: 'blur(60px)',
-          pointerEvents: 'none',
+          filter: 'blur(60px)', pointerEvents: 'none',
         }} />
         <div style={{
-          position: 'absolute',
-          bottom: '-40%',
-          right: '20%',
-          width: '500px',
-          height: '500px',
+          position: 'absolute', bottom: '-40%', right: '20%', width: '500px', height: '500px',
           background: 'radial-gradient(circle, rgba(124, 92, 255, 0.18) 0%, transparent 70%)',
-          filter: 'blur(60px)',
-          pointerEvents: 'none',
+          filter: 'blur(60px)', pointerEvents: 'none',
         }} />
 
         <div style={{
@@ -123,32 +149,19 @@ export const HomePage = () => {
           alignItems: 'center',
           padding: isMobile ? '40px 24px' : '64px 56px',
         }}>
-
           {/* COLONNE GAUCHE : TEXTE */}
           <div>
             <div style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
+              display: 'inline-flex', alignItems: 'center', gap: 8,
               padding: '6px 12px',
               background: 'rgba(0, 217, 255, 0.08)',
               border: '1px solid rgba(0, 217, 255, 0.25)',
               borderRadius: 100,
-              fontSize: 10,
-              fontWeight: 700,
-              color: '#00d9ff',
-              letterSpacing: '1.5px',
-              textTransform: 'uppercase',
+              fontSize: 10, fontWeight: 700, color: '#00d9ff',
+              letterSpacing: '1.5px', textTransform: 'uppercase',
               marginBottom: 24,
             }}>
-              <span style={{
-                width: 5,
-                height: 5,
-                borderRadius: '50%',
-                background: '#00d9ff',
-                boxShadow: '0 0 8px #00d9ff',
-                animation: 'pulse 2s infinite',
-              }} />
+              <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#00d9ff', boxShadow: '0 0 8px #00d9ff', animation: 'pulse 2s infinite' }} />
               Nouvelle génération
             </div>
 
@@ -175,69 +188,44 @@ export const HomePage = () => {
             <p style={{
               fontSize: isMobile ? 15 : 17,
               color: 'rgba(255, 255, 255, 0.55)',
-              lineHeight: 1.6,
-              maxWidth: 480,
-              margin: '0 0 36px 0',
-              fontWeight: 400,
+              lineHeight: 1.6, maxWidth: 480,
+              margin: '0 0 36px 0', fontWeight: 400,
             }}>
-            Toute la puissance d’un studio de production musicale professionnel, directement dans votre navigateur.
-            Créez, remixez, masterisez et diffusez en live. Votre studio, sans limites.
+              Toute la puissance d’un studio de production musicale professionnel, directement dans votre navigateur.
+              Créez, remixez, masterisez et diffusez en live. Votre studio, sans limites.
             </p>
 
             <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 12 }}>
               <Link to="/studio" style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 8,
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                 padding: '14px 28px',
                 background: 'linear-gradient(135deg, #00d9ff, #0088ff)',
-                color: '#000',
-                borderRadius: 10,
-                fontSize: 14,
-                fontWeight: 700,
-                textDecoration: 'none',
+                color: '#000', borderRadius: 10,
+                fontSize: 14, fontWeight: 700, textDecoration: 'none',
                 boxShadow: '0 4px 16px rgba(0, 217, 255, 0.35)',
               }}>
                 🎹 Lancer le Studio
               </Link>
               <Link to="/mixer" style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 8,
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                 padding: '14px 28px',
-                background: 'transparent',
-                color: '#fff',
-                border: '1px solid rgba(255, 255, 255, 0.15)',
-                borderRadius: 10,
-                fontSize: 14,
-                fontWeight: 600,
-                textDecoration: 'none',
+                background: 'transparent', color: '#fff',
+                border: '1px solid rgba(255, 255, 255, 0.15)', borderRadius: 10,
+                fontSize: 14, fontWeight: 600, textDecoration: 'none',
               }}>
                 🎛️ Ouvrir le Mixer
               </Link>
             </div>
 
-            <div style={{
-              display: 'flex',
-              gap: 24,
-              marginTop: 40,
-              paddingTop: 24,
-              borderTop: '1px solid rgba(255, 255, 255, 0.06)',
-            }}>
+            <div style={{ display: 'flex', gap: 24, marginTop: 40, paddingTop: 24, borderTop: '1px solid rgba(255, 255, 255, 0.06)' }}>
               {[
                 { value: stats.tracks, label: 'Morceaux' },
                 { value: stats.artists, label: 'Artistes' },
                 { value: stats.plays, label: 'Écoutes' },
               ].map((s) => (
                 <div key={s.label}>
-                  <div style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 22, fontWeight: 700, color: '#fff', lineHeight: 1 }}>
-                    {s.value}
-                  </div>
-                  <div style={{ fontSize: 10, color: 'rgba(255, 255, 255, 0.4)', letterSpacing: '1px', textTransform: 'uppercase', marginTop: 4, fontWeight: 600 }}>
-                    {s.label}
-                  </div>
+                  <div style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 22, fontWeight: 700, color: '#fff', lineHeight: 1 }}>{s.value}</div>
+                  <div style={{ fontSize: 10, color: 'rgba(255, 255, 255, 0.4)', letterSpacing: '1px', textTransform: 'uppercase', marginTop: 4, fontWeight: 600 }}>{s.label}</div>
                 </div>
               ))}
             </div>
@@ -247,86 +235,33 @@ export const HomePage = () => {
           {!isMobile && featured && (
             <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
               <div style={{
-                width: '100%',
-                maxWidth: 380,
-                aspectRatio: '1',
-                borderRadius: 20,
+                width: '100%', maxWidth: 380, aspectRatio: '1', borderRadius: 20,
                 background: featured.cover_url ? `url(${featured.cover_url}) center/cover` : '#1a1c24',
                 boxShadow: '0 30px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05)',
-                position: 'relative',
-                transform: 'rotate(-2deg)',
+                position: 'relative', transform: 'rotate(-2deg)',
               }}>
                 <div style={{
-                  position: 'absolute',
-                  top: 16,
-                  left: 16,
-                  padding: '6px 12px',
-                  background: 'rgba(0, 0, 0, 0.7)',
-                  backdropFilter: 'blur(10px)',
-                  border: '1px solid rgba(255, 255, 255, 0.15)',
-                  borderRadius: 100,
-                  fontSize: 10,
-                  fontWeight: 700,
-                  color: '#fff',
-                  letterSpacing: '1px',
+                  position: 'absolute', top: 16, left: 16,
+                  padding: '6px 12px', background: 'rgba(0, 0, 0, 0.7)',
+                  backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.15)',
+                  borderRadius: 100, fontSize: 10, fontWeight: 700, color: '#fff', letterSpacing: '1px',
                 }}>
                   🔥 À LA UNE
                 </div>
-
                 <div style={{
-                  position: 'absolute',
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  padding: 20,
-                  background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, transparent 100%)',
+                  position: 'absolute', bottom: 0, left: 0, right: 0,
+                  padding: 20, background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, transparent 100%)',
                   borderRadius: '0 0 20px 20px',
                 }}>
                   <div style={{ fontSize: 11, color: '#00d9ff', fontWeight: 700, letterSpacing: '1px', marginBottom: 4 }}>
                     {featured.bpm || 128} BPM
                   </div>
-                  <div style={{
-                    fontFamily: 'Space Grotesk, sans-serif',
-                    fontSize: 20,
-                    fontWeight: 700,
-                    color: '#fff',
-                    marginBottom: 2,
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                  }}>
+                  <div style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 20, fontWeight: 700, color: '#fff', marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {featured.title}
                   </div>
-                  <div style={{ fontSize: 13, color: 'rgba(255, 255, 255, 0.6)' }}>
-                    {featured.artist}
-                  </div>
+                  <div style={{ fontSize: 13, color: 'rgba(255, 255, 255, 0.6)' }}>{featured.artist}</div>
                 </div>
               </div>
-
-              <div style={{
-                position: 'absolute',
-                top: '10%',
-                left: '5%',
-                width: 40,
-                height: 40,
-                borderRadius: '50%',
-                background: 'linear-gradient(135deg, #00d9ff, #7c5cff)',
-                opacity: 0.6,
-                filter: 'blur(2px)',
-                animation: 'float 6s ease-in-out infinite',
-              }} />
-              <div style={{
-                position: 'absolute',
-                bottom: '15%',
-                right: '5%',
-                width: 60,
-                height: 60,
-                borderRadius: '50%',
-                background: 'linear-gradient(135deg, #ff5cf0, #7c5cff)',
-                opacity: 0.4,
-                filter: 'blur(3px)',
-                animation: 'float 8s ease-in-out infinite reverse',
-              }} />
             </div>
           )}
         </div>
@@ -334,73 +269,33 @@ export const HomePage = () => {
 
       {/* ============ BANDEAU "EN DIRECT" VERS /live ============ */}
       <section>
-        <Link
-          to="/live"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: isMobile ? 20 : 28,
-            background: 'linear-gradient(135deg, rgba(255, 51, 102, 0.1), rgba(255, 92, 240, 0.05))',
-            border: '1px solid rgba(255, 51, 102, 0.25)',
-            borderRadius: 20,
-            textDecoration: 'none',
-            color: '#fff',
-            transition: 'all 0.2s ease',
-            gap: 16,
-          }}
-        >
+        <Link to="/live" style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: isMobile ? 20 : 28,
+          background: 'linear-gradient(135deg, rgba(255, 51, 102, 0.1), rgba(255, 92, 240, 0.05))',
+          border: '1px solid rgba(255, 51, 102, 0.25)', borderRadius: 20,
+          textDecoration: 'none', color: '#fff', transition: 'all 0.2s ease', gap: 16,
+        }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             <div style={{
-              width: isMobile ? 40 : 48,
-              height: isMobile ? 40 : 48,
-              borderRadius: '50%',
+              width: isMobile ? 40 : 48, height: isMobile ? 40 : 48, borderRadius: '50%',
               background: 'linear-gradient(135deg, #ff3366, #ff5cf0)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: isMobile ? 16 : 20,
-              boxShadow: '0 0 20px rgba(255, 51, 102, 0.5)',
-              flexShrink: 0,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: isMobile ? 16 : 20, boxShadow: '0 0 20px rgba(255, 51, 102, 0.5)', flexShrink: 0,
             }}>
               🔴
             </div>
             <div>
-              <div style={{
-                fontSize: 10,
-                color: '#ff3366',
-                fontWeight: 700,
-                letterSpacing: '1.5px',
-                textTransform: 'uppercase',
-                marginBottom: 4,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-              }}>
-                <span style={{
-                  width: 5,
-                  height: 5,
-                  borderRadius: '50%',
-                  background: '#ff3366',
-                  boxShadow: '0 0 8px #ff3366',
-                  animation: 'pulse 1.5s infinite',
-                }} />
+              <div style={{ fontSize: 10, color: '#ff3366', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#ff3366', boxShadow: '0 0 8px #ff3366', animation: 'pulse 1.5s infinite' }} />
                 En direct
               </div>
-              <div style={{
-                fontFamily: 'Space Grotesk, sans-serif',
-                fontSize: isMobile ? 16 : 22,
-                fontWeight: 700,
-              }}>
+              <div style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: isMobile ? 16 : 22, fontWeight: 700 }}>
                 WaveForce.Pro Live Streaming
               </div>
             </div>
           </div>
-          <div style={{
-            fontSize: isMobile ? 20 : 24,
-            opacity: 0.5,
-            display: isMobile ? 'none' : 'block',
-          }}>→</div>
+          <div style={{ fontSize: isMobile ? 20 : 24, opacity: 0.5, display: isMobile ? 'none' : 'block' }}>→</div>
         </Link>
       </section>
 
@@ -409,13 +304,9 @@ export const HomePage = () => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{ width: 4, height: 24, background: 'linear-gradient(180deg, #ff5cf0, #ff3366)', borderRadius: 2 }} />
-            <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: isMobile ? 24 : 32, fontWeight: 700, margin: 0, letterSpacing: '-1px' }}>
-              Top Tracks
-            </h2>
+            <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: isMobile ? 24 : 32, fontWeight: 700, margin: 0, letterSpacing: '-1px' }}>Top Tracks</h2>
           </div>
-          <Link to="/nouveautes" style={{ fontSize: 13, color: '#00d9ff', textDecoration: 'none', fontWeight: 600 }}>
-            Tout voir →
-          </Link>
+          <Link to="/nouveautes" style={{ fontSize: 13, color: '#00d9ff', textDecoration: 'none', fontWeight: 600 }}>Tout voir →</Link>
         </div>
         <TrackGrid tracks={topTracks} />
       </section>
@@ -426,32 +317,18 @@ export const HomePage = () => {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <div style={{ width: 4, height: 24, background: 'linear-gradient(180deg, #7c5cff, #00d9ff)', borderRadius: 2 }} />
-              <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: isMobile ? 24 : 32, fontWeight: 700, margin: 0, letterSpacing: '-1px' }}>
-                Artistes
-              </h2>
+              <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: isMobile ? 24 : 32, fontWeight: 700, margin: 0, letterSpacing: '-1px' }}>Artistes</h2>
             </div>
-            <Link to="/artists" style={{ fontSize: 13, color: '#00d9ff', textDecoration: 'none', fontWeight: 600 }}>
-              Tout voir →
-            </Link>
+            <Link to="/artists" style={{ fontSize: 13, color: '#00d9ff', textDecoration: 'none', fontWeight: 600 }}>Tout voir →</Link>
           </div>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: `repeat(auto-fill, minmax(${isMobile ? 100 : 140}px, 1fr))`,
-            gap: isMobile ? 16 : 24,
-          }}>
+          <div style={{ display: 'grid', gridTemplateColumns: `repeat(auto-fill, minmax(${isMobile ? 100 : 140}px, 1fr))`, gap: isMobile ? 16 : 24 }}>
             {artists.map((artist) => (
               <Link key={artist.id} to={`/profil/${artist.id}`} style={{ textDecoration: 'none', color: '#fff', textAlign: 'center' }}>
                 <div style={{
-                  width: '100%',
-                  aspectRatio: '1',
-                  borderRadius: '50%',
+                  width: '100%', aspectRatio: '1', borderRadius: '50%',
                   background: artist.avatar_url ? `url(${artist.avatar_url}) center/cover` : '#1a1c24',
-                  marginBottom: 12,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 40,
-                  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)',
+                  marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 40, boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)',
                 }}>
                   {!artist.avatar_url && '🎧'}
                 </div>
@@ -469,13 +346,9 @@ export const HomePage = () => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{ width: 4, height: 24, background: 'linear-gradient(180deg, #00ff88, #00d9ff)', borderRadius: 2 }} />
-            <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: isMobile ? 24 : 32, fontWeight: 700, margin: 0, letterSpacing: '-1px' }}>
-              Nouveautés
-            </h2>
+            <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: isMobile ? 24 : 32, fontWeight: 700, margin: 0, letterSpacing: '-1px' }}>Nouveautés</h2>
           </div>
-          <Link to="/nouveautes" style={{ fontSize: 13, color: '#00d9ff', textDecoration: 'none', fontWeight: 600 }}>
-            Tout voir →
-          </Link>
+          <Link to="/nouveautes" style={{ fontSize: 13, color: '#00d9ff', textDecoration: 'none', fontWeight: 600 }}>Tout voir →</Link>
         </div>
         <TrackGrid tracks={newTracks} />
       </section>
@@ -484,39 +357,19 @@ export const HomePage = () => {
       <section style={{
         padding: isMobile ? '40px 24px' : '80px 60px',
         background: 'linear-gradient(135deg, #00d9ff 0%, #7c5cff 100%)',
-        borderRadius: 28,
-        textAlign: 'center',
-        position: 'relative',
-        overflow: 'hidden',
+        borderRadius: 28, textAlign: 'center', position: 'relative', overflow: 'hidden',
       }}>
         <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 30% 50%, rgba(255,255,255,0.2) 0%, transparent 50%)' }} />
-        <h2 style={{
-          fontFamily: 'Space Grotesk, sans-serif',
-          fontSize: isMobile ? 32 : 56,
-          fontWeight: 700,
-          color: '#000',
-          margin: '0 0 16px 0',
-          letterSpacing: '-2px',
-          lineHeight: 1,
-          position: 'relative',
-        }}>
+        <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: isMobile ? 32 : 56, fontWeight: 700, color: '#000', margin: '0 0 16px 0', letterSpacing: '-2px', lineHeight: 1, position: 'relative' }}>
           Prêt à créer ?
         </h2>
         <p style={{ fontSize: isMobile ? 15 : 18, color: 'rgba(0,0,0,0.7)', margin: '0 0 32px 0', position: 'relative' }}>
           Rejoins WaveForge et commence à mixer dès maintenant.
         </p>
         <Link to="/auth" style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 8,
-          padding: '16px 40px',
-          background: '#000',
-          color: '#fff',
-          borderRadius: 12,
-          fontSize: 15,
-          fontWeight: 700,
-          textDecoration: 'none',
-          position: 'relative',
+          display: 'inline-flex', alignItems: 'center', gap: 8,
+          padding: '16px 40px', background: '#000', color: '#fff', borderRadius: 12,
+          fontSize: 15, fontWeight: 700, textDecoration: 'none', position: 'relative',
         }}>
           Créer un compte gratuitement →
         </Link>
@@ -524,16 +377,10 @@ export const HomePage = () => {
 
       {/* Animations */}
       <style>{`
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.4; }
-        }
-        @keyframes float {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-20px); }
-        }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+        @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
       `}</style>
-
     </div>
   );
 };

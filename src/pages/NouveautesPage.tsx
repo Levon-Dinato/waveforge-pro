@@ -573,11 +573,6 @@ export const NouveautesPage: React.FC = () => {
     });
   };
 
-  const PANEL_STYLE: React.CSSProperties = {
-    background: '#1c1c1c',
-    border: '1px solid #2a2a2a',
-    borderRadius: 8,
-  };
 
   return (
     <div style={{

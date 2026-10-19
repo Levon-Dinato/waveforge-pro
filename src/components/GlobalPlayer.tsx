@@ -1,8 +1,7 @@
 // src/components/GlobalPlayer.tsx
 import React, { useRef, useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { usePlayer } from '../contexts/PlayerContext';
-import { useAuth } from '../contexts/AuthContext';
 import { useIsMobile } from '../hooks/useIsMobile';
 
 const formatTime = (sec: number): string => {
@@ -143,17 +142,15 @@ export const GlobalPlayer: React.FC = () => {
 
   const volumeIcon = isMuted || volume === 0 ? '🔇' : volume < 0.4 ? '🔉' : '🔊';
 
-  // ═══════════════════════════════════════════════════════════
-  // MOBILE (✅ CORRIGÉ : fixé en bas, au-dessus de la navbar)
-  // ═══════════════════════════════════════════════════════════
+  // MOBILE
   if (isMobile) {
     return (
       <div style={{
         position: 'fixed',
-        bottom: 70, // ✅ Juste au-dessus de la navbar mobile
+        bottom: 70,
         left: 0,
         right: 0,
-        zIndex: 9998, // Sous la navbar
+        zIndex: 9998,
         background: '#1c1c1c',
         borderTop: '1px solid #2a2a2a',
         padding: '10px 12px',
@@ -164,10 +161,8 @@ export const GlobalPlayer: React.FC = () => {
         color: '#fff',
         boxShadow: '0 -4px 12px rgba(0,0,0,0.3)',
       }}>
-        {/* Waveform fine en haut */}
         <WaveProgress peaks={currentTrack.peaks || []} progress={progress} onSeek={seek} height={8} compact={true} />
         
-        {/* Ligne principale : Pochette + Titre + Play */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <Link 
             to={currentTrack.user_id ? `/profil/${currentTrack.user_id}` : '#'} 
@@ -206,9 +201,7 @@ export const GlobalPlayer: React.FC = () => {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════
   // DESKTOP
-  // ═══════════════════════════════════════════════════════════
   return (
     <div style={{
       position: 'fixed', bottom: 0, left: 0, right: 0, height: 72, zIndex: 9999,
@@ -216,8 +209,6 @@ export const GlobalPlayer: React.FC = () => {
       display: 'flex', alignItems: 'center', padding: '0 20px', gap: 20,
       fontFamily: 'Inter, sans-serif', color: '#fff',
     }}>
-      
-      {/* GAUCHE : Pochette + Titre + Artiste */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, width: 280, flexShrink: 0 }}>
         <Link
           to={currentTrack.user_id ? `/profil/${currentTrack.user_id}` : '#'}
@@ -239,7 +230,6 @@ export const GlobalPlayer: React.FC = () => {
         </div>
       </div>
 
-      {/* CENTRE : Contrôles + Waveform */}
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 16 }}>
         <button onClick={togglePlay} style={{
           width: 36, height: 36, borderRadius: '50%',
@@ -259,7 +249,6 @@ export const GlobalPlayer: React.FC = () => {
         </div>
       </div>
 
-      {/* DROITE : Volume + Fermer */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <button onClick={handleVolumeToggle} style={{ background: 'transparent', border: 'none', color: '#666', fontSize: 14, cursor: 'pointer' }}>

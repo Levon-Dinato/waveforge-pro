@@ -1,3 +1,4 @@
+// src/pages/GenresPage.tsx
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { TrackGrid } from '../components/TrackGrid';
@@ -44,29 +45,27 @@ export const GenresPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div style={{ padding: '40px 48px', color: '#fff' }}>
-        <p>Chargement...</p>
+      <div style={{ padding: '40px 24px', color: '#999', fontFamily: 'Inter, sans-serif' }}>
+        Chargement...
       </div>
     );
   }
 
   return (
-    <div style={{ width: '100%', maxWidth: '100%' }}>
+    <div style={{ width: '100%', maxWidth: '100%', fontFamily: 'Inter, sans-serif', background: '#121212', paddingBottom: 100 }}>
       
       {/* TITRE */}
-      <div style={{ marginBottom: 32 }}>
+      <div style={{ marginBottom: 32, padding: '0 24px' }}>
         <h1 style={{ 
-          fontFamily: 'Space Grotesk, sans-serif', 
-          fontSize: 40, 
+          fontSize: 28, 
           fontWeight: 700, 
-          letterSpacing: '-1px',
           margin: '0 0 8px 0',
           color: '#fff'
         }}>
-          Explorer par <span style={{ color: '#ff3366' }}>Genre</span>
+          Explorer par <span style={{ color: '#00d9ff' }}>Genre</span>
         </h1>
         <p style={{ 
-          color: 'rgba(255,255,255,0.6)', 
+          color: '#999', 
           fontSize: 14,
           margin: 0
         }}>
@@ -74,13 +73,14 @@ export const GenresPage: React.FC = () => {
         </p>
       </div>
 
-      {/* LISTE DES GENRES (si aucun genre sélectionné) */}
+      {/* LISTE DES GENRES */}
       {!selectedGenre && (
         <div style={{ 
           display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 220px))', 
-          gap: 16,
-          marginBottom: 40
+          gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', 
+          gap: 12,
+          marginBottom: 40,
+          padding: '0 24px',
         }}>
           {genres.map((genre) => {
             const count = tracks.filter((t: any) => t.genre === genre).length;
@@ -89,30 +89,28 @@ export const GenresPage: React.FC = () => {
                 key={genre}
                 onClick={() => setSelectedGenre(genre)}
                 style={{
-                  background: 'rgba(30, 32, 42, 0.6)',
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  borderRadius: 12,
-                  padding: 20,
+                  background: '#1c1c1c',
+                  border: '1px solid #2a2a2a',
+                  borderRadius: 6,
+                  padding: '16px 20px',
                   textAlign: 'left',
                   cursor: 'pointer',
                   color: '#fff',
-                  transition: 'all 0.2s ease',
+                  transition: 'all 0.15s ease',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(40, 42, 55, 0.8)';
-                  e.currentTarget.style.borderColor = 'rgba(0, 217, 255, 0.4)';
-                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.background = '#222';
+                  e.currentTarget.style.borderColor = '#3a3a3a';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(30, 32, 42, 0.6)';
-                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
-                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.background = '#1c1c1c';
+                  e.currentTarget.style.borderColor = '#2a2a2a';
                 }}
               >
-                <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>
+                <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 4 }}>
                   {genre}
                 </div>
-                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>
+                <div style={{ fontSize: 12, color: '#999' }}>
                   {count} morceaux
                 </div>
               </button>
@@ -123,38 +121,38 @@ export const GenresPage: React.FC = () => {
 
       {/* TRACKS DU GENRE SÉLECTIONNÉ */}
       {selectedGenre && (
-        <div>
+        <div style={{ padding: '0 24px' }}>
           <button
             onClick={() => setSelectedGenre(null)}
             style={{
-              background: 'transparent',
-              border: '1px solid rgba(255,255,255,0.2)',
+              background: '#1c1c1c',
+              border: '1px solid #2a2a2a',
               color: '#fff',
               padding: '8px 16px',
-              borderRadius: 8,
-              fontSize: 13,
+              borderRadius: 4,
+              fontSize: 12,
               cursor: 'pointer',
-              marginBottom: 24
+              marginBottom: 24,
+              fontWeight: 600,
             }}
           >
             ← Retour aux genres
           </button>
 
           <h2 style={{ 
-            fontSize: 24, 
+            fontSize: 22, 
             fontWeight: 700, 
             margin: '0 0 8px 0',
             color: '#fff'
           }}>
-            {selectedGenre} <span style={{ color: 'rgba(255,255,255,0.5)', fontWeight: 400, fontSize: 16 }}>
+            {selectedGenre} <span style={{ color: '#666', fontWeight: 500, fontSize: 14 }}>
               ({filteredTracks.length} morceaux)
             </span>
           </h2>
-          <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, marginBottom: 24 }}>
+          <p style={{ color: '#999', fontSize: 13, marginBottom: 24 }}>
             Les morceaux les plus récents dans le style {selectedGenre}.
           </p>
 
-          {/* ✅ Utilisation de TrackGrid pour une grille parfaite */}
           <TrackGrid tracks={filteredTracks} />
         </div>
       )}

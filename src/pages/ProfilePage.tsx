@@ -9,17 +9,17 @@ import { TrackGrid } from '../components/TrackGrid';
 import type { Track } from '../components/TrackGrid';
 
 const PANEL_STYLE: React.CSSProperties = {
-  background: 'rgba(20, 22, 30, 0.8)',
-  border: '1px solid rgba(255, 255, 255, 0.05)',
-  borderRadius: 6,
+  background: '#1c1c1c',
+  border: '1px solid #2a2a2a',
+  borderRadius: 8,
 };
 
-const TEXT_MUTED = { color: '#888', fontSize: '0.8rem' };
+const TEXT_MUTED = { color: '#999', fontSize: '0.8rem' };
 const TEXT_TITLE = { color: '#fff', fontSize: '0.9rem', fontWeight: 700 };
 
 const PAGINATION_BTN: React.CSSProperties = {
   background: 'transparent',
-  border: '1px solid rgba(255,255,255,0.1)',
+  border: '1px solid #2a2a2a',
   color: '#fff',
   width: 34,
   height: 34,
@@ -122,7 +122,6 @@ export const ProfilePage: React.FC = () => {
           });
         }
 
-        // ✅ AJOUT DE bpm, song_key, camelot, genre dans le select
         const { data: tracksData, error: tracksError } = await supabase
           .from('tracks')
           .select('id, title, cover_url, audio_url, duration, peaks, artist, user_id, created_at, likes, downloads, bpm, song_key, camelot, genre')
@@ -289,8 +288,8 @@ export const ProfilePage: React.FC = () => {
     if (updatedPlaylists) setPlaylists(updatedPlaylists as Playlist[]);
   };
 
-  if (loading) return <div style={{ color: '#fff', padding: 40, textAlign: 'center', background: '#0a0c14', minHeight: '100vh' }}>Chargement...</div>;
-  if (!profile) return <div style={{ color: '#fff', padding: 40, textAlign: 'center', background: '#0a0c14', minHeight: '100vh' }}>Profil introuvable</div>;
+  if (loading) return <div style={{ color: '#fff', padding: 40, textAlign: 'center', background: '#121212', minHeight: '100vh' }}>Chargement...</div>;
+  if (!profile) return <div style={{ color: '#fff', padding: 40, textAlign: 'center', background: '#121212', minHeight: '100vh' }}>Profil introuvable</div>;
 
   const displayName = profile.username || profile.email?.split('@')[0] || 'Artiste';
   const isOwnProfile = user?.id === profile.id;
@@ -308,33 +307,33 @@ export const ProfilePage: React.FC = () => {
     if (totalPages <= 1) return null;
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, marginTop: 30 }}>
-        <button onClick={() => onPageChange(Math.max(1, currentPage - 1))} disabled={currentPage === 1} style={{ ...PAGINATION_BTN, width: 'auto', borderRadius: 8, padding: '0 16px', opacity: currentPage === 1 ? 0.3 : 1 }}>← Précédent</button>
+        <button onClick={() => onPageChange(Math.max(1, currentPage - 1))} disabled={currentPage === 1} style={{ ...PAGINATION_BTN, width: 'auto', borderRadius: 4, padding: '0 16px', opacity: currentPage === 1 ? 0.3 : 1 }}>← Précédent</button>
         {Array.from({ length: totalPages }).map((_, i) => (
-          <button key={i} onClick={() => onPageChange(i + 1)} style={{ ...PAGINATION_BTN, background: currentPage === i + 1 ? '#00d9ff' : 'transparent', color: currentPage === i + 1 ? '#000' : '#888', border: currentPage === i + 1 ? 'none' : '1px solid rgba(255,255,255,0.1)' }}>{i + 1}</button>
+          <button key={i} onClick={() => onPageChange(i + 1)} style={{ ...PAGINATION_BTN, background: currentPage === i + 1 ? '#00d9ff' : 'transparent', color: currentPage === i + 1 ? '#000' : '#888', border: currentPage === i + 1 ? 'none' : '1px solid #2a2a2a' }}>{i + 1}</button>
         ))}
-        <button onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))} disabled={currentPage === totalPages} style={{ ...PAGINATION_BTN, width: 'auto', borderRadius: 8, padding: '0 16px', opacity: currentPage === totalPages ? 0.3 : 1 }}>Suivant →</button>
+        <button onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))} disabled={currentPage === totalPages} style={{ ...PAGINATION_BTN, width: 'auto', borderRadius: 4, padding: '0 16px', opacity: currentPage === totalPages ? 0.3 : 1 }}>Suivant →</button>
       </div>
     );
   };
 
   const WallSection = () => (
     <div style={{ ...PANEL_STYLE, padding: 20, marginBottom: 20 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 }}><h3 style={{ ...TEXT_TITLE, fontSize: '1rem', margin: 0 }}>LAST POSTS ON THE WALL</h3></div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 }}><h3 style={{ ...TEXT_TITLE, fontSize: '1rem', margin: 0 }}>DERNIERS POSTS</h3></div>
       <form onSubmit={handlePostSubmit} style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
-        <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#333', flexShrink: 0, overflow: 'hidden' }}>{user?.user_metadata?.avatar_url ? <img src={user.user_metadata.avatar_url} alt="Me" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>👤</div>}</div>
+        <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#121212', flexShrink: 0, overflow: 'hidden', border: '1px solid #2a2a2a' }}>{user?.user_metadata?.avatar_url ? <img src={user.user_metadata.avatar_url} alt="Me" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>👤</div>}</div>
         <div style={{ flex: 1, position: 'relative' }}>
-          <input type="text" placeholder="Post on the wall" value={newPost} onChange={(e) => setNewPost(e.target.value)} disabled={!user || posting} style={{ width: '100%', padding: '10px 40px 10px 15px', background: '#111', border: '1px solid #333', borderRadius: 4, color: '#fff', outline: 'none', opacity: (!user || posting) ? 0.5 : 1 }} />
-          <button type="submit" disabled={!user || posting} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: newPost ? '#e50000' : '#888', cursor: (!user || posting) ? 'default' : 'pointer', fontSize: '1rem' }}>{posting ? '...' : '➤'}</button>
+          <input type="text" placeholder="Écrire un message..." value={newPost} onChange={(e) => setNewPost(e.target.value)} disabled={!user || posting} style={{ width: '100%', padding: '10px 40px 10px 15px', background: '#121212', border: '1px solid #2a2a2a', borderRadius: 4, color: '#fff', outline: 'none', opacity: (!user || posting) ? 0.5 : 1 }} />
+          <button type="submit" disabled={!user || posting} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: newPost ? '#00d9ff' : '#666', cursor: (!user || posting) ? 'default' : 'pointer', fontSize: '1rem' }}>{posting ? '...' : '➤'}</button>
         </div>
       </form>
       {!user && <div style={{ fontSize: '0.75rem', color: '#ff5c5c', marginBottom: 15 }}>* Connecte-toi pour laisser un message.</div>}
       {wallPosts.map(post => (
-        <div key={post.id} style={{ display: 'flex', gap: 12, paddingBottom: 15, marginBottom: 15, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-          <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#222', flexShrink: 0, overflow: 'hidden' }}><div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>👤</div></div>
+        <div key={post.id} style={{ display: 'flex', gap: 12, paddingBottom: 15, marginBottom: 15, borderBottom: '1px solid #2a2a2a' }}>
+          <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#121212', flexShrink: 0, overflow: 'hidden', border: '1px solid #2a2a2a' }}><div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>👤</div></div>
           <div style={{ flex: 1 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>{post.author_name} <span style={{ color: '#666', fontWeight: 400, marginLeft: 8 }}>{formatDate(post.created_at)}</span></div>
-              <button onClick={() => handleLikePost(post.id, post.likes)} style={{ background: 'none', border: 'none', color: post.likes > 0 ? '#e50000' : '#666', fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>👍 {post.likes}</button>
+              <button onClick={() => handleLikePost(post.id, post.likes)} style={{ background: 'none', border: 'none', color: post.likes > 0 ? '#00d9ff' : '#666', fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>👍 {post.likes}</button>
             </div>
             <div style={{ ...TEXT_MUTED, marginTop: 4, lineHeight: 1.5 }}>{post.content}</div>
           </div>
@@ -345,29 +344,29 @@ export const ProfilePage: React.FC = () => {
   );
 
   return (
-    <div style={{ background: '#0a0c14', minHeight: '100vh', color: '#fff', fontFamily: 'sans-serif' }}>
+    <div style={{ background: '#121212', minHeight: '100vh', color: '#fff', fontFamily: 'Inter, sans-serif' }}>
       
       <input type="file" accept="image/*" ref={bannerInputRef} onChange={(e) => handleImageUpload(e, 'banner')} style={{ display: 'none' }} />
       <input type="file" accept="image/*" ref={avatarInputRef} onChange={(e) => handleImageUpload(e, 'avatar')} style={{ display: 'none' }} />
 
       {/* HEADER */}
       <div style={{ position: 'relative', height: isMobile ? 200 : 280, background: '#111', overflow: 'hidden' }}>
-        {profile.banner_url && <img src={profile.banner_url} alt="Banner" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.8 }} />}
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #0a0c14 0%, transparent 100%)' }} />
+        {profile.banner_url && <img src={profile.banner_url} alt="Banner" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.6 }} />}
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #121212 0%, transparent 100%)' }} />
         
         {isOwnProfile && (
-          <button onClick={() => bannerInputRef.current?.click()} style={{ position: 'absolute', top: 20, right: 20, background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.3)', color: '#fff', padding: '8px 16px', borderRadius: 20, fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, backdropFilter: 'blur(10px)' }}>
+          <button onClick={() => bannerInputRef.current?.click()} style={{ position: 'absolute', top: 20, right: 20, background: 'rgba(0,0,0,0.6)', border: '1px solid #2a2a2a', color: '#fff', padding: '8px 16px', borderRadius: 4, fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, backdropFilter: 'blur(10px)' }}>
             🖼️ Changer la bannière
           </button>
         )}
 
         <div style={{ position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: 1200, padding: '0 20px', display: 'flex', alignItems: 'flex-end', gap: 20 }}>
           <div style={{ position: 'relative' }}>
-            <div style={{ width: 140, height: 140, borderRadius: 8, background: '#1a1f2e', border: '4px solid #0a0c14', overflow: 'hidden', flexShrink: 0, transform: 'translateY(30px)', boxShadow: '0 4px 20px rgba(0,0,0,0.5)' }}>
+            <div style={{ width: 140, height: 140, borderRadius: 8, background: '#1a1f2e', border: '4px solid #121212', overflow: 'hidden', flexShrink: 0, transform: 'translateY(30px)', boxShadow: '0 4px 20px rgba(0,0,0,0.5)' }}>
               {profile.avatar_url && <img src={profile.avatar_url} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
             </div>
             {isOwnProfile && (
-              <button onClick={() => avatarInputRef.current?.click()} style={{ position: 'absolute', bottom: 26, right: -10, width: 36, height: 36, borderRadius: '50%', background: '#00d9ff', color: '#000', border: '2px solid #0a0c14', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', zIndex: 2 }}>
+              <button onClick={() => avatarInputRef.current?.click()} style={{ position: 'absolute', bottom: 26, right: -10, width: 36, height: 36, borderRadius: '50%', background: '#00d9ff', color: '#000', border: '2px solid #121212', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', zIndex: 2 }}>
                 📷
               </button>
             )}
@@ -382,7 +381,7 @@ export const ProfilePage: React.FC = () => {
 
       {isOwnProfile && (
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '60px 20px 0', display: 'flex', justifyContent: 'flex-end' }}>
-          <button onClick={() => setIsEditing(true)} style={{ background: 'transparent', border: '1px solid #00d9ff', color: '#00d9ff', padding: '8px 16px', borderRadius: 6, fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>
+          <button onClick={() => setIsEditing(true)} style={{ background: 'transparent', border: '1px solid #2a2a2a', color: '#999', padding: '8px 16px', borderRadius: 4, fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>
             ✏️ Modifier le profil
           </button>
         </div>
@@ -393,13 +392,13 @@ export const ProfilePage: React.FC = () => {
         
         {/* COLONNE GAUCHE */}
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', gap: 20, borderBottom: '1px solid rgba(255,255,255,0.1)', marginBottom: 20, overflowX: 'auto' }}>
+          <div style={{ display: 'flex', gap: 20, borderBottom: '1px solid #2a2a2a', marginBottom: 20, overflowX: 'auto' }}>
             {['Featured', 'Creation', 'Playlists', 'Comments', 'Wall', 'Journal', 'Photos', 'Video'].map(tab => (
-              <button key={tab} onClick={() => setActiveTab(tab.toLowerCase())} style={{ background: 'none', border: 'none', padding: '10px 0', color: activeTab === tab.toLowerCase() ? '#fff' : '#888', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer', borderBottom: activeTab === tab.toLowerCase() ? '2px solid #e50000' : '2px solid transparent', whiteSpace: 'nowrap' }}>{tab}</button>
+              <button key={tab} onClick={() => setActiveTab(tab.toLowerCase())} style={{ background: 'none', border: 'none', padding: '10px 0', color: activeTab === tab.toLowerCase() ? '#fff' : '#999', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer', borderBottom: activeTab === tab.toLowerCase() ? '2px solid #00d9ff' : '2px solid transparent', whiteSpace: 'nowrap' }}>{tab}</button>
             ))}
           </div>
 
-          {activeTab === 'featured' && (<><WallSection /><div style={{ ...PANEL_STYLE, padding: 20 }}><div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 }}><h3 style={{ ...TEXT_TITLE, fontSize: '1rem', margin: 0 }}>NEW CREATION BY {displayName}</h3><Link to="/nouveautes" style={{ color: '#888', fontSize: '0.8rem', textDecoration: 'none' }}>VIEW ALL</Link></div><TrackGrid tracks={tracks.slice(0, 4)} /></div></>)}
+          {activeTab === 'featured' && (<><WallSection /><div style={{ ...PANEL_STYLE, padding: 20 }}><div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 }}><h3 style={{ ...TEXT_TITLE, fontSize: '1rem', margin: 0 }}>NOUVELLES CRÉATIONS DE {displayName.toUpperCase()}</h3><Link to="/nouveautes" style={{ color: '#999', fontSize: '0.8rem', textDecoration: 'none' }}>TOUT VOIR</Link></div><TrackGrid tracks={tracks.slice(0, 4)} /></div></>)}
 
           {activeTab === 'creation' && (<div style={{ ...PANEL_STYLE, padding: 20 }}><div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 }}><h3 style={{ ...TEXT_TITLE, fontSize: '1rem', margin: 0 }}>TOUTES LES CRÉATIONS ({tracks.length})</h3></div><TrackGrid tracks={paginatedCreationTracks} /><Pagination currentPage={safeCreationPage} totalPages={totalCreationPages} onPageChange={setCreationPage} /></div>)}
 
@@ -408,7 +407,7 @@ export const ProfilePage: React.FC = () => {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
                 <h3 style={{ ...TEXT_TITLE, fontSize: '1rem', margin: 0 }}>PLAYLISTS ({playlists.length})</h3>
                 {isOwnProfile && (
-                  <button onClick={() => setIsPlaylistModalOpen(true)} style={{ background: '#e50000', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: 6, fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer' }}>+ Créer une playlist</button>
+                  <button onClick={() => setIsPlaylistModalOpen(true)} style={{ background: '#00d9ff', color: '#000', border: 'none', padding: '8px 16px', borderRadius: 4, fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer' }}>+ Créer une playlist</button>
                 )}
               </div>
               
@@ -420,10 +419,7 @@ export const ProfilePage: React.FC = () => {
                     const cover = pl.playlist_tracks?.[0]?.tracks?.cover_url;
                     return (
                       <div key={pl.id} style={{ cursor: 'pointer' }}>
-                        <div style={{
-                          position: 'relative', width: '100%', aspectRatio: '1/1',
-                          background: '#1a1a24', borderRadius: 6, overflow: 'hidden', marginBottom: 8
-                        }}>
+                        <div style={{ position: 'relative', width: '100%', aspectRatio: '1/1', background: '#121212', borderRadius: 4, overflow: 'hidden', marginBottom: 8, border: '1px solid #2a2a2a' }}>
                           {cover ? (
                             <img src={cover} alt={pl.title} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
                           ) : (
@@ -444,45 +440,45 @@ export const ProfilePage: React.FC = () => {
           {activeTab === 'wall' && (<WallSection />)}
           {activeTab === 'journal' && (<div style={{ ...PANEL_STYLE, padding: 24 }}><h3 style={{ ...TEXT_TITLE, fontSize: '1rem', marginBottom: 15 }}>JOURNAL</h3><div style={{ ...TEXT_MUTED, lineHeight: 1.8, fontSize: '0.9rem' }}>{profile.bio || "Aucune biographie pour le moment."}</div></div>)}
 
-          {activeTab === 'photos' && (<div style={{ ...PANEL_STYLE, padding: 20 }}><div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 }}><h3 style={{ ...TEXT_TITLE, fontSize: '1rem', margin: 0 }}>PHOTOS</h3></div><div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: 15, width: '100%' }}>{paginatedPhotos.map((track) => (<div key={track.id} style={{ position: 'relative', width: '100%', aspectRatio: '1/1', background: '#1a1a24', borderRadius: 6, overflow: 'hidden' }}><img src={track.cover_url!} alt={track.title} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }} /></div>))}{paginatedPhotos.length === 0 && (<div style={{ ...TEXT_MUTED, gridColumn: '1 / -1', textAlign: 'center', padding: 20 }}>Aucune photo pour le moment.</div>)}</div><Pagination currentPage={safePhotosPage} totalPages={totalPhotosPages} onPageChange={setPhotosPage} /></div>)}
+          {activeTab === 'photos' && (<div style={{ ...PANEL_STYLE, padding: 20 }}><div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 }}><h3 style={{ ...TEXT_TITLE, fontSize: '1rem', margin: 0 }}>PHOTOS</h3></div><div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: 15, width: '100%' }}>{paginatedPhotos.map((track) => (<div key={track.id} style={{ position: 'relative', width: '100%', aspectRatio: '1/1', background: '#121212', borderRadius: 4, overflow: 'hidden', border: '1px solid #2a2a2a' }}><img src={track.cover_url!} alt={track.title} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }} /></div>))}{paginatedPhotos.length === 0 && (<div style={{ ...TEXT_MUTED, gridColumn: '1 / -1', textAlign: 'center', padding: 20 }}>Aucune photo pour le moment.</div>)}</div><Pagination currentPage={safePhotosPage} totalPages={totalPhotosPages} onPageChange={setPhotosPage} /></div>)}
           {activeTab === 'video' && (<div style={{ ...PANEL_STYLE, padding: 40, textAlign: 'center' }}><div style={{ fontSize: 40, marginBottom: 10 }}>🎥</div><h3 style={{ ...TEXT_TITLE, fontSize: '1.1rem' }}>Vidéos</h3><div style={{ ...TEXT_MUTED, marginTop: 8 }}>Aucune vidéo disponible pour le moment.</div></div>)}
         </div>
 
         {/* COLONNE DROITE */}
         <aside style={{ width: isMobile ? '100%' : 280, flexShrink: 0 }}>
           <div style={{ ...PANEL_STYLE, padding: 15, marginBottom: 15, textAlign: 'center' }}>
-            <div style={{ width: 120, height: 120, borderRadius: '50%', margin: '0 auto 10px', background: '#222', overflow: 'hidden', border: '3px solid #e50000' }}>
+            <div style={{ width: 120, height: 120, borderRadius: '50%', margin: '0 auto 10px', background: '#121212', overflow: 'hidden', border: '2px solid #2a2a2a' }}>
               {profile.avatar_url ? <img src={profile.avatar_url} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40 }}>🎧</div>}
             </div>
             <h2 style={{ fontSize: '1.1rem', margin: '0 0 5px 0' }}>{displayName}</h2>
             <div style={{ ...TEXT_MUTED, fontSize: '0.75rem' }}>{profile.city || 'France'}, {profile.country || 'Valence'}</div>
             <div style={{ marginTop: 10, display: 'flex', justifyContent: 'center', gap: 5, flexWrap: 'wrap' }}>
-              <span style={{ fontSize: '0.65rem', background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: 2 }}>Club House</span>
-              <span style={{ fontSize: '0.65rem', background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: 2 }}>Nu Disco</span>
-              <span style={{ fontSize: '0.65rem', background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: 2 }}>House</span>
+              <span style={{ fontSize: '0.65rem', background: '#121212', padding: '2px 6px', borderRadius: 2, border: '1px solid #2a2a2a' }}>Club House</span>
+              <span style={{ fontSize: '0.65rem', background: '#121212', padding: '2px 6px', borderRadius: 2, border: '1px solid #2a2a2a' }}>Nu Disco</span>
+              <span style={{ fontSize: '0.65rem', background: '#121212', padding: '2px 6px', borderRadius: 2, border: '1px solid #2a2a2a' }}>House</span>
             </div>
           </div>
 
           <div style={{ ...PANEL_STYLE, padding: 15, marginBottom: 15 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10, fontSize: '0.85rem' }}><span style={{ color: '#888' }}>Followers</span><span style={{ fontWeight: 600 }}>{followersCount}</span></div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10, fontSize: '0.85rem' }}><span style={{ color: '#888' }}>Plays</span><span style={{ fontWeight: 600 }}>{stats.plays}</span></div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}><span style={{ color: '#888' }}>Tracks</span><span style={{ fontWeight: 600 }}>{stats.tracks}</span></div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10, fontSize: '0.85rem' }}><span style={{ color: '#999' }}>Followers</span><span style={{ fontWeight: 600 }}>{followersCount}</span></div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10, fontSize: '0.85rem' }}><span style={{ color: '#999' }}>Plays</span><span style={{ fontWeight: 600 }}>{stats.plays}</span></div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}><span style={{ color: '#999' }}>Tracks</span><span style={{ fontWeight: 600 }}>{stats.tracks}</span></div>
           </div>
 
           <div style={{ display: 'flex', gap: 10, marginBottom: 15 }}>
             {!isOwnProfile && (
-              <button onClick={handleFollowToggle} style={{ flex: 1, padding: '12px', background: isFollowing ? 'transparent' : '#e50000', color: isFollowing ? '#888' : '#fff', border: isFollowing ? '1px solid #333' : 'none', borderRadius: 4, fontWeight: 700, cursor: 'pointer' }}>
+              <button onClick={handleFollowToggle} style={{ flex: 1, padding: '12px', background: isFollowing ? 'transparent' : '#00d9ff', color: isFollowing ? '#999' : '#000', border: isFollowing ? '1px solid #2a2a2a' : 'none', borderRadius: 4, fontWeight: 700, cursor: 'pointer' }}>
                 {isFollowing ? '✓ Abonné' : '+ SUIVRE'}
               </button>
             )}
             {!isOwnProfile && (
-              <button onClick={() => setIsChatOpen(true)} style={{ flex: 1, padding: '12px', background: '#333', color: '#fff', border: 'none', borderRadius: 4, fontWeight: 700, cursor: 'pointer' }}>CHAT</button>
+              <button onClick={() => setIsChatOpen(true)} style={{ flex: 1, padding: '12px', background: '#2a2a2a', color: '#fff', border: 'none', borderRadius: 4, fontWeight: 700, cursor: 'pointer' }}>CHAT</button>
             )}
           </div>
 
           <div style={{ ...PANEL_STYLE, padding: 15 }}>
-            <h4 style={{ fontSize: '0.8rem', color: '#888', margin: '0 0 10px 0', textTransform: 'uppercase' }}>ACTIVITY</h4>
-            <div style={{ fontSize: '0.75rem', color: '#ccc', lineHeight: 1.6 }}><div>A rejoint WaveForge en {new Date(profile.created_at).getFullYear()}</div><div style={{ marginTop: 8 }}>A publié {stats.tracks} morceaux</div></div>
+            <h4 style={{ fontSize: '0.8rem', color: '#999', margin: '0 0 10px 0', textTransform: 'uppercase' }}>ACTIVITÉ</h4>
+            <div style={{ fontSize: '0.75rem', color: '#ccc', lineHeight: 1.6 }}><div>A rejoint DropZone en {new Date(profile.created_at).getFullYear()}</div><div style={{ marginTop: 8 }}>A publié {stats.tracks} morceaux</div></div>
           </div>
         </aside>
       </div>
@@ -490,35 +486,35 @@ export const ProfilePage: React.FC = () => {
       {/* MODALE D'ÉDITION DU PROFIL */}
       {isEditing && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          <div style={{ background: '#151821', border: '1px solid #333', borderRadius: 12, padding: 30, width: '100%', maxWidth: 500, maxHeight: '90vh', overflowY: 'auto' }}>
+          <div style={{ background: '#1c1c1c', border: '1px solid #2a2a2a', borderRadius: 8, padding: 30, width: '100%', maxWidth: 500, maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
               <h2 style={{ margin: 0, fontSize: '1.2rem' }}>Modifier mon profil</h2>
-              <button onClick={() => setIsEditing(false)} style={{ background: 'none', border: 'none', color: '#888', fontSize: '1.5rem', cursor: 'pointer' }}>✕</button>
+              <button onClick={() => setIsEditing(false)} style={{ background: 'none', border: 'none', color: '#999', fontSize: '1.5rem', cursor: 'pointer' }}>✕</button>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 15 }}>
               <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', color: '#888', marginBottom: 5 }}>Nom d'artiste</label>
-                <input type="text" value={editForm.username} onChange={(e) => setEditForm({ ...editForm, username: e.target.value })} style={{ width: '100%', padding: 10, background: '#0a0c14', border: '1px solid #333', borderRadius: 6, color: '#fff', outline: 'none' }} />
+                <label style={{ display: 'block', fontSize: '0.8rem', color: '#999', marginBottom: 5 }}>Nom d'artiste</label>
+                <input type="text" value={editForm.username} onChange={(e) => setEditForm({ ...editForm, username: e.target.value })} style={{ width: '100%', padding: 10, background: '#121212', border: '1px solid #2a2a2a', borderRadius: 4, color: '#fff', outline: 'none' }} />
               </div>
               <div style={{ display: 'flex', gap: 10 }}>
                 <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', fontSize: '0.8rem', color: '#888', marginBottom: 5 }}>Ville</label>
-                  <input type="text" value={editForm.city} onChange={(e) => setEditForm({ ...editForm, city: e.target.value })} style={{ width: '100%', padding: 10, background: '#0a0c14', border: '1px solid #333', borderRadius: 6, color: '#fff', outline: 'none' }} />
+                  <label style={{ display: 'block', fontSize: '0.8rem', color: '#999', marginBottom: 5 }}>Ville</label>
+                  <input type="text" value={editForm.city} onChange={(e) => setEditForm({ ...editForm, city: e.target.value })} style={{ width: '100%', padding: 10, background: '#121212', border: '1px solid #2a2a2a', borderRadius: 4, color: '#fff', outline: 'none' }} />
                 </div>
                 <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', fontSize: '0.8rem', color: '#888', marginBottom: 5 }}>Pays</label>
-                  <input type="text" value={editForm.country} onChange={(e) => setEditForm({ ...editForm, country: e.target.value })} style={{ width: '100%', padding: 10, background: '#0a0c14', border: '1px solid #333', borderRadius: 6, color: '#fff', outline: 'none' }} />
+                  <label style={{ display: 'block', fontSize: '0.8rem', color: '#999', marginBottom: 5 }}>Pays</label>
+                  <input type="text" value={editForm.country} onChange={(e) => setEditForm({ ...editForm, country: e.target.value })} style={{ width: '100%', padding: 10, background: '#121212', border: '1px solid #2a2a2a', borderRadius: 4, color: '#fff', outline: 'none' }} />
                 </div>
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', color: '#888', marginBottom: 5 }}>Biographie</label>
-                <textarea value={editForm.bio} onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })} rows={4} style={{ width: '100%', padding: 10, background: '#0a0c14', border: '1px solid #333', borderRadius: 6, color: '#fff', outline: 'none', resize: 'vertical' }} placeholder="Parle de toi, de ton style musical, de tes influences..." />
+                <label style={{ display: 'block', fontSize: '0.8rem', color: '#999', marginBottom: 5 }}>Biographie</label>
+                <textarea value={editForm.bio} onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })} rows={4} style={{ width: '100%', padding: 10, background: '#121212', border: '1px solid #2a2a2a', borderRadius: 4, color: '#fff', outline: 'none', resize: 'vertical' }} placeholder="Parle de toi, de ton style musical, de tes influences..." />
               </div>
 
               <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
-                <button onClick={() => setIsEditing(false)} style={{ flex: 1, padding: 12, background: 'transparent', border: '1px solid #333', color: '#fff', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>Annuler</button>
-                <button onClick={handleSaveProfile} disabled={uploadingImage} style={{ flex: 1, padding: 12, background: '#e50000', border: 'none', color: '#fff', borderRadius: 6, cursor: uploadingImage ? 'wait' : 'pointer', fontWeight: 600 }}>{uploadingImage ? 'Upload...' : 'Enregistrer'}</button>
+                <button onClick={() => setIsEditing(false)} style={{ flex: 1, padding: 12, background: 'transparent', border: '1px solid #2a2a2a', color: '#fff', borderRadius: 4, cursor: 'pointer', fontWeight: 600 }}>Annuler</button>
+                <button onClick={handleSaveProfile} disabled={uploadingImage} style={{ flex: 1, padding: 12, background: '#00d9ff', border: 'none', color: '#000', borderRadius: 4, cursor: uploadingImage ? 'wait' : 'pointer', fontWeight: 700 }}>{uploadingImage ? 'Upload...' : 'Enregistrer'}</button>
               </div>
             </div>
           </div>
@@ -528,22 +524,22 @@ export const ProfilePage: React.FC = () => {
       {/* MODALE DE CRÉATION DE PLAYLIST */}
       {isPlaylistModalOpen && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          <div style={{ background: '#151821', border: '1px solid #333', borderRadius: 12, padding: 30, width: '100%', maxWidth: 500, maxHeight: '90vh', overflowY: 'auto' }}>
+          <div style={{ background: '#1c1c1c', border: '1px solid #2a2a2a', borderRadius: 8, padding: 30, width: '100%', maxWidth: 500, maxHeight: '90vh', overflowY: 'auto' }}>
             <h2 style={{ marginTop: 0 }}>Créer une playlist</h2>
             
             <div style={{ marginBottom: 15 }}>
-              <label style={{ display: 'block', fontSize: '0.8rem', color: '#888', marginBottom: 5 }}>Titre</label>
-              <input type="text" value={newPlaylistTitle} onChange={(e) => setNewPlaylistTitle(e.target.value)} style={{ width: '100%', padding: 10, background: '#0a0c14', border: '1px solid #333', borderRadius: 6, color: '#fff', outline: 'none' }} placeholder="Ma super playlist" />
+              <label style={{ display: 'block', fontSize: '0.8rem', color: '#999', marginBottom: 5 }}>Titre</label>
+              <input type="text" value={newPlaylistTitle} onChange={(e) => setNewPlaylistTitle(e.target.value)} style={{ width: '100%', padding: 10, background: '#121212', border: '1px solid #2a2a2a', borderRadius: 4, color: '#fff', outline: 'none' }} placeholder="Ma super playlist" />
             </div>
             
             <div style={{ marginBottom: 15 }}>
-              <label style={{ display: 'block', fontSize: '0.8rem', color: '#888', marginBottom: 5 }}>Description</label>
-              <textarea value={newPlaylistDesc} onChange={(e) => setNewPlaylistDesc(e.target.value)} rows={2} style={{ width: '100%', padding: 10, background: '#0a0c14', border: '1px solid #333', borderRadius: 6, color: '#fff', outline: 'none' }} placeholder="Ma sélection du moment..." />
+              <label style={{ display: 'block', fontSize: '0.8rem', color: '#999', marginBottom: 5 }}>Description</label>
+              <textarea value={newPlaylistDesc} onChange={(e) => setNewPlaylistDesc(e.target.value)} rows={2} style={{ width: '100%', padding: 10, background: '#121212', border: '1px solid #2a2a2a', borderRadius: 4, color: '#fff', outline: 'none' }} placeholder="Ma sélection du moment..." />
             </div>
 
             <div style={{ marginBottom: 20 }}>
-              <label style={{ display: 'block', fontSize: '0.8rem', color: '#888', marginBottom: 5 }}>Ajouter des tracks</label>
-              <div style={{ maxHeight: 200, overflowY: 'auto', border: '1px solid #333', borderRadius: 6, padding: 10, background: '#0a0c14' }}>
+              <label style={{ display: 'block', fontSize: '0.8rem', color: '#999', marginBottom: 5 }}>Ajouter des tracks</label>
+              <div style={{ maxHeight: 200, overflowY: 'auto', border: '1px solid #2a2a2a', borderRadius: 4, padding: 10, background: '#121212' }}>
                 {tracks.map(t => (
                   <label key={t.id} style={{ display: 'flex', gap: 10, alignItems: 'center', padding: 8, cursor: 'pointer', color: '#ccc' }}>
                     <input 
@@ -561,8 +557,8 @@ export const ProfilePage: React.FC = () => {
             </div>
 
             <div style={{ display: 'flex', gap: 10 }}>
-              <button onClick={() => setIsPlaylistModalOpen(false)} style={{ flex: 1, padding: 12, background: 'transparent', border: '1px solid #333', color: '#fff', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>Annuler</button>
-              <button onClick={handleCreatePlaylist} style={{ flex: 1, padding: 12, background: '#e50000', border: 'none', color: '#fff', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>Créer</button>
+              <button onClick={() => setIsPlaylistModalOpen(false)} style={{ flex: 1, padding: 12, background: 'transparent', border: '1px solid #2a2a2a', color: '#fff', borderRadius: 4, cursor: 'pointer', fontWeight: 600 }}>Annuler</button>
+              <button onClick={handleCreatePlaylist} style={{ flex: 1, padding: 12, background: '#00d9ff', border: 'none', color: '#000', borderRadius: 4, cursor: 'pointer', fontWeight: 700 }}>Créer</button>
             </div>
           </div>
         </div>

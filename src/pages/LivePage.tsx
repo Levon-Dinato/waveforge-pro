@@ -6,6 +6,7 @@ import { LiveChat } from '../components/LiveChat';
 export const LivePage = () => {
   const isMobile = useIsMobile(768);
   const [chatVisible, setChatVisible] = useState(true);
+  const [shareMenuOpen, setShareMenuOpen] = useState(false);
 
   // ✅ Tes infos RTMP (à mettre à jour si Tviply te donne une nouvelle clé)
   const rtmpUrl = 'rtmp://live.tviply.com/stream';
@@ -15,9 +16,42 @@ export const LivePage = () => {
   const tviplyEmbedUrl = 'https://tviply.com/waveforgepro/embed';
   const tviplyChannelUrl = 'https://tviply.com/waveforgepro';
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    alert('Copié dans le presse-papiers !');
+  // ✅ URL de partage canonique (fixe, pas window.location.href)
+  const shareUrl = 'https://waveforge-pro-one.vercel.app/live';
+  const shareTitle = 'WaveForge Pro Live 🎧';
+  const shareText = 'Regarde le live de WaveForge Pro et rejoins la communauté !';
+
+  // ✅ Clipboard robuste (fallback HTTP / vieux navigateurs)
+  const copyToClipboard = async (text: string, message = 'Copié dans le presse-papiers !') => {
+    try {
+      await navigator.clipboard.writeText(text);
+      alert(message);
+    } catch {
+      // Fallback pour HTTP / navigateurs sans Clipboard API
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      alert(message);
+    }
+  };
+
+  // ✅ URLs de partage par réseau (shareTitle inclus)
+  const shareLinks = {
+    twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareTitle + ' — ' + shareText)}&url=${encodeURIComponent(shareUrl)}`,
+    facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`,
+    whatsapp: `https://wa.me/?text=${encodeURIComponent(shareTitle + ' — ' + shareText + ' ' + shareUrl)}`,
+    linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`,
+    telegram: `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`,
+  };
+
+  const handleShare = (platform: keyof typeof shareLinks) => {
+    window.open(shareLinks[platform], '_blank', 'width=600,height=400');
+    setShareMenuOpen(false);
   };
 
   return (
@@ -56,31 +90,196 @@ export const LivePage = () => {
           En direct maintenant
         </div>
 
-        <h1 style={{
-          fontFamily: 'Space Grotesk, sans-serif',
-          fontSize: isMobile ? 36 : 56,
-          fontWeight: 700,
-          letterSpacing: isMobile ? '-1px' : '-2px',
-          lineHeight: 1,
-          margin: '0 0 16px 0',
-          color: '#fff',
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+          gap: 24,
+          flexWrap: 'wrap',
         }}>
-          Live <span style={{
-            background: 'linear-gradient(135deg, #ff3366, #ff5cf0)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-          }}>WaveForge Pro</span>
-        </h1>
-        <p style={{
-          fontSize: isMobile ? 14 : 16,
-          color: 'rgba(255, 255, 255, 0.6)',
-          maxWidth: 600,
-          margin: 0,
-          lineHeight: 1.6,
-        }}>
-          Rejoins le live et partage ta passion !
-          Écoute les émissions en direct, connecte-toi pour prendre l’antenne quand tu le souhaites et échange avec les autres auditeurs.
-        </p>
+          <div style={{ flex: 1, minWidth: 280 }}>
+            <h1 style={{
+              fontFamily: 'Space Grotesk, sans-serif',
+              fontSize: isMobile ? 36 : 56,
+              fontWeight: 700,
+              letterSpacing: isMobile ? '-1px' : '-2px',
+              lineHeight: 1,
+              margin: '0 0 16px 0',
+              color: '#fff',
+            }}>
+              Live <span style={{
+                background: 'linear-gradient(135deg, #ff3366, #ff5cf0)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+              }}>WaveForge Pro</span>
+            </h1>
+            <p style={{
+              fontSize: isMobile ? 14 : 16,
+              color: 'rgba(255, 255, 255, 0.6)',
+              maxWidth: 600,
+              margin: 0,
+              lineHeight: 1.6,
+            }}>
+              Rejoins le live et partage ta passion !
+              Écoute les émissions en direct, connecte-toi pour prendre l'antenne quand tu le souhaites et échange avec les autres auditeurs.
+            </p>
+          </div>
+
+          {/* ✅ BOUTON DE PARTAGE */}
+          <div style={{ position: 'relative' }}>
+            <button
+              onClick={() => setShareMenuOpen(!shareMenuOpen)}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '12px 20px',
+                background: 'linear-gradient(135deg, #00d9ff, #7c5cff)',
+                color: '#000',
+                border: 'none',
+                borderRadius: 12,
+                fontSize: 14,
+                fontWeight: 700,
+                cursor: 'pointer',
+                boxShadow: '0 4px 16px rgba(0, 217, 255, 0.35)',
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 217, 255, 0.5)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 4px 16px rgba(0, 217, 255, 0.35)';
+              }}
+            >
+              <span style={{ fontSize: 16 }}>📤</span>
+              Partager
+            </button>
+
+            {/* MENU DÉROULANT DE PARTAGE */}
+            {shareMenuOpen && (
+              <>
+                {/* Overlay pour fermer en cliquant à l'extérieur */}
+                <div
+                  onClick={() => setShareMenuOpen(false)}
+                  style={{
+                    position: 'fixed',
+                    inset: 0,
+                    zIndex: 99,
+                  }}
+                />
+
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: 'calc(100% + 8px)',
+                    right: 0,
+                    background: 'rgba(20, 22, 30, 0.98)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: 16,
+                    padding: 8,
+                    minWidth: 220,
+                    maxWidth: 'calc(100vw - 32px)', // ✅ safe sur mobile
+                    boxShadow: '0 20px 60px rgba(0, 0, 0, 0.6)',
+                    backdropFilter: 'blur(20px)',
+                    WebkitBackdropFilter: 'blur(20px)',
+                    zIndex: 100,
+                  }}
+                >
+                  <div style={{
+                    fontSize: 10,
+                    fontWeight: 700,
+                    color: 'rgba(255, 255, 255, 0.4)',
+                    letterSpacing: '1.5px',
+                    textTransform: 'uppercase',
+                    padding: '8px 12px 4px',
+                  }}>
+                    Partager sur
+                  </div>
+
+                  {[
+                    { key: 'twitter' as const, label: 'Twitter / X', icon: '𝕏', color: '#fff' },
+                    { key: 'facebook' as const, label: 'Facebook', icon: '📘', color: '#1877f2' },
+                    { key: 'whatsapp' as const, label: 'WhatsApp', icon: '💬', color: '#25d366' },
+                    { key: 'linkedin' as const, label: 'LinkedIn', icon: '💼', color: '#0a66c2' },
+                    { key: 'telegram' as const, label: 'Telegram', icon: '✈️', color: '#0088cc' },
+                  ].map((platform) => (
+                    <button
+                      key={platform.key}
+                      onClick={() => handleShare(platform.key)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 12,
+                        width: '100%',
+                        padding: '10px 12px',
+                        background: 'transparent',
+                        border: 'none',
+                        borderRadius: 10,
+                        color: '#fff',
+                        fontSize: 13,
+                        fontWeight: 500,
+                        cursor: 'pointer',
+                        transition: 'background 0.15s ease',
+                        textAlign: 'left',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'transparent';
+                      }}
+                    >
+                      <span style={{ fontSize: 18, width: 24, textAlign: 'center' }}>
+                        {platform.icon}
+                      </span>
+                      <span>{platform.label}</span>
+                    </button>
+                  ))}
+
+                  <div style={{
+                    height: 1,
+                    background: 'rgba(255, 255, 255, 0.08)',
+                    margin: '8px 0',
+                  }} />
+
+                  <button
+                    onClick={() => {
+                      copyToClipboard(shareUrl, 'Lien copié !');
+                      setShareMenuOpen(false);
+                    }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 12,
+                      width: '100%',
+                      padding: '10px 12px',
+                      background: 'transparent',
+                      border: 'none',
+                      borderRadius: 10,
+                      color: '#00d9ff',
+                      fontSize: 13,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      transition: 'background 0.15s ease',
+                      textAlign: 'left',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'rgba(0, 217, 255, 0.1)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'transparent';
+                    }}
+                  >
+                    <span style={{ fontSize: 18, width: 24, textAlign: 'center' }}>🔗</span>
+                    <span>Copier le lien</span>
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
       </section>
 
       {/* ============ LECTEUR + CHAT ============ */}
@@ -241,7 +440,7 @@ export const LivePage = () => {
                 {rtmpUrl}
               </code>
               <button
-                onClick={() => copyToClipboard(rtmpUrl)}
+                onClick={() => copyToClipboard(rtmpUrl, 'Hôte RTMP copié !')}
                 style={{
                   padding: '10px 16px',
                   background: 'rgba(0, 217, 255, 0.1)',
@@ -286,7 +485,7 @@ export const LivePage = () => {
                 {streamKey}
               </code>
               <button
-                onClick={() => copyToClipboard(streamKey)}
+                onClick={() => copyToClipboard(streamKey, 'Clé de flux copiée !')}
                 style={{
                   padding: '10px 16px',
                   background: 'rgba(255, 92, 240, 0.1)',

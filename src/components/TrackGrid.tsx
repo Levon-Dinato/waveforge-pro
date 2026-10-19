@@ -1,6 +1,4 @@
 // src/components/TrackGrid.tsx
-import { Link } from 'react-router-dom';
-
 export interface Track {
   id: string;
   title: string;
@@ -26,12 +24,7 @@ interface TrackGridProps {
 export const TrackGrid = ({ tracks }: TrackGridProps) => {
   if (!tracks || tracks.length === 0) {
     return (
-      <div style={{
-        padding: 40,
-        textAlign: 'center',
-        color: 'rgba(255, 255, 255, 0.4)',
-        fontSize: 14,
-      }}>
+      <div style={{ padding: 40, textAlign: 'center', color: 'rgba(255, 255, 255, 0.4)', fontSize: 14 }}>
         Aucun morceau pour le moment.
       </div>
     );
@@ -45,11 +38,9 @@ export const TrackGrid = ({ tracks }: TrackGridProps) => {
       width: '100%',
     }}>
       {tracks.map((track) => (
-        <Link
+        <div
           key={track.id}
-          to={`/track/${track.id}`}
           style={{
-            textDecoration: 'none',
             color: '#fff',
             background: 'rgba(30, 32, 42, 0.6)',
             border: '1px solid rgba(255, 255, 255, 0.08)',
@@ -60,6 +51,7 @@ export const TrackGrid = ({ tracks }: TrackGridProps) => {
             flexDirection: 'column',
             gap: 12,
             position: 'relative',
+            cursor: 'pointer',
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.background = 'rgba(40, 42, 55, 0.8)';
@@ -81,14 +73,7 @@ export const TrackGrid = ({ tracks }: TrackGridProps) => {
             overflow: 'hidden',
           }}>
             {!track.cover_url && (
-              <div style={{
-                width: '100%',
-                height: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 40,
-              }}>
+              <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40 }}>
                 🎵
               </div>
             )}
@@ -114,7 +99,7 @@ export const TrackGrid = ({ tracks }: TrackGridProps) => {
               {track.artist}
             </div>
           </div>
-        </Link>
+        </div>
       ))}
     </div>
   );

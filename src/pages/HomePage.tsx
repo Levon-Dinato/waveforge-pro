@@ -59,7 +59,6 @@ export const HomePage = () => {
   const top10 = [...tracks].sort((a, b) => (b.likes_count || 0) - (a.likes_count || 0)).slice(0, 10);
   const newReleases = tracks.slice(1, 13);
 
-  // ✅ Fonction pour lancer le morceau à la une (avec correction du typage)
   const playFeatured = () => {
     if (!featured) return;
     play({
@@ -68,17 +67,10 @@ export const HomePage = () => {
       artist: featured.artist,
       audio_url: featured.audio_url,
       cover_url: featured.cover_url,
-      user_id: featured.user_id || null, // ✅ Correction ici
+      user_id: featured.user_id || null,
       duration: featured.duration,
       peaks: featured.peaks,
     });
-  };
-
-  const panelStyle: React.CSSProperties = {
-    background: '#1c1c1c',
-    borderRadius: 8,
-    border: '1px solid #2a2a2a',
-    padding: 20,
   };
 
   return (
@@ -100,54 +92,31 @@ export const HomePage = () => {
         marginBottom: 16,
       }}>
         <div style={{
-          position: 'absolute',
-          inset: 0,
+          position: 'absolute', inset: 0,
           backgroundImage: 'url(/hero-banner.jpg)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
+          backgroundSize: 'cover', backgroundPosition: 'center',
           opacity: 0.4,
         }} />
-        
-        <div style={{
-          position: 'absolute',
-          inset: 0,
-          background: 'linear-gradient(90deg, #121212 20%, transparent 80%)',
-        }} />
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, #121212 20%, transparent 80%)' }} />
 
         <div style={{ position: 'relative', padding: isMobile ? '40px 24px' : '60px 40px' }}>
           <h1 style={{ 
-            fontSize: isMobile ? '1.8rem' : '3rem', 
-            fontWeight: 800, 
-            margin: '0 0 12px 0',
-            letterSpacing: '-0.5px',
-            lineHeight: 1.1,
-            maxWidth: 700,
+            fontSize: isMobile ? '1.8rem' : '3rem', fontWeight: 800, 
+            margin: '0 0 12px 0', letterSpacing: '-0.5px', lineHeight: 1.1, maxWidth: 700,
           }}>
             Les nouvelles sorties et les remixes.
           </h1>
-          <p style={{ 
-            color: '#ccc', 
-            fontSize: isMobile ? 14 : 16, 
-            maxWidth: 600, 
-            margin: 0,
-            lineHeight: 1.5
-          }}>
+          <p style={{ color: '#ccc', fontSize: isMobile ? 14 : 16, maxWidth: 600, margin: 0, lineHeight: 1.5 }}>
             Les promos, edits et morceaux exclusifs autorisés au partage. 
             <br />
             Nouveautés House, Tech House, EDM, Dance et Underground. Une communauté où les DJs présentent leurs productions et leurs découvertes.
           </p>
           
           <div style={{ display: 'flex', gap: 12, marginTop: 24 }}>
-            <Link to="/nouveautes" style={{ 
-              padding: '10px 20px', background: '#00d9ff', color: '#000', 
-              borderRadius: 4, fontWeight: 700, textDecoration: 'none', fontSize: 13 
-            }}>
+            <Link to="/nouveautes" style={{ padding: '10px 20px', background: '#00d9ff', color: '#000', borderRadius: 4, fontWeight: 700, textDecoration: 'none', fontSize: 13 }}>
               Écouter les sorties
             </Link>
-            <Link to="/auth" style={{ 
-              padding: '10px 20px', background: 'transparent', color: '#fff', 
-              border: '1px solid #2a2a2a', borderRadius: 4, fontWeight: 600, textDecoration: 'none', fontSize: 13 
-            }}>
+            <Link to="/auth" style={{ padding: '10px 20px', background: 'transparent', color: '#fff', border: '1px solid #2a2a2a', borderRadius: 4, fontWeight: 600, textDecoration: 'none', fontSize: 13 }}>
               Rejoindre la communauté
             </Link>
           </div>
@@ -155,13 +124,7 @@ export const HomePage = () => {
       </div>
 
       {/* BARRE DE NAVIGATION INTERNE */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingBottom: 16,
-        borderBottom: '1px solid #2a2a2a',
-      }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 16, borderBottom: '1px solid #2a2a2a' }}>
         <div style={{ display: 'flex', gap: 24, overflowX: 'auto', width: '100%' }}>
           <Link to="/" style={{ color: '#fff', textDecoration: 'none', fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap' }}>Accueil</Link>
           <Link to="/nouveautes" style={{ color: '#999', textDecoration: 'none', fontSize: 14, fontWeight: 500, whiteSpace: 'nowrap' }}>Sorties</Link>
@@ -175,28 +138,76 @@ export const HomePage = () => {
         
         <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
           
+          {/* ✅ MODULE À LA UNE EN 3D */}
           {featured && (
-            <div style={{ ...panelStyle, display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 24 }}>
+            <div 
+              onClick={playFeatured}
+              className="featured-3d-card"
+              style={{
+                position: 'relative',
+                display: 'flex',
+                alignItems: 'flex-end',
+                height: isMobile ? 260 : 340,
+                borderRadius: 12,
+                overflow: 'hidden',
+                cursor: 'pointer',
+                border: '1px solid #2a2a2a',
+                transition: 'transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.4s ease, border-color 0.4s ease',
+              }}
+            >
+              {/* Image de fond (Pochette) */}
               <div 
-                onClick={playFeatured} // ✅ Utilisation de la fonction corrigée
+                className="featured-3d-bg"
                 style={{
-                  width: isMobile ? '100%' : 200, height: isMobile ? 200 : 200,
-                  borderRadius: 4, overflow: 'hidden', flexShrink: 0,
-                  background: featured.cover_url ? `url(${featured.cover_url}) center/cover` : '#1a1a1a',
-                  cursor: 'pointer', position: 'relative',
-                }}
-              >
-                <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0, transition: '0.2s' }} className="hover-play">
-                  <span style={{ fontSize: 40, color: '#00d9ff' }}>▶</span>
-                </div>
-              </div>
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                <span style={{ fontSize: 11, color: '#999', fontWeight: 800, letterSpacing: '1px', marginBottom: 8 }}>À LA UNE</span>
-                <h1 style={{ fontSize: 28, fontWeight: 700, color: '#fff', margin: '0 0 8px 0' }}>{featured.title}</h1>
-                <p style={{ fontSize: 16, color: '#999', margin: '0 0 16px 0' }}>{featured.artist}</p>
-                <div style={{ display: 'flex', gap: 12 }}>
-                  <span style={{ fontSize: 11, color: '#fff', background: '#121212', padding: '4px 8px', borderRadius: 4, border: '1px solid #2a2a2a' }}>{featured.bpm} BPM</span>
-                  <span style={{ fontSize: 11, color: '#fff', background: '#121212', padding: '4px 8px', borderRadius: 4, border: '1px solid #2a2a2a' }}>{featured.genre || 'Electronic'}</span>
+                  position: 'absolute', inset: 0,
+                  backgroundImage: `url(${featured.cover_url || ''})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  filter: 'blur(2px) brightness(0.6)',
+                  transition: 'transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1), filter 0.6s ease',
+                }} 
+              />
+
+              {/* Dégradé pour la lisibilité */}
+              <div style={{
+                position: 'absolute', inset: 0,
+                background: 'linear-gradient(to top, rgba(10,12,20,0.95) 0%, transparent 80%)',
+              }} />
+
+              {/* Contenu (Texte et Bouton) */}
+              <div style={{ position: 'relative', padding: 24, width: '100%' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                  {/* Bouton Play */}
+                  <button 
+                    style={{
+                      width: 56, height: 56, borderRadius: '50%',
+                      background: '#fff', color: '#000', border: 'none',
+                      fontSize: 24, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      cursor: 'pointer', flexShrink: 0,
+                      boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
+                      transition: 'transform 0.2s ease',
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+                    onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                  >
+                    ▶
+                  </button>
+
+                  <div>
+                    <span style={{ fontSize: 11, color: '#00d9ff', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase' }}>
+                      À LA UNE
+                    </span>
+                    <h2 style={{ fontSize: isMobile ? 22 : 32, fontWeight: 800, margin: '4px 0', color: '#fff', lineHeight: 1.1 }}>
+                      {featured.title}
+                    </h2>
+                    <p style={{ fontSize: isMobile ? 14 : 16, color: '#ccc', margin: 0 }}>
+                      {featured.artist}
+                    </p>
+                    <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                      <span style={{ fontSize: 11, color: '#fff', background: 'rgba(255,255,255,0.1)', padding: '2px 8px', borderRadius: 4 }}>{featured.bpm} BPM</span>
+                      <span style={{ fontSize: 11, color: '#fff', background: 'rgba(255,255,255,0.1)', padding: '2px 8px', borderRadius: 4 }}>{featured.genre || 'Electronic'}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -214,26 +225,17 @@ export const HomePage = () => {
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
           
-          <div style={panelStyle}>
+          <div style={{ background: '#1c1c1c', borderRadius: 8, border: '1px solid #2a2a2a', padding: 20 }}>
             <h3 style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
               TOP 10
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {top10.map((track, idx) => (
-                <div 
-                  key={track.id} 
-                  onClick={() => play({
-                    id: track.id,
-                    title: track.title,
-                    artist: track.artist,
-                    audio_url: track.audio_url,
-                    cover_url: track.cover_url,
-                    user_id: track.user_id || null, // ✅ Correction ici aussi
-                    duration: track.duration,
-                    peaks: track.peaks,
-                  })} 
-                  style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}
-                >
+                <div key={track.id} onClick={() => play({
+                  id: track.id, title: track.title, artist: track.artist,
+                  audio_url: track.audio_url, cover_url: track.cover_url,
+                  user_id: track.user_id || null, duration: track.duration, peaks: track.peaks,
+                })} style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}>
                   <span style={{ fontSize: 13, fontWeight: 700, color: '#999', width: 20 }}>{idx + 1}</span>
                   <div style={{ width: 36, height: 36, borderRadius: 2, background: track.cover_url ? `url(${track.cover_url}) center/cover` : '#1a1a1a', flexShrink: 0, border: '1px solid #2a2a2a' }} />
                   <div style={{ flex: 1, minWidth: 0 }}>
@@ -246,7 +248,7 @@ export const HomePage = () => {
             </div>
           </div>
 
-          <div style={panelStyle}>
+          <div style={{ background: '#1c1c1c', borderRadius: 8, border: '1px solid #2a2a2a', padding: 20 }}>
             <h3 style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 12 }}>Artistes en vue</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {artists.slice(0, 5).map((artist) => (
@@ -263,8 +265,24 @@ export const HomePage = () => {
         </div>
       </div>
 
+      {/* ✅ EFFETS 3D ET ANIMATIONS */}
       <style>{`
-        .hover-play:hover { opacity: 1 !important; }
+        .featured-3d-card:hover {
+          transform: translateY(-6px) scale(1.01);
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 217, 255, 0.15);
+          border-color: rgba(0, 217, 255, 0.4);
+        }
+        
+        .featured-3d-card:hover .featured-3d-bg {
+          transform: scale(1.08);
+          filter: blur(1px) brightness(0.7);
+        }
+
+        .featured-3d-card:hover h2 {
+          color: #00d9ff;
+          transition: color 0.3s ease;
+        }
+
         a, div, button { outline: none !important; }
         a:focus, div:focus, button:focus { outline: none !important; box-shadow: none !important; }
       `}</style>

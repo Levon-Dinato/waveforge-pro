@@ -7,7 +7,7 @@ import { OnlineUsersWidget } from '../components/OnlineUsersWidget';
 import { ShareButton } from '../components/ShareButton';
 import { supabase, AUDIO_BUCKET } from '../lib/supabase';
 import { detectBPM } from '../audio/bpmDetector';
-import { detectKey, getCamelotColor, ALL_KEYS } from '../audio/keyDetector';
+import { detectKey } from '../audio/keyDetector';
 import { parseBlob } from 'music-metadata';
 import { useAuth } from '../contexts/AuthContext';
 import { usePlayer } from '../contexts/PlayerContext';

@@ -1,7 +1,6 @@
 // src/pages/NouveautesPage.tsx
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { GlassCard } from '../components/ui/GlassCard';
 import { CommentSection } from '../components/CommentSection';
 import { OnlineUsersWidget } from '../components/OnlineUsersWidget';
 import { ShareButton } from '../components/ShareButton';
@@ -587,7 +586,10 @@ export const NouveautesPage: React.FC = () => {
       color: '#fff',
       paddingBottom: isMobile ? 140 : 80,
       background: '#121212',
-      minHeight: '100vh'
+      minHeight: '100vh',
+      width: '100%',
+      maxWidth: '100%',
+      boxSizing: 'border-box',
     }}>
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -605,7 +607,8 @@ export const NouveautesPage: React.FC = () => {
 
       <input type="file" accept="audio/*" ref={fileInputRef} onChange={handleFileChange} style={{ display: 'none' }} />
 
-      <GlassCard style={{ padding: '16px', marginBottom: 20, border: '1px dashed #2a2a2a', background: '#1c1c1c' }}>
+      {/* ✅ Le GlassCard a été remplacé par un simple div pour ne pas bloquer la largeur */}
+      <div style={{ padding: '16px', marginBottom: 20, border: '1px dashed #2a2a2a', background: '#1c1c1c', borderRadius: 8 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
           <div>
             <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>Partager un nouveau son</div>
@@ -619,12 +622,15 @@ export const NouveautesPage: React.FC = () => {
             {uploading ? uploadStatus || 'Traitement...' : '+ UPLOADER'}
           </button>
         </div>
-      </GlassCard>
+      </div>
 
-      <div style={{ display: 'flex', gap: 20, flexDirection: isMobile ? 'column' : 'row' }}>
+      {/* ✅ CONTENEUR PRINCIPAL (sidebar gauche + contenu droite) */}
+      <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start', width: '100%' }}>
+        
+        {/* SIDEBAR DES GENRES (Cachée sur mobile) */}
         {!isMobile && (
-          <aside style={{ width: 220, flexShrink: 0 }}>
-            <div style={{ ...PANEL_STYLE, padding: '16px 0', position: 'sticky', top: 20 }}>
+          <aside style={{ width: 240, flexShrink: 0, position: 'sticky', top: 20 }}>
+            <div style={{ background: '#1c1c1c', border: '1px solid #2a2a2a', borderRadius: 8, padding: '16px 0' }}>
               <h3 style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.5px', padding: '0 16px 12px', margin: 0, color: '#999', borderBottom: '1px solid #2a2a2a' }}>
                 MUSIC CATEGORY
               </h3>
@@ -632,7 +638,6 @@ export const NouveautesPage: React.FC = () => {
                 <span>Tous les sons</span>
                 <span style={{ color: '#666', fontSize: 11 }}>{tracks.length}</span>
               </div>
-              {/* ✅ BOUCLE GENRES CORRIGÉE (Plus de "count" inutilisé) */}
               {genreStats.map(([genre]) => {
                 const isActive = selectedGenre === genre;
                 return (
@@ -642,14 +647,15 @@ export const NouveautesPage: React.FC = () => {
                 );
               })}
               
-              <div style={{ padding: '0 16px', marginTop: 20 }}>
+              <div style={{ padding: '16px 16px 0', marginTop: 20, borderTop: '1px solid #2a2a2a' }}>
                 <OnlineUsersWidget />
               </div>
             </div>
           </aside>
         )}
 
-        <main style={{ flex: 1, minWidth: 0 }}>
+        {/* CONTENU PRINCIPAL (grille des morceaux) */}
+        <main style={{ flex: 1, minWidth: 0, width: '100%' }}>
           {/* FILTRES */}
           <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap', alignItems: 'center' }}>
             <input type="text" placeholder="Rechercher..." value={search} onChange={(e) => setSearch(e.target.value)} style={{ ...INPUT_STYLE, flex: '1 1 200px', minWidth: 0 }} />
@@ -674,11 +680,12 @@ export const NouveautesPage: React.FC = () => {
             </div>
           )}
 
-          {/* GRILLE DES TRACKS (Style Accueil) */}
+          {/* GRILLE DES MORCEAUX */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: `repeat(auto-fill, minmax(${isMobile ? 150 : 200}px, 1fr))`,
-            gap: 20,
+            gridTemplateColumns: `repeat(auto-fill, minmax(${isMobile ? 140 : 180}px, 1fr))`,
+            gap: isMobile ? 12 : 20,
+            width: '100%',
           }}>
             {loading && <div style={{ gridColumn: '1 / -1', textAlign: 'center', color: '#999', padding: 40 }}>Chargement...</div>}
             {!loading && visibleTracks.length === 0 && (
@@ -710,7 +717,7 @@ export const NouveautesPage: React.FC = () => {
 
                   {/* EDITION INLINE */}
                   {isEditing ? (
-                    <div style={{ ...PANEL_STYLE, padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <div style={{ background: '#1c1c1c', border: '1px solid #2a2a2a', borderRadius: 8, padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
                       <input type="text" placeholder="Titre" value={editForm.title} onChange={(e) => setEditForm({ ...editForm, title: e.target.value })} style={{ ...INPUT_STYLE }} />
                       <input type="text" placeholder="Artiste" value={editForm.artist} onChange={(e) => setEditForm({ ...editForm, artist: e.target.value })} style={{ ...INPUT_STYLE }} />
                       <div style={{ display: 'flex', gap: 4 }}>

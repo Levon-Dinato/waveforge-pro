@@ -10,13 +10,16 @@
   --wf-bg-card: #1c1c1c;
   --wf-border: #2a2a2a;
   --wf-border-light: #333333;
+  
   --wf-cyan: #00d9ff;
   --wf-purple: #7c5cff;
   --wf-green: #00ff88;
   --wf-red: #ff3366;
+  
   --wf-text: #ffffff;
   --wf-text-dim: #999999;
   --wf-text-faint: #666666;
+  
   --wf-font-main: 'Inter', system-ui, -apple-system, sans-serif;
   --wf-font-title: 'Space Grotesk', system-ui, sans-serif;
 }
@@ -37,9 +40,7 @@ html, body {
   max-width: 100vw;
 }
 
-input, textarea, select {
-  font-size: 16px; /* empêche le zoom auto iOS */
-}
+input, textarea, select { font-size: 16px; }
 
 img {
   max-width: 100%;
@@ -68,22 +69,110 @@ h1, h2, h3, h4, h5, h6, p {
   display: flex;
   flex-direction: column;
   z-index: 100;
+  overflow-y: auto;
 }
 
-/* ... (garde tout le reste du CSS sidebar comme avant) ... */
+.wf-logo {
+  padding: 0 20px 24px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid var(--wf-border);
+  margin-bottom: 16px;
+}
+
+.wf-logo-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  background: #1c1c1c;
+  border: 1px solid var(--wf-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.wf-logo-text {
+  font-family: var(--wf-font-title);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--wf-text);
+  white-space: nowrap;
+}
+
+.wf-logo-text span { color: var(--wf-cyan); }
+
+.wf-sidebar-nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.wf-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  color: var(--wf-text-dim);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.1s ease;
+  cursor: pointer;
+  border-left: 3px solid transparent;
+}
+
+.wf-nav-link:hover {
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--wf-text);
+}
+
+.wf-nav-link.active {
+  background: #1c1c1c;
+  color: var(--wf-text);
+  border-left: 3px solid var(--wf-cyan);
+  font-weight: 600;
+}
+
+.wf-nav-link .icon {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.wf-nav-link .icon svg { width: 18px; height: 18px; }
+.wf-nav-link.active .icon { opacity: 1; }
+
+.wf-sidebar-footer {
+  flex-shrink: 0;
+  padding: 16px 20px;
+  border-top: 1px solid var(--wf-border);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
 
 /* ============================================================
-   CONTENU PRINCIPAL
+   CONTENU PRINCIPAL (CORRIGÉ POUR LA LARGEUR)
    ============================================================ */
 
 .wf-main {
   margin-left: 240px;
-  width: calc(100% - 240px);
+  width: calc(100% - 240px) !important;
+  max-width: calc(100% - 240px) !important;
   min-height: 100vh;
   padding: 32px 40px;
   background: var(--wf-bg);
   overflow-x: hidden;
   padding-bottom: 100px;
+  box-sizing: border-box;
 }
 
 .wf-main > * {
@@ -91,7 +180,115 @@ h1, h2, h3, h4, h5, h6, p {
   max-width: 100% !important;
 }
 
-/* ... (garde les boutons et cartes comme avant) ... */
+/* ============================================================
+   BOUTONS
+   ============================================================ */
+
+.wf-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 4px;
+  font-family: var(--wf-font-main);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.1s ease;
+  text-decoration: none;
+}
+
+.wf-btn-primary { background: var(--wf-cyan); color: #000; }
+.wf-btn-primary:hover { background: #33e0ff; }
+.wf-btn-secondary { background: #1c1c1c; color: var(--wf-text); border: 1px solid var(--wf-border); }
+.wf-btn-secondary:hover { background: #2a2a2a; }
+
+/* ============================================================
+   GRILLE DES CARTES
+   ============================================================ */
+
+.wf-main .wf-grid,
+.wf-main > section > div {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)) !important;
+  gap: 24px !important;
+  width: 100% !important;
+}
+
+.wf-card {
+  background: transparent;
+  border: none;
+  padding: 0;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+  width: 100%;
+}
+
+.wf-card:hover { transform: translateY(-4px); }
+
+.wf-card-cover {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 2px;
+  background: #1a1a1a center/cover no-repeat;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--wf-border);
+}
+
+.wf-card-title {
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--wf-text);
+  margin-top: 4px;
+}
+
+.wf-card-artist {
+  font-size: 12px;
+  color: var(--wf-text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wf-card-play-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.wf-card:hover .wf-card-play-overlay { opacity: 1; }
+
+.wf-card-play-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--wf-cyan);
+  color: #000;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.1s ease;
+}
+
+.wf-card-play-btn:hover { transform: scale(1.1); }
 
 /* ============================================================
    RESPONSIVE
@@ -118,8 +315,9 @@ h1, h2, h3, h4, h5, h6, p {
   .wf-main {
     margin-left: 0 !important;
     width: 100% !important;
+    max-width: 100% !important;
     padding: 16px !important;
-    padding-bottom: 160px !important; /* espace pour navbar + lecteur */
+    padding-bottom: 160px !important;
   }
 
   .wf-main .wf-grid,
@@ -143,4 +341,6 @@ h1, h2, h3, h4, h5, h6, p {
 
   .wf-card-title { font-size: 12px !important; }
   .wf-card-artist { font-size: 11px !important; }
+
+  .wf-sidebar { display: none !important; }
 }

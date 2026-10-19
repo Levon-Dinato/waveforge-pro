@@ -7,6 +7,44 @@ export default async function handler(req: any, res: any) {
     return res.status(400).send('Missing track id');
   }
 
+  // ✅ NOUVEAU : Si c'est le live, on renvoie direct l'affiche ON AIR
+  if (trackId === 'live') {
+    const liveHtml = `<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Live WaveForge Pro 🎧</title>
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="WaveForge PRO" />
+    <meta property="og:title" content="Rejoins le live WaveForge Pro !" />
+    <meta property="og:description" content="Écoute les émissions en direct, prends l'antenne quand tu veux et échange avec la communauté." />
+    <meta property="og:image" content="https://waveforge-pro-one.vercel.app/og-live.jpg" />
+    <meta property="og:url" content="https://waveforge-pro-one.vercel.app/share/live" />
+    
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Rejoins le live WaveForge Pro !" />
+    <meta name="twitter:description" content="Écoute les émissions en direct sur WaveForge Pro." />
+    <meta name="twitter:image" content="https://waveforge-pro-one.vercel.app/og-live.jpg" />
+  </head>
+  <body style="background:#000;color:#fff;font-family:monospace;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;">
+    <div style="text-align:center;">
+      <p>Redirection vers le Live…</p>
+      <a href="https://waveforge-pro-one.vercel.app/live" style="color:#00d9ff;">Clique ici si rien ne se passe</a>
+    </div>
+    <script>
+      setTimeout(function() {
+        window.location.href = "https://waveforge-pro-one.vercel.app/live";
+      }, 100);
+    </script>
+  </body>
+</html>`;
+    
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.setHeader('Cache-Control', 'public, max-age=300');
+    return res.status(200).send(liveHtml);
+  }
+
+  // ⬇️ LE RESTE DE TON CODE RESTE INCHANGÉ POUR LES TRACKS ⬇️
   const supabaseUrl = 'https://ivusrxkufajugvkbpcia.supabase.co';
   const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml2dXNyeGt1ZmFqdWd2a2JwY2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE5MzU1MDUsImV4cCI6MjEwNzUxMTUwNX0.iwjZ-9Lm8vRazk6KR7zi0BLmZ1RYRUP9dIwfyiW83_U';
 

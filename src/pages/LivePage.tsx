@@ -18,7 +18,8 @@ export const LivePage = () => {
   const tviplyChannelUrl = 'https://tviply.com/waveforgepro';
 
   // ✅ URL de partage canonique (fixe, pas window.location.href)
-  const shareUrl = 'https://waveforge-pro-one.vercel.app/live';
+  // src/pages/LivePage.tsx
+  const shareUrl = 'https://waveforge-pro-one.vercel.app/share/live'; // ✅ LE LIEN MAGIQUE
   const shareTitle = 'WaveForge Pro Live 🎧';
   const shareText = 'Regarde le live de WaveForge Pro et rejoins la communauté !';
 

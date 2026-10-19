@@ -78,7 +78,8 @@ export const LivePage = () => {
           margin: 0,
           lineHeight: 1.6,
         }}>
-          Écoute le live 24h/24 et discute avec les autres auditeurs. Les droits d'auteur sont gérés automatiquement par Tviply.
+          Rejoins le live et partage ta passion !
+          Écoute les émissions en direct, connecte-toi pour prendre l’antenne quand tu le souhaites et échange avec les autres auditeurs.
         </p>
       </section>
 
@@ -144,7 +145,7 @@ export const LivePage = () => {
           gap: 12,
         }}>
           <div style={{ fontSize: 13, color: 'rgba(255, 255, 255, 0.5)' }}>
-            🔴 En direct sur Tviply · Les droits sont gérés par la plateforme
+            🔴 En direct sur WaveForme.Pro
           </div>
           <div style={{ display: 'flex', gap: 12 }}>
             {!isMobile && (
@@ -327,7 +328,7 @@ export const LivePage = () => {
             {
               step: '03',
               title: 'Go Live !',
-              description: 'Clique sur "Démarrer la diffusion". Ton live sera visible sur Tviply dans quelques secondes.',
+              description: 'Clique sur "Démarrer la diffusion". Ton live sera visible sur WaveForme.Pro dans quelques secondes.',
               icon: '🔴',
             },
           ].map((item) => (
@@ -388,7 +389,7 @@ export const LivePage = () => {
               Astuce
             </div>
             <div style={{ fontSize: 13, color: 'rgba(255, 255, 255, 0.7)', lineHeight: 1.6 }}>
-              Ne partage <strong>jamais</strong> ta clé de flux. Elle permet à n'importe qui de diffuser à ta place. Si elle fuite, regénère-la depuis ton tableau de bord Tviply.
+              Ne partage <strong>jamais</strong> ta clé de flux. Elle permet à n'importe qui de diffuser sur WaveForme.pro en direct.
             </div>
           </div>
         </div>

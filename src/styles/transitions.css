@@ -1,28 +1,25 @@
 /* ============================================================
-   THÈME WAVEFORGE PRO — DESIGN MODERNE & HARMONIEUX
+   THÈME WAVEFORGE PRO — STYLE BEATPORT
    ============================================================ */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap');
 
 :root {
-  --wf-bg: #0d0e12;
-  --wf-bg-sidebar: rgba(20, 22, 30, 0.7);
-  --wf-bg-card: rgba(30, 32, 42, 0.6);
-  --wf-border: rgba(255, 255, 255, 0.08);
-  --wf-border-light: rgba(255, 255, 255, 0.15);
+  --wf-bg: #050507;
+  --wf-bg-sidebar: #0a0c14;
+  --wf-bg-card: #0f111a;
+  --wf-border: rgba(255, 255, 255, 0.06);
+  --wf-border-light: rgba(255, 255, 255, 0.12);
   --wf-cyan: #00d9ff;
   --wf-purple: #7c5cff;
   --wf-pink: #ff5cf0;
   --wf-green: #00ff88;
   --wf-red: #ff3366;
   --wf-text: #ffffff;
-  --wf-text-dim: rgba(255, 255, 255, 0.65);
-  --wf-text-faint: rgba(255, 255, 255, 0.4);
+  --wf-text-dim: rgba(255, 255, 255, 0.6);
+  --wf-text-faint: rgba(255, 255, 255, 0.35);
   --wf-font-main: 'Inter', system-ui, -apple-system, sans-serif;
   --wf-font-title: 'Space Grotesk', system-ui, sans-serif;
-  --wf-glass-blur: 20px;
-  --wf-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  --wf-glow: 0 0 20px rgba(0, 217, 255, 0.3);
 }
 
 * { box-sizing: border-box; }
@@ -39,16 +36,14 @@ html, body {
 }
 
 /* ============================================================
-   SIDEBAR (CORRIGÉ POUR FLEXBOX)
+   SIDEBAR STYLE BEATPORT
    ============================================================ */
 
 .wf-sidebar {
-  width: 260px;
+  width: 240px;
   background: var(--wf-bg-sidebar);
-  backdrop-filter: blur(var(--wf-glass-blur));
-  -webkit-backdrop-filter: blur(var(--wf-glass-blur));
   border-right: 1px solid var(--wf-border);
-  padding: 24px 16px;
+  padding: 20px 0;
   height: 100vh;
   position: fixed;
   top: 0;
@@ -56,50 +51,26 @@ html, body {
   display: flex;
   flex-direction: column;
   z-index: 100;
-  overflow: hidden; /* Empêche la sidebar entière de scroller */
-}
-
-.wf-sidebar-nav {
-  flex: 1;             /* Prend tout l'espace disponible */
-  min-height: 0;       /* ✅ L'ASTUCE : Permet le scroll interne sans déborder */
-  overflow-y: auto;    /* Scroll uniquement dans cette zone */
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding-right: 4px;
-  margin-bottom: 16px;
-}
-
-.wf-sidebar-nav::-webkit-scrollbar { width: 6px; }
-.wf-sidebar-nav::-webkit-scrollbar-thumb { background: var(--wf-border); border-radius: 3px; }
-
-.wf-sidebar-footer {
-  flex-shrink: 0;      /* ✅ Le footer ne se compresse jamais */
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding-top: 16px;
-  border-top: 1px solid var(--wf-border);
 }
 
 .wf-logo {
+  padding: 0 20px 24px 20px;
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 8px 12px;
-  margin-bottom: 24px;
+  border-bottom: 1px solid var(--wf-border);
+  margin-bottom: 16px;
 }
 
 .wf-logo-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
   background: linear-gradient(135deg, var(--wf-cyan), var(--wf-purple));
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
-  box-shadow: var(--wf-glow);
+  font-size: 16px;
 }
 
 .wf-logo-text {
@@ -107,43 +78,68 @@ html, body {
   font-size: 18px;
   font-weight: 700;
   letter-spacing: -0.5px;
-  color: var(--wf-text);
-}
-.wf-logo-text span {
-  background: linear-gradient(135deg, var(--wf-cyan), var(--wf-purple));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
 }
 
+.wf-logo-text span {
+  color: var(--wf-cyan);
+}
+
+.wf-sidebar-nav {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-bottom: 16px;
+}
+
+/* ✅ LE LIEN STYLE BEATPORT */
 .wf-nav-link {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 14px;
-  border-radius: 10px;
+  padding: 12px 20px;
   color: var(--wf-text-dim);
   text-decoration: none;
   font-size: 13px;
   font-weight: 500;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
   cursor: pointer;
+  border-left: 3px solid transparent;
 }
+
 .wf-nav-link:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.03);
   color: var(--wf-text);
-  transform: translateX(2px);
 }
+
 .wf-nav-link.active {
-  background: rgba(0, 217, 255, 0.1);
-  color: var(--wf-cyan);
+  background: rgba(0, 217, 255, 0.05);
+  color: var(--wf-text);
+  border-left: 3px solid var(--wf-cyan);
   font-weight: 600;
-  border: 1px solid rgba(0, 217, 255, 0.2);
 }
+
 .wf-nav-link .icon {
   font-size: 16px;
   width: 20px;
   display: flex;
   justify-content: center;
+  opacity: 0.7;
+}
+
+.wf-nav-link.active .icon {
+  opacity: 1;
+}
+
+.wf-sidebar-footer {
+  flex-shrink: 0;
+  padding: 16px 20px;
+  border-top: 1px solid var(--wf-border);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 /* ============================================================
@@ -151,13 +147,11 @@ html, body {
    ============================================================ */
 
 .wf-main {
-  margin-left: 260px;
-  width: calc(100% - 260px);
+  margin-left: 240px;
+  width: calc(100% - 240px);
   min-height: 100vh;
-  padding: 40px 48px;
-  background-image: 
-    radial-gradient(circle at 15% 20%, rgba(0, 217, 255, 0.08) 0%, transparent 40%),
-    radial-gradient(circle at 85% 80%, rgba(124, 92, 255, 0.06) 0%, transparent 40%);
+  padding: 32px 40px;
+  background: var(--wf-bg);
   overflow-x: hidden;
   box-sizing: border-box;
 }
@@ -167,63 +161,19 @@ html, body {
   max-width: 100% !important;
 }
 
-.wf-main-content {
-  width: 100% !important;
-  max-width: 100% !important;
-}
-
-.wf-hero {
-  position: relative;
-  width: 100%;
-  padding: 60px 40px;
-  background: var(--wf-bg-card);
-  border-radius: 24px;
-  border: 1px solid var(--wf-border);
-  text-align: center;
-  overflow: hidden;
-  margin-bottom: 40px;
-  box-sizing: border-box;
-}
-
-.wf-hero::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0; height: 1px;
-  background: linear-gradient(90deg, transparent, var(--wf-cyan), transparent);
-  opacity: 0.5;
-}
-
-.wf-hero h1 {
-  font-family: var(--wf-font-title);
-  font-size: 48px;
-  font-weight: 700;
-  letter-spacing: -1px;
-  margin: 0 0 16px 0;
-  line-height: 1.1;
-}
-.wf-hero h1 span {
-  background: linear-gradient(135deg, var(--wf-cyan), var(--wf-purple));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.wf-hero p {
-  font-size: 16px;
-  color: var(--wf-text-dim);
-  max-width: 500px;
-  margin: 0 auto 32px auto;
-  line-height: 1.6;
-}
+/* ============================================================
+   BOUTONS
+   ============================================================ */
 
 .wf-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 12px 24px;
-  border-radius: 12px;
+  padding: 10px 20px;
+  border-radius: 8px;
   font-family: var(--wf-font-main);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   border: none;
@@ -232,43 +182,26 @@ html, body {
 }
 
 .wf-btn-primary {
-  background: linear-gradient(135deg, var(--wf-cyan), #0088ff);
+  background: var(--wf-cyan);
   color: #000;
-  box-shadow: 0 4px 16px rgba(0, 217, 255, 0.3);
 }
+
 .wf-btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 217, 255, 0.5);
+  background: #33e0ff;
 }
 
 .wf-btn-secondary {
   background: rgba(255, 255, 255, 0.05);
   color: var(--wf-text);
-  border: 1px solid var(--wf-border-light);
-}
-.wf-btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: var(--wf-cyan);
+  border: 1px solid var(--wf-border);
 }
 
-.wf-section-title {
-  font-family: var(--wf-font-title);
-  font-size: 24px;
-  font-weight: 600;
-  letter-spacing: -0.5px;
-  margin-bottom: 8px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.wf-section-subtitle {
-  font-size: 13px;
-  color: var(--wf-text-dim);
-  margin-bottom: 24px;
+.wf-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
 }
 
 /* ============================================================
-   GRILLE DES CARTES
+   GRILLE DES CARTES (Style Sortie Beatport)
    ============================================================ */
 
 .wf-main .wf-grid,
@@ -276,47 +209,48 @@ html, body {
 .wf-main > section > div {
   display: grid !important;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)) !important;
-  gap: 20px !important;
+  gap: 24px !important;
   width: 100% !important;
   max-width: 100% !important;
 }
 
 .wf-card {
-  background: var(--wf-bg-card);
-  border: 1px solid var(--wf-border);
-  border-radius: 16px;
-  padding: 12px;
-  transition: all 0.25s ease;
+  background: transparent;
+  border: none;
+  padding: 0;
+  transition: all 0.2s ease;
   cursor: pointer;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
   position: relative;
   width: 100%;
 }
+
 .wf-card:hover {
-  background: rgba(40, 42, 55, 0.8);
-  border-color: var(--wf-border-light);
   transform: translateY(-4px);
-  box-shadow: var(--wf-shadow);
 }
 
 .wf-card-cover {
   width: 100%;
   aspect-ratio: 1;
-  border-radius: 10px;
+  border-radius: 4px; /* Coins carrés comme Beatport */
   background: #1a1c24 center/cover no-repeat;
   position: relative;
   overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .wf-card-title {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  color: var(--wf-text);
+  margin-top: 4px;
 }
+
 .wf-card-artist {
   font-size: 12px;
   color: var(--wf-text-dim);
@@ -328,353 +262,36 @@ html, body {
 .wf-card-play-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
   opacity: 0;
   transition: opacity 0.2s ease;
-  gap: 8px;
 }
+
 .wf-card:hover .wf-card-play-overlay {
   opacity: 1;
 }
 
 .wf-card-play-btn {
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   background: var(--wf-cyan);
   color: #000;
   border: none;
-  font-size: 16px;
+  font-size: 18px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 15px rgba(0, 217, 255, 0.5);
+  box-shadow: 0 4px 16px rgba(0, 217, 255, 0.4);
   transition: transform 0.15s ease;
 }
-.wf-card-play-btn:hover { transform: scale(1.1); }
 
-/* ============================================================
-   MIXER SPÉCIFIQUE (ISOLÉ AVEC .mixer-root)
-   ============================================================ */
-
-.mixer-root {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  min-height: 100vh;
-  background: var(--wf-bg);
-  padding: 20px;
-  box-sizing: border-box;
-}
-
-.mixer-root .tn-header {
-  width: 100%;
-  height: 48px;
-  background-color: #d0d0d0;
-  border-bottom: 1px solid #888;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-shrink: 0;
-  border-radius: 8px;
-  margin-bottom: 20px;
-}
-
-.mixer-root .tn-title {
-  color: #666;
-  font-size: 24px;
-  padding-left: 5px;
-  letter-spacing: 2px;
-  font-weight: 600;
-}
-
-.mixer-root .tn-menu {
-  padding-right: 23px;
-  display: flex;
-  gap: 20px;
-}
-
-.mixer-root .tn-menu a,
-.mixer-root .tn-menu button {
-  background: none;
-  border: none;
-  font-family: inherit;
-  font-size: 12px;
-  color: #595959;
-  text-decoration: none;
-  text-transform: uppercase;
-  cursor: pointer;
-  padding: 0;
-}
-
-.mixer-root .tn-menu a:hover,
-.mixer-root .tn-menu button:hover { color: #000; }
-
-.mixer-root .tn-btn {
-  display: inline-block;
-  height: 40px;
-  padding: 0 16px;
-  border: 1px solid black;
-  border-radius: 5px;
-  background-color: #323232;
-  color: #ccc;
-  line-height: 38px;
-  font-size: 11px;
-  font-weight: 600;
-  font-family: inherit;
-  cursor: pointer;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.mixer-root .tn-btn:hover { background-color: #3d3d3d; }
-.mixer-root .tn-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
-.mixer-root .tn-btn-accent {
-  background-color: #7497ff;
-  color: #000;
-  border-color: #7497ff;
-}
-
-.mixer-root .tn-btn-accent:hover { filter: brightness(1.1); }
-
-.mixer-root .mixer-timeline-panel {
-  background: #323232;
-  border-radius: 5px;
-  padding: 10px;
-  margin-bottom: 20px;
-  border: 1px solid #444;
-}
-
-.mixer-root .mixer-decks-row {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-.mixer-root .mixer-deck-panel {
-  flex: 1;
-  background: #323232;
-  border-radius: 5px;
-  padding: 12px;
-  border: 1px solid #444;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.mixer-root .mixer-deck-title {
-  font-weight: 800;
-  font-size: 0.85rem;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-}
-
-.mixer-root .mixer-track-info {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
-
-.mixer-root .mixer-track-cover {
-  width: 60px;
-  height: 60px;
-  border-radius: 4px;
-  background: #111 center/cover no-repeat;
-  flex-shrink: 0;
-}
-
-.mixer-root .mixer-track-meta {
-  flex: 1;
-  min-width: 0;
-}
-
-.mixer-root .mixer-track-title {
-  font-weight: 700;
-  font-size: 0.85rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.mixer-root .mixer-track-artist {
-  font-size: 0.75rem;
-  color: #888;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.mixer-root .mixer-cue-row {
-  display: flex;
-  gap: 4px;
-}
-
-.mixer-root .mixer-cue-btn {
-  flex: 1;
-  padding: 6px 0;
-  font-size: 0.75rem;
-  font-weight: 800;
-  border: 1px solid #555;
-  border-radius: 3px;
-  cursor: pointer;
-  background: #3a3a3a;
-  color: #ccc;
-  font-family: inherit;
-  transition: background 0.15s, border 0.15s, color 0.15s;
-}
-
-.mixer-root .mixer-cue-btn.set { color: #000; }
-
-.mixer-root .mixer-loop-row {
-  display: flex;
-  gap: 4px;
-}
-
-.mixer-root .mixer-loop-btn {
-  flex: 1;
-  padding: 5px 0;
-  font-size: 0.75rem;
-  font-weight: 800;
-  border: 1px solid #555;
-  border-radius: 3px;
-  background: #3a3a3a;
-  color: #ccc;
-  cursor: pointer;
-  font-family: inherit;
-  transition: background 0.15s, border 0.15s, color 0.15s;
-}
-
-.mixer-root .mixer-loop-btn.active { color: #000; }
-
-.mixer-root .mixer-knob {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  user-select: none;
-}
-
-.mixer-root .mixer-knob-label {
-  font-size: 0.55rem;
-  color: #888;
-  font-weight: 800;
-  letter-spacing: 1px;
-}
-
-.mixer-root .mixer-knob-dial {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  background: linear-gradient(145deg, #2a2a35, #1a1a24);
-  border: 2px solid #444;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: ns-resize;
-}
-
-.mixer-root .mixer-knob-marker {
-  width: 2px;
-  height: 10px;
-  background: currentColor;
-  position: absolute;
-  top: 4px;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-.mixer-root .mixer-knob-value {
-  font-size: 0.55rem;
-  font-weight: 700;
-}
-
-.mixer-root .mixer-crossfader-panel {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 15px;
-  background: #323232;
-  padding: 12px;
-  margin-bottom: 20px;
-  border-radius: 5px;
-  border: 1px solid #444;
-}
-
-.mixer-root .mixer-library {
-  flex: 1;
-  min-height: 220px;
-  background: #2e242e;
-  border-top: 1px solid #444;
-  overflow-y: auto;
-  border-radius: 5px;
-}
-
-.mixer-root .mixer-library-filters {
-  padding: 10px 20px;
-  display: flex;
-  gap: 15px;
-  align-items: center;
-  justify-content: flex-start;
-  position: sticky;
-  top: 0;
-  background: #2e242e;
-  z-index: 2;
-  border-bottom: 1px solid #444;
-}
-
-.mixer-root .mixer-library-table {
-  width: 100%;
-  font-size: 0.85rem;
-}
-
-.mixer-root .mixer-library-table thead {
-  position: sticky;
-  top: 49px;
-  background: #323232;
-  color: #888;
-  text-align: left;
-  font-size: 0.7rem;
-  z-index: 1;
-}
-
-.mixer-root .mixer-library-table td {
-  padding: 8px 10px;
-}
-
-.mixer-root .mixer-library-table tr {
-  border-bottom: 1px solid #1a1a1a;
-}
-
-.mixer-root .mixer-library-table tbody tr:hover {
-  background: rgba(255, 255, 255, 0.03);
-}
-
-.mixer-root .mixer-load-a,
-.mixer-root .mixer-load-b {
-  padding: 4px 8px;
-  border: none;
-  border-radius: 3px;
-  font-size: 0.7rem;
-  font-weight: 800;
-  cursor: pointer;
-  font-family: inherit;
-}
-
-.mixer-root .mixer-load-a {
-  background: #7497ff;
-  color: #000;
-  margin-right: 5px;
-}
-
-.mixer-root .mixer-load-b {
-  background: #c0c0c0;
-  color: #000;
+.wf-card-play-btn:hover {
+  transform: scale(1.1);
 }
 
 /* ============================================================
@@ -682,55 +299,27 @@ html, body {
    ============================================================ */
 
 @media (max-width: 1024px) {
-  .wf-main { padding: 32px 32px; }
-  .wf-hero h1 { font-size: 36px; }
-  .wf-main .wf-grid,
-  .wf-main-content .wf-grid,
-  .wf-main > section > div {
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)) !important;
-    gap: 16px !important;
-  }
+  .wf-main { padding: 24px; }
+  .wf-main .wf-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)) !important; }
 }
 
 @media (max-width: 900px) {
   .wf-sidebar {
     transform: translateX(-100%);
     transition: transform 0.3s ease;
-    width: 280px;
     z-index: 200;
   }
   .wf-sidebar.open {
     transform: translateX(0);
-    box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
   }
   .wf-main {
     margin-left: 0 !important;
     width: 100% !important;
-    padding: 20px 16px !important;
+    padding: 16px !important;
   }
-  .wf-hero { padding: 32px 20px !important; border-radius: 16px !important; }
-  .wf-hero h1 { font-size: 28px !important; }
-  .wf-hero p { font-size: 14px !important; }
-  .wf-main .wf-grid,
-  .wf-main-content .wf-grid,
-  .wf-main > section > div {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important;
-    gap: 12px !important;
-  }
-  .wf-card { padding: 8px !important; border-radius: 10px !important; }
-  .wf-card-title { font-size: 12px !important; }
-  .wf-card-artist { font-size: 10px !important; }
-  .wf-section-title { font-size: 20px !important; }
-  .wf-btn { padding: 10px 18px !important; font-size: 13px !important; }
+  .wf-main .wf-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important; }
 }
 
 @media (max-width: 560px) {
-  .wf-main { padding: 16px 12px !important; }
-  .wf-hero h1 { font-size: 24px !important; }
-  .wf-main .wf-grid,
-  .wf-main-content .wf-grid,
-  .wf-main > section > div {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 10px !important;
-  }
+  .wf-main .wf-grid { grid-template-columns: repeat(2, 1fr) !important; }
 }

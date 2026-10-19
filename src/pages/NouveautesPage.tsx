@@ -1,3 +1,4 @@
+// src/pages/NouveautesPage.tsx
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { GlassCard } from '../components/ui/GlassCard';
@@ -20,7 +21,7 @@ interface Track {
   bpm: number;
   song_key: string | null;
   camelot: string | null;
-  likes: number;
+  likes_count: number;
   downloads: number;
   audio_url: string;
   duration: number;
@@ -516,6 +517,7 @@ export const NouveautesPage: React.FC = () => {
   const { currentTrack, isPlaying, currentTime, duration, play, seek, stop } = usePlayer();
 
   const [tracks, setTracks] = useState<Track[]>([]);
+  const [userLikes, setUserLikes] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState('');
@@ -542,11 +544,12 @@ export const NouveautesPage: React.FC = () => {
   const [openComments, setOpenComments] = useState<Set<string>>(new Set());
 
   const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 10;
+  const ITEMS_PER_PAGE = 20;
 
   useEffect(() => {
     loadTracks();
-  }, []);
+    if (user) loadUserLikes();
+  }, [user]);
 
   const loadTracks = async () => {
     setLoading(true);
@@ -560,12 +563,58 @@ export const NouveautesPage: React.FC = () => {
         cover_url: t.cover_url || null,
         user_id: t.user_id || null,
         downloads: t.downloads || 0,
+        likes_count: t.likes_count || 0,
         song_key: t.song_key || null,
         camelot: t.camelot || null,
       }));
       setTracks(normalized);
     }
     setLoading(false);
+  };
+
+  const loadUserLikes = async () => {
+    if (!user) return;
+    const { data } = await supabase.from('likes').select('track_id').eq('user_id', user.id);
+    if (data) {
+      const likesMap: Record<string, boolean> = {};
+      data.forEach((like) => { likesMap[like.track_id] = true; });
+      setUserLikes(likesMap);
+    }
+  };
+
+  const handleLike = async (trackId: string) => {
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+    const isCurrentlyLiked = userLikes[trackId];
+    setUserLikes((prev) => ({ ...prev, [trackId]: !isCurrentlyLiked }));
+
+    setTracks((prev) =>
+      prev.map((t) =>
+        t.id === trackId
+          ? { ...t, likes_count: t.likes_count + (isCurrentlyLiked ? -1 : 1) }
+          : t
+      )
+    );
+
+    try {
+      if (isCurrentlyLiked) {
+        await supabase.from('likes').delete().eq('user_id', user.id).eq('track_id', trackId);
+      } else {
+        await supabase.from('likes').insert({ user_id: user.id, track_id: trackId });
+      }
+    } catch (err) {
+      console.error('Erreur like:', err);
+      setUserLikes((prev) => ({ ...prev, [trackId]: isCurrentlyLiked }));
+      setTracks((prev) =>
+        prev.map((t) =>
+          t.id === trackId
+            ? { ...t, likes_count: t.likes_count + (isCurrentlyLiked ? 1 : -1) }
+            : t
+        )
+      );
+    }
   };
 
   const genreStats = useMemo(() => {
@@ -582,7 +631,7 @@ export const NouveautesPage: React.FC = () => {
   }, [tracks]);
 
   const top10 = useMemo(() => {
-    return [...tracks].sort((a, b) => b.likes - a.likes).slice(0, 10);
+    return [...tracks].sort((a, b) => b.likes_count - a.likes_count).slice(0, 10);
   }, [tracks]);
 
   const handleUploadClick = () => fileInputRef.current?.click();
@@ -660,7 +709,7 @@ export const NouveautesPage: React.FC = () => {
         title: finalTitle, artist: finalArtist, user_id: user?.id || null,
         genre: finalGenre, bpm,
         song_key: detectedKey, camelot: detectedCamelot,
-        likes: 0, downloads: 0,
+        likes_count: 0, downloads: 0,
         audio_url: urlData.publicUrl, duration: detectedDuration, peaks, cover_url: coverUrl,
       }).select().single();
       if (insertError) throw insertError;
@@ -912,14 +961,6 @@ export const NouveautesPage: React.FC = () => {
 
   const handleSeekRatio = (ratio: number) => seek(ratio);
 
-  const handleLike = async (id: string) => {
-    const track = tracks.find((t) => t.id === id);
-    if (!track) return;
-    const newLikes = track.likes + 1;
-    setTracks((prev) => prev.map((t) => (t.id === id ? { ...t, likes: newLikes } : t)));
-    await supabase.from('tracks').update({ likes: newLikes }).eq('id', id);
-  };
-
   const handleDelete = async (id: string) => {
     const track = tracks.find((t) => t.id === id);
     if (!track) return;
@@ -966,7 +1007,7 @@ export const NouveautesPage: React.FC = () => {
       list = list.filter((t) => t.title.toLowerCase().includes(q) || t.artist.toLowerCase().includes(q) || t.genre.toLowerCase().includes(q));
     }
     switch (sortBy) {
-      case 'likes': list.sort((a, b) => b.likes - a.likes); break;
+      case 'likes': list.sort((a, b) => b.likes_count - a.likes_count); break;
       case 'bpm': list.sort((a, b) => b.bpm - a.bpm); break;
       case 'title': list.sort((a, b) => a.title.localeCompare(b.title)); break;
       default: list.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
@@ -1020,7 +1061,7 @@ export const NouveautesPage: React.FC = () => {
         .new-badge { animation: pulse 2s ease-in-out infinite; }
         .genre-item { transition: all 0.15s; }
         .genre-item:hover { background: rgba(0, 217, 255, 0.08) !important; color: #00d9ff !important; padding-left: 14px !important; }
-        .track-row { animation: fadeIn 0.3s ease; }
+        .track-card { animation: fadeIn 0.3s ease; }
         .key-btn { transition: all 0.15s ease; }
         .key-btn:hover { transform: scale(1.05); }
         select option { background: #0a0c14 !important; color: #fff !important; padding: 8px !important; }
@@ -1116,11 +1157,15 @@ export const NouveautesPage: React.FC = () => {
             </div>
           )}
 
-          {/* LISTE DES TRACKS */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {loading && <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.4)', padding: 40 }}>Chargement...</div>}
+          {/* ✅ GRILLE DES TRACKS (Style Accueil) */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: `repeat(auto-fill, minmax(${isMobile ? 150 : 200}px, 1fr))`,
+            gap: 16,
+          }}>
+            {loading && <div style={{ gridColumn: '1 / -1', textAlign: 'center', color: 'rgba(255,255,255,0.4)', padding: 40 }}>Chargement...</div>}
             {!loading && visibleTracks.length === 0 && (
-              <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.4)', padding: 40, fontSize: '0.9rem' }}>
+              <div style={{ gridColumn: '1 / -1', textAlign: 'center', color: 'rgba(255,255,255,0.4)', padding: 40, fontSize: '0.9rem' }}>
                 {tracks.length === 0 ? 'Aucun morceau.' : selectedGenre ? `Aucun morceau dans "${selectedGenre}".` : 'Aucun resultat.'}
               </div>
             )}
@@ -1129,110 +1174,147 @@ export const NouveautesPage: React.FC = () => {
               const isThisCurrent = currentTrack?.id === track.id;
               const isThisPlaying = isThisCurrent && isPlaying;
               const isEditing = editingId === track.id;
-              const progress = isThisCurrent && duration > 0 ? currentTime / duration : 0;
               const isReplacing = replacingId === track.id;
               const isDownloading = downloadingId === track.id;
               const fresh = isNew(track.created_at);
               const showComments = openComments.has(track.id);
+              const isLiked = userLikes[track.id] || false;
 
               return (
-                <div key={track.id} className="track-row" style={{
-                  ...PANEL_STYLE,
-                  padding: isMobile ? 12 : 16,
-                  border: isThisPlaying ? '1px solid rgba(0, 217, 255, 0.5)' : '1px solid rgba(255, 255, 255, 0.06)',
-                  boxShadow: isThisPlaying ? '0 0 20px rgba(0, 217, 255, 0.15)' : '0 8px 32px rgba(0, 0, 0, 0.3)',
-                  opacity: isReplacing ? 0.6 : 1,
-                  transition: 'all 0.2s',
-                }}>
+                <div key={track.id} className="track-card">
+                  {/* OVERLAY COMMENTAIRES */}
+                  {showComments && !isEditing && (
+                    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }} onClick={() => toggleComments(track.id)}>
+                      <div onClick={(e) => e.stopPropagation()} style={{ background: '#0a0c14', border: '1px solid rgba(0,217,255,0.3)', borderRadius: 12, padding: 20, width: '100%', maxWidth: 500, maxHeight: '80vh', overflowY: 'auto' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
+                          <h3 style={{ margin: 0, fontSize: 16 }}>Commentaires</h3>
+                          <button onClick={() => toggleComments(track.id)} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', fontSize: 20 }}>×</button>
+                        </div>
+                        <CommentSection trackId={track.id} />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* EDITION INLINE (remplace la carte) */}
                   {isEditing ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <div style={{ ...PANEL_STYLE, padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
                       <input type="text" placeholder="Titre" value={editForm.title} onChange={(e) => setEditForm({ ...editForm, title: e.target.value })} style={{ ...INPUT_STYLE, fontSize: '0.85rem' }} />
                       <input type="text" placeholder="Artiste" value={editForm.artist} onChange={(e) => setEditForm({ ...editForm, artist: e.target.value })} style={{ ...INPUT_STYLE, fontSize: '0.85rem' }} />
-                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                        <select value={editForm.genre} onChange={(e) => setEditForm({ ...editForm, genre: e.target.value })} style={{ ...INPUT_STYLE, fontSize: '0.85rem', flex: '1 1 200px', cursor: 'pointer' }}>
+                      <div style={{ display: 'flex', gap: 4 }}>
+                        <select value={editForm.genre} onChange={(e) => setEditForm({ ...editForm, genre: e.target.value })} style={{ ...INPUT_STYLE, fontSize: '0.85rem', flex: 1, cursor: 'pointer' }}>
                           <option style={OPTION_STYLE} value="Inconnu">-- Genre --</option>
                           {PREDEFINED_GENRES.map((g) => (<option key={g} value={g} style={OPTION_STYLE}>{g}</option>))}
                         </select>
-                        <input type="number" placeholder="BPM" value={editForm.bpm} onChange={(e) => setEditForm({ ...editForm, bpm: parseInt(e.target.value) || 0 })} style={{ ...INPUT_STYLE, fontSize: '0.85rem', flex: '0 0 90px' }} />
+                        <input type="number" placeholder="BPM" value={editForm.bpm} onChange={(e) => setEditForm({ ...editForm, bpm: parseInt(e.target.value) || 0 })} style={{ ...INPUT_STYLE, fontSize: '0.85rem', width: 60 }} />
                       </div>
-                      <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-                        <button onClick={cancelEdit} style={{ padding: '6px 14px', background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', borderRadius: 4, cursor: 'pointer', fontSize: '0.78rem' }}>Annuler</button>
-                        <button onClick={saveEdit} style={{ padding: '6px 14px', background: '#00d9ff', color: '#000', border: 'none', borderRadius: 4, cursor: 'pointer', fontWeight: 800, fontSize: '0.78rem' }}>Enregistrer</button>
+                      <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
+                        <button onClick={cancelEdit} style={{ padding: '4px 8px', background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', borderRadius: 4, cursor: 'pointer', fontSize: '0.7rem' }}>Annuler</button>
+                        <button onClick={saveEdit} style={{ padding: '4px 8px', background: '#00d9ff', color: '#000', border: 'none', borderRadius: 4, cursor: 'pointer', fontWeight: 800, fontSize: '0.7rem' }}>OK</button>
                       </div>
                     </div>
                   ) : (
-                    <div style={{ display: 'flex', gap: isMobile ? 12 : 16, flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'stretch' : 'center' }}>
-                      
-                      {/* POCHETTE + OVERLAY PLAY */}
-                      <div style={{ position: 'relative', flexShrink: 0, width: isMobile ? '100%' : 80, height: isMobile ? 120 : 80, borderRadius: 8, overflow: 'hidden', background: track.cover_url ? `url(${track.cover_url}) center/cover` : 'linear-gradient(135deg, rgba(0,217,255,0.2), rgba(124,92,255,0.15))', border: '1px solid rgba(0, 217, 255, 0.2)' }}>
-                        {!track.cover_url && <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, opacity: 0.5 }}>🎵</div>}
-                        <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: isThisPlaying ? 1 : 0, transition: 'opacity 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.opacity = '1'} onMouseLeave={(e) => e.currentTarget.style.opacity = isThisPlaying ? '1' : '0'}>
-                          <PlayButton isPlaying={isThisPlaying} isCurrent={isThisCurrent} onClick={() => handlePlayTrack(track)} size={isMobile ? 48 : 36} />
+                    /* CARTE NORMALE */
+                    <div
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'rgba(40, 42, 55, 0.9)';
+                        e.currentTarget.style.borderColor = 'rgba(0, 217, 255, 0.4)';
+                        e.currentTarget.style.transform = 'translateY(-4px)';
+                        e.currentTarget.style.boxShadow = '0 12px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 217, 255, 0.15)';
+                        const overlay = e.currentTarget.querySelector('.play-overlay') as HTMLElement;
+                        if (overlay) overlay.style.opacity = '1';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = isThisPlaying ? 'rgba(40, 42, 55, 0.9)' : 'rgba(30, 32, 42, 0.6)';
+                        e.currentTarget.style.borderColor = isThisPlaying ? 'rgba(0, 217, 255, 0.4)' : 'rgba(255, 255, 255, 0.08)';
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = isThisPlaying ? '0 12px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 217, 255, 0.15)' : 'none';
+                        const overlay = e.currentTarget.querySelector('.play-overlay') as HTMLElement;
+                        if (overlay) overlay.style.opacity = isThisPlaying ? '1' : '0';
+                      }}
+                      style={{
+                        color: '#fff',
+                        background: isThisPlaying ? 'rgba(40, 42, 55, 0.9)' : 'rgba(30, 32, 42, 0.6)',
+                        border: isThisPlaying ? '1px solid rgba(0, 217, 255, 0.4)' : '1px solid rgba(255, 255, 255, 0.08)',
+                        borderRadius: 16,
+                        padding: 12,
+                        transition: 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 12,
+                        position: 'relative',
+                        boxShadow: isThisPlaying ? '0 12px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 217, 255, 0.15)' : 'none',
+                      }}
+                    >
+                      {/* Pochette + Overlay Play */}
+                      <div style={{
+                        width: '100%', aspectRatio: '1', borderRadius: 10,
+                        background: track.cover_url ? `url(${track.cover_url}) center/cover` : '#1a1c24',
+                        position: 'relative', overflow: 'hidden',
+                      }}>
+                        {!track.cover_url && (
+                          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40 }}>🎵</div>
+                        )}
+                        
+                        <div className="play-overlay" style={{
+                          position: 'absolute', inset: 0,
+                          background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 50%)',
+                          opacity: isThisPlaying ? 1 : 0,
+                          transition: 'opacity 0.3s ease',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        }}>
+                          <PlayButton isPlaying={isThisPlaying} isCurrent={isThisCurrent} onClick={() => handlePlayTrack(track)} size={48} />
                         </div>
+
                         {isReplacing && (
                           <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>
                             <div style={{ width: 24, height: 24, border: '2px solid rgba(0, 217, 255, 0.3)', borderTop: '2px solid #00d9ff', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
                           </div>
                         )}
+
+                        {/* Badge BPM & New */}
+                        <div style={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 4 }}>
+                          {fresh && <span className="new-badge" style={{ fontSize: '0.55rem', padding: '2px 6px', background: 'linear-gradient(135deg, #00d9ff, #7c5cff)', color: '#fff', borderRadius: 4, fontWeight: 800 }}>NEW</span>}
+                          <span style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', padding: '2px 6px', borderRadius: 4, fontSize: 10, fontWeight: 700, color: '#00d9ff', border: '1px solid rgba(0, 217, 255, 0.3)' }}>{track.bpm} BPM</span>
+                        </div>
                       </div>
 
-                      {/* INFOS & WAVEFORM */}
-                      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                              {fresh && <span className="new-badge" style={{ fontSize: '0.55rem', padding: '1px 5px', background: 'linear-gradient(135deg, #00d9ff, #7c5cff)', color: '#fff', borderRadius: 3, fontWeight: 800, letterSpacing: '0.5px' }}>NEW</span>}
-                              <h3 style={{ margin: 0, fontSize: isMobile ? '0.9rem' : '0.95rem', fontWeight: 700, lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                <span style={{ color: '#fff' }}>{track.title}</span>
-                                <span style={{ color: 'rgba(255,255,255,0.4)' }}> - </span>
-                                {track.user_id ? <Link to={`/profil/${track.user_id}`} style={{ color: '#00d9ff', textDecoration: 'none' }}>{track.artist}</Link> : <span style={{ color: '#00d9ff' }}>{track.artist}</span>}
-                              </h3>
-                            </div>
-                          </div>
+                      {/* Infos */}
+                      <div style={{ padding: '0 4px' }}>
+                        <div style={{ fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: isThisPlaying ? '#00d9ff' : '#fff' }}>
+                          {track.title}
                         </div>
-
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                              <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.5)' }}>{isThisCurrent ? formatTime(currentTime) : '0:00'}</span>
-                              <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.5)' }}>{formatTime(track.duration)}</span>
-                            </div>
-                            <Waveform peaks={track.peaks} progress={progress} onSeek={isThisCurrent ? handleSeekRatio : undefined} height={isMobile ? 28 : 36} duration={track.duration} />
-                          </div>
+                        <div style={{ fontSize: 12, color: 'rgba(255, 255, 255, 0.6)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: 2 }}>
+                          {track.artist}
                         </div>
+                      </div>
 
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                          <button onClick={() => handleDownload(track)} disabled={isDownloading} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', background: 'linear-gradient(135deg, #00d9ff, #0088ff)', color: '#000', border: 'none', borderRadius: 6, cursor: isDownloading ? 'wait' : 'pointer', fontSize: '0.7rem', fontWeight: 800, fontFamily: 'monospace', flexShrink: 0, boxShadow: '0 2px 8px rgba(0, 217, 255, 0.3)' }}>
-                            {isDownloading ? '...' : user ? '⬇ Download' : '🔒 Download'}
+                      {/* Actions (Like + Download + Menu) */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', paddingTop: 8, borderTop: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                        <button onClick={() => handleLike(track.id)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, color: isLiked ? '#ff3366' : 'rgba(255, 255, 255, 0.4)', fontSize: 12, fontWeight: 600 }}>
+                          {isLiked ? '❤️' : '🤍'} {track.likes_count}
+                        </button>
+                        
+                        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                          <span style={{ fontSize: 11, color: 'rgba(255, 255, 255, 0.3)', maxWidth: 60, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{track.genre}</span>
+                          <button onClick={() => handleDownload(track)} disabled={isDownloading} title="Télécharger" style={{ background: 'transparent', border: 'none', color: user ? '#00d9ff' : 'rgba(255,255,255,0.3)', cursor: isDownloading ? 'wait' : 'pointer', fontSize: 14, padding: 0 }}>
+                            {isDownloading ? '...' : user ? '⬇' : '🔒'}
                           </button>
-                          <div style={{ display: 'flex', gap: 6, fontSize: '0.65rem', color: 'rgba(255,255,255,0.55)', flexWrap: 'wrap', alignItems: 'center' }}>
-                            <span style={{ display: 'flex', alignItems: 'center', gap: 3, padding: '3px 8px', background: 'rgba(0, 217, 255, 0.08)', borderRadius: 4, color: '#00d9ff' }}>🎵 {track.genre}</span>
-                            <span style={{ padding: '3px 8px', background: 'rgba(255,255,255,0.05)', borderRadius: 4 }}>⚡ {track.bpm} BPM</span>
-                            {track.camelot && track.camelot !== '?' && (
-                              <span style={{ display: 'flex', alignItems: 'center', gap: 3, padding: '3px 8px', background: `${getCamelotColor(track.camelot)}20`, borderRadius: 4, color: getCamelotColor(track.camelot), fontWeight: 700 }}>🎼 {track.camelot}</span>
-                            )}
-                            <span style={{ padding: '3px 8px', background: 'rgba(255,255,255,0.05)', borderRadius: 4 }}>⬇ {track.downloads}</span>
-                          </div>
                         </div>
                       </div>
 
-                      {/* ACTIONS DROITE */}
-                      <div style={{ display: 'flex', gap: 2, flexShrink: 0, alignSelf: isMobile ? 'flex-end' : 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                        <ShareButton url={`${window.location.origin}/share/${track.id}`} title={`${track.title} — ${track.artist}`} text={`Écoute "${track.title}" par ${track.artist} sur WaveForge PRO 🎵`} variant="icon" size="small" label="Partager" position="bottom" />
-                        <button onClick={() => handleLike(track.id)} title="Like" style={{ background: 'transparent', border: 'none', color: track.likes > 0 ? '#ff5c5c' : 'rgba(255,255,255,0.4)', cursor: 'pointer', fontSize: '1rem', padding: 4 }}>{track.likes > 0 ? '♥' : '♡'}</button>
-                        <button onClick={() => toggleComments(track.id)} style={{ background: 'transparent', border: 'none', color: showComments ? '#00d9ff' : 'rgba(255,255,255,0.4)', cursor: 'pointer', fontSize: '0.9rem', padding: 4 }} title="Commenter">💬</button>
-                        <button onClick={() => startEdit(track)} disabled={isReplacing} style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', fontSize: '0.85rem', padding: 4 }} title="Modifier">✏️</button>
-                        <button onClick={() => handleReplaceClick(track.id)} disabled={isReplacing} style={{ background: 'transparent', border: 'none', color: '#00d9ff', cursor: 'pointer', fontSize: '0.85rem', padding: 4 }} title="Remplacer">{isReplacing ? '...' : '🔄'}</button>
-                        <button onClick={() => handleDetectBpm(track)} disabled={detectingBpm === track.id || isReplacing} style={{ background: 'transparent', border: 'none', color: detectingBpm === track.id ? '#ffd43b' : '#00ff88', cursor: detectingBpm === track.id ? 'wait' : 'pointer', fontSize: '0.85rem', padding: 4, opacity: detectingBpm === track.id ? 0.6 : 1 }} title="Corriger le BPM">{detectingBpm === track.id ? '⏳' : '🎯'}</button>
-                        <button onClick={() => setKeyPicker(track.id)} disabled={isReplacing} style={{ background: 'transparent', border: 'none', color: '#7c5cff', cursor: 'pointer', fontSize: '0.85rem', padding: 4 }} title="Choisir la tonalité">🎼</button>
-                        <button onClick={() => handleDelete(track.id)} disabled={isReplacing} style={{ background: 'transparent', border: 'none', color: 'rgba(255, 100, 100, 0.6)', cursor: 'pointer', fontSize: '0.85rem', padding: 4 }} title="Supprimer">🗑️</button>
+                      {/* Menu d'actions caché (survol) */}
+                      <div style={{ position: 'absolute', top: 8, left: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                        <button onClick={() => toggleComments(track.id)} style={{ background: 'rgba(0,0,0,0.6)', border: 'none', color: showComments ? '#00d9ff' : '#fff', cursor: 'pointer', padding: 4, borderRadius: 4, fontSize: 10 }}>💬</button>
+                        <ShareButton url={`${window.location.origin}/share/${track.id}`} title={`${track.title} — ${track.artist}`} text={`Écoute "${track.title}" par ${track.artist} sur WaveForge PRO 🎵`} variant="icon" size="small" label="" position="bottom" />
+                        
+                        {/* ✅ SEUL LE CRÉATEUR PEUT MODIFIER OU SUPPRIMER */}
+                        {user?.id === track.user_id && (
+                          <>
+                            <button onClick={() => startEdit(track)} style={{ background: 'rgba(0,0,0,0.6)', border: 'none', color: '#fff', cursor: 'pointer', padding: 4, borderRadius: 4, fontSize: 10 }}>✏️</button>
+                            <button onClick={() => handleDelete(track.id)} style={{ background: 'rgba(0,0,0,0.6)', border: 'none', color: '#ff5c5c', cursor: 'pointer', padding: 4, borderRadius: 4, fontSize: 10 }}>🗑️</button>
+                          </>
+                        )}
                       </div>
-                    </div>
-                  )}
-
-                  {showComments && !isEditing && (
-                    <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-                      <CommentSection trackId={track.id} />
                     </div>
                   )}
                 </div>

@@ -108,16 +108,14 @@ export const TrackGrid = ({ tracks }: TrackGridProps) => {
       {tracks.map((track) => {
         const isHovered = hoveredId === track.id;
         const isLiked = userLikes[track.id] || false;
-        
-        // ✅ Calcul du compteur affiché (utilisé plus bas)
         const displayLikes = (track.likes_count || 0) + (isLiked ? 1 : 0);
-        
         const isThisTrack = isCurrentTrack(track.id);
         const isThisPlaying = isThisTrack && isPlaying;
 
         return (
           <div
             key={track.id}
+            onClick={() => navigate(`/track/${track.id}`)} // ✅ REDIRECTION ICI
             onMouseEnter={() => setHoveredId(track.id)}
             onMouseLeave={() => setHoveredId(null)}
             style={{
@@ -136,7 +134,6 @@ export const TrackGrid = ({ tracks }: TrackGridProps) => {
               boxShadow: isHovered || isThisTrack ? '0 12px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 217, 255, 0.15)' : 'none',
             }}
           >
-            {/* Pochette */}
             <div style={{
               width: '100%',
               aspectRatio: '1',
@@ -158,7 +155,6 @@ export const TrackGrid = ({ tracks }: TrackGridProps) => {
                 )}
               </div>
 
-              {/* Overlay Play */}
               <div style={{
                 position: 'absolute',
                 inset: 0,
@@ -188,7 +184,6 @@ export const TrackGrid = ({ tracks }: TrackGridProps) => {
                 </button>
               </div>
 
-              {/* Badge BPM */}
               <div style={{
                 position: 'absolute', top: 8, right: 8,
                 background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
@@ -200,7 +195,6 @@ export const TrackGrid = ({ tracks }: TrackGridProps) => {
               </div>
             </div>
 
-            {/* Infos */}
             <div style={{ padding: '0 4px' }}>
               <div style={{
                 fontSize: 14, fontWeight: 600,
@@ -215,7 +209,6 @@ export const TrackGrid = ({ tracks }: TrackGridProps) => {
               </div>
             </div>
 
-            {/* Actions */}
             <div style={{
               display: 'flex', justifyContent: 'space-between', alignItems: 'center',
               marginTop: 'auto', paddingTop: 8,
@@ -231,7 +224,6 @@ export const TrackGrid = ({ tracks }: TrackGridProps) => {
                   transition: 'color 0.2s ease',
                 }}
               >
-                {/* ✅ Utilisation de displayLikes ici pour corriger l'erreur Vercel */}
                 {isLiked ? '❤️' : '🤍'} {displayLikes}
               </button>
               

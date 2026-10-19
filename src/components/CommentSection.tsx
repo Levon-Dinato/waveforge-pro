@@ -39,6 +39,11 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ trackId }) => {
   const [posting, setPosting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // ✅ ÉTATS POUR LA MODIFICATION
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editContent, setEditContent] = useState('');
+  const [savingEdit, setSavingEdit] = useState(false);
+
   useEffect(() => {
     loadComments();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -48,7 +53,6 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ trackId }) => {
     setLoading(true);
     setError(null);
 
-    // ✅ CORRECTION : typage explicite du retour de la requête
     const { data, error: fetchError } = await supabase
       .from('comments')
       .select('*')
@@ -63,11 +67,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ trackId }) => {
     }
 
     const rawComments: Comment[] = (data || []) as Comment[];
-
-    // ✅ CORRECTION : typage explicite du paramètre 'c'
-    const userIds = Array.from(
-      new Set(rawComments.map((c: Comment) => c.user_id))
-    );
+    const userIds = Array.from(new Set(rawComments.map((c: Comment) => c.user_id)));
 
     let profileMap: Record<string, string> = {};
 
@@ -78,7 +78,6 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ trackId }) => {
         .in('id', userIds);
 
       if (profiles) {
-        // ✅ CORRECTION : typage explicite du paramètre 'p'
         profileMap = (profiles as { id: string; username: string | null }[]).reduce(
           (acc, p) => {
             acc[p.id] = p.username || 'Anonyme';
@@ -89,7 +88,6 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ trackId }) => {
       }
     }
 
-    // ✅ CORRECTION : typage explicite du paramètre 'c'
     const enriched: Comment[] = rawComments.map((c: Comment) => ({
       ...c,
       author_username: profileMap[c.user_id] || 'Anonyme',
@@ -139,6 +137,33 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ trackId }) => {
       setError(err.message || "Erreur lors de l'envoi");
     } finally {
       setPosting(false);
+    }
+  };
+
+  // ✅ NOUVELLE FONCTION : Sauvegarder la modification
+  const handleSaveEdit = async (id: string) => {
+    const trimmed = editContent.trim();
+    if (!trimmed) return;
+
+    setSavingEdit(true);
+    try {
+      const { error: updateError } = await supabase
+        .from('comments')
+        .update({ content: trimmed })
+        .eq('id', id);
+
+      if (updateError) throw updateError;
+
+      setComments((prev) =>
+        prev.map((c) => (c.id === id ? { ...c, content: trimmed } : c))
+      );
+      setEditingId(null);
+      setEditContent('');
+    } catch (err: any) {
+      console.error('Erreur modification:', err);
+      alert('Erreur : ' + (err.message || err));
+    } finally {
+      setSavingEdit(false);
     }
   };
 
@@ -200,6 +225,8 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ trackId }) => {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {comments.map((c: Comment) => {
           const isOwn = user?.id === c.user_id;
+          const isEditing = editingId === c.id;
+
           return (
             <div
               key={c.id}
@@ -257,35 +284,118 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ trackId }) => {
                   >
                     {formatRelativeDate(c.created_at)}
                   </span>
-                  {isOwn && (
-                    <button
-                      onClick={() => handleDelete(c.id)}
-                      title="Supprimer mon commentaire"
-                      style={{
-                        marginLeft: 'auto',
-                        background: 'transparent',
-                        border: 'none',
-                        color: 'rgba(255, 100, 100, 0.6)',
-                        cursor: 'pointer',
-                        fontSize: '0.75rem',
-                        padding: 0,
-                      }}
-                    >
-                      ✕
-                    </button>
+                  
+                  {/* ✅ BOUTONS D'ACTION (Visibles seulement si c'est MON commentaire) */}
+                  {isOwn && !isEditing && (
+                    <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+                      <button
+                        onClick={() => {
+                          setEditingId(c.id);
+                          setEditContent(c.content);
+                        }}
+                        title="Modifier mon commentaire"
+                        style={{
+                          background: 'transparent',
+                          border: 'none',
+                          color: '#00d9ff',
+                          cursor: 'pointer',
+                          fontSize: '0.75rem',
+                          padding: 0,
+                          opacity: 0.7
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
+                        onMouseLeave={(e) => e.currentTarget.style.opacity = '0.7'}
+                      >
+                        ✏️
+                      </button>
+                      <button
+                        onClick={() => handleDelete(c.id)}
+                        title="Supprimer mon commentaire"
+                        style={{
+                          background: 'transparent',
+                          border: 'none',
+                          color: 'rgba(255, 100, 100, 0.6)',
+                          cursor: 'pointer',
+                          fontSize: '0.75rem',
+                          padding: 0,
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.color = '#ff5c5c'}
+                        onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255, 100, 100, 0.6)'}
+                      >
+                        ✕
+                      </button>
+                    </div>
                   )}
                 </div>
-                <div
-                  style={{
-                    fontSize: '0.85rem',
-                    color: 'rgba(255,255,255,0.85)',
-                    lineHeight: 1.4,
-                    wordBreak: 'break-word',
-                    whiteSpace: 'pre-wrap',
-                  }}
-                >
-                  {c.content}
-                </div>
+
+                {/* ✅ ZONE D'ÉDITION OU TEXTE DU COMMENTAIRE */}
+                {isEditing ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 4 }}>
+                    <input
+                      type="text"
+                      value={editContent}
+                      onChange={(e) => setEditContent(e.target.value)}
+                      disabled={savingEdit}
+                      maxLength={500}
+                      style={{
+                        width: '100%',
+                        padding: '6px 8px',
+                        background: 'rgba(0,0,0,0.5)',
+                        border: '1px solid rgba(0, 217, 255, 0.4)',
+                        borderRadius: 4,
+                        color: '#fff',
+                        fontFamily: 'monospace',
+                        fontSize: '0.8rem',
+                        outline: 'none',
+                      }}
+                    />
+                    <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
+                      <button
+                        onClick={() => { setEditingId(null); setEditContent(''); }}
+                        disabled={savingEdit}
+                        style={{
+                          padding: '4px 10px',
+                          background: 'transparent',
+                          border: '1px solid rgba(255,255,255,0.2)',
+                          color: '#fff',
+                          borderRadius: 4,
+                          cursor: 'pointer',
+                          fontSize: '0.7rem',
+                        }}
+                      >
+                        Annuler
+                      </button>
+                      <button
+                        onClick={() => handleSaveEdit(c.id)}
+                        disabled={savingEdit || !editContent.trim()}
+                        style={{
+                          padding: '4px 10px',
+                          background: savingEdit ? '#444' : '#00d9ff',
+                          border: 'none',
+                          color: '#000',
+                          borderRadius: 4,
+                          cursor: savingEdit ? 'wait' : 'pointer',
+                          fontSize: '0.7rem',
+                          fontWeight: 800,
+                        }}
+                      >
+                        {savingEdit ? '...' : 'Sauver'}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    style={{
+                      fontSize: '0.85rem',
+                      color: 'rgba(255,255,255,0.85)',
+                      lineHeight: 1.4,
+                      wordBreak: 'break-word',
+                      whiteSpace: 'pre-wrap',
+                    }}
+                  >
+                    {c.content}
+                  </div>
+                )}
               </div>
             </div>
           );

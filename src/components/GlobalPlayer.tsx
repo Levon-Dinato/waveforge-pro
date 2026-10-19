@@ -45,7 +45,7 @@ const WaveProgress: React.FC<WaveProgressProps> = ({
   peaks, progress, onSeek, height = 30, compact = false,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [hoverRatio, setHoverRatio] = useState<number | null>(null);
+  const [, setHoverRatio] = useState<number | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
   const displayPeaks = downsamplePeaks(peaks, compact ? 80 : 120);

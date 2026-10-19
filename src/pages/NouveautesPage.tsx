@@ -495,7 +495,7 @@ export const NouveautesPage: React.FC = () => {
     play({
       id: track.id, title: track.title, artist: track.artist,
       audio_url: track.audio_url, cover_url: track.cover_url,
-      user_id: track.user_id || null, // ✅ Correction ici
+      user_id: track.user_id || null,
       duration: track.duration, peaks: track.peaks,
     });
   };
@@ -632,12 +632,12 @@ export const NouveautesPage: React.FC = () => {
                 <span>Tous les sons</span>
                 <span style={{ color: '#666', fontSize: 11 }}>{tracks.length}</span>
               </div>
-              {genreStats.map(([genre, count]) => {
+              {/* ✅ BOUCLE GENRES CORRIGÉE (Plus de "count" inutilisé) */}
+              {genreStats.map(([genre]) => {
                 const isActive = selectedGenre === genre;
                 return (
                   <div key={genre} onClick={() => setSelectedGenre(genre)} className="genre-item" style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 16px', fontSize: 12, cursor: 'pointer', background: isActive ? '#2a2a2a' : 'transparent', color: isActive ? '#fff' : '#999', borderLeft: isActive ? '3px solid #00d9ff' : '3px solid transparent', fontWeight: isActive ? 600 : 500 }}>
                     <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: 8 }}>{genre}</span>
-                    <span style={{ color: '#666', fontSize: 11, flexShrink: 0 }}>{count}</span>
                   </div>
                 );
               })}
@@ -665,7 +665,7 @@ export const NouveautesPage: React.FC = () => {
           {isMobile && genreStats.length > 0 && (
             <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 8, marginBottom: 16 }}>
               <button onClick={() => setSelectedGenre(null)} style={{ flexShrink: 0, padding: '6px 12px', background: selectedGenre === null ? '#2a2a2a' : 'transparent', border: '1px solid #2a2a2a', borderRadius: 4, color: selectedGenre === null ? '#fff' : '#999', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Tous</button>
-              {genreStats.map(([genre, count]) => {
+              {genreStats.map(([genre]) => {
                 const isActive = selectedGenre === genre;
                 return (
                   <button key={genre} onClick={() => setSelectedGenre(genre)} style={{ flexShrink: 0, padding: '6px 12px', background: isActive ? '#2a2a2a' : 'transparent', border: '1px solid #2a2a2a', borderRadius: 4, color: isActive ? '#fff' : '#999', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>{genre}</button>

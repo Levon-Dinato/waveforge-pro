@@ -56,7 +56,7 @@ const PLATFORMS: Platform[] = [
 
 export const ShareButton: React.FC<ShareButtonProps> = ({
   url,
-  title = 'WaveForge PRO',
+  title = 'DropZone DJ',
   text = 'Écoute ce son !',
   variant = 'button',
   size = 'medium',
@@ -149,7 +149,6 @@ export const ShareButton: React.FC<ShareButtonProps> = ({
   };
   const s = sizes[size];
 
-  // ✅ Style commun du bouton (Glassmorphism)
   const buttonStyle: React.CSSProperties = {
     display: 'inline-flex',
     alignItems: 'center',
@@ -161,7 +160,7 @@ export const ShareButton: React.FC<ShareButtonProps> = ({
     background: 'rgba(255, 255, 255, 0.03)',
     border: '1px solid rgba(255, 255, 255, 0.1)',
     color: 'rgba(255, 255, 255, 0.6)',
-    borderRadius: variant === 'icon' ? 8 : 30, // Très arrondi si c'est un bouton texte
+    borderRadius: variant === 'icon' ? 8 : 30,
     cursor: 'pointer',
     fontFamily: 'monospace',
     fontSize: s.font,
@@ -218,14 +217,13 @@ export const ShareButton: React.FC<ShareButtonProps> = ({
         {variant === 'button' && <span>{copied && isMobile ? 'Copié !' : label}</span>}
       </button>
 
-      {/* ✅ Menu UNIQUEMENT sur desktop */}
       {menuOpen && !isMobile && (
         <div
           style={{
             position: 'absolute',
             [position === 'bottom' ? 'top' : 'bottom']: '100%',
-            [position === 'bottom' ? 'marginTop' : 'marginBottom']: 8, // ✅ Espacement propre
-            right: 0, // ✅ Aligné à droite du bouton, plus besoin de marginRight
+            [position === 'bottom' ? 'marginTop' : 'marginBottom']: 8,
+            right: 0,
             background: 'linear-gradient(135deg, rgba(15, 18, 28, 0.98), rgba(10, 12, 20, 0.99))',
             border: '1px solid rgba(0, 217, 255, 0.3)',
             borderRadius: 12,

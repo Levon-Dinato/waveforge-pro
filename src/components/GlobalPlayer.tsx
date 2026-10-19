@@ -38,7 +38,7 @@ const downsamplePeaks = (peaks: number[], targetCount: number): number[] => {
 };
 
 // ═══════════════════════════════════════════════════════════
-// WAVEFORM DRAGGABLE
+// WAVEFORM (Style Beatport : très fine, grise puis cyan)
 // ═══════════════════════════════════════════════════════════
 interface WaveProgressProps {
   peaks: number[];
@@ -56,7 +56,7 @@ const WaveProgress: React.FC<WaveProgressProps> = ({
   const [hoverRatio, setHoverRatio] = useState<number | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
-  const displayPeaks = downsamplePeaks(peaks, compact ? 60 : 100);
+  const displayPeaks = downsamplePeaks(peaks, compact ? 80 : 120);
 
   const getRatio = (clientX: number): number | null => {
     if (!containerRef.current) return null;
@@ -80,23 +80,6 @@ const WaveProgress: React.FC<WaveProgressProps> = ({
 
   const handleMouseUp = () => setIsDragging(false);
 
-  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
-    const touch = e.touches[0];
-    const ratio = getRatio(touch.clientX);
-    if (ratio === null) return;
-    setIsDragging(true);
-    onSeek(ratio);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    const touch = e.touches[0];
-    const ratio = getRatio(touch.clientX);
-    if (ratio !== null) onSeek(ratio);
-  };
-
-  const handleTouchEnd = () => setIsDragging(false);
-
   useEffect(() => {
     const handler = () => setIsDragging(false);
     window.addEventListener('mouseup', handler);
@@ -110,27 +93,20 @@ const WaveProgress: React.FC<WaveProgressProps> = ({
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       onMouseLeave={() => { setHoverRatio(null); setIsDragging(false); }}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
       style={{
         width: '100%',
         height,
-        cursor: isDragging ? 'grabbing' : 'grab',
+        cursor: isDragging ? 'grabbing' : 'pointer',
         position: 'relative',
         display: 'flex',
         alignItems: 'center',
-        gap: compact ? 1 : 1.5,
-        padding: '2px 0',
+        gap: 1,
         userSelect: 'none',
-        WebkitUserSelect: 'none',
-        touchAction: 'none',
       }}
     >
       {displayPeaks.map((peak, i) => {
         const barRatio = i / displayPeaks.length;
         const isPlayed = barRatio <= progress;
-        const isHovered = hoverRatio !== null && barRatio <= hoverRatio;
         const h = Math.max(2, (peak / 100) * height);
 
         return (
@@ -139,109 +115,13 @@ const WaveProgress: React.FC<WaveProgressProps> = ({
             style={{
               flex: 1,
               height: h,
-              borderRadius: 1.5,
-              background: isPlayed
-                ? 'linear-gradient(180deg, #00e5ff, #0088ff)'
-                : isHovered
-                ? 'rgba(0, 217, 255, 0.55)'
-                : 'rgba(255, 255, 255, 0.18)',
-              boxShadow: isPlayed ? '0 0 4px rgba(0, 217, 255, 0.6)' : 'none',
-              transition: 'background 0.08s, box-shadow 0.08s',
+              borderRadius: 1,
+              background: isPlayed ? '#00d9ff' : 'rgba(255, 255, 255, 0.15)',
+              transition: 'background 0.05s',
             }}
           />
         );
       })}
-
-      {progress > 0 && progress < 1 && !compact && (
-        <div
-          style={{
-            position: 'absolute',
-            left: `${progress * 100}%`,
-            top: '50%',
-            transform: 'translate(-50%, -50%)',
-            width: 8,
-            height: 8,
-            borderRadius: '50%',
-            background: '#fff',
-            boxShadow: '0 0 10px #00d9ff, 0 0 3px #fff',
-            pointerEvents: 'none',
-            zIndex: 2,
-          }}
-        />
-      )}
-
-      {hoverRatio !== null && duration > 0 && !compact && (
-        <div
-          style={{
-            position: 'absolute',
-            left: `${hoverRatio * 100}%`,
-            bottom: height + 6,
-            transform: 'translateX(-50%)',
-            background: 'rgba(0, 0, 0, 0.92)',
-            border: '1px solid rgba(0, 217, 255, 0.5)',
-            borderRadius: 4,
-            padding: '2px 6px',
-            fontSize: 9,
-            fontFamily: 'monospace',
-            color: '#00d9ff',
-            fontWeight: 700,
-            pointerEvents: 'none',
-            whiteSpace: 'nowrap',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.5)',
-            zIndex: 3,
-          }}
-        >
-          {formatTime(hoverRatio * duration)}
-        </div>
-      )}
-    </div>
-  );
-};
-
-// ═══════════════════════════════════════════════════════════
-// ÉGALISEUR ANIMÉ
-// ═══════════════════════════════════════════════════════════
-const EqualizerBars: React.FC<{ isPlaying: boolean; small?: boolean }> = ({ isPlaying, small }) => {
-  const h = small ? 8 : 10;
-  return (
-    <div
-      style={{
-        position: 'absolute',
-        bottom: 2,
-        left: 3,
-        right: 3,
-        height: h,
-        display: 'flex',
-        alignItems: 'flex-end',
-        justifyContent: 'center',
-        gap: 2,
-        opacity: isPlaying ? 1 : 0,
-        transition: 'opacity 0.3s',
-        pointerEvents: 'none',
-        zIndex: 2,
-      }}
-    >
-      {[0, 1, 2, 3].map((i) => (
-        <div
-          key={i}
-          style={{
-            width: 2,
-            background: '#fff',
-            borderRadius: 1,
-            boxShadow: '0 0 4px #00d9ff',
-            animation: isPlaying
-              ? `eqBar 0.8s ease-in-out infinite ${i * 0.15}s`
-              : 'none',
-            height: isPlaying ? undefined : 3,
-          }}
-        />
-      ))}
-      <style>{`
-        @keyframes eqBar {
-          0%, 100% { height: 3px; opacity: 0.7; }
-          50% { height: ${small ? '7' : '9'}px; opacity: 1; }
-        }
-      `}</style>
     </div>
   );
 };
@@ -259,18 +139,7 @@ export const GlobalPlayer: React.FC = () => {
   const isMobile = useIsMobile(768);
   const [isMuted, setIsMuted] = useState(false);
   const [prevVolume, setPrevVolume] = useState(0.8);
-  const [isHovered, setIsHovered] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
-
-  const titleRef = useRef<HTMLDivElement>(null);
-  const [shouldMarquee, setShouldMarquee] = useState(false);
-
-  useEffect(() => {
-    if (titleRef.current) {
-      const el = titleRef.current;
-      setTimeout(() => setShouldMarquee(el.scrollWidth > el.clientWidth + 2), 50);
-    }
-  }, [currentTrack?.title]);
 
   if (!currentTrack) return null;
 
@@ -289,24 +158,20 @@ export const GlobalPlayer: React.FC = () => {
 
   const handleDownload = async () => {
     if (!currentTrack) return;
-
     if (!user) {
       if (window.confirm('Vous devez être connecté pour télécharger.\n\nSe connecter maintenant ?')) {
         navigate('/auth');
       }
       return;
     }
-
     setIsDownloading(true);
     try {
       const response = await fetch(currentTrack.audio_url);
       if (!response.ok) throw new Error('Impossible de récupérer le fichier');
       const blob = await response.blob();
-
       const safeTitle = currentTrack.title.replace(/[^a-zA-Z0-9._-]/g, '_');
       const safeArtist = currentTrack.artist.replace(/[^a-zA-Z0-9._-]/g, '_');
       const fileName = `${safeArtist}_-_${safeTitle}.mp3`;
-
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -330,464 +195,103 @@ export const GlobalPlayer: React.FC = () => {
   // ═══════════════════════════════════════════════════════════
   if (isMobile) {
     return (
-      <div
-        style={{
-          position: 'fixed',
-          bottom: 78,
-          left: 0,
-          right: 0,
-          zIndex: 9999,
-          background: 'linear-gradient(180deg, rgba(15, 18, 28, 0.98) 0%, rgba(10, 12, 20, 1) 100%)',
-          borderTop: '1px solid rgba(0, 217, 255, 0.4)',
-          borderBottom: '1px solid rgba(0, 217, 255, 0.15)',
-          boxShadow: '0 -8px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 217, 255, 0.15)',
-          backdropFilter: 'blur(24px)',
-          WebkitBackdropFilter: 'blur(24px)',
-          fontFamily: 'monospace',
-          color: '#fff',
-          padding: '7px 10px 5px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 3,
-          animation: 'playerSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-        }}
-      >
-        <style>{`
-          @keyframes playerSlideUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-          }
-        `}</style>
-
-        <WaveProgress
-          peaks={currentTrack.peaks || []}
-          progress={progress}
-          onSeek={seek}
-          height={10}
-          duration={duration}
-          compact={true}
-        />
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Link
-            to={currentTrack.user_id ? `/profil/${currentTrack.user_id}` : '#'}
-            style={{
-              width: 34,
-              height: 34,
-              borderRadius: 6,
-              flexShrink: 0,
-              position: 'relative',
-              background: currentTrack.cover_url
-                ? `url(${currentTrack.cover_url}) center/cover`
-                : 'linear-gradient(135deg, #00d9ff, #7c5cff)',
-              border: '1px solid rgba(0, 217, 255, 0.4)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              textDecoration: 'none',
-              fontSize: 13,
-              overflow: 'hidden',
-              boxShadow: isPlaying ? '0 0 10px rgba(0, 217, 255, 0.5)' : 'none',
-            }}
-          >
-            {!currentTrack.cover_url && '🎵'}
-            <EqualizerBars isPlaying={isPlaying} small />
-          </Link>
-
-          <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
-            <div
-              style={{
-                fontSize: '0.72rem',
-                fontWeight: 700,
-                color: '#fff',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                marginBottom: 1,
-              }}
-            >
+      <div style={{
+        position: 'fixed', bottom: 78, left: 0, right: 0, zIndex: 9999,
+        background: '#0f0f0f', borderTop: '1px solid #2a2a2a',
+        padding: '8px 12px 10px', display: 'flex', flexDirection: 'column', gap: 6,
+        fontFamily: 'Inter, sans-serif', color: '#fff',
+      }}>
+        <WaveProgress peaks={currentTrack.peaks || []} progress={progress} onSeek={seek} height={10} duration={duration} compact={true} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <Link to={currentTrack.user_id ? `/profil/${currentTrack.user_id}` : '#'} style={{
+            width: 40, height: 40, borderRadius: 4, flexShrink: 0,
+            background: currentTrack.cover_url ? `url(${currentTrack.cover_url}) center/cover` : '#1a1a1a',
+            border: '1px solid #2a2a2a',
+          }} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {currentTrack.title}
             </div>
-            <div
-              style={{
-                fontSize: '0.6rem',
-                color: 'rgba(255,255,255,0.55)',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-              }}
-            >
-              {currentTrack.artist} · {formatTime(currentTime)} / {formatTime(duration)}
+            <div style={{ fontSize: 11, color: '#999', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {currentTrack.artist}
             </div>
           </div>
-
-          <button
-            onClick={handleDownload}
-            disabled={isDownloading}
-            style={{
-              width: 28,
-              height: 28,
-              borderRadius: '50%',
-              background: user ? 'rgba(0, 217, 255, 0.15)' : 'rgba(255,255,255,0.05)',
-              border: user ? '1px solid rgba(0, 217, 255, 0.4)' : '1px solid rgba(255,255,255,0.15)',
-              color: user ? '#00d9ff' : 'rgba(255,255,255,0.4)',
-              fontSize: 11,
-              flexShrink: 0,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: isDownloading ? 'wait' : 'pointer',
-            }}
-            title={user ? 'Télécharger' : 'Connectez-vous'}
-          >
-            {isDownloading ? '...' : user ? '⬇' : '🔒'}
-          </button>
-
-          <button
-            onClick={togglePlay}
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: '50%',
-              background: 'linear-gradient(135deg, #00d9ff, #0088ff)',
-              color: '#000',
-              border: 'none',
-              fontSize: 12,
-              fontWeight: 900,
-              flexShrink: 0,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              boxShadow: isPlaying ? '0 0 12px rgba(0, 217, 255, 0.7)' : '0 0 8px rgba(0, 217, 255, 0.5)',
-            }}
-          >
+          <button onClick={togglePlay} style={{ width: 36, height: 36, borderRadius: '50%', background: '#00d9ff', color: '#000', border: 'none', fontSize: 14, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             {isPlaying ? '⏸' : '▶'}
           </button>
-
-          <button
-            onClick={stop}
-            style={{
-              width: 24,
-              height: 24,
-              borderRadius: '50%',
-              background: 'rgba(255, 60, 60, 0.1)',
-              border: '1px solid rgba(255, 60, 60, 0.3)',
-              color: '#ff5c5c',
-              fontSize: 9,
-              flexShrink: 0,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-            }}
-          >
-            ✕
-          </button>
+          <button onClick={stop} style={{ background: 'transparent', border: 'none', color: '#666', cursor: 'pointer', fontSize: 16 }}>✕</button>
         </div>
       </div>
     );
   }
 
   // ═══════════════════════════════════════════════════════════
-  // DESKTOP — BARRE DE TÂCHE COMPACTE (64px)
+  // DESKTOP (Style Beatport : Barre fixe, sombre, minimaliste)
   // ═══════════════════════════════════════════════════════════
   return (
-    <div
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      style={{
-        position: 'fixed',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        height: 64,
-        zIndex: 9999,
-        background: 'linear-gradient(180deg, rgba(15, 18, 28, 0.97) 0%, rgba(10, 12, 20, 0.99) 100%)',
-        borderTop: `1px solid ${isHovered ? 'rgba(0, 217, 255, 0.6)' : 'rgba(0, 217, 255, 0.35)'}`,
-        boxShadow: isHovered
-          ? '0 -12px 50px rgba(0, 0, 0, 0.7), 0 0 40px rgba(0, 217, 255, 0.2)'
-          : '0 -8px 40px rgba(0, 0, 0, 0.6), 0 0 25px rgba(0, 217, 255, 0.12)',
-        backdropFilter: 'blur(24px) saturate(180%)',
-        WebkitBackdropFilter: 'blur(24px) saturate(180%)',
-        transition: 'all 0.25s ease',
-        display: 'grid',
-        gridTemplateColumns: '1fr 2fr 1fr',
-        alignItems: 'center',
-        padding: '0 18px',
-        gap: 18,
-        fontFamily: 'monospace',
-        color: '#fff',
-        animation: 'playerSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
-      }}
-    >
-      <style>{`
-        @keyframes playerSlideUp {
-          from { opacity: 0; transform: translateY(30px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes marqueeScroll {
-          from { transform: translateX(0); }
-          to { transform: translateX(-50%); }
-        }
-        .player-btn {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          user-select: none;
-        }
-        .player-btn:hover { transform: scale(1.1); }
-        .player-btn:active { transform: scale(0.95); }
-      `}</style>
-
-      {/* ═══ GAUCHE : Pochette + Titre + Artiste ═══ */}
-      <div style={{ display: 'flex', gap: 10, alignItems: 'center', minWidth: 0 }}>
+    <div style={{
+      position: 'fixed', bottom: 0, left: 0, right: 0, height: 72, zIndex: 9999,
+      background: '#0f0f0f', borderTop: '1px solid #2a2a2a',
+      display: 'flex', alignItems: 'center', padding: '0 20px', gap: 20,
+      fontFamily: 'Inter, sans-serif', color: '#fff',
+    }}>
+      
+      {/* GAUCHE : Pochette + Titre + Artiste */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, width: 280, flexShrink: 0 }}>
         <Link
           to={currentTrack.user_id ? `/profil/${currentTrack.user_id}` : '#'}
           style={{
-            width: 44,
-            height: 44,
-            borderRadius: 8,
-            flexShrink: 0,
-            position: 'relative',
-            background: currentTrack.cover_url
-              ? `url(${currentTrack.cover_url}) center/cover`
-              : 'linear-gradient(135deg, #00d9ff, #7c5cff)',
-            border: '1px solid rgba(0, 217, 255, 0.4)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            textDecoration: 'none',
-            fontSize: 18,
-            overflow: 'hidden',
-            boxShadow: isPlaying
-              ? '0 0 20px rgba(0, 217, 255, 0.55), inset 0 0 10px rgba(255,255,255,0.15)'
-              : '0 0 12px rgba(0, 217, 255, 0.25)',
-            transition: 'transform 0.25s ease',
+            width: 48, height: 48, borderRadius: 4, flexShrink: 0,
+            background: currentTrack.cover_url ? `url(${currentTrack.cover_url}) center/cover` : '#1a1a1a',
+            border: '1px solid #2a2a2a', textDecoration: 'none', position: 'relative',
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.06)'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
         >
-          {!currentTrack.cover_url && '🎵'}
-          <EqualizerBars isPlaying={isPlaying} />
+          {!currentTrack.cover_url && <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', fontSize: 20 }}>🎵</div>}
         </Link>
-
-        <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
-          <div
-            style={{
-              fontSize: 8,
-              color: 'rgba(0, 217, 255, 0.7)',
-              fontWeight: 800,
-              letterSpacing: '1.5px',
-              marginBottom: 2,
-            }}
-          >
-            {isPlaying ? '▶ EN LECTURE' : '⏸ EN PAUSE'}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: 2 }}>
+            {currentTrack.title}
           </div>
-
-          <div style={{ overflow: 'hidden', marginBottom: 2 }}>
-            <div
-              ref={titleRef}
-              style={{
-                fontSize: '0.8rem',
-                fontWeight: 700,
-                color: '#fff',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: shouldMarquee ? 'clip' : 'ellipsis',
-                animation: shouldMarquee ? 'marqueeScroll 14s linear infinite' : 'none',
-                display: shouldMarquee ? 'inline-block' : 'block',
-                paddingRight: shouldMarquee ? 40 : 0,
-              }}
-            >
-              {shouldMarquee
-                ? `${currentTrack.title}\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0${currentTrack.title}`
-                : currentTrack.title}
-            </div>
-          </div>
-
-          <Link
-            to={currentTrack.user_id ? `/profil/${currentTrack.user_id}` : '#'}
-            style={{
-              fontSize: '0.65rem',
-              color: 'rgba(255,255,255,0.6)',
-              textDecoration: 'none',
-              display: 'block',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-              transition: 'color 0.2s',
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.color = '#00d9ff'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.6)'; }}
-          >
-            🎧 {currentTrack.artist}
+          <Link to={currentTrack.user_id ? `/profil/${currentTrack.user_id}` : '#'} style={{ fontSize: 12, color: '#999', textDecoration: 'none', display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {currentTrack.artist}
           </Link>
         </div>
       </div>
 
-      {/* ═══ CENTRE : Waveform + Contrôles ═══ */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
-        <button
-          className="player-btn"
-          onClick={togglePlay}
-          title={isPlaying ? 'Pause' : 'Lecture'}
-          style={{
-            width: 36,
-            height: 36,
-            borderRadius: '50%',
-            background: 'linear-gradient(135deg, #00d9ff, #0088ff)',
-            color: '#000',
-            border: 'none',
-            fontSize: 14,
-            fontWeight: 900,
-            flexShrink: 0,
-            boxShadow: isPlaying
-              ? '0 0 20px rgba(0, 217, 255, 0.8), inset 0 0 10px rgba(255,255,255,0.4)'
-              : '0 0 14px rgba(0, 217, 255, 0.5), inset 0 0 6px rgba(255,255,255,0.2)',
-          }}
-        >
+      {/* CENTRE : Contrôles + Waveform */}
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 16 }}>
+        <button onClick={togglePlay} style={{
+          width: 36, height: 36, borderRadius: '50%',
+          background: '#fff', color: '#000', border: 'none',
+          fontSize: 14, fontWeight: 900, cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
           {isPlaying ? '⏸' : '▶'}
         </button>
 
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span
-              style={{
-                fontSize: 9,
-                color: '#00d9ff',
-                fontWeight: 700,
-                fontFamily: 'monospace',
-                width: 32,
-                textAlign: 'right',
-                flexShrink: 0,
-              }}
-            >
-              {formatTime(currentTime)}
-            </span>
-
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <WaveProgress
-                peaks={currentTrack.peaks || []}
-                progress={progress}
-                onSeek={seek}
-                height={18}
-                duration={duration}
-              />
-            </div>
-
-            <span
-              style={{
-                fontSize: 9,
-                color: 'rgba(255,255,255,0.55)',
-                fontWeight: 600,
-                fontFamily: 'monospace',
-                width: 32,
-                flexShrink: 0,
-              }}
-            >
-              {formatTime(duration)}
-            </span>
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 12 }}>
+          <span style={{ fontSize: 11, color: '#666', width: 35, textAlign: 'right' }}>{formatTime(currentTime)}</span>
+          <div style={{ flex: 1 }}>
+            <WaveProgress peaks={currentTrack.peaks || []} progress={progress} onSeek={seek} height={20} duration={duration} />
           </div>
+          <span style={{ fontSize: 11, color: '#666', width: 35 }}>{formatTime(duration)}</span>
         </div>
       </div>
 
-      {/* ═══ DROITE : Volume + Download + Fermer ═══ */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 10 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 100 }}>
-          <button
-            className="player-btn"
-            onClick={handleVolumeToggle}
-            title={isMuted ? 'Activer le son' : 'Couper le son'}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: 'rgba(255,255,255,0.7)',
-              fontSize: 13,
-              padding: 0,
-              width: 20,
-            }}
-          >
+      {/* DROITE : Volume + Download + Fermer */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <button onClick={handleVolumeToggle} style={{ background: 'transparent', border: 'none', color: '#666', fontSize: 14, cursor: 'pointer' }}>
             {volumeIcon}
           </button>
-          <input
-            type="range"
-            min="0"
-            max="1"
-            step="0.01"
-            value={isMuted ? 0 : volume}
-            onChange={(e) => {
-              const v = parseFloat(e.target.value);
-              setVolume(v);
-              if (v > 0) setIsMuted(false);
-            }}
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              flex: 1,
-              accentColor: '#00d9ff',
-              cursor: 'pointer',
-              height: 4,
-            }}
-          />
+          <input type="range" min="0" max="1" step="0.01" value={isMuted ? 0 : volume} onChange={(e) => { const v = parseFloat(e.target.value); setVolume(v); if (v > 0) setIsMuted(false); }} style={{ width: 60, accentColor: '#00d9ff', cursor: 'pointer' }} />
         </div>
 
-        <button
-          className="player-btn"
-          onClick={handleDownload}
-          disabled={isDownloading}
-          title={user ? 'Télécharger ce morceau' : 'Connectez-vous pour télécharger'}
-          style={{
-            padding: '6px 12px',
-            borderRadius: 6,
-            background: user
-              ? 'linear-gradient(135deg, #00d9ff, #0088ff)'
-              : 'rgba(255,255,255,0.05)',
-            border: user ? 'none' : '1px solid rgba(255,255,255,0.15)',
-            color: user ? '#000' : 'rgba(255,255,255,0.5)',
-            fontSize: 10,
-            fontWeight: 800,
-            fontFamily: 'monospace',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 5,
-            flexShrink: 0,
-            cursor: isDownloading ? 'wait' : 'pointer',
-            boxShadow: user ? '0 2px 10px rgba(0, 217, 255, 0.3)' : 'none',
-            letterSpacing: '0.5px',
-          }}
-        >
-          {isDownloading ? (
-            '...'
-          ) : user ? (
-            <>
-              <span style={{ fontSize: 12 }}>⬇</span>
-              DL
-            </>
-          ) : (
-            <>
-              <span style={{ fontSize: 12 }}>🔒</span>
-              LOGIN
-            </>
-          )}
+        <button onClick={handleDownload} style={{ background: 'transparent', border: 'none', color: '#666', fontSize: 14, cursor: 'pointer' }}>
+          ⬇
         </button>
 
-        <button
-          className="player-btn"
-          onClick={stop}
-          title="Fermer le player"
-          style={{
-            width: 26,
-            height: 26,
-            borderRadius: '50%',
-            background: 'rgba(255, 60, 60, 0.08)',
-            border: '1px solid rgba(255, 60, 60, 0.3)',
-            color: '#ff5c5c',
-            fontSize: 11,
-            flexShrink: 0,
-          }}
-        >
+        <button onClick={stop} style={{ background: 'transparent', border: 'none', color: '#666', fontSize: 16, cursor: 'pointer' }}>
           ✕
         </button>
       </div>

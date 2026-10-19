@@ -1,23 +1,26 @@
 /* ============================================================
-   THÈME WAVEFORGE PRO — STYLE BEATPORT
+   THÈME WAVEFORGE PRO — STYLE BEATPORT (GRIS FONCÉ)
    ============================================================ */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap');
 
 :root {
-  --wf-bg: #050507;
-  --wf-bg-sidebar: #0a0c14;
-  --wf-bg-card: #0f111a;
-  --wf-border: rgba(255, 255, 255, 0.06);
-  --wf-border-light: rgba(255, 255, 255, 0.12);
+  /* Palette Beatport : Gris très foncé et cyan */
+  --wf-bg: #121212;
+  --wf-bg-sidebar: #0f0f0f;
+  --wf-bg-card: #1c1c1c;
+  --wf-border: #2a2a2a;
+  --wf-border-light: #333333;
+  
   --wf-cyan: #00d9ff;
   --wf-purple: #7c5cff;
-  --wf-pink: #ff5cf0;
   --wf-green: #00ff88;
   --wf-red: #ff3366;
+  
   --wf-text: #ffffff;
-  --wf-text-dim: rgba(255, 255, 255, 0.6);
-  --wf-text-faint: rgba(255, 255, 255, 0.35);
+  --wf-text-dim: #999999;
+  --wf-text-faint: #666666;
+  
   --wf-font-main: 'Inter', system-ui, -apple-system, sans-serif;
   --wf-font-title: 'Space Grotesk', system-ui, sans-serif;
 }
@@ -31,12 +34,11 @@ html, body {
   background: var(--wf-bg);
   color: var(--wf-text);
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
 }
 
 /* ============================================================
-   SIDEBAR STYLE BEATPORT
+   SIDEBAR (Style Beatport)
    ============================================================ */
 
 .wf-sidebar {
@@ -65,8 +67,9 @@ html, body {
 .wf-logo-icon {
   width: 32px;
   height: 32px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, var(--wf-cyan), var(--wf-purple));
+  border-radius: 4px;
+  background: #1c1c1c;
+  border: 1px solid var(--wf-border);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -77,11 +80,11 @@ html, body {
   font-family: var(--wf-font-title);
   font-size: 18px;
   font-weight: 700;
-  letter-spacing: -0.5px;
+  color: var(--wf-text);
 }
 
 .wf-logo-text span {
-  color: var(--wf-cyan);
+  color: var(--wf-text-dim);
 }
 
 .wf-sidebar-nav {
@@ -91,10 +94,8 @@ html, body {
   display: flex;
   flex-direction: column;
   gap: 0;
-  margin-bottom: 16px;
 }
 
-/* ✅ LE LIEN STYLE BEATPORT */
 .wf-nav-link {
   display: flex;
   align-items: center;
@@ -104,7 +105,7 @@ html, body {
   text-decoration: none;
   font-size: 13px;
   font-weight: 500;
-  transition: all 0.15s ease;
+  transition: all 0.1s ease;
   cursor: pointer;
   border-left: 3px solid transparent;
 }
@@ -115,7 +116,7 @@ html, body {
 }
 
 .wf-nav-link.active {
-  background: rgba(0, 217, 255, 0.05);
+  background: #1c1c1c;
   color: var(--wf-text);
   border-left: 3px solid var(--wf-cyan);
   font-weight: 600;
@@ -153,7 +154,6 @@ html, body {
   padding: 32px 40px;
   background: var(--wf-bg);
   overflow-x: hidden;
-  box-sizing: border-box;
 }
 
 .wf-main > * {
@@ -171,13 +171,13 @@ html, body {
   justify-content: center;
   gap: 8px;
   padding: 10px 20px;
-  border-radius: 8px;
+  border-radius: 4px;
   font-family: var(--wf-font-main);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   border: none;
-  transition: all 0.2s ease;
+  transition: all 0.1s ease;
   text-decoration: none;
 }
 
@@ -191,13 +191,13 @@ html, body {
 }
 
 .wf-btn-secondary {
-  background: rgba(255, 255, 255, 0.05);
+  background: #1c1c1c;
   color: var(--wf-text);
   border: 1px solid var(--wf-border);
 }
 
 .wf-btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: #2a2a2a;
 }
 
 /* ============================================================
@@ -205,13 +205,11 @@ html, body {
    ============================================================ */
 
 .wf-main .wf-grid,
-.wf-main-content .wf-grid,
 .wf-main > section > div {
   display: grid !important;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)) !important;
   gap: 24px !important;
   width: 100% !important;
-  max-width: 100% !important;
 }
 
 .wf-card {
@@ -234,11 +232,11 @@ html, body {
 .wf-card-cover {
   width: 100%;
   aspect-ratio: 1;
-  border-radius: 4px; /* Coins carrés comme Beatport */
-  background: #1a1c24 center/cover no-repeat;
+  border-radius: 2px;
+  background: #1a1a1a center/cover no-repeat;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--wf-border);
 }
 
 .wf-card-title {
@@ -262,7 +260,7 @@ html, body {
 .wf-card-play-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -275,8 +273,8 @@ html, body {
 }
 
 .wf-card-play-btn {
-  width: 48px;
-  height: 48px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   background: var(--wf-cyan);
   color: #000;
@@ -286,8 +284,7 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 16px rgba(0, 217, 255, 0.4);
-  transition: transform 0.15s ease;
+  transition: transform 0.1s ease;
 }
 
 .wf-card-play-btn:hover {
@@ -300,26 +297,18 @@ html, body {
 
 @media (max-width: 1024px) {
   .wf-main { padding: 24px; }
-  .wf-main .wf-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)) !important; }
 }
 
 @media (max-width: 900px) {
   .wf-sidebar {
     transform: translateX(-100%);
     transition: transform 0.3s ease;
-    z-index: 200;
   }
-  .wf-sidebar.open {
-    transform: translateX(0);
-  }
+  .wf-sidebar.open { transform: translateX(0); }
   .wf-main {
     margin-left: 0 !important;
     width: 100% !important;
     padding: 16px !important;
   }
   .wf-main .wf-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important; }
-}
-
-@media (max-width: 560px) {
-  .wf-main .wf-grid { grid-template-columns: repeat(2, 1fr) !important; }
 }

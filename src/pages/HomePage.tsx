@@ -30,9 +30,7 @@ export const HomePage = () => {
           .order('created_at', { ascending: false })
           .limit(30);
 
-        if (tracksData) {
-          setTracks(tracksData as Track[]);
-        }
+        if (tracksData) setTracks(tracksData as Track[]);
 
         const { data: profilesData } = await supabase
           .from('profiles')
@@ -51,7 +49,7 @@ export const HomePage = () => {
 
   if (loading) {
     return (
-      <div style={{ color: '#fff', padding: 60, textAlign: 'center', fontSize: 14, letterSpacing: '2px', opacity: 0.5 }}>
+      <div style={{ color: '#fff', padding: 60, textAlign: 'center', fontSize: 14, opacity: 0.5 }}>
         CHARGEMENT...
       </div>
     );
@@ -59,157 +57,137 @@ export const HomePage = () => {
 
   const featured = tracks[0];
   const top10 = [...tracks].sort((a, b) => (b.likes_count || 0) - (a.likes_count || 0)).slice(0, 10);
-  const newReleases = tracks.slice(1, 13); // 12 morceaux pour la grille
+  const newReleases = tracks.slice(1, 13);
+
+  const panelStyle: React.CSSProperties = {
+    background: '#1c1c1c',
+    borderRadius: 8,
+    border: '1px solid #2a2a2a',
+    padding: 20,
+  };
 
   return (
     <div style={{
       display: 'flex',
       flexDirection: 'column',
       gap: 32,
-      paddingBottom: 100, // Espace pour le lecteur
-      fontFamily: 'monospace',
+      paddingBottom: 100,
+      fontFamily: 'Inter, sans-serif',
+      color: '#fff',
     }}>
 
-      {/* ============ HEADER STYLE BEATPORT ============ */}
+      {/* ✅ HERO AVEC LE NOUVEAU SLOGAN */}
+      <div style={{ paddingBottom: 16, borderBottom: '1px solid #2a2a2a' }}>
+        <h1 style={{ 
+          fontSize: isMobile ? '1.8rem' : '2.5rem', 
+          fontWeight: 800, 
+          margin: '0 0 12px 0',
+          letterSpacing: '-0.5px',
+          lineHeight: 1.1
+        }}>
+          Les nouvelles sorties et les remixes.
+        </h1>
+        <p style={{ 
+          color: '#999', 
+          fontSize: isMobile ? 14 : 16, 
+          maxWidth: 800, 
+          margin: 0,
+          lineHeight: 1.5
+        }}>
+          Les promos, edits et morceaux exclusifs autorisés au partage. 
+          <br style={{ display: isMobile ? 'none' : 'block' }} />
+          Nouveautés House, Tech House, EDM, Dance et Underground. Une communauté où les DJs présentent leurs productions et leurs découvertes.
+        </p>
+      </div>
+
+      {/* BARRE DE NAVIGATION INTERNE */}
       <div style={{
         display: 'flex',
-        flexDirection: isMobile ? 'column' : 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '16px 24px',
-        background: 'rgba(10, 12, 20, 0.8)',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-        position: 'sticky',
-        top: 0,
-        zIndex: 100,
-        backdropFilter: 'blur(10px)',
-        gap: 16,
+        paddingBottom: 16,
+        borderBottom: '1px solid #2a2a2a',
       }}>
-        {/* Logo & Liens */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
-          <Link to="/" style={{ fontSize: 20, fontWeight: 900, color: '#fff', textDecoration: 'none' }}>
-            WAVE<span style={{ color: '#00d9ff' }}>FORGE</span>
-          </Link>
-          {!isMobile && (
-            <div style={{ display: 'flex', gap: 20 }}>
-              <Link to="/nouveautes" style={{ color: 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: 13, fontWeight: 600 }}>Sorties</Link>
-              <Link to="/genres" style={{ color: 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: 13, fontWeight: 600 }}>Genres</Link>
-              <Link to="/artists" style={{ color: 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: 13, fontWeight: 600 }}>Artistes</Link>
-              <Link to="/live" style={{ color: '#ff3366', textDecoration: 'none', fontSize: 13, fontWeight: 700 }}>🔴 LIVE</Link>
-            </div>
-          )}
-        </div>
-
-        {/* Recherche & Connexion */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16, width: isMobile ? '100%' : 'auto' }}>
-          <Link to="/search" style={{
-            display: 'flex', alignItems: 'center', gap: 8,
-            padding: '8px 16px', background: 'rgba(255,255,255,0.05)',
-            borderRadius: 8, color: 'rgba(255,255,255,0.5)', textDecoration: 'none', fontSize: 13,
-            flex: 1,
-          }}>
-            🔍 Rechercher...
-          </Link>
-          <Link to="/auth" style={{
-            padding: '8px 16px', background: '#00d9ff', color: '#000',
-            borderRadius: 8, fontWeight: 800, textDecoration: 'none', fontSize: 13,
-          }}>
-            Connexion
-          </Link>
+        <div style={{ display: 'flex', gap: 24, overflowX: 'auto', width: '100%' }}>
+          <Link to="/" style={{ color: '#fff', textDecoration: 'none', fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap' }}>Accueil</Link>
+          <Link to="/nouveautes" style={{ color: '#999', textDecoration: 'none', fontSize: 14, fontWeight: 500, whiteSpace: 'nowrap' }}>Sorties</Link>
+          <Link to="/genres" style={{ color: '#999', textDecoration: 'none', fontSize: 14, fontWeight: 500, whiteSpace: 'nowrap' }}>Genres</Link>
+          <Link to="/artists" style={{ color: '#999', textDecoration: 'none', fontSize: 14, fontWeight: 500, whiteSpace: 'nowrap' }}>Artistes</Link>
+          <Link to="/live" style={{ color: '#ff3366', textDecoration: 'none', fontSize: 14, fontWeight: 700, whiteSpace: 'nowrap' }}>🔴 LIVE</Link>
         </div>
       </div>
 
-      {/* ============ CONTENU PRINCIPAL ============ */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: isMobile ? '1fr' : '1fr 320px',
-        gap: 32,
-        padding: '0 24px',
-      }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 320px', gap: 32 }}>
         
-        {/* COLONNE GAUCHE : À LA UNE + SORTIES */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
           
-          {/* À LA UNE */}
           {featured && (
-            <div style={{
-              display: 'flex',
-              flexDirection: isMobile ? 'column' : 'row',
-              gap: 24,
-              background: '#0a0c14',
-              borderRadius: 16,
-              padding: 24,
-              border: '1px solid rgba(255,255,255,0.05)',
-            }}>
+            <div style={{ ...panelStyle, display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 24 }}>
               <div 
                 onClick={() => play(featured)}
                 style={{
                   width: isMobile ? '100%' : 200, height: isMobile ? 200 : 200,
-                  borderRadius: 12, overflow: 'hidden', flexShrink: 0,
-                  background: featured.cover_url ? `url(${featured.cover_url}) center/cover` : '#1a1c24',
+                  borderRadius: 4, overflow: 'hidden', flexShrink: 0,
+                  background: featured.cover_url ? `url(${featured.cover_url}) center/cover` : '#1a1a1a',
                   cursor: 'pointer', position: 'relative',
                 }}
               >
-                <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0, transition: '0.2s' }} className="hover-play">
+                <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0, transition: '0.2s' }} className="hover-play">
                   <span style={{ fontSize: 40, color: '#00d9ff' }}>▶</span>
                 </div>
               </div>
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                <span style={{ fontSize: 11, color: '#00d9ff', fontWeight: 800, letterSpacing: '1.5px', marginBottom: 8 }}>À LA UNE</span>
-                <h1 style={{ fontSize: 32, fontWeight: 900, color: '#fff', margin: '0 0 8px 0' }}>{featured.title}</h1>
-                <p style={{ fontSize: 18, color: 'rgba(255,255,255,0.6)', margin: '0 0 16px 0' }}>{featured.artist}</p>
+                <span style={{ fontSize: 11, color: '#999', fontWeight: 800, letterSpacing: '1px', marginBottom: 8 }}>À LA UNE</span>
+                <h1 style={{ fontSize: 28, fontWeight: 700, color: '#fff', margin: '0 0 8px 0' }}>{featured.title}</h1>
+                <p style={{ fontSize: 16, color: '#999', margin: '0 0 16px 0' }}>{featured.artist}</p>
                 <div style={{ display: 'flex', gap: 12 }}>
-                  <span style={{ fontSize: 12, color: '#fff', background: 'rgba(255,255,255,0.1)', padding: '4px 8px', borderRadius: 4 }}>{featured.bpm} BPM</span>
-                  <span style={{ fontSize: 12, color: '#fff', background: 'rgba(255,255,255,0.1)', padding: '4px 8px', borderRadius: 4 }}>{featured.genre || 'Electronic'}</span>
+                  <span style={{ fontSize: 11, color: '#fff', background: '#121212', padding: '4px 8px', borderRadius: 4, border: '1px solid #2a2a2a' }}>{featured.bpm} BPM</span>
+                  <span style={{ fontSize: 11, color: '#fff', background: '#121212', padding: '4px 8px', borderRadius: 4, border: '1px solid #2a2a2a' }}>{featured.genre || 'Electronic'}</span>
                 </div>
               </div>
             </div>
           )}
 
-          {/* GRILLE DE SORTIES */}
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-              <h2 style={{ fontSize: 20, fontWeight: 800, color: '#fff', margin: 0 }}>Nouvelles sorties</h2>
-              <Link to="/nouveautes" style={{ fontSize: 13, color: '#00d9ff', textDecoration: 'none' }}>Tout voir →</Link>
+              <h2 style={{ fontSize: 18, fontWeight: 700, color: '#fff', margin: 0 }}>Nouvelles sorties</h2>
+              <Link to="/nouveautes" style={{ fontSize: 12, color: '#00d9ff', textDecoration: 'none', fontWeight: 600 }}>Tout voir →</Link>
             </div>
             <TrackGrid tracks={newReleases} />
           </div>
 
         </div>
 
-        {/* COLONNE DROITE : TOP 10 & ARTISTES */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
           
-          {/* TOP 10 */}
-          <div style={{ background: 'rgba(15,18,28,0.6)', borderRadius: 16, padding: 20, border: '1px solid rgba(255,255,255,0.05)' }}>
-            <h3 style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ color: '#00d9ff' }}>⬆</span> TOP 10
+          <div style={panelStyle}>
+            <h3 style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+              TOP 10
             </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {top10.map((track, idx) => (
                 <div key={track.id} onClick={() => play(track)} style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}>
-                  <span style={{ fontSize: 14, fontWeight: 800, color: '#00d9ff', width: 20 }}>{idx + 1}</span>
-                  <div style={{ width: 40, height: 40, borderRadius: 6, background: track.cover_url ? `url(${track.cover_url}) center/cover` : '#1a1c24', flexShrink: 0 }} />
+                  <span style={{ fontSize: 13, fontWeight: 700, color: '#999', width: 20 }}>{idx + 1}</span>
+                  <div style={{ width: 36, height: 36, borderRadius: 2, background: track.cover_url ? `url(${track.cover_url}) center/cover` : '#1a1a1a', flexShrink: 0, border: '1px solid #2a2a2a' }} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 12, color: '#fff', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.title}</div>
-                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.artist}</div>
+                    <div style={{ fontSize: 11, color: '#999', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.artist}</div>
                   </div>
-                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>{track.bpm} BPM</div>
+                  <div style={{ fontSize: 10, color: '#666' }}>{track.bpm}</div>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* ARTISTES EN VUE */}
-          <div style={{ background: 'rgba(15,18,28,0.6)', borderRadius: 16, padding: 20, border: '1px solid rgba(255,255,255,0.05)' }}>
-            <h3 style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 16 }}>Artistes en vue</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={panelStyle}>
+            <h3 style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 12 }}>Artistes en vue</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {artists.slice(0, 5).map((artist) => (
                 <Link key={artist.id} to={`/profil/${artist.id}`} style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none' }}>
-                  <div style={{ width: 36, height: 36, borderRadius: '50%', background: artist.avatar_url ? `url(${artist.avatar_url}) center/cover` : 'linear-gradient(135deg, #00d9ff, #7c5cff)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', fontWeight: 800, fontSize: 14 }}>
+                  <div style={{ width: 32, height: 32, borderRadius: '50%', background: artist.avatar_url ? `url(${artist.avatar_url}) center/cover` : '#121212', border: '1px solid #2a2a2a', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999', fontWeight: 800, fontSize: 12 }}>
                     {!artist.avatar_url && artist.username?.charAt(0).toUpperCase()}
                   </div>
-                  <div style={{ fontSize: 13, color: '#fff', fontWeight: 600 }}>{artist.username}</div>
+                  <div style={{ fontSize: 12, color: '#fff', fontWeight: 600 }}>{artist.username}</div>
                 </Link>
               ))}
             </div>
@@ -218,9 +196,10 @@ export const HomePage = () => {
         </div>
       </div>
 
-      {/* Animations */}
       <style>{`
         .hover-play:hover { opacity: 1 !important; }
+        a, div, button { outline: none !important; }
+        a:focus, div:focus, button:focus { outline: none !important; box-shadow: none !important; }
       `}</style>
     </div>
   );

@@ -17,7 +17,7 @@ export interface Track {
   genre?: string;
   duration?: number;
   downloads?: number;
-  likes_count?: number; // ✅ Utilise le nouveau compteur
+  likes_count?: number;
   created_at?: string;
   user_id?: string;
   peaks?: any;
@@ -29,13 +29,12 @@ interface TrackGridProps {
 
 export const TrackGrid = ({ tracks }: TrackGridProps) => {
   const navigate = useNavigate();
-  const { user } = useAuth(); // ✅ Récupère l'utilisateur connecté
+  const { user } = useAuth(); 
   const { play, isPlaying, isCurrentTrack } = usePlayer();
   
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [userLikes, setUserLikes] = useState<Record<string, boolean>>({});
 
-  // ✅ Charge les likes de l'utilisateur au démarrage
   useEffect(() => {
     const fetchUserLikes = async () => {
       if (!user) return;
@@ -65,34 +64,22 @@ export const TrackGrid = ({ tracks }: TrackGridProps) => {
   const handleLike = async (e: React.MouseEvent, trackId: string) => {
     e.stopPropagation();
     
-    // Si pas connecté, on redirige vers login
     if (!user) {
       navigate('/auth');
       return;
     }
 
     const isCurrentlyLiked = userLikes[trackId];
-
-    // 1. Mise à jour optimiste (immédiate) de l'interface
     setUserLikes((prev) => ({ ...prev, [trackId]: !isCurrentlyLiked }));
 
     try {
       if (isCurrentlyLiked) {
-        // Retirer le like
-        await supabase
-          .from('likes')
-          .delete()
-          .eq('user_id', user.id)
-          .eq('track_id', trackId);
+        await supabase.from('likes').delete().eq('user_id', user.id).eq('track_id', trackId);
       } else {
-        // Ajouter le like
-        await supabase
-          .from('likes')
-          .insert({ user_id: user.id, track_id: trackId });
+        await supabase.from('likes').insert({ user_id: user.id, track_id: trackId });
       }
     } catch (err) {
       console.error('Erreur like:', err);
-      // En cas d'erreur, on annule le changement visuel
       setUserLikes((prev) => ({ ...prev, [trackId]: isCurrentlyLiked }));
     }
   };
@@ -122,9 +109,8 @@ export const TrackGrid = ({ tracks }: TrackGridProps) => {
         const isHovered = hoveredId === track.id;
         const isLiked = userLikes[track.id] || false;
         
-        // ✅ Affiche le vrai compteur + l'ajout optimiste
+        // ✅ Calcul du compteur affiché (utilisé plus bas)
         const displayLikes = (track.likes_count || 0) + (isLiked ? 1 : 0);
-        // Note: ce calcul est simplifié, le Trigger SQL met à jour le vrai compteur en base
         
         const isThisTrack = isCurrentTrack(track.id);
         const isThisPlaying = isThisTrack && isPlaying;
@@ -150,7 +136,7 @@ export const TrackGrid = ({ tracks }: TrackGridProps) => {
               boxShadow: isHovered || isThisTrack ? '0 12px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 217, 255, 0.15)' : 'none',
             }}
           >
-            {/* Pochette avec effet de zoom */}
+            {/* Pochette */}
             <div style={{
               width: '100%',
               aspectRatio: '1',
@@ -245,7 +231,8 @@ export const TrackGrid = ({ tracks }: TrackGridProps) => {
                   transition: 'color 0.2s ease',
                 }}
               >
-                {isLiked ? '❤️' : '🤍'} {track.likes_count || 0}
+                {/* ✅ Utilisation de displayLikes ici pour corriger l'erreur Vercel */}
+                {isLiked ? '❤️' : '🤍'} {displayLikes}
               </button>
               
               <div style={{ fontSize: 11, color: 'rgba(255, 255, 255, 0.3)' }}>

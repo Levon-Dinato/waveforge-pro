@@ -11,8 +11,8 @@ export const LivePage = () => {
 
   const rtmpUrl = 'rtmp://live.tviply.com/stream';
   const streamKey = '6n9kjjb7qw4ko4w4ock';
-  const tviplyEmbedUrl = 'https://tviply.com/waveforgepro/embed';
-  const tviplyChannelUrl = 'https://tviply.com/waveforgepro';
+  const tviplyEmbedUrl = 'https://tviply.com/dropzonedj/embed';
+  const tviplyChannelUrl = 'https://tviply.com/dropzonedj';
 
   const shareUrl = 'https://waveforge-pro-one.vercel.app/share/live';
   const shareTitle = 'DropZone DJ Live 🎧';

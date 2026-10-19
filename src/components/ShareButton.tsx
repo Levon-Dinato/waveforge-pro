@@ -88,17 +88,13 @@ export const ShareButton: React.FC<ShareButtonProps> = ({
   }, [menuOpen]);
 
   const handleShare = async () => {
-    // ✅ MOBILE : utilise UNIQUEMENT le partage natif
     if (isMobile) {
       if (navigator.share) {
         try {
           await navigator.share({ title, text, url });
           return;
-        } catch (e) {
-          // utilisateur a annulé ou pas supporté
-        }
+        } catch (e) {}
       }
-      // Fallback mobile (si pas de navigator.share) : copie le lien
       try {
         await navigator.clipboard.writeText(url);
         setCopied(true);
@@ -106,8 +102,6 @@ export const ShareButton: React.FC<ShareButtonProps> = ({
       } catch (e) {}
       return;
     }
-
-    // ✅ DESKTOP : ouvre notre menu custom
     setMenuOpen(!menuOpen);
   };
 
@@ -118,21 +112,11 @@ export const ShareButton: React.FC<ShareButtonProps> = ({
 
     let shareUrl = '';
     switch (platform) {
-      case 'facebook':
-        shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`;
-        break;
-      case 'twitter':
-        shareUrl = `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedText}`;
-        break;
-      case 'whatsapp':
-        shareUrl = `https://wa.me/?text=${encodedText}%20${encodedUrl}`;
-        break;
-      case 'telegram':
-        shareUrl = `https://t.me/share/url?url=${encodedUrl}&text=${encodedText}`;
-        break;
-      case 'reddit':
-        shareUrl = `https://www.reddit.com/submit?url=${encodedUrl}&title=${encodedTitle}`;
-        break;
+      case 'facebook': shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`; break;
+      case 'twitter': shareUrl = `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedText}`; break;
+      case 'whatsapp': shareUrl = `https://wa.me/?text=${encodedText}%20${encodedUrl}`; break;
+      case 'telegram': shareUrl = `https://t.me/share/url?url=${encodedUrl}&text=${encodedText}`; break;
+      case 'reddit': shareUrl = `https://www.reddit.com/submit?url=${encodedUrl}&title=${encodedTitle}`; break;
     }
 
     if (shareUrl) {
@@ -159,11 +143,31 @@ export const ShareButton: React.FC<ShareButtonProps> = ({
   };
 
   const sizes = {
-    small:  { btn: 30, font: 11, iconFont: 14 },
-    medium: { btn: 38, font: 12, iconFont: 16 },
-    large:  { btn: 46, font: 14, iconFont: 20 },
+    small:  { btn: 28, font: 11, iconFont: 14 },
+    medium: { btn: 36, font: 12, iconFont: 16 },
+    large:  { btn: 44, font: 13, iconFont: 18 },
   };
   const s = sizes[size];
+
+  // ✅ Style commun du bouton (Glassmorphism)
+  const buttonStyle: React.CSSProperties = {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    padding: variant === 'icon' ? 0 : '8px 16px',
+    width: variant === 'icon' ? s.btn : 'auto',
+    height: variant === 'icon' ? s.btn : 'auto',
+    background: 'rgba(255, 255, 255, 0.03)',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
+    color: 'rgba(255, 255, 255, 0.6)',
+    borderRadius: variant === 'icon' ? 8 : 30, // Très arrondi si c'est un bouton texte
+    cursor: 'pointer',
+    fontFamily: 'monospace',
+    fontSize: s.font,
+    fontWeight: 700,
+    transition: 'all 0.2s ease',
+  };
 
   return (
     <div ref={menuRef} style={{ position: 'relative', display: 'inline-block' }}>
@@ -177,11 +181,6 @@ export const ShareButton: React.FC<ShareButtonProps> = ({
           50% { transform: scale(1.15); }
           100% { transform: scale(1); opacity: 1; }
         }
-        .share-btn-hover { transition: all 0.15s ease; }
-        .share-btn-hover:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 8px 24px rgba(0, 217, 255, 0.35);
-        }
         .share-platform-item { transition: all 0.15s ease; }
         .share-platform-item:hover { transform: translateX(4px); }
       `}</style>
@@ -189,23 +188,18 @@ export const ShareButton: React.FC<ShareButtonProps> = ({
       <button
         onClick={handleShare}
         title={label}
-        className="share-btn-hover"
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 8,
-          padding: variant === 'icon' ? 0 : '8px 14px',
-          width: variant === 'icon' ? s.btn : 'auto',
-          height: variant === 'icon' ? s.btn : 'auto',
-          justifyContent: 'center',
-          background: 'linear-gradient(135deg, rgba(0, 217, 255, 0.15), rgba(124, 92, 255, 0.1))',
-          border: '1px solid rgba(0, 217, 255, 0.4)',
-          color: '#00d9ff',
-          borderRadius: 8,
-          cursor: 'pointer',
-          fontFamily: 'monospace',
-          fontSize: s.font,
-          fontWeight: 700,
+        style={buttonStyle}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = 'rgba(0, 217, 255, 0.1)';
+          e.currentTarget.style.borderColor = 'rgba(0, 217, 255, 0.4)';
+          e.currentTarget.style.color = '#00d9ff';
+          e.currentTarget.style.boxShadow = '0 0 20px rgba(0, 217, 255, 0.15)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)';
+          e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+          e.currentTarget.style.color = 'rgba(255, 255, 255, 0.6)';
+          e.currentTarget.style.boxShadow = 'none';
         }}
       >
         {copied && isMobile ? (
@@ -230,9 +224,8 @@ export const ShareButton: React.FC<ShareButtonProps> = ({
           style={{
             position: 'absolute',
             [position === 'bottom' ? 'top' : 'bottom']: '100%',
-            [position === 'bottom' ? 'marginTop' : 'marginBottom']: -200,
-            right: 0,
-            marginRight: 50,
+            [position === 'bottom' ? 'marginTop' : 'marginBottom']: 8, // ✅ Espacement propre
+            right: 0, // ✅ Aligné à droite du bouton, plus besoin de marginRight
             background: 'linear-gradient(135deg, rgba(15, 18, 28, 0.98), rgba(10, 12, 20, 0.99))',
             border: '1px solid rgba(0, 217, 255, 0.3)',
             borderRadius: 12,

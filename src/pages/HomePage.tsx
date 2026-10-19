@@ -30,7 +30,7 @@ export const HomePage = () => {
 
         if (tracksData) {
           setTracks(tracksData as Track[]);
-          const totalPlays = tracksData.reduce((acc: number, t: any) => acc + (t.downloads || 0) + (t.likes || 0), 0);
+          const totalPlays = tracksData.reduce((acc: number, t: any) => acc + (t.downloads || 0) + (t.likes_count || 0), 0);
           setStats({
             tracks: tracksData.length,
             artists: new Set(tracksData.map((t: any) => t.artist)).size,
@@ -203,16 +203,46 @@ export const HomePage = () => {
                 color: '#000', borderRadius: 10,
                 fontSize: 14, fontWeight: 700, textDecoration: 'none',
                 boxShadow: '0 4px 16px rgba(0, 217, 255, 0.35)',
-              }}>
+                transition: 'transform 0.2s, box-shadow 0.2s',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 217, 255, 0.5)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 4px 16px rgba(0, 217, 255, 0.35)';
+              }}
+              >
                 🎹 Lancer le Studio
               </Link>
+              
+              {/* ✅ BOUTON MIXER MODERNISÉ (Glassmorphism) */}
               <Link to="/mixer" style={{
                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                 padding: '14px 28px',
-                background: 'transparent', color: '#fff',
-                border: '1px solid rgba(255, 255, 255, 0.15)', borderRadius: 10,
+                background: 'rgba(255, 255, 255, 0.08)', // ✅ Un peu plus visible
+                color: 'rgba(255, 255, 255, 0.8)',
+                border: '1px solid rgba(255, 255, 255, 0.1)', 
+                borderRadius: 10,
                 fontSize: 14, fontWeight: 600, textDecoration: 'none',
-              }}>
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(0, 217, 255, 0.1)';
+                e.currentTarget.style.borderColor = 'rgba(0, 217, 255, 0.4)';
+                e.currentTarget.style.color = '#00d9ff';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 217, 255, 0.15)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                e.currentTarget.style.color = 'rgba(255, 255, 255, 0.8)';
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
+              >
                 🎛️ Ouvrir le Mixer
               </Link>
             </div>
@@ -234,24 +264,61 @@ export const HomePage = () => {
           {/* COLONNE DROITE : VISUEL */}
           {!isMobile && featured && (
             <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-              <div style={{
-                width: '100%', maxWidth: 380, aspectRatio: '1', borderRadius: 20,
-                background: featured.cover_url ? `url(${featured.cover_url}) center/cover` : '#1a1c24',
-                boxShadow: '0 30px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05)',
-                position: 'relative', transform: 'rotate(-2deg)',
-              }}>
+              
+              {/* ✅ CARTE AVEC FLOTTEMENT PLUS RAPIDE ET HALO CYAN */}
+              <div 
+                style={{
+                  width: '100%', maxWidth: 380, aspectRatio: '1', borderRadius: 20,
+                  background: featured.cover_url ? `url(${featured.cover_url}) center/cover` : '#1a1c24',
+                  boxShadow: '0 30px 80px rgba(0, 0, 0, 0.6), 0 0 40px rgba(0, 217, 255, 0.3)', // ✅ Halo cyan
+                  position: 'relative', 
+                  animation: 'floatCard 4s ease-in-out infinite', // ✅ Flottement plus rapide
+                  cursor: 'pointer',
+                  transition: 'transform 0.3s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'scale(1.02) rotate(-1deg)';
+                  const overlay = e.currentTarget.querySelector('.play-overlay-home') as HTMLElement;
+                  if (overlay) overlay.style.opacity = '1';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'scale(1) rotate(-2deg)';
+                  const overlay = e.currentTarget.querySelector('.play-overlay-home') as HTMLElement;
+                  if (overlay) overlay.style.opacity = '0';
+                }}
+              >
                 <div style={{
                   position: 'absolute', top: 16, left: 16,
                   padding: '6px 12px', background: 'rgba(0, 0, 0, 0.7)',
                   backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.15)',
                   borderRadius: 100, fontSize: 10, fontWeight: 700, color: '#fff', letterSpacing: '1px',
+                  zIndex: 2,
                 }}>
                   🔥 À LA UNE
                 </div>
+
+                {/* ✅ OVERLAY PLAY AU SURVOL */}
+                <div className="play-overlay-home" style={{
+                  position: 'absolute', inset: 0,
+                  background: 'rgba(0,0,0,0.5)',
+                  borderRadius: 20,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  opacity: 0, transition: 'opacity 0.3s ease', zIndex: 1,
+                }}>
+                  <div style={{
+                    width: 64, height: 64, borderRadius: '50%',
+                    background: 'linear-gradient(135deg, #00d9ff, #7c5cff)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 24, color: '#000', boxShadow: '0 0 30px rgba(0, 217, 255, 0.8)',
+                  }}>
+                    ▶
+                  </div>
+                </div>
+
                 <div style={{
                   position: 'absolute', bottom: 0, left: 0, right: 0,
                   padding: 20, background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, transparent 100%)',
-                  borderRadius: '0 0 20px 20px',
+                  borderRadius: '0 0 20px 20px', zIndex: 2,
                 }}>
                   <div style={{ fontSize: 11, color: '#00d9ff', fontWeight: 700, letterSpacing: '1px', marginBottom: 4 }}>
                     {featured.bpm || 128} BPM
@@ -274,9 +341,27 @@ export const HomePage = () => {
           padding: isMobile ? 20 : 28,
           background: 'linear-gradient(135deg, rgba(255, 51, 102, 0.1), rgba(255, 92, 240, 0.05))',
           border: '1px solid rgba(255, 51, 102, 0.25)', borderRadius: 20,
-          textDecoration: 'none', color: '#fff', transition: 'all 0.2s ease', gap: 16,
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          textDecoration: 'none', color: '#fff', transition: 'all 0.3s ease', gap: 16,
+          position: 'relative',
+          overflow: 'hidden',
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.borderColor = 'rgba(255, 51, 102, 0.5)';
+          e.currentTarget.style.boxShadow = '0 8px 32px rgba(255, 51, 102, 0.15)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.borderColor = 'rgba(255, 51, 102, 0.25)';
+          e.currentTarget.style.boxShadow = 'none';
+        }}
+        >
+          {/* ✅ EFFET DE BRILLANCE PLUS FORT */}
+          <div style={{
+            position: 'absolute', top: 0, left: '-100%', width: '50%', height: '100%',
+            background: 'linear-gradient(90deg, transparent, rgba(0, 217, 255, 0.3), transparent)', // ✅ Plus lumineux
+            animation: 'shimmer 3s infinite',
+          }} />
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, position: 'relative', zIndex: 1 }}>
             <div style={{
               width: isMobile ? 40 : 48, height: isMobile ? 40 : 48, borderRadius: '50%',
               background: 'linear-gradient(135deg, #ff3366, #ff5cf0)',
@@ -295,7 +380,7 @@ export const HomePage = () => {
               </div>
             </div>
           </div>
-          <div style={{ fontSize: isMobile ? 20 : 24, opacity: 0.5, display: isMobile ? 'none' : 'block' }}>→</div>
+          <div style={{ fontSize: isMobile ? 20 : 24, opacity: 0.5, display: isMobile ? 'none' : 'block', position: 'relative', zIndex: 1 }}>→</div>
         </Link>
       </section>
 
@@ -329,7 +414,18 @@ export const HomePage = () => {
                   background: artist.avatar_url ? `url(${artist.avatar_url}) center/cover` : '#1a1c24',
                   marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: 40, boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)',
-                }}>
+                  border: '2px solid transparent',
+                  transition: 'all 0.3s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = '#00d9ff';
+                  e.currentTarget.style.transform = 'scale(1.05)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = 'transparent';
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
+                >
                   {!artist.avatar_url && '🎧'}
                 </div>
                 <div style={{ fontSize: isMobile ? 12 : 14, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -370,7 +466,11 @@ export const HomePage = () => {
           display: 'inline-flex', alignItems: 'center', gap: 8,
           padding: '16px 40px', background: '#000', color: '#fff', borderRadius: 12,
           fontSize: 15, fontWeight: 700, textDecoration: 'none', position: 'relative',
-        }}>
+          transition: 'transform 0.2s',
+        }}
+        onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+        onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+        >
           Créer un compte gratuitement →
         </Link>
       </section>
@@ -380,6 +480,15 @@ export const HomePage = () => {
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
         @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
         @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+        
+        @keyframes floatCard { 
+          0%, 100% { transform: translateY(0) rotate(-2deg); } 
+          50% { transform: translateY(-15px) rotate(-2deg); } 
+        }
+        @keyframes shimmer {
+          0% { left: -100%; }
+          100% { left: 200%; }
+        }
       `}</style>
     </div>
   );

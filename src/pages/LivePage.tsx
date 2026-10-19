@@ -1,6 +1,6 @@
 // src/pages/LivePage.tsx
 import { useState } from 'react';
-import { Helmet } from 'react-helmet-async'; // ✅ NOUVEL IMPORT
+import { Helmet } from 'react-helmet-async';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { LiveChat } from '../components/LiveChat';
 
@@ -18,7 +18,7 @@ export const LivePage = () => {
   const tviplyChannelUrl = 'https://tviply.com/waveforgepro';
 
   // ✅ URL de partage canonique (fixe, pas window.location.href)
-  const shareUrl = 'https://waveforge-pro-one.vercel.app/share/live';
+  const shareUrl = 'https://waveforge-pro-one.vercel.app/live';
   const shareTitle = 'WaveForge Pro Live 🎧';
   const shareText = 'Regarde le live de WaveForge Pro et rejoins la communauté !';
 
@@ -140,7 +140,7 @@ export const LivePage = () => {
             </p>
           </div>
 
-          {/* ✅ BOUTON DE PARTAGE */}
+          {/* ✅ BOUTON DE PARTAGE MODERNISÉ */}
           <div style={{ position: 'relative' }}>
             <button
               onClick={() => setShareMenuOpen(!shareMenuOpen)}
@@ -148,27 +148,37 @@ export const LivePage = () => {
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 8,
-                padding: '12px 20px',
-                background: 'linear-gradient(135deg, #00d9ff, #7c5cff)',
-                color: '#000',
-                border: 'none',
-                borderRadius: 12,
-                fontSize: 14,
+                padding: '10px 20px',
+                background: 'rgba(255, 255, 255, 0.03)', // Fond verre
+                border: '1px solid rgba(255, 255, 255, 0.1)', // Bordure fine
+                color: 'rgba(255, 255, 255, 0.6)', // Gris clair
+                borderRadius: 30, // Très arrondi
+                fontSize: 13,
                 fontWeight: 700,
                 cursor: 'pointer',
-                boxShadow: '0 4px 16px rgba(0, 217, 255, 0.35)',
                 transition: 'all 0.2s ease',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 217, 255, 0.5)';
+                e.currentTarget.style.background = 'rgba(0, 217, 255, 0.1)';
+                e.currentTarget.style.borderColor = 'rgba(0, 217, 255, 0.4)';
+                e.currentTarget.style.color = '#00d9ff';
+                e.currentTarget.style.boxShadow = '0 0 20px rgba(0, 217, 255, 0.15)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 4px 16px rgba(0, 217, 255, 0.35)';
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)';
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                e.currentTarget.style.color = 'rgba(255, 255, 255, 0.6)';
+                e.currentTarget.style.boxShadow = 'none';
               }}
             >
-              <span style={{ fontSize: 16 }}>📤</span>
+              {/* Icône SVG moderne */}
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="18" cy="5" r="3" />
+                <circle cx="6" cy="12" r="3" />
+                <circle cx="18" cy="19" r="3" />
+                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+              </svg>
               Partager
             </button>
 
@@ -190,35 +200,37 @@ export const LivePage = () => {
                     position: 'absolute',
                     top: 'calc(100% + 8px)',
                     right: 0,
-                    background: 'rgba(20, 22, 30, 0.98)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: 16,
+                    background: 'linear-gradient(135deg, rgba(15, 18, 28, 0.98), rgba(10, 12, 20, 0.99))',
+                    border: '1px solid rgba(0, 217, 255, 0.3)',
+                    borderRadius: 12,
                     padding: 8,
                     minWidth: 220,
-                    maxWidth: 'calc(100vw - 32px)', // ✅ safe sur mobile
-                    boxShadow: '0 20px 60px rgba(0, 0, 0, 0.6)',
+                    maxWidth: 'calc(100vw - 32px)',
+                    boxShadow: '0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(0, 217, 255, 0.15)',
                     backdropFilter: 'blur(20px)',
                     WebkitBackdropFilter: 'blur(20px)',
                     zIndex: 100,
                   }}
                 >
                   <div style={{
-                    fontSize: 10,
+                    fontSize: 9,
                     fontWeight: 700,
-                    color: 'rgba(255, 255, 255, 0.4)',
-                    letterSpacing: '1.5px',
+                    color: 'rgba(0, 217, 255, 0.6)',
+                    letterSpacing: '2px',
                     textTransform: 'uppercase',
-                    padding: '8px 12px 4px',
+                    padding: '4px 12px 10px',
+                    borderBottom: '1px solid rgba(255,255,255,0.06)',
+                    marginBottom: 6,
                   }}>
                     Partager sur
                   </div>
 
                   {[
-                    { key: 'twitter' as const, label: 'Twitter / X', icon: '𝕏', color: '#fff' },
-                    { key: 'facebook' as const, label: 'Facebook', icon: '📘', color: '#1877f2' },
-                    { key: 'whatsapp' as const, label: 'WhatsApp', icon: '💬', color: '#25d366' },
-                    { key: 'linkedin' as const, label: 'LinkedIn', icon: '💼', color: '#0a66c2' },
-                    { key: 'telegram' as const, label: 'Telegram', icon: '✈️', color: '#0088cc' },
+                    { key: 'twitter' as const, label: 'Twitter / X', icon: '𝕏' },
+                    { key: 'facebook' as const, label: 'Facebook', icon: '📘' },
+                    { key: 'whatsapp' as const, label: 'WhatsApp', icon: '💬' },
+                    { key: 'linkedin' as const, label: 'LinkedIn', icon: '💼' },
+                    { key: 'telegram' as const, label: 'Telegram', icon: '✈️' },
                   ].map((platform) => (
                     <button
                       key={platform.key}
@@ -231,7 +243,7 @@ export const LivePage = () => {
                         padding: '10px 12px',
                         background: 'transparent',
                         border: 'none',
-                        borderRadius: 10,
+                        borderRadius: 8,
                         color: '#fff',
                         fontSize: 13,
                         fontWeight: 500,
@@ -256,7 +268,7 @@ export const LivePage = () => {
                   <div style={{
                     height: 1,
                     background: 'rgba(255, 255, 255, 0.08)',
-                    margin: '8px 0',
+                    margin: '6px 8px',
                   }} />
 
                   <button
@@ -272,8 +284,8 @@ export const LivePage = () => {
                       padding: '10px 12px',
                       background: 'transparent',
                       border: 'none',
-                      borderRadius: 10,
-                      color: '#00d9ff',
+                      borderRadius: 8,
+                      color: '#00ff88',
                       fontSize: 13,
                       fontWeight: 600,
                       cursor: 'pointer',
@@ -281,7 +293,7 @@ export const LivePage = () => {
                       textAlign: 'left',
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.background = 'rgba(0, 217, 255, 0.1)';
+                      e.currentTarget.style.background = 'rgba(0, 255, 136, 0.1)';
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.background = 'transparent';

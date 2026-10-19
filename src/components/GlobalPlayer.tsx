@@ -1,7 +1,8 @@
 // src/components/GlobalPlayer.tsx
 import React, { useRef, useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { usePlayer } from '../contexts/PlayerContext';
+import { useAuth } from '../contexts/AuthContext';
 import { useIsMobile } from '../hooks/useIsMobile';
 
 const formatTime = (sec: number): string => {
@@ -45,7 +46,6 @@ const WaveProgress: React.FC<WaveProgressProps> = ({
   peaks, progress, onSeek, height = 30, compact = false,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [, setHoverRatio] = useState<number | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
   const displayPeaks = downsamplePeaks(peaks, compact ? 80 : 120);
@@ -66,7 +66,6 @@ const WaveProgress: React.FC<WaveProgressProps> = ({
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const ratio = getRatio(e.clientX);
     if (ratio === null) return;
-    setHoverRatio(ratio);
     if (isDragging) onSeek(ratio);
   };
 
@@ -84,7 +83,7 @@ const WaveProgress: React.FC<WaveProgressProps> = ({
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
-      onMouseLeave={() => { setHoverRatio(null); setIsDragging(false); }}
+      onMouseLeave={() => setIsDragging(false)}
       style={{
         width: '100%',
         height,
@@ -145,23 +144,39 @@ export const GlobalPlayer: React.FC = () => {
   const volumeIcon = isMuted || volume === 0 ? '🔇' : volume < 0.4 ? '🔉' : '🔊';
 
   // ═══════════════════════════════════════════════════════════
-  // MOBILE
+  // MOBILE (✅ CORRIGÉ : fixé en bas, au-dessus de la navbar)
   // ═══════════════════════════════════════════════════════════
   if (isMobile) {
     return (
       <div style={{
-        position: 'fixed', bottom: 78, left: 0, right: 0, zIndex: 9999,
-        background: '#0f0f0f', borderTop: '1px solid #2a2a2a',
-        padding: '8px 12px 10px', display: 'flex', flexDirection: 'column', gap: 6,
-        fontFamily: 'Inter, sans-serif', color: '#fff',
+        position: 'fixed',
+        bottom: 70, // ✅ Juste au-dessus de la navbar mobile
+        left: 0,
+        right: 0,
+        zIndex: 9998, // Sous la navbar
+        background: '#1c1c1c',
+        borderTop: '1px solid #2a2a2a',
+        padding: '10px 12px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 8,
+        fontFamily: 'Inter, sans-serif',
+        color: '#fff',
+        boxShadow: '0 -4px 12px rgba(0,0,0,0.3)',
       }}>
-        <WaveProgress peaks={currentTrack.peaks || []} progress={progress} onSeek={seek} height={10} compact={true} />
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <Link to={currentTrack.user_id ? `/profil/${currentTrack.user_id}` : '#'} style={{
-            width: 40, height: 40, borderRadius: 4, flexShrink: 0,
-            background: currentTrack.cover_url ? `url(${currentTrack.cover_url}) center/cover` : '#1a1a1a',
-            border: '1px solid #2a2a2a',
-          }} />
+        {/* Waveform fine en haut */}
+        <WaveProgress peaks={currentTrack.peaks || []} progress={progress} onSeek={seek} height={8} compact={true} />
+        
+        {/* Ligne principale : Pochette + Titre + Play */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <Link 
+            to={currentTrack.user_id ? `/profil/${currentTrack.user_id}` : '#'} 
+            style={{
+              width: 40, height: 40, borderRadius: 4, flexShrink: 0,
+              background: currentTrack.cover_url ? `url(${currentTrack.cover_url}) center/cover` : '#121212',
+              border: '1px solid #2a2a2a',
+            }} 
+          />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 13, fontWeight: 600, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {currentTrack.title}
@@ -170,10 +185,22 @@ export const GlobalPlayer: React.FC = () => {
               {currentTrack.artist}
             </div>
           </div>
-          <button onClick={togglePlay} style={{ width: 36, height: 36, borderRadius: '50%', background: '#00d9ff', color: '#000', border: 'none', fontSize: 14, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <button onClick={togglePlay} style={{ 
+            width: 40, height: 40, borderRadius: '50%', 
+            background: '#00d9ff', color: '#000', border: 'none', 
+            fontSize: 16, fontWeight: 900, cursor: 'pointer', 
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            flexShrink: 0,
+          }}>
             {isPlaying ? '⏸' : '▶'}
           </button>
-          <button onClick={stop} style={{ background: 'transparent', border: 'none', color: '#666', cursor: 'pointer', fontSize: 16 }}>✕</button>
+          <button onClick={stop} style={{ 
+            background: 'transparent', border: 'none', 
+            color: '#666', cursor: 'pointer', fontSize: 16,
+            padding: 4, flexShrink: 0,
+          }}>
+            ✕
+          </button>
         </div>
       </div>
     );
@@ -189,6 +216,7 @@ export const GlobalPlayer: React.FC = () => {
       display: 'flex', alignItems: 'center', padding: '0 20px', gap: 20,
       fontFamily: 'Inter, sans-serif', color: '#fff',
     }}>
+      
       {/* GAUCHE : Pochette + Titre + Artiste */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, width: 280, flexShrink: 0 }}>
         <Link

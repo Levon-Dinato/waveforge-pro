@@ -1,10 +1,11 @@
 // src/pages/HomePage.tsx
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { TrackGrid } from '../components/TrackGrid';
 import type { Track } from '../components/TrackGrid';
 import { useIsMobile } from '../hooks/useIsMobile';
+import { usePlayer } from '../contexts/PlayerContext'; // ✅ IMPORT DU LECTEUR
 
 interface Artist {
   id: string;
@@ -14,6 +15,9 @@ interface Artist {
 
 export const HomePage = () => {
   const isMobile = useIsMobile(768);
+  const navigate = useNavigate();
+  const { play, isPlaying, isCurrentTrack } = usePlayer(); // ✅ RÉCUPÉRATION DU LECTEUR
+  
   const [tracks, setTracks] = useState<Track[]>([]);
   const [artists, setArtists] = useState<Artist[]>([]);
   const [stats, setStats] = useState({ tracks: 0, artists: 0, plays: 0 });
@@ -64,6 +68,23 @@ export const HomePage = () => {
   const featured = tracks[0];
   const topTracks = tracks.slice(1, 16);
   const newTracks = tracks.slice(16, 31);
+
+  // ✅ FONCTION POUR LANCER LA MUSIQUE DEPUIS LA CARTE "À LA UNE"
+  const handlePlayFeatured = () => {
+    if (!featured) return;
+    play({
+      id: featured.id,
+      title: featured.title,
+      artist: featured.artist,
+      audio_url: featured.audio_url,
+      cover_url: featured.cover_url,
+      user_id: featured.user_id || null,
+      duration: featured.duration,
+      peaks: featured.peaks,
+    });
+  };
+
+  const isFeaturedPlaying = featured ? isCurrentTrack(featured.id) && isPlaying : false;
 
   return (
     <div style={{
@@ -217,11 +238,11 @@ export const HomePage = () => {
                 🎹 Lancer le Studio
               </Link>
               
-              {/* ✅ BOUTON MIXER MODERNISÉ (Glassmorphism) */}
+              {/* ✅ BOUTON MIXER MODERNISÉ */}
               <Link to="/mixer" style={{
                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                 padding: '14px 28px',
-                background: 'rgba(255, 255, 255, 0.08)', // ✅ Un peu plus visible
+                background: 'rgba(255, 255, 255, 0.08)', 
                 color: 'rgba(255, 255, 255, 0.8)',
                 border: '1px solid rgba(255, 255, 255, 0.1)', 
                 borderRadius: 10,
@@ -261,20 +282,22 @@ export const HomePage = () => {
             </div>
           </div>
 
-          {/* COLONNE DROITE : VISUEL */}
+          {/* COLONNE DROITE : VISUEL "À LA UNE" */}
           {!isMobile && featured && (
             <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
               
-              {/* ✅ CARTE AVEC FLOTTEMENT PLUS RAPIDE ET HALO CYAN */}
               <div 
+                onClick={handlePlayFeatured} // ✅ CONNEXION AU LECTEUR ICI
                 style={{
                   width: '100%', maxWidth: 380, aspectRatio: '1', borderRadius: 20,
                   background: featured.cover_url ? `url(${featured.cover_url}) center/cover` : '#1a1c24',
-                  boxShadow: '0 30px 80px rgba(0, 0, 0, 0.6), 0 0 40px rgba(0, 217, 255, 0.3)', // ✅ Halo cyan
+                  boxShadow: isFeaturedPlaying 
+                    ? '0 30px 80px rgba(0, 0, 0, 0.6), 0 0 60px rgba(0, 217, 255, 0.6)' // Halo fort si en lecture
+                    : '0 30px 80px rgba(0, 0, 0, 0.6), 0 0 40px rgba(0, 217, 255, 0.3)', 
                   position: 'relative', 
-                  animation: 'floatCard 4s ease-in-out infinite', // ✅ Flottement plus rapide
+                  animation: 'floatCard 4s ease-in-out infinite', 
                   cursor: 'pointer',
-                  transition: 'transform 0.3s ease',
+                  transition: 'all 0.3s ease',
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = 'scale(1.02) rotate(-1deg)';
@@ -297,13 +320,14 @@ export const HomePage = () => {
                   🔥 À LA UNE
                 </div>
 
-                {/* ✅ OVERLAY PLAY AU SURVOL */}
+                {/* ✅ OVERLAY PLAY AU SURVOL (Change en Pause si en lecture) */}
                 <div className="play-overlay-home" style={{
                   position: 'absolute', inset: 0,
                   background: 'rgba(0,0,0,0.5)',
                   borderRadius: 20,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  opacity: 0, transition: 'opacity 0.3s ease', zIndex: 1,
+                  opacity: isFeaturedPlaying ? 1 : 0, 
+                  transition: 'opacity 0.3s ease', zIndex: 1,
                 }}>
                   <div style={{
                     width: 64, height: 64, borderRadius: '50%',
@@ -311,7 +335,7 @@ export const HomePage = () => {
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: 24, color: '#000', boxShadow: '0 0 30px rgba(0, 217, 255, 0.8)',
                   }}>
-                    ▶
+                    {isFeaturedPlaying ? '⏸' : '▶'}
                   </div>
                 </div>
 
@@ -354,10 +378,10 @@ export const HomePage = () => {
           e.currentTarget.style.boxShadow = 'none';
         }}
         >
-          {/* ✅ EFFET DE BRILLANCE PLUS FORT */}
+          {/* ✅ EFFET DE BRILLANCE */}
           <div style={{
             position: 'absolute', top: 0, left: '-100%', width: '50%', height: '100%',
-            background: 'linear-gradient(90deg, transparent, rgba(0, 217, 255, 0.3), transparent)', // ✅ Plus lumineux
+            background: 'linear-gradient(90deg, transparent, rgba(0, 217, 255, 0.3), transparent)', 
             animation: 'shimmer 3s infinite',
           }} />
 

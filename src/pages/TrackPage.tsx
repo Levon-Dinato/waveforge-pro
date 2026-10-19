@@ -1,20 +1,21 @@
 // src/pages/TrackPage.tsx
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { supabase, AUDIO_BUCKET } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
 import { usePlayer } from '../contexts/PlayerContext';
 import { useAuth } from '../contexts/AuthContext';
 import { CommentSection } from '../components/CommentSection';
 import { ShareButton } from '../components/ShareButton';
 import { useIsMobile } from '../hooks/useIsMobile';
 import type { Track } from '../components/TrackGrid';
+import { getCamelotColor } from '../audio/keyDetector';
 
 export const TrackPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const isMobile = useIsMobile(768);
   const { user } = useAuth();
-  const { play, isPlaying, isCurrentTrack, currentTime, duration } = usePlayer();
+  const { play, isPlaying, isCurrentTrack } = usePlayer();
 
   const [track, setTrack] = useState<Track | null>(null);
   const [loading, setLoading] = useState(true);
@@ -31,7 +32,6 @@ export const TrackPage = () => {
         setTrack(data as Track);
         setLikesCount(data.likes_count || 0);
         
-        // Vérifier si l'utilisateur a déjà liké
         if (user) {
           const { data: likeData } = await supabase
             .from('likes')
@@ -80,7 +80,6 @@ export const TrackPage = () => {
       }
     } catch (err) {
       console.error(err);
-      // Rollback en cas d'erreur
       setIsLiked(!newIsLiked);
       setLikesCount((prev) => prev + (newIsLiked ? -1 : 1));
     }
@@ -104,7 +103,6 @@ export const TrackPage = () => {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
       
-      // Incrémenter le compteur de downloads
       await supabase.from('tracks').update({ downloads: (track.downloads || 0) + 1 }).eq('id', track.id);
     } catch (err) {
       console.error('Erreur téléchargement', err);
@@ -147,7 +145,6 @@ export const TrackPage = () => {
         borderRadius: 24,
         border: '1px solid rgba(255,255,255,0.05)',
       }}>
-        {/* Pochette */}
         <div style={{
           width: isMobile ? '80%' : 320,
           aspectRatio: '1',
@@ -162,13 +159,12 @@ export const TrackPage = () => {
           )}
         </div>
 
-        {/* Infos & Actions */}
         <div style={{ flex: 1, width: '100%' }}>
           <div style={{ fontSize: 12, color: '#00d9ff', fontWeight: 800, letterSpacing: '2px', marginBottom: 8 }}>MORCEAU</div>
           <h1 style={{ fontSize: isMobile ? 32 : 48, fontWeight: 900, margin: '0 0 12px 0', lineHeight: 1.1 }}>{track.title}</h1>
           <h2 style={{ fontSize: isMobile ? 18 : 24, color: 'rgba(255,255,255,0.7)', margin: '0 0 24px 0', fontWeight: 500 }}>
             {track.user_id ? (
-              <Link to={`/profil/${track.user_id}`} style={{ color: 'inherit', textDecoration: 'none', hover: { textDecoration: 'underline' } }}>
+              <Link to={`/profil/${track.user_id}`} style={{ color: 'inherit', textDecoration: 'none' }}>
                 {track.artist}
               </Link>
             ) : track.artist}
@@ -177,7 +173,11 @@ export const TrackPage = () => {
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 32 }}>
             <span style={{ padding: '6px 12px', background: 'rgba(0,217,255,0.1)', border: '1px solid rgba(0,217,255,0.3)', borderRadius: 20, fontSize: 12, color: '#00d9ff' }}>⚡ {track.bpm} BPM</span>
             <span style={{ padding: '6px 12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 20, fontSize: 12 }}>🎵 {track.genre || 'Electronic'}</span>
-            {track.camelot && <span style={{ padding: '6px 12px', background: 'rgba(124,92,255,0.1)', border: '1px solid rgba(124,92,255,0.3)', borderRadius: 20, fontSize: 12, color: '#7c5cff' }}>🎼 {track.camelot}</span>}
+            {track.camelot && track.camelot !== '?' && (
+              <span style={{ padding: '6px 12px', background: `${getCamelotColor(track.camelot)}15`, border: `1px solid ${getCamelotColor(track.camelot)}40`, borderRadius: 20, fontSize: 12, color: getCamelotColor(track.camelot), fontWeight: 700 }}>
+                🎼 {track.camelot}
+              </span>
+            )}
             <span style={{ padding: '6px 12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 20, fontSize: 12 }}>⬇ {track.downloads || 0}</span>
           </div>
 

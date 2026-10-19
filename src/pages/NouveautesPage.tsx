@@ -1,6 +1,6 @@
 // src/pages/NouveautesPage.tsx
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { GlassCard } from '../components/ui/GlassCard';
 import { CommentSection } from '../components/CommentSection';
 import { OnlineUsersWidget } from '../components/OnlineUsersWidget';
@@ -42,13 +42,6 @@ const PREDEFINED_GENRES = [
   'Progressive House', 'Psytrance', 'Reggaeton', 'Tech House', 'Techno',
   'Trance', 'Trap', 'Vocal House', 'Inconnu',
 ];
-
-const formatTime = (sec: number): string => {
-  if (!sec || isNaN(sec)) return '0:00';
-  const m = Math.floor(sec / 60);
-  const s = Math.floor(sec % 60);
-  return m + ':' + (s < 10 ? '0' : '') + s;
-};
 
 const INPUT_STYLE: React.CSSProperties = {
   padding: '8px 10px',
@@ -93,23 +86,6 @@ const computePeaks = (audioBuffer: AudioBuffer): number[] => {
     peaks.push(Math.round(max * 100));
   }
   return peaks;
-};
-
-const downsamplePeaks = (peaks: number[], targetCount: number): number[] => {
-  if (!peaks || peaks.length === 0) return [];
-  if (peaks.length <= targetCount) return peaks;
-  const step = peaks.length / targetCount;
-  const result: number[] = [];
-  for (let i = 0; i < targetCount; i++) {
-    const start = Math.floor(i * step);
-    const end = Math.floor((i + 1) * step);
-    let max = 0;
-    for (let j = start; j < end && j < peaks.length; j++) {
-      if (peaks[j] > max) max = peaks[j];
-    }
-    result.push(max);
-  }
-  return result;
 };
 
 const analyzeAudioFile = async (
@@ -280,204 +256,6 @@ const uploadCoverToSupabase = async (blob: Blob, baseName: string): Promise<stri
 };
 
 // ═══════════════════════════════════════════════════════════
-// WAVEFORM
-// ═══════════════════════════════════════════════════════════
-interface WaveformProps {
-  peaks: number[];
-  progress: number;
-  onSeek?: (ratio: number) => void;
-  height?: number;
-  duration?: number;
-}
-
-const Waveform: React.FC<WaveformProps> = ({
-  peaks, progress, onSeek, height = 50, duration = 0,
-}) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [hoverRatio, setHoverRatio] = useState<number | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
-
-  const displayPeaks = useMemo(() => downsamplePeaks(peaks, 240), [peaks]);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    const container = containerRef.current;
-    if (!canvas || !container) return;
-
-    const width = container.clientWidth;
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = width * dpr;
-    canvas.height = height * dpr;
-    canvas.style.width = width + 'px';
-    canvas.style.height = height + 'px';
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    ctx.scale(dpr, dpr);
-    ctx.clearRect(0, 0, width, height);
-    if (displayPeaks.length === 0) return;
-
-    const midY = height / 2;
-    const progressX = progress * width;
-    const barWidth = width / displayPeaks.length;
-
-    for (let i = 0; i < displayPeaks.length; i++) {
-      const x = i * barWidth;
-      const h = (displayPeaks[i] / 100) * (height * 0.85);
-      const y = midY - h / 2;
-      const isPlayed = x < progressX;
-
-      if (isPlayed) {
-        ctx.fillStyle = '#00d9ff';
-      } else {
-        ctx.fillStyle = hoverRatio !== null && i / displayPeaks.length <= hoverRatio
-          ? 'rgba(255, 255, 255, 0.4)'
-          : 'rgba(255, 255, 255, 0.22)';
-      }
-      ctx.fillRect(x, y, Math.max(1, barWidth - 0.5), h);
-    }
-
-    if (hoverRatio !== null && onSeek) {
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-      ctx.fillRect(hoverRatio * width - 0.5, 0, 1, height);
-    }
-
-    if (onSeek || progress > 0) {
-      const cursorX = Math.max(2, Math.min(width - 2, progressX));
-      const haloGrad = ctx.createRadialGradient(cursorX, midY, 0, cursorX, midY, 14);
-      haloGrad.addColorStop(0, 'rgba(0, 217, 255, 0.4)');
-      haloGrad.addColorStop(1, 'rgba(0, 217, 255, 0)');
-      ctx.fillStyle = haloGrad;
-      ctx.fillRect(cursorX - 14, 0, 28, height);
-
-      ctx.fillStyle = '#fff';
-      ctx.fillRect(cursorX - 1, 0, 2, height);
-
-      const dotY = midY;
-      const dotR = isDragging ? 8 : hoverRatio !== null ? 7 : 5;
-
-      ctx.beginPath();
-      ctx.arc(cursorX, dotY, dotR + 2, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(0, 217, 255, 0.3)';
-      ctx.fill();
-
-      ctx.beginPath();
-      ctx.arc(cursorX, dotY, dotR, 0, Math.PI * 2);
-      ctx.fillStyle = '#fff';
-      ctx.shadowColor = '#00d9ff';
-      ctx.shadowBlur = 10;
-      ctx.fill();
-
-      ctx.beginPath();
-      ctx.arc(cursorX, dotY, dotR * 0.5, 0, Math.PI * 2);
-      ctx.fillStyle = '#00d9ff';
-      ctx.fill();
-      ctx.shadowBlur = 0;
-    }
-  }, [displayPeaks, progress, height, hoverRatio, onSeek, isDragging]);
-
-  const getRatioFromEvent = (clientX: number): number | null => {
-    if (!containerRef.current) return null;
-    const rect = containerRef.current.getBoundingClientRect();
-    return Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
-  };
-
-  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!onSeek) return;
-    const ratio = getRatioFromEvent(e.clientX);
-    if (ratio === null) return;
-    setIsDragging(true);
-    onSeek(ratio);
-  };
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const ratio = getRatioFromEvent(e.clientX);
-    if (ratio === null) return;
-    setHoverRatio(ratio);
-    if (isDragging && onSeek) onSeek(ratio);
-  };
-
-  const handleMouseUp = () => setIsDragging(false);
-
-  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
-    if (!onSeek) return;
-    const touch = e.touches[0];
-    const ratio = getRatioFromEvent(touch.clientX);
-    if (ratio === null) return;
-    setIsDragging(true);
-    onSeek(ratio);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
-    if (!onSeek) return;
-    e.preventDefault();
-    const touch = e.touches[0];
-    const ratio = getRatioFromEvent(touch.clientX);
-    if (ratio !== null) onSeek(ratio);
-  };
-
-  const handleTouchEnd = () => setIsDragging(false);
-
-  useEffect(() => {
-    const handleGlobalMouseUp = () => setIsDragging(false);
-    window.addEventListener('mouseup', handleGlobalMouseUp);
-    return () => window.removeEventListener('mouseup', handleGlobalMouseUp);
-  }, []);
-
-  return (
-    <div
-      ref={containerRef}
-      onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={() => {
-        setHoverRatio(null);
-        setIsDragging(false);
-      }}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-      style={{
-        width: '100%',
-        height,
-        cursor: onSeek ? (isDragging ? 'grabbing' : 'grab') : 'default',
-        position: 'relative',
-        background: 'rgba(0, 0, 0, 0.3)',
-        borderRadius: 4,
-        overflow: 'hidden',
-        userSelect: 'none',
-        WebkitUserSelect: 'none',
-        touchAction: 'none',
-      }}
-    >
-      <canvas ref={canvasRef} style={{ display: 'block' }} />
-      {hoverRatio !== null && duration > 0 && (
-        <div style={{
-          position: 'absolute',
-          left: `${hoverRatio * 100}%`,
-          top: -26,
-          transform: 'translateX(-50%)',
-          background: 'rgba(0, 0, 0, 0.95)',
-          border: '1px solid rgba(0, 217, 255, 0.5)',
-          borderRadius: 4,
-          padding: '2px 7px',
-          fontSize: 10,
-          fontFamily: 'monospace',
-          color: '#00d9ff',
-          fontWeight: 700,
-          pointerEvents: 'none',
-          whiteSpace: 'nowrap',
-          zIndex: 5,
-        }}>
-          {formatTime(hoverRatio * duration)}
-        </div>
-      )}
-    </div>
-  );
-};
-
-// ═══════════════════════════════════════════════════════════
 // BOUTON PLAY
 // ═══════════════════════════════════════════════════════════
 const PlayButton: React.FC<{
@@ -514,7 +292,7 @@ export const NouveautesPage: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const isMobile = useIsMobile(768);
-  const { currentTrack, isPlaying, currentTime, duration, play, seek, stop } = usePlayer();
+  const { currentTrack, isPlaying, play, stop } = usePlayer();
 
   const [tracks, setTracks] = useState<Track[]>([]);
   const [userLikes, setUserLikes] = useState<Record<string, boolean>>({});
@@ -523,17 +301,6 @@ export const NouveautesPage: React.FC = () => {
   const [uploadStatus, setUploadStatus] = useState('');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const replaceInputRef = useRef<HTMLInputElement>(null);
-  const [replaceTargetId, setReplaceTargetId] = useState<string | null>(null);
-  const [replacingId, setReplacingId] = useState<string | null>(null);
-  const [, setReplaceStatus] = useState('');
-
-  const [bpmCandidates, setBpmCandidates] = useState<{ trackId: string; candidates: number[]; current: number } | null>(null);
-  const [detectingBpm, setDetectingBpm] = useState<string | null>(null);
-  const [detectingKey, setDetectingKey] = useState<string | null>(null);
-  const [keyPicker, setKeyPicker] = useState<string | null>(null);
-
-  const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState<'recent' | 'likes' | 'bpm' | 'title'>('recent');
@@ -735,7 +502,6 @@ export const NouveautesPage: React.FC = () => {
       if (window.confirm('Vous devez être connecté pour télécharger.\n\nSe connecter maintenant ?')) navigate('/auth');
       return;
     }
-    setDownloadingId(track.id);
     try {
       const response = await fetch(track.audio_url);
       if (!response.ok) throw new Error('Impossible de récupérer le fichier');
@@ -757,197 +523,6 @@ export const NouveautesPage: React.FC = () => {
     } catch (err: any) {
       console.error(err);
       alert('Erreur téléchargement : ' + (err.message || err));
-    } finally {
-      setDownloadingId(null);
-    }
-  };
-
-  const handleDetectBpm = async (track: Track) => {
-    setDetectingBpm(track.id);
-    try {
-      const response = await fetch(track.audio_url);
-      if (!response.ok) throw new Error('Impossible de charger le fichier');
-      const arrayBuffer = await response.arrayBuffer();
-
-      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-      const audioCtx = new AudioCtx();
-      let audioBuffer: AudioBuffer;
-      try {
-        audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
-      } finally {
-        await audioCtx.close();
-      }
-
-      const result = await detectBPM(audioBuffer);
-
-      const uniqueCandidates = Array.from(new Set([
-        result.bpm,
-        ...result.candidates.slice(0, 8),
-      ])).filter((b) => b >= 60 && b <= 250).slice(0, 6);
-
-      setBpmCandidates({
-        trackId: track.id,
-        candidates: uniqueCandidates,
-        current: track.bpm,
-      });
-    } catch (err: any) {
-      console.error('Erreur détection BPM:', err);
-      alert('Erreur analyse BPM : ' + (err.message || err));
-    } finally {
-      setDetectingBpm(null);
-    }
-  };
-
-  const handleSelectBpm = async (trackId: string, bpm: number) => {
-    try {
-      const { error } = await supabase.from('tracks').update({ bpm }).eq('id', trackId);
-      if (error) throw error;
-      setTracks((prev) => prev.map((t) => (t.id === trackId ? { ...t, bpm } : t)));
-      setBpmCandidates(null);
-    } catch (err: any) {
-      console.error('Erreur sauvegarde BPM:', err);
-      alert('Erreur : ' + (err.message || err));
-    }
-  };
-
-  const handleAutoDetectKey = async (track: Track) => {
-    setDetectingKey(track.id);
-    try {
-      const response = await fetch(track.audio_url);
-      if (!response.ok) throw new Error('Impossible de charger le fichier');
-      const arrayBuffer = await response.arrayBuffer();
-
-      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-      const audioCtx = new AudioCtx();
-      let audioBuffer: AudioBuffer;
-      try {
-        audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
-      } finally {
-        await audioCtx.close();
-      }
-
-      const result = await detectKey(audioBuffer);
-
-      const { error } = await supabase.from('tracks').update({
-        song_key: result.key,
-        camelot: result.camelot,
-      }).eq('id', track.id);
-      if (error) throw error;
-
-      setTracks((prev) => prev.map((t) => t.id === track.id
-        ? { ...t, song_key: result.key, camelot: result.camelot }
-        : t));
-      setKeyPicker(null);
-    } catch (err: any) {
-      console.error('Erreur détection key:', err);
-      alert('Erreur analyse key : ' + (err.message || err));
-    } finally {
-      setDetectingKey(null);
-    }
-  };
-
-  const handleSelectKey = async (trackId: string, key: string, camelot: string) => {
-    try {
-      const { error } = await supabase
-        .from('tracks')
-        .update({ song_key: key, camelot })
-        .eq('id', trackId);
-      if (error) throw error;
-
-      setTracks((prev) => prev.map((t) => t.id === trackId
-        ? { ...t, song_key: key, camelot }
-        : t));
-      setKeyPicker(null);
-    } catch (err: any) {
-      console.error('Erreur sauvegarde Key:', err);
-      alert('Erreur : ' + (err.message || err));
-    }
-  };
-
-  const handleReplaceClick = (trackId: string) => {
-    setReplaceTargetId(trackId);
-    replaceInputRef.current?.click();
-  };
-
-  const handleReplaceChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    const targetId = replaceTargetId;
-    if (!file || !targetId) return;
-    const track = tracks.find((t) => t.id === targetId);
-    if (!track) { setReplaceTargetId(null); event.target.value = ''; return; }
-
-    if (!window.confirm(`Remplacer le fichier audio de "${track.title}" ?`)) {
-      setReplaceTargetId(null); event.target.value = ''; return;
-    }
-    if (currentTrack?.id === targetId) stop();
-    setReplacingId(targetId);
-    setReplaceStatus('Analyse...');
-
-    try {
-      let newDuration = track.duration;
-      let peaks: number[] = track.peaks;
-      let bpm = track.bpm;
-      let newKey = track.song_key;
-      let newCamelot = track.camelot;
-
-      const metadata = await extractMetadataFromMp3(file);
-
-      try {
-        const analysis = await analyzeAudioFile(file);
-        newDuration = analysis.duration;
-        peaks = analysis.peaks;
-        bpm = metadata.bpm || analysis.bpm;
-      } catch (e) { console.warn(e); }
-
-      if (metadata.key) {
-        newKey = metadata.key.key;
-        newCamelot = metadata.key.camelot;
-      }
-
-      setReplaceStatus('Upload...');
-      const cleanName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-      const newFileName = Date.now() + '_' + cleanName;
-      const { error: uploadError } = await supabase.storage.from(AUDIO_BUCKET).upload(newFileName, file);
-      if (uploadError) throw uploadError;
-
-      const { data: urlData } = supabase.storage.from(AUDIO_BUCKET).getPublicUrl(newFileName);
-
-      let newCoverUrl: string | null = track.cover_url;
-      if (metadata.coverBlob) {
-        const baseName = newFileName.replace(/\.[^/.]+$/, '');
-        const uploaded = await uploadCoverToSupabase(metadata.coverBlob, baseName);
-        if (uploaded) newCoverUrl = uploaded;
-      }
-
-      const newTitle = metadata.title || track.title;
-      const newArtist = metadata.artist || track.artist;
-      const newGenre = metadata.genre || track.genre;
-
-      setReplaceStatus('Mise à jour...');
-      const { error: updateError } = await supabase.from('tracks').update({
-        audio_url: urlData.publicUrl, duration: newDuration, peaks, bpm,
-        title: newTitle, artist: newArtist, genre: newGenre, cover_url: newCoverUrl,
-        song_key: newKey, camelot: newCamelot,
-      }).eq('id', targetId);
-      if (updateError) throw updateError;
-
-      const oldAudioParts = track.audio_url.split('/' + AUDIO_BUCKET + '/');
-      if (oldAudioParts[1] && oldAudioParts[1] !== newFileName) {
-        await supabase.storage.from(AUDIO_BUCKET).remove([oldAudioParts[1]]);
-      }
-
-      setTracks((prev) => prev.map((t) => t.id === targetId ? {
-        ...t, audio_url: urlData.publicUrl, duration: newDuration, peaks, bpm,
-        title: newTitle, artist: newArtist, genre: newGenre, cover_url: newCoverUrl,
-        song_key: newKey, camelot: newCamelot,
-      } : t));
-      setReplaceStatus('');
-    } catch (err: any) {
-      console.error(err);
-      alert('Erreur remplacement : ' + (err.message || err));
-      setReplaceStatus('');
-    } finally {
-      setReplacingId(null); setReplaceTargetId(null); event.target.value = '';
     }
   };
 
@@ -958,8 +533,6 @@ export const NouveautesPage: React.FC = () => {
       user_id: track.user_id, duration: track.duration, peaks: track.peaks,
     });
   };
-
-  const handleSeekRatio = (ratio: number) => seek(ratio);
 
   const handleDelete = async (id: string) => {
     const track = tracks.find((t) => t.id === id);
@@ -1073,7 +646,6 @@ export const NouveautesPage: React.FC = () => {
       </div>
 
       <input type="file" accept="audio/*" ref={fileInputRef} onChange={handleFileChange} style={{ display: 'none' }} />
-      <input type="file" accept="audio/*" ref={replaceInputRef} onChange={handleReplaceChange} style={{ display: 'none' }} />
 
       <GlassCard style={{ padding: '16px', marginBottom: 20, borderStyle: 'dashed', borderColor: 'rgba(0, 217, 255, 0.4)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
@@ -1174,8 +746,6 @@ export const NouveautesPage: React.FC = () => {
               const isThisCurrent = currentTrack?.id === track.id;
               const isThisPlaying = isThisCurrent && isPlaying;
               const isEditing = editingId === track.id;
-              const isReplacing = replacingId === track.id;
-              const isDownloading = downloadingId === track.id;
               const fresh = isNew(track.created_at);
               const showComments = openComments.has(track.id);
               const isLiked = userLikes[track.id] || false;
@@ -1265,12 +835,6 @@ export const NouveautesPage: React.FC = () => {
                           <PlayButton isPlaying={isThisPlaying} isCurrent={isThisCurrent} onClick={() => handlePlayTrack(track)} size={48} />
                         </div>
 
-                        {isReplacing && (
-                          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>
-                            <div style={{ width: 24, height: 24, border: '2px solid rgba(0, 217, 255, 0.3)', borderTop: '2px solid #00d9ff', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-                          </div>
-                        )}
-
                         {/* Badge BPM & New */}
                         <div style={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 4 }}>
                           {fresh && <span className="new-badge" style={{ fontSize: '0.55rem', padding: '2px 6px', background: 'linear-gradient(135deg, #00d9ff, #7c5cff)', color: '#fff', borderRadius: 4, fontWeight: 800 }}>NEW</span>}
@@ -1296,8 +860,8 @@ export const NouveautesPage: React.FC = () => {
                         
                         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                           <span style={{ fontSize: 11, color: 'rgba(255, 255, 255, 0.3)', maxWidth: 60, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{track.genre}</span>
-                          <button onClick={() => handleDownload(track)} disabled={isDownloading} title="Télécharger" style={{ background: 'transparent', border: 'none', color: user ? '#00d9ff' : 'rgba(255,255,255,0.3)', cursor: isDownloading ? 'wait' : 'pointer', fontSize: 14, padding: 0 }}>
-                            {isDownloading ? '...' : user ? '⬇' : '🔒'}
+                          <button onClick={() => handleDownload(track)} title="Télécharger" style={{ background: 'transparent', border: 'none', color: user ? '#00d9ff' : 'rgba(255,255,255,0.3)', cursor: 'pointer', fontSize: 14, padding: 0 }}>
+                            {user ? '⬇' : '🔒'}
                           </button>
                         </div>
                       </div>
@@ -1369,88 +933,6 @@ export const NouveautesPage: React.FC = () => {
           )}
         </main>
       </div>
-
-      {/* POPUP BPM */}
-      {bpmCandidates && (
-        <div onClick={() => setBpmCandidates(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0, 0, 0, 0.75)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          <div onClick={(e) => e.stopPropagation()} style={{ background: 'linear-gradient(135deg, rgba(15, 18, 28, 0.98) 0%, rgba(10, 12, 20, 0.99) 100%)', border: '1px solid rgba(0, 217, 255, 0.4)', borderRadius: 16, padding: 24, maxWidth: 480, width: '100%', boxShadow: '0 24px 70px rgba(0, 0, 0, 0.8)', fontFamily: 'monospace', color: '#fff' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <div>
-                <div style={{ fontSize: '0.75rem', color: 'rgba(0, 217, 255, 0.7)', fontWeight: 800, letterSpacing: '1.5px', marginBottom: 4 }}>🎯 CORRECTION BPM</div>
-                <div style={{ fontSize: '1rem', fontWeight: 700 }}>Choisis le bon tempo</div>
-              </div>
-              <button onClick={() => setBpmCandidates(null)} style={{ width: 30, height: 30, borderRadius: '50%', background: 'rgba(255, 60, 60, 0.08)', border: '1px solid rgba(255, 60, 60, 0.3)', color: '#ff5c5c', cursor: 'pointer', fontSize: 12 }}>✕</button>
-            </div>
-            <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', marginBottom: 16 }}>BPM actuel : <span style={{ color: '#ffd43b', fontWeight: 700 }}>{bpmCandidates.current}</span></div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 16 }}>
-              {bpmCandidates.candidates.map((bpm) => {
-                const isCurrent = bpm === bpmCandidates.current;
-                return (
-                  <button key={bpm} onClick={() => handleSelectBpm(bpmCandidates.trackId, bpm)} style={{ padding: '14px 8px', background: isCurrent ? 'linear-gradient(135deg, rgba(255, 212, 59, 0.25), rgba(255, 140, 0, 0.1))' : 'rgba(255, 255, 255, 0.03)', border: isCurrent ? '1px solid rgba(255, 212, 59, 0.6)' : '1px solid rgba(0, 217, 255, 0.3)', borderRadius: 8, color: isCurrent ? '#ffd43b' : '#00d9ff', fontFamily: 'monospace', fontSize: '1.1rem', fontWeight: 800, cursor: 'pointer' }}>
-                    {bpm}
-                    <div style={{ fontSize: '0.6rem', opacity: 0.6, marginTop: 4 }}>BPM</div>
-                    {isCurrent && <div style={{ fontSize: '0.55rem', marginTop: 2 }}>ACTUEL</div>}
-                  </button>
-                );
-              })}
-            </div>
-            <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>Si aucun BPM ne correspond, clique sur le plus proche puis corrige via ✏️ Edit.</div>
-          </div>
-        </div>
-      )}
-
-      {/* POPUP KEY */}
-      {keyPicker && (
-        <div onClick={() => setKeyPicker(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0, 0, 0, 0.8)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, overflow: 'auto' }}>
-          <div onClick={(e) => e.stopPropagation()} style={{ background: 'linear-gradient(135deg, rgba(15, 18, 28, 0.98) 0%, rgba(10, 12, 20, 0.99) 100%)', border: '1px solid rgba(124, 92, 255, 0.4)', borderRadius: 16, padding: 24, maxWidth: 640, width: '100%', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 24px 70px rgba(0, 0, 0, 0.8), 0 0 40px rgba(124, 92, 255, 0.2)', fontFamily: 'monospace', color: '#fff' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-              <div>
-                <div style={{ fontSize: '0.75rem', color: 'rgba(124, 92, 255, 0.9)', fontWeight: 800, letterSpacing: '1.5px', marginBottom: 4 }}>🎼 TONALITÉ</div>
-                <div style={{ fontSize: '1rem', fontWeight: 700 }}>Choisis la tonalité du morceau</div>
-              </div>
-              <button onClick={() => setKeyPicker(null)} style={{ width: 30, height: 30, borderRadius: '50%', background: 'rgba(255, 60, 60, 0.08)', border: '1px solid rgba(255, 60, 60, 0.3)', color: '#ff5c5c', cursor: 'pointer', fontSize: 12 }}>✕</button>
-            </div>
-
-            <button onClick={() => { const track = tracks.find((t) => t.id === keyPicker); if (track) handleAutoDetectKey(track); }} disabled={detectingKey === keyPicker} style={{ width: '100%', padding: '12px', marginBottom: 20, background: 'rgba(0, 217, 255, 0.08)', border: '1px dashed rgba(0, 217, 255, 0.4)', borderRadius: 8, color: '#00d9ff', fontFamily: 'monospace', fontSize: '0.8rem', fontWeight: 700, cursor: detectingKey === keyPicker ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-              {detectingKey === keyPicker ? '⏳ Analyse en cours...' : '🎼 Détection automatique (Meyda)'}
-            </button>
-
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)', marginBottom: 8, letterSpacing: '1px', fontWeight: 700 }}>MAJEURS (B)</div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(85px, 1fr))', gap: 8 }}>
-                {ALL_KEYS.filter((k) => !k.isMinor).map((k) => {
-                  const color = getCamelotColor(k.camelot);
-                  return (
-                    <button key={k.key} className="key-btn" onClick={() => handleSelectKey(keyPicker, k.key, k.camelot)} style={{ padding: '10px 6px', background: `${color}15`, border: `1px solid ${color}60`, borderRadius: 6, color: color, fontFamily: 'monospace', cursor: 'pointer', textAlign: 'center' }}>
-                      <div style={{ fontSize: '1rem', fontWeight: 800 }}>{k.key}</div>
-                      <div style={{ fontSize: '0.6rem', opacity: 0.7, marginTop: 2 }}>{k.camelot}</div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div>
-              <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)', marginBottom: 8, letterSpacing: '1px', fontWeight: 700 }}>MINEURS (A)</div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(85px, 1fr))', gap: 8 }}>
-                {ALL_KEYS.filter((k) => k.isMinor).map((k) => {
-                  const color = getCamelotColor(k.camelot);
-                  return (
-                    <button key={k.key} className="key-btn" onClick={() => handleSelectKey(keyPicker, k.key, k.camelot)} style={{ padding: '10px 6px', background: `${color}15`, border: `1px solid ${color}60`, borderRadius: 6, color: color, fontFamily: 'monospace', cursor: 'pointer', textAlign: 'center' }}>
-                      <div style={{ fontSize: '1rem', fontWeight: 800 }}>{k.key}</div>
-                      <div style={{ fontSize: '0.6rem', opacity: 0.7, marginTop: 2 }}>{k.camelot}</div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div style={{ marginTop: 16, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.08)', fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>
-              Astuce : Serato / Mixed In Key affichent la clé exacte de tes morceaux.
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

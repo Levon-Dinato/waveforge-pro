@@ -1,6 +1,6 @@
 // src/App.tsx
 import { lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AudioEngineProvider } from './contexts/AudioEngineContext';
 import { AuthProvider } from './contexts/AuthContext';
 import { PlayerProvider } from './contexts/PlayerContext';
@@ -156,9 +156,6 @@ export default function App() {
                       <Route path="artists" element={<PrivateRoute><ArtistsPage /></PrivateRoute>} />
                       <Route path="search" element={<PrivateRoute><SearchPage /></PrivateRoute>} />
                     </Route>
-
-                    {/* ✅ Route catch-all : redirige vers l'accueil si l'URL n'existe pas */}
-                    <Route path="*" element={<Navigate to="/" replace />} />
                   </Routes>
                 </Suspense>
               </WindowsProvider>

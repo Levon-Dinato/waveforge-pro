@@ -1,5 +1,6 @@
 // src/pages/LivePage.tsx
 import { useState } from 'react';
+import { Helmet } from 'react-helmet-async'; // ✅ NOUVEL IMPORT
 import { useIsMobile } from '../hooks/useIsMobile';
 import { LiveChat } from '../components/LiveChat';
 
@@ -61,6 +62,20 @@ export const LivePage = () => {
       gap: isMobile ? 32 : 48,
       paddingBottom: 60,
     }}>
+
+      {/* ✅ BALISES SEO / RÉSEAUX SOCIAUX POUR LA PAGE LIVE */}
+      <Helmet>
+        <title>Live WaveForge Pro 🎧</title>
+        <meta property="og:title" content="Live WaveForge Pro 🎧" />
+        <meta property="og:description" content="Rejoins le live et partage ta passion !" />
+        <meta property="og:image" content="https://waveforge-pro-one.vercel.app/og-live.jpg" />
+        <meta property="og:url" content="https://waveforge-pro-one.vercel.app/live" />
+        
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Live WaveForge Pro 🎧" />
+        <meta name="twitter:description" content="Rejoins le live et partage ta passion !" />
+        <meta name="twitter:image" content="https://waveforge-pro-one.vercel.app/og-live.jpg" />
+      </Helmet>
 
       {/* ============ HEADER ============ */}
       <section style={{ position: 'relative' }}>

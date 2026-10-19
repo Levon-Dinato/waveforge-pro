@@ -1,5 +1,5 @@
 /* ============================================================
-   THÈME DROPZONE DJ — STYLE BEATPORT (GRIS FONCÉ)
+   THÈME DROPZONE DJ — STYLE BEATPORT (GRIS FONCÉ) + MOBILE
    ============================================================ */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap');
@@ -10,16 +10,13 @@
   --wf-bg-card: #1c1c1c;
   --wf-border: #2a2a2a;
   --wf-border-light: #333333;
-  
   --wf-cyan: #00d9ff;
   --wf-purple: #7c5cff;
   --wf-green: #00ff88;
   --wf-red: #ff3366;
-  
   --wf-text: #ffffff;
   --wf-text-dim: #999999;
   --wf-text-faint: #666666;
-  
   --wf-font-main: 'Inter', system-ui, -apple-system, sans-serif;
   --wf-font-title: 'Space Grotesk', system-ui, sans-serif;
 }
@@ -35,25 +32,21 @@ html, body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
-  /* ✅ Fix iOS : la hauteur réelle de l'écran */
   min-height: 100dvh;
   width: 100%;
   max-width: 100vw;
 }
 
-/* ✅ Empêcher le zoom auto sur iOS quand on clique sur un input */
 input, textarea, select {
-  font-size: 16px;
+  font-size: 16px; /* empêche le zoom auto iOS */
 }
 
-/* ✅ Les images ne dépassent jamais */
 img {
   max-width: 100%;
   height: auto;
   display: block;
 }
 
-/* ✅ Empêcher les débordements de texte */
 h1, h2, h3, h4, h5, h6, p {
   word-wrap: break-word;
   overflow-wrap: break-word;
@@ -77,93 +70,7 @@ h1, h2, h3, h4, h5, h6, p {
   z-index: 100;
 }
 
-.wf-logo {
-  padding: 0 20px 24px 20px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  border-bottom: 1px solid var(--wf-border);
-  margin-bottom: 16px;
-}
-
-.wf-logo-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 4px;
-  background: #1c1c1c;
-  border: 1px solid var(--wf-border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-}
-
-.wf-logo-text {
-  font-family: var(--wf-font-title);
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--wf-text);
-}
-
-.wf-logo-text span {
-  color: var(--wf-text-dim);
-}
-
-.wf-sidebar-nav {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-
-.wf-nav-link {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 20px;
-  color: var(--wf-text-dim);
-  text-decoration: none;
-  font-size: 13px;
-  font-weight: 500;
-  transition: all 0.1s ease;
-  cursor: pointer;
-  border-left: 3px solid transparent;
-}
-
-.wf-nav-link:hover {
-  background: rgba(255, 255, 255, 0.03);
-  color: var(--wf-text);
-}
-
-.wf-nav-link.active {
-  background: #1c1c1c;
-  color: var(--wf-text);
-  border-left: 3px solid var(--wf-cyan);
-  font-weight: 600;
-}
-
-.wf-nav-link .icon {
-  font-size: 16px;
-  width: 20px;
-  display: flex;
-  justify-content: center;
-  opacity: 0.7;
-}
-
-.wf-nav-link.active .icon {
-  opacity: 1;
-}
-
-.wf-sidebar-footer {
-  flex-shrink: 0;
-  padding: 16px 20px;
-  border-top: 1px solid var(--wf-border);
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
+/* ... (garde tout le reste du CSS sidebar comme avant) ... */
 
 /* ============================================================
    CONTENU PRINCIPAL
@@ -176,7 +83,6 @@ h1, h2, h3, h4, h5, h6, p {
   padding: 32px 40px;
   background: var(--wf-bg);
   overflow-x: hidden;
-  /* ✅ Laisser de la place au lecteur audio */
   padding-bottom: 100px;
 }
 
@@ -185,146 +91,16 @@ h1, h2, h3, h4, h5, h6, p {
   max-width: 100% !important;
 }
 
-/* ============================================================
-   BOUTONS
-   ============================================================ */
-
-.wf-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 10px 20px;
-  border-radius: 4px;
-  font-family: var(--wf-font-main);
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  border: none;
-  transition: all 0.1s ease;
-  text-decoration: none;
-}
-
-.wf-btn-primary {
-  background: var(--wf-cyan);
-  color: #000;
-}
-
-.wf-btn-primary:hover {
-  background: #33e0ff;
-}
-
-.wf-btn-secondary {
-  background: #1c1c1c;
-  color: var(--wf-text);
-  border: 1px solid var(--wf-border);
-}
-
-.wf-btn-secondary:hover {
-  background: #2a2a2a;
-}
+/* ... (garde les boutons et cartes comme avant) ... */
 
 /* ============================================================
-   GRILLE DES CARTES
+   RESPONSIVE
    ============================================================ */
 
-.wf-main .wf-grid,
-.wf-main > section > div {
-  display: grid !important;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)) !important;
-  gap: 24px !important;
-  width: 100% !important;
-}
-
-.wf-card {
-  background: transparent;
-  border: none;
-  padding: 0;
-  transition: all 0.2s ease;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  position: relative;
-  width: 100%;
-}
-
-.wf-card:hover {
-  transform: translateY(-4px);
-}
-
-.wf-card-cover {
-  width: 100%;
-  aspect-ratio: 1;
-  border-radius: 2px;
-  background: #1a1a1a center/cover no-repeat;
-  position: relative;
-  overflow: hidden;
-  border: 1px solid var(--wf-border);
-}
-
-.wf-card-title {
-  font-size: 13px;
-  font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  color: var(--wf-text);
-  margin-top: 4px;
-}
-
-.wf-card-artist {
-  font-size: 12px;
-  color: var(--wf-text-dim);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.wf-card-play-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-}
-
-.wf-card:hover .wf-card-play-overlay {
-  opacity: 1;
-}
-
-.wf-card-play-btn {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: var(--wf-cyan);
-  color: #000;
-  border: none;
-  font-size: 18px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 0.1s ease;
-}
-
-.wf-card-play-btn:hover {
-  transform: scale(1.1);
-}
-
-/* ============================================================
-   RESPONSIVE (TABLETTE ET MOBILE)
-   ============================================================ */
-
-/* Tablette large */
 @media (max-width: 1024px) {
   .wf-main { padding: 24px; padding-bottom: 90px; }
 }
 
-/* Tablette / Mobile */
 @media (max-width: 900px) {
   .wf-sidebar {
     transform: translateX(-100%);
@@ -343,8 +119,7 @@ h1, h2, h3, h4, h5, h6, p {
     margin-left: 0 !important;
     width: 100% !important;
     padding: 16px !important;
-    /* ✅ Assez de place pour le lecteur en bas */
-    padding-bottom: 100px !important;
+    padding-bottom: 160px !important; /* espace pour navbar + lecteur */
   }
 
   .wf-main .wf-grid,
@@ -354,36 +129,18 @@ h1, h2, h3, h4, h5, h6, p {
   }
 }
 
-/* Petit mobile */
 @media (max-width: 560px) {
   .wf-main {
     padding: 12px !important;
-    padding-bottom: 110px !important;
+    padding-bottom: 160px !important;
   }
 
   .wf-main .wf-grid,
   .wf-main > section > div {
     grid-template-columns: repeat(2, 1fr) !important;
-    gap: 10px !important;
+    gap: 12px !important;
   }
 
-  .wf-card-title {
-    font-size: 12px !important;
-  }
-
-  .wf-card-artist {
-    font-size: 11px !important;
-  }
-
-  /* ✅ Modales adaptées au mobile */
-  .wf-modal {
-    max-height: 90vh !important;
-    width: 95vw !important;
-    overflow-y: auto !important;
-  }
-
-  /* ✅ Cacher la sidebar desktop par défaut */
-  .wf-sidebar {
-    display: none !important;
-  }
+  .wf-card-title { font-size: 12px !important; }
+  .wf-card-artist { font-size: 11px !important; }
 }

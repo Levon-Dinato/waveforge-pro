@@ -1,15 +1,15 @@
 {
-  "name": "WaveForge PRO - Audio → MIDI Studio",
-  "short_name": "WaveForge",
-  "description": "Studio de production musicale IA : analyse audio, stems, mastering, remix IA et génération de mélodies",
+  "name": "DropZone DJ · Les nouvelles sorties et les remixes",
+  "short_name": "DropZone DJ",
+  "description": "Les promos, edits et morceaux exclusifs autorisés au partage. Nouveautés House, Tech House, EDM, Dance et Underground. Une communauté où les DJs présentent leurs productions et leurs découvertes.",
   "start_url": "/",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#050508",
+  "background_color": "#121212",
   "theme_color": "#00d9ff",
   "scope": "/",
   "lang": "fr",
-  "categories": ["music", "productivity", "utilities"],
+  "categories": ["music", "entertainment", "social"],
   "icons": [
     {
       "src": "/icons/icon-192.png",
@@ -32,22 +32,22 @@
   ],
   "shortcuts": [
     {
-      "name": "Studio",
-      "short_name": "Studio",
-      "url": "/studio",
-      "description": "Analyse audio → MIDI"
+      "name": "Nouveautés",
+      "short_name": "Nouveautés",
+      "url": "/nouveautes",
+      "description": "Découvrir les dernières sorties"
     },
     {
-      "name": "Mastering",
-      "short_name": "Master",
-      "url": "/mastering",
-      "description": "Masteriser un morceau"
+      "name": "Live DJ",
+      "short_name": "Live",
+      "url": "/live",
+      "description": "Regarder le live DropZone DJ"
     },
     {
-      "name": "Remix AI",
-      "short_name": "Remix",
-      "url": "/remix",
-      "description": "Remix IA avec Treblo"
+      "name": "Mon Profil",
+      "short_name": "Profil",
+      "url": "/profil/me",
+      "description": "Voir mon profil"
     }
   ]
 }

@@ -1,6 +1,6 @@
 // src/pages/HomePage.tsx
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { TrackGrid } from '../components/TrackGrid';
 import type { Track } from '../components/TrackGrid';
@@ -15,7 +15,6 @@ interface Artist {
 
 export const HomePage = () => {
   const isMobile = useIsMobile(768);
-  const navigate = useNavigate();
   const { play, isPlaying, isCurrentTrack } = usePlayer(); // ✅ RÉCUPÉRATION DU LECTEUR
   
   const [tracks, setTracks] = useState<Track[]>([]);

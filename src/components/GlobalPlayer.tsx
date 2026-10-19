@@ -1,8 +1,7 @@
 // src/components/GlobalPlayer.tsx
 import React, { useRef, useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { usePlayer } from '../contexts/PlayerContext';
-import { useAuth } from '../contexts/AuthContext';
 import { useIsMobile } from '../hooks/useIsMobile';
 
 const formatTime = (sec: number): string => {
@@ -12,9 +11,6 @@ const formatTime = (sec: number): string => {
   return m + ':' + (s < 10 ? '0' : '') + s;
 };
 
-// ═══════════════════════════════════════════════════════════
-// DOWNSAMPLE PEAKS
-// ═══════════════════════════════════════════════════════════
 const downsamplePeaks = (peaks: number[], targetCount: number): number[] => {
   if (!peaks || peaks.length === 0) {
     return Array.from({ length: targetCount }, (_, i) => {
@@ -37,20 +33,16 @@ const downsamplePeaks = (peaks: number[], targetCount: number): number[] => {
   return result;
 };
 
-// ═══════════════════════════════════════════════════════════
-// WAVEFORM (Style Beatport : très fine, grise puis cyan)
-// ═══════════════════════════════════════════════════════════
 interface WaveProgressProps {
   peaks: number[];
   progress: number;
   onSeek: (ratio: number) => void;
   height?: number;
-  duration: number;
   compact?: boolean;
 }
 
 const WaveProgress: React.FC<WaveProgressProps> = ({
-  peaks, progress, onSeek, height = 30, duration, compact = false,
+  peaks, progress, onSeek, height = 30, compact = false,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [hoverRatio, setHoverRatio] = useState<number | null>(null);
@@ -126,20 +118,14 @@ const WaveProgress: React.FC<WaveProgressProps> = ({
   );
 };
 
-// ═══════════════════════════════════════════════════════════
-// COMPOSANT PRINCIPAL
-// ═══════════════════════════════════════════════════════════
 export const GlobalPlayer: React.FC = () => {
   const {
     currentTrack, isPlaying, currentTime, duration, volume,
     togglePlay, stop, seek, setVolume,
   } = usePlayer();
-  const { user } = useAuth();
-  const navigate = useNavigate();
   const isMobile = useIsMobile(768);
   const [isMuted, setIsMuted] = useState(false);
   const [prevVolume, setPrevVolume] = useState(0.8);
-  const [isDownloading, setIsDownloading] = useState(false);
 
   if (!currentTrack) return null;
 
@@ -156,38 +142,6 @@ export const GlobalPlayer: React.FC = () => {
     }
   };
 
-  const handleDownload = async () => {
-    if (!currentTrack) return;
-    if (!user) {
-      if (window.confirm('Vous devez être connecté pour télécharger.\n\nSe connecter maintenant ?')) {
-        navigate('/auth');
-      }
-      return;
-    }
-    setIsDownloading(true);
-    try {
-      const response = await fetch(currentTrack.audio_url);
-      if (!response.ok) throw new Error('Impossible de récupérer le fichier');
-      const blob = await response.blob();
-      const safeTitle = currentTrack.title.replace(/[^a-zA-Z0-9._-]/g, '_');
-      const safeArtist = currentTrack.artist.replace(/[^a-zA-Z0-9._-]/g, '_');
-      const fileName = `${safeArtist}_-_${safeTitle}.mp3`;
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    } catch (err: any) {
-      console.error('Erreur téléchargement:', err);
-      alert('Erreur téléchargement : ' + (err.message || err));
-    } finally {
-      setIsDownloading(false);
-    }
-  };
-
   const volumeIcon = isMuted || volume === 0 ? '🔇' : volume < 0.4 ? '🔉' : '🔊';
 
   // ═══════════════════════════════════════════════════════════
@@ -201,7 +155,7 @@ export const GlobalPlayer: React.FC = () => {
         padding: '8px 12px 10px', display: 'flex', flexDirection: 'column', gap: 6,
         fontFamily: 'Inter, sans-serif', color: '#fff',
       }}>
-        <WaveProgress peaks={currentTrack.peaks || []} progress={progress} onSeek={seek} height={10} duration={duration} compact={true} />
+        <WaveProgress peaks={currentTrack.peaks || []} progress={progress} onSeek={seek} height={10} compact={true} />
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <Link to={currentTrack.user_id ? `/profil/${currentTrack.user_id}` : '#'} style={{
             width: 40, height: 40, borderRadius: 4, flexShrink: 0,
@@ -226,7 +180,7 @@ export const GlobalPlayer: React.FC = () => {
   }
 
   // ═══════════════════════════════════════════════════════════
-  // DESKTOP (Style Beatport : Barre fixe, sombre, minimaliste)
+  // DESKTOP
   // ═══════════════════════════════════════════════════════════
   return (
     <div style={{
@@ -235,7 +189,6 @@ export const GlobalPlayer: React.FC = () => {
       display: 'flex', alignItems: 'center', padding: '0 20px', gap: 20,
       fontFamily: 'Inter, sans-serif', color: '#fff',
     }}>
-      
       {/* GAUCHE : Pochette + Titre + Artiste */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, width: 280, flexShrink: 0 }}>
         <Link
@@ -272,13 +225,13 @@ export const GlobalPlayer: React.FC = () => {
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 12 }}>
           <span style={{ fontSize: 11, color: '#666', width: 35, textAlign: 'right' }}>{formatTime(currentTime)}</span>
           <div style={{ flex: 1 }}>
-            <WaveProgress peaks={currentTrack.peaks || []} progress={progress} onSeek={seek} height={20} duration={duration} />
+            <WaveProgress peaks={currentTrack.peaks || []} progress={progress} onSeek={seek} height={20} />
           </div>
           <span style={{ fontSize: 11, color: '#666', width: 35 }}>{formatTime(duration)}</span>
         </div>
       </div>
 
-      {/* DROITE : Volume + Download + Fermer */}
+      {/* DROITE : Volume + Fermer */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <button onClick={handleVolumeToggle} style={{ background: 'transparent', border: 'none', color: '#666', fontSize: 14, cursor: 'pointer' }}>
@@ -286,10 +239,6 @@ export const GlobalPlayer: React.FC = () => {
           </button>
           <input type="range" min="0" max="1" step="0.01" value={isMuted ? 0 : volume} onChange={(e) => { const v = parseFloat(e.target.value); setVolume(v); if (v > 0) setIsMuted(false); }} style={{ width: 60, accentColor: '#00d9ff', cursor: 'pointer' }} />
         </div>
-
-        <button onClick={handleDownload} style={{ background: 'transparent', border: 'none', color: '#666', fontSize: 14, cursor: 'pointer' }}>
-          ⬇
-        </button>
 
         <button onClick={stop} style={{ background: 'transparent', border: 'none', color: '#666', fontSize: 16, cursor: 'pointer' }}>
           ✕

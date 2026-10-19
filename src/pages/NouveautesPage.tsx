@@ -43,13 +43,6 @@ const PREDEFINED_GENRES = [
   'Trance', 'Trap', 'Vocal House', 'Inconnu',
 ];
 
-const formatTime = (sec: number): string => {
-  if (!sec || isNaN(sec)) return '0:00';
-  const m = Math.floor(sec / 60);
-  const s = Math.floor(sec % 60);
-  return m + ':' + (s < 10 ? '0' : '') + s;
-};
-
 const INPUT_STYLE: React.CSSProperties = {
   padding: '8px 12px',
   background: '#1c1c1c',
@@ -402,10 +395,6 @@ export const NouveautesPage: React.FC = () => {
     });
   }, [tracks]);
 
-  const top10 = useMemo(() => {
-    return [...tracks].sort((a, b) => b.likes_count - a.likes_count).slice(0, 10);
-  }, [tracks]);
-
   const handleUploadClick = () => fileInputRef.current?.click();
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -502,40 +491,12 @@ export const NouveautesPage: React.FC = () => {
     }
   };
 
-  const handleDownload = async (track: Track) => {
-    if (!user) {
-      if (window.confirm('Vous devez être connecté pour télécharger.\n\nSe connecter maintenant ?')) navigate('/auth');
-      return;
-    }
-    try {
-      const response = await fetch(track.audio_url);
-      if (!response.ok) throw new Error('Impossible de récupérer le fichier');
-      const blob = await response.blob();
-      const safeName = track.title.replace(/[^a-zA-Z0-9._-]/g, '_');
-      const artistName = track.artist.replace(/[^a-zA-Z0-9._-]/g, '_');
-      const fileName = `${artistName}_-_${safeName}.mp3`;
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      const newDownloads = (track.downloads || 0) + 1;
-      await supabase.from('tracks').update({ downloads: newDownloads }).eq('id', track.id);
-      setTracks((prev) => prev.map((t) => (t.id === track.id ? { ...t, downloads: newDownloads } : t)));
-    } catch (err: any) {
-      console.error(err);
-      alert('Erreur téléchargement : ' + (err.message || err));
-    }
-  };
-
   const handlePlayTrack = (track: Track) => {
     play({
       id: track.id, title: track.title, artist: track.artist,
       audio_url: track.audio_url, cover_url: track.cover_url,
-      user_id: track.user_id, duration: track.duration, peaks: track.peaks,
+      user_id: track.user_id || null, // ✅ Correction ici
+      duration: track.duration, peaks: track.peaks,
     });
   };
 
@@ -613,7 +574,6 @@ export const NouveautesPage: React.FC = () => {
     });
   };
 
-  // ─── STYLE GLOBAL PANEL ───
   const PANEL_STYLE: React.CSSProperties = {
     background: '#1c1c1c',
     border: '1px solid #2a2a2a',

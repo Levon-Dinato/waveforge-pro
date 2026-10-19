@@ -59,6 +59,21 @@ export const HomePage = () => {
   const top10 = [...tracks].sort((a, b) => (b.likes_count || 0) - (a.likes_count || 0)).slice(0, 10);
   const newReleases = tracks.slice(1, 13);
 
+  // ✅ Fonction pour lancer le morceau à la une (avec correction du typage)
+  const playFeatured = () => {
+    if (!featured) return;
+    play({
+      id: featured.id,
+      title: featured.title,
+      artist: featured.artist,
+      audio_url: featured.audio_url,
+      cover_url: featured.cover_url,
+      user_id: featured.user_id || null, // ✅ Correction ici
+      duration: featured.duration,
+      peaks: featured.peaks,
+    });
+  };
+
   const panelStyle: React.CSSProperties = {
     background: '#1c1c1c',
     borderRadius: 8,
@@ -76,28 +91,67 @@ export const HomePage = () => {
       color: '#fff',
     }}>
 
-      {/* ✅ HERO AVEC LE NOUVEAU SLOGAN */}
-      <div style={{ paddingBottom: 16, borderBottom: '1px solid #2a2a2a' }}>
-        <h1 style={{ 
-          fontSize: isMobile ? '1.8rem' : '2.5rem', 
-          fontWeight: 800, 
-          margin: '0 0 12px 0',
-          letterSpacing: '-0.5px',
-          lineHeight: 1.1
-        }}>
-          Les nouvelles sorties et les remixes.
-        </h1>
-        <p style={{ 
-          color: '#999', 
-          fontSize: isMobile ? 14 : 16, 
-          maxWidth: 800, 
-          margin: 0,
-          lineHeight: 1.5
-        }}>
-          Les promos, edits et morceaux exclusifs autorisés au partage. 
-          <br style={{ display: isMobile ? 'none' : 'block' }} />
-          Nouveautés House, Tech House, EDM, Dance et Underground. Une communauté où les DJs présentent leurs productions et leurs découvertes.
-        </p>
+      {/* ✅ HERO AVEC LE NOUVEAU SLOGAN ET L'IMAGE DE FOND */}
+      <div style={{ 
+        position: 'relative',
+        borderRadius: 12, 
+        overflow: 'hidden',
+        border: '1px solid #2a2a2a',
+        marginBottom: 16,
+      }}>
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          backgroundImage: 'url(/hero-banner.jpg)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          opacity: 0.4,
+        }} />
+        
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'linear-gradient(90deg, #121212 20%, transparent 80%)',
+        }} />
+
+        <div style={{ position: 'relative', padding: isMobile ? '40px 24px' : '60px 40px' }}>
+          <h1 style={{ 
+            fontSize: isMobile ? '1.8rem' : '3rem', 
+            fontWeight: 800, 
+            margin: '0 0 12px 0',
+            letterSpacing: '-0.5px',
+            lineHeight: 1.1,
+            maxWidth: 700,
+          }}>
+            Les nouvelles sorties et les remixes.
+          </h1>
+          <p style={{ 
+            color: '#ccc', 
+            fontSize: isMobile ? 14 : 16, 
+            maxWidth: 600, 
+            margin: 0,
+            lineHeight: 1.5
+          }}>
+            Les promos, edits et morceaux exclusifs autorisés au partage. 
+            <br />
+            Nouveautés House, Tech House, EDM, Dance et Underground. Une communauté où les DJs présentent leurs productions et leurs découvertes.
+          </p>
+          
+          <div style={{ display: 'flex', gap: 12, marginTop: 24 }}>
+            <Link to="/nouveautes" style={{ 
+              padding: '10px 20px', background: '#00d9ff', color: '#000', 
+              borderRadius: 4, fontWeight: 700, textDecoration: 'none', fontSize: 13 
+            }}>
+              Écouter les sorties
+            </Link>
+            <Link to="/auth" style={{ 
+              padding: '10px 20px', background: 'transparent', color: '#fff', 
+              border: '1px solid #2a2a2a', borderRadius: 4, fontWeight: 600, textDecoration: 'none', fontSize: 13 
+            }}>
+              Rejoindre la communauté
+            </Link>
+          </div>
+        </div>
       </div>
 
       {/* BARRE DE NAVIGATION INTERNE */}
@@ -124,7 +178,7 @@ export const HomePage = () => {
           {featured && (
             <div style={{ ...panelStyle, display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 24 }}>
               <div 
-                onClick={() => play(featured)}
+                onClick={playFeatured} // ✅ Utilisation de la fonction corrigée
                 style={{
                   width: isMobile ? '100%' : 200, height: isMobile ? 200 : 200,
                   borderRadius: 4, overflow: 'hidden', flexShrink: 0,
@@ -166,7 +220,20 @@ export const HomePage = () => {
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {top10.map((track, idx) => (
-                <div key={track.id} onClick={() => play(track)} style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}>
+                <div 
+                  key={track.id} 
+                  onClick={() => play({
+                    id: track.id,
+                    title: track.title,
+                    artist: track.artist,
+                    audio_url: track.audio_url,
+                    cover_url: track.cover_url,
+                    user_id: track.user_id || null, // ✅ Correction ici aussi
+                    duration: track.duration,
+                    peaks: track.peaks,
+                  })} 
+                  style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}
+                >
                   <span style={{ fontSize: 13, fontWeight: 700, color: '#999', width: 20 }}>{idx + 1}</span>
                   <div style={{ width: 36, height: 36, borderRadius: 2, background: track.cover_url ? `url(${track.cover_url}) center/cover` : '#1a1a1a', flexShrink: 0, border: '1px solid #2a2a2a' }} />
                   <div style={{ flex: 1, minWidth: 0 }}>

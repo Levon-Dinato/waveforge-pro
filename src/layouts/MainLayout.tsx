@@ -22,17 +22,17 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { path: '/',           labelKey: 'nav.home',        shortLabelKey: 'nav.home',        icon: '🏠', color: '#888' },
-  { path: '/live',       labelKey: 'nav.live',        shortLabelKey: 'nav.live',        icon: '🔴', color: '#ff3366' },
   { path: '/nouveautes', labelKey: 'nav.nouveautes',  shortLabelKey: 'nav.nouveautes',  icon: '🔥', color: '#ff8c00' },
+  { path: '/live',       labelKey: 'live DJ',        shortLabelKey: 'nav.live',        icon: '🔴', color: '#ff3366' },
   { path: '/genres',     labelKey: 'nav.genres',      shortLabelKey: 'nav.genres',      icon: '🎵', color: '#e50000' },
   { path: '/artists',    labelKey: 'nav.artists',     shortLabelKey: 'nav.artists',     icon: '🎤', color: '#00d9ff' },
-  { path: '/mixer',      labelKey: 'nav.mixer',       shortLabelKey: 'nav.mixer',       icon: '🎛️', color: '#ff5cf0' },
+  //{ path: '/mixer',      labelKey: 'nav.mixer',       shortLabelKey: 'nav.mixer',       icon: '🎛️', color: '#ff5cf0' },//
   { path: '/studio',     labelKey: 'nav.studio',      shortLabelKey: 'nav.studio',      icon: '🎹', color: '#00d9ff' },
   { path: '/stems',      labelKey: 'nav.stems',       shortLabelKey: 'nav.stems',       icon: '🎤', color: '#00ff88' },
   { path: '/mastering',  labelKey: 'nav.mastering',   shortLabelKey: 'nav.mastering',   icon: '🎚️', color: '#7c5cff' },
   { path: '/generator',  labelKey: 'nav.generator',   shortLabelKey: 'nav.generator',   icon: '🎼', color: '#ffd43b' },
-  { path: '/musicgen',   labelKey: 'nav.musicgen',    shortLabelKey: 'nav.musicgen',    icon: '🎵', color: '#00ff88' },
-  { path: '/video',      labelKey: 'nav.video',       shortLabelKey: 'nav.video',       icon: '🎬', color: '#ff5cf0' },
+  //{ path: '/musicgen',   labelKey: 'nav.musicgen',    shortLabelKey: 'nav.musicgen',    icon: '🎵', color: '#00ff88' },//
+  //{ path: '/video',      labelKey: 'nav.video',       shortLabelKey: 'nav.video',       icon: '🎬', color: '#ff5cf0' },//
   { path: '/cdj',        labelKey: 'nav.cdj',         shortLabelKey: 'nav.cdj',         icon: '🎛️', color: '#00d9ff' },
   { path: '/help',       labelKey: 'nav.help',        shortLabelKey: 'nav.help',        icon: '📖', color: '#00d9ff' },
   { path: '/settings',   labelKey: 'nav.settings',    shortLabelKey: 'nav.settings',    icon: '⚙️', color: '#888' },

@@ -180,7 +180,7 @@ export const HomePage = () => {
               margin: '0 0 36px 0',
               fontWeight: 400,
             }}>
-              Mixez, masterisez, séparez les stems et générez des clips vidéo. Le tout dans ton navigateur, sans installation.
+              Créez, remixez, masterisez. Votre studio, sans limites. Toute la puissance d’un studio de production musicale professionnel, directement dans votre navigateur
             </p>
 
             <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 12 }}>
@@ -391,7 +391,7 @@ export const HomePage = () => {
                 fontSize: isMobile ? 16 : 22,
                 fontWeight: 700,
               }}>
-                DJ Control Radio
+                Mix en live sur WaveForme.Pro
               </div>
             </div>
           </div>

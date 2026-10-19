@@ -18,6 +18,7 @@ interface NavItem {
   shortLabelKey: string;
   icon: string;
   color: string;
+  devOnly?: boolean; // ✅ AJOUT DE LA PROPRIÉTÉ
 }
 
 const NAV_ITEMS: NavItem[] = [
@@ -27,10 +28,11 @@ const NAV_ITEMS: NavItem[] = [
   { path: '/genres',     labelKey: 'nav.genres',      shortLabelKey: 'nav.genres',      icon: '🎵', color: '#e50000' },
   { path: '/artists',    labelKey: 'nav.artists',     shortLabelKey: 'nav.artists',     icon: '🎤', color: '#00d9ff' },
   { path: '/studio',     labelKey: 'nav.studio',      shortLabelKey: 'nav.studio',      icon: '🎹', color: '#00d9ff' },
-  { path: '/stems',      labelKey: 'nav.stems',       shortLabelKey: 'nav.stems',       icon: '🎤', color: '#00ff88' },
-  { path: '/mastering',  labelKey: 'nav.mastering',   shortLabelKey: 'nav.mastering',   icon: '🎚️', color: '#7c5cff' },
-  { path: '/generator',  labelKey: 'nav.generator',   shortLabelKey: 'nav.generator',   icon: '🎼', color: '#ffd43b' },
-  { path: '/cdj',        labelKey: 'nav.cdj',         shortLabelKey: 'nav.cdj',         icon: '🎛️', color: '#00d9ff' },
+  // ✅ Pages marquées devOnly (cachées en ligne)
+  { path: '/stems',      labelKey: 'nav.stems',       shortLabelKey: 'nav.stems',       icon: '🎤', color: '#00ff88', devOnly: true },
+  { path: '/mastering',  labelKey: 'nav.mastering',   shortLabelKey: 'nav.mastering',   icon: '🎚️', color: '#7c5cff', devOnly: true },
+  { path: '/generator',  labelKey: 'nav.generator',   shortLabelKey: 'nav.generator',   icon: '🎼', color: '#ffd43b', devOnly: true },
+  { path: '/cdj',        labelKey: 'nav.cdj',         shortLabelKey: 'nav.cdj',         icon: '🎛️', color: '#00d9ff', devOnly: true },
   { path: '/help',       labelKey: 'nav.help',        shortLabelKey: 'nav.help',        icon: '📖', color: '#00d9ff' },
   { path: '/settings',   labelKey: 'nav.settings',    shortLabelKey: 'nav.settings',    icon: '⚙️', color: '#888' },
 ];
@@ -43,6 +45,10 @@ export const MainLayout: React.FC = () => {
   const isMobile = useIsMobile(768);
   const [showSessions, setShowSessions] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // ✅ FILTRE : On affiche les outils locaux seulement sur localhost
+  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  const visibleNavItems = NAV_ITEMS.filter((item) => isLocalhost || !item.devOnly);
 
   // ============================================================
   // VERSION MOBILE
@@ -77,7 +83,8 @@ export const MainLayout: React.FC = () => {
                   <div style={{ fontSize: 16, fontWeight: 700, color: '#fff' }}>Menu</div>
                   <button onClick={() => setSidebarOpen(false)} style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: 24, cursor: 'pointer' }}>×</button>
                 </div>
-                {NAV_ITEMS.map((item) => (
+                {/* ✅ UTILISE visibleNavItems ICI */}
+                {visibleNavItems.map((item) => (
                   <NavLink key={item.path} to={item.path} end={item.path === '/'} onClick={() => setSidebarOpen(false)} style={({ isActive }) => ({ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 10, textDecoration: 'none', fontSize: 14, fontWeight: 600, background: isActive ? 'rgba(0, 217, 255, 0.1)' : 'transparent', color: isActive ? '#00d9ff' : 'rgba(255,255,255,0.7)', border: isActive ? '1px solid rgba(0, 217, 255, 0.2)' : '1px solid transparent' })}>
                     <span style={{ fontSize: 18 }}>{item.icon}</span>
                     <span>{t(item.labelKey)}</span>
@@ -92,7 +99,8 @@ export const MainLayout: React.FC = () => {
           </main>
 
           <nav style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'rgba(10, 10, 15, 0.85)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderTop: '1px solid rgba(255, 255, 255, 0.08)', display: 'flex', justifyContent: 'space-around', alignItems: 'center', padding: '8px 6px', zIndex: 100, paddingBottom: 'max(8px, env(safe-area-inset-bottom))', overflowX: 'auto', gap: 2 }}>
-            {NAV_ITEMS.slice(0, 5).map((item) => (
+            {/* ✅ UTILISE visibleNavItems ICI AUSSI */}
+            {visibleNavItems.slice(0, 5).map((item) => (
               <NavLink key={item.path} to={item.path} end={item.path === '/'} style={({ isActive }) => ({ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, padding: '8px 6px', borderRadius: 10, textDecoration: 'none', flex: '0 0 auto', minWidth: 56, background: isActive ? `linear-gradient(180deg, ${item.color}20, ${item.color}05)` : 'transparent', border: isActive ? `1px solid ${item.color}50` : '1px solid transparent' })}>
                 {({ isActive }) => (
                   <>
@@ -135,7 +143,8 @@ export const MainLayout: React.FC = () => {
               <span>Recherche</span>
             </NavLink>
 
-            {NAV_ITEMS.map((item) => (
+            {/* ✅ UTILISE visibleNavItems ICI */}
+            {visibleNavItems.map((item) => (
               <NavLink key={item.path} to={item.path} end={item.path === '/'} className={({ isActive }) => `wf-nav-link ${isActive ? 'active' : ''}`}>
                 <span className="icon">{item.icon}</span>
                 <span>{t(item.labelKey)}</span>

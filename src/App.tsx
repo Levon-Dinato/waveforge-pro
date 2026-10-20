@@ -34,8 +34,10 @@ const ArtistsPage = lazy(() => import('./pages/ArtistsPage').then((m) => ({ defa
 const SearchPage = lazy(() => import('./pages/SearchPage').then((m) => ({ default: m.SearchPage })));
 const MixerPage = lazy(() => import('./pages/MixerPage').then((m) => ({ default: m.MixerPage })));
 const LivePage = lazy(() => import('./pages/LivePage').then((m) => ({ default: m.LivePage })));
-// ✅ NOUVEL IMPORT ICI
 const TrackPage = lazy(() => import('./pages/TrackPage').then((m) => ({ default: m.TrackPage })));
+
+// ✅ NOUVEL IMPORT : EventsPage
+const EventsPage = lazy(() => import('./pages/EventsPage').then((m) => ({ default: m.EventsPage })));
 
 // ============================================================
 // PAGE LOADER
@@ -115,9 +117,10 @@ export default function App() {
                         <Route path="genres" element={<PrivateRoute><GenresPage /></PrivateRoute>} />
                         <Route path="artists" element={<PrivateRoute><ArtistsPage /></PrivateRoute>} />
                         <Route path="search" element={<PrivateRoute><SearchPage /></PrivateRoute>} />
-                        
-                        {/* ✅ NOUVELLE ROUTE ICI */}
                         <Route path="track/:id" element={<TrackPage />} />
+
+                        {/* ✅ NOUVELLE ROUTE : Événements */}
+                        <Route path="events" element={<EventsPage />} />
                       </Route>
 
                       <Route path="*" element={<Navigate to="/" replace />} />

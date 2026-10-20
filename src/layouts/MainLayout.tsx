@@ -7,6 +7,7 @@ import { VUMeter } from '../components/VUMeter';
 import { SessionPanel } from '../components/SessionPanel';
 import { InstallButton } from '../components/InstallButton';
 import { GlobalPlayer } from '../components/GlobalPlayer';
+import { Footer } from '../components/Footer'; // ✅ Import du Footer
 import { useAudioEngineContext } from '../contexts/AudioEngineContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useIsMobile } from '../hooks/useIsMobile';
@@ -47,13 +48,6 @@ const Icons = {
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
       <circle cx="12" cy="7" r="4" />
-    </svg>
-  ),
-  studio: (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
-      <line x1="8" y1="21" x2="16" y2="21" />
-      <line x1="12" y1="17" x2="12" y2="21" />
     </svg>
   ),
   stems: (
@@ -101,19 +95,6 @@ const Icons = {
       <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
     </svg>
   ),
-  logout: (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-      <polyline points="16 17 21 12 16 7" />
-      <line x1="21" y1="12" x2="9" y2="12" />
-    </svg>
-  ),
-  user: (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-      <circle cx="12" cy="7" r="4" />
-    </svg>
-  ),
 };
 
 interface NavItem {
@@ -130,7 +111,6 @@ const NAV_ITEMS: NavItem[] = [
   { path: '/live',       labelKey: 'live DJ',        shortLabelKey: 'nav.live',        icon: Icons.live },
   { path: '/genres',     labelKey: 'nav.genres',      shortLabelKey: 'nav.genres',      icon: Icons.genres },
   { path: '/artists',    labelKey: 'nav.artists',     shortLabelKey: 'nav.artists',     icon: Icons.artists },
-  //{ path: '/studio',     labelKey: 'nav.studio',      shortLabelKey: 'nav.studio',      icon: Icons.studio },
   { path: '/stems',      labelKey: 'nav.stems',       shortLabelKey: 'nav.stems',       icon: Icons.stems, devOnly: true },
   { path: '/mastering',  labelKey: 'nav.mastering',   shortLabelKey: 'nav.mastering',   icon: Icons.mastering, devOnly: true },
   { path: '/generator',  labelKey: 'nav.generator',   shortLabelKey: 'nav.generator',   icon: Icons.generator, devOnly: true },
@@ -164,7 +144,6 @@ export const MainLayout: React.FC = () => {
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: 22, cursor: 'pointer', padding: 4 }}>☰</button>
               <div style={{ width: 32, height: 32, borderRadius: 6, background: '#1c1c1c', border: '1px solid #2a2a2a', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-                {/* ✅ On utilise l'icône DropZone DJ déjà existante */}
                 <img src="/icons/icon-192.png" alt="DropZone DJ" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               </div>
               <div style={{ fontSize: 13, fontWeight: 800, color: '#fff' }}>DROPZONE <span style={{ color: '#00d9ff' }}>DJ</span></div>
@@ -198,6 +177,7 @@ export const MainLayout: React.FC = () => {
 
           <main style={{ flex: 1, minWidth: 0, overflow: 'auto', padding: '16px 12px' }}>
             <Outlet />
+            <Footer />
           </main>
 
           <nav style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'rgba(15, 15, 15, 0.85)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderTop: '1px solid #2a2a2a', display: 'flex', justifyContent: 'space-around', alignItems: 'center', padding: '8px 6px', zIndex: 100, paddingBottom: 'max(8px, env(safe-area-inset-bottom))', overflowX: 'auto', gap: 2 }}>
@@ -235,12 +215,7 @@ export const MainLayout: React.FC = () => {
         <aside className="wf-sidebar">
           <div className="wf-logo">
             <div className="wf-logo-icon" style={{ padding: 0, overflow: 'hidden' }}>
-              {/* ✅ On utilise l'icône DropZone DJ déjà existante */}
-              <img 
-                src="/icons/icon-192.png" 
-                alt="DropZone DJ" 
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-              />
+              <img src="/icons/icon-192.png" alt="DropZone DJ" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </div>
             <div className="wf-logo-text">DROP<span>ZONE</span> DJ</div>
           </div>
@@ -267,22 +242,9 @@ export const MainLayout: React.FC = () => {
             </button>
 
             {user ? (
-              <div style={{ 
-                padding: '12px', 
-                background: '#1c1c1c',
-                border: '1px solid #2a2a2a',
-                borderRadius: 6,
-                marginTop: 8,
-                marginBottom: 8,
-              }}>
+              <div style={{ padding: '12px', background: '#1c1c1c', border: '1px solid #2a2a2a', borderRadius: 6, marginTop: 8, marginBottom: 8 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                  <div style={{ 
-                    width: 32, height: 32, borderRadius: '4px', 
-                    background: '#121212',
-                    border: '1px solid #2a2a2a',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 14, fontWeight: 700, color: '#fff',
-                  }}>
+                  <div style={{ width: 32, height: 32, borderRadius: '4px', background: '#121212', border: '1px solid #2a2a2a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: '#fff' }}>
                     {username?.charAt(0).toUpperCase()}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
@@ -317,6 +279,7 @@ export const MainLayout: React.FC = () => {
 
         <main className="wf-main">
           <Outlet />
+          <Footer />
         </main>
 
       </div>

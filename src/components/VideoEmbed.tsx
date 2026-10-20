@@ -57,26 +57,26 @@ export const VideoEmbed: React.FC<VideoEmbedProps> = ({ url }) => {
   }
 
   return (
-    // ✅ CONTENEUR RESPONSIVE AVEC RATIO FIXE 16:9 ET LARGEUR MAXIMALE
+    // ✅ La vidéo prend toute la largeur du post (100%), mais garde le bon ratio
     <div style={{ 
       position: 'relative', 
       width: '100%', 
-      maxWidth: '600px', // Limite la largeur à 600px
-      margin: '0 auto',  // Centre la vidéo dans le post
-      aspectRatio: '16 / 9', // Force le format paysage (fini les scrolls)
+      aspectRatio: '16 / 9', 
       backgroundColor: '#000',
       borderRadius: 8,
       overflow: 'hidden', 
-      border: '1px solid #2a2a2a'
+      border: '1px solid #2a2a2a',
+      marginBottom: 12
     }}>
       <iframe
         src={embedUrl}
+        scrolling="no"
         style={{ 
           position: 'absolute', 
           top: 0, 
           left: 0, 
           width: '100%', 
-          height: '100%', // Prend exactement la place du conteneur
+          height: '100%',
           border: 'none'
         }}
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"

@@ -458,7 +458,7 @@ export const ProfilePage: React.FC = () => {
   // ✅ ENVOI INTELLIGENT (Détecte automatiquement les vidéos)
   const handleArtistPostSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newArtistPost.trim() || !user || !id) return;
+    if ((!newArtistPost.trim() && !newArtistPostMediaUrl.trim()) || !user || !id) return;
     setPostingArtist(true);
     
     let finalMediaUrl = newArtistPostMediaUrl.trim();
@@ -468,8 +468,8 @@ export const ProfilePage: React.FC = () => {
       const extracted = extractCleanUrl(finalMediaUrl);
       if (extracted) finalMediaUrl = extracted;
 
-      // ✅ Si on colle un lien YouTube/Vimeo alors qu'on est en mode "LIEN", on le transforme en "VIDÉO"
-      if (newArtistPostType === 'link' && (finalMediaUrl.includes('youtube.com') || finalMediaUrl.includes('youtu.be') || finalMediaUrl.includes('vimeo.com'))) {
+      // ✅ Détection automatique YouTube/Vimeo
+      if (finalMediaUrl.includes('youtube.com') || finalMediaUrl.includes('youtu.be') || finalMediaUrl.includes('vimeo.com')) {
         finalMediaType = 'video';
       }
     }
@@ -478,7 +478,7 @@ export const ProfilePage: React.FC = () => {
       .from('artist_posts')
       .insert({ 
         profile_id: id, 
-        content: newArtistPost.trim(),
+        content: newArtistPost.trim() || ' ', 
         media_type: finalMediaType,
         media_url: finalMediaUrl || null
       })
@@ -596,14 +596,15 @@ export const ProfilePage: React.FC = () => {
               })}
             </div>
 
+            {/* ✅ BOUTON ENVOYER : Actif si texte OU média */}
             <button
               type="submit"
-              disabled={!newArtistPost.trim() || postingArtist}
+              disabled={(!newArtistPost.trim() && !newArtistPostMediaUrl.trim()) || postingArtist}
               style={{
                 background: 'transparent',
                 border: 'none',
-                color: newArtistPost.trim() ? '#00d9ff' : '#444',
-                cursor: (!newArtistPost.trim() || postingArtist) ? 'default' : 'pointer',
+                color: (newArtistPost.trim() || newArtistPostMediaUrl.trim()) ? '#00d9ff' : '#444',
+                cursor: ((!newArtistPost.trim() && !newArtistPostMediaUrl.trim()) || postingArtist) ? 'default' : 'pointer',
                 fontSize: '0.7rem',
                 fontWeight: 700,
                 letterSpacing: '0.5px',
@@ -652,7 +653,7 @@ export const ProfilePage: React.FC = () => {
               <div style={{ fontSize: '0.7rem', color: '#00d9ff', fontWeight: 700, marginBottom: 6 }}>
                 {new Date(post.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}
               </div>
-              <div style={{ fontSize: '0.85rem', color: '#eee', marginBottom: 8, whiteSpace: 'pre-wrap' }}>{post.content}</div>
+              <div style={{ fontSize: '0.85rem', color: '#eee', marginBottom: 8, whiteSpace: 'pre-wrap' }}>{post.content.trim() !== '' ? post.content : ''}</div>
               
               {post.media_url && post.media_type === 'image' && (
                 <img src={post.media_url} alt="" style={{ width: '100%', borderRadius: 4, marginTop: 8 }} />

@@ -32,6 +32,13 @@ export const EventsPage: React.FC = () => {
   });
   const [posting, setPosting] = useState(false);
 
+  // ✅ État pour l'édition
+  const [editingId, setEditingId] = useState<string | null>(null);
+
+  // ✅ État pour l'import Luma
+  const [importUrl, setImportUrl] = useState('');
+  const [importing, setImporting] = useState(false);
+
   useEffect(() => {
     loadEvents();
   }, []);
@@ -41,11 +48,45 @@ export const EventsPage: React.FC = () => {
     const { data, error } = await supabase
       .from('events')
       .select('*')
-      .gte('event_date', new Date().toISOString()) // Uniquement les événements à venir
+      .gte('event_date', new Date().toISOString())
       .order('event_date', { ascending: true });
 
     if (!error && data) setEvents(data);
     setLoading(false);
+  };
+
+  // ✅ Import depuis Luma
+  const handleImport = async () => {
+    if (!importUrl) return;
+    setImporting(true);
+    try {
+      const response = await fetch('/api/import-event', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: importUrl }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Erreur lors de l\'import');
+      }
+
+      setForm({
+        title: data.title || '',
+        description: data.description || '',
+        event_date: data.event_date ? new Date(data.event_date).toISOString().slice(0, 16) : '',
+        location: data.location || '',
+        city: data.city || '',
+        url: data.url || importUrl,
+        image_url: data.image_url || '',
+      });
+      setImportUrl('');
+    } catch (err: any) {
+      alert('Erreur : ' + err.message);
+    } finally {
+      setImporting(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -54,25 +95,76 @@ export const EventsPage: React.FC = () => {
     if (!form.title || !form.event_date) return;
 
     setPosting(true);
-    const { error } = await supabase.from('events').insert({
-      title: form.title,
-      description: form.description,
-      event_date: new Date(form.event_date).toISOString(),
-      location: form.location,
-      city: form.city,
-      url: form.url,
-      image_url: form.image_url,
-      created_by: user.id,
-    });
 
+    if (editingId) {
+      // ✅ Mode édition
+      const { error } = await supabase.from('events').update({
+        title: form.title,
+        description: form.description,
+        event_date: new Date(form.event_date).toISOString(),
+        location: form.location,
+        city: form.city,
+        url: form.url,
+        image_url: form.image_url,
+      }).eq('id', editingId);
+
+      if (error) {
+        alert('Erreur : ' + error.message);
+      } else {
+        setForm({ title: '', description: '', event_date: '', location: '', city: '', url: '', image_url: '' });
+        setEditingId(null);
+        setShowForm(false);
+        loadEvents();
+      }
+    } else {
+      // ✅ Mode création
+      const { error } = await supabase.from('events').insert({
+        title: form.title,
+        description: form.description,
+        event_date: new Date(form.event_date).toISOString(),
+        location: form.location,
+        city: form.city,
+        url: form.url,
+        image_url: form.image_url,
+        created_by: user.id,
+      });
+
+      if (error) {
+        alert('Erreur : ' + error.message);
+      } else {
+        setForm({ title: '', description: '', event_date: '', location: '', city: '', url: '', image_url: '' });
+        setShowForm(false);
+        loadEvents();
+      }
+    }
+    setPosting(false);
+  };
+
+  // ✅ Supprimer un événement
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('Supprimer cet événement ?')) return;
+    const { error } = await supabase.from('events').delete().eq('id', id);
     if (error) {
       alert('Erreur : ' + error.message);
     } else {
-      setForm({ title: '', description: '', event_date: '', location: '', city: '', url: '', image_url: '' });
-      setShowForm(false);
-      loadEvents();
+      setEvents(events.filter((e) => e.id !== id));
     }
-    setPosting(false);
+  };
+
+  // ✅ Modifier un événement
+  const startEdit = (event: Event) => {
+    setEditingId(event.id);
+    setForm({
+      title: event.title,
+      description: event.description || '',
+      event_date: new Date(event.event_date).toISOString().slice(0, 16),
+      location: event.location || '',
+      city: event.city || '',
+      url: event.url || '',
+      image_url: event.image_url || '',
+    });
+    setShowForm(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
@@ -89,7 +181,12 @@ export const EventsPage: React.FC = () => {
           </p>
         </div>
         <button
-          onClick={() => user ? setShowForm(!showForm) : navigate('/auth')}
+          onClick={() => {
+            if (!user) { navigate('/auth'); return; }
+            setShowForm(!showForm);
+            setEditingId(null);
+            setForm({ title: '', description: '', event_date: '', location: '', city: '', url: '', image_url: '' });
+          }}
           style={{
             padding: '10px 20px',
             background: '#00d9ff',
@@ -108,7 +205,42 @@ export const EventsPage: React.FC = () => {
       {/* FORMULAIRE */}
       {showForm && (
         <form onSubmit={handleSubmit} style={{ background: '#1c1c1c', border: '1px solid #2a2a2a', borderRadius: 8, padding: 20, marginBottom: 24, display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <h3 style={{ margin: 0, fontSize: 15 }}>Nouvel événement</h3>
+          <h3 style={{ margin: 0, fontSize: 15 }}>{editingId ? 'Modifier l\'événement' : 'Nouvel événement'}</h3>
+
+          {/* ✅ CHAMP D'IMPORT LUMA (seulement en création) */}
+          {!editingId && (
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: 12, background: '#121212', border: '1px dashed #2a2a2a', borderRadius: 4, marginBottom: 8, flexWrap: 'wrap' }}>
+              <div style={{ fontSize: 12, color: '#999', flex: '1 1 200px' }}>
+                ⚡ Gagne du temps : importe les infos depuis un lien Luma.
+              </div>
+              <input
+                type="url"
+                placeholder="https://lu.ma/..."
+                value={importUrl}
+                onChange={(e) => setImportUrl(e.target.value)}
+                style={{ flex: '1 1 200px', padding: 8, background: '#1c1c1c', border: '1px solid #2a2a2a', borderRadius: 4, color: '#fff', fontSize: 12, minWidth: 150 }}
+              />
+              <button
+                type="button"
+                onClick={handleImport}
+                disabled={importing || !importUrl}
+                style={{
+                  padding: '8px 12px',
+                  background: importing ? '#666' : '#00d9ff',
+                  color: '#000',
+                  border: 'none',
+                  borderRadius: 4,
+                  fontWeight: 700,
+                  fontSize: 11,
+                  cursor: importing ? 'wait' : 'pointer',
+                  flexShrink: 0,
+                }}
+              >
+                {importing ? '...' : 'IMPORTER'}
+              </button>
+            </div>
+          )}
+
           <input type="text" placeholder="Titre de l'événement *" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} style={{ padding: 10, background: '#121212', border: '1px solid #2a2a2a', borderRadius: 4, color: '#fff', fontSize: 13 }} required />
           <textarea placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={3} style={{ padding: 10, background: '#121212', border: '1px solid #2a2a2a', borderRadius: 4, color: '#fff', fontSize: 13, resize: 'vertical' }} />
           <input type="datetime-local" value={form.event_date} onChange={(e) => setForm({ ...form, event_date: e.target.value })} style={{ padding: 10, background: '#121212', border: '1px solid #2a2a2a', borderRadius: 4, color: '#fff', fontSize: 13 }} required />
@@ -119,7 +251,7 @@ export const EventsPage: React.FC = () => {
           <input type="url" placeholder="Lien vers l'événement (billetterie, FB, etc.)" value={form.url} onChange={(e) => setForm({ ...form, url: e.target.value })} style={{ padding: 10, background: '#121212', border: '1px solid #2a2a2a', borderRadius: 4, color: '#fff', fontSize: 13 }} />
           <input type="url" placeholder="URL de l'image (optionnel)" value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} style={{ padding: 10, background: '#121212', border: '1px solid #2a2a2a', borderRadius: 4, color: '#fff', fontSize: 13 }} />
           <button type="submit" disabled={posting} style={{ padding: '10px 20px', background: '#00d9ff', color: '#000', border: 'none', borderRadius: 4, fontWeight: 700, cursor: posting ? 'wait' : 'pointer', alignSelf: 'flex-end' }}>
-            {posting ? 'Publication...' : 'Publier l\'événement'}
+            {posting ? 'Publication...' : editingId ? 'Sauvegarder' : 'Publier l\'événement'}
           </button>
         </form>
       )}
@@ -133,8 +265,31 @@ export const EventsPage: React.FC = () => {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 20 }}>
           {events.map((event) => {
             const eventDate = new Date(event.event_date);
+            const isOwner = user?.id === event.created_by;
+            
             return (
-              <div key={event.id} style={{ background: '#1c1c1c', border: '1px solid #2a2a2a', borderRadius: 8, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+              <div key={event.id} style={{ background: '#1c1c1c', border: '1px solid #2a2a2a', borderRadius: 8, overflow: 'hidden', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+                
+                {/* ✅ BOUTONS MODIFIER / SUPPRIMER (uniquement pour le créateur) */}
+                {isOwner && (
+                  <div style={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 4, zIndex: 2 }}>
+                    <button
+                      onClick={() => startEdit(event)}
+                      title="Modifier"
+                      style={{ background: 'rgba(0,0,0,0.7)', border: '1px solid #2a2a2a', color: '#fff', cursor: 'pointer', padding: 6, borderRadius: 4, fontSize: 12 }}
+                    >
+                      ✏️
+                    </button>
+                    <button
+                      onClick={() => handleDelete(event.id)}
+                      title="Supprimer"
+                      style={{ background: 'rgba(0,0,0,0.7)', border: '1px solid #2a2a2a', color: '#ff5c5c', cursor: 'pointer', padding: 6, borderRadius: 4, fontSize: 12 }}
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                )}
+
                 {/* Image */}
                 {event.image_url ? (
                   <div style={{ width: '100%', height: 160, background: `url(${event.image_url}) center/cover` }} />

@@ -6,6 +6,7 @@ import { TrackGrid } from '../components/TrackGrid';
 import type { Track } from '../components/TrackGrid';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { usePlayer } from '../contexts/PlayerContext';
+import { EventsTicker } from '../components/EventsTicker'; // ✅ Réintégration
 
 interface Artist {
   id: string;
@@ -83,10 +84,13 @@ export const HomePage = () => {
       color: '#fff',
       width: '100%',
       maxWidth: '100%',
-      overflowX: 'hidden',
+      overflowX: 'hidden', // ✅ Sécurité supplémentaire
     }}>
 
-      {/* ✅ HERO AVEC LA VIDÉO DE FOND */}
+      {/* ✅ BANNIÈRE DÉFILANTE DES ÉVÉNEMENTS */}
+      <EventsTicker />
+
+      {/* HERO AVEC LA VIDÉO DE FOND */}
       <div style={{ 
         position: 'relative',
         borderRadius: 12, 
@@ -96,8 +100,7 @@ export const HomePage = () => {
         width: '100%',
         height: isMobile ? 320 : 420,
       }}>
-        
-        {/* VIDÉO EN FOND (autoplay, loop, muted, playsInline) */}
+        {/* VIDÉO EN FOND */}
         <video
           autoPlay
           loop
@@ -112,18 +115,17 @@ export const HomePage = () => {
             opacity: 0.5,
           }}
         >
-          {/* ⚠️ Remplace /ma-video.mp4 par le nom de ta vidéo dans le dossier public/ */}
           <source src="/videos/background.mp4" type="video/mp4" />
         </video>
 
-        {/* Overlay sombre pour la lisibilité */}
+        {/* Overlay sombre */}
         <div style={{ 
           position: 'absolute', 
           inset: 0, 
           background: 'linear-gradient(90deg, #121212 20%, transparent 80%)' 
         }} />
 
-        {/* Contenu (Texte) */}
+        {/* Contenu */}
         <div style={{ 
           position: 'relative', 
           padding: isMobile ? '40px 24px' : '60px 40px',
@@ -140,7 +142,7 @@ export const HomePage = () => {
             Les nouvelles sorties et les remixes.
           </h1>
           <p style={{ color: '#ccc', fontSize: isMobile ? 14 : 16, maxWidth: 600, margin: 0, lineHeight: 1.5 }}>
-            Les promos, edits et morceaux exclusifs. 
+            Les promos, edits et morceaux exclusifs autorisés au partage. 
             <br />
             Nouveautés House, Tech House, EDM, Dance et Underground. Une communauté où les DJs présentent leurs productions et leurs découvertes.
           </p>
@@ -161,13 +163,14 @@ export const HomePage = () => {
         <div style={{ display: 'flex', gap: 24, overflowX: 'auto', width: '100%' }}>
           <Link to="/" style={{ color: '#fff', textDecoration: 'none', fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap' }}>Accueil</Link>
           <Link to="/nouveautes" style={{ color: '#999', textDecoration: 'none', fontSize: 14, fontWeight: 500, whiteSpace: 'nowrap' }}>Sorties</Link>
+          <Link to="/events" style={{ color: '#999', textDecoration: 'none', fontSize: 14, fontWeight: 500, whiteSpace: 'nowrap' }}>Événements</Link>
           <Link to="/genres" style={{ color: '#999', textDecoration: 'none', fontSize: 14, fontWeight: 500, whiteSpace: 'nowrap' }}>Genres</Link>
           <Link to="/artists" style={{ color: '#999', textDecoration: 'none', fontSize: 14, fontWeight: 500, whiteSpace: 'nowrap' }}>Artistes</Link>
           <Link to="/live" style={{ color: '#ff3366', textDecoration: 'none', fontSize: 14, fontWeight: 700, whiteSpace: 'nowrap' }}>🔴 LIVE</Link>
         </div>
       </div>
 
-      {/* ✅ CONTENEUR PRINCIPAL : Sidebar gauche (contenu) + Sidebar droite (top 10) */}
+      {/* CONTENEUR PRINCIPAL */}
       <div style={{ 
         display: 'flex', 
         gap: 24, 
@@ -176,10 +179,10 @@ export const HomePage = () => {
         flexDirection: isMobile ? 'column' : 'row',
       }}>
         
-        {/* COLONNE GAUCHE (À la une + Nouvelles sorties) */}
+        {/* COLONNE GAUCHE */}
         <div style={{ flex: 1, minWidth: 0, width: '100%' }}>
           
-          {/* MODULE À LA UNE EN 3D */}
+          {/* MODULE À LA UNE 3D */}
           {featured && (
             <div 
               onClick={playFeatured}
@@ -258,7 +261,7 @@ export const HomePage = () => {
           <TrackGrid tracks={newReleases} />
         </div>
 
-        {/* COLONNE DROITE (Top 10 + Artistes) - Cachée sur mobile */}
+        {/* COLONNE DROITE */}
         {!isMobile && (
           <aside style={{ width: 280, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 24 }}>
             
@@ -300,7 +303,7 @@ export const HomePage = () => {
         )}
       </div>
 
-      {/* EFFETS 3D ET ANIMATIONS */}
+      {/* EFFETS 3D */}
       <style>{`
         .featured-3d-card:hover {
           transform: translateY(-6px) scale(1.01);

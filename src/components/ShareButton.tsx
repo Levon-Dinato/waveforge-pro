@@ -157,15 +157,15 @@ export const ShareButton: React.FC<ShareButtonProps> = ({
     padding: variant === 'icon' ? 0 : '8px 16px',
     width: variant === 'icon' ? s.btn : 'auto',
     height: variant === 'icon' ? s.btn : 'auto',
-    background: 'rgba(255, 255, 255, 0.03)',
-    border: '1px solid rgba(255, 255, 255, 0.1)',
-    color: 'rgba(255, 255, 255, 0.6)',
-    borderRadius: variant === 'icon' ? 8 : 30,
+    background: 'transparent', // ✅ Fond transparent
+    border: '1px solid #2a2a2a', // ✅ Bordure grise
+    color: '#999', // ✅ Texte gris
+    borderRadius: 4, // ✅ Coins carrés
     cursor: 'pointer',
-    fontFamily: 'monospace',
+    fontFamily: 'Inter, sans-serif',
     fontSize: s.font,
-    fontWeight: 700,
-    transition: 'all 0.2s ease',
+    fontWeight: 600,
+    transition: 'all 0.15s ease',
   };
 
   return (
@@ -181,7 +181,6 @@ export const ShareButton: React.FC<ShareButtonProps> = ({
           100% { transform: scale(1); opacity: 1; }
         }
         .share-platform-item { transition: all 0.15s ease; }
-        .share-platform-item:hover { transform: translateX(4px); }
       `}</style>
 
       <button
@@ -189,16 +188,14 @@ export const ShareButton: React.FC<ShareButtonProps> = ({
         title={label}
         style={buttonStyle}
         onMouseEnter={(e) => {
-          e.currentTarget.style.background = 'rgba(0, 217, 255, 0.1)';
-          e.currentTarget.style.borderColor = 'rgba(0, 217, 255, 0.4)';
-          e.currentTarget.style.color = '#00d9ff';
-          e.currentTarget.style.boxShadow = '0 0 20px rgba(0, 217, 255, 0.15)';
+          e.currentTarget.style.background = '#2a2a2a';
+          e.currentTarget.style.borderColor = '#3a3a3a';
+          e.currentTarget.style.color = '#fff';
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)';
-          e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-          e.currentTarget.style.color = 'rgba(255, 255, 255, 0.6)';
-          e.currentTarget.style.boxShadow = 'none';
+          e.currentTarget.style.background = 'transparent';
+          e.currentTarget.style.borderColor = '#2a2a2a';
+          e.currentTarget.style.color = '#999';
         }}
       >
         {copied && isMobile ? (
@@ -224,38 +221,29 @@ export const ShareButton: React.FC<ShareButtonProps> = ({
             [position === 'bottom' ? 'top' : 'bottom']: '100%',
             [position === 'bottom' ? 'marginTop' : 'marginBottom']: 8,
             right: 0,
-            background: 'linear-gradient(135deg, rgba(15, 18, 28, 0.98), rgba(10, 12, 20, 0.99))',
-            border: '1px solid rgba(0, 217, 255, 0.3)',
-            borderRadius: 12,
+            background: '#1c1c1c', // ✅ Fond gris Beatport
+            border: '1px solid #2a2a2a', // ✅ Bordure grise
+            borderRadius: 8, // ✅ Coins carrés
             padding: 8,
-            minWidth: 240,
-            boxShadow: '0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(0, 217, 255, 0.15)',
+            minWidth: 220,
+            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.8)',
             zIndex: 9999,
-            fontFamily: 'monospace',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            animation: 'shareMenuIn 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+            fontFamily: 'Inter, sans-serif',
+            animation: 'shareMenuIn 0.2s ease',
           }}
         >
           <div
             style={{
-              fontSize: 9,
-              color: 'rgba(0, 217, 255, 0.6)',
-              padding: '4px 12px 10px',
-              letterSpacing: '2px',
+              fontSize: 10,
+              color: '#999',
+              padding: '4px 12px 8px',
+              letterSpacing: '1px',
               fontWeight: 700,
-              borderBottom: '1px solid rgba(255,255,255,0.06)',
-              marginBottom: 6,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
+              textTransform: 'uppercase',
+              borderBottom: '1px solid #2a2a2a',
+              marginBottom: 4,
             }}
           >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
-              <polyline points="16 6 12 2 8 6" />
-              <line x1="12" y1="2" x2="12" y2="15" />
-            </svg>
             PARTAGER VIA
           </div>
 
@@ -274,14 +262,13 @@ export const ShareButton: React.FC<ShareButtonProps> = ({
                   gap: 12,
                   width: '100%',
                   padding: '10px 12px',
-                  background: isHovered ? `${p.color}20` : 'transparent',
-                  border: `1px solid ${isHovered ? p.color + '60' : 'transparent'}`,
+                  background: isHovered ? '#2a2a2a' : 'transparent',
+                  border: 'none',
                   color: '#fff',
                   cursor: 'pointer',
-                  fontSize: 12,
-                  fontFamily: 'monospace',
+                  fontSize: 13,
                   textAlign: 'left',
-                  borderRadius: 8,
+                  borderRadius: 4,
                   marginBottom: 2,
                 }}
               >
@@ -290,23 +277,24 @@ export const ShareButton: React.FC<ShareButtonProps> = ({
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    width: 32,
-                    height: 32,
-                    borderRadius: 8,
-                    background: isHovered ? p.color : 'rgba(255,255,255,0.06)',
-                    color: isHovered ? '#fff' : p.color,
+                    width: 28,
+                    height: 28,
+                    borderRadius: 4,
+                    background: '#121212',
+                    color: '#fff',
                     flexShrink: 0,
-                    transition: 'all 0.15s',
+                    filter: 'grayscale(1)',
+                    opacity: 0.8,
                   }}
                 >
                   {p.icon}
                 </span>
-                <span style={{ fontWeight: 600 }}>{p.name}</span>
+                <span style={{ fontWeight: 500 }}>{p.name}</span>
               </button>
             );
           })}
 
-          <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', margin: '6px 8px' }} />
+          <div style={{ height: 1, background: '#2a2a2a', margin: '6px 0' }} />
 
           <button
             onClick={handleCopy}
@@ -317,14 +305,13 @@ export const ShareButton: React.FC<ShareButtonProps> = ({
               gap: 12,
               width: '100%',
               padding: '10px 12px',
-              background: copied ? 'rgba(0, 255, 136, 0.12)' : 'transparent',
-              border: `1px solid ${copied ? '#00ff8860' : 'transparent'}`,
+              background: copied ? 'rgba(0, 255, 136, 0.1)' : 'transparent',
+              border: 'none',
               color: copied ? '#00ff88' : '#fff',
               cursor: 'pointer',
-              fontSize: 12,
-              fontFamily: 'monospace',
+              fontSize: 13,
               textAlign: 'left',
-              borderRadius: 8,
+              borderRadius: 4,
             }}
           >
             <span
@@ -332,23 +319,22 @@ export const ShareButton: React.FC<ShareButtonProps> = ({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                width: 32,
-                height: 32,
-                borderRadius: 8,
-                background: copied ? '#00ff88' : 'rgba(255,255,255,0.06)',
+                width: 28,
+                height: 28,
+                borderRadius: 4,
+                background: copied ? '#00ff88' : '#121212',
                 color: copied ? '#000' : '#00ff88',
                 flexShrink: 0,
-                transition: 'all 0.15s',
               }}
             >
               {copied ? (
                 <span style={{ animation: 'checkPop 0.3s ease' }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                 </span>
               ) : (
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
                   <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
                 </svg>

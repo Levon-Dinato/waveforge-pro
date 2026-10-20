@@ -258,7 +258,7 @@ const uploadCoverToSupabase = async (blob: Blob, baseName: string): Promise<stri
 const PlayButton: React.FC<{
   isPlaying: boolean;
   isCurrent: boolean;
-  onClick: () => void;
+  onClick: (e: React.MouseEvent) => void;
   size?: number;
 }> = ({ isPlaying, isCurrent, onClick, size = 52 }) => {
   const bg = isCurrent && isPlaying
@@ -490,7 +490,8 @@ export const NouveautesPage: React.FC = () => {
     }
   };
 
-  const handlePlayTrack = (track: Track) => {
+  const handlePlayTrack = (e: React.MouseEvent, track: Track) => {
+    e.stopPropagation(); // ✅ Évite la redirection
     play({
       id: track.id, title: track.title, artist: track.artist,
       audio_url: track.audio_url, cover_url: track.cover_url,
@@ -499,7 +500,8 @@ export const NouveautesPage: React.FC = () => {
     });
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation(); // ✅ Évite la redirection
     const track = tracks.find((t) => t.id === id);
     if (!track) return;
     if (!window.confirm('Supprimer "' + track.title + '" ?')) return;
@@ -522,7 +524,8 @@ export const NouveautesPage: React.FC = () => {
     }
   };
 
-  const startEdit = (track: Track) => {
+  const startEdit = (e: React.MouseEvent, track: Track) => {
+    e.stopPropagation(); // ✅ Évite la redirection
     setEditingId(track.id);
     setEditForm({ title: track.title, artist: track.artist, genre: track.genre, bpm: track.bpm });
   };
@@ -564,7 +567,8 @@ export const NouveautesPage: React.FC = () => {
     return visibleTracks.slice(start, start + ITEMS_PER_PAGE);
   }, [visibleTracks, safeCurrentPage]);
 
-  const toggleComments = (trackId: string) => {
+  const toggleComments = (e: React.MouseEvent, trackId: string) => {
+    e.stopPropagation(); // ✅ Évite la redirection
     setOpenComments((prev) => {
       const next = new Set(prev);
       if (next.has(trackId)) next.delete(trackId);
@@ -642,7 +646,7 @@ export const NouveautesPage: React.FC = () => {
                   color: selectedGenre === null ? '#fff' : '#999', 
                   borderLeft: selectedGenre === null ? '3px solid #00d9ff' : '3px solid transparent', 
                   fontWeight: selectedGenre === null ? 600 : 500,
-                  borderBottom: '1px solid #2a2a2a' // ✅ Ligne de séparation
+                  borderBottom: '1px solid #2a2a2a'
                 }}
               >
                 <span>Tous les sons</span>
@@ -666,7 +670,6 @@ export const NouveautesPage: React.FC = () => {
                       color: isActive ? '#fff' : '#999', 
                       borderLeft: isActive ? '3px solid #00d9ff' : '3px solid transparent', 
                       fontWeight: isActive ? 600 : 500,
-                      // ✅ Ligne de séparation sur tous SAUF le dernier
                       borderBottom: index === genreStats.length - 1 ? 'none' : '1px solid #2a2a2a' 
                     }}
                   >
@@ -732,11 +735,11 @@ export const NouveautesPage: React.FC = () => {
                 <div key={track.id} style={{ position: 'relative' }}>
                   {/* OVERLAY COMMENTAIRES */}
                   {openComments.has(track.id) && !isEditing && (
-                    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }} onClick={() => toggleComments(track.id)}>
+                    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }} onClick={() => toggleComments({ stopPropagation: () => {} } as any, track.id)}>
                       <div onClick={(e) => e.stopPropagation()} style={{ background: '#1c1c1c', border: '1px solid #2a2a2a', borderRadius: 8, padding: 20, width: '100%', maxWidth: 500, maxHeight: '80vh', overflowY: 'auto' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
                           <h3 style={{ margin: 0, fontSize: 14 }}>Commentaires</h3>
-                          <button onClick={() => toggleComments(track.id)} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', fontSize: 20 }}>×</button>
+                          <button onClick={(e) => toggleComments(e, track.id)} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', fontSize: 20 }}>×</button>
                         </div>
                         <CommentSection trackId={track.id} />
                       </div>
@@ -760,9 +763,10 @@ export const NouveautesPage: React.FC = () => {
                       </div>
                     </div>
                   ) : (
-                    /* CARTE NORMALE */
+                    /* CARTE NORMALE AVEC REDIRECTION */
                     <div
                       className="track-card-hover"
+                      onClick={() => navigate(`/track/${track.id}`)} // ✅ REDIRECTION ICI
                       style={{
                         color: '#fff',
                         background: 'transparent',
@@ -771,6 +775,7 @@ export const NouveautesPage: React.FC = () => {
                         display: 'flex',
                         flexDirection: 'column',
                         gap: 8,
+                        cursor: 'pointer', // ✅ Curseur pointeur
                       }}
                     >
                       {/* Pochette + Overlay Play */}
@@ -781,7 +786,7 @@ export const NouveautesPage: React.FC = () => {
                       }}>
                         <div
                           className="hover-play"
-                          onClick={() => handlePlayTrack(track)}
+                          onClick={(e) => handlePlayTrack(e, track)}
                           style={{
                             position: 'absolute', inset: 0,
                             background: 'rgba(0,0,0,0.5)',
@@ -791,7 +796,7 @@ export const NouveautesPage: React.FC = () => {
                             cursor: 'pointer',
                           }}
                         >
-                          <PlayButton isPlaying={isThisPlaying} isCurrent={isThisCurrent} onClick={() => handlePlayTrack(track)} size={44} />
+                          <PlayButton isPlaying={isThisPlaying} isCurrent={isThisCurrent} onClick={(e) => handlePlayTrack(e, track)} size={44} />
                         </div>
 
                         <div style={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 4 }}>
@@ -811,7 +816,7 @@ export const NouveautesPage: React.FC = () => {
 
                       {/* Actions */}
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 4px', marginTop: 4 }}>
-                        <button onClick={() => handleLike(track.id)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, color: isLiked ? '#ff3366' : '#666', fontSize: 12, fontWeight: 600 }}>
+                        <button onClick={(e) => { e.stopPropagation(); handleLike(track.id); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, color: isLiked ? '#ff3366' : '#666', fontSize: 12, fontWeight: 600 }}>
                           {isLiked ? '❤️' : '🤍'} {track.likes_count}
                         </button>
                         <div style={{ fontSize: 11, color: '#666' }}>{track.genre}</div>
@@ -819,13 +824,15 @@ export const NouveautesPage: React.FC = () => {
 
                       {/* Menu d'actions (visibles au survol) */}
                       <div style={{ position: 'absolute', top: 8, left: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                        <button onClick={() => toggleComments(track.id)} style={{ background: 'rgba(0,0,0,0.7)', border: '1px solid #2a2a2a', color: '#fff', cursor: 'pointer', padding: 4, borderRadius: 4, fontSize: 10 }}>💬</button>
-                        <ShareButton url={`${window.location.origin}/share/${track.id}`} title={`${track.title} — ${track.artist}`} text={`Écoute "${track.title}" par ${track.artist} sur DropZone DJ 🎵`} variant="icon" size="small" label="" position="bottom" />
+                        <button onClick={(e) => toggleComments(e, track.id)} style={{ background: 'rgba(0,0,0,0.7)', border: '1px solid #2a2a2a', color: '#fff', cursor: 'pointer', padding: 4, borderRadius: 4, fontSize: 10 }}>💬</button>
+                        <div onClick={(e) => e.stopPropagation()}>
+                          <ShareButton url={`${window.location.origin}/share/${track.id}`} title={`${track.title} — ${track.artist}`} text={`Écoute "${track.title}" par ${track.artist} sur DropZone DJ 🎵`} variant="icon" size="small" label="" position="bottom" />
+                        </div>
                         
                         {user?.id === track.user_id && (
                           <>
-                            <button onClick={() => startEdit(track)} style={{ background: 'rgba(0,0,0,0.7)', border: '1px solid #2a2a2a', color: '#fff', cursor: 'pointer', padding: 4, borderRadius: 4, fontSize: 10 }}>✏️</button>
-                            <button onClick={() => handleDelete(track.id)} style={{ background: 'rgba(0,0,0,0.7)', border: '1px solid #2a2a2a', color: '#ff5c5c', cursor: 'pointer', padding: 4, borderRadius: 4, fontSize: 10 }}>🗑️</button>
+                            <button onClick={(e) => startEdit(e, track)} style={{ background: 'rgba(0,0,0,0.7)', border: '1px solid #2a2a2a', color: '#fff', cursor: 'pointer', padding: 4, borderRadius: 4, fontSize: 10 }}>✏️</button>
+                            <button onClick={(e) => handleDelete(e, track.id)} style={{ background: 'rgba(0,0,0,0.7)', border: '1px solid #2a2a2a', color: '#ff5c5c', cursor: 'pointer', padding: 4, borderRadius: 4, fontSize: 10 }}>🗑️</button>
                           </>
                         )}
                       </div>

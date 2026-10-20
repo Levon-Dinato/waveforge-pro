@@ -112,7 +112,7 @@ export const TrackPage = () => {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', color: '#00d9ff', fontFamily: 'monospace' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', color: '#999', fontFamily: 'Inter, sans-serif', background: '#121212' }}>
         CHARGEMENT DU MORCEAU...
       </div>
     );
@@ -120,7 +120,7 @@ export const TrackPage = () => {
 
   if (!track) {
     return (
-      <div style={{ textAlign: 'center', padding: 60, color: '#fff' }}>
+      <div style={{ textAlign: 'center', padding: 60, color: '#fff', background: '#121212', minHeight: '100vh' }}>
         <h2 style={{ fontSize: 24 }}>Morceau introuvable</h2>
         <Link to="/" style={{ color: '#00d9ff', marginTop: 20, display: 'inline-block' }}>Retour à l'accueil</Link>
       </div>
@@ -131,7 +131,7 @@ export const TrackPage = () => {
   const shareUrl = `${window.location.origin}/share/${track.id}`;
 
   return (
-    <div style={{ maxWidth: 1000, margin: '0 auto', paddingBottom: 100, fontFamily: 'monospace' }}>
+    <div style={{ maxWidth: 1200, margin: '0 auto', paddingBottom: 120, fontFamily: 'Inter, sans-serif', background: '#121212', color: '#fff', minHeight: '100vh', padding: isMobile ? '16px' : '24px' }}>
       
       {/* HEADER / COUVERTURE */}
       <div style={{ 
@@ -140,19 +140,20 @@ export const TrackPage = () => {
         gap: isMobile ? 24 : 48, 
         alignItems: 'center', 
         marginBottom: 40,
-        background: 'linear-gradient(180deg, rgba(0, 217, 255, 0.05) 0%, transparent 100%)',
+        background: '#1c1c1c',
         padding: isMobile ? '20px' : '40px',
-        borderRadius: 24,
-        border: '1px solid rgba(255,255,255,0.05)',
+        borderRadius: 8,
+        border: '1px solid #2a2a2a',
       }}>
         <div style={{
-          width: isMobile ? '80%' : 320,
+          width: isMobile ? '100%' : 320,
           aspectRatio: '1',
-          borderRadius: 20,
-          background: track.cover_url ? `url(${track.cover_url}) center/cover` : 'linear-gradient(135deg, #00d9ff, #7c5cff)',
-          boxShadow: '0 20px 50px rgba(0,0,0,0.5), 0 0 30px rgba(0,217,255,0.2)',
+          borderRadius: 8,
+          background: track.cover_url ? `url(${track.cover_url}) center/cover` : '#1a1a1a',
+          boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
           position: 'relative',
           flexShrink: 0,
+          border: '1px solid #2a2a2a',
         }}>
           {!track.cover_url && (
             <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 80 }}>🎵</div>
@@ -160,9 +161,9 @@ export const TrackPage = () => {
         </div>
 
         <div style={{ flex: 1, width: '100%' }}>
-          <div style={{ fontSize: 12, color: '#00d9ff', fontWeight: 800, letterSpacing: '2px', marginBottom: 8 }}>MORCEAU</div>
-          <h1 style={{ fontSize: isMobile ? 32 : 48, fontWeight: 900, margin: '0 0 12px 0', lineHeight: 1.1 }}>{track.title}</h1>
-          <h2 style={{ fontSize: isMobile ? 18 : 24, color: 'rgba(255,255,255,0.7)', margin: '0 0 24px 0', fontWeight: 500 }}>
+          <div style={{ fontSize: 11, color: '#999', fontWeight: 800, letterSpacing: '1px', marginBottom: 8, textTransform: 'uppercase' }}>MORCEAU</div>
+          <h1 style={{ fontSize: isMobile ? 32 : 48, fontWeight: 700, margin: '0 0 12px 0', lineHeight: 1.1 }}>{track.title}</h1>
+          <h2 style={{ fontSize: isMobile ? 18 : 24, color: '#999', margin: '0 0 24px 0', fontWeight: 500 }}>
             {track.user_id ? (
               <Link to={`/profil/${track.user_id}`} style={{ color: 'inherit', textDecoration: 'none' }}>
                 {track.artist}
@@ -171,62 +172,123 @@ export const TrackPage = () => {
           </h2>
 
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 32 }}>
-            <span style={{ padding: '6px 12px', background: 'rgba(0,217,255,0.1)', border: '1px solid rgba(0,217,255,0.3)', borderRadius: 20, fontSize: 12, color: '#00d9ff' }}>⚡ {track.bpm} BPM</span>
-            <span style={{ padding: '6px 12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 20, fontSize: 12 }}>🎵 {track.genre || 'Electronic'}</span>
+            <span style={{ padding: '6px 12px', background: '#121212', border: '1px solid #2a2a2a', borderRadius: 4, fontSize: 12, color: '#fff' }}>{track.bpm} BPM</span>
+            <span style={{ padding: '6px 12px', background: '#121212', border: '1px solid #2a2a2a', borderRadius: 4, fontSize: 12, color: '#fff' }}>{track.genre || 'Electronic'}</span>
             {track.camelot && track.camelot !== '?' && (
-              <span style={{ padding: '6px 12px', background: `${getCamelotColor(track.camelot)}15`, border: `1px solid ${getCamelotColor(track.camelot)}40`, borderRadius: 20, fontSize: 12, color: getCamelotColor(track.camelot), fontWeight: 700 }}>
-                🎼 {track.camelot}
+              <span style={{ padding: '6px 12px', background: '#121212', border: '1px solid #2a2a2a', borderRadius: 4, fontSize: 12, color: '#fff' }}>
+                {track.camelot}
               </span>
             )}
-            <span style={{ padding: '6px 12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 20, fontSize: 12 }}>⬇ {track.downloads || 0}</span>
+            <span style={{ padding: '6px 12px', background: '#121212', border: '1px solid #2a2a2a', borderRadius: 4, fontSize: 12, color: '#fff' }}>{track.downloads || 0} DL</span>
           </div>
 
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
-            <button onClick={handlePlay} style={{
-              display: 'flex', alignItems: 'center', gap: 10,
-              padding: '14px 32px', borderRadius: 30,
-              background: 'linear-gradient(135deg, #00d9ff, #0088ff)',
-              color: '#000', border: 'none', cursor: 'pointer',
-              fontSize: 16, fontWeight: 900, boxShadow: '0 8px 24px rgba(0,217,255,0.4)',
-              transition: 'transform 0.2s'
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-            onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+            <button 
+              onClick={handlePlay} 
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '10px 20px',
+                background: isThisPlaying ? 'rgba(0, 217, 255, 0.15)' : 'transparent',
+                border: isThisPlaying ? '1px solid #00d9ff' : '1px solid #2a2a2a',
+                color: isThisPlaying ? '#00d9ff' : '#fff',
+                borderRadius: 4,
+                fontSize: 13,
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+              }}
+              onMouseEnter={(e) => {
+                if (!isThisPlaying) {
+                  e.currentTarget.style.background = '#2a2a2a';
+                  e.currentTarget.style.borderColor = '#3a3a3a';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isThisPlaying) {
+                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.borderColor = '#2a2a2a';
+                }
+              }}
             >
               {isThisPlaying ? '⏸ En lecture...' : '▶ Écouter'}
             </button>
 
-            <button onClick={handleLike} style={{
-              display: 'flex', alignItems: 'center', gap: 8,
-              padding: '14px 20px', borderRadius: 30,
-              background: isLiked ? 'rgba(255, 51, 102, 0.15)' : 'rgba(255,255,255,0.05)',
-              color: isLiked ? '#ff3366' : '#fff',
-              border: isLiked ? '1px solid rgba(255,51,102,0.4)' : '1px solid rgba(255,255,255,0.1)',
-              cursor: 'pointer', fontSize: 14, fontWeight: 700,
-            }}>
+            <button 
+              onClick={handleLike} 
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '10px 20px',
+                background: isLiked ? 'rgba(255, 51, 102, 0.1)' : 'transparent',
+                border: isLiked ? '1px solid #ff3366' : '1px solid #2a2a2a',
+                color: isLiked ? '#ff3366' : '#fff',
+                borderRadius: 4,
+                fontSize: 13,
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+              }}
+              onMouseEnter={(e) => {
+                if (!isLiked) {
+                  e.currentTarget.style.background = '#2a2a2a';
+                  e.currentTarget.style.borderColor = '#3a3a3a';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isLiked) {
+                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.borderColor = '#2a2a2a';
+                }
+              }}
+            >
               {isLiked ? '❤️' : '🤍'} {likesCount}
             </button>
 
-            <button onClick={handleDownload} style={{
-              padding: '14px 20px', borderRadius: 30,
-              background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-              color: '#fff', cursor: 'pointer', fontSize: 14, fontWeight: 700,
-            }}>
+            <button 
+              onClick={handleDownload} 
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '10px 20px',
+                background: 'transparent',
+                border: '1px solid #2a2a2a',
+                color: '#fff',
+                borderRadius: 4,
+                fontSize: 13,
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = '#2a2a2a';
+                e.currentTarget.style.borderColor = '#3a3a3a';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent';
+                e.currentTarget.style.borderColor = '#2a2a2a';
+              }}
+            >
               ⬇ Télécharger
             </button>
 
-            <ShareButton url={shareUrl} title={`${track.title} — ${track.artist}`} text={`Écoute "${track.title}" sur WaveForge PRO 🎵`} variant="icon" size="large" label="Partager" position="bottom" />
+            <div style={{ display: 'inline-flex' }}>
+              <ShareButton url={shareUrl} title={`${track.title} — ${track.artist}`} text={`Écoute "${track.title}" sur DropZone DJ 🎵`} variant="icon" size="large" label="Partager" position="bottom" />
+            </div>
           </div>
         </div>
       </div>
 
       {/* SECTION COMMENTAIRES */}
-      <div style={{ padding: isMobile ? '0 16px' : 0 }}>
-        <h3 style={{ fontSize: 20, fontWeight: 800, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
+      <div style={{ padding: isMobile ? '0' : '0' }}>
+        <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
           <span style={{ width: 4, height: 20, background: '#00d9ff', borderRadius: 2 }} />
           Commentaires de la communauté
         </h3>
-        <div style={{ background: 'rgba(15, 18, 28, 0.6)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 16, padding: 20 }}>
+        <div style={{ background: '#1c1c1c', border: '1px solid #2a2a2a', borderRadius: 8, padding: 20 }}>
           <CommentSection trackId={track.id} />
         </div>
       </div>

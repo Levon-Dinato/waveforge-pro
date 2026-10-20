@@ -130,7 +130,7 @@ const NAV_ITEMS: NavItem[] = [
   { path: '/live',       labelKey: 'live DJ',        shortLabelKey: 'nav.live',        icon: Icons.live },
   { path: '/genres',     labelKey: 'nav.genres',      shortLabelKey: 'nav.genres',      icon: Icons.genres },
   { path: '/artists',    labelKey: 'nav.artists',     shortLabelKey: 'nav.artists',     icon: Icons.artists },
-  { path: '/studio',     labelKey: 'nav.studio',      shortLabelKey: 'nav.studio',      icon: Icons.studio },
+  //{ path: '/studio',     labelKey: 'nav.studio',      shortLabelKey: 'nav.studio',      icon: Icons.studio },
   { path: '/stems',      labelKey: 'nav.stems',       shortLabelKey: 'nav.stems',       icon: Icons.stems, devOnly: true },
   { path: '/mastering',  labelKey: 'nav.mastering',   shortLabelKey: 'nav.mastering',   icon: Icons.mastering, devOnly: true },
   { path: '/generator',  labelKey: 'nav.generator',   shortLabelKey: 'nav.generator',   icon: Icons.generator, devOnly: true },

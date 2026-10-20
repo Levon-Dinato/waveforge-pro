@@ -140,7 +140,7 @@ export const HomePage = () => {
             Les nouvelles sorties et les remixes.
           </h1>
           <p style={{ color: '#ccc', fontSize: isMobile ? 14 : 16, maxWidth: 600, margin: 0, lineHeight: 1.5 }}>
-            Les promos, edits et morceaux exclusifs autorisés au partage. 
+            Les promos, edits et morceaux exclusifs. 
             <br />
             Nouveautés House, Tech House, EDM, Dance et Underground. Une communauté où les DJs présentent leurs productions et leurs découvertes.
           </p>

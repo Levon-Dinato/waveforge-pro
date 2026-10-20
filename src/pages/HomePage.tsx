@@ -1,7 +1,6 @@
 // src/pages/HomePage.tsx
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { usePlayer } from '../contexts/PlayerContext';
@@ -19,16 +18,14 @@ const TEXT_MUTED = { color: '#999', fontSize: '0.8rem' };
 const TEXT_TITLE = { color: '#fff', fontSize: '0.9rem', fontWeight: 700 };
 
 export const HomePage: React.FC = () => {
-  const { t } = useTranslation();
   const { user } = useAuth();
   const { play, isPlaying, isCurrentTrack } = usePlayer();
   const [topTracks, setTopTracks] = useState<Track[]>([]);
   const [recentTracks, setRecentTracks] = useState<Track[]>([]);
-  const [loading, setLoading] = useState(true);
+  // ✅ Suppression de la variable "loading" qui n'était pas utilisée
 
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true);
       try {
         // Top tracks (les plus likés)
         const { data: topData } = await supabase
@@ -49,8 +46,6 @@ export const HomePage: React.FC = () => {
         if (recentData) setRecentTracks(recentData as Track[]);
       } catch (err) {
         console.error("Erreur chargement accueil:", err);
-      } finally {
-        setLoading(false);
       }
     };
     

@@ -9,7 +9,7 @@ import { ChatWidget } from '../components/ChatWidget';
 import { TrackGrid } from '../components/TrackGrid';
 import { BadgeList } from '../components/BadgeList';
 import { VideoEmbed } from '../components/VideoEmbed';
-import { SocialLinks } from '../components/SocialLinks'; // ✅ IMPORT
+import { SocialLinks } from '../components/SocialLinks';
 import type { Track } from '../components/TrackGrid';
 
 const PANEL_STYLE: React.CSSProperties = {
@@ -38,6 +38,15 @@ const PAGINATION_BTN: React.CSSProperties = {
   flexShrink: 0,
 };
 
+// ✅ FONCTION POUR EXTRAIRE LE SRC D'UN CODE IFRAME
+const extractIframeSrc = (input: string): string | null => {
+  if (!input) return null;
+  const trimmed = input.trim();
+  if (trimmed.startsWith('http')) return trimmed;
+  const match = trimmed.match(/src=["']([^"']+)["']/i);
+  return match ? match[1] : null;
+};
+
 interface ProfileData {
   id: string;
   email: string;
@@ -52,21 +61,13 @@ interface ProfileData {
   influences?: string;
   gear?: string;
   badges?: string[];
-  social_links?: Record<string, string>; // ✅ AJOUT
+  social_links?: Record<string, string>;
 }
 
 interface Stats {
   tracks: number;
   followers: number;
   plays: number;
-}
-
-interface WallPost {
-  id: string;
-  content: string;
-  author_name: string;
-  created_at: string;
-  likes: number;
 }
 
 interface Playlist {
@@ -99,6 +100,14 @@ interface Video {
   created_at: string;
 }
 
+interface ArtistPost {
+  id: string;
+  content: string;
+  media_type: 'text' | 'image' | 'video' | 'link' | 'iframe';
+  media_url: string | null;
+  created_at: string;
+}
+
 export const ProfilePage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
@@ -116,16 +125,11 @@ export const ProfilePage: React.FC = () => {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const photoInputRef = useRef<HTMLInputElement>(null);
 
-  const [wallPosts, setWallPosts] = useState<WallPost[]>([]);
-  const [newPost, setNewPost] = useState('');
-  const [posting, setPosting] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
-
   const [isFollowing, setIsFollowing] = useState(false);
   const [followersCount, setFollowersCount] = useState(0);
 
   const [isEditing, setIsEditing] = useState(false);
-  // ✅ AJOUT DES CHAMPS RESEAUX SOCIAUX DANS LE FORMULAIRE
   const [editForm, setEditForm] = useState({ 
     username: '', city: '', country: '', bio: '',
     music_style: '', influences: '', gear: '',
@@ -147,6 +151,13 @@ export const ProfilePage: React.FC = () => {
   const [newVideoTitle, setNewVideoTitle] = useState('');
   const [newVideoUrl, setNewVideoUrl] = useState('');
   const [uploadingVideo, setUploadingVideo] = useState(false);
+
+  // États pour le Fil d'actualités
+  const [artistPosts, setArtistPosts] = useState<ArtistPost[]>([]);
+  const [newArtistPost, setNewArtistPost] = useState('');
+  const [newArtistPostType, setNewArtistPostType] = useState<'text' | 'image' | 'video' | 'link' | 'iframe'>('text');
+  const [newArtistPostMediaUrl, setNewArtistPostMediaUrl] = useState('');
+  const [postingArtist, setPostingArtist] = useState(false);
 
   const [creationPage, setCreationPage] = useState(1);
   const ITEMS_PER_PAGE = 12;
@@ -172,7 +183,6 @@ export const ProfilePage: React.FC = () => {
             music_style: profileData.music_style || '',
             influences: profileData.influences || '',
             gear: profileData.gear || '',
-            // ✅ CHARGEMENT DES LIENS SOCIAUX
             spotify: profileData.social_links?.spotify || '',
             soundcloud: profileData.social_links?.soundcloud || '',
             instagram: profileData.social_links?.instagram || '',
@@ -210,6 +220,14 @@ export const ProfilePage: React.FC = () => {
 
         if (videosData) setVideos(videosData);
 
+        const { data: artistPostsData } = await supabase
+          .from('artist_posts')
+          .select('*')
+          .eq('profile_id', id)
+          .order('created_at', { ascending: false });
+
+        if (artistPostsData) setArtistPosts(artistPostsData as ArtistPost[]);
+
         const { data: tracksData, error: tracksError } = await supabase
           .from('tracks')
           .select('id, title, cover_url, audio_url, duration, peaks, artist, user_id, created_at, likes_count, downloads, bpm, song_key, camelot, genre')
@@ -221,14 +239,6 @@ export const ProfilePage: React.FC = () => {
           setStats({ tracks: tracksData.length, followers: 0, plays: totalPlays });
           setTracks(tracksData as Track[]);
         }
-
-        const { data: postsData, error: postsError } = await supabase
-          .from('posts')
-          .select('*')
-          .eq('profile_id', id)
-          .order('created_at', { ascending: false });
-
-        if (!postsError && postsData) setWallPosts(postsData);
 
         const { data: playlistsData } = await supabase
           .from('playlists')
@@ -274,31 +284,6 @@ export const ProfilePage: React.FC = () => {
       setIsFollowing(true);
       setFollowersCount(prev => prev + 1);
     }
-  };
-
-  const handlePostSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newPost.trim() || !user || !id) return;
-    setPosting(true);
-    const displayName = user.user_metadata?.username || user.email?.split('@')[0] || 'Anonyme';
-    const { data, error } = await supabase.from('posts').insert({ profile_id: id, author_id: user.id, author_name: displayName, content: newPost.trim() }).select().single();
-    if (!error && data) { setWallPosts([data, ...wallPosts]); setNewPost(''); }
-    setPosting(false);
-  };
-
-  const handleLikePost = async (postId: string, currentLikes: number) => {
-    setWallPosts(posts => posts.map(p => p.id === postId ? { ...p, likes: p.likes + 1 } : p));
-    await supabase.from('posts').update({ likes: currentLikes + 1 }).eq('id', postId);
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / 60000);
-    if (diffInMinutes < 1) return "à l'instant";
-    if (diffInMinutes < 60) return `il y a ${diffInMinutes} min`;
-    if (diffInMinutes < 1440) return `il y a ${Math.floor(diffInMinutes / 60)} h`;
-    return `il y a ${Math.floor(diffInMinutes / 1440)} j`;
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'banner' | 'avatar') => {
@@ -356,7 +341,6 @@ export const ProfilePage: React.FC = () => {
     if (!error) setPhotos(prev => prev.filter(p => p.id !== photoId));
   };
 
-  // ✅ SAUVEGARDE DU PROFIL AVEC LES LIENS SOCIAUX
   const handleSaveProfile = async () => {
     if (!id) return;
     try {
@@ -371,7 +355,6 @@ export const ProfilePage: React.FC = () => {
         beatport: editForm.beatport,
       };
 
-      // On nettoie les champs vides pour ne pas encombrer le JSON
       const cleanedLinks = Object.fromEntries(Object.entries(socialLinks).filter(([_, v]) => v.trim() !== ''));
 
       const { error } = await supabase.from('profiles').update({
@@ -382,7 +365,7 @@ export const ProfilePage: React.FC = () => {
         music_style: editForm.music_style,
         influences: editForm.influences,
         gear: editForm.gear,
-        social_links: cleanedLinks, // ✅ SAUVEGARDE JSON
+        social_links: cleanedLinks,
       }).eq('id', id);
       
       if (error) throw error;
@@ -470,6 +453,52 @@ export const ProfilePage: React.FC = () => {
     if (!error) setVideos(prev => prev.filter(v => v.id !== videoId));
   };
 
+  // ✅ GESTION DES POSTS (avec support iframe)
+  const handleArtistPostSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newArtistPost.trim() || !user || !id) return;
+    setPostingArtist(true);
+    
+    let finalMediaUrl = newArtistPostMediaUrl.trim();
+    
+    if (newArtistPostType === 'iframe') {
+      const extracted = extractIframeSrc(newArtistPostMediaUrl);
+      if (!extracted) {
+        alert("Code iframe invalide. Assure-toi qu'il contient bien un attribut src=\"...\".");
+        setPostingArtist(false);
+        return;
+      }
+      finalMediaUrl = extracted;
+    }
+
+    const { data, error } = await supabase
+      .from('artist_posts')
+      .insert({ 
+        profile_id: id, 
+        content: newArtistPost.trim(),
+        media_type: newArtistPostType,
+        media_url: finalMediaUrl || null
+      })
+      .select()
+      .single();
+      
+    if (!error && data) {
+      setArtistPosts([data, ...artistPosts]);
+      setNewArtistPost('');
+      setNewArtistPostMediaUrl('');
+      setNewArtistPostType('text');
+    } else {
+      alert("Erreur : " + error?.message);
+    }
+    setPostingArtist(false);
+  };
+
+  const handleDeleteArtistPost = async (postId: string) => {
+    if (!window.confirm('Supprimer cette actualité ?')) return;
+    const { error } = await supabase.from('artist_posts').delete().eq('id', postId);
+    if (!error) setArtistPosts(prev => prev.filter(p => p.id !== postId));
+  };
+
   if (loading) return <div style={{ color: '#fff', padding: 40, textAlign: 'center', background: '#121212', minHeight: '100vh' }}>Chargement...</div>;
   if (!profile) return <div style={{ color: '#fff', padding: 40, textAlign: 'center', background: '#121212', minHeight: '100vh' }}>Profil introuvable</div>;
 
@@ -504,30 +533,162 @@ export const ProfilePage: React.FC = () => {
     );
   };
 
-  const WallSection = () => (
+  // ✅ SECTION DERNIÈRES ACTUALITÉS (Style Texte Minimaliste)
+  const FeedSection = () => (
     <div style={{ ...PANEL_STYLE, padding: 20, marginBottom: 20 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 }}><h3 style={{ ...TEXT_TITLE, fontSize: '1rem', margin: 0 }}>DERNIERS POSTS</h3></div>
-      <form onSubmit={handlePostSubmit} style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
-        <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#121212', flexShrink: 0, overflow: 'hidden', border: '1px solid #2a2a2a' }}>{user?.user_metadata?.avatar_url ? <img src={user.user_metadata.avatar_url} alt="Me" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>👤</div>}</div>
-        <div style={{ flex: 1, position: 'relative' }}>
-          <input type="text" placeholder="Écrire un message..." value={newPost} onChange={(e) => setNewPost(e.target.value)} disabled={!user || posting} style={{ width: '100%', padding: '10px 40px 10px 15px', background: '#121212', border: '1px solid #2a2a2a', borderRadius: 4, color: '#fff', outline: 'none', opacity: (!user || posting) ? 0.5 : 1 }} />
-          <button type="submit" disabled={!user || posting} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: newPost ? '#00d9ff' : '#666', cursor: (!user || posting) ? 'default' : 'pointer', fontSize: '1rem' }}>{posting ? '...' : '➤'}</button>
-        </div>
-      </form>
-      {!user && <div style={{ fontSize: '0.75rem', color: '#ff5c5c', marginBottom: 15 }}>* Connecte-toi pour laisser un message.</div>}
-      {wallPosts.map(post => (
-        <div key={post.id} style={{ display: 'flex', gap: 12, paddingBottom: 15, marginBottom: 15, borderBottom: '1px solid #2a2a2a' }}>
-          <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#121212', flexShrink: 0, overflow: 'hidden', border: '1px solid #2a2a2a' }}><div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>👤</div></div>
-          <div style={{ flex: 1 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>{post.author_name} <span style={{ color: '#666', fontWeight: 400, marginLeft: 8 }}>{formatDate(post.created_at)}</span></div>
-              <button onClick={() => handleLikePost(post.id, post.likes)} style={{ background: 'none', border: 'none', color: post.likes > 0 ? '#00d9ff' : '#666', fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>👍 {post.likes}</button>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 }}>
+        <h3 style={{ ...TEXT_TITLE, fontSize: '1rem', margin: 0 }}>DERNIÈRES ACTUALITÉS</h3>
+        {artistPosts.length > 3 && (
+          <button onClick={() => setActiveTab('journal')} style={{ background: 'none', border: 'none', color: '#00d9ff', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}>TOUT VOIR</button>
+        )}
+      </div>
+
+      {isOwnProfile && (
+        <form onSubmit={handleArtistPostSubmit} style={{ marginBottom: 20, background: '#121212', padding: 12, borderRadius: 8, border: '1px solid #2a2a2a' }}>
+          <textarea
+            value={newArtistPost}
+            onChange={(e) => setNewArtistPost(e.target.value)}
+            disabled={postingArtist}
+            rows={2}
+            placeholder="Quoi de neuf ? Publie une actu..."
+            style={{ 
+              width: '100%', 
+              padding: 10, 
+              background: 'transparent', 
+              border: 'none', 
+              borderBottom: '1px solid #2a2a2a', 
+              color: '#fff', 
+              outline: 'none', 
+              resize: 'none', 
+              marginBottom: 8, 
+              fontSize: '0.9rem' 
+            }}
+          />
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            {/* ✅ BOUTONS TEXTE GRIS (sauf sélectionné en cyan) */}
+            <div style={{ display: 'flex', gap: 12 }}>
+              {['text', 'link', 'image', 'video', 'iframe'].map((type) => {
+                const isActive = newArtistPostType === type;
+                const label = type === 'text' ? 'TEXTE' : type === 'link' ? 'LIEN' : type === 'image' ? 'IMAGE' : type === 'video' ? 'VIDÉO' : 'IFRAME';
+                return (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() => setNewArtistPostType(type as any)}
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      color: isActive ? '#00d9ff' : '#666',
+                      fontSize: '0.7rem',
+                      fontWeight: 600,
+                      letterSpacing: '0.5px',
+                      cursor: 'pointer',
+                      padding: 0,
+                      transition: 'color 0.2s'
+                    }}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
             </div>
-            <div style={{ ...TEXT_MUTED, marginTop: 4, lineHeight: 1.5 }}>{post.content}</div>
+
+            {/* ✅ BOUTON ENVOYER EN TEXTE */}
+            <button
+              type="submit"
+              disabled={!newArtistPost.trim() || postingArtist}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: newArtistPost.trim() ? '#00d9ff' : '#444',
+                cursor: (!newArtistPost.trim() || postingArtist) ? 'default' : 'pointer',
+                fontSize: '0.7rem',
+                fontWeight: 700,
+                letterSpacing: '0.5px',
+                padding: 0,
+                transition: 'color 0.2s'
+              }}
+              title="Publier"
+            >
+              {postingArtist ? '...' : 'ENVOYER'}
+            </button>
           </div>
+
+          {newArtistPostType !== 'text' && (
+            <textarea
+              value={newArtistPostMediaUrl}
+              onChange={(e) => setNewArtistPostMediaUrl(e.target.value)}
+              placeholder={
+                newArtistPostType === 'iframe' 
+                  ? 'Colle ton code <iframe src="..."></iframe>...' 
+                  : 'URL du média (https://...)'
+              }
+              rows={newArtistPostType === 'iframe' ? 2 : 1}
+              style={{ 
+                width: '100%', 
+                padding: '8px 10px', 
+                background: '#1c1c1c', 
+                border: '1px solid #2a2a2a', 
+                borderRadius: 6, 
+                color: '#fff', 
+                outline: 'none', 
+                marginTop: 10, 
+                fontSize: '0.8rem', 
+                fontFamily: newArtistPostType === 'iframe' ? 'monospace' : 'inherit' 
+              }}
+            />
+          )}
+        </form>
+      )}
+
+      {artistPosts.length === 0 ? (
+        <div style={{ ...TEXT_MUTED, textAlign: 'center', padding: 20 }}>Aucune actualité pour le moment.</div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {artistPosts.slice(0, 3).map(post => (
+            <div key={post.id} style={{ padding: 12, background: '#121212', borderRadius: 6, border: '1px solid #2a2a2a', position: 'relative' }}>
+              <div style={{ fontSize: '0.7rem', color: '#00d9ff', fontWeight: 700, marginBottom: 6 }}>
+                {new Date(post.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}
+              </div>
+              <div style={{ fontSize: '0.85rem', color: '#eee', marginBottom: 8, whiteSpace: 'pre-wrap' }}>{post.content}</div>
+              
+              {post.media_url && post.media_type === 'image' && (
+                <img src={post.media_url} alt="" style={{ width: '100%', borderRadius: 4, marginTop: 8 }} />
+              )}
+              {post.media_url && post.media_type === 'video' && (
+                <div style={{ marginTop: 8 }}><VideoEmbed url={post.media_url} /></div>
+              )}
+              {post.media_url && post.media_type === 'link' && (
+                <a href={post.media_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', marginTop: 8, color: '#00d9ff', fontSize: '0.8rem', fontWeight: 600 }}>🔗 Voir le lien</a>
+              )}
+              {post.media_url && post.media_type === 'iframe' && (
+                <div style={{ width: '100%', borderRadius: 8, overflow: 'hidden', border: '1px solid #2a2a2a', marginTop: 8 }}>
+                  <iframe
+                    src={post.media_url}
+                    width="100%"
+                    height="300"
+                    frameBorder="0"
+                    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                    loading="lazy"
+                    style={{ display: 'block' }}
+                  />
+                </div>
+              )}
+
+              {isOwnProfile && (
+                <button
+                  onClick={() => handleDeleteArtistPost(post.id)}
+                  style={{ position: 'absolute', top: 8, right: 8, background: 'transparent', border: 'none', color: '#ff5c5c', cursor: 'pointer', fontSize: '0.8rem', opacity: 0.6 }}
+                  title="Supprimer"
+                >
+                  🗑️
+                </button>
+              )}
+            </div>
+          ))}
         </div>
-      ))}
-      {wallPosts.length === 0 && <div style={{ ...TEXT_MUTED, textAlign: 'center', padding: 20 }}>Aucun message pour le moment.</div>}
+      )}
     </div>
   );
 
@@ -538,7 +699,6 @@ export const ProfilePage: React.FC = () => {
       <input type="file" accept="image/*" ref={avatarInputRef} onChange={(e) => handleImageUpload(e, 'avatar')} style={{ display: 'none' }} />
       <input type="file" accept="image/*" ref={photoInputRef} onChange={handlePhotoUpload} style={{ display: 'none' }} />
 
-      {/* HEADER */}
       <div style={{ position: 'relative', height: isMobile ? 200 : 280, background: '#111', overflow: 'hidden' }}>
         {profile.banner_url && <img src={profile.banner_url} alt="Banner" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.6 }} />}
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #121212 0%, transparent 100%)' }} />
@@ -576,34 +736,24 @@ export const ProfilePage: React.FC = () => {
         </div>
       )}
 
-      {/* CONTENU PRINCIPAL */}
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '20px 10px' : '20px 20px 40px', display: 'flex', gap: 20, flexDirection: isMobile ? 'column' : 'row' }}>
         
-        {/* COLONNE GAUCHE */}
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', gap: 20, borderBottom: '1px solid #2a2a2a', marginBottom: 20, overflowX: 'auto' }}>
-            {['Featured', 'Creation', 'Playlists', 'Comments', 'Wall', 'Journal', 'Photos', 'Video'].map(tab => (
+            {['Featured', 'Creation', 'Playlists', 'Comments', 'Journal', 'Photos', 'Video'].map(tab => (
               <button key={tab} onClick={() => setActiveTab(tab.toLowerCase())} style={{ background: 'none', border: 'none', padding: '10px 0', color: activeTab === tab.toLowerCase() ? '#fff' : '#999', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer', borderBottom: activeTab === tab.toLowerCase() ? '2px solid #00d9ff' : '2px solid transparent', whiteSpace: 'nowrap' }}>{tab}</button>
             ))}
           </div>
 
-          {/* TOP TRACK */}
           {activeTab === 'featured' && topTrack && (
             <div style={{ 
-              ...PANEL_STYLE, 
-              marginBottom: 20, 
-              padding: 0,
-              overflow: 'hidden',
-              display: 'flex',
-              flexDirection: isMobile ? 'column' : 'row',
-              height: isMobile ? 'auto' : 220,
+              ...PANEL_STYLE, marginBottom: 20, padding: 0, overflow: 'hidden',
+              display: 'flex', flexDirection: isMobile ? 'column' : 'row', height: isMobile ? 'auto' : 220,
             }}>
               <div style={{
-                width: isMobile ? '100%' : 220,
-                height: isMobile ? 220 : '100%',
+                width: isMobile ? '100%' : 220, height: isMobile ? 220 : '100%',
                 background: topTrack.cover_url ? `url(${topTrack.cover_url}) center/cover` : '#1a1a1a',
-                position: 'relative',
-                flexShrink: 0,
+                position: 'relative', flexShrink: 0,
               }}>
                 <div style={{ position: 'absolute', top: 12, left: 12, background: '#ff3366', color: '#fff', padding: '4px 10px', borderRadius: 4, fontSize: 10, fontWeight: 800, letterSpacing: '1px', zIndex: 2 }}>
                   🔥 TOP TRACK
@@ -635,19 +785,12 @@ export const ProfilePage: React.FC = () => {
                     user_id: topTrack.user_id || null, duration: topTrack.duration, peaks: topTrack.peaks,
                   })}
                   style={{
-                    alignSelf: 'flex-start',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 8,
+                    alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', gap: 8,
                     padding: '10px 20px',
                     background: isTopTrackPlaying ? 'rgba(0, 217, 255, 0.15)' : 'transparent',
                     color: isTopTrackPlaying ? '#00d9ff' : '#fff',
                     border: isTopTrackPlaying ? '1px solid #00d9ff' : '1px solid #2a2a2a',
-                    borderRadius: 4,
-                    fontSize: 13,
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease',
+                    borderRadius: 4, fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s ease',
                   }}
                   onMouseEnter={(e) => {
                     if (!isTopTrackPlaying) {
@@ -668,7 +811,9 @@ export const ProfilePage: React.FC = () => {
             </div>
           )}
 
-          {activeTab === 'featured' && (<><WallSection /><div style={{ ...PANEL_STYLE, padding: 20 }}><div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 }}><h3 style={{ ...TEXT_TITLE, fontSize: '1rem', margin: 0 }}>NOUVELLES CRÉATIONS DE {displayName.toUpperCase()}</h3><Link to="/nouveautes" style={{ color: '#999', fontSize: '0.8rem', textDecoration: 'none' }}>TOUT VOIR</Link></div><TrackGrid tracks={tracks.slice(0, 4)} /></div></>)}
+          {activeTab === 'featured' && <FeedSection />}
+
+          {activeTab === 'featured' && (<div style={{ ...PANEL_STYLE, padding: 20 }}><div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 }}><h3 style={{ ...TEXT_TITLE, fontSize: '1rem', margin: 0 }}>NOUVELLES CRÉATIONS DE {displayName.toUpperCase()}</h3><Link to="/nouveautes" style={{ color: '#999', fontSize: '0.8rem', textDecoration: 'none' }}>TOUT VOIR</Link></div><TrackGrid tracks={tracks.slice(0, 4)} /></div>)}
 
           {activeTab === 'creation' && (<div style={{ ...PANEL_STYLE, padding: 20 }}><div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 }}><h3 style={{ ...TEXT_TITLE, fontSize: '1rem', margin: 0 }}>TOUTES LES CRÉATIONS ({tracks.length})</h3></div><TrackGrid tracks={paginatedCreationTracks} /><Pagination currentPage={safeCreationPage} totalPages={totalCreationPages} onPageChange={setCreationPage} /></div>)}
 
@@ -707,50 +852,56 @@ export const ProfilePage: React.FC = () => {
           )}
 
           {activeTab === 'comments' && (<div style={{ ...PANEL_STYLE, padding: 40, textAlign: 'center' }}><div style={{ fontSize: 40, marginBottom: 10 }}>💬</div><h3 style={{ ...TEXT_TITLE, fontSize: '1.1rem' }}>Commentaires</h3><div style={{ ...TEXT_MUTED, marginTop: 8 }}>Aucun commentaire pour le moment.</div></div>)}
-          {activeTab === 'wall' && (<WallSection />)}
+          
           {activeTab === 'journal' && (
-            <div style={{ ...PANEL_STYLE, padding: 24 }}>
-              <h3 style={{ ...TEXT_TITLE, fontSize: '1rem', marginBottom: 15 }}>JOURNAL</h3>
-              <div style={{ ...TEXT_MUTED, lineHeight: 1.8, fontSize: '0.9rem', marginBottom: 20 }}>{profile.bio || "Aucune biographie pour le moment."}</div>
-              
-              {(styleTags.length > 0 || influenceTags.length > 0 || gearTags.length > 0) && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 16, paddingTop: 16, borderTop: '1px solid #2a2a2a' }}>
-                  {styleTags.length > 0 && (
-                    <div>
-                      <div style={{ fontSize: '0.7rem', color: '#999', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 8, fontWeight: 700 }}>🎵 Style musical</div>
-                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                        {styleTags.map(tag => (
-                          <Link key={tag} to={`/search?q=${encodeURIComponent(tag)}`} style={{ padding: '4px 10px', background: 'rgba(0, 217, 255, 0.1)', border: '1px solid rgba(0, 217, 255, 0.3)', color: '#00d9ff', borderRadius: 20, fontSize: '0.75rem', fontWeight: 600, textDecoration: 'none' }}>
-                            {tag}
-                          </Link>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {influenceTags.length > 0 && (
-                    <div>
-                      <div style={{ fontSize: '0.7rem', color: '#999', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 8, fontWeight: 700 }}>💡 Influences</div>
-                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                        {influenceTags.map(tag => (
-                          <span key={tag} style={{ padding: '4px 10px', background: '#121212', border: '1px solid #2a2a2a', color: '#ccc', borderRadius: 20, fontSize: '0.75rem', fontWeight: 600 }}>{tag}</span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {gearTags.length > 0 && (
-                    <div>
-                      <div style={{ fontSize: '0.7rem', color: '#999', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 8, fontWeight: 700 }}>🎛️ Matériel</div>
-                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                        {gearTags.map(tag => (
-                          <span key={tag} style={{ padding: '4px 10px', background: 'rgba(124, 92, 255, 0.1)', border: '1px solid rgba(124, 92, 255, 0.3)', color: '#a08aff', borderRadius: 20, fontSize: '0.75rem', fontWeight: 600 }}>{tag}</span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+              <div style={{ ...PANEL_STYLE, padding: 24 }}>
+                <h3 style={{ ...TEXT_TITLE, fontSize: '1rem', marginBottom: 15 }}>BIOGRAPHIE</h3>
+                <div style={{ ...TEXT_MUTED, lineHeight: 1.8, fontSize: '0.9rem', marginBottom: 20 }}>
+                  {profile.bio || "Aucune biographie pour le moment."}
                 </div>
-              )}
+                
+                {(styleTags.length > 0 || influenceTags.length > 0 || gearTags.length > 0) && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 16, paddingTop: 16, borderTop: '1px solid #2a2a2a' }}>
+                    {styleTags.length > 0 && (
+                      <div>
+                        <div style={{ fontSize: '0.7rem', color: '#999', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 8, fontWeight: 700 }}>🎵 Style musical</div>
+                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                          {styleTags.map(tag => (
+                            <Link key={tag} to={`/search?q=${encodeURIComponent(tag)}`} style={{ padding: '4px 10px', background: 'rgba(0, 217, 255, 0.1)', border: '1px solid rgba(0, 217, 255, 0.3)', color: '#00d9ff', borderRadius: 20, fontSize: '0.75rem', fontWeight: 600, textDecoration: 'none' }}>
+                              {tag}
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {influenceTags.length > 0 && (
+                      <div>
+                        <div style={{ fontSize: '0.7rem', color: '#999', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 8, fontWeight: 700 }}>💡 Influences</div>
+                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                          {influenceTags.map(tag => (
+                            <span key={tag} style={{ padding: '4px 10px', background: '#121212', border: '1px solid #2a2a2a', color: '#ccc', borderRadius: 20, fontSize: '0.75rem', fontWeight: 600 }}>{tag}</span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {gearTags.length > 0 && (
+                      <div>
+                        <div style={{ fontSize: '0.7rem', color: '#999', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 8, fontWeight: 700 }}>🎛️ Matériel</div>
+                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                          {gearTags.map(tag => (
+                            <span key={tag} style={{ padding: '4px 10px', background: 'rgba(124, 92, 255, 0.1)', border: '1px solid rgba(124, 92, 255, 0.3)', color: '#a08aff', borderRadius: 20, fontSize: '0.75rem', fontWeight: 600 }}>{tag}</span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <FeedSection />
             </div>
           )}
 
@@ -759,11 +910,7 @@ export const ProfilePage: React.FC = () => {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
                 <h3 style={{ ...TEXT_TITLE, fontSize: '1rem', margin: 0 }}>GALERIE PHOTOS ({photos.length})</h3>
                 {isOwnProfile && (
-                  <button 
-                    onClick={() => photoInputRef.current?.click()}
-                    disabled={uploadingPhoto}
-                    style={{ background: '#00d9ff', color: '#000', border: 'none', padding: '8px 16px', borderRadius: 4, fontWeight: 700, fontSize: '0.8rem', cursor: uploadingPhoto ? 'wait' : 'pointer' }}
-                  >
+                  <button onClick={() => photoInputRef.current?.click()} disabled={uploadingPhoto} style={{ background: '#00d9ff', color: '#000', border: 'none', padding: '8px 16px', borderRadius: 4, fontWeight: 700, fontSize: '0.8rem', cursor: uploadingPhoto ? 'wait' : 'pointer' }}>
                     {uploadingPhoto ? 'Upload...' : '+ Ajouter une photo'}
                   </button>
                 )}
@@ -777,12 +924,7 @@ export const ProfilePage: React.FC = () => {
                     <div key={photo.id} style={{ position: 'relative', width: '100%', aspectRatio: '1/1', background: '#121212', borderRadius: 4, overflow: 'hidden', border: '1px solid #2a2a2a' }}>
                       <img src={photo.image_url} alt="Photo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       {isOwnProfile && (
-                        <button
-                          onClick={() => handleDeletePhoto(photo.id)}
-                          style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(0,0,0,0.7)', border: '1px solid #2a2a2a', color: '#ff5c5c', cursor: 'pointer', padding: 6, borderRadius: 4, fontSize: 12 }}
-                        >
-                          🗑️
-                        </button>
+                        <button onClick={() => handleDeletePhoto(photo.id)} style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(0,0,0,0.7)', border: '1px solid #2a2a2a', color: '#ff5c5c', cursor: 'pointer', padding: 6, borderRadius: 4, fontSize: 12 }}>🗑️</button>
                       )}
                     </div>
                   ))}
@@ -796,10 +938,7 @@ export const ProfilePage: React.FC = () => {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
                 <h3 style={{ ...TEXT_TITLE, fontSize: '1rem', margin: 0 }}>VIDÉOS ({videos.length})</h3>
                 {isOwnProfile && (
-                  <button 
-                    onClick={() => setIsVideoModalOpen(true)}
-                    style={{ background: '#00d9ff', color: '#000', border: 'none', padding: '8px 16px', borderRadius: 4, fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer' }}
-                  >
+                  <button onClick={() => setIsVideoModalOpen(true)} style={{ background: '#00d9ff', color: '#000', border: 'none', padding: '8px 16px', borderRadius: 4, fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer' }}>
                     + Ajouter une vidéo
                   </button>
                 )}
@@ -815,13 +954,7 @@ export const ProfilePage: React.FC = () => {
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                         <div style={{ fontSize: '0.9rem', fontWeight: 600, color: '#fff' }}>{video.title}</div>
                         {isOwnProfile && (
-                          <button 
-                            onClick={() => handleDeleteVideo(video.id)}
-                            style={{ background: 'none', border: 'none', color: '#ff5c5c', cursor: 'pointer', fontSize: '1rem', padding: 0 }}
-                            title="Supprimer"
-                          >
-                            🗑️
-                          </button>
+                          <button onClick={() => handleDeleteVideo(video.id)} style={{ background: 'none', border: 'none', color: '#ff5c5c', cursor: 'pointer', fontSize: '1rem', padding: 0 }} title="Supprimer">🗑️</button>
                         )}
                       </div>
                       <div style={{ fontSize: '0.7rem', color: '#666' }}>
@@ -835,7 +968,6 @@ export const ProfilePage: React.FC = () => {
           )}
         </div>
 
-        {/* COLONNE DROITE */}
         <aside style={{ width: isMobile ? '100%' : 280, flexShrink: 0 }}>
           
           {upcomingEvents.length > 0 && (
@@ -867,13 +999,19 @@ export const ProfilePage: React.FC = () => {
             </div>
             <h2 style={{ fontSize: '1.1rem', margin: '0 0 5px 0' }}>{displayName}</h2>
             <div style={{ ...TEXT_MUTED, fontSize: '0.75rem' }}>{profile.city || 'France'}, {profile.country || 'Valence'}</div>
+            
+            {profile.bio && (
+              <div style={{ marginTop: 10, fontSize: '0.75rem', color: '#ccc', lineHeight: 1.5, textAlign: 'left', padding: '0 5px' }}>
+                {profile.bio}
+              </div>
+            )}
+
             <div style={{ marginTop: 10, display: 'flex', justifyContent: 'center', gap: 5, flexWrap: 'wrap' }}>
               {styleTags.slice(0, 3).map(tag => (
                 <span key={tag} style={{ fontSize: '0.65rem', background: '#121212', padding: '2px 6px', borderRadius: 2, border: '1px solid #2a2a2a' }}>{tag}</span>
               ))}
             </div>
 
-            {/* ✅ BADGES */}
             {profile.badges && profile.badges.length > 0 && (
               <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid #2a2a2a', textAlign: 'left' }}>
                 <div style={{ fontSize: '0.65rem', color: '#666', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700, marginBottom: 8, textAlign: 'center' }}>Badges</div>
@@ -882,7 +1020,6 @@ export const ProfilePage: React.FC = () => {
             )}
           </div>
 
-          {/* ✅ LIENS SOCIAUX */}
           {profile.social_links && Object.keys(profile.social_links).length > 0 && (
             <div style={{ ...PANEL_STYLE, padding: 15, marginBottom: 15 }}>
               <h4 style={{ fontSize: '0.8rem', color: '#999', margin: '0 0 10px 0', textTransform: 'uppercase', textAlign: 'center' }}>
@@ -916,7 +1053,6 @@ export const ProfilePage: React.FC = () => {
         </aside>
       </div>
 
-      {/* MODALE D'ÉDITION DU PROFIL */}
       {isEditing && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
           <div style={{ background: '#1c1c1c', border: '1px solid #2a2a2a', borderRadius: 8, padding: 30, width: '100%', maxWidth: 500, maxHeight: '90vh', overflowY: 'auto' }}>
@@ -958,7 +1094,6 @@ export const ProfilePage: React.FC = () => {
                 <input type="text" value={editForm.gear} onChange={(e) => setEditForm({ ...editForm, gear: e.target.value })} style={{ width: '100%', padding: 10, background: '#121212', border: '1px solid #2a2a2a', borderRadius: 4, color: '#fff', outline: 'none' }} placeholder="Pioneer CDJ, Ableton, Vinyle..." />
               </div>
 
-              {/* ✅ CHAMPS RESEAUX SOCIAUX */}
               <div style={{ borderTop: '1px solid #2a2a2a', marginTop: 10, paddingTop: 10 }}>
                 <div style={{ fontSize: '0.9rem', fontWeight: 600, marginBottom: 10 }}>Réseaux Sociaux</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -982,7 +1117,6 @@ export const ProfilePage: React.FC = () => {
         </div>
       )}
 
-      {/* MODALE DE CRÉATION DE PLAYLIST */}
       {isPlaylistModalOpen && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
           <div style={{ background: '#1c1c1c', border: '1px solid #2a2a2a', borderRadius: 8, padding: 30, width: '100%', maxWidth: 500, maxHeight: '90vh', overflowY: 'auto' }}>
@@ -1025,7 +1159,6 @@ export const ProfilePage: React.FC = () => {
         </div>
       )}
 
-      {/* MODALE D'AJOUT DE VIDÉO */}
       {isVideoModalOpen && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
           <div style={{ background: '#1c1c1c', border: '1px solid #2a2a2a', borderRadius: 8, padding: 30, width: '100%', maxWidth: 500 }}>

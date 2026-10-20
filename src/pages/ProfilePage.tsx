@@ -38,13 +38,23 @@ const PAGINATION_BTN: React.CSSProperties = {
   flexShrink: 0,
 };
 
-// ✅ FONCTION POUR EXTRAIRE LE SRC D'UN CODE IFRAME
-const extractIframeSrc = (input: string): string | null => {
+// ✅ FONCTION D'EXTRACTION D'URL (Gère les liens bruts et les codes iframe)
+const extractCleanUrl = (input: string): string | null => {
   if (!input) return null;
   const trimmed = input.trim();
+  
+  // Si c'est déjà un lien http
   if (trimmed.startsWith('http')) return trimmed;
+  
+  // Si c'est un code iframe (SoundCloud, Tviply, etc.)
   const match = trimmed.match(/src=["']([^"']+)["']/i);
-  return match ? match[1] : null;
+  if (match && match[1]) return match[1];
+
+  // Si c'est une balise <a>
+  const hrefMatch = trimmed.match(/href=["']([^"']+)["']/i);
+  if (hrefMatch && hrefMatch[1]) return hrefMatch[1];
+
+  return null;
 };
 
 interface ProfileData {
@@ -100,6 +110,7 @@ interface Video {
   created_at: string;
 }
 
+// ✅ TOUS LES TYPES SONT DE RETOUR
 interface ArtistPost {
   id: string;
   content: string;
@@ -453,7 +464,7 @@ export const ProfilePage: React.FC = () => {
     if (!error) setVideos(prev => prev.filter(v => v.id !== videoId));
   };
 
-  // ✅ GESTION DES POSTS (avec support iframe)
+  // ✅ FONCTION D'ENVOI QUI GÈRE TOUS LES TYPES
   const handleArtistPostSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newArtistPost.trim() || !user || !id) return;
@@ -461,14 +472,18 @@ export const ProfilePage: React.FC = () => {
     
     let finalMediaUrl = newArtistPostMediaUrl.trim();
     
-    if (newArtistPostType === 'iframe') {
-      const extracted = extractIframeSrc(newArtistPostMediaUrl);
-      if (!extracted) {
-        alert("Code iframe invalide. Assure-toi qu'il contient bien un attribut src=\"...\".");
+    // Si c'est un lien ou une vidéo ou une iframe, on nettoie l'URL pour être sûr
+    if (newArtistPostType !== 'text' && finalMediaUrl) {
+      const extracted = extractCleanUrl(finalMediaUrl);
+      if (extracted) {
+        finalMediaUrl = extracted;
+      } else if (newArtistPostType !== 'image') {
+        // Si c'est une image, on attend une URL directe, pas un code
+        // Pour les autres, on exige un code valide
+        alert("Lien ou code invalide.");
         setPostingArtist(false);
         return;
       }
-      finalMediaUrl = extracted;
     }
 
     const { data, error } = await supabase
@@ -488,7 +503,7 @@ export const ProfilePage: React.FC = () => {
       setNewArtistPostMediaUrl('');
       setNewArtistPostType('text');
     } else {
-      alert("Erreur : " + error?.message);
+      alert("Erreur d'envoi : " + error?.message);
     }
     setPostingArtist(false);
   };
@@ -533,7 +548,7 @@ export const ProfilePage: React.FC = () => {
     );
   };
 
-  // ✅ SECTION DERNIÈRES ACTUALITÉS (Style Texte Minimaliste)
+  // ✅ SECTION DERNIÈRES ACTUALITÉS (TOUS LES TYPES)
   const FeedSection = () => (
     <div style={{ ...PANEL_STYLE, padding: 20, marginBottom: 20 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 }}>
@@ -566,7 +581,7 @@ export const ProfilePage: React.FC = () => {
           />
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            {/* ✅ BOUTONS TEXTE GRIS (sauf sélectionné en cyan) */}
+            {/* ✅ TOUS LES BOUTONS SONT DE RETOUR */}
             <div style={{ display: 'flex', gap: 12 }}>
               {['text', 'link', 'image', 'video', 'iframe'].map((type) => {
                 const isActive = newArtistPostType === type;
@@ -594,7 +609,6 @@ export const ProfilePage: React.FC = () => {
               })}
             </div>
 
-            {/* ✅ BOUTON ENVOYER EN TEXTE */}
             <button
               type="submit"
               disabled={!newArtistPost.trim() || postingArtist}
@@ -622,7 +636,7 @@ export const ProfilePage: React.FC = () => {
               placeholder={
                 newArtistPostType === 'iframe' 
                   ? 'Colle ton code <iframe src="..."></iframe>...' 
-                  : 'URL du média (https://...)'
+                  : 'Lien (https://...)'
               }
               rows={newArtistPostType === 'iframe' ? 2 : 1}
               style={{ 
@@ -660,14 +674,16 @@ export const ProfilePage: React.FC = () => {
                 <div style={{ marginTop: 8 }}><VideoEmbed url={post.media_url} /></div>
               )}
               {post.media_url && post.media_type === 'link' && (
-                <a href={post.media_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', marginTop: 8, color: '#00d9ff', fontSize: '0.8rem', fontWeight: 600 }}>🔗 Voir le lien</a>
+                <a href={post.media_url} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8, padding: 10, background: '#1c1c1c', border: '1px solid #2a2a2a', borderRadius: 6, color: '#00d9ff', fontSize: '0.8rem', fontWeight: 600, textDecoration: 'none' }}>
+                  🔗 Voir le lien
+                </a>
               )}
               {post.media_url && post.media_type === 'iframe' && (
                 <div style={{ width: '100%', borderRadius: 8, overflow: 'hidden', border: '1px solid #2a2a2a', marginTop: 8 }}>
                   <iframe
                     src={post.media_url}
                     width="100%"
-                    height="300"
+                    height={post.media_url.includes('soundcloud') ? "166" : "300"} 
                     frameBorder="0"
                     allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
                     loading="lazy"

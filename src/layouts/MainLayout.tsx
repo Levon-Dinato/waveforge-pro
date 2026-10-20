@@ -7,7 +7,7 @@ import { VUMeter } from '../components/VUMeter';
 import { SessionPanel } from '../components/SessionPanel';
 import { InstallButton } from '../components/InstallButton';
 import { GlobalPlayer } from '../components/GlobalPlayer';
-//import { LanguageSwitcher } from '../components/LanguageSwitcher';//
+import { LanguageSwitcher } from '../components/LanguageSwitcher';
 import { useAudioEngineContext } from '../contexts/AudioEngineContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useIsMobile } from '../hooks/useIsMobile';

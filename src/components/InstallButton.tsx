@@ -48,13 +48,13 @@ export const InstallButton: React.FC<InstallButtonProps> = ({ variant = 'sidebar
       <div
         onClick={(e) => e.stopPropagation()}
         style={{
-          background: '#0d0d14',
-          border: '1px solid #00d9ff',
-          borderRadius: 12,
+          background: '#1c1c1c',
+          border: '1px solid #2a2a2a',
+          borderRadius: 8,
           padding: 24,
           maxWidth: 380,
           width: '100%',
-          boxShadow: '0 20px 60px rgba(0, 217, 255, 0.3)',
+          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
         }}
       >
         <div style={{ fontSize: 40, textAlign: 'center', marginBottom: 12 }}>
@@ -71,7 +71,7 @@ export const InstallButton: React.FC<InstallButtonProps> = ({ variant = 'sidebar
             letterSpacing: '0.5px',
           }}
         >
-          INSTALLER WAVEFORGE PRO
+          INSTALLER DROPZONE DJ
         </h3>
 
         {isIOS ? (
@@ -137,7 +137,7 @@ export const InstallButton: React.FC<InstallButtonProps> = ({ variant = 'sidebar
             </li>
             <li>
               OU ouvre le menu <strong style={{ color: '#fff' }}>⋮</strong> de Chrome →{' '}
-              <strong style={{ color: '#fff' }}>« Installer WaveForge PRO »</strong>
+              <strong style={{ color: '#fff' }}>« Installer DropZone DJ »</strong>
             </li>
             <li>Confirme l'installation</li>
           </ol>
@@ -150,8 +150,8 @@ export const InstallButton: React.FC<InstallButtonProps> = ({ variant = 'sidebar
             width: '100%',
             padding: '12px',
             border: 'none',
-            borderRadius: 8,
-            background: 'linear-gradient(135deg, #00d9ff, #0088ff)',
+            borderRadius: 4,
+            background: '#00d9ff',
             color: '#000',
             fontWeight: 700,
             fontSize: 12,
@@ -179,9 +179,9 @@ export const InstallButton: React.FC<InstallButtonProps> = ({ variant = 'sidebar
             right: 12,
             zIndex: 90,
             padding: '12px 14px',
-            background: 'linear-gradient(135deg, rgba(0, 217, 255, 0.15), rgba(255, 92, 240, 0.1))',
-            border: '1px solid rgba(0, 217, 255, 0.4)',
-            borderRadius: 12,
+            background: '#1c1c1c',
+            border: '1px solid #2a2a2a',
+            borderRadius: 8,
             backdropFilter: 'blur(12px)',
             display: 'flex',
             alignItems: 'center',
@@ -193,17 +193,18 @@ export const InstallButton: React.FC<InstallButtonProps> = ({ variant = 'sidebar
             style={{
               width: 36,
               height: 36,
-              borderRadius: 8,
-              background: 'linear-gradient(135deg, #00d9ff, #0088ff)',
+              borderRadius: 6,
+              background: '#121212',
+              border: '1px solid #2a2a2a',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               fontSize: 18,
               flexShrink: 0,
-              boxShadow: '0 0 16px rgba(0, 217, 255, 0.5)',
+              overflow: 'hidden',
             }}
           >
-            🎹
+            <img src="/icons/icon-192.png" alt="DropZone DJ" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           </div>
 
           <div style={{ flex: 1, minWidth: 0 }}>
@@ -215,7 +216,7 @@ export const InstallButton: React.FC<InstallButtonProps> = ({ variant = 'sidebar
                 marginBottom: 2,
               }}
             >
-              Installer WaveForge PRO
+              Installer DropZone DJ
             </div>
             <div style={{ fontSize: 10, color: '#888' }}>
               Accès rapide · Sans barre d'URL
@@ -227,8 +228,8 @@ export const InstallButton: React.FC<InstallButtonProps> = ({ variant = 'sidebar
             style={{
               padding: '8px 14px',
               border: 'none',
-              borderRadius: 6,
-              background: 'linear-gradient(135deg, #00d9ff, #0088ff)',
+              borderRadius: 4,
+              background: '#00d9ff',
               color: '#000',
               fontSize: 11,
               fontWeight: 700,
@@ -246,7 +247,7 @@ export const InstallButton: React.FC<InstallButtonProps> = ({ variant = 'sidebar
               width: 24,
               height: 24,
               border: 'none',
-              borderRadius: 6,
+              borderRadius: 4,
               background: 'transparent',
               color: '#666',
               fontSize: 16,
@@ -278,29 +279,29 @@ export const InstallButton: React.FC<InstallButtonProps> = ({ variant = 'sidebar
           gap: 8,
           padding: '10px 12px',
           marginBottom: 8,
-          background:
-            'linear-gradient(135deg, rgba(255, 92, 240, 0.15), rgba(0, 217, 255, 0.1))',
-          border: '1px solid rgba(255, 92, 240, 0.4)',
-          borderRadius: 8,
-          color: '#ff5cf0',
+          background: '#1c1c1c',
+          border: '1px solid #2a2a2a',
+          borderRadius: 4,
+          color: '#999',
           fontSize: 11,
           fontWeight: 700,
           cursor: 'pointer',
           letterSpacing: '0.5px',
-          transition: 'all 0.2s',
+          transition: 'all 0.15s ease',
+          width: '100%',
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.background =
-            'linear-gradient(135deg, rgba(255, 92, 240, 0.25), rgba(0, 217, 255, 0.2))';
-          e.currentTarget.style.boxShadow = '0 4px 16px rgba(255, 92, 240, 0.3)';
+          e.currentTarget.style.background = '#2a2a2a';
+          e.currentTarget.style.color = '#00d9ff';
+          e.currentTarget.style.borderColor = '#00d9ff';
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.background =
-            'linear-gradient(135deg, rgba(255, 92, 240, 0.15), rgba(0, 217, 255, 0.1))';
-          e.currentTarget.style.boxShadow = 'none';
+          e.currentTarget.style.background = '#1c1c1c';
+          e.currentTarget.style.color = '#999';
+          e.currentTarget.style.borderColor = '#2a2a2a';
         }}
       >
-        ⬇️ INSTALLER L'APP
+        INSTALLER L'APP
       </button>
       {manualModal}
     </>

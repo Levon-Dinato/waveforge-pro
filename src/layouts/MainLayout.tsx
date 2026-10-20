@@ -121,12 +121,12 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { path: '/',           labelKey: 'nav.home',        shortLabelKey: 'nav.home',        icon: Icons.home },
-  { path: '/feed',       labelKey: 'nav.feed',        shortLabelKey: 'nav.feed',        icon: Icons.feed },
   { path: '/nouveautes', labelKey: 'nav.nouveautes',  shortLabelKey: 'nav.nouveautes',  icon: Icons.newReleases },
   { path: '/events',     labelKey: 'Events',      shortLabelKey: 'nav.events',      icon: Icons.events },
   { path: '/live',       labelKey: 'live DJ',        shortLabelKey: 'nav.live',        icon: Icons.live },
   { path: '/genres',     labelKey: 'nav.genres',      shortLabelKey: 'nav.genres',      icon: Icons.genres },
   { path: '/artists',    labelKey: 'nav.artists',     shortLabelKey: 'nav.artists',     icon: Icons.artists },
+  { path: '/feed',       labelKey: 'Feed',        shortLabelKey: 'nav.feed',        icon: Icons.feed },
   { path: '/stems',      labelKey: 'nav.stems',       shortLabelKey: 'nav.stems',       icon: Icons.stems, devOnly: true },
   { path: '/mastering',  labelKey: 'nav.mastering',   shortLabelKey: 'nav.mastering',   icon: Icons.mastering, devOnly: true },
   { path: '/generator',  labelKey: 'nav.generator',   shortLabelKey: 'nav.generator',   icon: Icons.generator, devOnly: true },

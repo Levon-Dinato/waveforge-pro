@@ -7,7 +7,6 @@ import { VUMeter } from '../components/VUMeter';
 import { SessionPanel } from '../components/SessionPanel';
 import { InstallButton } from '../components/InstallButton';
 import { GlobalPlayer } from '../components/GlobalPlayer';
-import { LanguageSwitcher } from '../components/LanguageSwitcher';
 import { useAudioEngineContext } from '../contexts/AudioEngineContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useIsMobile } from '../hooks/useIsMobile';
@@ -161,14 +160,16 @@ export const MainLayout: React.FC = () => {
         <VideoBackground />
         <div style={{ minHeight: '100vh', position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', paddingBottom: 80 }}>
           
-          <header style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', background: 'rgba(10, 10, 15, 0.7)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', position: 'sticky', top: 0, zIndex: 50 }}>
+          <header style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #2a2a2a', background: 'rgba(15, 15, 15, 0.7)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', position: 'sticky', top: 0, zIndex: 50 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: 22, cursor: 'pointer', padding: 4 }}>☰</button>
-              <div style={{ width: 32, height: 32, borderRadius: 10, background: 'linear-gradient(135deg, #00d9ff, #0088ff)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, boxShadow: '0 0 16px rgba(0, 217, 255, 0.5)' }}>🎹</div>
+              <div style={{ width: 32, height: 32, borderRadius: 6, background: '#1c1c1c', border: '1px solid #2a2a2a', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                {/* ✅ On utilise l'icône DropZone DJ déjà existante */}
+                <img src="/icons/icon-192.png" alt="DropZone DJ" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              </div>
               <div style={{ fontSize: 13, fontWeight: 800, color: '#fff' }}>DROPZONE <span style={{ color: '#00d9ff' }}>DJ</span></div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              {/* <LanguageSwitcher /> */}
               {user ? (
                 <NavLink to={`/profil/${user.id}`} style={{ padding: '8px 12px', background: 'rgba(0, 217, 255, 0.1)', border: '1px solid rgba(0, 217, 255, 0.3)', borderRadius: 10, color: '#00d9ff', fontSize: 11, fontWeight: 700, textDecoration: 'none', maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>🎧 {username}</NavLink>
               ) : (
@@ -180,7 +181,7 @@ export const MainLayout: React.FC = () => {
           {sidebarOpen && (
             <>
               <div onClick={() => setSidebarOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 98 }} />
-              <aside style={{ position: 'fixed', top: 0, left: 0, height: '100vh', width: '280px', background: '#0a0c14', borderRight: '1px solid rgba(255,255,255,0.08)', zIndex: 99, padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: 8, overflowY: 'auto' }}>
+              <aside style={{ position: 'fixed', top: 0, left: 0, height: '100vh', width: '280px', background: '#0f0f0f', borderRight: '1px solid #2a2a2a', zIndex: 99, padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: 8, overflowY: 'auto' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
                   <div style={{ fontSize: 16, fontWeight: 700, color: '#fff' }}>Menu</div>
                   <button onClick={() => setSidebarOpen(false)} style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: 24, cursor: 'pointer' }}>×</button>
@@ -199,7 +200,7 @@ export const MainLayout: React.FC = () => {
             <Outlet />
           </main>
 
-          <nav style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'rgba(10, 10, 15, 0.85)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderTop: '1px solid rgba(255, 255, 255, 0.08)', display: 'flex', justifyContent: 'space-around', alignItems: 'center', padding: '8px 6px', zIndex: 100, paddingBottom: 'max(8px, env(safe-area-inset-bottom))', overflowX: 'auto', gap: 2 }}>
+          <nav style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'rgba(15, 15, 15, 0.85)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderTop: '1px solid #2a2a2a', display: 'flex', justifyContent: 'space-around', alignItems: 'center', padding: '8px 6px', zIndex: 100, paddingBottom: 'max(8px, env(safe-area-inset-bottom))', overflowX: 'auto', gap: 2 }}>
             {visibleNavItems.slice(0, 5).map((item) => (
               <NavLink key={item.path} to={item.path} end={item.path === '/'} style={({ isActive }) => ({ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, padding: '8px 6px', borderRadius: 10, textDecoration: 'none', flex: '0 0 auto', minWidth: 56, background: isActive ? `rgba(0, 217, 255, 0.1)` : 'transparent', border: isActive ? `1px solid rgba(0, 217, 255, 0.3)` : '1px solid transparent' })}>
                 {({ isActive }) => (
@@ -233,7 +234,14 @@ export const MainLayout: React.FC = () => {
         
         <aside className="wf-sidebar">
           <div className="wf-logo">
-            <div className="wf-logo-icon">🎹</div>
+            <div className="wf-logo-icon" style={{ padding: 0, overflow: 'hidden' }}>
+              {/* ✅ On utilise l'icône DropZone DJ déjà existante */}
+              <img 
+                src="/icons/icon-192.png" 
+                alt="DropZone DJ" 
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+              />
+            </div>
             <div className="wf-logo-text">DROP<span>ZONE</span> DJ</div>
           </div>
 
@@ -299,10 +307,6 @@ export const MainLayout: React.FC = () => {
                 {t('nav.logout')}
               </button>
             )}
-
-            <div style={{ display: 'flex', justifyContent: 'center', marginTop: 8 }}>
-              <LanguageSwitcher />
-            </div>
 
             <div style={{ marginTop: 12 }}>
               <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', marginBottom: 8, letterSpacing: '1.5px', fontWeight: 700, textTransform: 'uppercase', textAlign: 'center' }}>{t('nav.output')}</div>

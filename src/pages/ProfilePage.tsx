@@ -21,16 +21,17 @@ const PAGINATION_BTN: React.CSSProperties = {
   background: 'transparent',
   border: '1px solid #2a2a2a',
   color: '#fff',
-  width: 34,
-  height: 34,
+  width: 32,
+  height: 32,
   borderRadius: '50%',
-  fontWeight: 800,
+  fontWeight: 700,
   fontSize: '0.75rem',
   cursor: 'pointer',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  transition: 'all 0.2s',
+  transition: 'all 0.15s ease',
+  flexShrink: 0,
 };
 
 interface ProfileData {
@@ -124,12 +125,12 @@ export const ProfilePage: React.FC = () => {
 
         const { data: tracksData, error: tracksError } = await supabase
           .from('tracks')
-          .select('id, title, cover_url, audio_url, duration, peaks, artist, user_id, created_at, likes, downloads, bpm, song_key, camelot, genre')
+          .select('id, title, cover_url, audio_url, duration, peaks, artist, user_id, created_at, likes_count, downloads, bpm, song_key, camelot, genre')
           .eq('user_id', id)
           .order('created_at', { ascending: false });
 
         if (!tracksError && tracksData) {
-          const totalPlays = tracksData.reduce((acc, t: any) => acc + (t.downloads || 0) + (t.likes || 0), 0);
+          const totalPlays = tracksData.reduce((acc, t: any) => acc + (t.downloads || 0) + (t.likes_count || 0), 0);
           setStats({ tracks: tracksData.length, followers: 0, plays: totalPlays });
           setTracks(tracksData as Track[]);
         }
@@ -303,15 +304,71 @@ export const ProfilePage: React.FC = () => {
   const safePhotosPage = Math.min(photosPage, totalPhotosPages);
   const paginatedPhotos = tracksWithPhotos.slice((safePhotosPage - 1) * ITEMS_PER_PAGE, safePhotosPage * ITEMS_PER_PAGE);
 
+  // ✅ PAGINATION COMPACTE ET INTELLIGENTE
   const Pagination = ({ currentPage, totalPages, onPageChange }: { currentPage: number, totalPages: number, onPageChange: (p: number) => void }) => {
     if (totalPages <= 1) return null;
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, marginTop: 30 }}>
-        <button onClick={() => onPageChange(Math.max(1, currentPage - 1))} disabled={currentPage === 1} style={{ ...PAGINATION_BTN, width: 'auto', borderRadius: 4, padding: '0 16px', opacity: currentPage === 1 ? 0.3 : 1 }}>← Précédent</button>
-        {Array.from({ length: totalPages }).map((_, i) => (
-          <button key={i} onClick={() => onPageChange(i + 1)} style={{ ...PAGINATION_BTN, background: currentPage === i + 1 ? '#00d9ff' : 'transparent', color: currentPage === i + 1 ? '#000' : '#888', border: currentPage === i + 1 ? 'none' : '1px solid #2a2a2a' }}>{i + 1}</button>
-        ))}
-        <button onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))} disabled={currentPage === totalPages} style={{ ...PAGINATION_BTN, width: 'auto', borderRadius: 4, padding: '0 16px', opacity: currentPage === totalPages ? 0.3 : 1 }}>Suivant →</button>
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        gap: 6, 
+        marginTop: 24,
+        flexWrap: 'wrap',
+        padding: '0 10px',
+      }}>
+        <button 
+          onClick={() => onPageChange(Math.max(1, currentPage - 1))} 
+          disabled={currentPage === 1} 
+          style={{ 
+            ...PAGINATION_BTN, 
+            width: 'auto', 
+            borderRadius: 6, 
+            padding: '0 12px', 
+            opacity: currentPage === 1 ? 0.3 : 1,
+            fontSize: '0.7rem',
+          }}
+        >
+          ←
+        </button>
+        
+        {Array.from({ length: totalPages }).map((_, i) => {
+          if (Math.abs(i + 1 - currentPage) > 2 && i !== 0 && i !== totalPages - 1) {
+            if (Math.abs(i + 1 - currentPage) === 3) {
+              return <span key={i} style={{ color: '#666', fontSize: '0.7rem' }}>...</span>;
+            }
+            return null;
+          }
+          return (
+            <button 
+              key={i} 
+              onClick={() => onPageChange(i + 1)} 
+              style={{ 
+                ...PAGINATION_BTN, 
+                background: currentPage === i + 1 ? '#00d9ff' : 'transparent', 
+                color: currentPage === i + 1 ? '#000' : '#888', 
+                border: currentPage === i + 1 ? 'none' : '1px solid #2a2a2a',
+              }}
+            >
+              {i + 1}
+            </button>
+          );
+        })}
+
+        <button 
+          onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))} 
+          disabled={currentPage === totalPages} 
+          style={{ 
+            ...PAGINATION_BTN, 
+            width: 'auto', 
+            borderRadius: 6, 
+            padding: '0 12px', 
+            opacity: currentPage === totalPages ? 0.3 : 1,
+            fontSize: '0.7rem',
+          }}
+        >
+          →
+        </button>
       </div>
     );
   };

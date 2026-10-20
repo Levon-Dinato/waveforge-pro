@@ -573,7 +573,6 @@ export const NouveautesPage: React.FC = () => {
     });
   };
 
-
   return (
     <div style={{
       padding: isMobile ? '12px' : '24px',
@@ -629,14 +628,48 @@ export const NouveautesPage: React.FC = () => {
               <h3 style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.5px', padding: '0 16px 12px', margin: 0, color: '#999', borderBottom: '1px solid #2a2a2a' }}>
                 MUSIC CATEGORY
               </h3>
-              <div onClick={() => setSelectedGenre(null)} className="genre-item" style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 16px', fontSize: 12, cursor: 'pointer', background: selectedGenre === null ? '#2a2a2a' : 'transparent', color: selectedGenre === null ? '#fff' : '#999', borderLeft: selectedGenre === null ? '3px solid #00d9ff' : '3px solid transparent', fontWeight: selectedGenre === null ? 600 : 500 }}>
+              
+              <div 
+                onClick={() => setSelectedGenre(null)} 
+                className="genre-item" 
+                style={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  padding: '10px 16px', 
+                  fontSize: 12, 
+                  cursor: 'pointer', 
+                  background: selectedGenre === null ? '#2a2a2a' : 'transparent', 
+                  color: selectedGenre === null ? '#fff' : '#999', 
+                  borderLeft: selectedGenre === null ? '3px solid #00d9ff' : '3px solid transparent', 
+                  fontWeight: selectedGenre === null ? 600 : 500,
+                  borderBottom: '1px solid #2a2a2a' // ✅ Ligne de séparation
+                }}
+              >
                 <span>Tous les sons</span>
                 <span style={{ color: '#666', fontSize: 11 }}>{tracks.length}</span>
               </div>
-              {genreStats.map(([genre]) => {
+              
+              {genreStats.map(([genre], index) => {
                 const isActive = selectedGenre === genre;
                 return (
-                  <div key={genre} onClick={() => setSelectedGenre(genre)} className="genre-item" style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 16px', fontSize: 12, cursor: 'pointer', background: isActive ? '#2a2a2a' : 'transparent', color: isActive ? '#fff' : '#999', borderLeft: isActive ? '3px solid #00d9ff' : '3px solid transparent', fontWeight: isActive ? 600 : 500 }}>
+                  <div 
+                    key={genre} 
+                    onClick={() => setSelectedGenre(genre)} 
+                    className="genre-item" 
+                    style={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      padding: '10px 16px', 
+                      fontSize: 12, 
+                      cursor: 'pointer', 
+                      background: isActive ? '#2a2a2a' : 'transparent', 
+                      color: isActive ? '#fff' : '#999', 
+                      borderLeft: isActive ? '3px solid #00d9ff' : '3px solid transparent', 
+                      fontWeight: isActive ? 600 : 500,
+                      // ✅ Ligne de séparation sur tous SAUF le dernier
+                      borderBottom: index === genreStats.length - 1 ? 'none' : '1px solid #2a2a2a' 
+                    }}
+                  >
                     <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: 8 }}>{genre}</span>
                   </div>
                 );

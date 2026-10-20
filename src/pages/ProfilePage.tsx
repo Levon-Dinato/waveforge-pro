@@ -8,7 +8,8 @@ import { usePlayer } from '../contexts/PlayerContext';
 import { ChatWidget } from '../components/ChatWidget';
 import { TrackGrid } from '../components/TrackGrid';
 import { BadgeList } from '../components/BadgeList';
-import { VideoEmbed } from '../components/VideoEmbed'; // ✅ IMPORT
+import { VideoEmbed } from '../components/VideoEmbed';
+import { SocialLinks } from '../components/SocialLinks'; // ✅ IMPORT
 import type { Track } from '../components/TrackGrid';
 
 const PANEL_STYLE: React.CSSProperties = {
@@ -51,6 +52,7 @@ interface ProfileData {
   influences?: string;
   gear?: string;
   badges?: string[];
+  social_links?: Record<string, string>; // ✅ AJOUT
 }
 
 interface Stats {
@@ -90,7 +92,6 @@ interface Photo {
   created_at: string;
 }
 
-// ✅ AJOUT DE L'INTERFACE VIDEO
 interface Video {
   id: string;
   title: string;
@@ -124,9 +125,12 @@ export const ProfilePage: React.FC = () => {
   const [followersCount, setFollowersCount] = useState(0);
 
   const [isEditing, setIsEditing] = useState(false);
+  // ✅ AJOUT DES CHAMPS RESEAUX SOCIAUX DANS LE FORMULAIRE
   const [editForm, setEditForm] = useState({ 
     username: '', city: '', country: '', bio: '',
     music_style: '', influences: '', gear: '',
+    spotify: '', soundcloud: '', instagram: '', youtube: '', 
+    twitter: '', tiktok: '', facebook: '', beatport: ''
   });
   const [uploadingImage, setUploadingImage] = useState(false);
   const bannerInputRef = useRef<HTMLInputElement>(null);
@@ -138,7 +142,6 @@ export const ProfilePage: React.FC = () => {
   const [newPlaylistDesc, setNewPlaylistDesc] = useState('');
   const [selectedTracks, setSelectedTracks] = useState<string[]>([]);
 
-  // ✅ ÉTATS POUR LES VIDÉOS
   const [videos, setVideos] = useState<Video[]>([]);
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
   const [newVideoTitle, setNewVideoTitle] = useState('');
@@ -169,6 +172,15 @@ export const ProfilePage: React.FC = () => {
             music_style: profileData.music_style || '',
             influences: profileData.influences || '',
             gear: profileData.gear || '',
+            // ✅ CHARGEMENT DES LIENS SOCIAUX
+            spotify: profileData.social_links?.spotify || '',
+            soundcloud: profileData.social_links?.soundcloud || '',
+            instagram: profileData.social_links?.instagram || '',
+            youtube: profileData.social_links?.youtube || '',
+            twitter: profileData.social_links?.twitter || '',
+            tiktok: profileData.social_links?.tiktok || '',
+            facebook: profileData.social_links?.facebook || '',
+            beatport: profileData.social_links?.beatport || '',
           });
         }
 
@@ -190,7 +202,6 @@ export const ProfilePage: React.FC = () => {
 
         if (photosData) setPhotos(photosData);
 
-        // ✅ RÉCUPÉRATION DES VIDÉOS
         const { data: videosData } = await supabase
           .from('videos')
           .select('*')
@@ -345,9 +356,24 @@ export const ProfilePage: React.FC = () => {
     if (!error) setPhotos(prev => prev.filter(p => p.id !== photoId));
   };
 
+  // ✅ SAUVEGARDE DU PROFIL AVEC LES LIENS SOCIAUX
   const handleSaveProfile = async () => {
     if (!id) return;
     try {
+      const socialLinks = {
+        spotify: editForm.spotify,
+        soundcloud: editForm.soundcloud,
+        instagram: editForm.instagram,
+        youtube: editForm.youtube,
+        twitter: editForm.twitter,
+        tiktok: editForm.tiktok,
+        facebook: editForm.facebook,
+        beatport: editForm.beatport,
+      };
+
+      // On nettoie les champs vides pour ne pas encombrer le JSON
+      const cleanedLinks = Object.fromEntries(Object.entries(socialLinks).filter(([_, v]) => v.trim() !== ''));
+
       const { error } = await supabase.from('profiles').update({
         username: editForm.username,
         city: editForm.city,
@@ -356,9 +382,23 @@ export const ProfilePage: React.FC = () => {
         music_style: editForm.music_style,
         influences: editForm.influences,
         gear: editForm.gear,
+        social_links: cleanedLinks, // ✅ SAUVEGARDE JSON
       }).eq('id', id);
+      
       if (error) throw error;
-      setProfile(prev => prev ? { ...prev, ...editForm } : prev);
+      
+      setProfile(prev => prev ? { 
+        ...prev, 
+        username: editForm.username,
+        city: editForm.city,
+        country: editForm.country,
+        bio: editForm.bio,
+        music_style: editForm.music_style,
+        influences: editForm.influences,
+        gear: editForm.gear,
+        social_links: cleanedLinks,
+      } : prev);
+      
       setIsEditing(false);
     } catch (err: any) {
       console.error("Erreur sauvegarde profil:", err);
@@ -400,7 +440,6 @@ export const ProfilePage: React.FC = () => {
     if (updatedPlaylists) setPlaylists(updatedPlaylists as Playlist[]);
   };
 
-  // ✅ FONCTIONS POUR LES VIDÉOS
   const handleAddVideo = async () => {
     if (!newVideoTitle.trim() || !newVideoUrl.trim() || !id) return;
     setUploadingVideo(true);
@@ -752,7 +791,6 @@ export const ProfilePage: React.FC = () => {
             </div>
           )}
 
-          {/* ✅ SECTION VIDÉOS MODIFIÉE */}
           {activeTab === 'video' && (
             <div style={{ ...PANEL_STYLE, padding: 20 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
@@ -844,6 +882,16 @@ export const ProfilePage: React.FC = () => {
             )}
           </div>
 
+          {/* ✅ LIENS SOCIAUX */}
+          {profile.social_links && Object.keys(profile.social_links).length > 0 && (
+            <div style={{ ...PANEL_STYLE, padding: 15, marginBottom: 15 }}>
+              <h4 style={{ fontSize: '0.8rem', color: '#999', margin: '0 0 10px 0', textTransform: 'uppercase', textAlign: 'center' }}>
+                Réseaux
+              </h4>
+              <SocialLinks links={profile.social_links} />
+            </div>
+          )}
+
           <div style={{ ...PANEL_STYLE, padding: 15, marginBottom: 15 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10, fontSize: '0.85rem' }}><span style={{ color: '#999' }}>Followers</span><span style={{ fontWeight: 600 }}>{followersCount}</span></div>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10, fontSize: '0.85rem' }}><span style={{ color: '#999' }}>Plays</span><span style={{ fontWeight: 600 }}>{stats.plays}</span></div>
@@ -910,6 +958,21 @@ export const ProfilePage: React.FC = () => {
                 <input type="text" value={editForm.gear} onChange={(e) => setEditForm({ ...editForm, gear: e.target.value })} style={{ width: '100%', padding: 10, background: '#121212', border: '1px solid #2a2a2a', borderRadius: 4, color: '#fff', outline: 'none' }} placeholder="Pioneer CDJ, Ableton, Vinyle..." />
               </div>
 
+              {/* ✅ CHAMPS RESEAUX SOCIAUX */}
+              <div style={{ borderTop: '1px solid #2a2a2a', marginTop: 10, paddingTop: 10 }}>
+                <div style={{ fontSize: '0.9rem', fontWeight: 600, marginBottom: 10 }}>Réseaux Sociaux</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <input type="text" value={editForm.spotify} onChange={(e) => setEditForm({ ...editForm, spotify: e.target.value })} style={{ width: '100%', padding: 10, background: '#121212', border: '1px solid #2a2a2a', borderRadius: 4, color: '#fff', outline: 'none' }} placeholder="Lien Spotify" />
+                  <input type="text" value={editForm.soundcloud} onChange={(e) => setEditForm({ ...editForm, soundcloud: e.target.value })} style={{ width: '100%', padding: 10, background: '#121212', border: '1px solid #2a2a2a', borderRadius: 4, color: '#fff', outline: 'none' }} placeholder="Lien SoundCloud" />
+                  <input type="text" value={editForm.instagram} onChange={(e) => setEditForm({ ...editForm, instagram: e.target.value })} style={{ width: '100%', padding: 10, background: '#121212', border: '1px solid #2a2a2a', borderRadius: 4, color: '#fff', outline: 'none' }} placeholder="Lien Instagram" />
+                  <input type="text" value={editForm.youtube} onChange={(e) => setEditForm({ ...editForm, youtube: e.target.value })} style={{ width: '100%', padding: 10, background: '#121212', border: '1px solid #2a2a2a', borderRadius: 4, color: '#fff', outline: 'none' }} placeholder="Lien YouTube" />
+                  <input type="text" value={editForm.twitter} onChange={(e) => setEditForm({ ...editForm, twitter: e.target.value })} style={{ width: '100%', padding: 10, background: '#121212', border: '1px solid #2a2a2a', borderRadius: 4, color: '#fff', outline: 'none' }} placeholder="Lien X / Twitter" />
+                  <input type="text" value={editForm.tiktok} onChange={(e) => setEditForm({ ...editForm, tiktok: e.target.value })} style={{ width: '100%', padding: 10, background: '#121212', border: '1px solid #2a2a2a', borderRadius: 4, color: '#fff', outline: 'none' }} placeholder="Lien TikTok" />
+                  <input type="text" value={editForm.facebook} onChange={(e) => setEditForm({ ...editForm, facebook: e.target.value })} style={{ width: '100%', padding: 10, background: '#121212', border: '1px solid #2a2a2a', borderRadius: 4, color: '#fff', outline: 'none' }} placeholder="Lien Facebook" />
+                  <input type="text" value={editForm.beatport} onChange={(e) => setEditForm({ ...editForm, beatport: e.target.value })} style={{ width: '100%', padding: 10, background: '#121212', border: '1px solid #2a2a2a', borderRadius: 4, color: '#fff', outline: 'none' }} placeholder="Lien Beatport" />
+                </div>
+              </div>
+
               <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
                 <button onClick={() => setIsEditing(false)} style={{ flex: 1, padding: 12, background: 'transparent', border: '1px solid #2a2a2a', color: '#fff', borderRadius: 4, cursor: 'pointer', fontWeight: 600 }}>Annuler</button>
                 <button onClick={handleSaveProfile} disabled={uploadingImage} style={{ flex: 1, padding: 12, background: '#00d9ff', border: 'none', color: '#000', borderRadius: 4, cursor: uploadingImage ? 'wait' : 'pointer', fontWeight: 700 }}>{uploadingImage ? 'Upload...' : 'Enregistrer'}</button>
@@ -962,7 +1025,7 @@ export const ProfilePage: React.FC = () => {
         </div>
       )}
 
-      {/* ✅ MODALE D'AJOUT DE VIDÉO */}
+      {/* MODALE D'AJOUT DE VIDÉO */}
       {isVideoModalOpen && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
           <div style={{ background: '#1c1c1c', border: '1px solid #2a2a2a', borderRadius: 8, padding: 30, width: '100%', maxWidth: 500 }}>

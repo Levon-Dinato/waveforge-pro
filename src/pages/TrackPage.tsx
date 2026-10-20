@@ -8,7 +8,6 @@ import { CommentSection } from '../components/CommentSection';
 import { ShareButton } from '../components/ShareButton';
 import { useIsMobile } from '../hooks/useIsMobile';
 import type { Track } from '../components/TrackGrid';
-import { getCamelotColor } from '../audio/keyDetector';
 
 export const TrackPage = () => {
   const { id } = useParams<{ id: string }>();

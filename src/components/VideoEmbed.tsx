@@ -6,23 +6,22 @@ interface VideoEmbedProps {
 }
 
 export const VideoEmbed: React.FC<VideoEmbedProps> = ({ url }) => {
-  // Fonction pour transformer l'URL en lien "embed"
   const getEmbedUrl = (url: string) => {
-    // YouTube (youtube.com/watch?v=... ou youtu.be/...)
+    // YouTube
     const youtubeRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
     const youtubeMatch = url.match(youtubeRegex);
     if (youtubeMatch && youtubeMatch[1]) {
       return `https://www.youtube.com/embed/${youtubeMatch[1]}`;
     }
 
-    // Vimeo (vimeo.com/...)
+    // Vimeo
     const vimeoRegex = /vimeo\.com\/(?:.*#|.*\/videos\/)?([0-9]+)/;
     const vimeoMatch = url.match(vimeoRegex);
     if (vimeoMatch && vimeoMatch[1]) {
       return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
     }
 
-    // Twitch (twitch.tv/videos/... ou twitch.tv/chaine)
+    // Twitch
     const twitchVideoRegex = /twitch\.tv\/videos\/([0-9]+)/;
     const twitchVideoMatch = url.match(twitchVideoRegex);
     if (twitchVideoMatch && twitchVideoMatch[1]) {
@@ -34,18 +33,52 @@ export const VideoEmbed: React.FC<VideoEmbedProps> = ({ url }) => {
       return `https://player.twitch.tv/?channel=${twitchChannelMatch[1]}&parent=${window.location.hostname}`;
     }
 
-    // Si c'est déjà un lien embed ou non reconnu, on le renvoie tel quel
-    return url;
+    return null;
   };
 
   const embedUrl = getEmbedUrl(url);
 
+  if (!embedUrl) {
+    return (
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+          width: '100%', aspectRatio: '16/9', background: '#1c1c1c',
+          border: '1px solid #2a2a2a', borderRadius: 8, color: '#00d9ff',
+          textDecoration: 'none', fontSize: '1rem', fontWeight: 600, transition: 'all 0.15s ease',
+        }}
+      >
+        ▶ Ouvrir la vidéo
+      </a>
+    );
+  }
+
   return (
-    <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0, overflow: 'hidden', borderRadius: 8, background: '#000', border: '1px solid #2a2a2a' }}>
+    // ✅ CONTENEUR RESPONSIVE AVEC RATIO FIXE 16:9 ET LARGEUR MAXIMALE
+    <div style={{ 
+      position: 'relative', 
+      width: '100%', 
+      maxWidth: '600px', // Limite la largeur à 600px
+      margin: '0 auto',  // Centre la vidéo dans le post
+      aspectRatio: '16 / 9', // Force le format paysage (fini les scrolls)
+      backgroundColor: '#000',
+      borderRadius: 8,
+      overflow: 'hidden', 
+      border: '1px solid #2a2a2a'
+    }}>
       <iframe
         src={embedUrl}
-        style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
-        frameBorder="0"
+        style={{ 
+          position: 'absolute', 
+          top: 0, 
+          left: 0, 
+          width: '100%', 
+          height: '100%', // Prend exactement la place du conteneur
+          border: 'none'
+        }}
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
         allowFullScreen
         title="Vidéo intégrée"

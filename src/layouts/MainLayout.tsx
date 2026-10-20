@@ -8,6 +8,7 @@ import { SessionPanel } from '../components/SessionPanel';
 import { InstallButton } from '../components/InstallButton';
 import { GlobalPlayer } from '../components/GlobalPlayer';
 import { Footer } from '../components/Footer';
+import { NotificationsDropdown } from '../components/NotificationsDropdown'; // ✅ IMPORT
 import { useAudioEngineContext } from '../contexts/AudioEngineContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useIsMobile } from '../hooks/useIsMobile';
@@ -103,6 +104,11 @@ const Icons = {
       <line x1="3" y1="10" x2="21" y2="10"></line>
     </svg>
   ),
+  feed: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+    </svg>
+  ),
 };
 
 interface NavItem {
@@ -115,8 +121,9 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { path: '/',           labelKey: 'nav.home',        shortLabelKey: 'nav.home',        icon: Icons.home },
+  { path: '/feed',       labelKey: 'nav.feed',        shortLabelKey: 'nav.feed',        icon: Icons.feed },
   { path: '/nouveautes', labelKey: 'nav.nouveautes',  shortLabelKey: 'nav.nouveautes',  icon: Icons.newReleases },
-  { path: '/events',     labelKey: 'Events',      shortLabelKey: 'nav.events',      icon: Icons.events },
+  { path: '/events',     labelKey: 'nav.events',      shortLabelKey: 'nav.events',      icon: Icons.events },
   { path: '/live',       labelKey: 'live DJ',        shortLabelKey: 'nav.live',        icon: Icons.live },
   { path: '/genres',     labelKey: 'nav.genres',      shortLabelKey: 'nav.genres',      icon: Icons.genres },
   { path: '/artists',    labelKey: 'nav.artists',     shortLabelKey: 'nav.artists',     icon: Icons.artists },
@@ -158,6 +165,7 @@ export const MainLayout: React.FC = () => {
               <div style={{ fontSize: 13, fontWeight: 800, color: '#fff' }}>DROPZONE <span style={{ color: '#00d9ff' }}>DJ</span></div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <NotificationsDropdown /> {/* ✅ AJOUT MOBILE */}
               {user ? (
                 <NavLink to={`/profil/${user.id}`} style={{ padding: '8px 12px', background: 'rgba(0, 217, 255, 0.1)', border: '1px solid rgba(0, 217, 255, 0.3)', borderRadius: 10, color: '#00d9ff', fontSize: 11, fontWeight: 700, textDecoration: 'none', maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>🎧 {username}</NavLink>
               ) : (
@@ -288,6 +296,19 @@ export const MainLayout: React.FC = () => {
         </aside>
 
         <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: '100vh' }}>
+          
+          {/* ✅ HEADER AVEC NOTIFICATIONS */}
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'flex-end', 
+            alignItems: 'center', 
+            padding: '16px 32px', 
+            borderBottom: '1px solid #2a2a2a',
+            background: '#121212',
+          }}>
+            <NotificationsDropdown />
+          </div>
+
           <main className="wf-main" style={{ flex: 1 }}>
             <Outlet />
           </main>

@@ -35,9 +35,10 @@ const SearchPage = lazy(() => import('./pages/SearchPage').then((m) => ({ defaul
 const MixerPage = lazy(() => import('./pages/MixerPage').then((m) => ({ default: m.MixerPage })));
 const LivePage = lazy(() => import('./pages/LivePage').then((m) => ({ default: m.LivePage })));
 const TrackPage = lazy(() => import('./pages/TrackPage').then((m) => ({ default: m.TrackPage })));
-
-// ✅ NOUVEL IMPORT : EventsPage
 const EventsPage = lazy(() => import('./pages/EventsPage').then((m) => ({ default: m.EventsPage })));
+
+// ✅ NOUVEL IMPORT : FeedPage
+const FeedPage = lazy(() => import('./pages/FeedPage').then((m) => ({ default: m.FeedPage })));
 
 // ============================================================
 // PAGE LOADER
@@ -103,6 +104,7 @@ export default function App() {
                         <Route path="reset-password" element={<ResetPasswordPage />} />
                         <Route path="help" element={<HelpPage />} />
                         <Route path="live" element={<LivePage />} />
+                        <Route path="events" element={<EventsPage />} />
 
                         <Route path="studio" element={<PrivateRoute><StudioPage /></PrivateRoute>} />
                         <Route path="stems" element={<PrivateRoute><StemsPage /></PrivateRoute>} />
@@ -119,8 +121,8 @@ export default function App() {
                         <Route path="search" element={<PrivateRoute><SearchPage /></PrivateRoute>} />
                         <Route path="track/:id" element={<TrackPage />} />
 
-                        {/* ✅ NOUVELLE ROUTE : Événements */}
-                        <Route path="events" element={<EventsPage />} />
+                        {/* ✅ NOUVELLE ROUTE : Mon Feed */}
+                        <Route path="feed" element={<PrivateRoute><FeedPage /></PrivateRoute>} />
                       </Route>
 
                       <Route path="*" element={<Navigate to="/" replace />} />

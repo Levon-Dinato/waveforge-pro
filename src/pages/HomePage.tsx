@@ -86,7 +86,7 @@ export const HomePage = () => {
       overflowX: 'hidden',
     }}>
 
-      {/* HERO AVEC LE NOUVEAU SLOGAN ET L'IMAGE DE FOND */}
+      {/* ✅ HERO AVEC LA VIDÉO DE FOND */}
       <div style={{ 
         position: 'relative',
         borderRadius: 12, 
@@ -94,16 +94,45 @@ export const HomePage = () => {
         border: '1px solid #2a2a2a',
         marginBottom: 16,
         width: '100%',
+        height: isMobile ? 320 : 420,
       }}>
-        <div style={{
-          position: 'absolute', inset: 0,
-          backgroundImage: 'url(/hero-banner.jpg)',
-          backgroundSize: 'cover', backgroundPosition: 'center',
-          opacity: 0.4,
-        }} />
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, #121212 20%, transparent 80%)' }} />
+        
+        {/* VIDÉO EN FOND (autoplay, loop, muted, playsInline) */}
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          style={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            opacity: 0.5,
+          }}
+        >
+          {/* ⚠️ Remplace /ma-video.mp4 par le nom de ta vidéo dans le dossier public/ */}
+          <source src="/videos/background.mp4" type="video/mp4" />
+        </video>
 
-        <div style={{ position: 'relative', padding: isMobile ? '40px 24px' : '60px 40px' }}>
+        {/* Overlay sombre pour la lisibilité */}
+        <div style={{ 
+          position: 'absolute', 
+          inset: 0, 
+          background: 'linear-gradient(90deg, #121212 20%, transparent 80%)' 
+        }} />
+
+        {/* Contenu (Texte) */}
+        <div style={{ 
+          position: 'relative', 
+          padding: isMobile ? '40px 24px' : '60px 40px',
+          zIndex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          height: '100%',
+        }}>
           <h1 style={{ 
             fontSize: isMobile ? '1.8rem' : '3rem', fontWeight: 800, 
             margin: '0 0 12px 0', letterSpacing: '-0.5px', lineHeight: 1.1, maxWidth: 700,
@@ -111,7 +140,7 @@ export const HomePage = () => {
             Les nouvelles sorties et les remixes.
           </h1>
           <p style={{ color: '#ccc', fontSize: isMobile ? 14 : 16, maxWidth: 600, margin: 0, lineHeight: 1.5 }}>
-            Les promos, edits et morceaux exclusifs. 
+            Les promos, edits et morceaux exclusifs autorisés au partage. 
             <br />
             Nouveautés House, Tech House, EDM, Dance et Underground. Une communauté où les DJs présentent leurs productions et leurs découvertes.
           </p>

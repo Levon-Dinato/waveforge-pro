@@ -42,18 +42,11 @@ const PAGINATION_BTN: React.CSSProperties = {
 const extractCleanUrl = (input: string): string | null => {
   if (!input) return null;
   const trimmed = input.trim();
-  
-  // Si c'est déjà un lien http
   if (trimmed.startsWith('http')) return trimmed;
-  
-  // Si c'est un code iframe (SoundCloud, Tviply, etc.)
   const match = trimmed.match(/src=["']([^"']+)["']/i);
   if (match && match[1]) return match[1];
-
-  // Si c'est une balise <a>
   const hrefMatch = trimmed.match(/href=["']([^"']+)["']/i);
   if (hrefMatch && hrefMatch[1]) return hrefMatch[1];
-
   return null;
 };
 
@@ -110,7 +103,6 @@ interface Video {
   created_at: string;
 }
 
-// ✅ TOUS LES TYPES SONT DE RETOUR
 interface ArtistPost {
   id: string;
   content: string;
@@ -163,7 +155,6 @@ export const ProfilePage: React.FC = () => {
   const [newVideoUrl, setNewVideoUrl] = useState('');
   const [uploadingVideo, setUploadingVideo] = useState(false);
 
-  // États pour le Fil d'actualités
   const [artistPosts, setArtistPosts] = useState<ArtistPost[]>([]);
   const [newArtistPost, setNewArtistPost] = useState('');
   const [newArtistPostType, setNewArtistPostType] = useState<'text' | 'image' | 'video' | 'link' | 'iframe'>('text');
@@ -464,25 +455,22 @@ export const ProfilePage: React.FC = () => {
     if (!error) setVideos(prev => prev.filter(v => v.id !== videoId));
   };
 
-  // ✅ FONCTION D'ENVOI QUI GÈRE TOUS LES TYPES
+  // ✅ ENVOI INTELLIGENT (Détecte automatiquement les vidéos)
   const handleArtistPostSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newArtistPost.trim() || !user || !id) return;
     setPostingArtist(true);
     
     let finalMediaUrl = newArtistPostMediaUrl.trim();
-    
-    // Si c'est un lien ou une vidéo ou une iframe, on nettoie l'URL pour être sûr
-    if (newArtistPostType !== 'text' && finalMediaUrl) {
+    let finalMediaType = newArtistPostType;
+
+    if (finalMediaUrl) {
       const extracted = extractCleanUrl(finalMediaUrl);
-      if (extracted) {
-        finalMediaUrl = extracted;
-      } else if (newArtistPostType !== 'image') {
-        // Si c'est une image, on attend une URL directe, pas un code
-        // Pour les autres, on exige un code valide
-        alert("Lien ou code invalide.");
-        setPostingArtist(false);
-        return;
+      if (extracted) finalMediaUrl = extracted;
+
+      // ✅ Si on colle un lien YouTube/Vimeo alors qu'on est en mode "LIEN", on le transforme en "VIDÉO"
+      if (newArtistPostType === 'link' && (finalMediaUrl.includes('youtube.com') || finalMediaUrl.includes('youtu.be') || finalMediaUrl.includes('vimeo.com'))) {
+        finalMediaType = 'video';
       }
     }
 
@@ -491,7 +479,7 @@ export const ProfilePage: React.FC = () => {
       .insert({ 
         profile_id: id, 
         content: newArtistPost.trim(),
-        media_type: newArtistPostType,
+        media_type: finalMediaType,
         media_url: finalMediaUrl || null
       })
       .select()
@@ -548,7 +536,7 @@ export const ProfilePage: React.FC = () => {
     );
   };
 
-  // ✅ SECTION DERNIÈRES ACTUALITÉS (TOUS LES TYPES)
+  // ✅ SECTION DERNIÈRES ACTUALITÉS (Avec détection auto)
   const FeedSection = () => (
     <div style={{ ...PANEL_STYLE, padding: 20, marginBottom: 20 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 }}>
@@ -581,7 +569,6 @@ export const ProfilePage: React.FC = () => {
           />
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            {/* ✅ TOUS LES BOUTONS SONT DE RETOUR */}
             <div style={{ display: 'flex', gap: 12 }}>
               {['text', 'link', 'image', 'video', 'iframe'].map((type) => {
                 const isActive = newArtistPostType === type;

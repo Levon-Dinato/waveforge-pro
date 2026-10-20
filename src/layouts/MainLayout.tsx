@@ -7,7 +7,7 @@ import { VUMeter } from '../components/VUMeter';
 import { SessionPanel } from '../components/SessionPanel';
 import { InstallButton } from '../components/InstallButton';
 import { GlobalPlayer } from '../components/GlobalPlayer';
-import { LanguageSwitcher } from '../components/LanguageSwitcher';
+//import { LanguageSwitcher } from '../components/LanguageSwitcher';//
 import { useAudioEngineContext } from '../contexts/AudioEngineContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useIsMobile } from '../hooks/useIsMobile';
@@ -168,7 +168,7 @@ export const MainLayout: React.FC = () => {
               <div style={{ fontSize: 13, fontWeight: 800, color: '#fff' }}>DROPZONE <span style={{ color: '#00d9ff' }}>DJ</span></div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <LanguageSwitcher />
+              {/* <LanguageSwitcher /> */}
               {user ? (
                 <NavLink to={`/profil/${user.id}`} style={{ padding: '8px 12px', background: 'rgba(0, 217, 255, 0.1)', border: '1px solid rgba(0, 217, 255, 0.3)', borderRadius: 10, color: '#00d9ff', fontSize: 11, fontWeight: 700, textDecoration: 'none', maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>🎧 {username}</NavLink>
               ) : (

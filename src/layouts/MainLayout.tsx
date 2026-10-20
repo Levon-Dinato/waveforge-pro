@@ -7,7 +7,7 @@ import { VUMeter } from '../components/VUMeter';
 import { SessionPanel } from '../components/SessionPanel';
 import { InstallButton } from '../components/InstallButton';
 import { GlobalPlayer } from '../components/GlobalPlayer';
-import { Footer } from '../components/Footer'; // ✅ Import du Footer
+import { Footer } from '../components/Footer';
 import { useAudioEngineContext } from '../contexts/AudioEngineContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useIsMobile } from '../hooks/useIsMobile';
@@ -177,8 +177,10 @@ export const MainLayout: React.FC = () => {
 
           <main style={{ flex: 1, minWidth: 0, overflow: 'auto', padding: '16px 12px' }}>
             <Outlet />
-            <Footer />
           </main>
+
+          {/* ✅ FOOTER MOBILE (en dehors du main, prend toute la largeur) */}
+          <Footer />
 
           <nav style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'rgba(15, 15, 15, 0.85)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderTop: '1px solid #2a2a2a', display: 'flex', justifyContent: 'space-around', alignItems: 'center', padding: '8px 6px', zIndex: 100, paddingBottom: 'max(8px, env(safe-area-inset-bottom))', overflowX: 'auto', gap: 2 }}>
             {visibleNavItems.slice(0, 5).map((item) => (
@@ -277,10 +279,13 @@ export const MainLayout: React.FC = () => {
           </div>
         </aside>
 
-        <main className="wf-main">
-          <Outlet />
+        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: '100vh' }}>
+          <main className="wf-main" style={{ flex: 1 }}>
+            <Outlet />
+          </main>
+          {/* ✅ FOOTER DESKTOP (en dehors du main, prend toute la largeur) */}
           <Footer />
-        </main>
+        </div>
 
       </div>
       <GlobalPlayer />

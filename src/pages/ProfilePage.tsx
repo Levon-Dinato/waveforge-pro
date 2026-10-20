@@ -7,7 +7,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { usePlayer } from '../contexts/PlayerContext';
 import { ChatWidget } from '../components/ChatWidget';
 import { TrackGrid } from '../components/TrackGrid';
-import { BadgeList } from '../components/BadgeList'; // ✅ IMPORT
+import { BadgeList } from '../components/BadgeList';
+import { VideoEmbed } from '../components/VideoEmbed'; // ✅ IMPORT
 import type { Track } from '../components/TrackGrid';
 
 const PANEL_STYLE: React.CSSProperties = {
@@ -49,7 +50,7 @@ interface ProfileData {
   music_style?: string;
   influences?: string;
   gear?: string;
-  badges?: string[]; // ✅ AJOUT
+  badges?: string[];
 }
 
 interface Stats {
@@ -86,6 +87,14 @@ interface Photo {
   id: string;
   image_url: string;
   caption: string | null;
+  created_at: string;
+}
+
+// ✅ AJOUT DE L'INTERFACE VIDEO
+interface Video {
+  id: string;
+  title: string;
+  url: string;
   created_at: string;
 }
 
@@ -128,6 +137,13 @@ export const ProfilePage: React.FC = () => {
   const [newPlaylistTitle, setNewPlaylistTitle] = useState('');
   const [newPlaylistDesc, setNewPlaylistDesc] = useState('');
   const [selectedTracks, setSelectedTracks] = useState<string[]>([]);
+
+  // ✅ ÉTATS POUR LES VIDÉOS
+  const [videos, setVideos] = useState<Video[]>([]);
+  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
+  const [newVideoTitle, setNewVideoTitle] = useState('');
+  const [newVideoUrl, setNewVideoUrl] = useState('');
+  const [uploadingVideo, setUploadingVideo] = useState(false);
 
   const [creationPage, setCreationPage] = useState(1);
   const ITEMS_PER_PAGE = 12;
@@ -173,6 +189,15 @@ export const ProfilePage: React.FC = () => {
           .order('created_at', { ascending: false });
 
         if (photosData) setPhotos(photosData);
+
+        // ✅ RÉCUPÉRATION DES VIDÉOS
+        const { data: videosData } = await supabase
+          .from('videos')
+          .select('*')
+          .eq('profile_id', id)
+          .order('created_at', { ascending: false });
+
+        if (videosData) setVideos(videosData);
 
         const { data: tracksData, error: tracksError } = await supabase
           .from('tracks')
@@ -373,6 +398,37 @@ export const ProfilePage: React.FC = () => {
       .order('created_at', { ascending: false });
     
     if (updatedPlaylists) setPlaylists(updatedPlaylists as Playlist[]);
+  };
+
+  // ✅ FONCTIONS POUR LES VIDÉOS
+  const handleAddVideo = async () => {
+    if (!newVideoTitle.trim() || !newVideoUrl.trim() || !id) return;
+    setUploadingVideo(true);
+    try {
+      const { data, error } = await supabase
+        .from('videos')
+        .insert({ profile_id: id, title: newVideoTitle.trim(), url: newVideoUrl.trim() })
+        .select()
+        .single();
+        
+      if (error) throw error;
+      if (data) {
+        setVideos([data, ...videos]);
+        setIsVideoModalOpen(false);
+        setNewVideoTitle('');
+        setNewVideoUrl('');
+      }
+    } catch (err: any) {
+      alert("Erreur lors de l'ajout de la vidéo : " + err.message);
+    } finally {
+      setUploadingVideo(false);
+    }
+  };
+
+  const handleDeleteVideo = async (videoId: string) => {
+    if (!window.confirm('Supprimer cette vidéo ?')) return;
+    const { error } = await supabase.from('videos').delete().eq('id', videoId);
+    if (!error) setVideos(prev => prev.filter(v => v.id !== videoId));
   };
 
   if (loading) return <div style={{ color: '#fff', padding: 40, textAlign: 'center', background: '#121212', minHeight: '100vh' }}>Chargement...</div>;
@@ -696,7 +752,49 @@ export const ProfilePage: React.FC = () => {
             </div>
           )}
 
-          {activeTab === 'video' && (<div style={{ ...PANEL_STYLE, padding: 40, textAlign: 'center' }}><div style={{ fontSize: 40, marginBottom: 10 }}>🎥</div><h3 style={{ ...TEXT_TITLE, fontSize: '1.1rem' }}>Vidéos</h3><div style={{ ...TEXT_MUTED, marginTop: 8 }}>Aucune vidéo disponible pour le moment.</div></div>)}
+          {/* ✅ SECTION VIDÉOS MODIFIÉE */}
+          {activeTab === 'video' && (
+            <div style={{ ...PANEL_STYLE, padding: 20 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                <h3 style={{ ...TEXT_TITLE, fontSize: '1rem', margin: 0 }}>VIDÉOS ({videos.length})</h3>
+                {isOwnProfile && (
+                  <button 
+                    onClick={() => setIsVideoModalOpen(true)}
+                    style={{ background: '#00d9ff', color: '#000', border: 'none', padding: '8px 16px', borderRadius: 4, fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer' }}
+                  >
+                    + Ajouter une vidéo
+                  </button>
+                )}
+              </div>
+
+              {videos.length === 0 ? (
+                <div style={{ ...TEXT_MUTED, textAlign: 'center', padding: 40 }}>Aucune vidéo pour le moment.</div>
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: 20 }}>
+                  {videos.map(video => (
+                    <div key={video.id} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      <VideoEmbed url={video.url} />
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div style={{ fontSize: '0.9rem', fontWeight: 600, color: '#fff' }}>{video.title}</div>
+                        {isOwnProfile && (
+                          <button 
+                            onClick={() => handleDeleteVideo(video.id)}
+                            style={{ background: 'none', border: 'none', color: '#ff5c5c', cursor: 'pointer', fontSize: '1rem', padding: 0 }}
+                            title="Supprimer"
+                          >
+                            🗑️
+                          </button>
+                        )}
+                      </div>
+                      <div style={{ fontSize: '0.7rem', color: '#666' }}>
+                        Ajoutée le {new Date(video.created_at).toLocaleDateString('fr-FR')}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* COLONNE DROITE */}
@@ -859,6 +957,30 @@ export const ProfilePage: React.FC = () => {
             <div style={{ display: 'flex', gap: 10 }}>
               <button onClick={() => setIsPlaylistModalOpen(false)} style={{ flex: 1, padding: 12, background: 'transparent', border: '1px solid #2a2a2a', color: '#fff', borderRadius: 4, cursor: 'pointer', fontWeight: 600 }}>Annuler</button>
               <button onClick={handleCreatePlaylist} style={{ flex: 1, padding: 12, background: '#00d9ff', border: 'none', color: '#000', borderRadius: 4, cursor: 'pointer', fontWeight: 700 }}>Créer</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ✅ MODALE D'AJOUT DE VIDÉO */}
+      {isVideoModalOpen && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div style={{ background: '#1c1c1c', border: '1px solid #2a2a2a', borderRadius: 8, padding: 30, width: '100%', maxWidth: 500 }}>
+            <h2 style={{ marginTop: 0, fontSize: '1.2rem' }}>Ajouter une vidéo</h2>
+            
+            <div style={{ marginBottom: 15 }}>
+              <label style={{ display: 'block', fontSize: '0.8rem', color: '#999', marginBottom: 5 }}>Titre de la vidéo</label>
+              <input type="text" value={newVideoTitle} onChange={(e) => setNewVideoTitle(e.target.value)} style={{ width: '100%', padding: 10, background: '#121212', border: '1px solid #2a2a2a', borderRadius: 4, color: '#fff', outline: 'none' }} placeholder="Ex: Mon live au festival" />
+            </div>
+            
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ display: 'block', fontSize: '0.8rem', color: '#999', marginBottom: 5 }}>Lien de la vidéo (YouTube, Vimeo, Twitch...)</label>
+              <input type="text" value={newVideoUrl} onChange={(e) => setNewVideoUrl(e.target.value)} style={{ width: '100%', padding: 10, background: '#121212', border: '1px solid #2a2a2a', borderRadius: 4, color: '#fff', outline: 'none' }} placeholder="https://www.youtube.com/watch?v=..." />
+            </div>
+
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button onClick={() => setIsVideoModalOpen(false)} style={{ flex: 1, padding: 12, background: 'transparent', border: '1px solid #2a2a2a', color: '#fff', borderRadius: 4, cursor: 'pointer', fontWeight: 600 }}>Annuler</button>
+              <button onClick={handleAddVideo} disabled={uploadingVideo} style={{ flex: 1, padding: 12, background: '#00d9ff', border: 'none', color: '#000', borderRadius: 4, cursor: uploadingVideo ? 'wait' : 'pointer', fontWeight: 700 }}>{uploadingVideo ? 'Ajout...' : 'Ajouter'}</button>
             </div>
           </div>
         </div>

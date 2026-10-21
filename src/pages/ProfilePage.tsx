@@ -113,7 +113,8 @@ interface ArtistPost {
 
 export const ProfilePage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { user } = useAuth();
+  // ✅ Récupération de refreshProfile
+  const { user, refreshProfile } = useAuth(); 
   const isMobile = useIsMobile(768);
   const { play, isPlaying, isCurrentTrack } = usePlayer();
 
@@ -343,6 +344,7 @@ export const ProfilePage: React.FC = () => {
     if (!error) setPhotos(prev => prev.filter(p => p.id !== photoId));
   };
 
+  // ✅ FONCTION MODIFIÉE POUR METTRE À JOUR LE CONTEXTE GLOBAL
   const handleSaveProfile = async () => {
     if (!id) return;
     try {
@@ -383,6 +385,9 @@ export const ProfilePage: React.FC = () => {
         gear: editForm.gear,
         social_links: cleanedLinks,
       } : prev);
+
+      // ✅ LE TRUC MAGIQUE : on force le contexte global à se recharger
+      await refreshProfile();
       
       setIsEditing(false);
     } catch (err: any) {

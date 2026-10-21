@@ -7,7 +7,6 @@ import { useIsMobile } from '../hooks/useIsMobile';
 import { usePlayer } from '../contexts/PlayerContext';
 import { OnlineUsersWidget } from '../components/OnlineUsersWidget';
 
-// ✅ 1. Renommage de l'interface Event en DbEvent
 interface DbEvent {
   id: string;
   title: string;
@@ -34,13 +33,11 @@ interface Track {
   peaks: number[];
 }
 
-// ✅ 2. Utilisation de DbEvent dans le type FeedItem
 type FeedItem = 
   | { type: 'track'; data: Track; date: Date }
   | { type: 'event'; data: DbEvent; date: Date }
   | { type: 'post'; data: { id: string; author: string; text: string; url?: string; postType: string; date: Date }; date: Date };
 
-// ✅ 3. Mise à jour du Type Guard avec DbEvent
 const isTrackItem = (item: FeedItem): item is { type: 'track'; data: Track; date: Date } => item.type === 'track';
 const isEventItem = (item: FeedItem): item is { type: 'event'; data: DbEvent; date: Date } => item.type === 'event';
 const isPostItem = (item: FeedItem): item is { type: 'post'; data: { id: string; author: string; text: string; url?: string; postType: string; date: Date }; date: Date } => item.type === 'post';
@@ -69,7 +66,7 @@ const getCleanUrl = (input: string): { url: string; isYoutube: boolean } => {
 };
 
 export const FeedPage: React.FC = () => {
-  const { user } = useAuth();
+  const { user, username } = useAuth(); 
   const navigate = useNavigate();
   const isMobile = useIsMobile(1024);
   const { play, currentTrack, isPlaying } = usePlayer();
@@ -77,7 +74,6 @@ export const FeedPage: React.FC = () => {
   const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [topTracks, setTopTracks] = useState<Track[]>([]);
-  // ✅ 4. Mise à jour de l'état avec DbEvent
   const [upcomingEvents, setUpcomingEvents] = useState<DbEvent[]>([]);
 
   const [postContent, setPostContent] = useState('');
@@ -94,7 +90,6 @@ export const FeedPage: React.FC = () => {
 
         const combined: FeedItem[] = [];
         (tracksData || []).forEach(t => combined.push({ type: 'track', data: t as Track, date: new Date(t.created_at) }));
-        // ✅ 5. Cast en DbEvent
         (eventsData || []).forEach(e => combined.push({ type: 'event', data: e as DbEvent, date: new Date(e.created_at || e.event_date) }));
         combined.sort((a, b) => b.date.getTime() - a.date.getTime());
         setFeedItems(combined);
@@ -102,7 +97,6 @@ export const FeedPage: React.FC = () => {
         const { data: topData } = await supabase.from('tracks').select('*').order('likes_count', { ascending: false }).limit(5);
         if (topData) setTopTracks(topData as Track[]);
 
-        // ✅ 6. Cast en DbEvent
         if (eventsData) setUpcomingEvents(eventsData.slice(0, 3) as DbEvent[]);
       } catch (err) {
         console.error('Erreur chargement feed:', err);
@@ -130,7 +124,7 @@ export const FeedPage: React.FC = () => {
       date: new Date(),
       data: {
         id: Math.random().toString(),
-        author: user?.email?.split('@')[0] || 'Utilisateur',
+        author: username || user?.email?.split('@')[0] || 'Utilisateur', 
         text: postContent,
         url: url,
         postType: postType === 'video' ? 'video' : postType,
@@ -172,7 +166,7 @@ export const FeedPage: React.FC = () => {
             <div style={{ background: '#1e1e1e', border: '1px solid #2a2a2a', borderRadius: 12, padding: 16, marginBottom: 24 }}>
               <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
                 <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#333', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
-                  {user.email?.charAt(0).toUpperCase() || 'U'}
+                  {(username || user.email)?.charAt(0).toUpperCase() || 'U'}
                 </div>
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 12 }}>
                   <input 
@@ -258,7 +252,6 @@ export const FeedPage: React.FC = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
               {feedItems.map((item, index) => {
                 
-                // ✅ RENDU POST
                 if (isPostItem(item)) {
                   const { isYoutube, url: cleanUrl } = getCleanUrl(item.data.url || '');
                   const isTviplyOrOther = !isYoutube && cleanUrl.includes('http');
@@ -316,7 +309,6 @@ export const FeedPage: React.FC = () => {
                   );
                 }
 
-                // ✅ RENDU TRACK / EVENT
                 const authorName = isTrackItem(item) ? item.data.artist : 'Organisateur';
                 const isThisPlaying = isTrackItem(item) && currentTrack?.id === item.data.id && isPlaying;
                 
@@ -343,8 +335,16 @@ export const FeedPage: React.FC = () => {
                           Découvrez le nouveau son : <strong>{item.data.title}</strong> 🎶
                         </div>
                         
-                        <div style={{ position: 'relative', width: '100%', aspectRatio: '1', background: item.data.cover_url ? `url(${item.data.cover_url}) center/cover` : '#222', cursor: 'pointer' }} onClick={() => navigate(`/track/${item.data.id}`)}>
-                          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {/* ✅ L'IMAGE EST MAINTENANT LIMITÉE EN HAUTEUR */}
+                        <div style={{ 
+                          position: 'relative', 
+                          width: '100%', 
+                          height: isMobile ? 200 : 320, 
+                          background: item.data.cover_url ? `url(${item.data.cover_url}) center/cover` : '#222', 
+                          cursor: 'pointer' 
+                        }} onClick={() => navigate(`/track/${item.data.id}`)}>
+                          
+                          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <button 
                               onClick={(e) => { e.stopPropagation(); play(item.data); }}
                               style={{ width: 64, height: 64, borderRadius: '50%', background: isThisPlaying ? '#00d9ff' : 'rgba(0,0,0,0.6)', border: '2px solid #fff', color: isThisPlaying ? '#000' : '#fff', fontSize: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', backdropFilter: 'blur(4px)' }}

@@ -1,3 +1,4 @@
+// src/components/GlobalPlayer.tsx
 import React, { useRef, useEffect } from 'react';
 import { usePlayer } from '../contexts/PlayerContext';
 
@@ -29,7 +30,6 @@ export const GlobalPlayer: React.FC = () => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // ✅ SÉCURITÉ : On s'assure que les peaks sont bien un tableau de nombres
     let rawPeaks = currentTrack.peaks;
     if (typeof rawPeaks === 'string') {
       try { rawPeaks = JSON.parse(rawPeaks); } catch (e) { rawPeaks = []; }
@@ -48,11 +48,10 @@ export const GlobalPlayer: React.FC = () => {
       const x = i * barWidth;
       const y = (height - barHeight) / 2;
 
-      // ✅ Rendu de la belle waveform
       if (i / peaks.length < progressRatio) {
-        ctx.fillStyle = '#00d9ff'; // Cyan (partie jouée)
+        ctx.fillStyle = '#00d9ff';
       } else {
-        ctx.fillStyle = '#333333'; // Gris (partie restante)
+        ctx.fillStyle = '#333333';
       }
       
       ctx.beginPath();
@@ -60,6 +59,26 @@ export const GlobalPlayer: React.FC = () => {
       ctx.fill();
     });
   }, [currentTrack, currentTime, duration]);
+
+  // ✅ NOUVELLE FONCTION : Force le téléchargement
+  const handleDownload = async () => {
+    if (!currentTrack) return;
+    try {
+      const response = await fetch(currentTrack.audio_url);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${currentTrack.artist} - ${currentTrack.title}.mp3`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Erreur de téléchargement", error);
+      alert("Impossible de télécharger le fichier. Vérifiez votre connexion.");
+    }
+  };
 
   if (!currentTrack) return null;
 
@@ -71,7 +90,7 @@ export const GlobalPlayer: React.FC = () => {
       zIndex: 9999, fontFamily: 'Inter, sans-serif', color: '#fff',
     }}>
       
-      {/* GAUCHE : Infos du son (30%) */}
+      {/* GAUCHE */}
       <div style={{ display: 'flex', alignItems: 'center', width: '30%', gap: 12, flexShrink: 0 }}>
         <div style={{ 
           width: 56, height: 56, borderRadius: 4, 
@@ -92,7 +111,7 @@ export const GlobalPlayer: React.FC = () => {
         </div>
       </div>
 
-      {/* CENTRE : Timeline & Waveform (40%) */}
+      {/* CENTRE */}
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 16, padding: '0 24px', minWidth: 0 }}>
         <span style={{ fontSize: 11, color: '#888', fontFamily: 'monospace', width: 40, textAlign: 'right', flexShrink: 0 }}>
           {formatTime(currentTime)}
@@ -111,7 +130,7 @@ export const GlobalPlayer: React.FC = () => {
         </span>
       </div>
 
-      {/* DROITE : Play + Volume + Download + Close (30%) */}
+      {/* DROITE */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', width: '30%', gap: 16, flexShrink: 0 }}>
         
         <button 
@@ -135,18 +154,19 @@ export const GlobalPlayer: React.FC = () => {
           />
         </div>
 
-        <a 
-          href={currentTrack.audio_url} 
-          download={`${currentTrack.artist} - ${currentTrack.title}.mp3`}
-          target="_blank" rel="noopener noreferrer"
+        {/* ✅ BOUTON DE TÉLÉCHARGEMENT CORRIGÉ */}
+        <button 
+          onClick={handleDownload}
           style={{ 
-            textDecoration: 'none', color: '#00d9ff', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            width: 32, height: 32, borderRadius: '50%', background: 'rgba(0, 217, 255, 0.1)', fontSize: 16, flexShrink: 0
+            background: 'rgba(0, 217, 255, 0.1)', border: 'none', color: '#00d9ff', 
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            width: 32, height: 32, borderRadius: '50%', cursor: 'pointer',
+            fontSize: 16, flexShrink: 0
           }}
           title="Télécharger le morceau"
         >
           ⬇️
-        </a>
+        </button>
 
         <button onClick={stop} style={{ background: 'transparent', border: 'none', color: '#666', cursor: 'pointer', fontSize: 18, padding: 8, flexShrink: 0 }}>
           ✕

@@ -10,7 +10,6 @@ export interface PlayerTrack {
   user_id: string | null;
   duration?: number;
   peaks?: number[];
-  // ✅ Ajout des métadonnées pour le lecteur Beatport
   bpm?: number | null;
   song_key?: string | null;
   genre?: string | null;
@@ -50,9 +49,10 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, []);
 
   const play = (track: PlayerTrack) => {
+    // Si c'est le même morceau, on toggle Play/Pause
     if (currentTrack?.id === track.id && audioRef.current) {
       if (audioRef.current.paused) {
-        audioRef.current.play().catch((e) => console.error(e));
+        audioRef.current.play().catch((e) => console.error("Lecture bloquée:", e));
         setIsPlaying(true);
       } else {
         audioRef.current.pause();
@@ -61,14 +61,17 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       return;
     }
 
+    // Si c'est un nouveau morceau, on arrête l'ancien
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current = null;
     }
 
+    // Création de l'élément audio
     const audio = new Audio(track.audio_url);
     audio.volume = volume;
     audioRef.current = audio;
+    
     setCurrentTrack(track);
     setIsPlaying(true);
     setCurrentTime(0);
@@ -85,8 +88,9 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setCurrentTime(0);
     });
 
+    // Tentative de lecture
     audio.play().catch((e) => {
-      console.error('Erreur lecture:', e);
+      console.error('Erreur de lecture (navigateur bloque ?):', e);
       setIsPlaying(false);
     });
   };

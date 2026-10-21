@@ -1,3 +1,4 @@
+// src/contexts/PlayerContext.tsx
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 
 export interface PlayerTrack {
@@ -9,6 +10,10 @@ export interface PlayerTrack {
   user_id: string | null;
   duration?: number;
   peaks?: number[];
+  // ✅ Ajout des métadonnées pour le lecteur Beatport
+  bpm?: number | null;
+  song_key?: string | null;
+  genre?: string | null;
 }
 
 interface PlayerContextValue {
@@ -45,7 +50,6 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, []);
 
   const play = (track: PlayerTrack) => {
-    // Cas 1 : même morceau → toggle pause/play
     if (currentTrack?.id === track.id && audioRef.current) {
       if (audioRef.current.paused) {
         audioRef.current.play().catch((e) => console.error(e));
@@ -57,7 +61,6 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       return;
     }
 
-    // Cas 2 : nouveau morceau → arrête l'ancien
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current = null;

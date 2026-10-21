@@ -6,7 +6,7 @@ import { TrackGrid } from '../components/TrackGrid';
 import type { Track } from '../components/TrackGrid';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { usePlayer } from '../contexts/PlayerContext';
-import { EventsTicker } from '../components/EventsTicker'; // ✅ Réintégration
+import { EventsTicker } from '../components/EventsTicker';
 
 interface Artist {
   id: string;
@@ -84,10 +84,9 @@ export const HomePage = () => {
       color: '#fff',
       width: '100%',
       maxWidth: '100%',
-      overflowX: 'hidden', // ✅ Sécurité supplémentaire
+      overflowX: 'hidden',
     }}>
 
-      {/* ✅ BANNIÈRE DÉFILANTE DES ÉVÉNEMENTS */}
       <EventsTicker />
 
       {/* HERO AVEC LA VIDÉO DE FOND */}
@@ -99,24 +98,27 @@ export const HomePage = () => {
         marginBottom: 16,
         width: '100%',
         height: isMobile ? 320 : 420,
+        background: '#121212', // ✅ Ajout d'un fond sombre au cas où la vidéo est coupée sur mobile
       }}>
-        {/* VIDÉO EN FOND */}
-        <video
-          autoPlay
-          loop
-          muted
-          playsInline
-          style={{
-            position: 'absolute',
-            inset: 0,
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            opacity: 0.5,
-          }}
-        >
-          <source src="/videos/background.mp4" type="video/mp4" />
-        </video>
+        {/* ✅ LA VIDÉO SEULEMENT SI ON N'EST PAS SUR MOBILE */}
+        {!isMobile && (
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            style={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              opacity: 0.5,
+            }}
+          >
+            <source src="/videos/background.mp4" type="video/mp4" />
+          </video>
+        )}
 
         {/* Overlay sombre */}
         <div style={{ 

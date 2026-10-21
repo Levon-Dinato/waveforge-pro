@@ -49,7 +49,6 @@ export class MasteringChain {
   private widenerMidToR: GainNode;
   private widenerSideToL: GainNode;
   private widenerSideToR: GainNode;
-  private currentWidth = 1.0;
 
   private monoMakerInput: GainNode;
   private monoMakerOutput: GainNode;
@@ -500,7 +499,6 @@ export class MasteringChain {
   }
 
   setWidth(value: number): void {
-    this.currentWidth = value;
     const sideGain = Math.max(0, value - 1);
     const midGain = 1 - Math.min(0.5, sideGain * 0.3);
     const now = this.context.currentTime;

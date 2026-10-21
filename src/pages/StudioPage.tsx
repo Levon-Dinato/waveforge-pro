@@ -11,7 +11,6 @@ const PANEL_STYLE: React.CSSProperties = {
   background: '#1c1c1c',
   border: '1px solid #2a2a2a',
   borderRadius: 8,
-  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.3)',
 };
 
 const BTN_BASE: React.CSSProperties = {
@@ -44,7 +43,7 @@ export const StudioPage: React.FC = () => {
 
   const hasAudio = !!engine.result;
 
-  // ✅ Calcul optimisé du nombre de notes par piste
+  // ✅ Calcul optimisé du nombre de notes par piste (Ton code original)
   const trackCounts = useMemo(() => {
     if (!engine.finalNotes) return { lead: 0, bass: 0, harmony: 0, drums: 0 };
     return {
@@ -57,74 +56,98 @@ export const StudioPage: React.FC = () => {
 
   return (
     <div style={{
+      maxWidth: 1000,
+      margin: '0 auto',
+      padding: '60px 20px',
       display: 'flex',
-      flexDirection: isMobile ? 'column' : 'row',
+      flexDirection: 'column',
       gap: 20,
-      padding: isMobile ? 12 : 24,
       minHeight: '100vh',
       fontFamily: 'Inter, sans-serif',
       color: '#fff',
-      background: '#121212',
       width: '100%',
       boxSizing: 'border-box',
     }}>
       
-      {/* BARRE LATÉRALE (optionnelle sur desktop) */}
-      {!isMobile && (
-        <aside style={{ width: 220, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
-           <div style={{...PANEL_STYLE, padding: 16}}>
-              <div style={{ fontSize: 10, color: '#999', marginBottom: 8, letterSpacing: 1, textTransform: 'uppercase', fontWeight: 700 }}>NAVIGATION</div>
-              <Link to="/studio" style={{ color: '#00d9ff', textDecoration: 'none', fontSize: 13, fontWeight: 600, display: 'block' }}>🎹 Studio</Link>
-           </div>
-        </aside>
-      )}
-
-      {/* CONTENU PRINCIPAL */}
-      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 16, minWidth: 0 }}>
-        
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <h1 style={{ fontSize: 20, margin: 0, fontWeight: 700 }}>
-              <span style={{ color: '#00d9ff' }}>Studio</span> Audio → MIDI
-            </h1>
-            <div style={{ fontSize: 12, color: '#999', marginTop: 4 }}>
-              Analysez vos morceaux, extrayez les notes et exportez en MIDI.
-            </div>
-          </div>
+      {/* ✅ NOUVEL EN-TÊTE MINIMALISTE */}
+      <div style={{ marginBottom: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+          <h1 style={{ fontSize: '1.8rem', fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span>🎚️</span> STUDIO / REMIX
+          </h1>
+          <span style={{ 
+            background: 'rgba(124, 92, 255, 0.15)', 
+            color: '#a08aff', 
+            border: '1px solid rgba(124, 92, 255, 0.3)', 
+            padding: '2px 8px', 
+            borderRadius: 12, 
+            fontSize: '0.65rem', 
+            fontWeight: 700, 
+            letterSpacing: '1px' 
+          }}>
+            CRÉATION
+          </span>
         </div>
+        <p style={{ color: '#666', fontSize: '0.75rem', letterSpacing: '2px', textTransform: 'uppercase', margin: 0 }}>
+          ÉDITION · MIDI · REMIX · SÉQUENCEUR
+        </p>
+      </div>
 
+      {/* CONTENU PRINCIPAL (Ton code intact) */}
+      <main style={{ display: 'flex', flexDirection: 'column', gap: 16, minWidth: 0 }}>
+        
         {!hasAudio ? (
+          /* ✅ ZONE DE DROP MINIMALISTE (Style Outils DJ) */
           <div 
             onClick={() => fileInputRef.current?.click()}
             style={{
               ...PANEL_STYLE,
               borderStyle: 'dashed',
-              borderColor: '#2a2a2a',
-              padding: '60px 20px',
+              padding: '80px 20px',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
-              transition: 'all 0.2s',
+              transition: 'all 0.2s ease',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = '#00d9ff';
-              e.currentTarget.style.background = '#222';
+              e.currentTarget.style.borderColor = '#7c5cff'; // Violet au survol
+              e.currentTarget.style.background = '#1e1e1e';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.borderColor = '#2a2a2a';
               e.currentTarget.style.background = '#1c1c1c';
             }}
           >
-            <div style={{ fontSize: 48, marginBottom: 16, opacity: 0.6 }}>🎧</div>
-            <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}>Glisse ton audio ici</div>
-            <div style={{ fontSize: 12, color: '#999' }}>ou <span style={{ color: '#00d9ff', textDecoration: 'underline' }}>parcourir</span> — wav, mp3, flac, ogg</div>
             <input type="file" accept="audio/*" ref={fileInputRef} onChange={handleFileChange} style={{ display: 'none' }} />
+            
+            <div style={{ fontSize: 48, marginBottom: 16, filter: 'drop-shadow(0 0 10px rgba(124, 92, 255, 0.3))' }}>
+              🎹
+            </div>
+            <h2 style={{ fontSize: '1.2rem', fontWeight: 700, margin: '0 0 8px 0' }}>
+              Charger un morceau
+            </h2>
+            <p style={{ color: '#999', fontSize: '0.85rem', margin: '0 0 16px 0' }}>
+              Clique ou glisse un fichier audio ici pour extraire les notes (wav, mp3, flac, ogg)
+            </p>
+            <div style={{ 
+              display: 'flex', 
+              gap: 12, 
+              color: '#666', 
+              fontSize: '0.75rem', 
+              fontWeight: 600 
+            }}>
+              <span>Studio Audio → MIDI</span>
+              <span>·</span>
+              <span>Piano Roll intégré</span>
+              <span>·</span>
+              <span>Export</span>
+            </div>
           </div>
         ) : (
           <>
-            {/* INFO FICHIER AUDIO */}
+            {/* INFO FICHIER AUDIO (Ton code intact) */}
             <div style={{ 
               ...PANEL_STYLE, 
               padding: '12px 16px', 
@@ -151,7 +174,7 @@ export const StudioPage: React.FC = () => {
               )}
             </div>
 
-            {/* TOOLBAR */}
+            {/* TOOLBAR (Ton code intact) */}
             <div style={{ 
               ...PANEL_STYLE, 
               padding: '10px 16px', 
@@ -208,7 +231,7 @@ export const StudioPage: React.FC = () => {
               </div>
             </div>
 
-            {/* PISTES */}
+            {/* PISTES (Ton code intact) */}
             <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, 1fr)', gap: 12 }}>
               <div style={{ ...PANEL_STYLE, padding: 12, borderLeft: '3px solid #7c5cff' }}>
                 <div style={{ fontSize: 10, color: '#7c5cff', fontWeight: 700, letterSpacing: 1, marginBottom: 4, textTransform: 'uppercase' }}>MELODY</div>
@@ -239,7 +262,7 @@ export const StudioPage: React.FC = () => {
               </div>
             </div>
 
-            {/* PIANO ROLL */}
+            {/* PIANO ROLL (Ton code intact) */}
             <div style={{ 
               ...PANEL_STYLE, 
               flex: 1, 

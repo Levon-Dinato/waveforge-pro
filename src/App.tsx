@@ -11,10 +11,7 @@ import { MainLayout } from './layouts/MainLayout';
 import { PrivateRoute } from './components/PrivateRoute';
 import './styles.css';
 
-// ============================================================
-// LAZY LOADING DES PAGES
-// ============================================================
-
+// Lazy loading
 const HomePage = lazy(() => import('./pages/HomePage').then((m) => ({ default: m.HomePage })));
 const StudioPage = lazy(() => import('./pages/StudioPage').then((m) => ({ default: m.StudioPage })));
 const StemsPage = lazy(() => import('./pages/StemsPage').then((m) => ({ default: m.StemsPage })));
@@ -37,55 +34,16 @@ const LivePage = lazy(() => import('./pages/LivePage').then((m) => ({ default: m
 const TrackPage = lazy(() => import('./pages/TrackPage').then((m) => ({ default: m.TrackPage })));
 const EventsPage = lazy(() => import('./pages/EventsPage').then((m) => ({ default: m.EventsPage })));
 const FeedPage = lazy(() => import('./pages/FeedPage').then((m) => ({ default: m.FeedPage })));
-
-// ✅ NOUVEL IMPORT : Outils DJ
 const ToolsPage = lazy(() => import('./pages/ToolsPage').then((m) => ({ default: m.ToolsPage })));
 
-// ============================================================
-// PAGE LOADER
-// ============================================================
 const PageLoader = () => (
-  <div
-    style={{
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: '60vh',
-      flexDirection: 'column',
-      gap: 16,
-    }}
-  >
-    <div
-      style={{
-        width: 40,
-        height: 40,
-        border: '3px solid rgba(0, 217, 255, 0.2)',
-        borderTop: '3px solid #00d9ff',
-        borderRadius: '50%',
-        animation: 'spin 0.8s linear infinite',
-      }}
-    />
-    <div
-      style={{
-        fontSize: 11,
-        color: '#666',
-        letterSpacing: '2px',
-        fontFamily: 'monospace',
-      }}
-    >
-      CHARGEMENT...
-    </div>
-    <style>{`
-      @keyframes spin {
-        to { transform: rotate(360deg); }
-      }
-    `}</style>
+  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', flexDirection: 'column', gap: 16 }}>
+    <div style={{ width: 40, height: 40, border: '3px solid rgba(0, 217, 255, 0.2)', borderTop: '3px solid #00d9ff', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+    <div style={{ fontSize: 11, color: '#666', letterSpacing: '2px', fontFamily: 'monospace' }}>CHARGEMENT...</div>
+    <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
   </div>
 );
 
-// ============================================================
-// APP
-// ============================================================
 export default function App() {
   return (
     <HelmetProvider>
@@ -97,37 +55,39 @@ export default function App() {
                 <WindowsProvider>
                   <Suspense fallback={<PageLoader />}>
                     <Routes>
+                      
+                      {/* ✅ 1. ROUTES PUBLIQUES (Accessibles sans être connecté) */}
+                      <Route path="/auth" element={<AuthPage />} />
+                      <Route path="/reset-password" element={<ResetPasswordPage />} />
+
+                      {/* ✅ 2. ROUTES PROTÉGÉES (L'utilisateur doit être connecté) */}
                       <Route path="/mixer" element={<PrivateRoute><MixerPage /></PrivateRoute>} />
 
-                      <Route path="/" element={<MainLayout />}>
+                      {/* ✅ On enveloppe MainLayout avec PrivateRoute pour bloquer tout le reste */}
+                      <Route path="/" element={
+                        <PrivateRoute>
+                          <MainLayout />
+                        </PrivateRoute>
+                      }>
                         <Route index element={<HomePage />} />
-                        <Route path="auth" element={<AuthPage />} />
-                        <Route path="reset-password" element={<ResetPasswordPage />} />
-                        <Route path="help" element={<HelpPage />} />
-                        <Route path="live" element={<LivePage />} />
+                        <Route path="feed" element={<FeedPage />} />
+                        <Route path="nouveautes" element={<NouveautesPage />} />
                         <Route path="events" element={<EventsPage />} />
-
-                        <Route path="studio" element={<PrivateRoute><StudioPage /></PrivateRoute>} />
-                        
-                        {/* ✅ NOUVELLE ROUTE : Le hub des Outils DJ */}
-                        <Route path="tools" element={<PrivateRoute><ToolsPage /></PrivateRoute>} />
-                        
-                        {/* Les routes individuelles (accessibles depuis le hub) */}
-                        <Route path="stems" element={<PrivateRoute><StemsPage /></PrivateRoute>} />
-                        <Route path="mastering" element={<PrivateRoute><MasteringPage /></PrivateRoute>} />
-                        <Route path="musicgen" element={<PrivateRoute><MusicGenPage /></PrivateRoute>} />
-                        <Route path="generator" element={<PrivateRoute><GeneratorPage /></PrivateRoute>} />
-                        <Route path="video" element={<PrivateRoute><VideoPage /></PrivateRoute>} />
-                        <Route path="cdj" element={<PrivateRoute><CDJPage /></PrivateRoute>} />
-                        
-                        <Route path="settings" element={<PrivateRoute><SettingsPage /></PrivateRoute>} />
-                        <Route path="nouveautes" element={<PrivateRoute><NouveautesPage /></PrivateRoute>} />
-                        <Route path="profil/:id" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
-                        <Route path="genres" element={<PrivateRoute><GenresPage /></PrivateRoute>} />
-                        <Route path="artists" element={<PrivateRoute><ArtistsPage /></PrivateRoute>} />
-                        <Route path="search" element={<PrivateRoute><SearchPage /></PrivateRoute>} />
+                        <Route path="live" element={<LivePage />} />
+                        <Route path="genres" element={<GenresPage />} />
+                        <Route path="artists" element={<ArtistsPage />} />
+                        <Route path="tools" element={<ToolsPage />} />
+                        <Route path="stems" element={<StemsPage />} />
+                        <Route path="mastering" element={<MasteringPage />} />
+                        <Route path="musicgen" element={<MusicGenPage />} />
+                        <Route path="generator" element={<GeneratorPage />} />
+                        <Route path="video" element={<VideoPage />} />
+                        <Route path="cdj" element={<CDJPage />} />
+                        <Route path="help" element={<HelpPage />} />
+                        <Route path="settings" element={<SettingsPage />} />
+                        <Route path="profil/:id" element={<ProfilePage />} />
+                        <Route path="search" element={<SearchPage />} />
                         <Route path="track/:id" element={<TrackPage />} />
-                        <Route path="feed" element={<PrivateRoute><FeedPage /></PrivateRoute>} />
                       </Route>
 
                       <Route path="*" element={<Navigate to="/" replace />} />

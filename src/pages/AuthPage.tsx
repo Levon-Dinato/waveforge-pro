@@ -1,24 +1,31 @@
+// src/pages/AuthPage.tsx
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { GlassCard } from '../components/ui/GlassCard';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
+// ✅ Style des inputs aligné sur le reste du site
 const INPUT_STYLE: React.CSSProperties = {
   padding: '12px 14px',
-  background: 'rgba(255,255,255,0.05)',
-  border: '1px solid rgba(0,255,255,0.3)',
+  background: '#121212',
+  border: '1px solid #333',
   borderRadius: '6px',
   color: '#fff',
-  fontFamily: 'monospace',
-  fontSize: '0.9rem',
+  fontFamily: 'Inter, sans-serif',
+  fontSize: '14px',
   outline: 'none',
   width: '100%',
+  transition: 'border-color 0.2s',
 };
 
 type Mode = 'login' | 'signup' | 'forgot';
 
 export const AuthPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  // ✅ Récupération de la page d'origine (si l'utilisateur a été redirigé)
+  const from = location.state?.from || '/';
+
   const [mode, setMode] = useState<Mode>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -50,14 +57,16 @@ export const AuthPage: React.FC = () => {
         if (signUpError) throw signUpError;
 
         if (data.session) {
-          navigate('/nouveautes');
+          // ✅ Redirection après inscription
+          navigate(from, { replace: true });
         } else {
           setInfo('Compte créé ! Vérifiez votre email pour confirmer votre inscription.');
         }
       } else {
         const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
         if (signInError) throw signInError;
-        navigate('/nouveautes');
+        // ✅ Redirection après connexion
+        navigate(from, { replace: true });
       }
     } catch (err: any) {
       console.error('Erreur auth:', err);
@@ -83,59 +92,64 @@ export const AuthPage: React.FC = () => {
     login: {
       title: 'Connexion',
       subtitle: 'Accédez à vos morceaux et à la communauté',
-      submit: '→ Se connecter',
+      submit: 'Se connecter',
     },
     signup: {
       title: 'Créer un compte',
-      subtitle: 'Rejoignez WaveForge PRO',
-      submit: '→ Créer mon compte',
+      subtitle: 'Rejoignez DropZone DJ',
+      submit: 'Créer mon compte',
     },
     forgot: {
       title: 'Mot de passe oublié',
       subtitle: 'Recevez un lien pour en définir un nouveau',
-      submit: '→ Envoyer le lien',
+      submit: 'Envoyer le lien',
     },
   };
 
   return (
     <div
       style={{
-        padding: '40px 20px',
+        minHeight: '100vh',
         display: 'flex',
+        alignItems: 'center',
         justifyContent: 'center',
-        alignItems: 'flex-start',
-        minHeight: '70vh',
+        background: '#121212',
+        fontFamily: 'Inter, sans-serif',
+        padding: '20px',
       }}
     >
-      <GlassCard
+      <div
         style={{
-          padding: '32px',
+          background: '#181818',
+          border: '1px solid #2a2a2a',
+          borderRadius: '12px',
+          padding: '40px 32px',
           maxWidth: 420,
           width: '100%',
-          borderColor: 'rgba(0, 217, 255, 0.3)',
         }}
       >
-        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+        {/* Header */}
+        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
           <div
             style={{
               width: 56,
               height: 56,
-              borderRadius: 14,
-              background: 'linear-gradient(135deg, #00d9ff, #0088ff)',
+              borderRadius: 12,
+              background: '#222',
+              border: '1px solid #333',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: 26,
-              margin: '0 auto 12px',
-              boxShadow: '0 0 24px rgba(0, 217, 255, 0.5)',
+              fontSize: 24,
+              margin: '0 auto 16px',
             }}
           >
             {mode === 'forgot' ? '🔑' : '🎧'}
           </div>
-          <h1 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 800, letterSpacing: '-0.5px' }}>
+          <h1 style={{ margin: 0, fontSize: '24px', fontWeight: 700, color: '#fff' }}>
             {titles[mode].title}
           </h1>
-          <p style={{ margin: '6px 0 0', fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)' }}>
+          <p style={{ margin: '8px 0 0', fontSize: '13px', color: '#888' }}>
             {titles[mode].subtitle}
           </p>
         </div>
@@ -145,10 +159,8 @@ export const AuthPage: React.FC = () => {
           <div
             style={{
               display: 'flex',
-              background: 'rgba(255,255,255,0.04)',
-              borderRadius: 8,
-              padding: 4,
-              marginBottom: 20,
+              borderBottom: '1px solid #2a2a2a',
+              marginBottom: 24,
             }}
           >
             {(['login', 'signup'] as const).map((m) => (
@@ -158,16 +170,16 @@ export const AuthPage: React.FC = () => {
                 onClick={() => switchMode(m)}
                 style={{
                   flex: 1,
-                  padding: '8px 0',
-                  background: mode === m ? 'rgba(0, 217, 255, 0.15)' : 'transparent',
-                  border: mode === m ? '1px solid rgba(0, 217, 255, 0.4)' : '1px solid transparent',
-                  borderRadius: 6,
-                  color: mode === m ? '#00d9ff' : 'rgba(255,255,255,0.6)',
-                  fontFamily: 'monospace',
-                  fontSize: '0.8rem',
-                  fontWeight: 700,
+                  padding: '12px 0',
+                  background: 'transparent',
+                  border: 'none',
+                  borderBottom: mode === m ? '2px solid #fff' : '2px solid transparent',
+                  color: mode === m ? '#fff' : '#888',
+                  fontSize: '14px',
+                  fontWeight: 600,
                   cursor: 'pointer',
                   transition: 'all 0.2s',
+                  marginBottom: '-1px', // Pour coller la bordure
                 }}
               >
                 {m === 'login' ? 'Connexion' : 'Inscription'}
@@ -176,7 +188,8 @@ export const AuthPage: React.FC = () => {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {/* Formulaire */}
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <input
             type="email"
             placeholder="Email"
@@ -185,6 +198,8 @@ export const AuthPage: React.FC = () => {
             required
             autoComplete="email"
             style={INPUT_STYLE}
+            onFocus={(e) => e.target.style.borderColor = '#00d9ff'}
+            onBlur={(e) => e.target.style.borderColor = '#333'}
           />
 
           {mode !== 'forgot' && (
@@ -196,6 +211,8 @@ export const AuthPage: React.FC = () => {
               required
               autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
               style={INPUT_STYLE}
+              onFocus={(e) => e.target.style.borderColor = '#00d9ff'}
+              onBlur={(e) => e.target.style.borderColor = '#333'}
             />
           )}
 
@@ -208,10 +225,12 @@ export const AuthPage: React.FC = () => {
               required
               autoComplete="new-password"
               style={INPUT_STYLE}
+              onFocus={(e) => e.target.style.borderColor = '#00d9ff'}
+              onBlur={(e) => e.target.style.borderColor = '#333'}
             />
           )}
 
-          {/* Lien mot de passe oublié (uniquement en mode login) */}
+          {/* Lien mot de passe oublié */}
           {mode === 'login' && (
             <button
               type="button"
@@ -219,66 +238,51 @@ export const AuthPage: React.FC = () => {
               style={{
                 background: 'transparent',
                 border: 'none',
-                color: 'rgba(255,255,255,0.5)',
-                fontSize: '0.78rem',
+                color: '#888',
+                fontSize: '12px',
                 textAlign: 'right',
                 cursor: 'pointer',
-                fontFamily: 'monospace',
                 padding: 0,
-                marginTop: -4,
-                textDecoration: 'underline',
+                marginTop: -8,
               }}
+              onMouseEnter={(e) => e.currentTarget.style.color = '#fff'}
+              onMouseLeave={(e) => e.currentTarget.style.color = '#888'}
             >
               Mot de passe oublié ?
             </button>
           )}
 
+          {/* Messages d'erreur / info */}
           {error && (
-            <div
-              style={{
-                padding: '10px 12px',
-                background: 'rgba(255, 60, 60, 0.1)',
-                border: '1px solid rgba(255, 60, 60, 0.4)',
-                borderRadius: 6,
-                color: '#ff8c8c',
-                fontSize: '0.8rem',
-              }}
-            >
-              ⚠️ {error}
+            <div style={{ padding: '12px', background: 'rgba(255, 51, 102, 0.1)', border: '1px solid rgba(255, 51, 102, 0.3)', borderRadius: 6, color: '#ff5c5c', fontSize: '13px' }}>
+              {error}
             </div>
           )}
 
           {info && (
-            <div
-              style={{
-                padding: '10px 12px',
-                background: 'rgba(0, 217, 255, 0.1)',
-                border: '1px solid rgba(0, 217, 255, 0.4)',
-                borderRadius: 6,
-                color: '#00d9ff',
-                fontSize: '0.8rem',
-              }}
-            >
-              ℹ️ {info}
+            <div style={{ padding: '12px', background: 'rgba(0, 217, 255, 0.1)', border: '1px solid rgba(0, 217, 255, 0.3)', borderRadius: 6, color: '#00d9ff', fontSize: '13px' }}>
+              {info}
             </div>
           )}
 
+          {/* Bouton principal */}
           <button
             type="submit"
             disabled={loading}
             style={{
               marginTop: 8,
-              padding: '12px',
-              background: loading ? '#666' : 'linear-gradient(135deg, #00d9ff, #0088ff)',
-              color: '#000',
+              padding: '14px',
+              background: loading ? '#333' : '#fff',
+              color: loading ? '#888' : '#000',
               border: 'none',
-              borderRadius: 8,
-              fontFamily: 'monospace',
-              fontSize: '0.9rem',
-              fontWeight: 800,
+              borderRadius: '6px',
+              fontSize: '14px',
+              fontWeight: 600,
               cursor: loading ? 'wait' : 'pointer',
-              letterSpacing: '0.5px',
+              transition: 'background 0.2s',
             }}
+            onMouseEnter={(e) => { if (!loading) e.currentTarget.style.background = '#e0e0e0'; }}
+            onMouseLeave={(e) => { if (!loading) e.currentTarget.style.background = '#fff'; }}
           >
             {loading ? 'Traitement...' : titles[mode].submit}
           </button>
@@ -290,20 +294,21 @@ export const AuthPage: React.FC = () => {
               onClick={() => switchMode('login')}
               style={{
                 background: 'transparent',
-                border: '1px solid rgba(255,255,255,0.15)',
-                color: 'rgba(255,255,255,0.6)',
+                border: 'none',
+                color: '#888',
                 padding: '10px',
-                borderRadius: 8,
-                fontFamily: 'monospace',
-                fontSize: '0.8rem',
+                fontSize: '13px',
                 cursor: 'pointer',
+                marginTop: 8,
               }}
+              onMouseEnter={(e) => e.currentTarget.style.color = '#fff'}
+              onMouseLeave={(e) => e.currentTarget.style.color = '#888'}
             >
               ← Retour à la connexion
             </button>
           )}
         </form>
-      </GlassCard>
+      </div>
     </div>
   );
 };

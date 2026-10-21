@@ -78,97 +78,112 @@ export const HomePage = () => {
     <div style={{
       display: 'flex',
       flexDirection: 'column',
-      gap: 32,
+      gap: isMobile ? 20 : 32, // ✅ Moins d'espace entre les blocs sur mobile
       paddingBottom: 100,
       fontFamily: 'Inter, sans-serif',
       color: '#fff',
       width: '100%',
       maxWidth: '100%',
-      overflowX: 'hidden', // ✅ Empêche le débordement horizontal
-      background: '#121212', // ✅ Fond noir profond global
+      overflowX: 'hidden',
+      background: '#121212',
+      boxSizing: 'border-box', // ✅ Sécurité anti-débordement
     }}>
 
       <EventsTicker />
 
-      {/* ✅ CONTENEUR CENTRAL (Max Width pour aligner avec le reste) */}
-      <div style={{ maxWidth: 1200, margin: '0 auto', width: '100%', padding: '0 20px', display: 'flex', flexDirection: 'column', gap: 32 }}>
+      {/* CONTENEUR CENTRAL */}
+      <div style={{ 
+        maxWidth: 1200, 
+        margin: '0 auto', 
+        width: '100%', 
+        padding: isMobile ? '0 12px' : '0 20px', // ✅ Padding réduit sur mobile
+        display: 'flex', 
+        flexDirection: 'column', 
+        gap: isMobile ? 20 : 32 
+      }}>
 
         {/* HERO SECTION */}
         <div style={{ 
           position: 'relative',
           borderRadius: 8, 
           overflow: 'hidden',
-          border: '1px solid #2a2a2a', // Bordure fine
+          border: '1px solid #2a2a2a',
           width: '100%',
-          height: isMobile ? 300 : 400,
+          height: isMobile ? 280 : 400, // ✅ Un peu moins haut sur mobile
           background: '#000',
         }}>
-          {/* Vidéo de fond (si dispo) ou image */}
           <video
             autoPlay loop muted playsInline
             style={{
               position: 'absolute', inset: 0, width: '100%', height: '100%',
-              objectFit: 'cover', opacity: 0.4, // Un peu plus sombre pour le côté pro
+              objectFit: 'cover', opacity: 0.4,
             }}
           >
             <source src="/videos/hero-video.mp4" type="video/mp4" />
           </video>
 
-          {/* Dégradé de gauche à droite pour lire le texte */}
           <div style={{ 
             position: 'absolute', inset: 0, 
-            background: 'linear-gradient(90deg, #121212 30%, transparent 90%)' 
+            background: isMobile 
+              ? 'linear-gradient(to top, #121212 40%, transparent 100%)' // ✅ Dégradé vertical sur mobile
+              : 'linear-gradient(90deg, #121212 30%, transparent 90%)' 
           }} />
 
-          {/* Contenu du Hero */}
           <div style={{ 
             position: 'relative', 
-            padding: isMobile ? '32px 24px' : '48px',
+            padding: isMobile ? '24px 16px' : '48px',
             zIndex: 1,
             display: 'flex',
             flexDirection: 'column',
-            justifyContent: 'center',
+            justifyContent: 'flex-end', // ✅ Texte poussé vers le bas sur mobile
             height: '100%',
           }}>
             <h1 style={{ 
-              fontSize: isMobile ? '2rem' : '3rem', fontWeight: 700, 
-              margin: '0 0 16px 0', letterSpacing: '-1px', lineHeight: 1.1, maxWidth: 600,
+              fontSize: isMobile ? '1.8rem' : '3rem', fontWeight: 700, 
+              margin: '0 0 12px 0', letterSpacing: '-1px', lineHeight: 1.1, maxWidth: 600,
             }}>
               Les nouvelles sorties et les remixes.
             </h1>
-            <p style={{ color: '#aaa', fontSize: isMobile ? 14 : 15, maxWidth: 500, margin: '0 0 32px 0', lineHeight: 1.6 }}>
-              Les promos, edits et morceaux exclusifs autorisés au partage. 
-              Nouveautés House, Tech House, EDM, Dance et Underground.
+            <p style={{ color: '#aaa', fontSize: isMobile ? 13 : 15, maxWidth: 500, margin: '0 0 24px 0', lineHeight: 1.5 }}>
+              Les promos, edits et morceaux exclusifs autorisés au partage.
             </p>
             
-            {/* Boutons style Beatport */}
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
               <Link to="/nouveautes" style={{ 
-                padding: '12px 24px', background: '#fff', color: '#000', 
+                padding: '10px 20px', background: '#fff', color: '#000', 
                 borderRadius: 4, fontWeight: 600, textDecoration: 'none', fontSize: 13,
-                transition: 'background 0.2s'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.background = '#e0e0e0'}
-              onMouseLeave={(e) => e.currentTarget.style.background = '#fff'}
-              >
-                Écouter les sorties
+                flex: isMobile ? 1 : 'none', // ✅ Boutons prennent toute la largeur sur mobile
+                textAlign: 'center',
+              }}>
+                Écouter
               </Link>
               <Link to="/auth" style={{ 
-                padding: '12px 24px', background: 'transparent', color: '#fff', 
+                padding: '10px 20px', background: 'transparent', color: '#fff', 
                 border: '1px solid #333', borderRadius: 4, fontWeight: 600, textDecoration: 'none', fontSize: 13,
-                transition: 'background 0.2s'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.background = '#1e1e1e'}
-              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-              >
-                Rejoindre la communauté
+                flex: isMobile ? 1 : 'none',
+                textAlign: 'center',
+              }}>
+                Rejoindre
               </Link>
             </div>
           </div>
         </div>
 
-        {/* NAVIGATION INTERNE */}
-        <div style={{ display: 'flex', alignItems: 'center', borderBottom: '1px solid #2a2a2a', paddingBottom: 16, gap: 24, overflowX: 'auto' }}>
+        {/* NAVIGATION INTERNE (Scrollable horizontalement sur mobile) */}
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          borderBottom: '1px solid #2a2a2a', 
+          paddingBottom: 12, 
+          gap: 20, 
+          overflowX: 'auto', 
+          width: '100%',
+          // ✅ Cache la barre de défilement moche sur mobile
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none',
+          WebkitOverflowScrolling: 'touch'
+        }}>
+          <style>{`.internal-nav::-webkit-scrollbar { display: none; }`}</style>
           <Link to="/" style={{ color: '#fff', textDecoration: 'none', fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap' }}>Accueil</Link>
           <Link to="/nouveautes" style={{ color: '#888', textDecoration: 'none', fontSize: 13, fontWeight: 500, whiteSpace: 'nowrap' }}>Sorties</Link>
           <Link to="/events" style={{ color: '#888', textDecoration: 'none', fontSize: 13, fontWeight: 500, whiteSpace: 'nowrap' }}>Événements</Link>
@@ -179,10 +194,10 @@ export const HomePage = () => {
           </Link>
         </div>
 
-        {/* CONTENU PRINCIPAL (2 Colonnes) */}
+        {/* CONTENU PRINCIPAL */}
         <div style={{ 
           display: 'flex', 
-          gap: 32, 
+          gap: isMobile ? 20 : 32, 
           alignItems: 'flex-start', 
           width: '100%',
           flexDirection: isMobile ? 'column' : 'row',
@@ -191,7 +206,7 @@ export const HomePage = () => {
           {/* COLONNE GAUCHE */}
           <div style={{ flex: 1, minWidth: 0, width: '100%' }}>
             
-            {/* MODULE À LA UNE (Sobre, sans effet 3D) */}
+            {/* MODULE À LA UNE */}
             {featured && (
               <div 
                 onClick={playFeatured}
@@ -199,16 +214,15 @@ export const HomePage = () => {
                   position: 'relative',
                   display: 'flex',
                   alignItems: 'flex-end',
-                  height: isMobile ? 240 : 320,
+                  height: isMobile ? 200 : 320, // ✅ Plus petit sur mobile
                   borderRadius: 8,
                   overflow: 'hidden',
                   cursor: 'pointer',
                   border: '1px solid #2a2a2a',
-                  marginBottom: 32,
+                  marginBottom: isMobile ? 20 : 32,
                   width: '100%',
                 }}
               >
-                {/* Image de fond nette (plus de blur) */}
                 <div 
                   style={{
                     position: 'absolute', inset: 0,
@@ -218,29 +232,28 @@ export const HomePage = () => {
                   }} 
                 />
                 
-                {/* Dégradé noir pour lire le texte */}
                 <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 80%)' }} />
 
-                <div style={{ position: 'relative', padding: 24, width: '100%', display: 'flex', alignItems: 'center', gap: 16 }}>
+                <div style={{ position: 'relative', padding: isMobile ? 16 : 24, width: '100%', display: 'flex', alignItems: 'center', gap: 16 }}>
                   <button 
                     style={{
-                      width: 56, height: 56, borderRadius: '50%',
+                      width: isMobile ? 44 : 56, height: isMobile ? 44 : 56, borderRadius: '50%',
                       background: '#fff', color: '#000', border: 'none',
-                      fontSize: 20, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: isMobile ? 16 : 20, display: 'flex', alignItems: 'center', justifyContent: 'center',
                       cursor: 'pointer', flexShrink: 0,
                     }}
                   >
                     ▶
                   </button>
 
-                  <div style={{ minWidth: 0 }}>
-                    <span style={{ fontSize: 10, color: '#fff', background: '#00d9ff', padding: '2px 6px', borderRadius: 4, fontWeight: 700, letterSpacing: '0.5px' }}>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <span style={{ fontSize: 9, color: '#fff', background: '#00d9ff', padding: '2px 6px', borderRadius: 4, fontWeight: 700 }}>
                       À LA UNE
                     </span>
-                    <h2 style={{ fontSize: isMobile ? 20 : 24, fontWeight: 700, margin: '8px 0 4px 0', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <h2 style={{ fontSize: isMobile ? 18 : 24, fontWeight: 700, margin: '6px 0 2px 0', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {featured.title}
                     </h2>
-                    <p style={{ fontSize: isMobile ? 13 : 14, color: '#ccc', margin: 0 }}>
+                    <p style={{ fontSize: isMobile ? 12 : 14, color: '#ccc', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {featured.artist}
                     </p>
                   </div>
@@ -248,19 +261,18 @@ export const HomePage = () => {
               </div>
             )}
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-              <h2 style={{ fontSize: 20, fontWeight: 700, color: '#fff', margin: 0 }}>Nouvelles sorties</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <h2 style={{ fontSize: isMobile ? 18 : 20, fontWeight: 700, color: '#fff', margin: 0 }}>Nouvelles sorties</h2>
               <Link to="/nouveautes" style={{ fontSize: 13, color: '#00d9ff', textDecoration: 'none', fontWeight: 500 }}>Tout voir →</Link>
             </div>
             
             <TrackGrid tracks={newReleases} />
           </div>
 
-          {/* COLONNE DROITE */}
+          {/* COLONNE DROITE (Cachée sur mobile, gérée par TrackGrid si besoin) */}
           {!isMobile && (
             <aside style={{ width: 280, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 24 }}>
               
-              {/* TOP 10 */}
               <div style={{ background: '#181818', borderRadius: 8, border: '1px solid #2a2a2a', padding: 16 }}>
                 <h3 style={{ fontSize: 12, fontWeight: 700, color: '#fff', margin: '0 0 16px 0' }}>TOP 10</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -281,7 +293,6 @@ export const HomePage = () => {
                 </div>
               </div>
 
-              {/* ARTISTES EN VUE */}
               <div style={{ background: '#181818', borderRadius: 8, border: '1px solid #2a2a2a', padding: 16 }}>
                 <h3 style={{ fontSize: 12, fontWeight: 700, color: '#fff', margin: '0 0 16px 0' }}>Artistes en vue</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>

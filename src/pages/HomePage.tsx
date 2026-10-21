@@ -15,12 +15,29 @@ interface Artist {
 }
 
 export const HomePage = () => {
-  const isMobile = useIsMobile(768); // On le garde pour le layout (colonne/droite)
+  const isMobile = useIsMobile(768);
   const { play } = usePlayer();
   
   const [tracks, setTracks] = useState<Track[]>([]);
   const [artists, setArtists] = useState<Artist[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // ✅ NOUVEL ÉTAT : On vérifie la taille de l'écran pour la vidéo
+  const [showVideo, setShowVideo] = useState(false);
+
+  useEffect(() => {
+    // Cette fonction vérifie si l'écran est assez grand (PC)
+    const checkScreen = () => {
+      setShowVideo(window.innerWidth > 768);
+    };
+    
+    // On vérifie au chargement
+    checkScreen();
+    
+    // On vérifie aussi si l'utilisateur redimensionne la fenêtre
+    window.addEventListener('resize', checkScreen);
+    return () => window.removeEventListener('resize', checkScreen);
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -98,27 +115,28 @@ export const HomePage = () => {
         marginBottom: 16,
         width: '100%',
         height: isMobile ? 320 : 420,
-        background: '#121212', // Fond de secours si la vidéo est masquée
+        background: '#121212',
       }}>
         
-        {/* ✅ LA VIDÉO EST TOUJOURS LÀ DANS LE CODE, C'EST LE CSS QUI LA CACHE */}
-        <video
-          className="hero-bg-video"
-          autoPlay
-          loop
-          muted
-          playsInline
-          style={{
-            position: 'absolute',
-            inset: 0,
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            opacity: 0.5,
-          }}
-        >
-          <source src="/videos/background.mp4" type="video/mp4" />
-        </video>
+        {/* ✅ LA VIDÉO N'EST CHARGÉE QUE SI showVideo EST TRUE (donc PC) */}
+        {showVideo && (
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            style={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              opacity: 0.5,
+            }}
+          >
+            <source src="/videos/background.mp4" type="video/mp4" />
+          </video>
+        )}
 
         {/* Overlay sombre */}
         <div style={{ 
@@ -305,7 +323,7 @@ export const HomePage = () => {
         )}
       </div>
 
-      {/* ✅ EFFETS 3D ET MASQUAGE DE LA VIDÉO SUR MOBILE */}
+      {/* EFFETS 3D */}
       <style>{`
         .featured-3d-card:hover {
           transform: translateY(-6px) scale(1.01);
@@ -325,13 +343,6 @@ export const HomePage = () => {
 
         a, div, button { outline: none !important; }
         a:focus, div:focus, button:focus { outline: none !important; box-shadow: none !important; }
-
-        /* ✅ C'EST ICI QUE LA MAGIE OPÈRE : ON CACHE LA VIDÉO SUR MOBILE */
-        @media (max-width: 768px) {
-          .hero-bg-video {
-            display: none !important;
-          }
-        }
       `}</style>
     </div>
   );

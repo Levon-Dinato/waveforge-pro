@@ -1,14 +1,13 @@
 // src/pages/MasteringPage.tsx
-import React, { useRef } from 'react';
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { useAudioEngineContext } from '../contexts/AudioEngineContext';
 
 export const MasteringPage: React.FC = () => {
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const engine = useAudioEngineContext();
 
-  const handleDragOver = (e: React.DragEvent) => e.preventDefault();
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    // Ta logique pour récupérer le fichier audio
-  };
+  // ✅ On vérifie si un morceau est chargé dans le Studio
+  const hasAudio = !!engine.result;
 
   return (
     <div style={{ 
@@ -43,12 +42,9 @@ export const MasteringPage: React.FC = () => {
         </p>
       </div>
 
-      {/* Zone de Drop minimaliste */}
-      <div 
-        onClick={() => fileInputRef.current?.click()}
-        onDragOver={handleDragOver}
-        onDrop={handleDrop}
-        style={{
+      {/* ✅ SI AUCUN AUDIO N'EST CHARGÉ : On demande d'aller au Studio */}
+      {!hasAudio ? (
+        <div style={{
           background: '#1c1c1c',
           border: '2px dashed #2a2a2a',
           borderRadius: 12,
@@ -57,53 +53,72 @@ export const MasteringPage: React.FC = () => {
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          cursor: 'pointer',
-          transition: 'all 0.2s ease',
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.borderColor = '#ff3366'; // Rouge au survol
-          e.currentTarget.style.background = '#1e1e1e';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.borderColor = '#2a2a2a';
-          e.currentTarget.style.background = '#1c1c1c';
-        }}
-      >
-        <input 
-          type="file" 
-          ref={fileInputRef} 
-          style={{ display: 'none' }} 
-          accept="audio/*"
-        />
-        
-        <div style={{ fontSize: 48, marginBottom: 16, filter: 'drop-shadow(0 0 10px rgba(255, 51, 102, 0.3))' }}>
-          🎚️
-        </div>
-        <h2 style={{ fontSize: '1.2rem', fontWeight: 700, margin: '0 0 8px 0' }}>
-          Charger un fichier audio
-        </h2>
-        <p style={{ color: '#999', fontSize: '0.85rem', margin: '0 0 16px 0' }}>
-          Clique ou glisse ton fichier WAV / MP3 ici
-        </p>
-        <div style={{ 
-          display: 'flex', 
-          gap: 12, 
-          color: '#666', 
-          fontSize: '0.75rem', 
-          fontWeight: 600 
+          textAlign: 'center',
         }}>
-          <span>Mastering auto</span>
-          <span>·</span>
-          <span>Stéréo</span>
-          <span>·</span>
-          <span>Haute qualité</span>
+          <div style={{ fontSize: 48, marginBottom: 16, filter: 'drop-shadow(0 0 10px rgba(255, 51, 102, 0.3))' }}>
+            🔒
+          </div>
+          <h2 style={{ fontSize: '1.2rem', fontWeight: 700, margin: '0 0 8px 0' }}>
+            Aucun morceau chargé
+          </h2>
+          <p style={{ color: '#999', fontSize: '0.85rem', margin: '0 0 24px 0', maxWidth: 400 }}>
+            Pour utiliser l'outil de Mastering, tu dois d'abord importer un fichier audio dans le Studio.
+          </p>
+          <Link to="/studio" style={{
+            background: '#00d9ff',
+            color: '#000',
+            padding: '10px 20px',
+            borderRadius: 4,
+            fontWeight: 700,
+            textDecoration: 'none',
+            fontSize: 13,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8
+          }}>
+            🎚️ Aller au Studio
+          </Link>
         </div>
-      </div>
+      ) : (
+        /* ✅ SI UN AUDIO EST CHARGÉ : On affiche l'interface */
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          
+          {/* Info Fichier */}
+          <div style={{ 
+            background: '#1c1c1c', 
+            border: '1px solid #2a2a2a', 
+            borderRadius: 8,
+            padding: '12px 16px', 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: 12,
+            borderLeft: '3px solid #00d9ff'
+          }}>
+            <span style={{ fontSize: 16 }}>🎵</span>
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#fff' }}>{engine.fileName}</div>
+              <div style={{ fontSize: 10, color: '#999', marginTop: 2 }}>
+                {engine.fileFormat} · {engine.result?.bpm} BPM · {engine.result?.duration.toFixed(1)}s
+              </div>
+            </div>
+          </div>
 
-      {/* Espace pour tes modules de mastering (boutons, sliders, etc.) */}
-      {/* <div style={{ marginTop: 32 }}>
-        ... tes composants de mastering ici ...
-      </div> */}
+          {/* ICI : Tu pourras mettre tes sliders de mastering (EQ, Compresseur...) */}
+          <div style={{ 
+            background: '#1c1c1c', 
+            border: '1px solid #2a2a2a', 
+            borderRadius: 8,
+            padding: 40,
+            textAlign: 'center',
+            color: '#666'
+          }}>
+            <div style={{ fontSize: 40, marginBottom: 16 }}>⚙️</div>
+            <h3 style={{ color: '#fff', marginBottom: 8 }}>Interface de Mastering</h3>
+            <p style={{ fontSize: '0.85rem' }}>C'est ici que viendront tes réglages d'égalisation, de compression et d'exportation.</p>
+          </div>
+
+        </div>
+      )}
     </div>
   );
 };

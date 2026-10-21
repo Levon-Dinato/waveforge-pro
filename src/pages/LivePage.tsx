@@ -13,6 +13,9 @@ export const LivePage = () => {
   const streamKey = '6n9kjjb7qw4ko4w4ock';
   const tviplyEmbedUrl = 'https://tviply.com/dropzonedj/embed';
   const tviplyChannelUrl = 'https://tviply.com/dropzonedj';
+  
+  // URL à partager
+  const liveShareUrl = window.location.origin + '/live';
 
   const copyToClipboard = async (text: string, message = 'Copié !') => {
     try {
@@ -29,11 +32,28 @@ export const LivePage = () => {
     }
   };
 
+  // ✅ Fonction de partage native
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'DropZone DJ Live 🎧',
+          text: 'Rejoins le live et vibre avec la communauté !',
+          url: liveShareUrl,
+        });
+      } catch (err) {
+        console.log('Partage annulé');
+      }
+    } else {
+      copyToClipboard(liveShareUrl, 'Lien du live copié !');
+    }
+  };
+
   return (
     <div style={{
       display: 'flex',
       flexDirection: 'column',
-      gap: isMobile ? 40 : 64,
+      gap: isMobile ? 32 : 48,
       paddingBottom: 80,
       fontFamily: 'Inter, sans-serif',
       background: '#121212',
@@ -42,20 +62,21 @@ export const LivePage = () => {
     }}>
 
       <Helmet>
-        <title>Live DropZone DJ 🎧</title>
+        <title>Live DropZone DJ 🎧 - Prends l'antenne</title>
         <meta property="og:title" content="Live DropZone DJ 🎧" />
-        <meta property="og:description" content="Rejoins la scène et mixe en direct." />
+        <meta property="og:description" content="Rejoins la scène, mixe en direct et partage ta passion avec la communauté." />
+        <meta property="og:url" content={liveShareUrl} />
       </Helmet>
 
       {/* ==================================================== */}
-      {/* 1. HERO SECTION (Sobre et direct)                    */}
+      {/* 1. HERO SECTION                                      */}
       {/* ==================================================== */}
       <section style={{ padding: isMobile ? '32px 20px 0' : '48px 24px 0', maxWidth: 1200, margin: '0 auto', width: '100%' }}>
         
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 40 }}>
           <div style={{ flex: 1, minWidth: 300 }}>
             
-            {/* Badge Live minimaliste */}
+            {/* Badge Live */}
             <div style={{
               display: 'inline-flex',
               alignItems: 'center',
@@ -71,7 +92,7 @@ export const LivePage = () => {
               textTransform: 'uppercase',
               marginBottom: 24,
             }}>
-              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#ff3366' }} />
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#ff3366', animation: 'pulse 1.5s infinite' }} />
               En direct
             </div>
 
@@ -96,6 +117,7 @@ export const LivePage = () => {
               Rejoignez la scène DropZone. Diffusez vos sets en direct, partagez votre passion avec la communauté et faites découvrir votre univers musical.
             </p>
 
+            {/* Boutons d'action */}
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
               <button
                 onClick={() => {
@@ -119,10 +141,9 @@ export const LivePage = () => {
                 Commencer à mixer
               </button>
               
-              <a
-                href={tviplyChannelUrl}
-                target="_blank"
-                rel="noopener noreferrer"
+              {/* ✅ Bouton Partager */}
+              <button
+                onClick={handleShare}
                 style={{
                   padding: '12px 24px',
                   background: 'transparent',
@@ -131,19 +152,23 @@ export const LivePage = () => {
                   borderRadius: 4,
                   fontSize: 13,
                   fontWeight: 600,
-                  textDecoration: 'none',
+                  cursor: 'pointer',
                   transition: 'background 0.2s',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
                 }}
                 onMouseEnter={(e) => e.currentTarget.style.background = '#1e1e1e'}
                 onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
               >
-                Voir la chaîne
-              </a>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                Partager
+              </button>
             </div>
           </div>
 
           {/* Stats discrètes */}
-          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginTop: isMobile ? 10 : 0 }}>
+          <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', marginTop: isMobile ? 10 : 0 }}>
              <div style={{ borderLeft: '2px solid #333', paddingLeft: 16 }}>
                 <div style={{ fontSize: 20, fontWeight: 600, color: '#fff' }}>24/7</div>
                 <div style={{ fontSize: 11, color: '#888', textTransform: 'uppercase', marginTop: 4 }}>Antenne ouverte</div>
@@ -157,13 +182,14 @@ export const LivePage = () => {
       </section>
 
       {/* ==================================================== */}
-      {/* 2. LE LIVE ACTUEL                                    */}
+      {/* 2. LE PLAYER & LE CHAT                               */}
       {/* ==================================================== */}
       <section style={{ maxWidth: 1200, margin: '0 auto', width: '100%', padding: '0 20px' }}>
         <div style={{
           display: 'grid',
           gridTemplateColumns: isMobile ? '1fr' : (chatVisible ? '1fr 320px' : '1fr'),
           gap: 16,
+          transition: 'all 0.3s ease',
         }}>
           {/* Lecteur Vidéo */}
           <div style={{
@@ -207,27 +233,43 @@ export const LivePage = () => {
           )}
         </div>
 
-        {/* Barre d'info */}
+        {/* Barre d'actions sous le lecteur */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 16, flexWrap: 'wrap', gap: 12 }}>
-          <div style={{ fontSize: 12, color: '#888' }}>
-            En direct sur DropZone
+          <div style={{ fontSize: 12, color: '#888', display: 'flex', alignItems: 'center', gap: 8 }}>
+             <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#ff3366' }} />
+             En direct sur DropZone
           </div>
-          {!isMobile && (
-            <button
-              onClick={() => setChatVisible(!chatVisible)}
+          <div style={{ display: 'flex', gap: 16 }}>
+            {!isMobile && (
+              <button
+                onClick={() => setChatVisible(!chatVisible)}
+                style={{
+                  fontSize: 12, color: '#aaa', background: 'transparent',
+                  border: 'none', cursor: 'pointer', padding: 0, textDecoration: 'underline'
+                }}
+              >
+                {chatVisible ? 'Masquer le chat' : 'Afficher le chat'}
+              </button>
+            )}
+            <a
+              href={tviplyChannelUrl}
+              target="_blank"
+              rel="noopener noreferrer"
               style={{
-                fontSize: 11, color: '#aaa', background: 'transparent',
-                border: 'none', cursor: 'pointer', textDecoration: 'underline'
+                fontSize: 12,
+                color: '#00d9ff',
+                textDecoration: 'none',
+                fontWeight: 500,
               }}
             >
-              {chatVisible ? 'Masquer le chat' : 'Afficher le chat'}
-            </button>
-          )}
+              Ouvrir sur Tviply →
+            </a>
+          </div>
         </div>
       </section>
 
       {/* ==================================================== */}
-      {/* 3. POURQUOI STREAMER ICI                            */}
+      {/* 3. POURQUOI MIXER ICI                                */}
       {/* ==================================================== */}
       <section style={{ maxWidth: 1200, margin: '0 auto', width: '100%', padding: '0 20px' }}>
         <h2 style={{ fontSize: 20, fontWeight: 600, marginBottom: 32, color: '#fff' }}>Pourquoi mixer sur DropZone ?</h2>
@@ -319,6 +361,10 @@ export const LivePage = () => {
           </div>
         )}
       </section>
+
+      <style>{`
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+      `}</style>
 
     </div>
   );

@@ -1,6 +1,6 @@
 // src/pages/HomePage.tsx
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { TrackGrid } from '../components/TrackGrid';
 import type { Track } from '../components/TrackGrid';
@@ -17,10 +17,15 @@ interface Artist {
 export const HomePage = () => {
   const isMobile = useIsMobile(768);
   const { play } = usePlayer();
+  const navigate = useNavigate();
   
   const [tracks, setTracks] = useState<Track[]>([]);
   const [artists, setArtists] = useState<Artist[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // ✅ État pour gérer le live
+  // (À remplacer par un vrai fetch API plus tard, ex: check TViply status)
+  const [isLive, setIsLive] = useState(false); 
 
   useEffect(() => {
     const fetchData = async () => {
@@ -39,6 +44,11 @@ export const HomePage = () => {
           .limit(10);
 
         if (profilesData) setArtists(profilesData as Artist[]);
+        
+        // 💡 Simulation : Mettons que tu veux tester l'affichage.
+        // Change à 'true' pour voir le widget rouge en direct.
+        setIsLive(false); 
+        
       } catch (err) {
         console.error('Erreur chargement:', err);
       } finally {
@@ -74,11 +84,42 @@ export const HomePage = () => {
     });
   };
 
+  const handleShareSite = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'DropZone DJ',
+          text: 'Découvrez les dernières pépites de la musique électronique sur DropZone DJ !',
+          url: window.location.origin,
+        });
+      } catch (err) {
+        console.log('Partage annulé');
+      }
+    } else {
+      navigator.clipboard.writeText(window.location.origin);
+      alert('Lien du site copié dans le presse-papiers !');
+    }
+  };
+
+  const handleShareTrack = (track: Track) => {
+    const url = `${window.location.origin}/track/${track.id}`;
+    if (navigator.share) {
+      navigator.share({
+        title: `${track.artist} - ${track.title}`,
+        text: `Écoute "${track.title}" par ${track.artist} sur DropZone DJ 🎵`,
+        url: url,
+      }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(url);
+      alert('Lien du morceau copié !');
+    }
+  };
+
   return (
     <div style={{
       display: 'flex',
       flexDirection: 'column',
-      gap: isMobile ? 20 : 32, // ✅ Moins d'espace entre les blocs sur mobile
+      gap: isMobile ? 20 : 32,
       paddingBottom: 100,
       fontFamily: 'Inter, sans-serif',
       color: '#fff',
@@ -86,17 +127,16 @@ export const HomePage = () => {
       maxWidth: '100%',
       overflowX: 'hidden',
       background: '#121212',
-      boxSizing: 'border-box', // ✅ Sécurité anti-débordement
+      boxSizing: 'border-box',
     }}>
 
       <EventsTicker />
 
-      {/* CONTENEUR CENTRAL */}
       <div style={{ 
         maxWidth: 1200, 
         margin: '0 auto', 
         width: '100%', 
-        padding: isMobile ? '0 12px' : '0 20px', // ✅ Padding réduit sur mobile
+        padding: isMobile ? '0 12px' : '0 20px', 
         display: 'flex', 
         flexDirection: 'column', 
         gap: isMobile ? 20 : 32 
@@ -109,7 +149,7 @@ export const HomePage = () => {
           overflow: 'hidden',
           border: '1px solid #2a2a2a',
           width: '100%',
-          height: isMobile ? 280 : 400, // ✅ Un peu moins haut sur mobile
+          height: isMobile ? 320 : 400,
           background: '#000',
         }}>
           <video
@@ -125,7 +165,7 @@ export const HomePage = () => {
           <div style={{ 
             position: 'absolute', inset: 0, 
             background: isMobile 
-              ? 'linear-gradient(to top, #121212 40%, transparent 100%)' // ✅ Dégradé vertical sur mobile
+              ? 'linear-gradient(to top, #121212 40%, transparent 100%)' 
               : 'linear-gradient(90deg, #121212 30%, transparent 90%)' 
           }} />
 
@@ -135,7 +175,7 @@ export const HomePage = () => {
             zIndex: 1,
             display: 'flex',
             flexDirection: 'column',
-            justifyContent: 'flex-end', // ✅ Texte poussé vers le bas sur mobile
+            justifyContent: 'flex-end', 
             height: '100%',
           }}>
             <h1 style={{ 
@@ -152,72 +192,86 @@ export const HomePage = () => {
               <Link to="/nouveautes" style={{ 
                 padding: '10px 20px', background: '#fff', color: '#000', 
                 borderRadius: 4, fontWeight: 600, textDecoration: 'none', fontSize: 13,
-                flex: isMobile ? 1 : 'none', // ✅ Boutons prennent toute la largeur sur mobile
-                textAlign: 'center',
+                flex: isMobile ? 1 : 'none', textAlign: 'center',
               }}>
                 Écouter
               </Link>
               <Link to="/auth" style={{ 
                 padding: '10px 20px', background: 'transparent', color: '#fff', 
                 border: '1px solid #333', borderRadius: 4, fontWeight: 600, textDecoration: 'none', fontSize: 13,
-                flex: isMobile ? 1 : 'none',
-                textAlign: 'center',
+                flex: isMobile ? 1 : 'none', textAlign: 'center',
               }}>
                 Rejoindre
               </Link>
+              <button 
+                onClick={handleShareSite}
+                style={{ 
+                  padding: '10px 20px', background: 'transparent', color: '#fff', 
+                  border: '1px solid #333', borderRadius: 4, fontWeight: 600, fontSize: 13,
+                  cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                  flex: isMobile ? 1 : 'none',
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                Partager
+              </button>
             </div>
           </div>
         </div>
 
-        {/* NAVIGATION INTERNE (Scrollable horizontalement sur mobile) */}
+        {/* NAVIGATION INTERNE */}
         <div style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          borderBottom: '1px solid #2a2a2a', 
-          paddingBottom: 12, 
-          gap: 20, 
-          overflowX: 'auto', 
-          width: '100%',
-          // ✅ Cache la barre de défilement moche sur mobile
-          scrollbarWidth: 'none',
-          msOverflowStyle: 'none',
-          WebkitOverflowScrolling: 'touch'
+          display: 'flex', alignItems: 'center', borderBottom: '1px solid #2a2a2a', paddingBottom: 12, gap: 20, overflowX: 'auto', width: '100%',
+          scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch'
         }}>
-          <style>{`.internal-nav::-webkit-scrollbar { display: none; }`}</style>
           <Link to="/" style={{ color: '#fff', textDecoration: 'none', fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap' }}>Accueil</Link>
           <Link to="/nouveautes" style={{ color: '#888', textDecoration: 'none', fontSize: 13, fontWeight: 500, whiteSpace: 'nowrap' }}>Sorties</Link>
           <Link to="/events" style={{ color: '#888', textDecoration: 'none', fontSize: 13, fontWeight: 500, whiteSpace: 'nowrap' }}>Événements</Link>
           <Link to="/genres" style={{ color: '#888', textDecoration: 'none', fontSize: 13, fontWeight: 500, whiteSpace: 'nowrap' }}>Genres</Link>
           <Link to="/artists" style={{ color: '#888', textDecoration: 'none', fontSize: 13, fontWeight: 500, whiteSpace: 'nowrap' }}>Artistes</Link>
-          <Link to="/live" style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#ff3366', textDecoration: 'none', fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap' }}>
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#ff3366' }} /> LIVE
-          </Link>
         </div>
 
         {/* CONTENU PRINCIPAL */}
-        <div style={{ 
-          display: 'flex', 
-          gap: isMobile ? 20 : 32, 
-          alignItems: 'flex-start', 
-          width: '100%',
-          flexDirection: isMobile ? 'column' : 'row',
-        }}>
+        <div style={{ display: 'flex', gap: isMobile ? 20 : 32, alignItems: 'flex-start', width: '100%', flexDirection: isMobile ? 'column' : 'row' }}>
           
           {/* COLONNE GAUCHE */}
           <div style={{ flex: 1, minWidth: 0, width: '100%' }}>
             
+            {/* ✅ BANNIÈRE MOBILE : LIVE OU HORS LIGNE */}
+            {isMobile && (
+              <Link to="/live" style={{ textDecoration: 'none', display: 'block', marginBottom: 20 }}>
+                <div style={{ 
+                  background: '#181818', 
+                  border: `1px solid ${isLive ? '#ff3366' : '#2a2a2a'}`, 
+                  borderRadius: 8, padding: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between' 
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span style={{ 
+                      width: 8, height: 8, borderRadius: '50%', 
+                      background: isLive ? '#ff3366' : '#666', 
+                      boxShadow: isLive ? '0 0 8px #ff3366' : 'none' 
+                    }} />
+                    <span style={{ color: '#fff', fontWeight: 700, fontSize: 14 }}>
+                      {isLive ? 'Live DJ en cours' : 'Scène libre'}
+                    </span>
+                  </div>
+                  <span style={{ color: isLive ? '#ff3366' : '#888', fontSize: 12, fontWeight: 600 }}>
+                    {isLive ? 'Rejoindre →' : 'Mixer →'}
+                  </span>
+                </div>
+              </Link>
+            )}
+
             {/* MODULE À LA UNE */}
             {featured && (
               <div 
-                onClick={playFeatured}
                 style={{
                   position: 'relative',
                   display: 'flex',
                   alignItems: 'flex-end',
-                  height: isMobile ? 200 : 320, // ✅ Plus petit sur mobile
+                  height: isMobile ? 220 : 320,
                   borderRadius: 8,
                   overflow: 'hidden',
-                  cursor: 'pointer',
                   border: '1px solid #2a2a2a',
                   marginBottom: isMobile ? 20 : 32,
                   width: '100%',
@@ -236,8 +290,9 @@ export const HomePage = () => {
 
                 <div style={{ position: 'relative', padding: isMobile ? 16 : 24, width: '100%', display: 'flex', alignItems: 'center', gap: 16 }}>
                   <button 
+                    onClick={playFeatured}
                     style={{
-                      width: isMobile ? 44 : 56, height: isMobile ? 44 : 56, borderRadius: '50%',
+                      width: isMobile ? 48 : 56, height: isMobile ? 48 : 56, borderRadius: '50%',
                       background: '#fff', color: '#000', border: 'none',
                       fontSize: isMobile ? 16 : 20, display: 'flex', alignItems: 'center', justifyContent: 'center',
                       cursor: 'pointer', flexShrink: 0,
@@ -257,6 +312,19 @@ export const HomePage = () => {
                       {featured.artist}
                     </p>
                   </div>
+
+                  <button 
+                    onClick={() => handleShareTrack(featured)}
+                    style={{
+                      background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', 
+                      color: '#fff', width: 40, height: 40, borderRadius: '50%',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                      flexShrink: 0
+                    }}
+                    title="Partager ce morceau"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                  </button>
                 </div>
               </div>
             )}
@@ -269,10 +337,48 @@ export const HomePage = () => {
             <TrackGrid tracks={newReleases} />
           </div>
 
-          {/* COLONNE DROITE (Cachée sur mobile, gérée par TrackGrid si besoin) */}
+          {/* COLONNE DROITE (Desktop) */}
           {!isMobile && (
             <aside style={{ width: 280, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 24 }}>
               
+              {/* ✅ WIDGET LIVE / OFFLINE DYNAMIQUE */}
+              <div 
+                onClick={() => navigate('/live')}
+                style={{ 
+                  background: '#181818', 
+                  borderRadius: 8, 
+                  border: `1px solid ${isLive ? '#ff3366' : '#2a2a2a'}`, 
+                  padding: 16, 
+                  cursor: 'pointer', 
+                  transition: 'background 0.2s',
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  gap: 12
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.background = '#1e1e1e'}
+                onMouseLeave={(e) => e.currentTarget.style.background = '#181818'}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ 
+                    width: 8, height: 8, borderRadius: '50%', 
+                    background: isLive ? '#ff3366' : '#666', 
+                    boxShadow: isLive ? '0 0 8px #ff3366' : 'none' 
+                  }} />
+                  <h3 style={{ fontSize: 12, fontWeight: 700, color: isLive ? '#ff3366' : '#888', margin: 0, letterSpacing: '0.5px' }}>
+                    {isLive ? 'EN DIRECT' : 'HORS LIGNE'}
+                  </h3>
+                </div>
+                <p style={{ fontSize: 13, color: '#aaa', margin: 0, lineHeight: 1.4 }}>
+                  {isLive 
+                    ? 'Un DJ est actuellement aux platines. Rejoignez le live et vibrez avec la communauté.'
+                    : 'La scène est libre. Prenez les commandes et montrez votre talent à la communauté.'}
+                </p>
+                <div style={{ fontSize: 12, color: isLive ? '#ff3366' : '#fff', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4, marginTop: 4 }}>
+                  {isLive ? 'Regarder le Live' : 'Lancer ton live'} <span>→</span>
+                </div>
+              </div>
+
+              {/* TOP 10 */}
               <div style={{ background: '#181818', borderRadius: 8, border: '1px solid #2a2a2a', padding: 16 }}>
                 <h3 style={{ fontSize: 12, fontWeight: 700, color: '#fff', margin: '0 0 16px 0' }}>TOP 10</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -293,6 +399,7 @@ export const HomePage = () => {
                 </div>
               </div>
 
+              {/* ARTISTES EN VUE */}
               <div style={{ background: '#181818', borderRadius: 8, border: '1px solid #2a2a2a', padding: 16 }}>
                 <h3 style={{ fontSize: 12, fontWeight: 700, color: '#fff', margin: '0 0 16px 0' }}>Artistes en vue</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>

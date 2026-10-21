@@ -89,7 +89,7 @@ export const HomePage = () => {
       try {
         await navigator.share({
           title: 'DropZone DJ',
-          text: 'Découvrez les dernières pépites de la musique électronique sur DropZone DJ !',
+          text: 'Découvrez les dernières pépites électro surpuissantes de DropZone DJ. Montez le son !',
           url: window.location.origin,
         });
       } catch (err) {

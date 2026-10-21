@@ -49,7 +49,7 @@ export class MasteringChain {
   private widenerMidToR: GainNode;
   private widenerSideToL: GainNode;
   private widenerSideToR: GainNode;
-  // ❌ Supprimé : private currentWidth = 1.0;
+  private currentWidth = 1.0;
 
   private monoMakerInput: GainNode;
   private monoMakerOutput: GainNode;
@@ -118,9 +118,11 @@ export class MasteringChain {
   constructor(context: BaseAudioContext) {
     this.context = context;
 
+    // 1. Gain d'entrée
     this.inputGain = context.createGain();
     this.inputGain.gain.value = 1;
 
+    // 2. EQ 5 bandes
     for (const band of DEFAULT_EQ_BANDS) {
       const filter = context.createBiquadFilter();
       filter.type = band.type;
@@ -136,10 +138,12 @@ export class MasteringChain {
     this.eqMid.Q.value = 1;
     this.eqMid.gain.value = 0;
 
+    // 3. Saturateur
     this.saturator = context.createWaveShaper();
     this.saturator.curve = this.makeDistortionCurve(0) as any;
     this.saturator.oversample = '4x';
 
+    // 4. Mid/Side Widener
     this.widenerInput = context.createGain();
     this.widenerOutput = context.createGain();
     this.widenerSplitter = context.createChannelSplitter(2);
@@ -187,6 +191,7 @@ export class MasteringChain {
     this.widenerSideToR.connect(this.widenerMerger, 0, 1);
     this.widenerMerger.connect(this.widenerOutput);
 
+    // 5. Imager 3 bandes
     this.imagerInput = context.createGain();
     this.imagerOutput = context.createGain();
     this.imagerWetGain = context.createGain();
@@ -283,6 +288,7 @@ export class MasteringChain {
 
     this.imagerWetGain.connect(this.imagerOutput);
 
+    // 6. Mono-Maker
     this.monoMakerInput = context.createGain();
     this.monoMakerOutput = context.createGain();
     this.monoMakerSplitter = context.createChannelSplitter(2);
@@ -353,6 +359,7 @@ export class MasteringChain {
     this.monoMakerMerger.connect(this.monoMakerWetGain);
     this.monoMakerWetGain.connect(this.monoMakerOutput);
 
+    // 7. Compresseur broadband
     this.compressor = context.createDynamicsCompressor();
     this.compressor.threshold.value = -18;
     this.compressor.knee.value = 6;
@@ -361,8 +368,9 @@ export class MasteringChain {
     this.compressor.release.value = 0.25;
 
     this.compressorMakeup = context.createGain();
-    this.compressorMakeup.gain.value = 1.25;
+    this.compressorMakeup.gain.value = 1.25;  // ✅ +2 dB (au lieu de +5 dB)
 
+    // 7b. Harmonic Exciter
     this.exciterHighShelf = context.createBiquadFilter();
     this.exciterHighShelf.type = 'highshelf';
     this.exciterHighShelf.frequency.value = 3000;
@@ -377,6 +385,7 @@ export class MasteringChain {
     this.exciterDryGain = context.createGain();
     this.exciterDryGain.gain.value = 0.75;
 
+    // 7c. Sub-bass + Air band
     this.subBassFilter = context.createBiquadFilter();
     this.subBassFilter.type = 'peaking';
     this.subBassFilter.frequency.value = 60;
@@ -396,19 +405,22 @@ export class MasteringChain {
     this.airShelf.frequency.value = 14000;
     this.airShelf.gain.value = 4;
 
+    // 7d. Limiteur brickwall
     this.limiter = context.createDynamicsCompressor();
-    this.limiter.threshold.value = -3.0;
+    this.limiter.threshold.value = -3.0;   // ✅ Plus agressif
     this.limiter.knee.value = 0;
     this.limiter.ratio.value = 20;
     this.limiter.attack.value = 0.001;
-    this.limiter.release.value = 0.1;
+    this.limiter.release.value = 0.1;      // ✅ Release plus long
 
+    // 8. Bypass & gains
     this.bypassGain = context.createGain();
     this.bypassGain.gain.value = 0;
     this.processedGain = context.createGain();
     this.processedGain.gain.value = 1;
     this.outputGain = context.createGain();
 
+    // 9. Chaîne principale
     let prev: AudioNode = this.inputGain;
     for (const band of this.eqBands) {
       prev.connect(band);
@@ -444,7 +456,7 @@ export class MasteringChain {
   private makeDistortionCurve(amount: number): Float32Array {
     const samples = 44100;
     const curve = new Float32Array(samples);
-    const k = amount * 4;
+    const k = amount * 4;  // ✅ Plus doux (au lieu de × 8)
     for (let i = 0; i < samples; i++) {
       const x = (i * 2) / samples - 1;
       if (k < 0.001) {
@@ -488,7 +500,7 @@ export class MasteringChain {
   }
 
   setWidth(value: number): void {
-    // ❌ Supprimé : this.currentWidth = value;
+    this.currentWidth = value;
     const sideGain = Math.max(0, value - 1);
     const midGain = 1 - Math.min(0.5, sideGain * 0.3);
     const now = this.context.currentTime;
@@ -584,6 +596,7 @@ export class MasteringChain {
     }
   }
 
+  // ✅ NIVEAUX ÉQUILIBRÉS (audibles mais propres)
   getPresetValues(preset: MasteringPreset): PresetValues {
     switch (preset) {
       case 'warm':     return { loudness: +3, presence: -1, width: 1.3, saturation: 0.18 };
@@ -677,11 +690,15 @@ export class MasteringChain {
   }
 }
 
+// ============================================================
+// SINGLETON — la chaîne survit aux mount/unmount React
+// ============================================================
 let _singletonChain: MasteringChain | null = null;
 let _singletonCtx: AudioContext | null = null;
 
 export function getMasteringChainSingleton(ctx: AudioContext): MasteringChain {
   if (_singletonChain && _singletonCtx === ctx) {
+    console.log('🔒 Réutilisation du singleton MasteringChain');
     return _singletonChain;
   }
   if (_singletonChain) {
@@ -691,5 +708,6 @@ export function getMasteringChainSingleton(ctx: AudioContext): MasteringChain {
   }
   _singletonChain = new MasteringChain(ctx);
   _singletonCtx = ctx;
+  console.log('🔒 Nouveau singleton MasteringChain créé');
   return _singletonChain;
 }

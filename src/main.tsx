@@ -3,6 +3,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import { ToastProvider } from './components/ui/Toast';
+import { Analytics } from '@vercel/analytics/react'; // ✅ 1. Ajout de l'import Vercel
 import './i18n';
 
 // ✅ Ordre IMPORTANT : designSystem d'abord (styles globaux), transitions en dernier (Mixer)
@@ -13,6 +14,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ToastProvider>
       <App />
+      <Analytics /> {/* ✅ 2. Ajout du composant Analytics */}
     </ToastProvider>
   </React.StrictMode>
 );

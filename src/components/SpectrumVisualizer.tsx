@@ -6,7 +6,8 @@ interface SpectrumVisualizerProps {
   isActive: boolean;
   height?: number;
   barCount?: number;
-  colorByAmplitude?: boolean;
+  // On ajoute un mode pour choisir le style de couleur
+  colorMode?: 'amplitude' | 'frequency'; 
 }
 
 export const SpectrumVisualizer: React.FC<SpectrumVisualizerProps> = ({
@@ -14,19 +15,17 @@ export const SpectrumVisualizer: React.FC<SpectrumVisualizerProps> = ({
   isActive, 
   height = 160, 
   barCount = 64, 
-  colorByAmplitude = true,
+  colorMode = 'frequency', // ✅ Par défaut, on met le mode "Fréquence"
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  // ✅ Correction React 19 : valeur initiale explicite
   const requestRef = useRef<number | null>(null);
-  const dataArrayRef = useRef<Uint8Array | null>(null);
+  const dataArrayRef = useRef<Uint8Array<ArrayBuffer> | null>(null);
   const heightsRef = useRef<number[]>(new Array(barCount).fill(0));
 
   useEffect(() => {
     if (!analyser) return;
     analyser.minDecibels = -90;
     analyser.maxDecibels = -10;
-    // ✅ Cast ajouté
     dataArrayRef.current = new Uint8Array(analyser.frequencyBinCount) as Uint8Array<ArrayBuffer>;
     heightsRef.current = new Array(barCount).fill(0);
   }, [analyser, barCount]);
@@ -46,7 +45,6 @@ export const SpectrumVisualizer: React.FC<SpectrumVisualizerProps> = ({
 
       if (!analyser || !dataArrayRef.current || !isActive) return;
 
-      // ✅ Cast ajouté
       analyser.getByteFrequencyData(dataArrayRef.current as Uint8Array<ArrayBuffer>);
       const data = dataArrayRef.current;
       
@@ -78,12 +76,17 @@ export const SpectrumVisualizer: React.FC<SpectrumVisualizerProps> = ({
         const x = i * barWidth;
         const y = h - nextHeight;
 
-        if (colorByAmplitude) {
+        // ✅ NOUVEAU : Gestion des couleurs
+        if (colorMode === 'frequency') {
+          // Couleurs fixes par bande de fréquence (Style DJ)
+          if (freq < 250) ctx.fillStyle = '#00d9ff';        // Basses (Cyan)
+          else if (freq < 4000) ctx.fillStyle = '#00ff88';  // Médiums (Vert)
+          else ctx.fillStyle = '#7c5cff';                   // Aigus (Violet)
+        } else {
+          // Ancien mode basé sur l'amplitude
           if (nextHeight > h * 0.85) ctx.fillStyle = '#ff3366';
           else if (nextHeight > h * 0.6) ctx.fillStyle = '#ffd43b';
           else ctx.fillStyle = '#00ff88';
-        } else {
-          ctx.fillStyle = '#00d9ff';
         }
 
         ctx.beginPath();
@@ -100,7 +103,7 @@ export const SpectrumVisualizer: React.FC<SpectrumVisualizerProps> = ({
     return () => {
       if (requestRef.current) cancelAnimationFrame(requestRef.current);
     };
-  }, [analyser, isActive, barCount, colorByAmplitude]);
+  }, [analyser, isActive, barCount, colorMode]); // Ajout de colorMode
 
   useEffect(() => {
     const canvas = canvasRef.current;

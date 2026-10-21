@@ -15,7 +15,7 @@ interface Artist {
 }
 
 export const HomePage = () => {
-  const isMobile = useIsMobile(768); // Gardé pour le layout (colonne/droite)
+  const isMobile = useIsMobile(768);
   const { play } = usePlayer();
   
   const [tracks, setTracks] = useState<Track[]>([]);
@@ -89,7 +89,7 @@ export const HomePage = () => {
 
       <EventsTicker />
 
-      {/* HERO AVEC LA VIDÉO DE FOND */}
+      {/* HERO AVEC LA VIDÉO DE L'ENCADRÉ */}
       <div style={{ 
         position: 'relative',
         borderRadius: 12, 
@@ -98,12 +98,10 @@ export const HomePage = () => {
         marginBottom: 16,
         width: '100%',
         height: isMobile ? 320 : 420,
-        background: '#121212', // Fond de secours
+        background: '#121212',
       }}>
-        
-        {/* ✅ LA VIDÉO EST TOUJOURS LÀ, C'EST LE CSS QUI LA CACHE SUR MOBILE */}
+        {/* ✅ C'EST ICI QU'ON MET LA VIDÉO DE L'ENCADRÉ */}
         <video
-          className="hero-video"
           autoPlay
           loop
           muted
@@ -117,17 +115,15 @@ export const HomePage = () => {
             opacity: 0.5,
           }}
         >
-          <source src="/videos/background.mp4" type="video/mp4" />
+          <source src="/videos/hero-video.mp4" type="video/mp4" />
         </video>
 
-        {/* Overlay sombre */}
         <div style={{ 
           position: 'absolute', 
           inset: 0, 
           background: 'linear-gradient(90deg, #121212 20%, transparent 80%)' 
         }} />
 
-        {/* Contenu */}
         <div style={{ 
           position: 'relative', 
           padding: isMobile ? '40px 24px' : '60px 40px',
@@ -305,7 +301,7 @@ export const HomePage = () => {
         )}
       </div>
 
-      {/* ✅ EFFETS 3D ET C'EST ICI QU'ON CACHE LA VIDÉO SUR MOBILE */}
+      {/* EFFETS 3D */}
       <style>{`
         .featured-3d-card:hover {
           transform: translateY(-6px) scale(1.01);
@@ -325,13 +321,6 @@ export const HomePage = () => {
 
         a, div, button { outline: none !important; }
         a:focus, div:focus, button:focus { outline: none !important; box-shadow: none !important; }
-
-        /* ✅ LA RÈGLE MAGIQUE POUR MOBILE */
-        @media (max-width: 768px) {
-          .hero-video {
-            display: none !important;
-          }
-        }
       `}</style>
     </div>
   );

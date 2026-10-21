@@ -50,7 +50,6 @@ export class MasteringChain {
   private widenerMidToR: GainNode;
   private widenerSideToL: GainNode;
   private widenerSideToR: GainNode;
-  private currentWidth = 1.0;
 
   // Mono-Maker
   private monoMakerInput: GainNode;
@@ -125,11 +124,9 @@ export class MasteringChain {
   constructor(context: BaseAudioContext) {
     this.context = context;
 
-    // 1. GAIN D'ENTRÉE
     this.inputGain = context.createGain();
     this.inputGain.gain.value = 1;
 
-    // 2. EQ 5 BANDES
     for (const band of DEFAULT_EQ_BANDS) {
       const filter = context.createBiquadFilter();
       filter.type = band.type;
@@ -145,12 +142,10 @@ export class MasteringChain {
     this.eqMid.Q.value = 1;
     this.eqMid.gain.value = 0;
 
-    // 3. SATURATEUR
     this.saturator = context.createWaveShaper();
     this.saturator.curve = this.makeDistortionCurve(0) as any;
     this.saturator.oversample = '4x';
 
-    // 4. MID/SIDE WIDENER
     this.widenerInput = context.createGain();
     this.widenerOutput = context.createGain();
     this.widenerSplitter = context.createChannelSplitter(2);
@@ -198,7 +193,6 @@ export class MasteringChain {
     this.widenerSideToR.connect(this.widenerMerger, 0, 1);
     this.widenerMerger.connect(this.widenerOutput);
 
-    // 5. IMAGER 3 BANDES
     this.imagerInput = context.createGain();
     this.imagerOutput = context.createGain();
     this.imagerWetGain = context.createGain();
@@ -295,7 +289,6 @@ export class MasteringChain {
 
     this.imagerWetGain.connect(this.imagerOutput);
 
-    // 6. MONO-MAKER
     this.monoMakerInput = context.createGain();
     this.monoMakerOutput = context.createGain();
     this.monoMakerSplitter = context.createChannelSplitter(2);
@@ -366,7 +359,6 @@ export class MasteringChain {
     this.monoMakerMerger.connect(this.monoMakerWetGain);
     this.monoMakerWetGain.connect(this.monoMakerOutput);
 
-    // 7. COMPRESSEUR BROADBAND
     this.compressor = context.createDynamicsCompressor();
     this.compressor.threshold.value = -18;
     this.compressor.knee.value = 6;
@@ -377,7 +369,6 @@ export class MasteringChain {
     this.compressorMakeup = context.createGain();
     this.compressorMakeup.gain.value = 1.8;
 
-    // 7b. HARMONIC EXCITER
     this.exciterHighShelf = context.createBiquadFilter();
     this.exciterHighShelf.type = 'highshelf';
     this.exciterHighShelf.frequency.value = 3000;
@@ -392,7 +383,6 @@ export class MasteringChain {
     this.exciterDryGain = context.createGain();
     this.exciterDryGain.gain.value = 0.75;
 
-    // 7c. SUB-BASS + AIR BAND
     this.subBassFilter = context.createBiquadFilter();
     this.subBassFilter.type = 'peaking';
     this.subBassFilter.frequency.value = 60;
@@ -412,7 +402,6 @@ export class MasteringChain {
     this.airShelf.frequency.value = 14000;
     this.airShelf.gain.value = 4;
 
-    // 7d. LIMITEUR BRICKWALL
     this.limiter = context.createDynamicsCompressor();
     this.limiter.threshold.value = -1.5;
     this.limiter.knee.value = 0;
@@ -420,14 +409,12 @@ export class MasteringChain {
     this.limiter.attack.value = 0.001;
     this.limiter.release.value = 0.08;
 
-    // 8. BYPASS & GAINS
     this.bypassGain = context.createGain();
     this.bypassGain.gain.value = 0;
     this.processedGain = context.createGain();
     this.processedGain.gain.value = 1;
     this.outputGain = context.createGain();
 
-    // 9. CHAÎNE PRINCIPALE COMPLÈTE
     let prev: AudioNode = this.inputGain;
     for (const band of this.eqBands) {
       prev.connect(band);
@@ -459,7 +446,6 @@ export class MasteringChain {
     this.bypassGain.connect(this.outputGain);
   }
 
-  // COURBES
   private makeDistortionCurve(amount: number): any {
     const samples = 44100;
     const curve = new Float32Array(samples);
@@ -487,7 +473,6 @@ export class MasteringChain {
     return curve;
   }
 
-  // CONNEXIONS EXTERNES
   connect(source: AudioNode): void {
     if (this.inputNode) {
       try {
@@ -506,7 +491,6 @@ export class MasteringChain {
     return this.inputGain;
   }
 
-  // CONTRÔLES
   setLoudness(value: number): void {
     this.inputGain.gain.value = Math.pow(10, value / 20);
   }
@@ -516,7 +500,6 @@ export class MasteringChain {
   }
 
   setWidth(value: number): void {
-    this.currentWidth = value;
     const sideGain = Math.max(0, value - 1);
     const midGain = 1 - Math.min(0.5, sideGain * 0.3);
 
@@ -536,7 +519,6 @@ export class MasteringChain {
     this.processedGain.gain.value = bypass ? 0 : 1;
   }
 
-  // EQ 5 BANDES
   setEQBand(index: number, frequency: number, gain: number, q?: number): void {
     const band = this.eqBands[index];
     if (!band) return;
@@ -549,7 +531,6 @@ export class MasteringChain {
     return this.eqBands.length;
   }
 
-  // MONO-MAKER
   setMonoMaker(enabled: boolean, frequency?: number): void {
     this.monoMakerEnabled = enabled;
     if (frequency !== undefined) {
@@ -578,7 +559,6 @@ export class MasteringChain {
     return this.monoMakerFreq;
   }
 
-  // IMAGER 3 BANDES
   setImager(enabled: boolean, lowAmount?: number, midAmount?: number, highAmount?: number): void {
     if (lowAmount !== undefined) {
       this.imagerLowDryL.gain.value = 1 - lowAmount;
@@ -606,7 +586,6 @@ export class MasteringChain {
     }
   }
 
-  // PRESETS
   applyPreset(preset: MasteringPreset): void {
     const values = this.getPresetValues(preset);
     this.setLoudness(values.loudness);
@@ -672,7 +651,6 @@ export class MasteringChain {
     }
   }
 
-  // CLEANUP
   destroy(): void {
     try { this.inputGain.disconnect(); } catch {}
     this.eqBands.forEach((b) => { try { b.disconnect(); } catch {} });
@@ -718,4 +696,24 @@ export class MasteringChain {
     try { this.processedGain.disconnect(); } catch {}
     try { this.outputGain.disconnect(); } catch {}
   }
+}
+
+// ============================================================
+// SINGLETON (pour éviter la boucle infinie React)
+// ============================================================
+let _singletonChain: MasteringChain | null = null;
+let _singletonCtx: AudioContext | null = null;
+
+export function getMasteringChainSingleton(ctx: AudioContext): MasteringChain {
+  if (_singletonChain && _singletonCtx === ctx) {
+    return _singletonChain;
+  }
+  if (_singletonChain) {
+    try { _singletonChain.destroy(); } catch {}
+    _singletonChain = null;
+    _singletonCtx = null;
+  }
+  _singletonChain = new MasteringChain(ctx);
+  _singletonCtx = ctx;
+  return _singletonChain;
 }

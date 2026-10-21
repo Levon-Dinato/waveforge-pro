@@ -56,14 +56,14 @@ export default function App() {
                   <Suspense fallback={<PageLoader />}>
                     <Routes>
                       
-                      {/* ✅ 1. ROUTES PUBLIQUES (Accessibles sans être connecté) */}
+                      {/* ✅ 1. ROUTES PUBLIQUES */}
                       <Route path="/auth" element={<AuthPage />} />
                       <Route path="/reset-password" element={<ResetPasswordPage />} />
 
-                      {/* ✅ 2. ROUTES PROTÉGÉES (L'utilisateur doit être connecté) */}
+                      {/* ✅ 2. ROUTES PROTÉGÉES */}
                       <Route path="/mixer" element={<PrivateRoute><MixerPage /></PrivateRoute>} />
 
-                      {/* ✅ On enveloppe MainLayout avec PrivateRoute pour bloquer tout le reste */}
+                      {/* ✅ On enveloppe MainLayout avec PrivateRoute */}
                       <Route path="/" element={
                         <PrivateRoute>
                           <MainLayout />
@@ -77,6 +77,10 @@ export default function App() {
                         <Route path="genres" element={<GenresPage />} />
                         <Route path="artists" element={<ArtistsPage />} />
                         <Route path="tools" element={<ToolsPage />} />
+                        
+                        {/* ✅ AJOUT DE LA ROUTE STUDIO */}
+                        <Route path="studio" element={<StudioPage />} />
+                        
                         <Route path="stems" element={<StemsPage />} />
                         <Route path="mastering" element={<MasteringPage />} />
                         <Route path="musicgen" element={<MusicGenPage />} />

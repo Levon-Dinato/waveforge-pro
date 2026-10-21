@@ -250,7 +250,8 @@ const PlayButton: React.FC<{
 };
 
 export const NouveautesPage: React.FC = () => {
-  const { user } = useAuth();
+  // ✅ Récupération du username
+  const { user, username } = useAuth(); 
   const navigate = useNavigate();
   const isMobile = useIsMobile(1024);
   const { currentTrack, isPlaying, play, stop } = usePlayer();
@@ -390,7 +391,8 @@ export const NouveautesPage: React.FC = () => {
       }
 
       const finalTitle = metadata.title || file.name.replace(/\.[^/.]+$/, '');
-      const finalArtist = metadata.artist || user?.email?.split('@')[0] || 'Anonyme';
+      // ✅ Utilisation du username prioritaire
+      const finalArtist = metadata.artist || username || user?.email?.split('@')[0] || 'Anonyme';
       const finalGenre = metadata.genre || 'Inconnu';
 
       if (metadata.key) {
@@ -533,7 +535,6 @@ export const NouveautesPage: React.FC = () => {
       width: '100%',
       boxSizing: 'border-box',
     }}>
-      {/* ✅ EFFET DE SURVOL BLEU LÉGER */}
       <style>{`
         .list-row:hover { background: rgba(0, 217, 255, 0.08) !important; }
         .list-row:hover .row-actions { opacity: 1 !important; }
@@ -554,7 +555,7 @@ export const NouveautesPage: React.FC = () => {
                 padding: '8px 12px', fontSize: 12, cursor: 'pointer', 
                 color: selectedGenre === null ? '#fff' : '#888', fontWeight: selectedGenre === null ? 600 : 400, 
                 borderLeft: selectedGenre === null ? '2px solid #fff' : '2px solid transparent',
-                borderBottom: '1px solid #2a2a2a' // ✅ Séparateur pour "Tous"
+                borderBottom: '1px solid #2a2a2a'
               }}>
                 Tous les sons
               </div>
@@ -563,7 +564,6 @@ export const NouveautesPage: React.FC = () => {
                 {genreStats.map(([genre], index) => {
                   const isActive = selectedGenre === genre;
                   return (
-                    /* ✅ BORDURE FINE POUR SÉPARER LES GENRES */
                     <div key={genre} onClick={() => setSelectedGenre(genre)} className="genre-link" style={{ 
                       padding: '8px 12px', fontSize: 12, cursor: 'pointer', 
                       color: isActive ? '#fff' : '#888', fontWeight: isActive ? 600 : 400, 

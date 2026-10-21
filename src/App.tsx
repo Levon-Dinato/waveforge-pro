@@ -11,9 +11,9 @@ import { MainLayout } from './layouts/MainLayout';
 import { PrivateRoute } from './components/PrivateRoute';
 import './styles.css';
 
-// Lazy loading
+// Lazy loading de toutes les pages
 const HomePage = lazy(() => import('./pages/HomePage').then((m) => ({ default: m.HomePage })));
-const StudioPage = lazy(() => import('./pages/StudioPage').then((m) => ({ default: m.StudioPage })));
+const StudioPage = lazy(() => import('./pages/StudioPage').then((m) => ({ default: m.StudioPage }))); // ✅ Import présent
 const StemsPage = lazy(() => import('./pages/StemsPage').then((m) => ({ default: m.StemsPage })));
 const MasteringPage = lazy(() => import('./pages/MasteringPage').then((m) => ({ default: m.MasteringPage })));
 const MusicGenPage = lazy(() => import('./pages/MusicGenPage').then((m) => ({ default: m.MusicGenPage })));
@@ -63,7 +63,7 @@ export default function App() {
                       {/* ✅ 2. ROUTES PROTÉGÉES */}
                       <Route path="/mixer" element={<PrivateRoute><MixerPage /></PrivateRoute>} />
 
-                      {/* ✅ On enveloppe MainLayout avec PrivateRoute */}
+                      {/* ✅ 3. ROUTES AVEC LE LAYOUT PRINCIPAL (Mur de connexion) */}
                       <Route path="/" element={
                         <PrivateRoute>
                           <MainLayout />
@@ -78,7 +78,7 @@ export default function App() {
                         <Route path="artists" element={<ArtistsPage />} />
                         <Route path="tools" element={<ToolsPage />} />
                         
-                        {/* ✅ AJOUT DE LA ROUTE STUDIO */}
+                        {/* ✅ LIGNE CRUCIALE : La route StudioPage doit être ici */}
                         <Route path="studio" element={<StudioPage />} />
                         
                         <Route path="stems" element={<StemsPage />} />
@@ -94,6 +94,7 @@ export default function App() {
                         <Route path="track/:id" element={<TrackPage />} />
                       </Route>
 
+                      {/* Redirection par défaut */}
                       <Route path="*" element={<Navigate to="/" replace />} />
                     </Routes>
                   </Suspense>

@@ -1,12 +1,11 @@
 // src/pages/FeedPage.tsx
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom'; // ✅ Link est de nouveau utilisé
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { usePlayer } from '../contexts/PlayerContext';
 import { OnlineUsersWidget } from '../components/OnlineUsersWidget';
-import { LiveChat } from '../components/LiveChat';
 
 interface Event {
   id: string;
@@ -243,6 +242,12 @@ export const FeedPage: React.FC = () => {
             <div style={{ textAlign: 'center', padding: '60px 20px', background: '#1e1e1e', border: '1px dashed #2a2a2a', borderRadius: 12 }}>
               <div style={{ fontSize: 48, marginBottom: 16, opacity: 0.5 }}>🌐</div>
               <h3 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 8px 0' }}>Le feed est vide</h3>
+              <p style={{ color: '#999', fontSize: 13, margin: '0 0 24px 0' }}>Sois le premier à partager un son !</p>
+              
+              {/* ✅ LINK EST UTILISÉ ICI */}
+              <Link to="/studio" style={{ display: 'inline-flex', padding: '10px 20px', background: '#00d9ff', color: '#000', borderRadius: 20, fontWeight: 700, textDecoration: 'none', fontSize: 13 }}>
+                Uploader un son
+              </Link>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -290,16 +295,8 @@ export const FeedPage: React.FC = () => {
                       )}
 
                       {item.data.postType === 'video' && isTviplyOrOther && cleanUrl && (
-                        <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', width: '100%', height: isMobile ? 400 : 500, background: '#000', borderTop: '1px solid #2a2a2a' }}>
-                          <div style={{ flex: 1, height: '100%' }}>
-                            <iframe src={cleanUrl} style={{ width: '100%', height: '100%', border: 'none' }} allow="autoplay; fullscreen; picture-in-picture" allowFullScreen title="Live" scrolling="no" />
-                          </div>
-                          {!isMobile && (
-                            <div style={{ width: 320, height: '100%', display: 'flex', flexDirection: 'column', background: '#181818', borderLeft: '1px solid #333' }}>
-                              <div style={{ padding: '10px 12px', borderBottom: '1px solid #333', fontSize: 11, fontWeight: 700, color: '#fff', background: '#1e1e1e' }}>Chat en direct</div>
-                              <div style={{ flex: 1, overflow: 'hidden' }}><LiveChat roomId="waveforgepro" /></div>
-                            </div>
-                          )}
+                        <div style={{ width: '100%', height: isMobile ? 400 : 500, background: '#000', borderTop: '1px solid #2a2a2a' }}>
+                          <iframe src={cleanUrl} style={{ width: '100%', height: '100%', border: 'none' }} allow="autoplay; fullscreen; picture-in-picture" allowFullScreen title="Live" scrolling="no" />
                         </div>
                       )}
 

@@ -15,7 +15,7 @@ interface Artist {
 }
 
 export const HomePage = () => {
-  const isMobile = useIsMobile(768);
+  const isMobile = useIsMobile(768); // On le garde pour le layout (colonne/droite)
   const { play } = usePlayer();
   
   const [tracks, setTracks] = useState<Track[]>([]);
@@ -98,27 +98,27 @@ export const HomePage = () => {
         marginBottom: 16,
         width: '100%',
         height: isMobile ? 320 : 420,
-        background: '#121212', // ✅ Ajout d'un fond sombre au cas où la vidéo est coupée sur mobile
+        background: '#121212', // Fond de secours si la vidéo est masquée
       }}>
-        {/* ✅ LA VIDÉO SEULEMENT SI ON N'EST PAS SUR MOBILE */}
-        {!isMobile && (
-          <video
-            autoPlay
-            loop
-            muted
-            playsInline
-            style={{
-              position: 'absolute',
-              inset: 0,
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              opacity: 0.5,
-            }}
-          >
-            <source src="/videos/background.mp4" type="video/mp4" />
-          </video>
-        )}
+        
+        {/* ✅ LA VIDÉO EST TOUJOURS LÀ DANS LE CODE, C'EST LE CSS QUI LA CACHE */}
+        <video
+          className="hero-bg-video"
+          autoPlay
+          loop
+          muted
+          playsInline
+          style={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            opacity: 0.5,
+          }}
+        >
+          <source src="/videos/background.mp4" type="video/mp4" />
+        </video>
 
         {/* Overlay sombre */}
         <div style={{ 
@@ -305,7 +305,7 @@ export const HomePage = () => {
         )}
       </div>
 
-      {/* EFFETS 3D */}
+      {/* ✅ EFFETS 3D ET MASQUAGE DE LA VIDÉO SUR MOBILE */}
       <style>{`
         .featured-3d-card:hover {
           transform: translateY(-6px) scale(1.01);
@@ -325,6 +325,13 @@ export const HomePage = () => {
 
         a, div, button { outline: none !important; }
         a:focus, div:focus, button:focus { outline: none !important; box-shadow: none !important; }
+
+        /* ✅ C'EST ICI QUE LA MAGIE OPÈRE : ON CACHE LA VIDÉO SUR MOBILE */
+        @media (max-width: 768px) {
+          .hero-bg-video {
+            display: none !important;
+          }
+        }
       `}</style>
     </div>
   );

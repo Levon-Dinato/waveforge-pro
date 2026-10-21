@@ -223,6 +223,32 @@ const uploadCoverToSupabase = async (blob: Blob, baseName: string): Promise<stri
   }
 };
 
+const PlayButton: React.FC<{
+  isPlaying: boolean;
+  isCurrent: boolean;
+  onClick: (e: React.MouseEvent) => void;
+  size?: number;
+}> = ({ isPlaying, isCurrent, onClick, size = 52 }) => {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        width: size, height: size, borderRadius: '50%',
+        background: isCurrent && isPlaying ? '#00d9ff' : 'rgba(0,0,0,0.6)',
+        border: isCurrent && isPlaying ? 'none' : '1px solid rgba(255,255,255,0.2)',
+        color: isCurrent && isPlaying ? '#000' : '#fff',
+        cursor: 'pointer',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        flexShrink: 0, fontSize: size * 0.35, fontWeight: 900,
+        backdropFilter: 'blur(4px)',
+        transition: 'all 0.2s ease',
+      }}
+    >
+      {isCurrent && isPlaying ? '⏸' : '▶'}
+    </button>
+  );
+};
+
 export const NouveautesPage: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -243,6 +269,7 @@ export const NouveautesPage: React.FC = () => {
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ title: '', artist: '', genre: '', bpm: 0 });
+  const [openComments, setOpenComments] = useState<Set<string>>(new Set());
 
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 20;
@@ -254,12 +281,7 @@ export const NouveautesPage: React.FC = () => {
 
   const loadTracks = async () => {
     setLoading(true);
-    // ✅ On récupère le compteur de likes en direct depuis la table 'likes' pour être sûr
-    const { data, error } = await supabase
-      .from('tracks')
-      .select('*, likes(count)')
-      .order('created_at', { ascending: false });
-      
+    const { data, error } = await supabase.from('tracks').select('*').order('created_at', { ascending: false });
     if (error) {
       console.error('Erreur chargement:', error);
     } else {
@@ -269,8 +291,7 @@ export const NouveautesPage: React.FC = () => {
         cover_url: t.cover_url || null,
         user_id: t.user_id || null,
         downloads: t.downloads || 0,
-        // ✅ On utilise le count réel de la table likes
-        likes_count: t.likes && t.likes[0] ? t.likes[0].count : 0,
+        likes_count: t.likes_count || 0,
         song_key: t.song_key || null,
         camelot: t.camelot || null,
       }));
@@ -291,53 +312,20 @@ export const NouveautesPage: React.FC = () => {
 
   const handleLike = async (trackId: string) => {
     if (!user) { navigate('/auth'); return; }
-    
-    // On récupère le track actuel pour calculer le nouveau compteur
-    const track = tracks.find(t => t.id === trackId);
-    if (!track) return;
-
     const isCurrentlyLiked = userLikes[trackId];
-    const newLikesCount = Math.max(0, track.likes_count + (isCurrentlyLiked ? -1 : 1));
-
-    // Mise à jour optimiste (interface réactive)
     setUserLikes((prev) => ({ ...prev, [trackId]: !isCurrentlyLiked }));
-    setTracks((prev) => prev.map((t) => t.id === trackId ? { ...t, likes_count: newLikesCount } : t));
+    setTracks((prev) => prev.map((t) => t.id === trackId ? { ...t, likes_count: t.likes_count + (isCurrentlyLiked ? -1 : 1) } : t));
 
     try {
-      // 1. Insertion / Suppression dans la table 'likes'
       if (isCurrentlyLiked) {
         await supabase.from('likes').delete().eq('user_id', user.id).eq('track_id', trackId);
       } else {
         await supabase.from('likes').insert({ user_id: user.id, track_id: trackId });
       }
-
-      // ✅ 2. Mise à jour du compteur dans la table 'tracks' pour la persistance
-      await supabase.from('tracks').update({ likes_count: newLikesCount }).eq('id', trackId);
-
     } catch (err) {
       console.error('Erreur like:', err);
-      // Rollback en cas d'erreur
       setUserLikes((prev) => ({ ...prev, [trackId]: isCurrentlyLiked }));
-      setTracks((prev) => prev.map((t) => t.id === trackId ? { ...t, likes_count: track.likes_count } : t));
-    }
-  };
-
-  const handleDownload = async (e: React.MouseEvent, track: Track) => {
-    e.stopPropagation();
-    try {
-      const response = await fetch(track.audio_url);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `${track.artist} - ${track.title}.mp3`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error("Erreur de téléchargement :", err);
-      alert("Impossible de télécharger le fichier.");
+      setTracks((prev) => prev.map((t) => t.id === trackId ? { ...t, likes_count: t.likes_count + (isCurrentlyLiked ? 1 : -1) } : t));
     }
   };
 
@@ -385,6 +373,7 @@ export const NouveautesPage: React.FC = () => {
       } catch (e) {
         console.warn('Analyse audio échouée:', e);
         if (metadata.bpm) bpm = metadata.bpm;
+        peaks = new Array(500).fill(0); 
       }
 
       setUploadStatus('Upload...');
@@ -422,11 +411,27 @@ export const NouveautesPage: React.FC = () => {
       }
 
       setUploadStatus('Enregistrement...');
-      const { data: inserted, error: insertError } = await supabase.from('tracks').insert({
-        title: finalTitle, artist: finalArtist, user_id: user?.id || null,
-        genre: finalGenre, bpm, song_key: detectedKey, camelot: detectedCamelot,
-        likes_count: 0, downloads: 0, audio_url: urlData.publicUrl, duration: detectedDuration, peaks, cover_url: coverUrl,
-      }).select().single();
+      
+      // ✅ DIAGNOSTIC : On prépare l'objet pour voir exactement ce qui est envoyé
+      const payload = {
+        title: finalTitle, 
+        artist: finalArtist, 
+        user_id: user?.id || null,
+        genre: finalGenre, 
+        bpm: bpm, 
+        song_key: detectedKey, 
+        camelot: detectedCamelot,
+        likes_count: 0, 
+        downloads: 0, 
+        audio_url: urlData.publicUrl, 
+        duration: detectedDuration, 
+        peaks: peaks, 
+        cover_url: coverUrl,
+      };
+
+      console.log('🚀 Envoi à Supabase:', payload); // 👈 Regarde ça dans la console (F12)
+
+      const { data: inserted, error: insertError } = await supabase.from('tracks').insert(payload).select().single();
 
       if (insertError) throw insertError;
 
@@ -586,7 +591,7 @@ export const NouveautesPage: React.FC = () => {
             </select>
           </div>
 
-          {/* ✅ SECTION RECOMMANDATIONS (LISTE) */}
+          {/* SECTION RECOMMANDATIONS */}
           {!search && !selectedGenre && top10Tracks.length > 0 && (
             <div style={{ marginBottom: 40 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
@@ -700,7 +705,7 @@ export const NouveautesPage: React.FC = () => {
             </div>
           )}
 
-          {/* ✅ SECTION NOUVELLES SORTIES (LISTE) */}
+          {/* SECTION NOUVELLES SORTIES */}
           <div>
             <h2 style={{ fontSize: 20, fontWeight: 700, margin: '0 0 20px 0' }}>Nouvelles sorties</h2>
             <div style={{ background: 'transparent', width: '100%' }}>
@@ -830,8 +835,6 @@ export const NouveautesPage: React.FC = () => {
                       </button>
 
                       <div className="row-actions" style={{ display: 'flex', gap: 8, opacity: 0, transition: 'opacity 0.2s' }}>
-                        <button onClick={(e) => handleDownload(e, track)} style={{ background: 'transparent', border: 'none', color: '#00d9ff', cursor: 'pointer', fontSize: 14 }} title="Télécharger">⬇️</button>
-                        
                         <div onClick={(e) => e.stopPropagation()}>
                           <ShareButton url={`${window.location.origin}/share/${track.id}`} title={`${track.title} — ${track.artist}`} text={`Écoute "${track.title}" par ${track.artist} sur DropZone DJ 🎵`} variant="icon" size="small" label="" position="bottom" />
                         </div>

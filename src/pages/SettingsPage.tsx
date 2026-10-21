@@ -10,12 +10,10 @@ export const SettingsPage: React.FC = () => {
 
   // Charge les stats
   useEffect(() => {
-    // Compte les remix dans IndexedDB
     import('../remix/historyStore').then(({ historyStore }) => {
       historyStore.getAll().then((all) => setRemixCount(all.length));
     });
 
-    // Compte les musicgen
     import('../utils/musicgenHistory').then(({ musicgenHistory }) => {
       musicgenHistory.getAll().then((all) => setMusicgenCount(all.length));
     });
@@ -31,7 +29,7 @@ export const SettingsPage: React.FC = () => {
     const { historyStore } = await import('../remix/historyStore');
     await historyStore.clear();
     setRemixCount(0);
-    showToast('✅ Historique remix effacé');
+    showToast('Historique remix effacé');
   };
 
   const handleClearMusicGenHistory = async () => {
@@ -39,7 +37,7 @@ export const SettingsPage: React.FC = () => {
     const { musicgenHistory } = await import('../utils/musicgenHistory');
     await musicgenHistory.clear();
     setMusicgenCount(0);
-    showToast('✅ Historique MusicGen effacé');
+    showToast('Historique MusicGen effacé');
   };
 
   const handleClearAll = async () => {
@@ -60,200 +58,160 @@ export const SettingsPage: React.FC = () => {
 
     setRemixCount(0);
     setMusicgenCount(0);
-    showToast('🗑️ Toutes les données ont été effacées');
+    showToast('Toutes les données ont été effacées');
   };
 
   return (
-    <div
-      className="wf-fade-in"
-      style={{
-        padding: isMobile ? 16 : 32,
-        maxWidth: 1000,
-        margin: '0 auto',
-        display: 'grid',
-        gap: isMobile ? 16 : 20,
-      }}
-    >
+    <div style={{
+      padding: isMobile ? 16 : 32,
+      maxWidth: 800,
+      margin: '0 auto',
+      display: 'grid',
+      gap: 24,
+      fontFamily: 'Inter, sans-serif',
+      color: '#fff',
+      background: '#121212',
+      minHeight: '100vh',
+    }}>
+      
       {/* HEADER */}
-      <div>
-        <h1 className="wf-title-2" style={{ marginBottom: 6, fontSize: isMobile ? 20 : 24 }}>
-          ⚙️ Réglages
+      <div style={{ marginBottom: 8 }}>
+        <h1 style={{ margin: '0 0 8px 0', fontSize: isMobile ? 24 : 32, fontWeight: 700 }}>
+          Réglages
         </h1>
-        <p style={{ margin: 0, fontSize: 12, color: 'var(--text-tertiary)' }}>
+        <p style={{ margin: 0, fontSize: 14, color: '#888' }}>
           Préférences · Historique · Informations système
         </p>
       </div>
 
-      {/* HISTORIQUE */}
-      <div className="wf-glass" style={{ padding: 24 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-          <div
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 10,
-              background: 'rgba(124, 92, 255, 0.12)',
-              border: '1px solid rgba(124, 92, 255, 0.3)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 18,
-            }}
-          >
-            📚
+      {/* SECTION HISTORIQUE */}
+      <div style={{ background: '#181818', border: '1px solid #2a2a2a', borderRadius: 8, padding: isMobile ? 20 : 32 }}>
+        
+        <div style={{ marginBottom: 24 }}>
+          <div style={{ fontSize: 16, fontWeight: 600, color: '#fff', marginBottom: 4 }}>
+            Historique
           </div>
-          <div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>
-              Historique
-            </div>
-            <div style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>
-              Données stockées localement (jamais envoyées)
-            </div>
+          <div style={{ fontSize: 13, color: '#888' }}>
+            Données stockées localement (jamais envoyées sur un serveur).
           </div>
         </div>
 
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-            gap: 12,
-            marginBottom: 20,
-          }}
-        >
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 16, marginBottom: 24 }}>
+          
           {/* Remix */}
-          <div
-            style={{
-              padding: 16,
-              background: 'rgba(255, 255, 255, 0.02)',
-              border: '1px solid rgba(255, 255, 255, 0.06)',
-              borderRadius: 10,
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <div className="wf-label" style={{ fontSize: 9 }}>
-                REMIX IA
+          <div style={{ padding: 20, background: '#121212', border: '1px solid #2a2a2a', borderRadius: 6 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Remix IA
               </div>
-              <div
-                style={{
-                  fontSize: 20,
-                  fontWeight: 800,
-                  color: '#ff5cf0',
-                  fontFamily: 'var(--font-mono)',
-                }}
-              >
+              <div style={{ fontSize: 24, fontWeight: 700, color: '#fff', fontFamily: 'monospace' }}>
                 {remixCount}
               </div>
             </div>
             <button
               onClick={handleClearRemixHistory}
               disabled={remixCount === 0}
-              className="wf-btn wf-btn-secondary"
               style={{
                 width: '100%',
-                padding: '8px',
-                fontSize: 11,
-                color: remixCount > 0 ? '#ff3366' : 'var(--text-disabled)',
+                padding: '10px',
+                fontSize: 12,
+                fontWeight: 600,
+                background: 'transparent',
+                border: '1px solid #333',
+                color: remixCount > 0 ? '#ff5c5c' : '#555',
+                borderRadius: 4,
                 cursor: remixCount > 0 ? 'pointer' : 'not-allowed',
-                opacity: remixCount > 0 ? 1 : 0.5,
+                transition: 'background 0.2s',
+              }}
+              onMouseEnter={(e) => {
+                if (remixCount > 0) e.currentTarget.style.background = 'rgba(255, 92, 92, 0.1)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent';
               }}
             >
-              🗑️ EFFACER
+              Effacer
             </button>
           </div>
 
           {/* MusicGen */}
-          <div
-            style={{
-              padding: 16,
-              background: 'rgba(255, 255, 255, 0.02)',
-              border: '1px solid rgba(255, 255, 255, 0.06)',
-              borderRadius: 10,
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <div className="wf-label" style={{ fontSize: 9 }}>
-                MUSICGEN
+          <div style={{ padding: 20, background: '#121212', border: '1px solid #2a2a2a', borderRadius: 6 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                MusicGen
               </div>
-              <div
-                style={{
-                  fontSize: 20,
-                  fontWeight: 800,
-                  color: '#00ff88',
-                  fontFamily: 'var(--font-mono)',
-                }}
-              >
+              <div style={{ fontSize: 24, fontWeight: 700, color: '#fff', fontFamily: 'monospace' }}>
                 {musicgenCount}
               </div>
             </div>
             <button
               onClick={handleClearMusicGenHistory}
               disabled={musicgenCount === 0}
-              className="wf-btn wf-btn-secondary"
               style={{
                 width: '100%',
-                padding: '8px',
-                fontSize: 11,
-                color: musicgenCount > 0 ? '#ff3366' : 'var(--text-disabled)',
+                padding: '10px',
+                fontSize: 12,
+                fontWeight: 600,
+                background: 'transparent',
+                border: '1px solid #333',
+                color: musicgenCount > 0 ? '#ff5c5c' : '#555',
+                borderRadius: 4,
                 cursor: musicgenCount > 0 ? 'pointer' : 'not-allowed',
-                opacity: musicgenCount > 0 ? 1 : 0.5,
+                transition: 'background 0.2s',
+              }}
+              onMouseEnter={(e) => {
+                if (musicgenCount > 0) e.currentTarget.style.background = 'rgba(255, 92, 92, 0.1)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent';
               }}
             >
-              🗑️ EFFACER
+              Effacer
             </button>
           </div>
         </div>
 
-        <div style={{ paddingTop: 16, borderTop: '1px solid rgba(255, 255, 255, 0.06)' }}>
+        {/* Bouton tout effacer */}
+        <div style={{ paddingTop: 24, borderTop: '1px solid #2a2a2a' }}>
           <button
             onClick={handleClearAll}
-            className="wf-btn"
             style={{
               width: '100%',
-              padding: '12px',
-              fontSize: 12,
+              padding: '14px',
+              fontSize: 13,
+              fontWeight: 600,
               background: 'rgba(255, 51, 102, 0.1)',
-              border: '1px solid rgba(255, 51, 102, 0.4)',
-              color: '#ff3366',
+              border: '1px solid rgba(255, 51, 102, 0.3)',
+              color: '#ff5c5c',
+              borderRadius: 6,
+              cursor: 'pointer',
+              transition: 'background 0.2s',
             }}
+            onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 51, 102, 0.2)'}
+            onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255, 51, 102, 0.1)'}
           >
-            ⚠️ EFFACER TOUTES LES DONNÉES
+            Effacer toutes les données
           </button>
-          <div style={{ fontSize: 10, color: 'var(--text-tertiary)', marginTop: 8, textAlign: 'center' }}>
-            Remix · MusicGen · Presets Mastering · Configurations
+          <div style={{ fontSize: 11, color: '#666', marginTop: 12, textAlign: 'center' }}>
+            Remix · MusicGen · Presets Mastering · Configurations locales
           </div>
         </div>
       </div>
 
-      {/* INFORMATIONS SYSTÈME */}
-      <div className="wf-glass" style={{ padding: 24 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-          <div
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 10,
-              background: 'rgba(0, 217, 255, 0.12)',
-              border: '1px solid rgba(0, 217, 255, 0.3)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 18,
-            }}
-          >
-            🖥️
+      {/* SECTION INFORMATIONS SYSTÈME */}
+      <div style={{ background: '#181818', border: '1px solid #2a2a2a', borderRadius: 8, padding: isMobile ? 20 : 32 }}>
+        
+        <div style={{ marginBottom: 24 }}>
+          <div style={{ fontSize: 16, fontWeight: 600, color: '#fff', marginBottom: 4 }}>
+            Informations système
           </div>
-          <div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>
-              Informations système
-            </div>
-            <div style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>
-              Détails de l'application
-            </div>
+          <div style={{ fontSize: 13, color: '#888' }}>
+            Détails de l'application et de ton appareil.
           </div>
         </div>
 
-        <div style={{ display: 'grid', gap: 8 }}>
-          <InfoRow label="Application" value="WaveForge PRO" />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+          <InfoRow label="Application" value="DropZone DJ" />
           <InfoRow label="Version" value="v1.0" />
           <InfoRow label="Navigateur" value={navigator.userAgent.split(' ').slice(-2).join(' ')} />
           <InfoRow label="Résolution" value={`${window.screen.width} × ${window.screen.height}`} />
@@ -262,19 +220,11 @@ export const SettingsPage: React.FC = () => {
       </div>
 
       {/* FOOTER */}
-      <div
-        style={{
-          textAlign: 'center',
-          fontSize: 10,
-          color: 'var(--text-tertiary)',
-          letterSpacing: '1px',
-          paddingTop: 8,
-        }}
-      >
-        WAVEFORGE PRO · v1.0 · DONNÉES 100% LOCALES
+      <div style={{ textAlign: 'center', fontSize: 11, color: '#555', letterSpacing: '1px', paddingTop: 8 }}>
+        DROPZONE DJ · DONNÉES 100% LOCALES
       </div>
 
-      {/* TOAST */}
+      {/* TOAST NOTIFICATION */}
       {toast && (
         <div
           style={{
@@ -283,15 +233,14 @@ export const SettingsPage: React.FC = () => {
             left: '50%',
             transform: 'translateX(-50%)',
             padding: '12px 24px',
-            background: 'rgba(20, 20, 30, 0.95)',
-            border: '1px solid rgba(0, 255, 136, 0.4)',
-            borderRadius: 10,
-            color: '#00ff88',
-            fontSize: 12,
-            fontWeight: 600,
+            background: '#1e1e1e',
+            border: '1px solid #333',
+            borderRadius: 6,
+            color: '#fff',
+            fontSize: 13,
+            fontWeight: 500,
             zIndex: 9999,
             boxShadow: '0 8px 24px rgba(0, 0, 0, 0.5)',
-            backdropFilter: 'blur(10px)',
           }}
         >
           {toast}
@@ -302,7 +251,7 @@ export const SettingsPage: React.FC = () => {
 };
 
 // ============================================================
-// SOUS-COMPOSANT : ligne d'info
+// SOUS-COMPOSANT : Ligne d'information
 // ============================================================
 const InfoRow: React.FC<{ label: string; value: string }> = ({ label, value }) => (
   <div
@@ -310,22 +259,13 @@ const InfoRow: React.FC<{ label: string; value: string }> = ({ label, value }) =
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
-      padding: '10px 14px',
-      background: 'rgba(255, 255, 255, 0.02)',
-      border: '1px solid rgba(255, 255, 255, 0.06)',
-      borderRadius: 8,
-      fontSize: 12,
+      padding: '12px 0',
+      borderBottom: '1px solid #2a2a2a', // Ligne fine de séparation
+      fontSize: 13,
     }}
   >
-    <span style={{ color: 'var(--text-tertiary)' }}>{label}</span>
-    <span
-      style={{
-        color: 'var(--text-primary)',
-        fontWeight: 600,
-        fontFamily: 'var(--font-mono)',
-        fontSize: 11,
-      }}
-    >
+    <span style={{ color: '#888' }}>{label}</span>
+    <span style={{ color: '#fff', fontWeight: 500, fontFamily: 'monospace' }}>
       {value}
     </span>
   </div>

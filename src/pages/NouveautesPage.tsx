@@ -223,32 +223,6 @@ const uploadCoverToSupabase = async (blob: Blob, baseName: string): Promise<stri
   }
 };
 
-const PlayButton: React.FC<{
-  isPlaying: boolean;
-  isCurrent: boolean;
-  onClick: (e: React.MouseEvent) => void;
-  size?: number;
-}> = ({ isPlaying, isCurrent, onClick, size = 52 }) => {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        width: size, height: size, borderRadius: '50%',
-        background: isCurrent && isPlaying ? '#00d9ff' : 'rgba(0,0,0,0.6)',
-        border: isCurrent && isPlaying ? 'none' : '1px solid rgba(255,255,255,0.2)',
-        color: isCurrent && isPlaying ? '#000' : '#fff',
-        cursor: 'pointer',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        flexShrink: 0, fontSize: size * 0.35, fontWeight: 900,
-        backdropFilter: 'blur(4px)',
-        transition: 'all 0.2s ease',
-      }}
-    >
-      {isCurrent && isPlaying ? '⏸' : '▶'}
-    </button>
-  );
-};
-
 export const NouveautesPage: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -269,7 +243,6 @@ export const NouveautesPage: React.FC = () => {
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ title: '', artist: '', genre: '', bpm: 0 });
-  const [openComments, setOpenComments] = useState<Set<string>>(new Set());
 
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 20;
@@ -412,7 +385,6 @@ export const NouveautesPage: React.FC = () => {
 
       setUploadStatus('Enregistrement...');
       
-      // ✅ DIAGNOSTIC : On prépare l'objet pour voir exactement ce qui est envoyé
       const payload = {
         title: finalTitle, 
         artist: finalArtist, 
@@ -423,13 +395,11 @@ export const NouveautesPage: React.FC = () => {
         camelot: detectedCamelot,
         likes_count: 0, 
         downloads: 0, 
-        audio_url: urlData.publicUrl, 
+        audio_url: String(urlData.publicUrl),
         duration: detectedDuration, 
-        peaks: peaks, 
+        peaks: JSON.stringify(peaks),
         cover_url: coverUrl,
       };
-
-      console.log('🚀 Envoi à Supabase:', payload); // 👈 Regarde ça dans la console (F12)
 
       const { data: inserted, error: insertError } = await supabase.from('tracks').insert(payload).select().single();
 
@@ -591,7 +561,7 @@ export const NouveautesPage: React.FC = () => {
             </select>
           </div>
 
-          {/* SECTION RECOMMANDATIONS */}
+          {/* ✅ SECTION RECOMMANDATIONS */}
           {!search && !selectedGenre && top10Tracks.length > 0 && (
             <div style={{ marginBottom: 40 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
@@ -705,7 +675,7 @@ export const NouveautesPage: React.FC = () => {
             </div>
           )}
 
-          {/* SECTION NOUVELLES SORTIES */}
+          {/* ✅ SECTION NOUVELLES SORTIES */}
           <div>
             <h2 style={{ fontSize: 20, fontWeight: 700, margin: '0 0 20px 0' }}>Nouvelles sorties</h2>
             <div style={{ background: 'transparent', width: '100%' }}>

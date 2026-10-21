@@ -1,7 +1,6 @@
 // src/pages/NouveautesPage.tsx
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CommentSection } from '../components/CommentSection';
 import { OnlineUsersWidget } from '../components/OnlineUsersWidget';
 import { ShareButton } from '../components/ShareButton';
 import { supabase, AUDIO_BUCKET } from '../lib/supabase';
@@ -224,32 +223,6 @@ const uploadCoverToSupabase = async (blob: Blob, baseName: string): Promise<stri
   }
 };
 
-const PlayButton: React.FC<{
-  isPlaying: boolean;
-  isCurrent: boolean;
-  onClick: (e: React.MouseEvent) => void;
-  size?: number;
-}> = ({ isPlaying, isCurrent, onClick, size = 52 }) => {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        width: size, height: size, borderRadius: '50%',
-        background: isCurrent && isPlaying ? '#00d9ff' : 'rgba(0,0,0,0.6)',
-        border: isCurrent && isPlaying ? 'none' : '1px solid rgba(255,255,255,0.2)',
-        color: isCurrent && isPlaying ? '#000' : '#fff',
-        cursor: 'pointer',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        flexShrink: 0, fontSize: size * 0.35, fontWeight: 900,
-        backdropFilter: 'blur(4px)',
-        transition: 'all 0.2s ease',
-      }}
-    >
-      {isCurrent && isPlaying ? '⏸' : '▶'}
-    </button>
-  );
-};
-
 export const NouveautesPage: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -270,7 +243,6 @@ export const NouveautesPage: React.FC = () => {
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ title: '', artist: '', genre: '', bpm: 0 });
-  const [openComments, setOpenComments] = useState<Set<string>>(new Set());
 
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 20;
@@ -510,16 +482,6 @@ export const NouveautesPage: React.FC = () => {
     return visibleTracks.slice(start, start + ITEMS_PER_PAGE);
   }, [visibleTracks, safeCurrentPage]);
 
-  const toggleComments = (e: React.MouseEvent, trackId: string) => {
-    e.stopPropagation();
-    setOpenComments((prev) => {
-      const next = new Set(prev);
-      if (next.has(trackId)) next.delete(trackId);
-      else next.add(trackId);
-      return next;
-    });
-  };
-
   return (
     <div style={{
       padding: isMobile ? '12px' : '24px',
@@ -699,12 +661,11 @@ export const NouveautesPage: React.FC = () => {
             </div>
           )}
 
-          {/* ✅ SECTION NOUVELLES SORTIES (NOUVELLE LISTE) */}
+          {/* ✅ SECTION NOUVELLES SORTIES (LISTE) */}
           <div>
             <h2 style={{ fontSize: 20, fontWeight: 700, margin: '0 0 20px 0' }}>Nouvelles sorties</h2>
             <div style={{ background: 'transparent', width: '100%' }}>
               
-              {/* En-tête du tableau */}
               <div style={{ 
                 display: 'grid', 
                 gridTemplateColumns: '40px 48px minmax(200px, 2fr) 1fr 1fr 120px', 
@@ -767,7 +728,6 @@ export const NouveautesPage: React.FC = () => {
                       borderRadius: 6,
                     }}
                   >
-                    {/* Play */}
                     <button 
                       onClick={(e) => handlePlayTrack(e, track)} 
                       style={{ 
@@ -780,7 +740,6 @@ export const NouveautesPage: React.FC = () => {
                       {isThisPlaying ? '⏸' : '▶'}
                     </button>
                     
-                    {/* Pochette + Badge NEW */}
                     <div 
                       onClick={() => navigate(`/track/${track.id}`)} 
                       style={{ 
@@ -796,7 +755,6 @@ export const NouveautesPage: React.FC = () => {
                       )}
                     </div>
 
-                    {/* Titre / Artiste */}
                     <div onClick={() => navigate(`/track/${track.id}`)} style={{ minWidth: 0 }}>
                       <div style={{ 
                         fontSize: 13, fontWeight: 600, 
@@ -811,17 +769,14 @@ export const NouveautesPage: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Genre */}
                     <div style={{ fontSize: 12, color: '#aaa', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {track.genre || '—'}
                     </div>
 
-                    {/* BPM / Clé */}
                     <div style={{ fontSize: 12, color: '#aaa', whiteSpace: 'nowrap' }}>
                       {track.bpm ? `${track.bpm} BPM` : '—'} · {track.song_key || '—'}
                     </div>
 
-                    {/* Actions (Like + Autres) */}
                     <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', alignItems: 'center' }}>
                       <button 
                         onClick={(e) => { e.stopPropagation(); handleLike(track.id); }} 
@@ -835,10 +790,7 @@ export const NouveautesPage: React.FC = () => {
                         {isLiked ? '❤️' : '🤍'} <span style={{ fontSize: 11, color: '#666' }}>{track.likes_count}</span>
                       </button>
 
-                      {/* Boutons qui apparaissent au survol */}
                       <div className="row-actions" style={{ display: 'flex', gap: 6, opacity: 0, transition: 'opacity 0.2s' }}>
-                        <button onClick={(e) => toggleComments(e, track.id)} style={{ background: 'transparent', border: 'none', color: '#888', cursor: 'pointer', fontSize: 13 }} title="Commentaires">💬</button>
-                        
                         <div onClick={(e) => e.stopPropagation()}>
                           <ShareButton url={`${window.location.origin}/share/${track.id}`} title={`${track.title} — ${track.artist}`} text={`Écoute "${track.title}" par ${track.artist} sur DropZone DJ 🎵`} variant="icon" size="small" label="" position="bottom" />
                         </div>

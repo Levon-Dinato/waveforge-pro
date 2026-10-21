@@ -1,5 +1,5 @@
 // src/components/GlobalPlayer.tsx
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { usePlayer } from '../contexts/PlayerContext';
 
 export const GlobalPlayer: React.FC = () => {
@@ -16,8 +16,8 @@ export const GlobalPlayer: React.FC = () => {
   } = usePlayer();
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [downloading, setDownloading] = useState(false);
 
-  // Formater le temps (ex: 02:34)
   const formatTime = (time: number) => {
     if (!isFinite(time)) return '0:00';
     const mins = Math.floor(time / 60);
@@ -25,14 +25,12 @@ export const GlobalPlayer: React.FC = () => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Dessin de la waveform basée sur les "peaks"
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || !currentTrack) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Si pas de peaks, on génère une ligne plate par défaut
     const peaks = currentTrack.peaks && currentTrack.peaks.length > 0 
       ? currentTrack.peaks 
       : Array(100).fill(20); 
@@ -47,11 +45,10 @@ export const GlobalPlayer: React.FC = () => {
     peaks.forEach((peak, i) => {
       const barHeight = Math.max(2, (peak / 100) * height);
       const x = i * barWidth;
-      const y = (height - barHeight) / 2; // Centré verticalement
+      const y = (height - barHeight) / 2;
 
-      // Couleur : Cyan si joué, Gris si à venir
       if (i / peaks.length < progressRatio) {
-        ctx.fillStyle = '#00d9ff'; // --accent-primary
+        ctx.fillStyle = '#00d9ff';
       } else {
         ctx.fillStyle = '#333333';
       }
@@ -61,6 +58,28 @@ export const GlobalPlayer: React.FC = () => {
       ctx.fill();
     });
   }, [currentTrack, currentTime, duration]);
+
+  const handleDownload = async () => {
+    if (!currentTrack || downloading) return;
+    setDownloading(true);
+    try {
+      const response = await fetch(currentTrack.audio_url);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${currentTrack.artist} - ${currentTrack.title}.mp3`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Erreur de téléchargement :", err);
+      alert("Impossible de télécharger le fichier.");
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   if (!currentTrack) return null;
 
@@ -75,14 +94,14 @@ export const GlobalPlayer: React.FC = () => {
       borderTop: '1px solid #2a2a2a',
       display: 'flex',
       alignItems: 'center',
-      padding: '0 16px',
+      padding: '0 24px',
       zIndex: 9999,
       fontFamily: 'Inter, sans-serif',
       color: '#fff',
     }}>
       
-      {/* --- GAUCHE : Infos du son --- */}
-      <div style={{ display: 'flex', alignItems: 'center', width: '25%', minWidth: 220, gap: 12 }}>
+      {/* --- GAUCHE : Infos du son (30%) --- */}
+      <div style={{ display: 'flex', alignItems: 'center', width: '30%', gap: 12, flexShrink: 0 }}>
         <div style={{ 
           width: 56, height: 56, borderRadius: 4, 
           background: currentTrack.cover_url ? `url(${currentTrack.cover_url}) center/cover` : '#222',
@@ -95,22 +114,19 @@ export const GlobalPlayer: React.FC = () => {
           <div style={{ fontSize: 11, color: '#888', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {currentTrack.artist}
           </div>
-          {/* Métadonnées (Style Beatport) */}
           <div style={{ display: 'flex', gap: 6, fontSize: 10, color: '#666', marginTop: 4 }}>
             {currentTrack.bpm && <span style={{ color: '#fff', background: '#2a2a2a', padding: '1px 4px', borderRadius: 2 }}>{currentTrack.bpm} BPM</span>}
             {currentTrack.song_key && <span style={{ color: '#fff', background: '#2a2a2a', padding: '1px 4px', borderRadius: 2 }}>{currentTrack.song_key}</span>}
-            {currentTrack.genre && <span style={{ color: '#fff', background: '#2a2a2a', padding: '1px 4px', borderRadius: 2 }}>{currentTrack.genre}</span>}
           </div>
         </div>
       </div>
 
-      {/* --- CENTRE : Waveform & Timeline --- */}
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 12, padding: '0 24px' }}>
-        <span style={{ fontSize: 11, color: '#888', fontFamily: 'monospace', width: 40, textAlign: 'right' }}>
+      {/* --- CENTRE : Timeline & Waveform (40%) --- */}
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 16, padding: '0 24px', minWidth: 0 }}>
+        <span style={{ fontSize: 11, color: '#888', fontFamily: 'monospace', width: 40, textAlign: 'right', flexShrink: 0 }}>
           {formatTime(currentTime)}
         </span>
         
-        {/* Canvas Waveform */}
         <div style={{ flex: 1, height: 40, position: 'relative', cursor: 'pointer' }} onClick={(e) => {
             const rect = e.currentTarget.getBoundingClientRect();
             const percent = (e.clientX - rect.left) / rect.width;
@@ -119,29 +135,28 @@ export const GlobalPlayer: React.FC = () => {
           <canvas ref={canvasRef} width={800} height={40} style={{ width: '100%', height: '100%' }} />
         </div>
 
-        <span style={{ fontSize: 11, color: '#888', fontFamily: 'monospace', width: 40 }}>
+        <span style={{ fontSize: 11, color: '#888', fontFamily: 'monospace', width: 40, flexShrink: 0 }}>
           {formatTime(duration)}
         </span>
       </div>
 
-      {/* --- DROITE : Contrôles --- */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', width: '25%', minWidth: 220, gap: 16 }}>
+      {/* --- DROITE : Play + Volume + Download + Close (30%) --- */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', width: '30%', gap: 16, flexShrink: 0 }}>
         
-        {/* Play/Pause */}
         <button 
           onClick={togglePlay}
           style={{ 
-            width: 40, height: 40, borderRadius: '50%', background: '#fff', border: 'none', 
+            width: 44, height: 44, borderRadius: '50%', background: '#fff', border: 'none', 
             display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-            color: '#000', fontSize: 16, paddingLeft: isPlaying ? 0 : 2
+            color: '#000', fontSize: 18, paddingLeft: isPlaying ? 0 : 3,
+            flexShrink: 0
           }}
         >
           {isPlaying ? '⏸' : '▶'}
         </button>
 
-        {/* Volume */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, width: 90 }}>
-          <span style={{ fontSize: 12, color: '#888' }}>🔊</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, width: 100 }}>
+          <span style={{ fontSize: 14, color: '#888' }}>🔊</span>
           <input 
             type="range" min="0" max="1" step="0.01" 
             value={volume} 
@@ -150,10 +165,26 @@ export const GlobalPlayer: React.FC = () => {
           />
         </div>
 
-        {/* Close */}
+        {/* ✅ BOUTON TÉLÉCHARGER CORRIGÉ */}
+        <button 
+          onClick={handleDownload}
+          disabled={downloading}
+          style={{ 
+            border: 'none', color: '#00d9ff', 
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            width: 32, height: 32, borderRadius: '50%', background: 'rgba(0, 217, 255, 0.1)',
+            fontSize: 16, transition: 'background 0.2s', flexShrink: 0,
+            cursor: downloading ? 'wait' : 'pointer',
+            opacity: downloading ? 0.5 : 1
+          }}
+          title="Télécharger le morceau"
+        >
+          {downloading ? '⏳' : '⬇️'}
+        </button>
+
         <button 
           onClick={stop}
-          style={{ background: 'transparent', border: 'none', color: '#666', cursor: 'pointer', fontSize: 16 }}
+          style={{ background: 'transparent', border: 'none', color: '#666', cursor: 'pointer', fontSize: 18, padding: 8, flexShrink: 0 }}
         >
           ✕
         </button>

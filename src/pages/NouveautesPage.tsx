@@ -302,6 +302,26 @@ export const NouveautesPage: React.FC = () => {
     }
   };
 
+  // ✅ FONCTION DE TÉLÉCHARGEMENT CORRIGÉE (Via Fetch)
+  const handleDownload = async (e: React.MouseEvent, track: Track) => {
+    e.stopPropagation();
+    try {
+      const response = await fetch(track.audio_url);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${track.artist} - ${track.title}.mp3`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Erreur de téléchargement :", err);
+      alert("Impossible de télécharger le fichier.");
+    }
+  };
+
   const genreStats = useMemo(() => {
     const counts: Record<string, number> = {};
     for (const t of tracks) {
@@ -560,7 +580,7 @@ export const NouveautesPage: React.FC = () => {
               <div style={{ background: 'transparent', width: '100%' }}>
                 <div style={{ 
                   display: 'grid', 
-                  gridTemplateColumns: '40px 48px minmax(200px, 2fr) 1fr 1fr 60px', 
+                  gridTemplateColumns: '40px 48px minmax(200px, 2fr) 1fr 1fr 80px', 
                   gap: 16, 
                   padding: '0 12px 12px', 
                   borderBottom: '1px solid #2a2a2a', 
@@ -587,7 +607,7 @@ export const NouveautesPage: React.FC = () => {
                       className="list-row" 
                       style={{ 
                         display: 'grid', 
-                        gridTemplateColumns: '40px 48px minmax(200px, 2fr) 1fr 1fr 60px', 
+                        gridTemplateColumns: '40px 48px minmax(200px, 2fr) 1fr 1fr 80px', 
                         gap: 16, 
                         padding: '10px 12px', 
                         alignItems: 'center', 
@@ -790,7 +810,9 @@ export const NouveautesPage: React.FC = () => {
                         {isLiked ? '❤️' : '🤍'} <span style={{ fontSize: 11, color: '#666' }}>{track.likes_count}</span>
                       </button>
 
-                      <div className="row-actions" style={{ display: 'flex', gap: 6, opacity: 0, transition: 'opacity 0.2s' }}>
+                      <div className="row-actions" style={{ display: 'flex', gap: 8, opacity: 0, transition: 'opacity 0.2s' }}>
+                        <button onClick={(e) => handleDownload(e, track)} style={{ background: 'transparent', border: 'none', color: '#00d9ff', cursor: 'pointer', fontSize: 14 }} title="Télécharger">⬇️</button>
+                        
                         <div onClick={(e) => e.stopPropagation()}>
                           <ShareButton url={`${window.location.origin}/share/${track.id}`} title={`${track.title} — ${track.artist}`} text={`Écoute "${track.title}" par ${track.artist} sur DropZone DJ 🎵`} variant="icon" size="small" label="" position="bottom" />
                         </div>
@@ -809,7 +831,6 @@ export const NouveautesPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Pagination */}
           {!loading && totalPages > 1 && (
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12, marginTop: 40 }}>
               <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={safeCurrentPage === 1} style={{ background: 'transparent', border: '1px solid #333', color: safeCurrentPage === 1 ? '#444' : '#fff', padding: '6px 12px', borderRadius: 4, cursor: safeCurrentPage === 1 ? 'not-allowed' : 'pointer', fontSize: 12 }}>←</button>

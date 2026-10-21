@@ -223,6 +223,32 @@ const uploadCoverToSupabase = async (blob: Blob, baseName: string): Promise<stri
   }
 };
 
+const PlayButton: React.FC<{
+  isPlaying: boolean;
+  isCurrent: boolean;
+  onClick: (e: React.MouseEvent) => void;
+  size?: number;
+}> = ({ isPlaying, isCurrent, onClick, size = 52 }) => {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        width: size, height: size, borderRadius: '50%',
+        background: isCurrent && isPlaying ? '#00d9ff' : 'rgba(0,0,0,0.6)',
+        border: isCurrent && isPlaying ? 'none' : '1px solid rgba(255,255,255,0.2)',
+        color: isCurrent && isPlaying ? '#000' : '#fff',
+        cursor: 'pointer',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        flexShrink: 0, fontSize: size * 0.35, fontWeight: 900,
+        backdropFilter: 'blur(4px)',
+        transition: 'all 0.2s ease',
+      }}
+    >
+      {isCurrent && isPlaying ? '⏸' : '▶'}
+    </button>
+  );
+};
+
 export const NouveautesPage: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -507,8 +533,9 @@ export const NouveautesPage: React.FC = () => {
       width: '100%',
       boxSizing: 'border-box',
     }}>
+      {/* ✅ EFFET DE SURVOL BLEU LÉGER */}
       <style>{`
-        .list-row:hover { background: rgba(255,255,255,0.03) !important; }
+        .list-row:hover { background: rgba(0, 217, 255, 0.08) !important; }
         .list-row:hover .row-actions { opacity: 1 !important; }
         .genre-link:hover { color: #fff !important; }
       `}</style>
@@ -522,14 +549,27 @@ export const NouveautesPage: React.FC = () => {
           <aside style={{ width: 200, flexShrink: 0, position: 'sticky', top: 20 }}>
             <div style={{ padding: '16px 0' }}>
               <h3 style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.5px', padding: '0 12px 12px', margin: 0, color: '#666', borderBottom: '1px solid #2a2a2a' }}>GENRES</h3>
-              <div onClick={() => setSelectedGenre(null)} className="genre-link" style={{ padding: '8px 12px', fontSize: 12, cursor: 'pointer', color: selectedGenre === null ? '#fff' : '#888', fontWeight: selectedGenre === null ? 600 : 400, borderLeft: selectedGenre === null ? '2px solid #fff' : '2px solid transparent' }}>
+              
+              <div onClick={() => setSelectedGenre(null)} className="genre-link" style={{ 
+                padding: '8px 12px', fontSize: 12, cursor: 'pointer', 
+                color: selectedGenre === null ? '#fff' : '#888', fontWeight: selectedGenre === null ? 600 : 400, 
+                borderLeft: selectedGenre === null ? '2px solid #fff' : '2px solid transparent',
+                borderBottom: '1px solid #2a2a2a' // ✅ Séparateur pour "Tous"
+              }}>
                 Tous les sons
               </div>
+
               <div style={{ maxHeight: 'calc(100vh - 300px)', overflowY: 'auto' }}>
-                {genreStats.map(([genre]) => {
+                {genreStats.map(([genre], index) => {
                   const isActive = selectedGenre === genre;
                   return (
-                    <div key={genre} onClick={() => setSelectedGenre(genre)} className="genre-link" style={{ padding: '8px 12px', fontSize: 12, cursor: 'pointer', color: isActive ? '#fff' : '#888', fontWeight: isActive ? 600 : 400, borderLeft: isActive ? '2px solid #fff' : '2px solid transparent' }}>
+                    /* ✅ BORDURE FINE POUR SÉPARER LES GENRES */
+                    <div key={genre} onClick={() => setSelectedGenre(genre)} className="genre-link" style={{ 
+                      padding: '8px 12px', fontSize: 12, cursor: 'pointer', 
+                      color: isActive ? '#fff' : '#888', fontWeight: isActive ? 600 : 400, 
+                      borderLeft: isActive ? '2px solid #fff' : '2px solid transparent',
+                      borderBottom: index === genreStats.length - 1 ? 'none' : '1px solid #2a2a2a' 
+                    }}>
                       <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{genre}</span>
                     </div>
                   );
@@ -539,7 +579,7 @@ export const NouveautesPage: React.FC = () => {
           </aside>
         )}
 
-        {/* --- COLONNE CENTRALE (CONTENU) --- */}
+        {/* --- COLONNE CENTRALE --- */}
         <main style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
             <div>
@@ -561,7 +601,6 @@ export const NouveautesPage: React.FC = () => {
             </select>
           </div>
 
-          {/* ✅ SECTION RECOMMANDATIONS */}
           {!search && !selectedGenre && top10Tracks.length > 0 && (
             <div style={{ marginBottom: 40 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
@@ -572,22 +611,8 @@ export const NouveautesPage: React.FC = () => {
               </div>
               
               <div style={{ background: 'transparent', width: '100%' }}>
-                <div style={{ 
-                  display: 'grid', 
-                  gridTemplateColumns: '40px 48px minmax(200px, 2fr) 1fr 1fr 80px', 
-                  gap: 16, 
-                  padding: '0 12px 12px', 
-                  borderBottom: '1px solid #2a2a2a', 
-                  fontSize: 11, 
-                  color: '#888', 
-                  fontWeight: 500 
-                }}>
-                  <div></div>
-                  <div></div>
-                  <div>Titre / Artistes</div>
-                  <div>Genre</div>
-                  <div>BPM / Clé</div>
-                  <div style={{ textAlign: 'right' }}>Actions</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '40px 48px minmax(200px, 2fr) 1fr 1fr 80px', gap: 16, padding: '0 12px 12px', borderBottom: '1px solid #2a2a2a', fontSize: 11, color: '#888', fontWeight: 500 }}>
+                  <div></div><div></div><div>Titre / Artistes</div><div>Genre</div><div>BPM / Clé</div><div style={{ textAlign: 'right' }}>Actions</div>
                 </div>
 
                 {top10Tracks.slice(0, 5).map((track) => {
@@ -596,75 +621,23 @@ export const NouveautesPage: React.FC = () => {
                   const isLiked = userLikes[track.id] || false;
 
                   return (
-                    <div 
-                      key={track.id} 
-                      className="list-row" 
-                      style={{ 
-                        display: 'grid', 
-                        gridTemplateColumns: '40px 48px minmax(200px, 2fr) 1fr 1fr 80px', 
-                        gap: 16, 
-                        padding: '10px 12px', 
-                        alignItems: 'center', 
-                        borderBottom: '1px solid #1a1a1a', 
-                        cursor: 'pointer',
-                        transition: 'background 0.2s ease',
-                        borderRadius: 6,
-                      }}
-                    >
-                      <button 
-                        onClick={(e) => handlePlayTrack(e, track)} 
-                        style={{ 
-                          background: 'transparent', border: 'none', 
-                          color: isThisPlaying ? '#00d9ff' : '#fff', 
-                          cursor: 'pointer', fontSize: 14, 
-                          display: 'flex', alignItems: 'center', justifyContent: 'center' 
-                        }}
-                      >
+                    <div key={track.id} className="list-row" style={{ display: 'grid', gridTemplateColumns: '40px 48px minmax(200px, 2fr) 1fr 1fr 80px', gap: 16, padding: '10px 12px', alignItems: 'center', borderBottom: '1px solid #1a1a1a', cursor: 'pointer', transition: 'background 0.2s ease', borderRadius: 6 }}>
+                      <button onClick={(e) => handlePlayTrack(e, track)} style={{ background: 'transparent', border: 'none', color: isThisPlaying ? '#00d9ff' : '#fff', cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         {isThisPlaying ? '⏸' : '▶'}
                       </button>
                       
-                      <div 
-                        onClick={() => navigate(`/track/${track.id}`)} 
-                        style={{ 
-                          width: 44, height: 44, borderRadius: 4, 
-                          background: track.cover_url ? `url(${track.cover_url}) center/cover` : '#222',
-                          border: '1px solid #333',
-                          flexShrink: 0
-                        }} 
-                      />
+                      <div onClick={() => navigate(`/track/${track.id}`)} style={{ width: 44, height: 44, borderRadius: 4, background: track.cover_url ? `url(${track.cover_url}) center/cover` : '#222', border: '1px solid #333', flexShrink: 0 }} />
 
                       <div onClick={() => navigate(`/track/${track.id}`)} style={{ minWidth: 0 }}>
-                        <div style={{ 
-                          fontSize: 13, fontWeight: 600, 
-                          color: isThisPlaying ? '#00d9ff' : '#fff', 
-                          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                          marginBottom: 4
-                        }}>
-                          {track.title}
-                        </div>
-                        <div style={{ fontSize: 11, color: '#888', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          {track.artist}
-                        </div>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: isThisPlaying ? '#00d9ff' : '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: 4 }}>{track.title}</div>
+                        <div style={{ fontSize: 11, color: '#888', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.artist}</div>
                       </div>
 
-                      <div style={{ fontSize: 12, color: '#aaa', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {track.genre || '—'}
-                      </div>
-
-                      <div style={{ fontSize: 12, color: '#aaa', whiteSpace: 'nowrap' }}>
-                        {track.bpm ? `${track.bpm} BPM` : '—'} · {track.song_key || '—'}
-                      </div>
+                      <div style={{ fontSize: 12, color: '#aaa', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.genre || '—'}</div>
+                      <div style={{ fontSize: 12, color: '#aaa', whiteSpace: 'nowrap' }}>{track.bpm ? `${track.bpm} BPM` : '—'} · {track.song_key || '—'}</div>
 
                       <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', alignItems: 'center' }}>
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); handleLike(track.id); }} 
-                          style={{ 
-                            background: 'transparent', border: 'none', 
-                            color: isLiked ? '#ff3366' : '#666',
-                            cursor: 'pointer', fontSize: 14, 
-                            display: 'flex', alignItems: 'center', gap: 4 
-                          }}
-                        >
+                        <button onClick={(e) => { e.stopPropagation(); handleLike(track.id); }} style={{ background: 'transparent', border: 'none', color: isLiked ? '#ff3366' : '#666', cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', gap: 4 }}>
                           {isLiked ? '❤️' : '🤍'} <span style={{ fontSize: 11, color: '#666' }}>{track.likes_count}</span>
                         </button>
                       </div>
@@ -675,27 +648,11 @@ export const NouveautesPage: React.FC = () => {
             </div>
           )}
 
-          {/* ✅ SECTION NOUVELLES SORTIES */}
           <div>
             <h2 style={{ fontSize: 20, fontWeight: 700, margin: '0 0 20px 0' }}>Nouvelles sorties</h2>
             <div style={{ background: 'transparent', width: '100%' }}>
-              
-              <div style={{ 
-                display: 'grid', 
-                gridTemplateColumns: '40px 48px minmax(200px, 2fr) 1fr 1fr 120px', 
-                gap: 16, 
-                padding: '0 12px 12px', 
-                borderBottom: '1px solid #2a2a2a', 
-                fontSize: 11, 
-                color: '#888', 
-                fontWeight: 500 
-              }}>
-                <div></div>
-                <div></div>
-                <div>Titre / Artistes</div>
-                <div>Genre</div>
-                <div>BPM / Clé</div>
-                <div style={{ textAlign: 'right' }}>Actions</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '40px 48px minmax(200px, 2fr) 1fr 1fr 120px', gap: 16, padding: '0 12px 12px', borderBottom: '1px solid #2a2a2a', fontSize: 11, color: '#888', fontWeight: 500 }}>
+                <div></div><div></div><div>Titre / Artistes</div><div>Genre</div><div>BPM / Clé</div><div style={{ textAlign: 'right' }}>Actions</div>
               </div>
 
               {loading && <div style={{ textAlign: 'center', color: '#888', padding: 40 }}>Chargement...</div>}
@@ -727,80 +684,27 @@ export const NouveautesPage: React.FC = () => {
                 }
 
                 return (
-                  <div 
-                    key={track.id} 
-                    className="list-row" 
-                    style={{ 
-                      display: 'grid', 
-                      gridTemplateColumns: '40px 48px minmax(200px, 2fr) 1fr 1fr 120px', 
-                      gap: 16, 
-                      padding: '10px 12px', 
-                      alignItems: 'center', 
-                      borderBottom: '1px solid #1a1a1a', 
-                      cursor: 'pointer',
-                      transition: 'background 0.2s ease',
-                      borderRadius: 6,
-                    }}
-                  >
-                    <button 
-                      onClick={(e) => handlePlayTrack(e, track)} 
-                      style={{ 
-                        background: 'transparent', border: 'none', 
-                        color: isThisPlaying ? '#00d9ff' : '#fff', 
-                        cursor: 'pointer', fontSize: 14, 
-                        display: 'flex', alignItems: 'center', justifyContent: 'center' 
-                      }}
-                    >
+                  <div key={track.id} className="list-row" style={{ display: 'grid', gridTemplateColumns: '40px 48px minmax(200px, 2fr) 1fr 1fr 120px', gap: 16, padding: '10px 12px', alignItems: 'center', borderBottom: '1px solid #1a1a1a', cursor: 'pointer', transition: 'background 0.2s ease', borderRadius: 6 }}>
+                    <button onClick={(e) => handlePlayTrack(e, track)} style={{ background: 'transparent', border: 'none', color: isThisPlaying ? '#00d9ff' : '#fff', cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       {isThisPlaying ? '⏸' : '▶'}
                     </button>
                     
-                    <div 
-                      onClick={() => navigate(`/track/${track.id}`)} 
-                      style={{ 
-                        width: 44, height: 44, borderRadius: 4, 
-                        background: track.cover_url ? `url(${track.cover_url}) center/cover` : '#222',
-                        border: '1px solid #333',
-                        flexShrink: 0,
-                        position: 'relative'
-                      }} 
-                    >
+                    <div onClick={() => navigate(`/track/${track.id}`)} style={{ width: 44, height: 44, borderRadius: 4, background: track.cover_url ? `url(${track.cover_url}) center/cover` : '#222', border: '1px solid #333', flexShrink: 0, position: 'relative' }}>
                       {isNew(track.created_at) && (
                         <span style={{ position: 'absolute', top: -4, right: -4, fontSize: 8, padding: '2px 4px', background: '#fff', color: '#000', borderRadius: 2, fontWeight: 700, zIndex: 2 }}>NEW</span>
                       )}
                     </div>
 
                     <div onClick={() => navigate(`/track/${track.id}`)} style={{ minWidth: 0 }}>
-                      <div style={{ 
-                        fontSize: 13, fontWeight: 600, 
-                        color: isThisPlaying ? '#00d9ff' : '#fff', 
-                        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                        marginBottom: 4
-                      }}>
-                        {track.title}
-                      </div>
-                      <div style={{ fontSize: 11, color: '#888', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {track.artist}
-                      </div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: isThisPlaying ? '#00d9ff' : '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: 4 }}>{track.title}</div>
+                      <div style={{ fontSize: 11, color: '#888', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.artist}</div>
                     </div>
 
-                    <div style={{ fontSize: 12, color: '#aaa', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {track.genre || '—'}
-                    </div>
-
-                    <div style={{ fontSize: 12, color: '#aaa', whiteSpace: 'nowrap' }}>
-                      {track.bpm ? `${track.bpm} BPM` : '—'} · {track.song_key || '—'}
-                    </div>
+                    <div style={{ fontSize: 12, color: '#aaa', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.genre || '—'}</div>
+                    <div style={{ fontSize: 12, color: '#aaa', whiteSpace: 'nowrap' }}>{track.bpm ? `${track.bpm} BPM` : '—'} · {track.song_key || '—'}</div>
 
                     <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', alignItems: 'center' }}>
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); handleLike(track.id); }} 
-                        style={{ 
-                          background: 'transparent', border: 'none', 
-                          color: isLiked ? '#ff3366' : '#666',
-                          cursor: 'pointer', fontSize: 14, 
-                          display: 'flex', alignItems: 'center', gap: 4 
-                        }}
-                      >
+                      <button onClick={(e) => { e.stopPropagation(); handleLike(track.id); }} style={{ background: 'transparent', border: 'none', color: isLiked ? '#ff3366' : '#666', cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', gap: 4 }}>
                         {isLiked ? '❤️' : '🤍'} <span style={{ fontSize: 11, color: '#666' }}>{track.likes_count}</span>
                       </button>
 
@@ -832,7 +736,7 @@ export const NouveautesPage: React.FC = () => {
           )}
         </main>
 
-        {/* --- COLONNE DROITE (TOP 10 / ARTISTES) --- */}
+        {/* --- COLONNE DROITE --- */}
         {!isMobile && (
           <aside style={{ width: 280, flexShrink: 0, position: 'sticky', top: 20, display: 'flex', flexDirection: 'column', gap: 24 }}>
             

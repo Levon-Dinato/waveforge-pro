@@ -37,6 +37,15 @@ type FeedItem =
   | { type: 'track'; data: Track; date: Date }
   | { type: 'event'; data: Event; date: Date };
 
+// ✅ Type Guards pour aider TypeScript à comprendre le typage
+const isTrackItem = (item: FeedItem): item is { type: 'track'; data: Track; date: Date } => {
+  return item.type === 'track';
+};
+
+const isEventItem = (item: FeedItem): item is { type: 'event'; data: Event; date: Date } => {
+  return item.type === 'event';
+};
+
 export const FeedPage: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -121,7 +130,7 @@ export const FeedPage: React.FC = () => {
         padding: isMobile ? '16px' : '24px 16px',
         display: 'flex',
         gap: 32,
-        alignItems: 'flex-start' // Permet au sticky de fonctionner correctement
+        alignItems: 'flex-start'
       }}>
         
         {/* ==================================================== */}
@@ -138,7 +147,6 @@ export const FeedPage: React.FC = () => {
             </p>
           </div>
 
-          {/* COMPOSER COMPLET */}
           {user && (
             <div style={{ background: '#1e1e1e', border: '1px solid #2a2a2a', borderRadius: 12, padding: 16, marginBottom: 24, boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
               <div style={{ display: 'flex', gap: 12 }}>
@@ -207,7 +215,6 @@ export const FeedPage: React.FC = () => {
             </div>
           )}
 
-          {/* LISTE DES POSTS */}
           {loading ? (
             <div style={{ textAlign: 'center', color: '#999', padding: 40 }}>Chargement...</div>
           ) : feedItems.length === 0 ? (
@@ -220,67 +227,64 @@ export const FeedPage: React.FC = () => {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
               {feedItems.map((item, index) => {
-                const isTrack = item.type === 'track';
-                const data = item.data;
-                const authorName = isTrack ? data.artist : 'Organisateur';
-                const isThisPlaying = isTrack && currentTrack?.id === data.id && isPlaying;
+                const authorName = item.type === 'track' ? item.data.artist : 'Organisateur';
+                const isThisPlaying = item.type === 'track' && currentTrack?.id === item.data.id && isPlaying;
                 
                 return (
-                  <div key={`${item.type}-${data.id}-${index}`} style={{ background: '#1e1e1e', border: '1px solid #2a2a2a', borderRadius: 12, overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
+                  <div key={`${item.type}-${item.data.id}-${index}`} style={{ background: '#1e1e1e', border: '1px solid #2a2a2a', borderRadius: 12, overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
                     
                     <div style={{ padding: '16px 16px 12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                        <div style={{ width: 40, height: 40, borderRadius: '50%', background: isTrack ? '#00d9ff' : '#ff3366', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', fontWeight: 'bold' }}>
+                        <div style={{ width: 40, height: 40, borderRadius: '50%', background: item.type === 'track' ? '#00d9ff' : '#ff3366', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', fontWeight: 'bold' }}>
                           {authorName.charAt(0).toUpperCase()}
                         </div>
                         <div>
                           <div style={{ fontSize: 14, fontWeight: 600, color: '#fff' }}>
-                            {authorName} {isTrack && <span style={{ color: '#888', fontWeight: 400 }}>· a partagé un son</span>}
-                            {!isTrack && <span style={{ color: '#888', fontWeight: 400 }}>· a créé un événement</span>}
+                            {authorName} {item.type === 'track' ? <span style={{ color: '#888', fontWeight: 400 }}>· a partagé un son</span> : <span style={{ color: '#888', fontWeight: 400 }}>· a créé un événement</span>}
                           </div>
                           <div style={{ fontSize: 12, color: '#888', marginTop: 2 }}>{formatDate(item.date)} · 🌍</div>
                         </div>
                       </div>
                     </div>
 
-                    {isTrack ? (
+                    {isTrackItem(item) ? (
                       <>
                         <div style={{ padding: '0 16px 12px 16px', fontSize: 14, color: '#ddd' }}>
-                          Découvrez le nouveau son : <strong>{data.title}</strong> 🎶
+                          Découvrez le nouveau son : <strong>{item.data.title}</strong> 🎶
                         </div>
                         
-                        <div style={{ position: 'relative', width: '100%', aspectRatio: '1', background: data.cover_url ? `url(${data.cover_url}) center/cover` : '#222', cursor: 'pointer' }} onClick={() => navigate(`/track/${data.id}`)}>
+                        <div style={{ position: 'relative', width: '100%', aspectRatio: '1', background: item.data.cover_url ? `url(${item.data.cover_url}) center/cover` : '#222', cursor: 'pointer' }} onClick={() => navigate(`/track/${item.data.id}`)}>
                           <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <button 
-                              onClick={(e) => { e.stopPropagation(); play(data); }}
+                              onClick={(e) => { e.stopPropagation(); play(item.data); }}
                               style={{ width: 64, height: 64, borderRadius: '50%', background: isThisPlaying ? '#00d9ff' : 'rgba(0,0,0,0.6)', border: '2px solid #fff', color: isThisPlaying ? '#000' : '#fff', fontSize: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', backdropFilter: 'blur(4px)' }}
                             >
                               {isThisPlaying ? '⏸' : '▶'}
                             </button>
                           </div>
                           <div style={{ position: 'absolute', bottom: 12, left: 12, display: 'flex', gap: 8 }}>
-                            <span style={{ background: 'rgba(0,0,0,0.8)', color: '#fff', padding: '4px 8px', borderRadius: 4, fontSize: 11, fontWeight: 600 }}>{data.bpm} BPM</span>
-                            {data.song_key && <span style={{ background: 'rgba(0,0,0,0.8)', color: '#fff', padding: '4px 8px', borderRadius: 4, fontSize: 11, fontWeight: 600 }}>{data.song_key}</span>}
+                            <span style={{ background: 'rgba(0,0,0,0.8)', color: '#fff', padding: '4px 8px', borderRadius: 4, fontSize: 11, fontWeight: 600 }}>{item.data.bpm} BPM</span>
+                            {item.data.song_key && <span style={{ background: 'rgba(0,0,0,0.8)', color: '#fff', padding: '4px 8px', borderRadius: 4, fontSize: 11, fontWeight: 600 }}>{item.data.song_key}</span>}
                           </div>
                         </div>
                       </>
                     ) : (
                       <>
                         <div style={{ padding: '0 16px 12px 16px', fontSize: 14, color: '#ddd' }}>
-                          Nouvel événement : <strong>{data.title}</strong> 📅
+                          Nouvel événement : <strong>{item.data.title}</strong> 📅
                         </div>
                         
-                        {data.image_url ? (
-                          <div style={{ width: '100%', aspectRatio: '16 / 9', background: `url(${data.image_url}) center/cover` }} />
+                        {item.data.image_url ? (
+                          <div style={{ width: '100%', aspectRatio: '16 / 9', background: `url(${item.data.image_url}) center/cover` }} />
                         ) : (
                           <div style={{ width: '100%', height: 120, background: '#2a2a2a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40 }}>🎉</div>
                         )}
                         
                         <div style={{ padding: 16 }}>
                           <div style={{ fontSize: 12, color: '#00d9ff', fontWeight: 700, textTransform: 'uppercase', marginBottom: 4 }}>
-                            {new Date(data.event_date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                            {new Date(item.data.event_date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
                           </div>
-                          <div style={{ fontSize: 14, color: '#fff' }}>📍 {data.location} {data.city ? `, ${data.city}` : ''}</div>
+                          <div style={{ fontSize: 14, color: '#fff' }}>📍 {item.data.location} {item.data.city ? `, ${item.data.city}` : ''}</div>
                         </div>
                       </>
                     )}
@@ -288,11 +292,11 @@ export const FeedPage: React.FC = () => {
                     <div style={{ padding: '12px 16px', borderTop: '1px solid #2a2a2a', display: 'flex', justifyContent: 'space-between' }}>
                       <button style={{ flex: 1, background: 'transparent', border: 'none', color: '#aaa', padding: '8px', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>👍 J'aime</button>
                       <button style={{ flex: 1, background: 'transparent', border: 'none', color: '#aaa', padding: '8px', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>💬 Commenter</button>
-                      {!isTrack && (
-                        <a href={data.url || '#'} target="_blank" rel="noopener noreferrer" style={{ flex: 1, background: 'transparent', border: 'none', color: '#00d9ff', padding: '8px', textDecoration: 'none', textAlign: 'center', fontSize: 13, fontWeight: 600 }}>🎟️ Billets</a>
+                      {isEventItem(item) && (
+                        <a href={item.data.url || '#'} target="_blank" rel="noopener noreferrer" style={{ flex: 1, background: 'transparent', border: 'none', color: '#00d9ff', padding: '8px', textDecoration: 'none', textAlign: 'center', fontSize: 13, fontWeight: 600 }}>🎟️ Billets</a>
                       )}
-                      {isTrack && (
-                        <button onClick={() => navigate(`/track/${data.id}`)} style={{ flex: 1, background: 'transparent', border: 'none', color: '#00d9ff', padding: '8px', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>⬇️ Écouter</button>
+                      {isTrackItem(item) && (
+                        <button onClick={() => navigate(`/track/${item.data.id}`)} style={{ flex: 1, background: 'transparent', border: 'none', color: '#00d9ff', padding: '8px', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>⬇️ Écouter</button>
                       )}
                     </div>
 
@@ -313,14 +317,12 @@ export const FeedPage: React.FC = () => {
             position: 'sticky', 
             top: 24, 
             alignSelf: 'flex-start', 
-            // ❌ On a retiré maxHeight et overflowY. La colonne ne défilera plus du tout avec le feed.
             display: 'flex',
             flexDirection: 'column',
             gap: 20,
             paddingBottom: 24
           }}>
             
-            {/* WIDGET TOP 5 */}
             <div style={{ background: '#181818', border: '1px solid #2a2a2a', borderRadius: 12, padding: 16 }}>
               <h3 style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.5px', margin: '0 0 16px 0', color: '#fff' }}>🔥 TOP 5 DU MOMENT</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -337,7 +339,6 @@ export const FeedPage: React.FC = () => {
               </div>
             </div>
 
-            {/* WIDGET ÉVÉNEMENTS */}
             <div style={{ background: '#181818', border: '1px solid #2a2a2a', borderRadius: 12, padding: 16 }}>
               <h3 style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.5px', margin: '0 0 16px 0', color: '#fff' }}>📅 ÉVÉNEMENTS À VENIR</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -357,7 +358,6 @@ export const FeedPage: React.FC = () => {
               </div>
             </div>
 
-            {/* WIDGET EN LIGNE */}
             <div style={{ background: '#181818', border: '1px solid #2a2a2a', borderRadius: 12, padding: 16, flexShrink: 0 }}>
               <OnlineUsersWidget />
             </div>

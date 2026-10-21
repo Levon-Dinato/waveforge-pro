@@ -13,6 +13,7 @@ import { useAudioEngineContext } from '../contexts/AudioEngineContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useIsMobile } from '../hooks/useIsMobile';
 
+// --- ICÔNES SVG ---
 const Icons = {
   home: (<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>),
   search: (<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>),
@@ -53,15 +54,15 @@ export const MainLayout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // ============================================================
-  // VERSION MOBILE
+  // VERSION MOBILE (Inchangée)
   // ============================================================
   if (isMobile) {
     return (
       <>
         <VideoBackground />
-        <div style={{ minHeight: '100vh', position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', paddingBottom: 150 }}>
+        <div style={{ minHeight: '100vh', position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', paddingBottom: 160, background: '#121212' }}>
           
-          <header style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #2a2a2a', background: 'rgba(15, 15, 15, 0.7)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', position: 'sticky', top: 0, zIndex: 50 }}>
+          <header style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #2a2a2a', background: '#181818', position: 'sticky', top: 0, zIndex: 50 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: 22, cursor: 'pointer', padding: 4 }}>☰</button>
               <div style={{ width: 32, height: 32, borderRadius: 6, background: '#1c1c1c', border: '1px solid #2a2a2a', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
@@ -82,7 +83,7 @@ export const MainLayout: React.FC = () => {
           {sidebarOpen && (
             <>
               <div onClick={() => setSidebarOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 98 }} />
-              <aside style={{ position: 'fixed', top: 0, left: 0, height: '100vh', width: '280px', background: '#0f0f0f', borderRight: '1px solid #2a2a2a', zIndex: 99, padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: 8, overflowY: 'auto' }}>
+              <aside style={{ position: 'fixed', top: 0, left: 0, height: '100vh', width: '280px', background: '#121212', borderRight: '1px solid #2a2a2a', zIndex: 99, padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: 8, overflowY: 'auto' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
                   <div style={{ fontSize: 16, fontWeight: 700, color: '#fff' }}>Menu</div>
                   <button onClick={() => setSidebarOpen(false)} style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: 24, cursor: 'pointer' }}>×</button>
@@ -100,124 +101,109 @@ export const MainLayout: React.FC = () => {
           <main style={{ flex: 1, minWidth: 0, overflow: 'auto', padding: '16px 12px' }}>
             <Outlet />
           </main>
-
-          <Footer />
-
-          <nav style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'rgba(15, 15, 15, 0.85)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderTop: '1px solid #2a2a2a', display: 'flex', justifyContent: 'space-around', alignItems: 'center', padding: '8px 6px', zIndex: 100, paddingBottom: 'max(8px, env(safe-area-inset-bottom))', overflowX: 'auto', gap: 2 }}>
-            {NAV_ITEMS.slice(0, 5).map((item) => (
-              <NavLink key={item.path} to={item.path} end={item.path === '/'} style={({ isActive }) => ({ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, padding: '8px 6px', borderRadius: 10, textDecoration: 'none', flex: '0 0 auto', minWidth: 56, background: isActive ? `rgba(0, 217, 255, 0.1)` : 'transparent', border: isActive ? `1px solid rgba(0, 217, 255, 0.3)` : '1px solid transparent' })}>
-                {({ isActive }) => (
-                  <>
-                    <span style={{ display: 'flex', alignItems: 'center', color: isActive ? '#00d9ff' : 'rgba(255,255,255,0.5)' }}>{item.icon}</span>
-                    <span style={{ fontSize: 9, color: isActive ? '#00d9ff' : 'rgba(255,255,255,0.45)', fontWeight: isActive ? 700 : 500 }}>{t(item.shortLabelKey)}</span>
-                  </>
-                )}
-              </NavLink>
-            ))}
-            <button onClick={() => setSidebarOpen(true)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, padding: '8px 6px', borderRadius: 10, background: 'transparent', border: '1px solid transparent', cursor: 'pointer', flex: '0 0 auto', minWidth: 56 }}>
-              <span style={{ fontSize: 18, color: '#888' }}>⋯</span>
-              <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.45)', fontWeight: 500 }}>Plus</span>
-            </button>
-          </nav>
         </div>
         <InstallButton variant="banner" />
-        
-        {/* ✅ Composant sans props, il lit le contexte */}
         <GlobalPlayer />
-        
         <SessionPanel isOpen={showSessions} onClose={() => setShowSessions(false)} />
       </>
     );
   }
 
   // ============================================================
-  // VERSION DESKTOP
+  // VERSION DESKTOP (Avec Header global)
   // ============================================================
   return (
     <>
       <VideoBackground />
-      <div style={{ display: 'flex', minHeight: '100vh', position: 'relative', zIndex: 1, paddingBottom: 90 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', position: 'relative', zIndex: 1, background: '#121212' }}>
         
-        <aside className="wf-sidebar">
-          <div className="wf-logo">
-            <div className="wf-logo-icon" style={{ padding: 0, overflow: 'hidden' }}>
+        {/* ✅ HEADER GLOBAL (Plus clair, style Beatport) */}
+        <header style={{ 
+          height: 60, 
+          background: '#181818', 
+          borderBottom: '1px solid #2a2a2a', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between',
+          padding: '0 24px',
+          flexShrink: 0
+        }}>
+          {/* Logo à gauche */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }} onClick={() => navigate('/')}>
+            <div style={{ width: 28, height: 28, borderRadius: 6, background: '#1c1c1c', border: '1px solid #2a2a2a', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
               <img src="/icons/icon-192.png" alt="DropZone DJ" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </div>
-            <div className="wf-logo-text">DROP<span>ZONE</span> DJ</div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', letterSpacing: '0.5px' }}>DROP<span style={{ color: '#00d9ff' }}>ZONE</span> DJ</div>
           </div>
 
-          <nav className="wf-sidebar-nav">
-            <NavLink to="/search" className={({ isActive }) => `wf-nav-link ${isActive ? 'active' : ''}`}>
-              <span className="icon" style={{ display: 'flex', alignItems: 'center' }}>{Icons.search}</span>
-              <span>Recherche</span>
-            </NavLink>
+          {/* Recherche globale (optionnelle) */}
+          <div style={{ flex: 1, maxWidth: 400, margin: '0 40px' }}>
+             <input type="text" placeholder="Rechercher sur DropZone..." style={{ width: '100%', padding: '8px 12px', background: '#121212', border: '1px solid #2a2a2a', borderRadius: 6, color: '#fff', outline: 'none', fontSize: 13 }} />
+          </div>
 
-            {NAV_ITEMS.map((item) => (
-              <NavLink key={item.path} to={item.path} end={item.path === '/'} className={({ isActive }) => `wf-nav-link ${isActive ? 'active' : ''}`}>
-                <span className="icon" style={{ display: 'flex', alignItems: 'center' }}>{item.icon}</span>
-                <span>{t(item.labelKey)}</span>
-              </NavLink>
-            ))}
-
-            <InstallButton variant="sidebar" />
-          </nav>
-
-          <div className="wf-sidebar-footer">
-            <button onClick={() => setShowSessions(true)} className="wf-btn wf-btn-secondary" style={{ width: '100%' }}>
-              💾 {t('nav.sessions')}
-            </button>
-
+          {/* Profil + Notifications à droite */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <NotificationsDropdown />
             {user ? (
-              <div style={{ padding: '12px', background: '#1c1c1c', border: '1px solid #2a2a2a', borderRadius: 6, marginTop: 8, marginBottom: 8 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                  <div style={{ width: 32, height: 32, borderRadius: '4px', background: '#121212', border: '1px solid #2a2a2a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: '#fff' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <NavLink to={`/profil/${user.id}`} style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', color: '#fff' }}>
+                  <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#333', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700 }}>
                     {username?.charAt(0).toUpperCase()}
                   </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {username}
-                    </div>
-                    <div style={{ fontSize: 10, color: '#999', fontWeight: 500 }}>Niveau 4</div>
-                  </div>
-                </div>
-                <div style={{ width: '100%', height: 4, background: '#121212', borderRadius: 2, overflow: 'hidden' }}>
-                  <div style={{ width: '65%', height: '100%', background: '#00d9ff', borderRadius: 2 }} />
-                </div>
+                  <span style={{ fontSize: 12, fontWeight: 600 }}>{username}</span>
+                </NavLink>
+                <button onClick={async () => { await signOut(); navigate('/'); }} style={{ background: 'transparent', border: 'none', color: '#888', fontSize: 11, cursor: 'pointer' }}>Déconnexion</button>
               </div>
             ) : (
-              <NavLink to="/auth" className="wf-btn wf-btn-primary" style={{ width: '100%', marginTop: 8, marginBottom: 8 }}>
-                🔐 {t('auth.login_tab').toUpperCase()}
+              <NavLink to="/auth" style={{ padding: '6px 16px', background: '#00d9ff', borderRadius: 4, color: '#000', fontSize: 12, fontWeight: 700, textDecoration: 'none' }}>
+                Connexion
               </NavLink>
             )}
-
-            {user && (
-              <button onClick={async () => { await signOut(); navigate('/'); }} className="wf-btn wf-btn-secondary" style={{ width: '100%', color: '#ff8c8c' }}>
-                {t('nav.logout')}
-              </button>
-            )}
-
-            <div style={{ marginTop: 12 }}>
-              <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', marginBottom: 8, letterSpacing: '1.5px', fontWeight: 700, textTransform: 'uppercase', textAlign: 'center' }}>{t('nav.output')}</div>
-              <VUMeter audioBuffer={engine.audioBuffer} isPlaying={engine.isPlaying} currentTime={engine.currentTime} />
-            </div>
           </div>
-        </aside>
+        </header>
 
-        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: '100vh' }}>
+        {/* ✅ CORPS DU SITE (Sidebar + Main) */}
+        <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
           
-          <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', padding: '16px 32px', borderBottom: '1px solid #2a2a2a', background: '#121212' }}>
-            <NotificationsDropdown />
-          </div>
+          {/* SIDEBAR GAUCHE (Plus sombre) */}
+          <aside className="wf-sidebar" style={{ background: '#121212', borderRight: '1px solid #2a2a2a', width: 240, display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
+            <nav className="wf-sidebar-nav" style={{ paddingTop: 16 }}>
+              <NavLink to="/search" className={({ isActive }) => `wf-nav-link ${isActive ? 'active' : ''}`}>
+                <span className="icon" style={{ display: 'flex', alignItems: 'center' }}>{Icons.search}</span>
+                <span>Recherche</span>
+              </NavLink>
 
-          <main className="wf-main" style={{ flex: 1 }}>
+              {NAV_ITEMS.map((item) => (
+                <NavLink key={item.path} to={item.path} end={item.path === '/'} className={({ isActive }) => `wf-nav-link ${isActive ? 'active' : ''}`}>
+                  <span className="icon" style={{ display: 'flex', alignItems: 'center' }}>{item.icon}</span>
+                  <span>{t(item.labelKey)}</span>
+                </NavLink>
+              ))}
+
+              <InstallButton variant="sidebar" />
+            </nav>
+
+            <div className="wf-sidebar-footer" style={{ marginTop: 'auto', padding: 16 }}>
+              <button onClick={() => setShowSessions(true)} className="wf-btn wf-btn-secondary" style={{ width: '100%' }}>
+                💾 {t('nav.sessions')}
+              </button>
+              <div style={{ marginTop: 12 }}>
+                <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', marginBottom: 8, letterSpacing: '1.5px', fontWeight: 700, textTransform: 'uppercase', textAlign: 'center' }}>{t('nav.output')}</div>
+                <VUMeter audioBuffer={engine.audioBuffer} isPlaying={engine.isPlaying} currentTime={engine.currentTime} />
+              </div>
+            </div>
+          </aside>
+
+          {/* MAIN CONTENU (Scrollable) */}
+          <main className="wf-main" style={{ flex: 1, overflowY: 'auto', background: '#121212', paddingBottom: 90 }}>
             <Outlet />
+            <Footer />
           </main>
-          <Footer />
-        </div>
 
+        </div>
       </div>
       
-      {/* ✅ Composant sans props, il lit le contexte */}
+      {/* LECTEUR GLOBAL (Fixe en bas) */}
       <GlobalPlayer />
       
       <SessionPanel isOpen={showSessions} onClose={() => setShowSessions(false)} />

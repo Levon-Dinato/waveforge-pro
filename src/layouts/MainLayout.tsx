@@ -13,7 +13,6 @@ import { useAudioEngineContext } from '../contexts/AudioEngineContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useIsMobile } from '../hooks/useIsMobile';
 
-// --- ICÔNES SVG ---
 const Icons = {
   home: (<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>),
   search: (<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>),
@@ -54,7 +53,7 @@ export const MainLayout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // ============================================================
-  // VERSION MOBILE (Inchangée)
+  // VERSION MOBILE
   // ============================================================
   if (isMobile) {
     return (
@@ -110,14 +109,14 @@ export const MainLayout: React.FC = () => {
   }
 
   // ============================================================
-  // VERSION DESKTOP (Avec Header global)
+  // VERSION DESKTOP
   // ============================================================
   return (
     <>
       <VideoBackground />
       <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', position: 'relative', zIndex: 1, background: '#121212' }}>
         
-        {/* ✅ HEADER GLOBAL (Plus clair, style Beatport) */}
+        {/* HEADER GLOBAL (Barre du haut) */}
         <header style={{ 
           height: 60, 
           background: '#181818', 
@@ -128,17 +127,12 @@ export const MainLayout: React.FC = () => {
           padding: '0 24px',
           flexShrink: 0
         }}>
-          {/* Logo à gauche */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }} onClick={() => navigate('/')}>
-            <div style={{ width: 28, height: 28, borderRadius: 6, background: '#1c1c1c', border: '1px solid #2a2a2a', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-              <img src="/icons/icon-192.png" alt="DropZone DJ" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            </div>
-            <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', letterSpacing: '0.5px' }}>DROP<span style={{ color: '#00d9ff' }}>ZONE</span> DJ</div>
-          </div>
+          {/* Espace vide à gauche pour compenser la sidebar */}
+          <div style={{ width: 240 }}></div>
 
-          {/* Recherche globale (optionnelle) */}
-          <div style={{ flex: 1, maxWidth: 400, margin: '0 40px' }}>
-             <input type="text" placeholder="Rechercher sur DropZone..." style={{ width: '100%', padding: '8px 12px', background: '#121212', border: '1px solid #2a2a2a', borderRadius: 6, color: '#fff', outline: 'none', fontSize: 13 }} />
+          {/* Recherche globale */}
+          <div style={{ flex: 1, maxWidth: 500 }}>
+             <input type="text" placeholder="Rechercher un son, un artiste..." style={{ width: '100%', padding: '8px 12px', background: '#121212', border: '1px solid #2a2a2a', borderRadius: 6, color: '#fff', outline: 'none', fontSize: 13 }} />
           </div>
 
           {/* Profil + Notifications à droite */}
@@ -162,11 +156,20 @@ export const MainLayout: React.FC = () => {
           </div>
         </header>
 
-        {/* ✅ CORPS DU SITE (Sidebar + Main) */}
+        {/* CORPS DU SITE (Sidebar + Main) */}
         <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
           
-          {/* SIDEBAR GAUCHE (Plus sombre) */}
+          {/* SIDEBAR GAUCHE */}
           <aside className="wf-sidebar" style={{ background: '#121212', borderRight: '1px solid #2a2a2a', width: 240, display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
+            
+            {/* ✅ LE LOGO EST DE RETOUR ICI */}
+            <div className="wf-logo" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '20px 24px', borderBottom: '1px solid #2a2a2a', cursor: 'pointer' }} onClick={() => navigate('/')}>
+              <div style={{ width: 32, height: 32, borderRadius: 6, background: '#1c1c1c', border: '1px solid #2a2a2a', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                <img src="/icons/icon-192.png" alt="DropZone DJ" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              </div>
+              <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', letterSpacing: '0.5px' }}>DROP<span style={{ color: '#00d9ff' }}>ZONE</span> DJ</div>
+            </div>
+
             <nav className="wf-sidebar-nav" style={{ paddingTop: 16 }}>
               <NavLink to="/search" className={({ isActive }) => `wf-nav-link ${isActive ? 'active' : ''}`}>
                 <span className="icon" style={{ display: 'flex', alignItems: 'center' }}>{Icons.search}</span>
@@ -194,7 +197,7 @@ export const MainLayout: React.FC = () => {
             </div>
           </aside>
 
-          {/* MAIN CONTENU (Scrollable) */}
+          {/* MAIN CONTENU */}
           <main className="wf-main" style={{ flex: 1, overflowY: 'auto', background: '#121212', paddingBottom: 90 }}>
             <Outlet />
             <Footer />
@@ -203,9 +206,7 @@ export const MainLayout: React.FC = () => {
         </div>
       </div>
       
-      {/* LECTEUR GLOBAL (Fixe en bas) */}
       <GlobalPlayer />
-      
       <SessionPanel isOpen={showSessions} onClose={() => setShowSessions(false)} />
     </>
   );

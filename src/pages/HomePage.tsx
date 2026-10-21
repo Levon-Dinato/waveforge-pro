@@ -1,6 +1,6 @@
 // src/pages/HomePage.tsx
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { TrackGrid } from '../components/TrackGrid';
 import type { Track } from '../components/TrackGrid';
@@ -17,15 +17,10 @@ interface Artist {
 export const HomePage = () => {
   const isMobile = useIsMobile(768);
   const { play } = usePlayer();
-  const navigate = useNavigate();
   
   const [tracks, setTracks] = useState<Track[]>([]);
   const [artists, setArtists] = useState<Artist[]>([]);
   const [loading, setLoading] = useState(true);
-  
-  // ✅ État pour gérer le live
-  // (À remplacer par un vrai fetch API plus tard, ex: check TViply status)
-  const [isLive, setIsLive] = useState(false); 
 
   useEffect(() => {
     const fetchData = async () => {
@@ -44,11 +39,6 @@ export const HomePage = () => {
           .limit(10);
 
         if (profilesData) setArtists(profilesData as Artist[]);
-        
-        // 💡 Simulation : Mettons que tu veux tester l'affichage.
-        // Change à 'true' pour voir le widget rouge en direct.
-        setIsLive(false); 
-        
       } catch (err) {
         console.error('Erreur chargement:', err);
       } finally {
@@ -70,7 +60,9 @@ export const HomePage = () => {
   const top10 = [...tracks].sort((a, b) => (b.likes_count || 0) - (a.likes_count || 0)).slice(0, 10);
   const newReleases = tracks.slice(1, 13);
 
-  const playFeatured = () => {
+  const playFeatured = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
     if (!featured) return;
     play({
       id: featured.id,
@@ -81,38 +73,10 @@ export const HomePage = () => {
       user_id: featured.user_id || null,
       duration: featured.duration,
       peaks: featured.peaks,
+      bpm: featured.bpm,
+      song_key: featured.song_key,
+      genre: featured.genre,
     });
-  };
-
-  const handleShareSite = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: 'DropZone DJ',
-          text: 'Découvrez les dernières pépites électro surpuissantes de DropZone DJ. Montez le son !',
-          url: window.location.origin,
-        });
-      } catch (err) {
-        console.log('Partage annulé');
-      }
-    } else {
-      navigator.clipboard.writeText(window.location.origin);
-      alert('Lien du site copié dans le presse-papiers !');
-    }
-  };
-
-  const handleShareTrack = (track: Track) => {
-    const url = `${window.location.origin}/track/${track.id}`;
-    if (navigator.share) {
-      navigator.share({
-        title: `${track.artist} - ${track.title}`,
-        text: `Écoute "${track.title}" par ${track.artist} sur DropZone DJ 🎵`,
-        url: url,
-      }).catch(() => {});
-    } else {
-      navigator.clipboard.writeText(url);
-      alert('Lien du morceau copié !');
-    }
   };
 
   return (
@@ -149,7 +113,7 @@ export const HomePage = () => {
           overflow: 'hidden',
           border: '1px solid #2a2a2a',
           width: '100%',
-          height: isMobile ? 320 : 400,
+          height: isMobile ? 280 : 400,
           background: '#000',
         }}>
           <video
@@ -203,18 +167,6 @@ export const HomePage = () => {
               }}>
                 Rejoindre
               </Link>
-              <button 
-                onClick={handleShareSite}
-                style={{ 
-                  padding: '10px 20px', background: 'transparent', color: '#fff', 
-                  border: '1px solid #333', borderRadius: 4, fontWeight: 600, fontSize: 13,
-                  cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                  flex: isMobile ? 1 : 'none',
-                }}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-                Partager
-              </button>
             </div>
           </div>
         </div>
@@ -237,31 +189,6 @@ export const HomePage = () => {
           {/* COLONNE GAUCHE */}
           <div style={{ flex: 1, minWidth: 0, width: '100%' }}>
             
-            {/* ✅ BANNIÈRE MOBILE : LIVE OU HORS LIGNE */}
-            {isMobile && (
-              <Link to="/live" style={{ textDecoration: 'none', display: 'block', marginBottom: 20 }}>
-                <div style={{ 
-                  background: '#181818', 
-                  border: `1px solid ${isLive ? '#ff3366' : '#2a2a2a'}`, 
-                  borderRadius: 8, padding: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between' 
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <span style={{ 
-                      width: 8, height: 8, borderRadius: '50%', 
-                      background: isLive ? '#ff3366' : '#666', 
-                      boxShadow: isLive ? '0 0 8px #ff3366' : 'none' 
-                    }} />
-                    <span style={{ color: '#fff', fontWeight: 700, fontSize: 14 }}>
-                      {isLive ? 'Live DJ en cours' : 'Scène libre'}
-                    </span>
-                  </div>
-                  <span style={{ color: isLive ? '#ff3366' : '#888', fontSize: 12, fontWeight: 600 }}>
-                    {isLive ? 'Rejoindre →' : 'Mixer →'}
-                  </span>
-                </div>
-              </Link>
-            )}
-
             {/* MODULE À LA UNE */}
             {featured && (
               <div 
@@ -269,7 +196,7 @@ export const HomePage = () => {
                   position: 'relative',
                   display: 'flex',
                   alignItems: 'flex-end',
-                  height: isMobile ? 220 : 320,
+                  height: isMobile ? 200 : 320,
                   borderRadius: 8,
                   overflow: 'hidden',
                   border: '1px solid #2a2a2a',
@@ -278,30 +205,36 @@ export const HomePage = () => {
                 }}
               >
                 <div 
+                  onClick={() => window.location.href = `/track/${featured.id}`}
                   style={{
                     position: 'absolute', inset: 0,
                     backgroundImage: `url(${featured.cover_url || ''})`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
+                    cursor: 'pointer'
                   }} 
                 />
                 
-                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 80%)' }} />
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 80%)', pointerEvents: 'none' }} />
 
                 <div style={{ position: 'relative', padding: isMobile ? 16 : 24, width: '100%', display: 'flex', alignItems: 'center', gap: 16 }}>
+                  
                   <button 
                     onClick={playFeatured}
                     style={{
                       width: isMobile ? 48 : 56, height: isMobile ? 48 : 56, borderRadius: '50%',
                       background: '#fff', color: '#000', border: 'none',
                       fontSize: isMobile ? 16 : 20, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      cursor: 'pointer', flexShrink: 0,
+                      cursor: 'pointer', flexShrink: 0, zIndex: 10
                     }}
                   >
                     ▶
                   </button>
 
-                  <div style={{ minWidth: 0, flex: 1 }}>
+                  <div 
+                    onClick={() => window.location.href = `/track/${featured.id}`}
+                    style={{ minWidth: 0, flex: 1, cursor: 'pointer' }}
+                  >
                     <span style={{ fontSize: 9, color: '#fff', background: '#00d9ff', padding: '2px 6px', borderRadius: 4, fontWeight: 700 }}>
                       À LA UNE
                     </span>
@@ -312,19 +245,6 @@ export const HomePage = () => {
                       {featured.artist}
                     </p>
                   </div>
-
-                  <button 
-                    onClick={() => handleShareTrack(featured)}
-                    style={{
-                      background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', 
-                      color: '#fff', width: 40, height: 40, borderRadius: '50%',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-                      flexShrink: 0
-                    }}
-                    title="Partager ce morceau"
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-                  </button>
                 </div>
               </div>
             )}
@@ -341,53 +261,29 @@ export const HomePage = () => {
           {!isMobile && (
             <aside style={{ width: 280, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 24 }}>
               
-              {/* ✅ WIDGET LIVE / OFFLINE DYNAMIQUE */}
-              <div 
-                onClick={() => navigate('/live')}
-                style={{ 
-                  background: '#181818', 
-                  borderRadius: 8, 
-                  border: `1px solid ${isLive ? '#ff3366' : '#2a2a2a'}`, 
-                  padding: 16, 
-                  cursor: 'pointer', 
-                  transition: 'background 0.2s',
-                  display: 'flex', 
-                  flexDirection: 'column', 
-                  gap: 12
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.background = '#1e1e1e'}
-                onMouseLeave={(e) => e.currentTarget.style.background = '#181818'}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ 
-                    width: 8, height: 8, borderRadius: '50%', 
-                    background: isLive ? '#ff3366' : '#666', 
-                    boxShadow: isLive ? '0 0 8px #ff3366' : 'none' 
-                  }} />
-                  <h3 style={{ fontSize: 12, fontWeight: 700, color: isLive ? '#ff3366' : '#888', margin: 0, letterSpacing: '0.5px' }}>
-                    {isLive ? 'EN DIRECT' : 'HORS LIGNE'}
-                  </h3>
-                </div>
-                <p style={{ fontSize: 13, color: '#aaa', margin: 0, lineHeight: 1.4 }}>
-                  {isLive 
-                    ? 'Un DJ est actuellement aux platines. Rejoignez le live et vibrez avec la communauté.'
-                    : 'La scène est libre. Prenez les commandes et montrez votre talent à la communauté.'}
-                </p>
-                <div style={{ fontSize: 12, color: isLive ? '#ff3366' : '#fff', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4, marginTop: 4 }}>
-                  {isLive ? 'Regarder le Live' : 'Lancer ton live'} <span>→</span>
-                </div>
-              </div>
-
               {/* TOP 10 */}
               <div style={{ background: '#181818', borderRadius: 8, border: '1px solid #2a2a2a', padding: 16 }}>
                 <h3 style={{ fontSize: 12, fontWeight: 700, color: '#fff', margin: '0 0 16px 0' }}>TOP 10</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   {top10.map((track, idx) => (
-                    <div key={track.id} onClick={() => play({
-                      id: track.id, title: track.title, artist: track.artist,
-                      audio_url: track.audio_url, cover_url: track.cover_url,
-                      user_id: track.user_id || null, duration: track.duration, peaks: track.peaks,
-                    })} style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}>
+                    // ✅ CORRECTION ICI : on passe l'objet complet pour TypeScript
+                    <div 
+                      key={track.id} 
+                      onClick={() => play({
+                        id: track.id,
+                        title: track.title,
+                        artist: track.artist,
+                        audio_url: track.audio_url,
+                        cover_url: track.cover_url,
+                        user_id: track.user_id || null,
+                        duration: track.duration,
+                        peaks: track.peaks,
+                        bpm: track.bpm,
+                        song_key: track.song_key,
+                        genre: track.genre
+                      })} 
+                      style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}
+                    >
                       <span style={{ fontSize: 12, fontWeight: 600, color: '#666', width: 16, textAlign: 'center' }}>{idx + 1}</span>
                       <div style={{ width: 36, height: 36, borderRadius: 4, background: track.cover_url ? `url(${track.cover_url}) center/cover` : '#222', flexShrink: 0 }} />
                       <div style={{ flex: 1, minWidth: 0 }}>

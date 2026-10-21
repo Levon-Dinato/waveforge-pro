@@ -408,7 +408,7 @@ export const MasteringPage: React.FC = () => {
             <div className="wf-glass" style={{ padding: 16 }}>
               <div className="wf-label" style={{ marginBottom: 12 }}>📊 Spectre sonore</div>
               <div style={{ background: 'var(--bg-0)', borderRadius: 8, border: '1px solid var(--border-subtle)', padding: 8 }}>
-                 <SpectrumVisualizer analyser={abAnalyser} isActive={isPlayingAB} height={isMobile ? 120 : 180} colorByAmplitude={true} barCount={isMobile ? 40 : 80} />
+                <SpectrumVisualizer analyser={abAnalyser} isActive={isPlayingAB} height={isMobile ? 120 : 180} colorMode="frequency" barCount={isMobile ? 40 : 80} />
               </div>
             </div>
             

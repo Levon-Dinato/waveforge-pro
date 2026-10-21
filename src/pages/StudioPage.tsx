@@ -3,7 +3,6 @@ import React, { useRef, useMemo } from 'react';
 import { useAudioEngineContext } from '../contexts/AudioEngineContext';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { PianoRoll } from '../components/PianoRoll';
-import { Link } from 'react-router-dom';
 import type { DetectedNote } from '../types';
 
 // ─── Styles réutilisables (Style Beatport) ──────────────────────

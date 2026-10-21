@@ -1,13 +1,14 @@
 // src/pages/FeedPage.tsx
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom'; // ✅ Link est de nouveau utilisé
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { usePlayer } from '../contexts/PlayerContext';
 import { OnlineUsersWidget } from '../components/OnlineUsersWidget';
 
-interface Event {
+// ✅ 1. Renommage de l'interface Event en DbEvent
+interface DbEvent {
   id: string;
   title: string;
   event_date: string;
@@ -33,13 +34,15 @@ interface Track {
   peaks: number[];
 }
 
+// ✅ 2. Utilisation de DbEvent dans le type FeedItem
 type FeedItem = 
   | { type: 'track'; data: Track; date: Date }
-  | { type: 'event'; data: Event; date: Date }
+  | { type: 'event'; data: DbEvent; date: Date }
   | { type: 'post'; data: { id: string; author: string; text: string; url?: string; postType: string; date: Date }; date: Date };
 
+// ✅ 3. Mise à jour du Type Guard avec DbEvent
 const isTrackItem = (item: FeedItem): item is { type: 'track'; data: Track; date: Date } => item.type === 'track';
-const isEventItem = (item: FeedItem): item is { type: 'event'; data: Event; date: Date } => item.type === 'event';
+const isEventItem = (item: FeedItem): item is { type: 'event'; data: DbEvent; date: Date } => item.type === 'event';
 const isPostItem = (item: FeedItem): item is { type: 'post'; data: { id: string; author: string; text: string; url?: string; postType: string; date: Date }; date: Date } => item.type === 'post';
 
 const getCleanUrl = (input: string): { url: string; isYoutube: boolean } => {
@@ -74,7 +77,8 @@ export const FeedPage: React.FC = () => {
   const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [topTracks, setTopTracks] = useState<Track[]>([]);
-  const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([]);
+  // ✅ 4. Mise à jour de l'état avec DbEvent
+  const [upcomingEvents, setUpcomingEvents] = useState<DbEvent[]>([]);
 
   const [postContent, setPostContent] = useState('');
   const [postUrl, setPostUrl] = useState('');
@@ -90,14 +94,16 @@ export const FeedPage: React.FC = () => {
 
         const combined: FeedItem[] = [];
         (tracksData || []).forEach(t => combined.push({ type: 'track', data: t as Track, date: new Date(t.created_at) }));
-        (eventsData || []).forEach(e => combined.push({ type: 'event', data: e as Event, date: new Date(e.created_at || e.event_date) }));
+        // ✅ 5. Cast en DbEvent
+        (eventsData || []).forEach(e => combined.push({ type: 'event', data: e as DbEvent, date: new Date(e.created_at || e.event_date) }));
         combined.sort((a, b) => b.date.getTime() - a.date.getTime());
         setFeedItems(combined);
 
         const { data: topData } = await supabase.from('tracks').select('*').order('likes_count', { ascending: false }).limit(5);
         if (topData) setTopTracks(topData as Track[]);
 
-        if (eventsData) setUpcomingEvents(eventsData.slice(0, 3));
+        // ✅ 6. Cast en DbEvent
+        if (eventsData) setUpcomingEvents(eventsData.slice(0, 3) as DbEvent[]);
       } catch (err) {
         console.error('Erreur chargement feed:', err);
       } finally {
@@ -244,10 +250,9 @@ export const FeedPage: React.FC = () => {
               <h3 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 8px 0' }}>Le feed est vide</h3>
               <p style={{ color: '#999', fontSize: 13, margin: '0 0 24px 0' }}>Sois le premier à partager un son !</p>
               
-              {/* ✅ LINK EST UTILISÉ ICI */}
-              <Link to="/studio" style={{ display: 'inline-flex', padding: '10px 20px', background: '#00d9ff', color: '#000', borderRadius: 20, fontWeight: 700, textDecoration: 'none', fontSize: 13 }}>
+              <button onClick={() => navigate('/studio')} style={{ padding: '10px 20px', background: '#00d9ff', color: '#000', borderRadius: 20, fontWeight: 700, border: 'none', cursor: 'pointer', fontSize: 13 }}>
                 Uploader un son
-              </Link>
+              </button>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>

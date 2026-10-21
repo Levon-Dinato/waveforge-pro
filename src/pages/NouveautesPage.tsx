@@ -254,7 +254,12 @@ export const NouveautesPage: React.FC = () => {
 
   const loadTracks = async () => {
     setLoading(true);
-    const { data, error } = await supabase.from('tracks').select('*').order('created_at', { ascending: false });
+    // ✅ On récupère le compteur de likes en direct depuis la table 'likes' pour être sûr
+    const { data, error } = await supabase
+      .from('tracks')
+      .select('*, likes(count)')
+      .order('created_at', { ascending: false });
+      
     if (error) {
       console.error('Erreur chargement:', error);
     } else {
@@ -264,7 +269,8 @@ export const NouveautesPage: React.FC = () => {
         cover_url: t.cover_url || null,
         user_id: t.user_id || null,
         downloads: t.downloads || 0,
-        likes_count: t.likes_count || 0,
+        // ✅ On utilise le count réel de la table likes
+        likes_count: t.likes && t.likes[0] ? t.likes[0].count : 0,
         song_key: t.song_key || null,
         camelot: t.camelot || null,
       }));
@@ -285,24 +291,37 @@ export const NouveautesPage: React.FC = () => {
 
   const handleLike = async (trackId: string) => {
     if (!user) { navigate('/auth'); return; }
+    
+    // On récupère le track actuel pour calculer le nouveau compteur
+    const track = tracks.find(t => t.id === trackId);
+    if (!track) return;
+
     const isCurrentlyLiked = userLikes[trackId];
+    const newLikesCount = Math.max(0, track.likes_count + (isCurrentlyLiked ? -1 : 1));
+
+    // Mise à jour optimiste (interface réactive)
     setUserLikes((prev) => ({ ...prev, [trackId]: !isCurrentlyLiked }));
-    setTracks((prev) => prev.map((t) => t.id === trackId ? { ...t, likes_count: t.likes_count + (isCurrentlyLiked ? -1 : 1) } : t));
+    setTracks((prev) => prev.map((t) => t.id === trackId ? { ...t, likes_count: newLikesCount } : t));
 
     try {
+      // 1. Insertion / Suppression dans la table 'likes'
       if (isCurrentlyLiked) {
         await supabase.from('likes').delete().eq('user_id', user.id).eq('track_id', trackId);
       } else {
         await supabase.from('likes').insert({ user_id: user.id, track_id: trackId });
       }
+
+      // ✅ 2. Mise à jour du compteur dans la table 'tracks' pour la persistance
+      await supabase.from('tracks').update({ likes_count: newLikesCount }).eq('id', trackId);
+
     } catch (err) {
       console.error('Erreur like:', err);
+      // Rollback en cas d'erreur
       setUserLikes((prev) => ({ ...prev, [trackId]: isCurrentlyLiked }));
-      setTracks((prev) => prev.map((t) => t.id === trackId ? { ...t, likes_count: t.likes_count + (isCurrentlyLiked ? 1 : -1) } : t));
+      setTracks((prev) => prev.map((t) => t.id === trackId ? { ...t, likes_count: track.likes_count } : t));
     }
   };
 
-  // ✅ FONCTION DE TÉLÉCHARGEMENT CORRIGÉE (Via Fetch)
   const handleDownload = async (e: React.MouseEvent, track: Track) => {
     e.stopPropagation();
     try {

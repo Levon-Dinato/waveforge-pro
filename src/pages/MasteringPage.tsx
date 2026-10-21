@@ -1,721 +1,239 @@
-// src/audio/masteringChain.ts
-
-export type MasteringPreset = 'warm' | 'balanced' | 'open' | 'master';
-
-export interface PresetValues {
-  loudness: number;
-  presence: number;
-  width: number;
-  saturation: number;
-}
-
-export interface EQBand {
-  id: number;
-  type: 'lowshelf' | 'peaking' | 'highshelf';
-  frequency: number;
-  gain: number;
-  q: number;
-  label: string;
-  color: string;
-  minFreq: number;
-  maxFreq: number;
-}
-
-export const DEFAULT_EQ_BANDS: EQBand[] = [
-  { id: 0, type: 'lowshelf',  frequency: 80,    gain: 0, q: 0.7, label: 'Basses',   color: '#00d9ff', minFreq: 20,   maxFreq: 300 },
-  { id: 1, type: 'peaking',   frequency: 250,   gain: 0, q: 1,   label: 'Low-Mid',  color: '#7c5cff', minFreq: 100,  maxFreq: 800 },
-  { id: 2, type: 'peaking',   frequency: 1000,  gain: 0, q: 1,   label: 'Mid',      color: '#00ff88', minFreq: 400,  maxFreq: 3000 },
-  { id: 3, type: 'peaking',   frequency: 4000,  gain: 0, q: 1,   label: 'High-Mid', color: '#ffd43b', minFreq: 1500, maxFreq: 8000 },
-  { id: 4, type: 'highshelf', frequency: 12000, gain: 0, q: 0.7, label: 'Aigus',    color: '#ff5cf0', minFreq: 6000, maxFreq: 20000 },
-];
-
-export class MasteringChain {
-  private inputGain: GainNode;
-  private eqBands: BiquadFilterNode[] = [];
-  private eqMid: BiquadFilterNode;
-  private saturator: WaveShaperNode;
-
-  // Mid/Side Widener
-  private widenerInput: GainNode;
-  private widenerOutput: GainNode;
-  private widenerSplitter: ChannelSplitterNode;
-  private widenerMerger: ChannelMergerNode;
-  private widenerMidL: GainNode;
-  private widenerMidR: GainNode;
-  private widenerMidSum: GainNode;
-  private widenerSideL: GainNode;
-  private widenerSideR: GainNode;
-  private widenerSideSum: GainNode;
-  private widenerMidToL: GainNode;
-  private widenerMidToR: GainNode;
-  private widenerSideToL: GainNode;
-  private widenerSideToR: GainNode;
-  private currentWidth = 1.0;
-
-  // Mono-Maker
-  private monoMakerInput: GainNode;
-  private monoMakerOutput: GainNode;
-  private monoMakerSplitter: ChannelSplitterNode;
-  private monoMakerMerger: ChannelMergerNode;
-  private monoMakerBassL: BiquadFilterNode;
-  private monoMakerBassR: BiquadFilterNode;
-  private monoMakerHighL: BiquadFilterNode;
-  private monoMakerHighR: BiquadFilterNode;
-  private monoMakerBassGainL: GainNode;
-  private monoMakerBassGainR: GainNode;
-  private monoMakerBassMono: GainNode;
-  private monoMakerMixL: GainNode;
-  private monoMakerMixR: GainNode;
-  private monoMakerWetGain: GainNode;
-  private monoMakerDryGain: GainNode;
-  private monoMakerFreq = 120;
-  private monoMakerEnabled = false;
-
-  // Imager 3 bandes
-  private imagerInput: GainNode;
-  private imagerOutput: GainNode;
-  private imagerWetGain: GainNode;
-  private imagerDryGain: GainNode;
-  private imagerLowFilter: BiquadFilterNode;
-  private imagerLowSplitter: ChannelSplitterNode;
-  private imagerLowMerger: ChannelMergerNode;
-  private imagerLowDryL: GainNode;
-  private imagerLowDryR: GainNode;
-  private imagerLowMonoSum: GainNode;
-  private imagerLowMonoGain: GainNode;
-  private imagerMidFilter: BiquadFilterNode;
-  private imagerMidSplitter: ChannelSplitterNode;
-  private imagerMidMerger: ChannelMergerNode;
-  private imagerMidDryL: GainNode;
-  private imagerMidDryR: GainNode;
-  private imagerMidMonoSum: GainNode;
-  private imagerMidMonoGain: GainNode;
-  private imagerHighFilter: BiquadFilterNode;
-  private imagerHighSplitter: ChannelSplitterNode;
-  private imagerHighMerger: ChannelMergerNode;
-  private imagerHighDryL: GainNode;
-  private imagerHighDryR: GainNode;
-  private imagerHighMonoSum: GainNode;
-  private imagerHighMonoGain: GainNode;
-
-  // Compresseur broadband
-  private compressor: DynamicsCompressorNode;
-  private compressorMakeup: GainNode;
-
-  // Harmonic Exciter
-  private exciterHighShelf: BiquadFilterNode;
-  private exciterDrive: WaveShaperNode;
-  private exciterWetGain: GainNode;
-  private exciterDryGain: GainNode;
-
-  // Sub-bass + Air band
-  private subBassFilter: BiquadFilterNode;
-  private bassShelf: BiquadFilterNode;
-  private subBassGain: GainNode;
-  private airShelf: BiquadFilterNode;
-
-  // Limiteur + bypass
-  private limiter: DynamicsCompressorNode;
-  private bypassGain: GainNode;
-  private processedGain: GainNode;
-  private outputGain: GainNode;
-  private inputNode: AudioNode | null = null;
-  private context: BaseAudioContext;
-
-  constructor(context: BaseAudioContext) {
-    this.context = context;
-
-    // 1. GAIN D'ENTRÉE
-    this.inputGain = context.createGain();
-    this.inputGain.gain.value = 1;
-
-    // 2. EQ 5 BANDES
-    for (const band of DEFAULT_EQ_BANDS) {
-      const filter = context.createBiquadFilter();
-      filter.type = band.type;
-      filter.frequency.value = band.frequency;
-      filter.gain.value = band.gain;
-      filter.Q.value = band.q;
-      this.eqBands.push(filter);
-    }
-
-    this.eqMid = context.createBiquadFilter();
-    this.eqMid.type = 'peaking';
-    this.eqMid.frequency.value = 1000;
-    this.eqMid.Q.value = 1;
-    this.eqMid.gain.value = 0;
-
-    // 3. SATURATEUR
-    this.saturator = context.createWaveShaper();
-    this.saturator.curve = this.makeDistortionCurve(0) as any;
-    this.saturator.oversample = '4x';
-
-    // 4. MID/SIDE WIDENER
-    this.widenerInput = context.createGain();
-    this.widenerOutput = context.createGain();
-    this.widenerSplitter = context.createChannelSplitter(2);
-    this.widenerMerger = context.createChannelMerger(2);
-
-    this.widenerMidL = context.createGain();
-    this.widenerMidL.gain.value = 0.5;
-    this.widenerMidR = context.createGain();
-    this.widenerMidR.gain.value = 0.5;
-    this.widenerMidSum = context.createGain();
-    this.widenerMidSum.gain.value = 1;
-
-    this.widenerSideL = context.createGain();
-    this.widenerSideL.gain.value = 0.5;
-    this.widenerSideR = context.createGain();
-    this.widenerSideR.gain.value = -0.5;
-    this.widenerSideSum = context.createGain();
-    this.widenerSideSum.gain.value = 1;
-
-    this.widenerMidToL = context.createGain();
-    this.widenerMidToL.gain.value = 1;
-    this.widenerMidToR = context.createGain();
-    this.widenerMidToR.gain.value = 1;
-    this.widenerSideToL = context.createGain();
-    this.widenerSideToL.gain.value = 0;
-    this.widenerSideToR = context.createGain();
-    this.widenerSideToR.gain.value = 0;
-
-    this.widenerInput.connect(this.widenerSplitter);
-    this.widenerSplitter.connect(this.widenerMidL, 0);
-    this.widenerSplitter.connect(this.widenerMidR, 1);
-    this.widenerMidL.connect(this.widenerMidSum);
-    this.widenerMidR.connect(this.widenerMidSum);
-    this.widenerSplitter.connect(this.widenerSideL, 0);
-    this.widenerSplitter.connect(this.widenerSideR, 1);
-    this.widenerSideL.connect(this.widenerSideSum);
-    this.widenerSideR.connect(this.widenerSideSum);
-    this.widenerMidSum.connect(this.widenerMidToL);
-    this.widenerMidSum.connect(this.widenerMidToR);
-    this.widenerMidToL.connect(this.widenerMerger, 0, 0);
-    this.widenerMidToR.connect(this.widenerMerger, 0, 1);
-    this.widenerSideSum.connect(this.widenerSideToL);
-    this.widenerSideSum.connect(this.widenerSideToR);
-    this.widenerSideToL.connect(this.widenerMerger, 0, 0);
-    this.widenerSideToR.connect(this.widenerMerger, 0, 1);
-    this.widenerMerger.connect(this.widenerOutput);
-
-    // 5. IMAGER 3 BANDES
-    this.imagerInput = context.createGain();
-    this.imagerOutput = context.createGain();
-    this.imagerWetGain = context.createGain();
-    this.imagerWetGain.gain.value = 0;
-    this.imagerDryGain = context.createGain();
-    this.imagerDryGain.gain.value = 1;
-
-    this.imagerLowFilter = context.createBiquadFilter();
-    this.imagerLowFilter.type = 'lowpass';
-    this.imagerLowFilter.frequency.value = 200;
-    this.imagerLowFilter.Q.value = 0.7;
-    this.imagerLowSplitter = context.createChannelSplitter(2);
-    this.imagerLowMerger = context.createChannelMerger(2);
-    this.imagerLowDryL = context.createGain();
-    this.imagerLowDryL.gain.value = 1;
-    this.imagerLowDryR = context.createGain();
-    this.imagerLowDryR.gain.value = 1;
-    this.imagerLowMonoSum = context.createGain();
-    this.imagerLowMonoSum.gain.value = 0.5;
-    this.imagerLowMonoGain = context.createGain();
-    this.imagerLowMonoGain.gain.value = 0;
-
-    this.imagerMidFilter = context.createBiquadFilter();
-    this.imagerMidFilter.type = 'bandpass';
-    this.imagerMidFilter.frequency.value = 1000;
-    this.imagerMidFilter.Q.value = 0.5;
-    this.imagerMidSplitter = context.createChannelSplitter(2);
-    this.imagerMidMerger = context.createChannelMerger(2);
-    this.imagerMidDryL = context.createGain();
-    this.imagerMidDryL.gain.value = 1;
-    this.imagerMidDryR = context.createGain();
-    this.imagerMidDryR.gain.value = 1;
-    this.imagerMidMonoSum = context.createGain();
-    this.imagerMidMonoSum.gain.value = 0.5;
-    this.imagerMidMonoGain = context.createGain();
-    this.imagerMidMonoGain.gain.value = 0;
-
-    this.imagerHighFilter = context.createBiquadFilter();
-    this.imagerHighFilter.type = 'highpass';
-    this.imagerHighFilter.frequency.value = 4000;
-    this.imagerHighFilter.Q.value = 0.7;
-    this.imagerHighSplitter = context.createChannelSplitter(2);
-    this.imagerHighMerger = context.createChannelMerger(2);
-    this.imagerHighDryL = context.createGain();
-    this.imagerHighDryL.gain.value = 1;
-    this.imagerHighDryR = context.createGain();
-    this.imagerHighDryR.gain.value = 1;
-    this.imagerHighMonoSum = context.createGain();
-    this.imagerHighMonoSum.gain.value = 0.5;
-    this.imagerHighMonoGain = context.createGain();
-    this.imagerHighMonoGain.gain.value = 0;
-
-    this.imagerInput.connect(this.imagerDryGain);
-    this.imagerDryGain.connect(this.imagerOutput);
-
-    this.imagerInput.connect(this.imagerLowFilter);
-    this.imagerLowFilter.connect(this.imagerLowSplitter);
-    this.imagerLowSplitter.connect(this.imagerLowDryL, 0);
-    this.imagerLowSplitter.connect(this.imagerLowDryR, 1);
-    this.imagerLowDryL.connect(this.imagerLowMerger, 0, 0);
-    this.imagerLowDryR.connect(this.imagerLowMerger, 0, 1);
-    this.imagerLowSplitter.connect(this.imagerLowMonoSum, 0);
-    this.imagerLowSplitter.connect(this.imagerLowMonoSum, 1);
-    this.imagerLowMonoSum.connect(this.imagerLowMonoGain);
-    this.imagerLowMonoGain.connect(this.imagerLowMerger, 0, 0);
-    this.imagerLowMonoGain.connect(this.imagerLowMerger, 0, 1);
-    this.imagerLowMerger.connect(this.imagerWetGain);
-
-    this.imagerInput.connect(this.imagerMidFilter);
-    this.imagerMidFilter.connect(this.imagerMidSplitter);
-    this.imagerMidSplitter.connect(this.imagerMidDryL, 0);
-    this.imagerMidSplitter.connect(this.imagerMidDryR, 1);
-    this.imagerMidDryL.connect(this.imagerMidMerger, 0, 0);
-    this.imagerMidDryR.connect(this.imagerMidMerger, 0, 1);
-    this.imagerMidSplitter.connect(this.imagerMidMonoSum, 0);
-    this.imagerMidSplitter.connect(this.imagerMidMonoSum, 1);
-    this.imagerMidMonoSum.connect(this.imagerMidMonoGain);
-    this.imagerMidMonoGain.connect(this.imagerMidMerger, 0, 0);
-    this.imagerMidMonoGain.connect(this.imagerMidMerger, 0, 1);
-    this.imagerMidMerger.connect(this.imagerWetGain);
-
-    this.imagerInput.connect(this.imagerHighFilter);
-    this.imagerHighFilter.connect(this.imagerHighSplitter);
-    this.imagerHighSplitter.connect(this.imagerHighDryL, 0);
-    this.imagerHighSplitter.connect(this.imagerHighDryR, 1);
-    this.imagerHighDryL.connect(this.imagerHighMerger, 0, 0);
-    this.imagerHighDryR.connect(this.imagerHighMerger, 0, 1);
-    this.imagerHighSplitter.connect(this.imagerHighMonoSum, 0);
-    this.imagerHighSplitter.connect(this.imagerHighMonoSum, 1);
-    this.imagerHighMonoSum.connect(this.imagerHighMonoGain);
-    this.imagerHighMonoGain.connect(this.imagerHighMerger, 0, 0);
-    this.imagerHighMonoGain.connect(this.imagerHighMerger, 0, 1);
-    this.imagerHighMerger.connect(this.imagerWetGain);
-
-    this.imagerWetGain.connect(this.imagerOutput);
-
-    // 6. MONO-MAKER
-    this.monoMakerInput = context.createGain();
-    this.monoMakerOutput = context.createGain();
-    this.monoMakerSplitter = context.createChannelSplitter(2);
-    this.monoMakerMerger = context.createChannelMerger(2);
-
-    this.monoMakerBassL = context.createBiquadFilter();
-    this.monoMakerBassL.type = 'lowpass';
-    this.monoMakerBassL.frequency.value = this.monoMakerFreq;
-    this.monoMakerBassL.Q.value = 0.7;
-
-    this.monoMakerBassR = context.createBiquadFilter();
-    this.monoMakerBassR.type = 'lowpass';
-    this.monoMakerBassR.frequency.value = this.monoMakerFreq;
-    this.monoMakerBassR.Q.value = 0.7;
-
-    this.monoMakerBassGainL = context.createGain();
-    this.monoMakerBassGainL.gain.value = 0.5;
-    this.monoMakerBassGainR = context.createGain();
-    this.monoMakerBassGainR.gain.value = 0.5;
-
-    this.monoMakerBassMono = context.createGain();
-    this.monoMakerBassMono.gain.value = 1;
-
-    this.monoMakerHighL = context.createBiquadFilter();
-    this.monoMakerHighL.type = 'highpass';
-    this.monoMakerHighL.frequency.value = this.monoMakerFreq;
-    this.monoMakerHighL.Q.value = 0.7;
-
-    this.monoMakerHighR = context.createBiquadFilter();
-    this.monoMakerHighR.type = 'highpass';
-    this.monoMakerHighR.frequency.value = this.monoMakerFreq;
-    this.monoMakerHighR.Q.value = 0.7;
-
-    this.monoMakerMixL = context.createGain();
-    this.monoMakerMixL.gain.value = 1;
-    this.monoMakerMixR = context.createGain();
-    this.monoMakerMixR.gain.value = 1;
-
-    this.monoMakerWetGain = context.createGain();
-    this.monoMakerWetGain.gain.value = 0;
-    this.monoMakerDryGain = context.createGain();
-    this.monoMakerDryGain.gain.value = 1;
-
-    this.monoMakerInput.connect(this.monoMakerSplitter);
-    this.monoMakerInput.connect(this.monoMakerDryGain);
-    this.monoMakerDryGain.connect(this.monoMakerOutput);
-
-    this.monoMakerSplitter.connect(this.monoMakerBassL, 0);
-    this.monoMakerBassL.connect(this.monoMakerBassGainL);
-    this.monoMakerBassGainL.connect(this.monoMakerBassMono);
-
-    this.monoMakerSplitter.connect(this.monoMakerBassR, 1);
-    this.monoMakerBassR.connect(this.monoMakerBassGainR);
-    this.monoMakerBassGainR.connect(this.monoMakerBassMono);
-
-    this.monoMakerSplitter.connect(this.monoMakerHighL, 0);
-    this.monoMakerHighL.connect(this.monoMakerMixL);
-
-    this.monoMakerSplitter.connect(this.monoMakerHighR, 1);
-    this.monoMakerHighR.connect(this.monoMakerMixR);
-
-    this.monoMakerBassMono.connect(this.monoMakerMixL);
-    this.monoMakerBassMono.connect(this.monoMakerMixR);
-
-    this.monoMakerMixL.connect(this.monoMakerMerger, 0, 0);
-    this.monoMakerMixR.connect(this.monoMakerMerger, 0, 1);
-
-    this.monoMakerMerger.connect(this.monoMakerWetGain);
-    this.monoMakerWetGain.connect(this.monoMakerOutput);
-
-    // 7. COMPRESSEUR BROADBAND
-    this.compressor = context.createDynamicsCompressor();
-    this.compressor.threshold.value = -18;
-    this.compressor.knee.value = 6;
-    this.compressor.ratio.value = 4;
-    this.compressor.attack.value = 0.01;
-    this.compressor.release.value = 0.25;
-
-    this.compressorMakeup = context.createGain();
-    this.compressorMakeup.gain.value = 1.8;
-
-    // 7b. HARMONIC EXCITER
-    this.exciterHighShelf = context.createBiquadFilter();
-    this.exciterHighShelf.type = 'highshelf';
-    this.exciterHighShelf.frequency.value = 3000;
-    this.exciterHighShelf.gain.value = 3;
-
-    this.exciterDrive = context.createWaveShaper();
-    this.exciterDrive.curve = this.makeExciterCurve(2.5) as any;
-    this.exciterDrive.oversample = '4x';
-
-    this.exciterWetGain = context.createGain();
-    this.exciterWetGain.gain.value = 0.35;
-    this.exciterDryGain = context.createGain();
-    this.exciterDryGain.gain.value = 0.75;
-
-    // 7c. SUB-BASS + AIR BAND
-    this.subBassFilter = context.createBiquadFilter();
-    this.subBassFilter.type = 'peaking';
-    this.subBassFilter.frequency.value = 60;
-    this.subBassFilter.Q.value = 1.2;
-    this.subBassFilter.gain.value = 3;
-
-    this.bassShelf = context.createBiquadFilter();
-    this.bassShelf.type = 'lowshelf';
-    this.bassShelf.frequency.value = 120;
-    this.bassShelf.gain.value = 2;
-
-    this.subBassGain = context.createGain();
-    this.subBassGain.gain.value = 1;
-
-    this.airShelf = context.createBiquadFilter();
-    this.airShelf.type = 'highshelf';
-    this.airShelf.frequency.value = 14000;
-    this.airShelf.gain.value = 4;
-
-    // 7d. LIMITEUR BRICKWALL
-    this.limiter = context.createDynamicsCompressor();
-    this.limiter.threshold.value = -1.5;
-    this.limiter.knee.value = 0;
-    this.limiter.ratio.value = 20;
-    this.limiter.attack.value = 0.001;
-    this.limiter.release.value = 0.08;
-
-    // 8. BYPASS & GAINS
-    this.bypassGain = context.createGain();
-    this.bypassGain.gain.value = 0;
-    this.processedGain = context.createGain();
-    this.processedGain.gain.value = 1;
-    this.outputGain = context.createGain();
-
-    // 9. CHAÎNE PRINCIPALE COMPLÈTE
-    let prev: AudioNode = this.inputGain;
-    for (const band of this.eqBands) {
-      prev.connect(band);
-      prev = band;
-    }
-    prev.connect(this.eqMid);
-    this.eqMid.connect(this.saturator);
-    this.saturator.connect(this.widenerInput);
-    this.widenerOutput.connect(this.imagerInput);
-    this.imagerOutput.connect(this.monoMakerInput);
-
-    this.monoMakerOutput.connect(this.subBassFilter);
-    this.subBassFilter.connect(this.bassShelf);
-    this.bassShelf.connect(this.compressor);
-    this.compressor.connect(this.compressorMakeup);
-
-    this.compressorMakeup.connect(this.exciterHighShelf);
-    this.exciterHighShelf.connect(this.exciterWetGain);
-    this.exciterWetGain.connect(this.exciterDrive);
-    this.exciterDrive.connect(this.airShelf);
-    this.exciterHighShelf.connect(this.exciterDryGain);
-    this.exciterDryGain.connect(this.airShelf);
-
-    this.airShelf.connect(this.limiter);
-    this.limiter.connect(this.processedGain);
-    this.processedGain.connect(this.outputGain);
-
-    this.inputGain.connect(this.bypassGain);
-    this.bypassGain.connect(this.outputGain);
-  }
-
-  // COURBES
-  private makeDistortionCurve(amount: number): any {
-    const samples = 44100;
-    const curve = new Float32Array(samples);
-    const k = amount * 8;
-    for (let i = 0; i < samples; i++) {
-      const x = (i * 2) / samples - 1;
-      if (k < 0.001) {
-        curve[i] = x;
-      } else {
-        curve[i] = Math.tanh(k * x) / Math.tanh(k);
-      }
-    }
-    return curve;
-  }
-
-  private makeExciterCurve(drive: number): any {
-    const samples = 44100;
-    const curve = new Float32Array(samples);
-    for (let i = 0; i < samples; i++) {
-      const x = (i * 2) / samples - 1;
-      const pos = Math.tanh(drive * x) / Math.tanh(drive);
-      const neg = Math.tanh(drive * 0.7 * x) / Math.tanh(drive * 0.7);
-      curve[i] = x >= 0 ? pos : neg * 0.9;
-    }
-    return curve;
-  }
-
-  // CONNEXIONS EXTERNES
-  connect(source: AudioNode): void {
-    if (this.inputNode) {
-      try {
-        this.inputNode.disconnect(this.inputGain);
-      } catch {}
-    }
-    this.inputNode = source;
-    source.connect(this.inputGain);
-  }
-
-  getOutputNode(): AudioNode {
-    return this.outputGain;
-  }
-
-  getInputNode(): AudioNode {
-    return this.inputGain;
-  }
-
-  // CONTRÔLES
-  setLoudness(value: number): void {
-    this.inputGain.gain.value = Math.pow(10, value / 20);
-  }
-
-  setPresence(value: number): void {
-    this.eqMid.gain.value = value;
-  }
-
-  setWidth(value: number): void {
-    this.currentWidth = value;
-    const sideGain = Math.max(0, value - 1);
-    const midGain = 1 - Math.min(0.5, sideGain * 0.3);
-
-    const now = this.context.currentTime;
-    this.widenerSideToL.gain.setTargetAtTime(sideGain, now, 0.02);
-    this.widenerSideToR.gain.setTargetAtTime(-sideGain, now, 0.02);
-    this.widenerMidToL.gain.setTargetAtTime(midGain, now, 0.02);
-    this.widenerMidToR.gain.setTargetAtTime(midGain, now, 0.02);
-  }
-
-  setSaturation(value: number): void {
-    this.saturator.curve = this.makeDistortionCurve(value) as any;
-  }
-
-  setBypass(bypass: boolean): void {
-    this.bypassGain.gain.value = bypass ? 1 : 0;
-    this.processedGain.gain.value = bypass ? 0 : 1;
-  }
-
-  // EQ 5 BANDES
-  setEQBand(index: number, frequency: number, gain: number, q?: number): void {
-    const band = this.eqBands[index];
-    if (!band) return;
-    band.frequency.value = frequency;
-    band.gain.value = gain;
-    if (q !== undefined) band.Q.value = q;
-  }
-
-  getEQBandCount(): number {
-    return this.eqBands.length;
-  }
-
-  // MONO-MAKER
-  setMonoMaker(enabled: boolean, frequency?: number): void {
-    this.monoMakerEnabled = enabled;
-    if (frequency !== undefined) {
-      this.monoMakerFreq = frequency;
-      this.monoMakerBassL.frequency.value = frequency;
-      this.monoMakerBassR.frequency.value = frequency;
-      this.monoMakerHighL.frequency.value = frequency;
-      this.monoMakerHighR.frequency.value = frequency;
-    }
-
-    const now = this.context.currentTime;
-    if (enabled) {
-      this.monoMakerWetGain.gain.setTargetAtTime(1, now, 0.02);
-      this.monoMakerDryGain.gain.setTargetAtTime(0, now, 0.02);
-    } else {
-      this.monoMakerWetGain.gain.setTargetAtTime(0, now, 0.02);
-      this.monoMakerDryGain.gain.setTargetAtTime(1, now, 0.02);
-    }
-  }
-
-  isMonoMakerEnabled(): boolean {
-    return this.monoMakerEnabled;
-  }
-
-  getMonoMakerFrequency(): number {
-    return this.monoMakerFreq;
-  }
-
-  // IMAGER 3 BANDES
-  setImager(enabled: boolean, lowAmount?: number, midAmount?: number, highAmount?: number): void {
-    if (lowAmount !== undefined) {
-      this.imagerLowDryL.gain.value = 1 - lowAmount;
-      this.imagerLowDryR.gain.value = 1 - lowAmount;
-      this.imagerLowMonoGain.gain.value = lowAmount;
-    }
-    if (midAmount !== undefined) {
-      this.imagerMidDryL.gain.value = 1 - midAmount;
-      this.imagerMidDryR.gain.value = 1 - midAmount;
-      this.imagerMidMonoGain.gain.value = midAmount;
-    }
-    if (highAmount !== undefined) {
-      this.imagerHighDryL.gain.value = 1 - highAmount;
-      this.imagerHighDryR.gain.value = 1 - highAmount;
-      this.imagerHighMonoGain.gain.value = highAmount;
-    }
-
-    const now = this.context.currentTime;
-    if (enabled) {
-      this.imagerWetGain.gain.setTargetAtTime(1, now, 0.02);
-      this.imagerDryGain.gain.setTargetAtTime(0, now, 0.02);
-    } else {
-      this.imagerWetGain.gain.setTargetAtTime(0, now, 0.02);
-      this.imagerDryGain.gain.setTargetAtTime(1, now, 0.02);
-    }
-  }
-
-  // PRESETS
-  applyPreset(preset: MasteringPreset): void {
-    const values = this.getPresetValues(preset);
-    this.setLoudness(values.loudness);
-    this.setPresence(values.presence);
-    this.setWidth(values.width);
-    this.setSaturation(values.saturation);
-
-    const eqPreset = this.getEQPreset(preset);
-    eqPreset.forEach((band, i) => {
-      this.setEQBand(i, band.frequency, band.gain, band.q);
-    });
-
-    if (preset === 'warm' || preset === 'balanced') {
-      this.setMonoMaker(true, 120);
-    } else {
-      this.setMonoMaker(false);
-    }
-  }
-
-  getPresetValues(preset: MasteringPreset): PresetValues {
-    switch (preset) {
-      case 'warm':     return { loudness: +5, presence: -1, width: 1.4, saturation: 0.5 };
-      case 'balanced': return { loudness: +4, presence: +2, width: 1.3, saturation: 0.35 };
-      case 'open':     return { loudness: +5, presence: +5, width: 1.6, saturation: 0.25 };
-      case 'master':   return { loudness: +1, presence: +1, width: 1.1, saturation: 0.1 };
-    }
-  }
-
-  getEQPreset(preset: MasteringPreset): { frequency: number; gain: number; q: number }[] {
-    switch (preset) {
-      case 'warm':
-        return [
-          { frequency: 80,    gain: +3.5, q: 0.7 },
-          { frequency: 250,   gain: +1.5, q: 1   },
-          { frequency: 1000,  gain: -1.0, q: 1   },
-          { frequency: 4000,  gain: -0.5, q: 1   },
-          { frequency: 12000, gain: -2.0, q: 0.7 },
-        ];
-      case 'balanced':
-        return [
-          { frequency: 80,    gain: +2.0, q: 0.7 },
-          { frequency: 250,   gain: +0.5, q: 1   },
-          { frequency: 1000,  gain: 0,    q: 1   },
-          { frequency: 4000,  gain: +1.0, q: 1   },
-          { frequency: 12000, gain: +1.5, q: 0.7 },
-        ];
-      case 'open':
-        return [
-          { frequency: 80,    gain: -1.5, q: 0.7 },
-          { frequency: 250,   gain: -1.0, q: 1   },
-          { frequency: 1000,  gain: 0,    q: 1   },
-          { frequency: 4000,  gain: +2.5, q: 1   },
-          { frequency: 12000, gain: +4.0, q: 0.7 },
-        ];
-      case 'master':
-        return [
-          { frequency: 80,    gain: 0, q: 0.7 },
-          { frequency: 250,   gain: 0, q: 1   },
-          { frequency: 1000,  gain: 0, q: 1   },
-          { frequency: 4000,  gain: 0, q: 1   },
-          { frequency: 12000, gain: 0, q: 0.7 },
-        ];
-    }
-  }
-
-  // CLEANUP
-  destroy(): void {
-    try { this.inputGain.disconnect(); } catch {}
-    this.eqBands.forEach((b) => { try { b.disconnect(); } catch {} });
-    try { this.eqMid.disconnect(); } catch {}
-    try { this.saturator.disconnect(); } catch {}
-
-    const widenerNodes = [
-      this.widenerInput, this.widenerOutput, this.widenerSplitter, this.widenerMerger,
-      this.widenerMidL, this.widenerMidR, this.widenerMidSum,
-      this.widenerSideL, this.widenerSideR, this.widenerSideSum,
-      this.widenerMidToL, this.widenerMidToR, this.widenerSideToL, this.widenerSideToR,
-    ];
-    widenerNodes.forEach((n) => { try { n.disconnect(); } catch {} });
-
-    const imagerNodes = [
-      this.imagerInput, this.imagerOutput, this.imagerWetGain, this.imagerDryGain,
-      this.imagerLowFilter, this.imagerLowSplitter, this.imagerLowMerger,
-      this.imagerLowDryL, this.imagerLowDryR, this.imagerLowMonoSum, this.imagerLowMonoGain,
-      this.imagerMidFilter, this.imagerMidSplitter, this.imagerMidMerger,
-      this.imagerMidDryL, this.imagerMidDryR, this.imagerMidMonoSum, this.imagerMidMonoGain,
-      this.imagerHighFilter, this.imagerHighSplitter, this.imagerHighMerger,
-      this.imagerHighDryL, this.imagerHighDryR, this.imagerHighMonoSum, this.imagerHighMonoGain,
-    ];
-    imagerNodes.forEach((n) => { try { n.disconnect(); } catch {} });
-
-    const monoNodes = [
-      this.monoMakerInput, this.monoMakerOutput, this.monoMakerSplitter, this.monoMakerMerger,
-      this.monoMakerBassL, this.monoMakerBassR, this.monoMakerHighL, this.monoMakerHighR,
-      this.monoMakerBassGainL, this.monoMakerBassGainR, this.monoMakerBassMono,
-      this.monoMakerMixL, this.monoMakerMixR, this.monoMakerWetGain, this.monoMakerDryGain,
-    ];
-    monoNodes.forEach((n) => { try { n.disconnect(); } catch {} });
-
-    const extraNodes = [
-      this.compressor, this.compressorMakeup,
-      this.exciterHighShelf, this.exciterDrive, this.exciterWetGain, this.exciterDryGain,
-      this.subBassFilter, this.bassShelf, this.subBassGain, this.airShelf,
-    ];
-    extraNodes.forEach((n) => { try { n.disconnect(); } catch {} });
-
-    try { this.limiter.disconnect(); } catch {}
-    try { this.bypassGain.disconnect(); } catch {}
-    try { this.processedGain.disconnect(); } catch {}
-    try { this.outputGain.disconnect(); } catch {}
-  }
-}
+// src/pages/MasteringPage.tsx
+import React, { useRef } from 'react';
+import { useAudioEngineContext } from '../contexts/AudioEngineContext';
+
+// ─── Styles réutilisables ──────────────────────────────────────
+const PANEL_STYLE: React.CSSProperties = {
+  background: '#1c1c1c',
+  border: '1px solid #2a2a2a',
+  borderRadius: 8,
+  overflow: 'hidden',
+};
+
+const LABEL_STYLE: React.CSSProperties = {
+  fontSize: 10,
+  color: '#999',
+  letterSpacing: 1,
+  textTransform: 'uppercase',
+  fontWeight: 700,
+  marginBottom: 8,
+};
+
+const BTN_BASE: React.CSSProperties = {
+  padding: '8px 16px',
+  borderRadius: 4,
+  border: '1px solid #2a2a2a',
+  background: 'transparent',
+  color: '#999',
+  fontSize: 11,
+  fontWeight: 600,
+  cursor: 'pointer',
+  transition: 'all 0.15s ease',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: 6,
+};
+
+export const MasteringPage: React.FC = () => {
+  const engine = useAudioEngineContext();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) engine.loadFile(file);
+    e.target.value = '';
+  };
+
+  const hasAudio = !!engine.result;
+
+  return (
+    <div style={{ maxWidth: 1100, margin: '0 auto', padding: '40px 20px', color: '#fff', fontFamily: 'Inter, sans-serif' }}>
+      
+      {/* EN-TÊTE */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+            <h1 style={{ fontSize: '1.6rem', fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span>🎛️</span> Mastering
+            </h1>
+            <span style={{ background: 'rgba(255, 51, 102, 0.15)', color: '#ff3366', border: '1px solid rgba(255, 51, 102, 0.3)', padding: '2px 8px', borderRadius: 12, fontSize: '0.65rem', fontWeight: 700 }}>PRO</span>
+          </div>
+          <p style={{ color: '#666', fontSize: '0.75rem', margin: 0 }}>
+            Chaîne complète · EQ 5 bandes · Mono-Maker · Vector Scope · Limiteur · Export WAV
+          </p>
+        </div>
+        
+        {/* Statut */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(0, 255, 136, 0.1)', border: '1px solid rgba(0, 255, 136, 0.2)', padding: '6px 12px', borderRadius: 20 }}>
+          <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#00ff88', boxShadow: '0 0 8px #00ff88' }}></div>
+          <span style={{ fontSize: 10, color: '#00ff88', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1 }}>Prêt à masteriser</span>
+        </div>
+      </div>
+
+      {!hasAudio ? (
+        /* ZONE D'IMPORT */
+        <div 
+          onClick={() => fileInputRef.current?.click()}
+          style={{ ...PANEL_STYLE, borderStyle: 'dashed', padding: '60px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer' }}
+        >
+          <input type="file" accept="audio/*" ref={fileInputRef} onChange={handleFileChange} style={{ display: 'none' }} />
+          <div style={{ fontSize: 40, marginBottom: 16 }}>📂</div>
+          <h2 style={{ fontSize: '1.1rem', fontWeight: 700, margin: '0 0 8px 0' }}>Importer un fichier source</h2>
+          <p style={{ color: '#999', fontSize: '0.8rem', margin: 0 }}>Glisse ton fichier WAV / MP3 ici</p>
+        </div>
+      ) : (
+        /* INTERFACE DE MASTERING COMPLÈTE */
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          
+          {/* MODULE A/B & INTENSITÉ */}
+          <div style={{ ...PANEL_STYLE, padding: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ flex: 1, marginRight: 40 }}>
+              <div style={LABEL_STYLE}>⚖️ Comparaison A/B</div>
+              <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
+                <button style={{ ...BTN_BASE, flex: 1, background: 'rgba(124, 92, 255, 0.2)', borderColor: '#7c5cff', color: '#fff' }}>▶ ORIGINAL</button>
+                <button style={{ ...BTN_BASE, flex: 1 }}>◼ MASTERISÉ</button>
+              </div>
+              <button onClick={engine.stopAll} style={{ ...BTN_BASE, width: '100%', background: '#ff3366', borderColor: '#ff3366', color: '#fff', fontWeight: 700 }}>■ ARRÊTER</button>
+            </div>
+            
+            <div style={{ flex: 1 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 8 }}>
+                <div style={LABEL_STYLE}>🔥 Intensité du preset</div>
+                <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#fff' }}>100%</div>
+              </div>
+              <input type="range" min="0" max="100" defaultValue="100" style={{ width: '100%', accentColor: '#00d9ff' }} />
+              <div style={{ fontSize: 10, color: '#666', marginTop: 4, textAlign: 'right' }}>Effets à pleine puissance</div>
+            </div>
+          </div>
+
+          {/* MODULE SPECTRE SONORE (Visuel) */}
+          <div style={{ ...PANEL_STYLE, padding: 20 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <div style={LABEL_STYLE}>📊 Spectre sonore</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#00ff88' }}></div>
+                <span style={{ fontSize: 10, color: '#00ff88', fontWeight: 700 }}>LIVE</span>
+              </div>
+            </div>
+            <div style={{ height: 120, background: '#121212', borderRadius: 6, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: 2, padding: '10px 0', position: 'relative' }}>
+              {/* Fausses barres d'égaliseur */}
+              {Array.from({ length: 40 }).map((_, i) => {
+                const height = Math.sin(i * 0.2) * 40 + 50 + Math.random() * 20;
+                return (
+                  <div key={i} style={{ 
+                    width: '2%', height: `${height}%`, 
+                    background: `linear-gradient(to top, #00ff88, #ffd43b, #ff3366)`,
+                    borderRadius: '2px 2px 0 0',
+                    opacity: 0.8
+                  }} />
+                );
+              })}
+              <button style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', width: 32, height: 32, borderRadius: '50%', background: '#fff', border: 'none', color: '#000', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                ▶
+              </button>
+            </div>
+          </div>
+
+          {/* GRILLE DU BAS (Source + Chaîne / Master + EQ) */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: 16 }}>
+            
+            {/* COLONNE GAUCHE */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              
+              {/* Fichier Source */}
+              <div style={{ ...PANEL_STYLE, padding: 16 }}>
+                <div style={LABEL_STYLE}>🎵 Fichier source</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#121212', padding: 10, borderRadius: 6, border: '1px solid #2a2a2a' }}>
+                  <div style={{ width: 32, height: 32, background: 'rgba(255,255,255,0.05)', borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>🎵</div>
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: '#fff' }}>{engine.fileName}</div>
+                    <div style={{ fontSize: 10, color: '#666' }}>WAV · {(engine.result as any)?.fileSize || '33.8 Mo'}</div>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 12 }}>
+                  <div style={{ textAlign: 'center', flex: 1, borderRight: '1px solid #2a2a2a' }}>
+                    <div style={{ fontSize: 9, color: '#666', textTransform: 'uppercase' }}>Durée</div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: '#fff' }}>{engine.result?.duration.toFixed(1)}s</div>
+                  </div>
+                  <div style={{ textAlign: 'center', flex: 1 }}>
+                    <div style={{ fontSize: 9, color: '#666', textTransform: 'uppercase' }}>BPM</div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: '#fff' }}>{engine.result?.bpm}</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Chaîne de traitement */}
+              <div style={{ ...PANEL_STYLE, padding: 16, flex: 1 }}>
+                <div style={LABEL_STYLE}>⚙️ Chaîne de traitement</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {['EQ 5 bandes', 'Compression', 'Saturation', 'Stéréo Widener', 'Mono-Maker', 'Limiteur brickwall'].map((item, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: '#ccc', padding: '6px 8px', background: '#121212', borderRadius: 4, border: '1px solid #2a2a2a' }}>
+                      <div style={{ width: 6, height: 6, borderRadius: '50%', background: i < 3 ? '#00d9ff' : '#666' }}></div>
+                      {item}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+            </div>
+
+            {/* COLONNE DROITE */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              
+              {/* Presets & EQ */}
+              <div style={{ ...PANEL_STYLE, padding: 20, flex: 1, display: 'flex', flexDirection: 'column' }}>
+                <div style={{ marginBottom: 20 }}>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 2 }}>WAVEFORGE <span style={{ color: '#00d9ff' }}>MASTERING</span></div>
+                  <div style={{ fontSize: 9, color: '#666', letterSpacing: 1, textTransform: 'uppercase' }}>Professional Audio Processing</div>
+                </div>
+
+                <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+                  <button style={{ ...BTN_BASE, flex: 1 }}>WARM</button>
+                  <button style={{ ...BTN_BASE, flex: 1, background: 'rgba(0, 217, 255, 0.1)', borderColor: '#00d9ff', color: '#00d9ff' }}>BALANCED</button>
+                  <button style={{ ...BTN_BASE, flex: 1 }}>OPEN</button>
+                  <button style={{ ...BTN_BASE, flex: 1 }}>MASTER</button>
+                </div>
+
+                <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
+                  <button style={{ ...BTN_BASE, flex: 1 }}>💾 SAUVEGARDER</button>
+                  <button style={{ ...BTN_BASE, flex: 1 }}>📁 MES PRESETS (0)</button>
+                </div>
+
+                {/* Égaliseur Graphique (Faux) */}
+                <div style={{ position: 'relative', flex: 1, minHeight: 150, background: '#121212', borderRadius: 6, border: '1px solid #2a2a2a', padding: 10 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
+                    <div style={LABEL_STYLE}>Égaliseur 5 bandes</div>
+                    <button style={{ background: 'transparent', border: 'none', color: '#00d9ff', fontSize: 10, fontWeight: 700, cursor: 'pointer' }}>▼ MASQUER</button>
+                  </div>
+                  
+                  {/* Lignes de grille */}
+                  <div style={{ position: 'absolute', inset: '40px 10px 20px 30px', borderLeft: '1px solid #2a2a2a', borderBottom: '1px solid #2a2a2a' }}>
+                    <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, borderTop: '1px dashed #333' }}></div>
+                    <div style={{ position: 'absolute', top: 0, bottom: 0, left: '50%', borderLeft: '1px dashed #333' }}></div>
+                    
+                    {/* Points d'égalisation (Faux) */}
+                    <div style={{ position: 'absolute', top: '40%', left: '10%', width: 8, height: 8, background: '#00d9ff', borderRadius: '50%', boxShadow: '0 0 8px #00d9ff' }}></div>
+                    <div style={{ position: 'absolute', top: '30%', left: '30%', width: 8, height: 8, background: '#7c5cff', borderRadius: '50%', boxShadow: '0 0 8px #7c5cff' }}></div>
+                    <div style={{ position: 'absolute', top: '50%', left: '50%', width: 8, height: 8, background: '#00ff88', borderRadius: '50%', boxShadow: '0 0 8px #00ff88' }}></div>
+                    <div style={{ position: 'absolute', top: '20%', left: '70%', width: 8, height: 8, background: '#ffd43b', borderRadius: '50%', boxShadow: '0 0 8px #ffd43b' }}></div>
+                    <div style={{ position: 'absolute', top: '45%', left: '90%', width: 8, height: 8, background: '#ff3366', borderRadius: '50%', boxShadow: '0 0 8px #ff3366' }}></div>
+                  </div>
+
+                  {/* Labels Axes */}
+                  <div style={{ position: 'absolute', bottom: 2, left: 0, right: 0, display: 'flex', justifyContent: 'space-between', padding: '0 20px', fontSize: 8, color: '#666' }}>
+                    <span>50Hz</span><span>100Hz</span><span>500Hz</span><span>1kHz</span><span>5kHz</span><span>10kHz</span>
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+      )}
+    </div>
+  );
+};

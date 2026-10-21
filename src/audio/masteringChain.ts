@@ -31,8 +31,6 @@ export const DEFAULT_EQ_BANDS: EQBand[] = [
 
 // ============================================================
 // LUFS METER — ITU-R BS.1770-4
-// ⚠️ FIX : sortie muette vers destination pour forcer le "pull"
-//          (sinon Safari/Edge renvoient toujours 0)
 // ============================================================
 export class LUFSMeter {
   private ctx: BaseAudioContext;
@@ -40,7 +38,7 @@ export class LUFSMeter {
   private kHP: BiquadFilterNode;
   private analyser: AnalyserNode;
   private silence: GainNode;
-  private buf: Float32Array;
+  private buf: Float32Array<ArrayBuffer>; // ✅ Type strict
   private sampleHistory: number[] = [];
   private lastUpdate = 0;
 
@@ -59,14 +57,14 @@ export class LUFSMeter {
 
     this.analyser = ctx.createAnalyser();
     this.analyser.fftSize = 2048;
-    this.buf = new Float32Array(2048);
+    // ✅ Cast pour TypeScript 5.7+
+    this.buf = new Float32Array(2048) as Float32Array<ArrayBuffer>;
 
     this.silence = ctx.createGain();
     this.silence.gain.value = 0;
 
     this.kHS.connect(this.kHP);
     this.kHP.connect(this.analyser);
-    // ✅ Force le pull : sortie muette
     this.analyser.connect(this.silence);
     this.silence.connect(ctx.destination);
   }
@@ -208,7 +206,7 @@ export class MasteringChain {
   private outputGain: GainNode;
   private inputNode: AudioNode | null = null;
   private context: BaseAudioContext;
-  private curveCache = new Map<string, Float32Array>();
+  private curveCache = new Map<string, Float32Array<ArrayBuffer>>(); // ✅ Type strict
 
   constructor(context: BaseAudioContext) {
     this.context = context;
@@ -480,9 +478,10 @@ export class MasteringChain {
     this.bypassGain.connect(this.outputGain);
   }
 
-  private makeDistortionCurve(amount: number): Float32Array {
+  private makeDistortionCurve(amount: number): Float32Array<ArrayBuffer> {
     const samples = 4096;
-    const curve = new Float32Array(samples);
+    // ✅ Cast ajouté
+    const curve = new Float32Array(samples) as Float32Array<ArrayBuffer>;
     const k = amount * 4;
     for (let i = 0; i < samples; i++) {
       const x = (i * 2) / samples - 1;
@@ -491,9 +490,10 @@ export class MasteringChain {
     return curve;
   }
 
-  private makeExciterCurve(drive: number): Float32Array {
+  private makeExciterCurve(drive: number): Float32Array<ArrayBuffer> {
     const samples = 4096;
-    const curve = new Float32Array(samples);
+    // ✅ Cast ajouté
+    const curve = new Float32Array(samples) as Float32Array<ArrayBuffer>;
     for (let i = 0; i < samples; i++) {
       const x = (i * 2) / samples - 1;
       const pos = Math.tanh(drive * x) / Math.tanh(drive);
@@ -503,9 +503,10 @@ export class MasteringChain {
     return curve;
   }
 
-  private makeBrickwallCurve(ceilingDb: number): Float32Array {
+  private makeBrickwallCurve(ceilingDb: number): Float32Array<ArrayBuffer> {
     const samples = 4096;
-    const curve = new Float32Array(samples);
+    // ✅ Cast ajouté
+    const curve = new Float32Array(samples) as Float32Array<ArrayBuffer>;
     const ceiling = Math.pow(10, ceilingDb / 20);
     for (let i = 0; i < samples; i++) {
       const x = (i * 2) / samples - 1;
@@ -521,7 +522,7 @@ export class MasteringChain {
     return curve;
   }
 
-  private getCachedDistortionCurve(amount: number): Float32Array {
+  private getCachedDistortionCurve(amount: number): Float32Array<ArrayBuffer> {
     const key = `d${Math.round(amount * 1000)}`;
     let curve = this.curveCache.get(key);
     if (!curve) {

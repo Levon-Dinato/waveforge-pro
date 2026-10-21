@@ -17,18 +17,17 @@ export const SpectrumVisualizer: React.FC<SpectrumVisualizerProps> = ({
   colorByAmplitude = true,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const requestRef = useRef<number>();
+  // ✅ Correction React 19 : valeur initiale explicite
+  const requestRef = useRef<number | null>(null);
   const dataArrayRef = useRef<Uint8Array | null>(null);
-  
-  // ✅ NOUVEAU : On garde en mémoire la hauteur actuelle de chaque barre
   const heightsRef = useRef<number[]>(new Array(barCount).fill(0));
 
   useEffect(() => {
     if (!analyser) return;
     analyser.minDecibels = -90;
     analyser.maxDecibels = -10;
-    dataArrayRef.current = new Uint8Array(analyser.frequencyBinCount);
-    // Reset les hauteurs si le barCount change
+    // ✅ Cast ajouté
+    dataArrayRef.current = new Uint8Array(analyser.frequencyBinCount) as Uint8Array<ArrayBuffer>;
     heightsRef.current = new Array(barCount).fill(0);
   }, [analyser, barCount]);
 
@@ -47,7 +46,8 @@ export const SpectrumVisualizer: React.FC<SpectrumVisualizerProps> = ({
 
       if (!analyser || !dataArrayRef.current || !isActive) return;
 
-      analyser.getByteFrequencyData(dataArrayRef.current);
+      // ✅ Cast ajouté
+      analyser.getByteFrequencyData(dataArrayRef.current as Uint8Array<ArrayBuffer>);
       const data = dataArrayRef.current;
       
       const sampleRate = analyser.context.sampleRate;
@@ -68,17 +68,11 @@ export const SpectrumVisualizer: React.FC<SpectrumVisualizerProps> = ({
         let value = data[Math.min(binIndex, binCount - 1)] || 0;
         value = Math.pow(value / 255, 1.2) * 255;
 
-        // Hauteur cible calculée
         const targetHeight = Math.max(2, (value / 255) * h);
-        
-        // ✅ INERTIE : On calcule la hauteur actuelle de la barre
         const currentHeight = heightsRef.current[i];
-        
-        // Si le son monte, on monte vite (0.4). Si le son descend, on descend doucement (0.08)
         const smoothing = targetHeight > currentHeight ? 0.4 : 0.08;
         const nextHeight = currentHeight + (targetHeight - currentHeight) * smoothing;
         
-        // On sauvegarde la nouvelle hauteur pour l'image suivante
         heightsRef.current[i] = nextHeight;
 
         const x = i * barWidth;

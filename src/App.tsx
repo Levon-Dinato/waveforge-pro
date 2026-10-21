@@ -36,9 +36,10 @@ const MixerPage = lazy(() => import('./pages/MixerPage').then((m) => ({ default:
 const LivePage = lazy(() => import('./pages/LivePage').then((m) => ({ default: m.LivePage })));
 const TrackPage = lazy(() => import('./pages/TrackPage').then((m) => ({ default: m.TrackPage })));
 const EventsPage = lazy(() => import('./pages/EventsPage').then((m) => ({ default: m.EventsPage })));
-
-// ✅ NOUVEL IMPORT : FeedPage
 const FeedPage = lazy(() => import('./pages/FeedPage').then((m) => ({ default: m.FeedPage })));
+
+// ✅ NOUVEL IMPORT : Outils DJ
+const ToolsPage = lazy(() => import('./pages/ToolsPage').then((m) => ({ default: m.ToolsPage })));
 
 // ============================================================
 // PAGE LOADER
@@ -107,12 +108,18 @@ export default function App() {
                         <Route path="events" element={<EventsPage />} />
 
                         <Route path="studio" element={<PrivateRoute><StudioPage /></PrivateRoute>} />
+                        
+                        {/* ✅ NOUVELLE ROUTE : Le hub des Outils DJ */}
+                        <Route path="tools" element={<PrivateRoute><ToolsPage /></PrivateRoute>} />
+                        
+                        {/* Les routes individuelles (accessibles depuis le hub) */}
                         <Route path="stems" element={<PrivateRoute><StemsPage /></PrivateRoute>} />
                         <Route path="mastering" element={<PrivateRoute><MasteringPage /></PrivateRoute>} />
                         <Route path="musicgen" element={<PrivateRoute><MusicGenPage /></PrivateRoute>} />
                         <Route path="generator" element={<PrivateRoute><GeneratorPage /></PrivateRoute>} />
                         <Route path="video" element={<PrivateRoute><VideoPage /></PrivateRoute>} />
                         <Route path="cdj" element={<PrivateRoute><CDJPage /></PrivateRoute>} />
+                        
                         <Route path="settings" element={<PrivateRoute><SettingsPage /></PrivateRoute>} />
                         <Route path="nouveautes" element={<PrivateRoute><NouveautesPage /></PrivateRoute>} />
                         <Route path="profil/:id" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
@@ -120,8 +127,6 @@ export default function App() {
                         <Route path="artists" element={<PrivateRoute><ArtistsPage /></PrivateRoute>} />
                         <Route path="search" element={<PrivateRoute><SearchPage /></PrivateRoute>} />
                         <Route path="track/:id" element={<TrackPage />} />
-
-                        {/* ✅ NOUVELLE ROUTE : Mon Feed */}
                         <Route path="feed" element={<PrivateRoute><FeedPage /></PrivateRoute>} />
                       </Route>
 

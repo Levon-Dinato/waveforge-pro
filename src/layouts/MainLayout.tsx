@@ -8,12 +8,12 @@ import { SessionPanel } from '../components/SessionPanel';
 import { InstallButton } from '../components/InstallButton';
 import { GlobalPlayer } from '../components/GlobalPlayer';
 import { Footer } from '../components/Footer';
-import { NotificationsDropdown } from '../components/NotificationsDropdown'; // ✅ IMPORT
+import { NotificationsDropdown } from '../components/NotificationsDropdown';
 import { useAudioEngineContext } from '../contexts/AudioEngineContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useIsMobile } from '../hooks/useIsMobile';
 
-// ✅ ICÔNES SVG MINIMALISTES (Style Beatport)
+// ✅ ICÔNES SVG MINIMALISTES
 const Icons = {
   home: (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -51,36 +51,10 @@ const Icons = {
       <circle cx="12" cy="7" r="4" />
     </svg>
   ),
-  stems: (
+  // ✅ NOUVELLE ICÔNE : Outils DJ (Une clé à molette)
+  tools: (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
-      <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-      <line x1="12" y1="19" x2="12" y2="23" />
-      <line x1="8" y1="23" x2="16" y2="23" />
-    </svg>
-  ),
-  mastering: (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="4" y1="21" x2="4" y2="14" />
-      <line x1="4" y1="10" x2="4" y2="3" />
-      <line x1="12" y1="21" x2="12" y2="12" />
-      <line x1="12" y1="8" x2="12" y2="3" />
-      <line x1="20" y1="21" x2="20" y2="16" />
-      <line x1="20" y1="12" x2="20" y2="3" />
-      <line x1="1" y1="14" x2="7" y2="14" />
-      <line x1="9" y1="8" x2="15" y2="8" />
-      <line x1="17" y1="16" x2="23" y2="16" />
-    </svg>
-  ),
-  generator: (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
-    </svg>
-  ),
-  cdj: (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="10" />
-      <circle cx="12" cy="12" r="4" />
+      <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
     </svg>
   ),
   help: (
@@ -116,21 +90,20 @@ interface NavItem {
   labelKey: string;
   shortLabelKey: string;
   icon: React.ReactNode;
-  devOnly?: boolean;
 }
 
 const NAV_ITEMS: NavItem[] = [
   { path: '/',           labelKey: 'nav.home',        shortLabelKey: 'nav.home',        icon: Icons.home },
+  { path: '/feed',       labelKey: 'nav.feed',        shortLabelKey: 'nav.feed',        icon: Icons.feed },
   { path: '/nouveautes', labelKey: 'nav.nouveautes',  shortLabelKey: 'nav.nouveautes',  icon: Icons.newReleases },
-  { path: '/events',     labelKey: 'Events',      shortLabelKey: 'nav.events',      icon: Icons.events },
+  { path: '/events',     labelKey: 'nav.events',      shortLabelKey: 'nav.events',      icon: Icons.events },
   { path: '/live',       labelKey: 'live DJ',        shortLabelKey: 'nav.live',        icon: Icons.live },
   { path: '/genres',     labelKey: 'nav.genres',      shortLabelKey: 'nav.genres',      icon: Icons.genres },
   { path: '/artists',    labelKey: 'nav.artists',     shortLabelKey: 'nav.artists',     icon: Icons.artists },
-  { path: '/feed',       labelKey: 'Feed',        shortLabelKey: 'nav.feed',        icon: Icons.feed },
-  { path: '/stems',      labelKey: 'nav.stems',       shortLabelKey: 'nav.stems',       icon: Icons.stems, devOnly: true },
-  { path: '/mastering',  labelKey: 'nav.mastering',   shortLabelKey: 'nav.mastering',   icon: Icons.mastering, devOnly: true },
-  { path: '/generator',  labelKey: 'nav.generator',   shortLabelKey: 'nav.generator',   icon: Icons.generator, devOnly: true },
-  { path: '/cdj',        labelKey: 'nav.cdj',         shortLabelKey: 'nav.cdj',         icon: Icons.cdj, devOnly: true },
+  
+  // ✅ NOUVEAU : Lien unique vers le hub Outils DJ
+  { path: '/tools',      labelKey: 'Outils DJ',       shortLabelKey: 'Outils',          icon: Icons.tools },
+
   { path: '/help',       labelKey: 'nav.help',        shortLabelKey: 'nav.help',        icon: Icons.help },
   { path: '/settings',   labelKey: 'nav.settings',    shortLabelKey: 'nav.settings',    icon: Icons.settings },
 ];
@@ -143,9 +116,6 @@ export const MainLayout: React.FC = () => {
   const isMobile = useIsMobile(768);
   const [showSessions, setShowSessions] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  const visibleNavItems = NAV_ITEMS.filter((item) => isLocalhost || !item.devOnly);
 
   // ============================================================
   // VERSION MOBILE
@@ -165,7 +135,7 @@ export const MainLayout: React.FC = () => {
               <div style={{ fontSize: 13, fontWeight: 800, color: '#fff' }}>DROPZONE <span style={{ color: '#00d9ff' }}>DJ</span></div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <NotificationsDropdown /> {/* ✅ AJOUT MOBILE */}
+              <NotificationsDropdown />
               {user ? (
                 <NavLink to={`/profil/${user.id}`} style={{ padding: '8px 12px', background: 'rgba(0, 217, 255, 0.1)', border: '1px solid rgba(0, 217, 255, 0.3)', borderRadius: 10, color: '#00d9ff', fontSize: 11, fontWeight: 700, textDecoration: 'none', maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>🎧 {username}</NavLink>
               ) : (
@@ -182,7 +152,7 @@ export const MainLayout: React.FC = () => {
                   <div style={{ fontSize: 16, fontWeight: 700, color: '#fff' }}>Menu</div>
                   <button onClick={() => setSidebarOpen(false)} style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: 24, cursor: 'pointer' }}>×</button>
                 </div>
-                {visibleNavItems.map((item) => (
+                {NAV_ITEMS.map((item) => (
                   <NavLink key={item.path} to={item.path} end={item.path === '/'} onClick={() => setSidebarOpen(false)} style={({ isActive }) => ({ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 10, textDecoration: 'none', fontSize: 14, fontWeight: 600, background: isActive ? 'rgba(0, 217, 255, 0.1)' : 'transparent', color: isActive ? '#00d9ff' : 'rgba(255,255,255,0.7)', border: isActive ? '1px solid rgba(0, 217, 255, 0.2)' : '1px solid transparent' })}>
                     <span style={{ display: 'flex', alignItems: 'center' }}>{item.icon}</span>
                     <span>{t(item.labelKey)}</span>
@@ -199,7 +169,7 @@ export const MainLayout: React.FC = () => {
           <Footer />
 
           <nav style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'rgba(15, 15, 15, 0.85)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderTop: '1px solid #2a2a2a', display: 'flex', justifyContent: 'space-around', alignItems: 'center', padding: '8px 6px', zIndex: 100, paddingBottom: 'max(8px, env(safe-area-inset-bottom))', overflowX: 'auto', gap: 2 }}>
-            {visibleNavItems.slice(0, 5).map((item) => (
+            {NAV_ITEMS.slice(0, 5).map((item) => (
               <NavLink key={item.path} to={item.path} end={item.path === '/'} style={({ isActive }) => ({ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, padding: '8px 6px', borderRadius: 10, textDecoration: 'none', flex: '0 0 auto', minWidth: 56, background: isActive ? `rgba(0, 217, 255, 0.1)` : 'transparent', border: isActive ? `1px solid rgba(0, 217, 255, 0.3)` : '1px solid transparent' })}>
                 {({ isActive }) => (
                   <>
@@ -244,7 +214,7 @@ export const MainLayout: React.FC = () => {
               <span>Recherche</span>
             </NavLink>
 
-            {visibleNavItems.map((item) => (
+            {NAV_ITEMS.map((item) => (
               <NavLink key={item.path} to={item.path} end={item.path === '/'} className={({ isActive }) => `wf-nav-link ${isActive ? 'active' : ''}`}>
                 <span className="icon" style={{ display: 'flex', alignItems: 'center' }}>{item.icon}</span>
                 <span>{t(item.labelKey)}</span>
@@ -297,7 +267,6 @@ export const MainLayout: React.FC = () => {
 
         <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: '100vh' }}>
           
-          {/* ✅ HEADER AVEC NOTIFICATIONS */}
           <div style={{ 
             display: 'flex', 
             justifyContent: 'flex-end', 

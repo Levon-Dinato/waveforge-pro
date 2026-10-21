@@ -5,7 +5,6 @@ import {
   getMasteringChainSingleton,
   type MasteringPreset,
 } from '../audio/masteringChain';
-import { ShareButton } from './ShareButton';
 
 // ============================================================
 // UTILITAIRE : Encode un AudioBuffer en WAV (PCM 16-bit)
@@ -13,19 +12,23 @@ import { ShareButton } from './ShareButton';
 function encodeWAV(buffer: AudioBuffer): Blob {
   const numChannels = buffer.numberOfChannels;
   const sampleRate = buffer.sampleRate;
-  const format = 1;
+  const format = 1; // PCM
   const bitDepth = 16;
   const bytesPerSample = bitDepth / 8;
   const blockAlign = numChannels * bytesPerSample;
   const byteRate = sampleRate * blockAlign;
+
   const dataLength = buffer.length * blockAlign;
   const headerLength = 44;
   const arrayBuffer = new ArrayBuffer(headerLength + dataLength);
   const view = new DataView(arrayBuffer);
 
+  // "RIFF"
   view.setUint32(0, 0x52494646, false);
   view.setUint32(4, 36 + dataLength, true);
   view.setUint32(8, 0x57415645, false);
+
+  // "fmt "
   view.setUint32(12, 0x666d7420, false);
   view.setUint32(16, 16, true);
   view.setUint16(20, format, true);
@@ -34,9 +37,12 @@ function encodeWAV(buffer: AudioBuffer): Blob {
   view.setUint32(28, byteRate, true);
   view.setUint16(32, blockAlign, true);
   view.setUint16(34, bitDepth, true);
+
+  // "data"
   view.setUint32(36, 0x64617461, false);
   view.setUint32(40, dataLength, true);
 
+  // Interleave des échantillons
   const channels: Float32Array[] = [];
   for (let c = 0; c < numChannels; c++) {
     channels.push(buffer.getChannelData(c));
@@ -90,11 +96,12 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
   const [imagerMid, setImagerMid] = useState(0);
   const [imagerHigh, setImagerHigh] = useState(0);
 
+  // ✅ États export
   const [isExporting, setIsExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState(0);
 
   // ============================================================
-  // CRÉATION via SINGLETON
+  // CRÉATION via SINGLETON — PAS de destroy on unmount
   // ============================================================
   useEffect(() => {
     if (!audioContext) {
@@ -118,8 +125,10 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
     }
 
     setChainState('ready');
+    // ⚠️ PAS DE CLEANUP — le singleton survit
   }, [audioContext, sourceNode]);
 
+  // Application des paramètres
   useEffect(() => {
     if (chainState !== 'ready') return;
     const chain = chainRef.current;
@@ -179,7 +188,7 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
   }, []);
 
   // ============================================================
-  // EXPORT WAV
+  // EXPORT WAV via OfflineAudioContext
   // ============================================================
   const handleExportWAV = useCallback(async () => {
     if (!audioContext || !sourceBuffer) {
@@ -201,6 +210,7 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
 
       const offlineChain = new MasteringChain(offlineCtx);
 
+      // Applique tous les paramètres actuels
       offlineChain.setLoudness(loudness);
       offlineChain.setPresence(presence);
       offlineChain.setWidth(width);
@@ -210,6 +220,7 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
       offlineChain.setImager(imagerOn, imagerLow, imagerMid, imagerHigh);
       offlineChain.applyPreset(preset);
 
+      // Crée la source offline
       const sourceNode = offlineCtx.createBufferSource();
       sourceNode.buffer = sourceBuffer;
       sourceNode.connect(offlineChain.getInputNode());
@@ -219,11 +230,13 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
       sourceNode.start(0);
       setExportProgress(30);
 
+      // Rend l'audio
       const renderedBuffer = await offlineCtx.startRendering();
       setExportProgress(80);
 
       console.log('💾 Export WAV : rendu terminé', renderedBuffer.duration.toFixed(1) + 's');
 
+      // Encode en WAV
       const wavBlob = encodeWAV(renderedBuffer);
       const url = URL.createObjectURL(wavBlob);
 
@@ -393,19 +406,6 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
         <Knob label="Low" value={imagerLow} min={0} max={1} step={0.05} unit="%" color="#00d9ff" isPercent onChange={setImagerLow} />
         <Knob label="Mid" value={imagerMid} min={0} max={1} step={0.05} unit="%" color="#00ff88" isPercent onChange={setImagerMid} />
         <Knob label="High" value={imagerHigh} min={0} max={1} step={0.05} unit="%" color="#ffd43b" isPercent onChange={setImagerHigh} />
-      </div>
-
-      {/* ✅ BOUTON PARTAGE */}
-      <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 12 }}>
-        <ShareButton
-          url={typeof window !== 'undefined' ? window.location.href : ''}
-          title={`Mastering ${preset.toUpperCase()} — WaveForge PRO`}
-          text={`Écoute mon master "${preset}" sur WaveForge PRO !`}
-          variant="button"
-          size="medium"
-          label="Partager ce master"
-          position="top"
-        />
       </div>
 
       {/* ✅ BOUTON EXPORT WAV */}

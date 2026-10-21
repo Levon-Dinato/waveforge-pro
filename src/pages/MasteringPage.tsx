@@ -1,6 +1,5 @@
 // src/pages/MasteringPage.tsx
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { Link } from 'react-router-dom';
 import { useAudioEngineContext } from '../contexts/AudioEngineContext';
 import { 
   MasteringChain, 
@@ -72,7 +71,6 @@ export const MasteringPage: React.FC = () => {
   const engine = useAudioEngineContext();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  // États du MasteringChain
   const chainRef = useRef<MasteringChain | null>(null);
   const [chainState, setChainState] = useState<'waiting' | 'ready' | 'error'>('waiting');
   
@@ -83,32 +81,20 @@ export const MasteringPage: React.FC = () => {
   const [isBypassed, setIsBypassed] = useState(false);
   const [preset, setPreset] = useState<MasteringPreset>('warm');
   
-  const [monoMakerOn, setMonoMakerOn] = useState(false);
-  const [monoMakerFreq, setMonoMakerFreq] = useState(120);
-  const [imagerOn, setImagerOn] = useState(false);
-  const [imagerLow, setImagerLow] = useState(0);
-  const [imagerMid, setImagerMid] = useState(0);
-  const [imagerHigh, setImagerHigh] = useState(0);
+  // ❌ États inutilisés supprimés (setMonoMakerOn, setImagerOn, etc.)
 
   const [isExporting, setIsExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState(0);
 
   const hasAudio = !!engine.result;
 
-  // ─── INITIALISATION DU CHAIN ──────────────────────────────────
   useEffect(() => {
     if (!engine.audioContext) return;
     const chain = getMasteringChainSingleton(engine.audioContext);
     chainRef.current = chain;
     setChainState('ready');
-    
-    // On connecte l'engine au chain si possible
-    if (engine.audioBuffer) {
-      // Logique de connexion (simulée ici)
-    }
-  }, [engine.audioContext, engine.audioBuffer]);
+  }, [engine.audioContext]);
 
-  // ─── APPLICATION DES PARAMÈTRES ────────────────────────────────
   useEffect(() => {
     if (chainState !== 'ready' || !chainRef.current) return;
     const chain = chainRef.current;
@@ -118,12 +104,11 @@ export const MasteringPage: React.FC = () => {
       chain.setWidth(width);
       chain.setSaturation(saturation);
       chain.setBypass(isBypassed);
-      chain.setMonoMaker(monoMakerOn, monoMakerFreq);
-      chain.setImager(imagerOn, imagerLow, imagerMid, imagerHigh);
+      // ❌ Appels setMonoMaker et setImager supprimés
     } catch (e) {
       console.warn(e);
     }
-  }, [chainState, loudness, presence, width, saturation, isBypassed, monoMakerOn, monoMakerFreq, imagerOn, imagerLow, imagerMid, imagerHigh]);
+  }, [chainState, loudness, presence, width, saturation, isBypassed]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -165,8 +150,6 @@ export const MasteringPage: React.FC = () => {
       offlineChain.setWidth(width);
       offlineChain.setSaturation(saturation);
       offlineChain.setBypass(isBypassed);
-      offlineChain.setMonoMaker(monoMakerOn, monoMakerFreq);
-      offlineChain.setImager(imagerOn, imagerLow, imagerMid, imagerHigh);
       offlineChain.applyPreset(preset);
 
       const sourceNode = offlineCtx.createBufferSource();
@@ -257,7 +240,7 @@ export const MasteringPage: React.FC = () => {
             </div>
           </div>
 
-          {/* SPECTRE SONORE (Fake, pour le visuel) */}
+          {/* SPECTRE SONORE (Fake) */}
           <div style={{ ...PANEL_STYLE, padding: 20 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <div style={LABEL_STYLE}>📊 Spectre sonore</div>
@@ -280,7 +263,7 @@ export const MasteringPage: React.FC = () => {
           {/* GRILLE DU BAS */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: 16 }}>
             
-            {/* COLONNE GAUCHE (Source & Modules) */}
+            {/* COLONNE GAUCHE */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div style={{ ...PANEL_STYLE, padding: 16 }}>
                 <div style={LABEL_STYLE}>🎵 Fichier source</div>
@@ -306,11 +289,10 @@ export const MasteringPage: React.FC = () => {
               </div>
             </div>
 
-            {/* COLONNE DROITE (Presets & Contrôles) */}
+            {/* COLONNE DROITE */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div style={{ ...PANEL_STYLE, padding: 20, flex: 1 }}>
                 
-                {/* Presets */}
                 <div style={{ marginBottom: 20 }}>
                   <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 2 }}>WAVEFORGE <span style={{ color: '#00d9ff' }}>MASTERING</span></div>
                   <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
@@ -322,7 +304,6 @@ export const MasteringPage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Sliders de contrôle */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   <SliderControl label="Loudness" value={loudness} min={-12} max={12} step={0.5} unit="dB" color="#7c5cff" onChange={setLoudness} />
                   <SliderControl label="Presence" value={presence} min={-12} max={12} step={0.5} unit="dB" color="#00ff88" onChange={setPresence} />
@@ -330,7 +311,6 @@ export const MasteringPage: React.FC = () => {
                   <SliderControl label="Saturation" value={saturation} min={0} max={1} step={0.02} unit="%" color="#ff5cf0" onChange={setSaturation} isPercent />
                 </div>
 
-                {/* Export WAV */}
                 <div style={{ marginTop: 24, borderTop: '1px solid #2a2a2a', paddingTop: 16 }}>
                   <button onClick={handleExportWAV} disabled={isExporting} style={{ width: '100%', padding: '12px', background: isExporting ? '#666' : 'linear-gradient(135deg, #00ff88, #00d9ff)', color: '#000', border: 'none', borderRadius: 6, cursor: isExporting ? 'wait' : 'pointer', fontSize: 12, fontWeight: 800, boxShadow: !isExporting ? '0 4px 16px rgba(0, 255, 136, 0.3)' : 'none' }}>
                     {isExporting ? `💾 EXPORT... ${exportProgress}%` : '💾 TÉLÉCHARGER WAV MASTERISÉ'}
@@ -348,7 +328,6 @@ export const MasteringPage: React.FC = () => {
   );
 };
 
-// Composant Knob/Slider réutilisable
 const SliderControl = ({ label, value, min, max, step, unit, color, onChange, isPercent }: any) => {
   const displayValue = isPercent ? `${Math.round(value * 100)}%` : `${value.toFixed(step < 1 ? 2 : 0)} ${unit}`;
   const percent = ((value - min) / (max - min)) * 100;

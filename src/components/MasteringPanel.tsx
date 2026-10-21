@@ -1,496 +1,132 @@
 // src/components/MasteringPanel.tsx
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
-  MasteringChain,
   getMasteringChainSingleton,
+  renderMasteredOffline,
+  DEFAULT_EQ_BANDS,
+  type MasteringChain,
   type MasteringPreset,
 } from '../audio/masteringChain';
+import { audioBufferToWav, downloadBlob } from '../utils/wavEncoder';
 
-// ============================================================
-// UTILITAIRE : Encode un AudioBuffer en WAV (PCM 16-bit)
-// ============================================================
-function encodeWAV(buffer: AudioBuffer): Blob {
-  const numChannels = buffer.numberOfChannels;
-  const sampleRate = buffer.sampleRate;
-  const format = 1; // PCM
-  const bitDepth = 16;
-  const bytesPerSample = bitDepth / 8;
-  const blockAlign = numChannels * bytesPerSample;
-  const byteRate = sampleRate * blockAlign;
-
-  const dataLength = buffer.length * blockAlign;
-  const headerLength = 44;
-  const arrayBuffer = new ArrayBuffer(headerLength + dataLength);
-  const view = new DataView(arrayBuffer);
-
-  // "RIFF"
-  view.setUint32(0, 0x52494646, false);
-  view.setUint32(4, 36 + dataLength, true);
-  view.setUint32(8, 0x57415645, false);
-
-  // "fmt "
-  view.setUint32(12, 0x666d7420, false);
-  view.setUint32(16, 16, true);
-  view.setUint16(20, format, true);
-  view.setUint16(22, numChannels, true);
-  view.setUint32(24, sampleRate, true);
-  view.setUint32(28, byteRate, true);
-  view.setUint16(32, blockAlign, true);
-  view.setUint16(34, bitDepth, true);
-
-  // "data"
-  view.setUint32(36, 0x64617461, false);
-  view.setUint32(40, dataLength, true);
-
-  // Interleave des échantillons
-  const channels: Float32Array[] = [];
-  for (let c = 0; c < numChannels; c++) {
-    channels.push(buffer.getChannelData(c));
-  }
-
-  let offset = 44;
-  for (let i = 0; i < buffer.length; i++) {
-    for (let c = 0; c < numChannels; c++) {
-      const s = Math.max(-1, Math.min(1, channels[c][i]));
-      view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true);
-      offset += 2;
-    }
-  }
-
-  return new Blob([arrayBuffer], { type: 'audio/wav' });
+export interface MasteringExportPayload {
+  id: string; timestamp: number; preset: string; intensity: number;
+  fileName: string; duration: number; blob: Blob;
 }
 
 interface MasteringPanelProps {
   audioContext: AudioContext | null;
-  sourceNode?: AudioNode | null;
-  sourceBuffer?: AudioBuffer | null;
-  onChainReady?: (chain: MasteringChain | null) => void;
+  sourceNode: AudioNode | null;
+  sourceBuffer: AudioBuffer | null;
+  preset: MasteringPreset;
+  intensity: number;
+  onChainReady: (chain: MasteringChain | null) => void;
+  onExport?: (payload: MasteringExportPayload) => void;
 }
 
-type ChainReadyState = 'waiting' | 'ready' | 'error';
-
 export const MasteringPanel: React.FC<MasteringPanelProps> = ({
-  audioContext,
-  sourceNode = null,
-  sourceBuffer = null,
-  onChainReady,
+  audioContext, sourceBuffer, preset, intensity, onChainReady, onExport,
 }) => {
   const chainRef = useRef<MasteringChain | null>(null);
-  const [chainState, setChainState] = useState<ChainReadyState>('waiting');
-
-  const onChainReadyRef = useRef(onChainReady);
-  useEffect(() => {
-    onChainReadyRef.current = onChainReady;
-  }, [onChainReady]);
-
-  const [loudness, setLoudness] = useState(0);
-  const [presence, setPresence] = useState(0);
-  const [width, setWidth] = useState(1.0);
-  const [saturation, setSaturation] = useState(0);
-  const [isBypassed, setIsBypassed] = useState(false);
-  const [preset, setPreset] = useState<MasteringPreset>('warm');
-  const [monoMakerOn, setMonoMakerOn] = useState(false);
-  const [monoMakerFreq, setMonoMakerFreq] = useState(120);
-  const [imagerOn, setImagerOn] = useState(false);
-  const [imagerLow, setImagerLow] = useState(0);
-  const [imagerMid, setImagerMid] = useState(0);
-  const [imagerHigh, setImagerHigh] = useState(0);
-
-  // ✅ États export
-  const [isExporting, setIsExporting] = useState(false);
+  const [eqGains, setEqGains] = useState<number[]>(DEFAULT_EQ_BANDS.map(b => b.gain));
+  const [monoEnabled, setMonoEnabled] = useState(false);
+  const [monoFreq, setMonoFreq] = useState(120);
+  const [exporting, setExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState(0);
 
-  // ============================================================
-  // CRÉATION via SINGLETON — PAS de destroy on unmount
-  // ============================================================
   useEffect(() => {
-    if (!audioContext) {
-      setChainState('waiting');
-      return;
-    }
-
+    if (!audioContext) { onChainReady(null); return; }
     const chain = getMasteringChainSingleton(audioContext);
     chainRef.current = chain;
-
-    if (sourceNode) {
-      try {
-        chain.connect(sourceNode);
-      } catch (e) {
-        console.warn('⚠️ Impossible de connecter la source:', e);
-      }
-    }
-
-    if (onChainReadyRef.current) {
-      onChainReadyRef.current(chain);
-    }
-
-    setChainState('ready');
-    // ⚠️ PAS DE CLEANUP — le singleton survit
-  }, [audioContext, sourceNode]);
-
-  // Application des paramètres
-  useEffect(() => {
-    if (chainState !== 'ready') return;
-    const chain = chainRef.current;
-    if (!chain) return;
-    try {
-      chain.setLoudness(loudness);
-      chain.setPresence(presence);
-      chain.setWidth(width);
-      chain.setSaturation(saturation);
-      chain.setBypass(isBypassed);
-    } catch (e) {
-      console.error('❌ Erreur application paramètres:', e);
-    }
-  }, [chainState, loudness, presence, width, saturation, isBypassed]);
+    onChainReady(chain);
+  }, [audioContext, onChainReady]);
 
   useEffect(() => {
-    if (chainState !== 'ready') return;
-    const chain = chainRef.current;
-    if (!chain) return;
-    try { chain.setMonoMaker(monoMakerOn, monoMakerFreq); } catch (e) { console.warn(e); }
-  }, [chainState, monoMakerOn, monoMakerFreq]);
+    chainRef.current?.applyPreset(preset, intensity / 100);
+  }, [preset, intensity]);
 
-  useEffect(() => {
-    if (chainState !== 'ready') return;
-    const chain = chainRef.current;
-    if (!chain) return;
-    try { chain.setImager(imagerOn, imagerLow, imagerMid, imagerHigh); } catch (e) { console.warn(e); }
-  }, [chainState, imagerOn, imagerLow, imagerMid, imagerHigh]);
-
-  const applyPreset = useCallback((p: MasteringPreset) => {
-    setPreset(p);
-    const chain = chainRef.current;
-    if (!chain || chainState !== 'ready') return;
-    try {
-      chain.applyPreset(p);
-      const v = chain.getPresetValues(p);
-      setLoudness(v.loudness);
-      setPresence(v.presence);
-      setWidth(v.width);
-      setSaturation(v.saturation);
-    } catch (e) {
-      console.error('❌ Erreur applyPreset:', e);
-    }
-  }, [chainState]);
-
-  const resetAll = useCallback(() => {
-    setLoudness(0);
-    setPresence(0);
-    setWidth(1.0);
-    setSaturation(0);
-    setIsBypassed(false);
-    setMonoMakerOn(false);
-    setImagerOn(false);
-    setImagerLow(0);
-    setImagerMid(0);
-    setImagerHigh(0);
+  const handleEqGain = useCallback((index: number, gain: number) => {
+    setEqGains(prev => {
+      const next = [...prev]; next[index] = gain; return next;
+    });
+    const band = DEFAULT_EQ_BANDS[index];
+    chainRef.current?.setEQBand(index, band.frequency, gain, band.q);
   }, []);
 
-  // ============================================================
-  // EXPORT WAV via OfflineAudioContext
-  // ============================================================
-  const handleExportWAV = useCallback(async () => {
-    if (!audioContext || !sourceBuffer) {
-      alert('Aucun audio chargé');
-      return;
-    }
+  const handleMonoToggle = useCallback(() => {
+    setMonoEnabled(prev => {
+      chainRef.current?.setMonoMaker(!prev, monoFreq);
+      return !prev;
+    });
+  }, [monoFreq]);
 
-    setIsExporting(true);
-    setExportProgress(0);
+  const handleMonoFreq = useCallback((freq: number) => {
+    setMonoFreq(freq);
+    if (monoEnabled) chainRef.current?.setMonoMaker(true, freq);
+  }, [monoEnabled]);
 
+  const handleExport = useCallback(async () => {
+    if (!sourceBuffer || exporting) return;
+    setExporting(true); setExportProgress(10);
     try {
-      console.log('💾 Export WAV : démarrage...');
-
-      const offlineCtx = new OfflineAudioContext(
-        sourceBuffer.numberOfChannels,
-        sourceBuffer.length,
-        sourceBuffer.sampleRate
-      );
-
-      const offlineChain = new MasteringChain(offlineCtx);
-
-      // Applique tous les paramètres actuels
-      offlineChain.setLoudness(loudness);
-      offlineChain.setPresence(presence);
-      offlineChain.setWidth(width);
-      offlineChain.setSaturation(saturation);
-      offlineChain.setBypass(isBypassed);
-      offlineChain.setMonoMaker(monoMakerOn, monoMakerFreq);
-      offlineChain.setImager(imagerOn, imagerLow, imagerMid, imagerHigh);
-      offlineChain.applyPreset(preset);
-
-      // Crée la source offline
-      const sourceNode = offlineCtx.createBufferSource();
-      sourceNode.buffer = sourceBuffer;
-      sourceNode.connect(offlineChain.getInputNode());
-
-      offlineChain.getOutputNode().connect(offlineCtx.destination);
-
-      sourceNode.start(0);
-      setExportProgress(30);
-
-      // Rend l'audio
-      const renderedBuffer = await offlineCtx.startRendering();
+      const rendered = await renderMasteredOffline(sourceBuffer, preset, intensity / 100);
       setExportProgress(80);
-
-      console.log('💾 Export WAV : rendu terminé', renderedBuffer.duration.toFixed(1) + 's');
-
-      // Encode en WAV
-      const wavBlob = encodeWAV(renderedBuffer);
-      const url = URL.createObjectURL(wavBlob);
-
-      const safeName = (preset || 'mastered').replace(/[^a-zA-Z0-9_-]/g, '_');
-      const timestamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
-      const fileName = `mastered_${safeName}_${timestamp}.wav`;
-
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-
-      setTimeout(() => URL.revokeObjectURL(url), 5000);
-
+      const blob = audioBufferToWav(rendered);
+      const fileName = `mastered_${preset}_${intensity}pct.wav`;
+      onExport?.({ id: crypto.randomUUID(), timestamp: Date.now(), preset, intensity, fileName, duration: rendered.duration, blob });
+      downloadBlob(blob, fileName);
       setExportProgress(100);
-      console.log('💾 Export WAV : téléchargé →', fileName);
-
-      try { offlineChain.destroy(); } catch {}
-
-    } catch (e: any) {
-      console.error('❌ Erreur export WAV:', e);
-      alert('Erreur export : ' + (e.message || e));
+    } catch (e) {
+      alert('Erreur export');
     } finally {
-      setIsExporting(false);
-      setTimeout(() => setExportProgress(0), 1500);
+      setTimeout(() => { setExporting(false); setExportProgress(0); }, 600);
     }
-  }, [
-    audioContext, sourceBuffer, preset,
-    loudness, presence, width, saturation, isBypassed,
-    monoMakerOn, monoMakerFreq,
-    imagerOn, imagerLow, imagerMid, imagerHigh,
-  ]);
+  }, [sourceBuffer, preset, intensity, onExport, exporting]);
 
   return (
-    <div
-      className="panel"
-      style={{
-        padding: 16,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 16,
-        background: 'rgba(124, 92, 255, 0.02)',
-        border: '1px solid rgba(124, 92, 255, 0.15)',
-      }}
-    >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div style={{ display: 'grid', gap: 16 }}>
+      <div className="wf-glass" style={{ padding: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <div style={{ fontSize: 11, fontWeight: 700, color: '#7c5cff', letterSpacing: '1px' }}>
-            🎛️ CONTRÔLES DE MASTERING
-          </div>
-          <div style={{ fontSize: 9, color: '#666', marginTop: 2 }}>
-            État :{' '}
-            <span style={{ color: chainState === 'ready' ? '#00ff88' : '#ffd43b', fontWeight: 700 }}>
-              {chainState === 'ready' ? '● PRÊTE' : '○ ATTENTE'}
-            </span>
+          <div className="wf-label">🎛️ Chaîne de mastering</div>
+          <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginTop: 4 }}>
+            Preset : <span style={{ color: 'var(--accent-primary)', fontWeight: 600 }}>{preset.toUpperCase()}</span> · {intensity}%
           </div>
         </div>
-        <button
-          onClick={resetAll}
-          style={{
-            padding: '6px 12px',
-            background: 'transparent',
-            border: '1px solid rgba(255,255,255,0.2)',
-            color: '#fff',
-            borderRadius: 6,
-            cursor: 'pointer',
-            fontSize: 10,
-            fontFamily: 'monospace',
-          }}
-        >
-          ♻️ RESET
+        <button onClick={handleExport} disabled={!sourceBuffer || exporting} className="wf-btn wf-btn-primary" style={{ background: exporting ? 'var(--bg-3)' : 'linear-gradient(135deg, #00ff88, #00cc6a)', color: '#000' }}>
+          {exporting ? `⏳ RENDU ${exportProgress}%` : '💾 EXPORT WAV'}
         </button>
       </div>
 
-      <div>
-        <div style={{ fontSize: 10, color: '#666', letterSpacing: '1px', marginBottom: 8 }}>PRESETS</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 }}>
-          {(['warm', 'balanced', 'open', 'master'] as MasteringPreset[]).map((p) => (
-            <button
-              key={p}
-              onClick={() => applyPreset(p)}
-              style={{
-                padding: '8px 4px',
-                background: preset === p ? 'linear-gradient(135deg, #7c5cff, #5b3fd9)' : 'rgba(255,255,255,0.03)',
-                border: preset === p ? '1px solid #7c5cff' : '1px solid rgba(255,255,255,0.1)',
-                borderRadius: 6,
-                color: preset === p ? '#fff' : '#aaa',
-                cursor: 'pointer',
-                fontSize: 10,
-                fontFamily: 'monospace',
-                fontWeight: 700,
-                textTransform: 'uppercase',
-              }}
-            >
-              {p}
-            </button>
+      <div className="wf-glass" style={{ padding: 16 }}>
+        <div className="wf-label" style={{ marginBottom: 16 }}>Égaliseur 5 Bandes</div>
+        <div style={{ display: 'grid', gap: 4 }}>
+          {DEFAULT_EQ_BANDS.map((band, i) => (
+            <div key={band.id} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '8px 0', borderBottom: i < DEFAULT_EQ_BANDS.length - 1 ? '1px solid var(--border-subtle)' : 'none' }}>
+              <div style={{ width: 90 }}>
+                <div style={{ fontSize: 11, color: 'var(--text-primary)', fontWeight: 500 }}>{band.label}</div>
+                <div className="mono" style={{ fontSize: 9, color: 'var(--text-tertiary)' }}>{band.frequency >= 1000 ? `${band.frequency / 1000}kHz` : `${band.frequency}Hz`}</div>
+              </div>
+              <input type="range" min={-12} max={12} step={0.5} value={eqGains[i]} onChange={(e) => handleEqGain(i, parseFloat(e.target.value))} style={{ flex: 1, accentColor: band.color }} />
+              <div className="mono" style={{ width: 60, textAlign: 'right', fontSize: 12, fontWeight: 600, color: eqGains[i] !== 0 ? band.color : 'var(--text-tertiary)' }}>
+                {eqGains[i] > 0 ? '+' : ''}{eqGains[i].toFixed(1)} dB
+              </div>
+            </div>
           ))}
         </div>
       </div>
 
-      <Knob label="Loudness" value={loudness} min={-12} max={+12} step={0.5} unit="dB" color="#7c5cff" onChange={setLoudness} />
-      <Knob label="Presence" value={presence} min={-12} max={+12} step={0.5} unit="dB" color="#00ff88" onChange={setPresence} />
-      <Knob label="Width" value={width} min={0} max={2} step={0.05} unit="x" color="#00d9ff" onChange={setWidth} />
-      <Knob label="Saturation" value={saturation} min={0} max={1} step={0.02} unit="%" color="#ff5cf0" isPercent onChange={setSaturation} />
-
-      <button
-        onClick={() => setIsBypassed(!isBypassed)}
-        style={{
-          padding: '8px 12px',
-          background: isBypassed ? 'rgba(255, 51, 102, 0.15)' : 'rgba(0, 255, 136, 0.08)',
-          border: isBypassed ? '1px solid #ff3366' : '1px solid #00ff88',
-          color: isBypassed ? '#ff3366' : '#00ff88',
-          borderRadius: 6,
-          cursor: 'pointer',
-          fontSize: 10,
-          fontFamily: 'monospace',
-          fontWeight: 700,
-          letterSpacing: '1px',
-        }}
-      >
-        {isBypassed ? '🚫 BYPASS ACTIF' : '✅ TRAITEMENT ACTIF'}
-      </button>
-
-      <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 12 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-          <span style={{ fontSize: 10, color: '#666', letterSpacing: '1px' }}>MONO-MAKER</span>
-          <button
-            onClick={() => setMonoMakerOn(!monoMakerOn)}
-            style={{
-              padding: '3px 10px',
-              background: monoMakerOn ? '#00d9ff' : 'transparent',
-              border: '1px solid #00d9ff',
-              color: monoMakerOn ? '#000' : '#00d9ff',
-              borderRadius: 4,
-              cursor: 'pointer',
-              fontSize: 9,
-              fontWeight: 700,
-            }}
-          >
-            {monoMakerOn ? 'ON' : 'OFF'}
+      <div className="wf-glass" style={{ padding: 16 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+          <div className="wf-label">Mono-Maker (Basses)</div>
+          <button onClick={handleMonoToggle} style={{ padding: '4px 12px', borderRadius: 6, border: 'none', fontWeight: 700, fontSize: 10, background: monoEnabled ? 'var(--accent-success)' : 'var(--bg-3)', color: monoEnabled ? '#000' : 'var(--text-secondary)', cursor: 'pointer' }}>
+            {monoEnabled ? 'ACTIF' : 'INACTIF'}
           </button>
         </div>
-        <Knob label="Fréquence" value={monoMakerFreq} min={40} max={300} step={1} unit="Hz" color="#00d9ff" onChange={setMonoMakerFreq} />
-      </div>
-
-      <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 12 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-          <span style={{ fontSize: 10, color: '#666', letterSpacing: '1px' }}>IMAGER 3 BANDES</span>
-          <button
-            onClick={() => setImagerOn(!imagerOn)}
-            style={{
-              padding: '3px 10px',
-              background: imagerOn ? '#ffd43b' : 'transparent',
-              border: '1px solid #ffd43b',
-              color: imagerOn ? '#000' : '#ffd43b',
-              borderRadius: 4,
-              cursor: 'pointer',
-              fontSize: 9,
-              fontWeight: 700,
-            }}
-          >
-            {imagerOn ? 'ON' : 'OFF'}
-          </button>
-        </div>
-        <Knob label="Low" value={imagerLow} min={0} max={1} step={0.05} unit="%" color="#00d9ff" isPercent onChange={setImagerLow} />
-        <Knob label="Mid" value={imagerMid} min={0} max={1} step={0.05} unit="%" color="#00ff88" isPercent onChange={setImagerMid} />
-        <Knob label="High" value={imagerHigh} min={0} max={1} step={0.05} unit="%" color="#ffd43b" isPercent onChange={setImagerHigh} />
-      </div>
-
-      {/* ✅ BOUTON EXPORT WAV */}
-      <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 12 }}>
-        <button
-          onClick={handleExportWAV}
-          disabled={isExporting || !sourceBuffer}
-          style={{
-            width: '100%',
-            padding: '12px',
-            background: isExporting
-              ? '#666'
-              : !sourceBuffer
-              ? '#333'
-              : 'linear-gradient(135deg, #00ff88, #00d9ff)',
-            color: '#000',
-            border: 'none',
-            borderRadius: 6,
-            cursor: isExporting ? 'wait' : !sourceBuffer ? 'not-allowed' : 'pointer',
-            fontSize: 12,
-            fontWeight: 800,
-            fontFamily: 'monospace',
-            letterSpacing: '0.5px',
-            boxShadow: sourceBuffer && !isExporting ? '0 4px 16px rgba(0, 255, 136, 0.3)' : 'none',
-          }}
-        >
-          {isExporting
-            ? `💾 EXPORT... ${exportProgress}%`
-            : '💾 TÉLÉCHARGER WAV MASTERISÉ'}
-        </button>
-        <div
-          style={{
-            fontSize: 9,
-            color: '#666',
-            marginTop: 6,
-            textAlign: 'center',
-            fontFamily: 'monospace',
-          }}
-        >
-          Applique tous les réglages + preset actuel
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <input type="range" min={60} max={300} step={5} value={monoFreq} onChange={(e) => handleMonoFreq(parseInt(e.target.value))} style={{ flex: 1, accentColor: 'var(--accent-secondary)' }} disabled={!monoEnabled} />
+          <div className="mono" style={{ width: 60, textAlign: 'right', fontSize: 12, color: 'var(--accent-secondary)' }}>{monoFreq} Hz</div>
         </div>
       </div>
-    </div>
-  );
-};
-
-interface KnobProps {
-  label: string;
-  value: number;
-  min: number;
-  max: number;
-  step: number;
-  unit: string;
-  color: string;
-  isPercent?: boolean;
-  onChange: (v: number) => void;
-}
-
-const Knob: React.FC<KnobProps> = ({ label, value, min, max, step, unit, color, isPercent, onChange }) => {
-  const displayValue = isPercent ? `${Math.round(value * 100)}%` : `${value.toFixed(step < 1 ? 2 : 0)} ${unit}`;
-  const percent = ((value - min) / (max - min)) * 100;
-
-  return (
-    <div style={{ marginBottom: 10 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-        <span style={{ fontSize: 10, color: '#aaa', fontFamily: 'monospace' }}>{label}</span>
-        <span style={{ fontSize: 11, color, fontWeight: 700, fontFamily: 'monospace' }}>{displayValue}</span>
-      </div>
-      <input
-        type="range"
-        min={min}
-        max={max}
-        step={step}
-        value={value}
-        onChange={(e) => onChange(parseFloat(e.target.value))}
-        style={{
-          width: '100%',
-          accentColor: color,
-          height: 4,
-          background: `linear-gradient(to right, ${color} 0%, ${color} ${percent}%, rgba(255,255,255,0.1) ${percent}%, rgba(255,255,255,0.1) 100%)`,
-          borderRadius: 2,
-          appearance: 'none',
-          cursor: 'pointer',
-        }}
-      />
     </div>
   );
 };

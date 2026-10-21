@@ -6,7 +6,7 @@ import { SpectrumVisualizer } from '../components/SpectrumVisualizer';
 import { useAudioEngineContext } from '../contexts/AudioEngineContext';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { audioTransfer } from '../utils/audioTransfer';
-import type { MasteringChain, MasteringPreset } from '../audio/masteringChain';
+import { LUFSMeter, type MasteringChain, type MasteringPreset } from '../audio/masteringChain';
 
 interface MasteredExport {
   id: string;
@@ -18,16 +18,124 @@ interface MasteredExport {
   duration: number;
 }
 
-const PRESET_INFO: Record<
-  string,
-  { name: string; description: string; color: string; values: string }
-> = {
-  warm: { name: 'WARM', description: 'Chaud et chaleureux', color: '#ffb800', values: '+5dB · -1dB · 1.4x · 50%' },
-  balanced: { name: 'BALANCED', description: 'Neutre et équilibré', color: '#00d9ff', values: '+4dB · +2dB · 1.3x · 35%' },
-  open: { name: 'OPEN', description: 'Aérien et large', color: '#00ff88', values: '+5dB · +5dB · 1.6x · 25%' },
-  master: { name: 'MASTER', description: 'Neutre (fichiers déjà masterisés)', color: '#888', values: '+1dB · +1dB · 1.1x · 10%' },
+interface StoredExport extends Omit<MasteredExport, 'audioUrl'> {
+  blob: Blob;
+}
+
+// ============================================================
+// IndexedDB
+// ============================================================
+const EXPORT_DB = 'waveforge-mastering';
+const EXPORT_STORE = 'exports';
+
+function openExportDB(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(EXPORT_DB, 1);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains(EXPORT_STORE)) {
+        db.createObjectStore(EXPORT_STORE, { keyPath: 'id' });
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function loadExportsFromDB(): Promise<MasteredExport[]> {
+  try {
+    const db = await openExportDB();
+    const stored: StoredExport[] = await new Promise((resolve, reject) => {
+      const tx = db.transaction(EXPORT_STORE, 'readonly');
+      const req = tx.objectStore(EXPORT_STORE).getAll();
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+    return stored
+      .sort((a, b) => b.timestamp - a.timestamp)
+      .map(s => ({ ...s, audioUrl: URL.createObjectURL(s.blob) }));
+  } catch (e) {
+    console.warn('IndexedDB load failed:', e);
+    return [];
+  }
+}
+
+async function saveExportToDB(exp: StoredExport): Promise<void> {
+  const db = await openExportDB();
+  await new Promise<void>((resolve, reject) => {
+    const tx = db.transaction(EXPORT_STORE, 'readwrite');
+    tx.objectStore(EXPORT_STORE).put(exp);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function deleteExportFromDB(id: string): Promise<void> {
+  const db = await openExportDB();
+  await new Promise<void>((resolve, reject) => {
+    const tx = db.transaction(EXPORT_STORE, 'readwrite');
+    tx.objectStore(EXPORT_STORE).delete(id);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+// ============================================================
+// UI CONSTANTS & COMPONENTS
+// ============================================================
+const PRESET_INFO: Record<string, { name: string; description: string; color: string; values: string }> = {
+  warm:     { name: 'WARM',     description: 'Chaud et chaleureux',               color: '#ffb800', values: '+5dB · -1dB' },
+  balanced: { name: 'BALANCED', description: 'Neutre et équilibré',               color: '#00d9ff', values: '+4dB · +2dB' },
+  open:     { name: 'OPEN',     description: 'Aérien et large',                   color: '#00ff88', values: '+5dB · +5dB' },
+  master:   { name: 'MASTER',   description: 'Neutre (fichiers déjà masterisés)', color: '#888888', values: '+1dB · +1dB' },
 };
 
+const LufsMeter: React.FC<{ label: string; value: number }> = ({ label, value }) => {
+  const isActive = isFinite(value) && value > -70;
+  let color = 'var(--text-tertiary)';
+  if (isActive) {
+    if (value > -6) color = 'var(--accent-danger)';
+    else if (value > -12) color = 'var(--accent-warning)';
+    else color = 'var(--accent-success)';
+  }
+  const percent = isActive ? Math.max(0, Math.min(100, ((value + 30) / 30) * 100)) : 0;
+  
+  return (
+    <div style={{ background: 'var(--bg-0)', border: '1px solid var(--border-subtle)', borderRadius: 8, padding: '10px 12px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+        <span className="wf-label" style={{ fontSize: 9 }}>{label}</span>
+        <span className="mono" style={{ fontSize: 14, fontWeight: 700, color: isActive ? '#fff' : 'var(--text-tertiary)' }}>
+          {isActive ? value.toFixed(1) : '---'}
+        </span>
+      </div>
+      <div style={{ height: 3, background: 'var(--bg-2)', borderRadius: 2, overflow: 'hidden' }}>
+        <div style={{ height: '100%', width: `${percent}%`, background: color, boxShadow: isActive ? `0 0 8px ${color}` : 'none', transition: 'width 0.1s' }} />
+      </div>
+    </div>
+  );
+};
+
+const PresetCard: React.FC<{ name: string; description: string; color: string; isActive: boolean; onClick: () => void }> = ({ name, description, color, isActive, onClick }) => (
+  <div 
+    onClick={onClick} 
+    style={{ 
+      padding: '12px', 
+      background: isActive ? 'rgba(255,255,255,0.05)' : 'var(--bg-1)', 
+      border: `1px solid ${isActive ? color : 'var(--border-subtle)'}`, 
+      borderRadius: 8, cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: 12 
+    }}
+  >
+    <div style={{ width: 8, height: 8, borderRadius: '50%', background: color, boxShadow: isActive ? `0 0 10px ${color}` : 'none', opacity: isActive ? 1 : 0.4 }} />
+    <div style={{ flex: 1 }}>
+      <div style={{ color: isActive ? '#fff' : 'var(--text-secondary)', fontWeight: 600, fontSize: 12 }}>{name}</div>
+      <div style={{ fontSize: 10, color: 'var(--text-tertiary)', marginTop: 2 }}>{description}</div>
+    </div>
+  </div>
+);
+
+// ============================================================
+// MAIN PAGE
+// ============================================================
 export const MasteringPage: React.FC = () => {
   const isMobile = useIsMobile(768);
   const engine = useAudioEngineContext();
@@ -39,699 +147,357 @@ export const MasteringPage: React.FC = () => {
   const [isPlayingAB, setIsPlayingAB] = useState(false);
   const [abAnalyser, setAbAnalyser] = useState<AnalyserNode | null>(null);
   const [exports, setExports] = useState<MasteredExport[]>([]);
+  const [chainVersion, setChainVersion] = useState(0);
+  const [lufs, setLufs] = useState({ m: -Infinity, s: -Infinity, i: -Infinity });
 
-  const sourceRef = useRef<AudioBufferSourceNode | null>(null);
+  const abGraphRef = useRef<{
+    source: AudioBufferSourceNode;
+    dryGain: GainNode;
+    wetGain: GainNode;
+    analyser: AnalyserNode;
+    masterOut: GainNode;
+  } | null>(null);
+
   const chainRef = useRef<MasteringChain | null>(null);
-  const tapAnalyserRef = useRef<AnalyserNode | null>(null);
+  const lufsRef = useRef<LUFSMeter | null>(null);
+  const lufsContextRef = useRef<AudioContext | null>(null);
 
+  // -------------------- Chain ready --------------------
   const handleChainReady = useCallback((chain: MasteringChain | null) => {
     chainRef.current = chain;
-    console.log('✅ Chain ready:', chain ? 'OK' : 'NULLE');
-  }, []);
-
-  const handlePresetClick = useCallback((key: string) => {
-    setActivePreset(key);
-    const chain = chainRef.current;
-    if (chain) {
-      try {
-        chain.applyPreset(key as MasteringPreset);
-        console.log('🎨 Preset appliqué à la chaîne:', key);
-      } catch (e) {
-        console.error('❌ Erreur applyPreset:', e);
+    if (chain && engine.audioContext) {
+      if (!lufsRef.current || lufsContextRef.current !== engine.audioContext) {
+        lufsRef.current?.destroy();
+        lufsRef.current = new LUFSMeter(engine.audioContext);
+        lufsContextRef.current = engine.audioContext;
       }
     }
-  }, []);
+    setChainVersion(v => v + 1);
+  }, [engine.audioContext]);
 
+  // -------------------- Apply preset live --------------------
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem('waveforge-mastering-exports');
-      if (raw) setExports(JSON.parse(raw));
-    } catch (e) {}
+    chainRef.current?.applyPreset(activePreset as MasteringPreset, presetIntensity / 100);
+  }, [activePreset, presetIntensity, chainVersion]);
+
+  // -------------------- Load Exports --------------------
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const dbExports = await loadExportsFromDB();
+      if (cancelled) return;
+      if (dbExports.length > 0) {
+        setExports(dbExports);
+        return;
+      }
+      try {
+        const raw = localStorage.getItem('waveforge-mastering-exports');
+        if (!raw) return;
+        const old: MasteredExport[] = JSON.parse(raw);
+        const migrated: MasteredExport[] = [];
+        for (const exp of old) {
+          try {
+            const blob = await fetch(exp.audioUrl).then(r => r.blob());
+            await saveExportToDB({ ...exp, blob });
+            migrated.push({ ...exp, audioUrl: URL.createObjectURL(blob) });
+          } catch {}
+        }
+        if (!cancelled) {
+          setExports(migrated);
+          if (migrated.length > 0) localStorage.removeItem('waveforge-mastering-exports');
+        }
+      } catch (e) {
+        console.warn('Legacy migration failed:', e);
+      }
+    })();
+    return () => { cancelled = true; };
   }, []);
 
+  // -------------------- Transfert MusicGen --------------------
   useEffect(() => {
     audioTransfer.consume('mastering').then((pending) => {
       if (pending) {
         const file = new File([pending.blob], pending.filename, { type: 'audio/wav' });
-        console.log('📥 Transfert reçu depuis MusicGen :', pending.filename);
         engine.loadFile(file);
       }
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // -------------------- LUFS Polling --------------------
   useEffect(() => {
-    return () => {
-      if (sourceRef.current) {
-        try { sourceRef.current.stop(); } catch {}
+    const id = setInterval(() => {
+      if (lufsRef.current) {
+        // ✅ CORRECTION ICI : Mapping des bonnes clés
+        const data = lufsRef.current.read();
+        setLufs({ 
+          m: data.momentary, 
+          s: data.shortTerm, 
+          i: data.integrated 
+        });
       }
-    };
+    }, 200);
+    return () => clearInterval(id);
   }, []);
 
-  const saveExports = (list: MasteredExport[]) => {
-    setExports(list);
-    localStorage.setItem('waveforge-mastering-exports', JSON.stringify(list));
-  };
-
-  const handlePlayAB = useCallback(() => {
-    if (!engine.audioBuffer || !engine.audioContext) return;
-    const ctx = engine.audioContext;
-
-    if (sourceRef.current) {
-      try { sourceRef.current.stop(); } catch {}
-      sourceRef.current = null;
-    }
-    if (tapAnalyserRef.current) {
-      try { tapAnalyserRef.current.disconnect(); } catch {}
-      tapAnalyserRef.current = null;
-    }
-
-    const source = ctx.createBufferSource();
-    source.buffer = engine.audioBuffer;
-
-    const analyser = ctx.createAnalyser();
-    analyser.fftSize = 2048;
-    analyser.smoothingTimeConstant = 0.82;
-
-    const chain = chainRef.current;
-    console.log('🎬 handlePlayAB | abMode:', abMode, '| chain:', chain ? 'PRÉSENTE' : 'NULLE');
-
-    if (abMode === 'mastered' && chain) {
-      try {
-        chain.applyPreset(activePreset as MasteringPreset);
-        console.log('🎨 Preset appliqué au play:', activePreset);
-      } catch (e) { console.warn(e); }
-
-      const chainInput = chain.getInputNode();
-      const chainOutput = chain.getOutputNode();
-
-      source.connect(chainInput);
-      chainOutput.connect(analyser);
-      analyser.connect(ctx.destination);
-      console.log('🔌 Mode MASTERED : Source → Chaîne → Analyser → Destination');
-    } else {
-      source.connect(analyser);
-      analyser.connect(ctx.destination);
-      console.log('🔌 Mode ORIGINAL : Source → Analyser → Destination (bypass)');
-    }
-
-    tapAnalyserRef.current = analyser;
-    setAbAnalyser(analyser);
-
-    source.start(0);
-    sourceRef.current = source;
-    setIsPlayingAB(true);
-
-    source.onended = () => {
-      setIsPlayingAB(false);
-      sourceRef.current = null;
-      setAbAnalyser(null);
-      if (tapAnalyserRef.current) {
-        try { tapAnalyserRef.current.disconnect(); } catch {}
-        tapAnalyserRef.current = null;
-      }
-    };
-  }, [engine, abMode, activePreset]);
-
+  // -------------------- A/B Stop --------------------
   const handleStopAB = useCallback(() => {
-    if (sourceRef.current) {
-      try { sourceRef.current.stop(); } catch {}
-      sourceRef.current = null;
-    }
-    if (tapAnalyserRef.current) {
-      try { tapAnalyserRef.current.disconnect(); } catch {}
-      tapAnalyserRef.current = null;
-    }
+    const g = abGraphRef.current;
+    if (!g) return;
+    try { g.source.stop(); } catch {}
+    try { g.source.disconnect(); } catch {}
+    try { g.dryGain.disconnect(); } catch {}
+    try { g.wetGain.disconnect(); } catch {}
+    try { g.masterOut.disconnect(); } catch {}
+    try { g.analyser.disconnect(); } catch {}
+    abGraphRef.current = null;
     setIsPlayingAB(false);
     setAbAnalyser(null);
   }, []);
 
-  const handleDeleteExport = (id: string) => {
+  // -------------------- A/B Play --------------------
+  const handlePlayAB = useCallback(() => {
+    if (abGraphRef.current) { handleStopAB(); return; }
+    
+    const ctx = engine.audioContext;
+    const chain = chainRef.current;
+    const buffer = engine.audioBuffer;
+    if (!ctx || !chain || !buffer) return;
+    
+    chain.applyPreset(activePreset as MasteringPreset, presetIntensity / 100);
+
+    const source = ctx.createBufferSource(); 
+    source.buffer = buffer;
+    
+    const dryGain = ctx.createGain(); 
+    dryGain.gain.value = abMode === 'original' ? 1 : 0;
+    
+    const wetGain = ctx.createGain(); 
+    wetGain.gain.value = abMode === 'mastered' ? 1 : 0;
+    
+    const analyser = ctx.createAnalyser(); 
+    analyser.fftSize = 2048; 
+    analyser.smoothingTimeConstant = 0.92; // ✅ Lissage fluide
+    
+    const masterOut = ctx.createGain();
+    
+    source.connect(dryGain); 
+    source.connect(chain.getInputNode()); 
+    chain.getOutputNode().connect(wetGain);
+    
+    dryGain.connect(masterOut);
+    wetGain.connect(masterOut);
+    
+    masterOut.connect(analyser); 
+    analyser.connect(ctx.destination);
+    
+    if (lufsRef.current) {
+      try { masterOut.connect(lufsRef.current.getInput()); } catch {}
+    }
+
+    source.start(0);
+    abGraphRef.current = { source, dryGain, wetGain, analyser, masterOut };
+    setAbAnalyser(analyser); 
+    setIsPlayingAB(true);
+    
+    source.onended = () => { 
+      if (abGraphRef.current?.source === source) handleStopAB(); 
+    };
+  }, [engine, activePreset, presetIntensity, abMode, handleStopAB]);
+
+  // -------------------- A/B Crossfade --------------------
+  useEffect(() => {
+    const g = abGraphRef.current;
+    if (!g || !engine.audioContext) return;
+    const t = engine.audioContext.currentTime;
+    g.dryGain.gain.setTargetAtTime(abMode === 'original' ? 1 : 0, t, 0.015);
+    g.wetGain.gain.setTargetAtTime(abMode === 'mastered' ? 1 : 0, t, 0.015);
+  }, [abMode, engine.audioContext]);
+
+  // -------------------- Export Handlers --------------------
+  const handleDeleteExport = async (id: string) => {
     if (!confirm("Supprimer cet export de l'historique ?")) return;
-    saveExports(exports.filter((e) => e.id !== id));
+    try { await deleteExportFromDB(id); } catch {}
+    setExports(prev => prev.filter(e => e.id !== id));
   };
 
-  return (
-    <div
-      className="fade-in"
-      style={{
-        padding: isMobile ? 12 : 20,
-        display: 'grid',
-        gap: isMobile ? 14 : 20,
-      }}
-    >
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'flex-start',
-          flexWrap: 'wrap',
-          gap: 12,
-        }}
-      >
-        <div>
-          <h2 style={{ fontSize: isMobile ? 16 : 20, fontWeight: 700, margin: 0, marginBottom: 8 }}>
-            🎚️ <span style={{ color: '#7c5cff' }}>Mastering</span>
-            <span
-              style={{
-                fontSize: 10,
-                color: '#7c5cff',
-                marginLeft: 10,
-                padding: '2px 8px',
-                background: 'rgba(124, 92, 255, 0.15)',
-                border: '1px solid rgba(124, 92, 255, 0.4)',
-                borderRadius: 10,
-                verticalAlign: 'middle',
-                fontWeight: 700,
-                letterSpacing: '0.5px',
-              }}
-            >
-              PRO
-            </span>
-          </h2>
-          <p style={{ color: '#888', fontSize: 11, margin: 0 }}>
-            Chaîne complète : EQ 5 bandes · Compresseur · Exciter · Sub-Bass · Limiteur · Export WAV
-          </p>
-        </div>
+  const handleNewExport = useCallback(async (payload: any) => {
+    const audioUrl = URL.createObjectURL(payload.blob);
+    const exp = { ...payload, audioUrl };
+    try { await saveExportToDB({ ...payload, blob: payload.blob }); } catch {}
+    setExports(prev => [exp, ...prev].slice(0, 50));
+  }, []);
 
-        {hasAudio && (
-          <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
-              padding: '6px 12px',
-              background: 'rgba(0, 255, 136, 0.06)',
-              border: '1px solid rgba(0, 255, 136, 0.3)',
-              borderRadius: 8,
-              fontSize: 10,
-              color: '#00ff88',
-            }}
-          >
-            <div
-              style={{
-                width: 6,
-                height: 6,
-                borderRadius: '50%',
-                background: '#00ff88',
-                boxShadow: '0 0 8px #00ff88',
-              }}
-            />
-            PRÊT À MASTERISER
-          </div>
-        )}
+  // -------------------- Cleanup on unmount --------------------
+  useEffect(() => {
+    return () => {
+      if (abGraphRef.current) handleStopAB();
+    };
+  }, [handleStopAB]);
+
+  // -------------------- Render --------------------
+  return (
+    <div style={{ padding: isMobile ? 12 : 24, display: 'grid', gap: 20, maxWidth: 1200, margin: '0 auto' }}>
+      
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
+        <div>
+          <h2 style={{ fontSize: isMobile ? 20 : 24, fontWeight: 700, margin: 0, marginBottom: 8, color: '#fff' }}>
+            🎚️ <span className="wf-title-gradient">Mastering</span>
+            <span className="wf-badge" style={{ marginLeft: 10, verticalAlign: 'middle' }}>PRO</span>
+          </h2>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 12, margin: 0 }}>Chaîne complète : EQ 5 bandes · Compresseur · Exciter · Limiteur · Export WAV</p>
+        </div>
       </div>
 
+      {/* Pas d'audio */}
       {!hasAudio && (
-        <div
-          className="panel"
-          style={{
-            padding: isMobile ? 24 : 40,
-            textAlign: 'center',
-            borderStyle: 'dashed',
-            borderColor: 'rgba(124, 92, 255, 0.3)',
-          }}
-        >
-          <div style={{ fontSize: isMobile ? 40 : 52, marginBottom: 16 }}>🎚️</div>
-          <div style={{ fontSize: 15, color: '#fff', marginBottom: 10, fontWeight: 600 }}>
-            Aucun audio chargé
-          </div>
-          <div
-            style={{
-              fontSize: 12,
-              color: '#888',
-              marginBottom: 24,
-              maxWidth: 450,
-              margin: '0 auto 24px',
-              lineHeight: 1.6,
-            }}
-          >
-            Charge un audio dans la page Studio pour accéder à la chaîne de mastering.
-          </div>
-          <Link
-            to="/studio"
-            className="btn-action primary"
-            style={{
-              textDecoration: 'none',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 6,
-              background: 'linear-gradient(135deg, #7c5cff, #5b3fd9)',
-              color: '#fff',
-              borderColor: 'transparent',
-              padding: '12px 24px',
-              fontSize: 12,
-            }}
-          >
-            🎹 Aller au Studio
-          </Link>
+        <div className="wf-glass" style={{ padding: 40, textAlign: 'center', borderStyle: 'dashed' }}>
+          <div style={{ fontSize: 52, marginBottom: 16 }}>🎚️</div>
+          <div style={{ fontSize: 16, color: '#fff', marginBottom: 10, fontWeight: 600 }}>Aucun audio chargé</div>
+          <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 24, maxWidth: 450, margin: '0 auto 24px' }}>Charge un audio dans la page Studio pour accéder à la chaîne de mastering.</div>
+          <Link to="/studio" className="wf-btn wf-btn-primary" style={{ textDecoration: 'none' }}>🎹 Aller au Studio</Link>
         </div>
       )}
 
+      {/* UI Principale */}
       {hasAudio && (
         <>
-          <div
-            className="panel"
-            style={{
-              padding: 16,
-              display: 'grid',
-              gridTemplateColumns: isMobile ? '1fr' : 'minmax(200px, 1fr) minmax(200px, 1fr)',
-              gap: 20,
-            }}
-          >
+          {/* A/B + Intensité */}
+          <div className="wf-glass" style={{ padding: 16, display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 20 }}>
             <div>
-              <div
-                className="label-uppercase"
-                style={{ fontSize: 10, color: '#666', marginBottom: 10, letterSpacing: '1px' }}
-              >
-                🎧 COMPARAISON A/B
-              </div>
-              <div
-                style={{
-                  display: 'flex',
-                  gap: 4,
-                  background: 'var(--bg-1)',
-                  padding: 4,
-                  borderRadius: 8,
-                }}
-              >
-                <button
-                  onClick={() => setAbMode('original')}
-                  style={{
-                    flex: 1,
-                    padding: '8px',
-                    borderRadius: 6,
-                    border: 'none',
-                    background: abMode === 'original' ? '#7c5cff' : 'transparent',
-                    color: abMode === 'original' ? '#fff' : '#666',
-                    cursor: 'pointer',
-                    fontSize: 11,
-                    fontWeight: 600,
-                  }}
+              <div className="wf-label" style={{ marginBottom: 12 }}>🎧 Comparaison A/B</div>
+              <div style={{ display: 'flex', gap: 4, background: 'var(--bg-0)', padding: 4, borderRadius: 8 }}>
+                <button 
+                  onClick={() => setAbMode('original')} 
+                  style={{ flex: 1, padding: '8px', borderRadius: 6, border: 'none', background: abMode === 'original' ? 'var(--bg-3)' : 'transparent', color: abMode === 'original' ? '#fff' : 'var(--text-secondary)', cursor: 'pointer', fontSize: 11, fontWeight: 600 }}
                 >
                   🔊 ORIGINAL
                 </button>
-                <button
-                  onClick={() => setAbMode('mastered')}
-                  style={{
-                    flex: 1,
-                    padding: '8px',
-                    borderRadius: 6,
-                    border: 'none',
-                    background: abMode === 'mastered' ? '#00ff88' : 'transparent',
-                    color: abMode === 'mastered' ? '#000' : '#666',
-                    cursor: 'pointer',
-                    fontSize: 11,
-                    fontWeight: 600,
-                  }}
+                <button 
+                  onClick={() => setAbMode('mastered')} 
+                  style={{ flex: 1, padding: '8px', borderRadius: 6, border: 'none', background: abMode === 'mastered' ? 'var(--accent-primary)' : 'transparent', color: abMode === 'mastered' ? '#000' : 'var(--text-secondary)', cursor: 'pointer', fontSize: 11, fontWeight: 600 }}
                 >
                   🎚️ MASTERISÉ
                 </button>
               </div>
-
-              <button
-                onClick={isPlayingAB ? handleStopAB : handlePlayAB}
-                className="btn-action primary"
-                style={{
-                  width: '100%',
-                  marginTop: 10,
-                  background: isPlayingAB
-                    ? '#ff3366'
-                    : abMode === 'mastered'
-                    ? '#00ff88'
-                    : '#7c5cff',
-                  color: abMode === 'mastered' && !isPlayingAB ? '#000' : '#fff',
-                  borderColor: 'transparent',
-                  fontWeight: 700,
-                  padding: '10px',
-                  fontSize: 11,
-                  justifyContent: 'center',
-                }}
+              <button 
+                onClick={handlePlayAB} 
+                className="wf-btn wf-btn-primary" 
+                style={{ width: '100%', marginTop: 12, padding: '12px', background: isPlayingAB ? 'var(--accent-danger)' : 'var(--accent-primary)', color: isPlayingAB ? '#fff' : '#000' }}
               >
-                {isPlayingAB
-                  ? '⏹ ARRÊTER'
-                  : `▶ LIRE (${abMode === 'mastered' ? 'Master' : 'Original'})`}
+                {isPlayingAB ? '⏹ ARRÊTER' : `▶ LIRE (${abMode === 'mastered' ? 'Master' : 'Original'})`}
               </button>
             </div>
-
+            
             <div>
-              <div
-                className="label-uppercase"
-                style={{ fontSize: 10, color: '#666', marginBottom: 10, letterSpacing: '1px' }}
-              >
-                ⚡ INTENSITÉ DU PRESET
+              <div className="wf-label" style={{ marginBottom: 12 }}>⚡ Intensité du preset (Live)</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+                <span className="mono" style={{ fontSize: 28, fontWeight: 700, color: 'var(--accent-primary)' }}>{presetIntensity}%</span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                <span className="mono" style={{ fontSize: 24, fontWeight: 700, color: '#7c5cff' }}>
-                  {presetIntensity}%
-                </span>
-                <div style={{ flex: 1, fontSize: 10, color: '#666', lineHeight: 1.4 }}>
-                  {presetIntensity === 0
-                    ? 'Aucun effet appliqué'
-                    : presetIntensity < 50
-                    ? 'Effets légers · subtil'
-                    : presetIntensity < 100
-                    ? 'Effets modérés'
-                    : 'Effets à pleine puissance'}
-                </div>
-              </div>
-              <input
-                type="range"
-                min={0}
-                max={100}
-                step={5}
-                value={presetIntensity}
-                onChange={(e) => setPresetIntensity(parseInt(e.target.value))}
-                style={{ width: '100%', accentColor: '#7c5cff' }}
+              <input 
+                type="range" min={0} max={100} step={5} 
+                value={presetIntensity} 
+                onChange={(e) => setPresetIntensity(parseInt(e.target.value))} 
               />
             </div>
           </div>
 
-          <div className="panel" style={{ padding: 16 }}>
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: 12,
-              }}
-            >
-              <div
-                className="label-uppercase"
-                style={{ fontSize: 10, color: '#666', letterSpacing: '1px' }}
-              >
-                📊 SPECTRE SONORE
-              </div>
-              <div
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  fontSize: 9,
-                  color: isPlayingAB ? '#00ff88' : '#666',
-                }}
-              >
-                <div
-                  style={{
-                    width: 6,
-                    height: 6,
-                    borderRadius: '50%',
-                    background: isPlayingAB ? '#00ff88' : '#444',
-                    boxShadow: isPlayingAB ? '0 0 8px #00ff88' : 'none',
-                  }}
-                />
-                {isPlayingAB ? 'LIVE' : 'IDLE'}
+          {/* Spectre + LUFS */}
+          <div style={{ display: 'grid', gap: 16 }}>
+            <div className="wf-glass" style={{ padding: 16 }}>
+              <div className="wf-label" style={{ marginBottom: 12 }}>📊 Spectre sonore</div>
+              <div style={{ background: 'var(--bg-0)', borderRadius: 8, border: '1px solid var(--border-subtle)', padding: 8 }}>
+                 <SpectrumVisualizer analyser={abAnalyser} isActive={isPlayingAB} height={isMobile ? 120 : 180} colorByAmplitude={true} barCount={isMobile ? 40 : 80} />
               </div>
             </div>
-            <SpectrumVisualizer
-              analyser={abAnalyser}
-              isActive={isPlayingAB}
-              height={isMobile ? 100 : 160}
-              color={abMode === 'mastered' ? '#00ff88' : '#7c5cff'}
-              barCount={isMobile ? 40 : 72}
-              colorByAmplitude={true}
-            />
+            
+            <div className="wf-glass" style={{ padding: 16 }}>
+              <div className="wf-label" style={{ marginBottom: 12 }}>📈 Loudness · ITU-R BS.1770</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+                <LufsMeter label="M (Momentary)" value={lufs.m} />
+                <LufsMeter label="S (Short-term)" value={lufs.s} />
+                <LufsMeter label="I (Integrated)" value={lufs.i} />
+              </div>
+            </div>
           </div>
 
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: isMobile ? '1fr' : 'minmax(260px, 320px) 1fr',
-              gap: isMobile ? 16 : 20,
-              alignItems: 'start',
-            }}
-          >
-            <div
-              style={{
-                display: 'grid',
-                gap: 16,
-                position: isMobile ? 'relative' : 'sticky',
-                top: isMobile ? 'auto' : 20,
-              }}
-            >
-              <div className="panel" style={{ padding: 16 }}>
-                <div
-                  className="label-uppercase"
-                  style={{ fontSize: 10, color: '#666', marginBottom: 12, letterSpacing: '1px' }}
-                >
-                  🎵 FICHIER SOURCE
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-                  <div
-                    style={{
-                      width: 36,
-                      height: 36,
-                      borderRadius: 8,
-                      background: 'rgba(124, 92, 255, 0.1)',
-                      border: '1px solid rgba(124, 92, 255, 0.3)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: 16,
-                      flexShrink: 0,
-                    }}
-                  >
-                    🎵
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div
-                      style={{
-                        fontSize: 12,
-                        color: '#fff',
-                        fontWeight: 500,
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {engine.fileName || 'Sans titre'}
-                    </div>
-                    <div className="mono" style={{ fontSize: 9, color: '#888', marginTop: 2 }}>
-                      {engine.fileFormat} · {((engine.fileSize ?? 0) / (1024 * 1024)).toFixed(1)} MB
-                    </div>
-                  </div>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                  <InfoBox label="DURÉE" value={`${engine.result?.duration.toFixed(1)}s`} color="#7c5cff" />
-                  <InfoBox label="BPM" value={engine.result?.bpm?.toString() ?? '—'} color="#7c5cff" />
-                </div>
-              </div>
-
-              <div className="panel" style={{ padding: 16 }}>
-                <div
-                  className="label-uppercase"
-                  style={{ fontSize: 10, color: '#666', marginBottom: 12, letterSpacing: '1px' }}
-                >
-                  🎨 PRESETS DISPONIBLES
-                </div>
-                <div style={{ display: 'grid', gap: 8, fontSize: 10 }}>
-                  {Object.entries(PRESET_INFO).map(([key, info]) => (
-                    <PresetInfo
-                      key={key}
-                      name={info.name}
-                      description={info.description}
-                      color={info.color}
-                      values={info.values}
-                      isActive={activePreset === key}
-                      onClick={() => handlePresetClick(key)}
-                    />
-                  ))}
-                </div>
-              </div>
+          {/* Fichier + Presets + Mastering Panel */}
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '300px 1fr', gap: 20 }}>
+            <div style={{ display: 'grid', gap: 16 }}>
+               <div className="wf-glass" style={{ padding: 16 }}>
+                 <div className="wf-label" style={{ marginBottom: 12 }}>🎵 Fichier source</div>
+                 <div style={{ fontSize: 13, color: '#fff', fontWeight: 600 }}>{engine.fileName || 'Sans titre'}</div>
+                 <div className="mono" style={{ fontSize: 10, color: 'var(--text-tertiary)', marginTop: 4 }}>
+                   {engine.fileFormat} · {((engine.fileSize ?? 0) / (1024 * 1024)).toFixed(1)} MB
+                 </div>
+               </div>
+               <div className="wf-glass" style={{ padding: 16 }}>
+                 <div className="wf-label" style={{ marginBottom: 12 }}>🎨 Presets</div>
+                 <div style={{ display: 'grid', gap: 8 }}>
+                   {Object.entries(PRESET_INFO).map(([key, info]) => (
+                     <PresetCard 
+                       key={key} 
+                       name={info.name} 
+                       description={info.description} 
+                       color={info.color} 
+                       isActive={activePreset === key} 
+                       onClick={() => setActivePreset(key)} 
+                     />
+                   ))}
+                 </div>
+               </div>
             </div>
-
+            
             <div>
-              <MasteringPanel
-                audioContext={engine.audioContext}
-                sourceNode={null}
-                sourceBuffer={engine.audioBuffer}
-                onChainReady={handleChainReady}
+              <MasteringPanel 
+                audioContext={engine.audioContext} 
+                sourceNode={null} 
+                sourceBuffer={engine.audioBuffer} 
+                preset={activePreset as MasteringPreset} 
+                intensity={presetIntensity} 
+                onChainReady={handleChainReady} 
+                onExport={handleNewExport} 
               />
             </div>
           </div>
 
+          {/* Historique des exports */}
           <div>
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: 12,
-              }}
-            >
-              <div className="label-uppercase" style={{ fontSize: 10, color: '#666', letterSpacing: '1px' }}>
-                📦 HISTORIQUE · {exports.length}
-              </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <div className="wf-label">📦 Historique · {exports.length}</div>
             </div>
 
             {exports.length === 0 ? (
-              <div
-                className="panel"
-                style={{
-                  padding: 20,
-                  textAlign: 'center',
-                  fontSize: 11,
-                  color: '#666',
-                  borderStyle: 'dashed',
-                }}
-              >
+              <div className="wf-glass" style={{ padding: 20, textAlign: 'center', fontSize: 11, color: 'var(--text-tertiary)', borderStyle: 'dashed' }}>
                 Aucun export pour le moment.
               </div>
             ) : (
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(240px, 1fr))',
-                  gap: 12,
-                }}
-              >
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(240px, 1fr))', gap: 12 }}>
                 {exports.slice(0, 6).map((exp) => (
-                  <ExportCard key={exp.id} exportItem={exp} onDelete={() => handleDeleteExport(exp.id)} />
+                  <div key={exp.id} className="wf-glass wf-fade-in" style={{ padding: 14 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8, gap: 8 }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div className="mono" style={{ fontSize: 10, color: 'var(--accent-primary)', fontWeight: 600, textTransform: 'uppercase' }}>
+                          {exp.preset} · {exp.intensity}%
+                        </div>
+                        <div className="mono" style={{ fontSize: 9, color: 'var(--text-tertiary)', marginTop: 2 }}>
+                          {new Date(exp.timestamp).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                      </div>
+                      <button onClick={() => handleDeleteExport(exp.id)} style={{ background: 'transparent', border: 'none', color: 'var(--text-tertiary)', cursor: 'pointer', fontSize: 14 }}>✕</button>
+                    </div>
+                    <div className="mono" style={{ fontSize: 9, color: 'var(--text-secondary)', padding: '4px 8px', background: 'var(--bg-0)', borderRadius: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 8 }}>
+                      🎵 {exp.fileName}
+                    </div>
+                    <audio src={exp.audioUrl} controls style={{ width: '100%', height: 28 }} />
+                  </div>
                 ))}
               </div>
             )}
           </div>
         </>
       )}
-    </div>
-  );
-};
-
-const InfoBox: React.FC<{ label: string; value: string; color: string }> = ({ label, value, color }) => (
-  <div
-    style={{
-      padding: '8px 10px',
-      background: 'var(--bg-1)',
-      border: '1px solid var(--border)',
-      borderRadius: 6,
-      textAlign: 'center',
-    }}
-  >
-    <div className="label-uppercase" style={{ fontSize: 8, color: '#666', marginBottom: 3 }}>
-      {label}
-    </div>
-    <div className="mono" style={{ fontSize: 13, color, fontWeight: 600 }}>
-      {value}
-    </div>
-  </div>
-);
-
-const PresetInfo: React.FC<{
-  name: string;
-  description: string;
-  color: string;
-  values: string;
-  isActive: boolean;
-  onClick: () => void;
-}> = ({ name, description, color, values, isActive, onClick }) => {
-  const activeBorder = isActive ? `1px solid ${color}40` : '1px solid transparent';
-
-  return (
-    <div
-      onClick={onClick}
-      style={{
-        padding: '8px 10px',
-        background: isActive ? `${color}10` : 'var(--bg-1)',
-        borderRadius: 6,
-        borderTop: activeBorder,
-        borderRight: activeBorder,
-        borderBottom: activeBorder,
-        borderLeft: `3px solid ${color}`,
-        cursor: 'pointer',
-        transition: 'all 0.2s',
-      }}
-    >
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: 2,
-        }}
-      >
-        <span style={{ color, fontWeight: 700, fontSize: 11, letterSpacing: '0.5px' }}>
-          {name}
-          {isActive && <span style={{ marginLeft: 6, fontSize: 9 }}>✓</span>}
-        </span>
-        <span className="mono" style={{ fontSize: 8, color: '#666' }}>
-          {values}
-        </span>
-      </div>
-      <div style={{ fontSize: 9, color: '#666' }}>{description}</div>
-    </div>
-  );
-};
-
-const ExportCard: React.FC<{ exportItem: MasteredExport; onDelete: () => void }> = ({ exportItem, onDelete }) => {
-  const date = new Date(exportItem.timestamp);
-  const dateStr = date.toLocaleString('fr-FR', {
-    day: '2-digit',
-    month: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-
-  return (
-    <div className="panel fade-in" style={{ padding: 14, borderColor: 'var(--border)' }}>
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'flex-start',
-          marginBottom: 8,
-          gap: 8,
-        }}
-      >
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div
-            className="mono"
-            style={{
-              fontSize: 10,
-              color: '#7c5cff',
-              fontWeight: 600,
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px',
-            }}
-          >
-            {exportItem.preset} · {exportItem.intensity}%
-          </div>
-          <div className="mono" style={{ fontSize: 9, color: '#666', marginTop: 2 }}>
-            {dateStr}
-          </div>
-        </div>
-        <button
-          onClick={onDelete}
-          style={{
-            background: 'transparent',
-            border: 'none',
-            color: '#666',
-            cursor: 'pointer',
-            fontSize: 14,
-            padding: 2,
-          }}
-          title="Supprimer"
-        >
-          ✕
-        </button>
-      </div>
-
-      <div
-        className="mono"
-        style={{
-          fontSize: 9,
-          color: '#888',
-          padding: '4px 8px',
-          background: 'var(--bg-1)',
-          borderRadius: 4,
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap',
-          marginBottom: 8,
-        }}
-      >
-        🎵 {exportItem.fileName}
-      </div>
-
-      <audio src={exportItem.audioUrl} controls style={{ width: '100%', height: 28 }} />
     </div>
   );
 };

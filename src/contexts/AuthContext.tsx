@@ -3,51 +3,87 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 import type { User, Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 
+// ============================================================
+// TYPES
+// ============================================================
+export interface Profile {
+  id: string;
+  username: string;
+  avatar_url: string | null;
+  bio?: string | null;
+  role?: 'user' | 'moderator' | 'admin';
+  city?: string | null;
+  country?: string | null;
+  music_style?: string | null;
+  influences?: string | null;
+  gear?: string | null;
+  badges?: string[] | null;
+  social_links?: Record<string, string> | null;
+  created_at?: string;
+}
+
 interface AuthContextValue {
   user: User | null;
   session: Session | null;
+  profile: Profile | null;       // ✅ Profil complet
   loading: boolean;
+  username: string | null;        // ✅ Gardé pour compatibilité
+  isAdmin: boolean;               // ✅ NOUVEAU
+  isModerator: boolean;           // ✅ NOUVEAU
   signOut: () => Promise<void>;
-  username: string | null;
-  refreshProfile: () => Promise<void>; // ✅ Nouvelle fonction exposée
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
+// ============================================================
+// PROVIDER
+// ============================================================
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [username, setUsername] = useState<string | null>(null);
 
-  // ✅ Fonction pour récupérer le vrai username depuis la table 'profiles'
+  // ✅ Fetch du profil complet (username + role + autres infos)
   const fetchProfile = useCallback(async (currentUser: User | null) => {
     if (!currentUser) {
-      setUsername(null);
+      setProfile(null);
       return;
     }
 
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('username')
+        .select('id, username, avatar_url, role, bio, city, country, music_style, influences, gear, badges, social_links, created_at')
         .eq('id', currentUser.id)
         .single();
 
       if (error) {
         console.warn('Profil introuvable, fallback sur l\'email');
-        setUsername(currentUser.email?.split('@')[0] ?? null);
+        // Fallback : on crée un profil minimal basé sur l'email
+        setProfile({
+          id: currentUser.id,
+          username: currentUser.email?.split('@')[0] || 'Artiste',
+          avatar_url: null,
+          role: 'user',
+        });
         return;
       }
 
-      // On utilise le username du profil, sinon on fallback sur l'email
-      setUsername(data?.username || currentUser.email?.split('@')[0] || null);
+      setProfile(data as Profile);
     } catch (e) {
-      setUsername(currentUser.email?.split('@')[0] ?? null);
+      console.error('Erreur fetchProfile:', e);
+      setProfile({
+        id: currentUser.id,
+        username: currentUser.email?.split('@')[0] || 'Artiste',
+        avatar_url: null,
+        role: 'user',
+      });
     }
   }, []);
 
-  // ✅ Fonction publique pour forcer le rafraîchissement depuis n'importe où
+  // ✅ Fonction publique pour forcer le rafraîchissement (après modif du profil)
   const refreshProfile = useCallback(async () => {
     await fetchProfile(user);
   }, [user, fetchProfile]);
@@ -61,7 +97,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(false);
     });
 
-    // Écoute des changements (login, logout, refresh)
+    // Écoute des changements (login, logout, refresh token)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setSession(session);
@@ -77,16 +113,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await supabase.auth.signOut();
     setUser(null);
     setSession(null);
-    setUsername(null);
+    setProfile(null);
+  };
+
+  // ✅ Calcul des droits
+  const isAdmin = profile?.role === 'admin';
+  const isModerator = profile?.role === 'admin' || profile?.role === 'moderator';
+
+  // ✅ Valeur exposée (avec les nouveaux champs)
+  const value: AuthContextValue = {
+    user,
+    session,
+    profile,
+    loading,
+    username: profile?.username || null,
+    isAdmin,
+    isModerator,
+    signOut,
+    refreshProfile,
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signOut, username, refreshProfile }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
 };
 
+// ============================================================
+// HOOK
+// ============================================================
 export const useAuth = (): AuthContextValue => {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error('useAuth doit être utilisé dans AuthProvider');

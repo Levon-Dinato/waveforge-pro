@@ -3,9 +3,27 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
-    <!-- ✅ NOUVEAU TITRE ET DESCRIPTION (SEO) -->
+    <!-- ✅ VIEWPORT OPTIMISÉ MOBILE -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    
+    <!-- ✅ DÉTECTION AUTO (évite que Safari transforme les numéros en liens) -->
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="format-detection" content="date=no" />
+    <meta name="format-detection" content="address=no" />
+    <meta name="format-detection" content="email=no" />
+    
+    <!-- ✅ PWA iOS -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="DropZone DJ" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+    
+    <!-- ✅ THEME COLOR (barre d'adresse Chrome Android) -->
+    <meta name="theme-color" content="#121212" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#121212" />
+    
+    <!-- ✅ TITRE ET DESCRIPTION (SEO) -->
     <title>DropZone DJ · Les nouvelles sorties et les remixes</title>
     <meta name="description" content="Les promos, edits et morceaux exclusifs autorisés au partage. Nouveautés House, Tech House, EDM, Dance et Underground. Une communauté où les DJs présentent leurs productions et leurs découvertes." />
 
@@ -28,9 +46,8 @@
     <meta name="twitter:image" content="https://waveforge-pro-one.vercel.app/og-image.jpg" />
     <meta name="twitter:image:alt" content="DropZone DJ" />
 
-    <!-- PWA -->
+    <!-- ✅ PWA -->
     <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="#00d9ff" />
   </head>
   <body>
     <div id="root"></div>

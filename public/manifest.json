@@ -1,15 +1,22 @@
 {
+  "id": "/",
   "name": "DropZone DJ · Les nouvelles sorties et les remixes",
-  "short_name": "DropZone DJ",
-  "description": "Les promos, edits et morceaux exclusifs autorisés au partage. Nouveautés House, Tech House, EDM, Dance et Underground. Une communauté où les DJs présentent leurs productions et leurs découvertes.",
+  "short_name": "DropZone",
+  "description": "Promos, edits et morceaux exclusifs. Nouveautés House, Tech House, EDM, Dance et Underground.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
   "orientation": "any",
   "background_color": "#121212",
-  "theme_color": "#00d9ff",
-  "scope": "/",
+  "theme_color": "#121212",
   "lang": "fr",
+  "dir": "ltr",
   "categories": ["music", "entertainment", "social"],
+  "prefer_related_applications": false,
+  "launch_handler": {
+    "client_mode": ["focus-existing", "auto"]
+  },
   "icons": [
     {
       "src": "/icons/icon-192.png",
@@ -30,24 +37,50 @@
       "purpose": "maskable"
     }
   ],
+  "screenshots": [
+    {
+      "src": "/screenshots/home.jpg",
+      "sizes": "1280x720",
+      "type": "image/jpeg",
+      "form_factor": "wide",
+      "label": "Page d'accueil - Découvrez les nouveautés"
+    },
+    {
+      "src": "/screenshots/mixer.jpg",
+      "sizes": "1280x720",
+      "type": "image/jpeg",
+      "form_factor": "wide",
+      "label": "Mixer Pro - Console DJ virtuelle"
+    },
+    {
+      "src": "/screenshots/mobile.jpg",
+      "sizes": "720x1280",
+      "type": "image/jpeg",
+      "form_factor": "narrow",
+      "label": "Feed mobile"
+    }
+  ],
   "shortcuts": [
     {
       "name": "Nouveautés",
       "short_name": "Nouveautés",
       "url": "/nouveautes",
-      "description": "Découvrir les dernières sorties"
+      "description": "Découvrir les dernières sorties",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Mixer Pro",
+      "short_name": "Mixer",
+      "url": "/mixer",
+      "description": "Ouvrir la console DJ",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     },
     {
       "name": "Live DJ",
       "short_name": "Live",
       "url": "/live",
-      "description": "Regarder le live DropZone DJ"
-    },
-    {
-      "name": "Mon Profil",
-      "short_name": "Profil",
-      "url": "/profil/me",
-      "description": "Voir mon profil"
+      "description": "Regarder le live DropZone DJ",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     }
   ]
 }

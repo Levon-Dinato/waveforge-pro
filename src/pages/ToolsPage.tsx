@@ -23,6 +23,14 @@ const TOOLS = [
     desc: 'Crée, édite et remixe tes morceaux avec notre station de travail audio intégrée.',
     icon: '🎹',
     color: '#7c5cff'
+  },
+  {
+    // ✅ NOUVEL OUTIL AJOUTÉ ICI
+    path: '/mixer',
+    title: 'Console Mixer Pro',
+    desc: 'Mixe tes morceaux en direct avec nos deux platines virtuelles, EQ et crossfader.',
+    icon: '🎚️',
+    color: '#00ff9d'
   }
 ];
 

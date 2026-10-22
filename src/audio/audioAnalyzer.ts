@@ -1,113 +1,95 @@
-// src/audio/audioAnalyzer.ts
-
-export interface AudioMetrics {
-  lufs: number;
-  truePeak: number;
-  dr: number;
+// src/utils/audioAnalyzer.ts
+export interface WaveformData {
+  low: Float32Array;
+  mid: Float32Array;
+  high: Float32Array;
+  max: number;
 }
 
-export class AudioAnalyzer {
-  private audioContext: AudioContext;
-  public analyser: AnalyserNode;
-  private sourceNode: AudioNode | null = null;
-  private dataArray: Float32Array;
-  private lufsBuffer: number[] = [];
-  private readonly LUFS_WINDOW = 3;
-  private isRunning = false;
-  private animationFrameId: number | null = null;
+export const analyzeAudio = async (audioBuffer: AudioBuffer): Promise<WaveformData> => {
+  const FPS = 100; // Résolution (100 points par seconde)
+  const length = audioBuffer.length;
+  const sampleRate = audioBuffer.sampleRate;
+  const step = Math.floor(sampleRate / FPS);
+  const numFrames = Math.floor(length / step);
 
-  constructor(audioContext: AudioContext) {
-    this.audioContext = audioContext;
-    this.analyser = this.audioContext.createAnalyser();
-    this.analyser.fftSize = 2048;
-    this.analyser.smoothingTimeConstant = 0.8;
-    this.dataArray = new Float32Array(this.analyser.fftSize);
-    this.lufsBuffer = new Array(Math.floor(this.LUFS_WINDOW * 10)).fill(-Infinity);
-  }
+  // Création des buffers pour isoler les fréquences
+  const offlineCtx = new OfflineAudioContext(1, length, sampleRate);
+  const source = offlineCtx.createBufferSource();
+  source.buffer = audioBuffer;
 
-  connect(source: AudioNode): void {
-    if (this.sourceNode) {
-      this.sourceNode.disconnect(this.analyser);
-    }
-    this.sourceNode = source;
-    source.connect(this.analyser);
-  }
+  const lowFilter = offlineCtx.createBiquadFilter();
+  lowFilter.type = 'lowpass';
+  lowFilter.frequency.value = 250;
 
-  getAnalyserNode(): AnalyserNode {
-    return this.analyser;
-  }
+  const midFilter = offlineCtx.createBiquadFilter();
+  midFilter.type = 'bandpass';
+  midFilter.frequency.value = 1000;
+  midFilter.Q.value = 1;
 
-  start(callback: (metrics: AudioMetrics) => void): void {
-    if (this.isRunning) return;
-    this.isRunning = true;
+  const highFilter = offlineCtx.createBiquadFilter();
+  highFilter.type = 'highpass';
+  highFilter.frequency.value = 4000;
 
-    const analyze = () => {
-      if (!this.isRunning) return;
-      const metrics = this.getMetrics();
-      callback(metrics);
-      this.animationFrameId = requestAnimationFrame(analyze);
-    };
-    analyze();
-  }
+  // Splitter en 3 canaux
+  const splitter = offlineCtx.createChannelSplitter(3);
+  source.connect(lowFilter); source.connect(midFilter); source.connect(highFilter);
+  
+  // On doit rendre l'audio pour chaque filtre (simplifié ici pour la performance)
+  // En production, on utiliserait un seul graphe avec un splitter vers 3 gain nodes
+  // Pour simplifier le code, on fait 3 rendus séparés (un peu plus long au chargement mais très stable)
+  
+  const renderFilter = async (filter: BiquadFilterNode) => {
+    const ctx = new OfflineAudioContext(1, length, sampleRate);
+    const src = ctx.createBufferSource();
+    src.buffer = audioBuffer;
+    src.connect(filter);
+    filter.connect(ctx.destination);
+    src.start();
+    const rendered = await ctx.startRendering();
+    return rendered.getChannelData(0);
+  };
 
-  stop(): void {
-    this.isRunning = false;
-    if (this.animationFrameId !== null) {
-      cancelAnimationFrame(this.animationFrameId);
-      this.animationFrameId = null;
-    }
-  }
+  const [lowData, midData, highData] = await Promise.all([
+    renderFilter(lowFilter),
+    renderFilter(midFilter),
+    renderFilter(highFilter)
+  ]);
 
-  getMetrics(): AudioMetrics {
-    // ✅ Cast pour Vercel (TS strict)
-    this.analyser.getFloatTimeDomainData(this.dataArray as Float32Array<ArrayBuffer>);
+  const lowArr = new Float32Array(numFrames);
+  const midArr = new Float32Array(numFrames);
+  const highArr = new Float32Array(numFrames);
+  let maxVal = 0.01;
 
-    // True Peak
-    let peak = 0;
-    for (let i = 0; i < this.dataArray.length; i++) {
-      const absVal = Math.abs(this.dataArray[i]);
-      if (absVal > peak) peak = absVal;
-    }
-    const truePeak = peak > 0 ? 20 * Math.log10(peak) + 0.5 : -Infinity;
+  for (let i = 0; i < numFrames; i++) {
+    const start = i * step;
+    let lowSum = 0, midSum = 0, highSum = 0;
 
-    // LUFS
-    let sumSquares = 0;
-    for (let i = 0; i < this.dataArray.length; i++) {
-      sumSquares += this.dataArray[i] * this.dataArray[i];
-    }
-    const rms = Math.sqrt(sumSquares / this.dataArray.length);
-    const lufsInstant = rms > 0 ? 20 * Math.log10(rms) - 0.691 : -Infinity;
-
-    this.lufsBuffer.push(lufsInstant);
-    if (this.lufsBuffer.length > Math.floor(this.LUFS_WINDOW * 10)) {
-      this.lufsBuffer.shift();
+    for (let j = 0; j < step; j++) {
+      const idx = start + j;
+      lowSum += lowData[idx] * lowData[idx];
+      midSum += midData[idx] * midData[idx];
+      highSum += highData[idx] * highData[idx];
     }
 
-    const validLufs = this.lufsBuffer.filter((v) => isFinite(v));
-    const lufs = validLufs.length > 0
-      ? validLufs.reduce((a, b) => a + b, 0) / validLufs.length
-      : -Infinity;
+    const lowRms = Math.sqrt(lowSum / step);
+    const midRms = Math.sqrt(midSum / step);
+    const highRms = Math.sqrt(highSum / step);
 
-    const dr = (isFinite(truePeak) && isFinite(lufs))
-      ? Math.max(0, truePeak - lufs)
-      : 0;
+    lowArr[i] = lowRms;
+    midArr[i] = midRms;
+    highArr[i] = highRms;
 
-    return {
-      lufs: isFinite(lufs) ? parseFloat(lufs.toFixed(1)) : -Infinity,
-      truePeak: isFinite(truePeak) ? parseFloat(truePeak.toFixed(1)) : -Infinity,
-      dr: parseFloat(dr.toFixed(1)),
-    };
+    const total = lowRms + midRms + highRms;
+    if (total > maxVal) maxVal = total;
   }
 
-  reset(): void {
-    this.lufsBuffer = new Array(Math.floor(this.LUFS_WINDOW * 10)).fill(-Infinity);
+  // Normalisation
+  for (let i = 0; i < numFrames; i++) {
+    lowArr[i] /= maxVal;
+    midArr[i] /= maxVal;
+    highArr[i] /= maxVal;
   }
 
-  destroy(): void {
-    this.stop();
-    if (this.sourceNode) {
-      this.sourceNode.disconnect(this.analyser);
-    }
-    this.analyser.disconnect();
-  }
-}
+  return { low: lowArr, mid: midArr, high: highArr, max: maxVal };
+};

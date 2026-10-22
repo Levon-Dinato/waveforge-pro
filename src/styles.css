@@ -1,0 +1,18 @@
+/* src/styles.css */
+@font-face {
+  font-family: 'Open Sans';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Open Sans Regular'), local('OpenSans-Regular'), url('/fonts/OpenSans-Regular.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Open Sans';
+  font-style: normal;
+  font-weight: 700;
+  src: local('Open Sans Bold'), local('OpenSans-Bold'), url('/fonts/OpenSans-Bold.ttf') format('truetype');
+}
+
+body {
+  font-family: 'Open Sans', sans-serif;
+    background-color: #2e242e; /* Le fond Transitions DJ */
+}

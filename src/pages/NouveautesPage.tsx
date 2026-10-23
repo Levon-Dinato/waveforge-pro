@@ -98,10 +98,8 @@ export const NouveautesPage: React.FC = () => {
     return matchesSearch && matchesGenre;
   });
 
-  // ✅ CALCUL DU TOP 10 (LIGNE MANQUANTE)
   const top10 = [...tracks].sort((a, b) => (b.likes_count || 0) - (a.likes_count || 0)).slice(0, 10);
 
-  // Calcul de la pagination
   const recommendations = filteredTracks.slice(0, 5);
   const allReleases = filteredTracks.slice(5);
   const totalPages = Math.max(1, Math.ceil(allReleases.length / ITEMS_PER_PAGE));
@@ -194,9 +192,34 @@ export const NouveautesPage: React.FC = () => {
         ) : (
           <div style={{ width: 200, flexShrink: 0, position: 'sticky', top: 40 }}>
             <div style={{ fontSize: 11, fontWeight: 800, color: '#666', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 16 }}>Genres</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
               {genres.map(g => (
-                <button key={g} onClick={() => setSelectedGenre(g)} style={{ textAlign: 'left', padding: '8px 12px', borderRadius: 8, border: 'none', background: selectedGenre === g ? 'rgba(255,255,255,0.05)' : 'transparent', color: selectedGenre === g ? '#fff' : '#888', fontWeight: selectedGenre === g ? 700 : 500, fontSize: 13, cursor: 'pointer', borderLeft: selectedGenre === g ? '2px solid #00d9ff' : '2px solid transparent' }}>
+                <button 
+                  key={g} 
+                  onClick={() => setSelectedGenre(g)} 
+                  style={{ 
+                    textAlign: 'left', padding: '12px 16px', 
+                    border: 'none', borderBottom: '1px solid #1a1a1a', // ✅ Trait de séparation subtil
+                    background: selectedGenre === g ? 'rgba(0, 217, 255, 0.05)' : 'transparent', 
+                    color: selectedGenre === g ? '#00d9ff' : '#888', 
+                    fontWeight: selectedGenre === g ? 700 : 500, 
+                    fontSize: 13, cursor: 'pointer', 
+                    transition: 'all 0.2s ease', // ✅ Transition fluide
+                    borderLeft: selectedGenre === g ? '2px solid #00d9ff' : '2px solid transparent' 
+                  }}
+                  onMouseEnter={(e) => {
+                    if (selectedGenre !== g) {
+                      e.currentTarget.style.color = '#fff';
+                      e.currentTarget.style.background = '#121212';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (selectedGenre !== g) {
+                      e.currentTarget.style.color = '#888';
+                      e.currentTarget.style.background = 'transparent';
+                    }
+                  }}
+                >
                   {g}
                 </button>
               ))}
@@ -251,9 +274,15 @@ export const NouveautesPage: React.FC = () => {
           
           <div style={{ background: '#121212', border: '1px solid #222', borderRadius: 12, padding: 20 }}>
             <h3 style={{ fontSize: 12, fontWeight: 800, color: '#fff', margin: '0 0 16px 0', textTransform: 'uppercase', letterSpacing: '1px' }}>Top 10</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               {top10.map((track, idx) => (
-                <div key={track.id} onClick={() => navigate(`/track/${track.id}`)} style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}>
+                <div 
+                  key={track.id} 
+                  onClick={() => navigate(`/track/${track.id}`)} 
+                  style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', padding: '8px 10px', borderRadius: 8, transition: 'background 0.2s' }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = '#1a1a1a'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                >
                   <span style={{ fontSize: 14, fontWeight: 900, fontStyle: 'italic', color: idx < 3 ? '#00d9ff' : '#444', width: 20 }}>{idx + 1}</span>
                   <div style={{ width: 36, height: 36, borderRadius: 4, background: track.cover_url ? `url(${track.cover_url}) center/cover` : '#222', flexShrink: 0 }} />
                   <div style={{ flex: 1, minWidth: 0 }}>
@@ -267,9 +296,15 @@ export const NouveautesPage: React.FC = () => {
 
           <div style={{ background: '#121212', border: '1px solid #222', borderRadius: 12, padding: 20 }}>
             <h3 style={{ fontSize: 12, fontWeight: 800, color: '#fff', margin: '0 0 16px 0', textTransform: 'uppercase', letterSpacing: '1px' }}>Artistes en vue</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               {artists.slice(0, 5).map(artist => (
-                <div key={artist.id} onClick={() => navigate(`/profil/${artist.id}`)} style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}>
+                <div 
+                  key={artist.id} 
+                  onClick={() => navigate(`/profil/${artist.id}`)} 
+                  style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', padding: '8px 10px', borderRadius: 8, transition: 'background 0.2s' }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = '#1a1a1a'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                >
                   <div style={{ width: 32, height: 32, borderRadius: '50%', background: artist.avatar_url ? `url(${artist.avatar_url}) center/cover` : '#1a1a1a', border: '1px solid #333', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#00d9ff', fontWeight: 700, fontSize: 12 }}>
                     {!artist.avatar_url && artist.username?.charAt(0).toUpperCase()}
                   </div>

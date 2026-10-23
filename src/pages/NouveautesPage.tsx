@@ -62,10 +62,11 @@ const INPUT_STYLE: React.CSSProperties = {
   transition: 'border-color 0.2s',
 };
 
+// ✅ MODIFICATION ICI : 24 heures au lieu de 7 jours
 const isNew = (createdAt: string): boolean => {
   const created = new Date(createdAt).getTime();
-  const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-  return created > sevenDaysAgo;
+  const twentyFourHoursAgo = Date.now() - 24 * 60 * 60 * 1000;
+  return created > twentyFourHoursAgo;
 };
 
 const PEAKS_COUNT = 500;

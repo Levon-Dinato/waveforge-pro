@@ -61,11 +61,26 @@ export const LivePage = () => {
       color: '#fff',
     }}>
 
+      {/* ✅ METADONNÉES POUR LE PARTAGE (Facebook, Twitter, Discord, etc.) */}
       <Helmet>
         <title>Live DropZone DJ 🎧 - Prends l'antenne</title>
+        
+        {/* Open Graph (Facebook, Discord, WhatsApp) */}
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="DropZone DJ" />
         <meta property="og:title" content="Live DropZone DJ 🎧" />
         <meta property="og:description" content="Rejoins la scène, mixe en direct et partage ta passion avec la communauté." />
         <meta property="og:url" content={liveShareUrl} />
+        {/* 👇 Mets ici le nom de ton image pour le Live (à placer dans le dossier public) */}
+        <meta property="og:image" content="https://waveforge-pro-one.vercel.app/og-live.jpg" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Live DropZone DJ 🎧" />
+        <meta name="twitter:description" content="Rejoins la scène, mixe en direct et partage ta passion." />
+        <meta name="twitter:image" content="https://waveforge-pro-one.vercel.app/og-live.jpg" />
       </Helmet>
 
       {/* ==================================================== */}

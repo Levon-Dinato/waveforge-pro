@@ -81,7 +81,7 @@ export const MainLayout: React.FC = () => {
         <header style={{ position: 'sticky', top: 0, zIndex: 50, background: 'rgba(10, 10, 10, 0.9)', backdropFilter: 'blur(10px)', borderBottom: '1px solid #222', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
             {/* ✅ LOGO OFFICIEL ICI */}
-            <img src="/icons/icon-192.png" alt="DropZone DJ" style={{ width: 32, height: 32, objectFit: 'contain', borderRadius: 8 }} />
+            <img src="/icons/icon-192.png" alt="DropZone DJ" style={{ width: 40, height: 40, objectFit: 'contain', borderRadius: 12 }} />
             <span style={{ fontWeight: 800, fontSize: '1rem', color: '#fff', letterSpacing: '-0.5px' }}>DROPZONE <span style={{ color: '#00d9ff' }}>DJ</span></span>
           </Link>
           <Link to={`/profil/${user?.id}`} style={{ width: 34, height: 34, borderRadius: '50%', overflow: 'hidden', background: '#1a1a1a', border: '1px solid #333', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#00d9ff', fontWeight: 700, fontSize: 13, textDecoration: 'none' }}>

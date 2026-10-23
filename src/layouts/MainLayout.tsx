@@ -80,7 +80,8 @@ export const MainLayout: React.FC = () => {
         {/* Header mobile */}
         <header style={{ position: 'sticky', top: 0, zIndex: 50, background: 'rgba(10, 10, 10, 0.9)', backdropFilter: 'blur(10px)', borderBottom: '1px solid #222', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
-            <div style={{ width: 30, height: 30, borderRadius: 8, background: 'linear-gradient(135deg, #00d9ff, #7c5cff)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: 14, color: '#000' }}>W</div>
+            {/* ✅ LOGO OFFICIEL ICI */}
+            <img src="/icons/icon-192.png" alt="DropZone DJ" style={{ width: 32, height: 32, objectFit: 'contain', borderRadius: 8 }} />
             <span style={{ fontWeight: 800, fontSize: '1rem', color: '#fff', letterSpacing: '-0.5px' }}>DROPZONE <span style={{ color: '#00d9ff' }}>DJ</span></span>
           </Link>
           <Link to={`/profil/${user?.id}`} style={{ width: 34, height: 34, borderRadius: '50%', overflow: 'hidden', background: '#1a1a1a', border: '1px solid #333', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#00d9ff', fontWeight: 700, fontSize: 13, textDecoration: 'none' }}>
@@ -190,8 +191,9 @@ export const MainLayout: React.FC = () => {
       
       <aside style={{ width: 240, background: '#0a0a0a', borderRight: '1px solid #222', display: 'flex', flexDirection: 'column', position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 50 }}>
         <div style={{ padding: '24px 20px', borderBottom: '1px solid #222', display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{ width: 32, height: 32, borderRadius: 8, background: 'linear-gradient(135deg, #00d9ff, #7c5cff)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: 16, color: '#000' }}>W</div>
-          <span style={{ fontWeight: 800, fontSize: '1rem', letterSpacing: '-0.5px' }}>DropZone DJ</span>
+          {/* ✅ LOGO OFFICIEL ICI AUSSI */}
+          <img src="/icons/icon-192.png" alt="DropZone DJ" style={{ width: 36, height: 36, objectFit: 'contain', borderRadius: 8 }} />
+          <span style={{ fontWeight: 800, fontSize: '1.1rem', letterSpacing: '-0.5px' }}>DropZone DJ</span>
         </div>
 
         <nav style={{ flex: 1, padding: '16px 12px', display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>

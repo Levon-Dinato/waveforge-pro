@@ -13,7 +13,7 @@ import './styles.css';
 
 // Lazy loading de toutes les pages
 const HomePage = lazy(() => import('./pages/HomePage').then((m) => ({ default: m.HomePage })));
-const StudioPage = lazy(() => import('./pages/StudioPage').then((m) => ({ default: m.StudioPage }))); // ✅ Import présent
+const StudioPage = lazy(() => import('./pages/StudioPage').then((m) => ({ default: m.StudioPage })));
 const StemsPage = lazy(() => import('./pages/StemsPage').then((m) => ({ default: m.StemsPage })));
 const MasteringPage = lazy(() => import('./pages/MasteringPage').then((m) => ({ default: m.MasteringPage })));
 const MusicGenPage = lazy(() => import('./pages/MusicGenPage').then((m) => ({ default: m.MusicGenPage })));
@@ -35,6 +35,7 @@ const TrackPage = lazy(() => import('./pages/TrackPage').then((m) => ({ default:
 const EventsPage = lazy(() => import('./pages/EventsPage').then((m) => ({ default: m.EventsPage })));
 const FeedPage = lazy(() => import('./pages/FeedPage').then((m) => ({ default: m.FeedPage })));
 const ToolsPage = lazy(() => import('./pages/ToolsPage').then((m) => ({ default: m.ToolsPage })));
+const AdminPage = lazy(() => import('./pages/AdminPage').then((m) => ({ default: m.AdminPage }))); // ✅ NOUVEAU
 
 const PageLoader = () => (
   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', flexDirection: 'column', gap: 16 }}>
@@ -56,14 +57,14 @@ export default function App() {
                   <Suspense fallback={<PageLoader />}>
                     <Routes>
                       
-                      {/* ✅ 1. ROUTES PUBLIQUES */}
+                      {/* ROUTES PUBLIQUES */}
                       <Route path="/auth" element={<AuthPage />} />
                       <Route path="/reset-password" element={<ResetPasswordPage />} />
 
-                      {/* ✅ 2. ROUTES PROTÉGÉES */}
+                      {/* ROUTE MIXER (Plein écran) */}
                       <Route path="/mixer" element={<PrivateRoute><MixerPage /></PrivateRoute>} />
 
-                      {/* ✅ 3. ROUTES AVEC LE LAYOUT PRINCIPAL (Mur de connexion) */}
+                      {/* ROUTES AVEC LE LAYOUT PRINCIPAL */}
                       <Route path="/" element={
                         <PrivateRoute>
                           <MainLayout />
@@ -77,10 +78,7 @@ export default function App() {
                         <Route path="genres" element={<GenresPage />} />
                         <Route path="artists" element={<ArtistsPage />} />
                         <Route path="tools" element={<ToolsPage />} />
-                        
-                        {/* ✅ LIGNE CRUCIALE : La route StudioPage doit être ici */}
                         <Route path="studio" element={<StudioPage />} />
-                        
                         <Route path="stems" element={<StemsPage />} />
                         <Route path="mastering" element={<MasteringPage />} />
                         <Route path="musicgen" element={<MusicGenPage />} />
@@ -92,9 +90,11 @@ export default function App() {
                         <Route path="profil/:id" element={<ProfilePage />} />
                         <Route path="search" element={<SearchPage />} />
                         <Route path="track/:id" element={<TrackPage />} />
+                        
+                        {/* ✅ NOUVELLE ROUTE ADMIN */}
+                        <Route path="admin" element={<AdminPage />} />
                       </Route>
 
-                      {/* Redirection par défaut */}
                       <Route path="*" element={<Navigate to="/" replace />} />
                     </Routes>
                   </Suspense>

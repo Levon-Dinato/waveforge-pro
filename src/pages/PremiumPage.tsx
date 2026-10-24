@@ -21,6 +21,14 @@ export const PremiumPage: React.FC = () => {
   const [duration, setDuration] = useState(0);
   
   const audioRef = useRef<HTMLAudioElement>(null);
+  
+  // Détection simple du mobile pour ajuster la taille de l'image
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 1024);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -194,47 +202,43 @@ export const PremiumPage: React.FC = () => {
           <section id="about">
             <div className="section-header"><h2 className="section-title">À propos</h2></div>
             
-            {/* ✅ CORRECTIF ULTIME : Flexbox forcé en inline pour ne jamais casser */}
+            {/* ✅ MISE EN PAGE BLINDÉE : Flexbox qui s'adapte automatiquement */}
             <div 
-              className="about-grid" 
               style={{ 
                 display: 'flex', 
-                flexWrap: 'wrap', 
+                flexDirection: isMobile ? 'column' : 'row',
+                flexWrap: 'nowrap',
                 gap: '40px', 
                 padding: '40px', 
-                alignItems: 'flex-start',
+                alignItems: isMobile ? 'center' : 'flex-start',
                 background: 'linear-gradient(145deg, rgba(13, 22, 33, 0.95), rgba(6, 13, 20, 0.95))',
                 border: '1px solid rgba(0, 217, 255, 0.15)',
                 borderRadius: '16px',
                 boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5)'
               }}
             >
-              <div style={{ flex: '1 1 300px', minWidth: 0 }}>
+              <div style={{ flex: '1 1 100%', minWidth: 0, width: '100%' }}>
                 <h3 style={{ fontSize: '1.3rem', fontWeight: 800, marginBottom: '16px', color: '#fff' }}>Le son de {profile.username}</h3>
-                <p style={{ whiteSpace: 'pre-wrap', lineHeight: '1.8', color: 'var(--text-muted)' }}>
+                <p style={{ whiteSpace: 'pre-wrap', lineHeight: '1.8', color: '#8c9f98' }}>
                   {profile.bio || "Bio à venir..."}
                 </p>
               </div>
               
               <div 
                 style={{ 
-                  flex: '0 0 100%', 
-                  maxWidth: '350px', 
-                  height: '450px', 
+                  flexShrink: 0,
+                  width: isMobile ? '100%' : '350px', 
+                  height: isMobile ? '300px' : '400px', 
                   borderRadius: '12px', 
                   overflow: 'hidden', 
                   background: '#000',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  margin: '0 auto',
                   boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
                 }}
               >
                 <img 
                   src={profile.avatar_url || "/logo.jpg"} 
                   alt={profile.username} 
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} 
                 />
               </div>
 

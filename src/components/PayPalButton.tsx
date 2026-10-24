@@ -1,7 +1,6 @@
 // src/components/PayPalButton.tsx
 import React, { useEffect, useRef } from 'react';
 
-// On déclare window.paypal pour éviter les erreurs TypeScript
 declare global {
   interface Window {
     paypal: any;
@@ -12,27 +11,39 @@ export const PayPalButton: React.FC = () => {
   const paypalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // On s'assure que le script PayPal est chargé et que le conteneur existe
-    if (window.paypal && paypalRef.current) {
-      
-      // On vide le conteneur au cas où (utile pour le Hot Reload de React)
-      paypalRef.current.innerHTML = '';
+    // ✅ On crée un intervalle pour vérifier si le script PayPal est chargé
+    const interval = setInterval(() => {
+      if (window.paypal && paypalRef.current) {
+        // Dès qu'il est là, on arrête de vérifier
+        clearInterval(interval);
+        
+        // On vide le conteneur pour éviter les doublons (si React recharge le composant)
+        paypalRef.current.innerHTML = '';
 
-      // ✅ C'est ici qu'on utilise le code de la "Partie 2" de ton écran
-      window.paypal.HostedButtons({
-        hostedButtonId: "W7684MWNUGDXL", 
-      }).render(paypalRef.current);
-    }
+        try {
+          // On affiche le bouton hébergé PayPal
+          window.paypal.HostedButtons({
+            hostedButtonId: "W7684MWNUGDXL", // Ton ID de bouton
+          }).render(paypalRef.current);
+        } catch (error) {
+          console.error("Erreur de rendu PayPal:", error);
+        }
+      }
+    }, 500); // On vérifie toutes les 500ms
+
+    // Nettoyage si le composant est démonté
+    return () => clearInterval(interval);
   }, []);
 
   return (
     <div 
       ref={paypalRef} 
       style={{ 
-        minHeight: '150px', 
+        minHeight: '120px', // Hauteur minimale pour éviter que la page saute
         display: 'flex', 
         justifyContent: 'center', 
-        marginTop: '20px' 
+        alignItems: 'center',
+        width: '100%'
       }} 
     />
   );

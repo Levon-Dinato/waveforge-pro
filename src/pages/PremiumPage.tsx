@@ -1,13 +1,13 @@
 // src/pages/PremiumPage.tsx
 import React, { useState, useRef, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { useNavigate, useParams } from 'react-router-dom'; // ✅ useParams pour récupérer le nom dans l'URL
+import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import './LevonDinato.css'; // On réutilise ton super fichier CSS
+import './LevonDinato.css';
 
 export const PremiumPage: React.FC = () => {
   const navigate = useNavigate();
-  const { username } = useParams<{ username: string }>(); // Récupère "levon-dinato" ou autre
+  const { username } = useParams<{ username: string }>();
   
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<any>(null);
@@ -22,22 +22,19 @@ export const PremiumPage: React.FC = () => {
   
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  // ✅ 1. On va chercher les infos du DJ, ses sons et ses dates dans Supabase
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
+      const isId = username?.includes('-');
+      const query = supabase.from('profiles').select('*');
       
-      // On cherche le profil par son username (en ignorant les majuscules)
-      const { data: profileData, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .ilike('username', username || '')
-        .single();
+      const { data: profileData } = isId 
+        ? await query.eq('id', username).single()
+        : await query.ilike('username', username || '').single();
 
       if (profileData) {
         setProfile(profileData);
 
-        // On cherche ses sons
         const { data: tracksData } = await supabase
           .from('tracks')
           .select('*')
@@ -45,7 +42,6 @@ export const PremiumPage: React.FC = () => {
           .order('created_at', { ascending: false });
         if (tracksData) setTracks(tracksData);
 
-        // On cherche ses dates (uniquement celles de CET artiste)
         const today = new Date().toISOString().split('T')[0];
         const { data: eventsData } = await supabase
           .from('events')
@@ -55,7 +51,6 @@ export const PremiumPage: React.FC = () => {
           .order('event_date', { ascending: true });
         if (eventsData) setEvents(eventsData);
       }
-      
       setLoading(false);
     };
     fetchData();
@@ -115,7 +110,6 @@ export const PremiumPage: React.FC = () => {
     } catch { return 'DATE'; }
   };
 
-  // ✅ Si l'artiste n'existe pas, on affiche un message
   if (loading) return <div style={{ background: '#050a10', color: '#fff', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Chargement de la page...</div>;
   if (!profile) return <div style={{ background: '#050a10', color: '#fff', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Artiste introuvable.</div>;
 
@@ -138,7 +132,8 @@ export const PremiumPage: React.FC = () => {
       <header className="nav">
         <div className="wrapper nav-inner">
           <a href="#" className="logo">
-            <img src={profile.avatar_url || "/logo.jpg"} alt={profile.username} />
+            {/* ✅ Logo arrondi */}
+            <img src={profile.avatar_url || "/logo.jpg"} alt={profile.username} style={{ borderRadius: '50%', objectFit: 'cover' }} />
             <span className="premium-badge">PREMIUM</span>
           </a>
           <ul className="nav-links">
@@ -151,7 +146,7 @@ export const PremiumPage: React.FC = () => {
         </div>
       </header>
 
-      {/* Bandeau dynamique des événements de l'artiste */}
+      {/* Bandeau des événements */}
       <div className="event-ticker-wrapper">
         <div className="event-ticker">
           {events.length > 0 ? (
@@ -168,7 +163,13 @@ export const PremiumPage: React.FC = () => {
               </div>
             ))
           ) : (
-            <div className="event-ticker-item"><div className="event-info"><div className="event-title">Aucune date à venir</div></div></div>
+            // ✅ On duplique le message pour que l'animation reste fluide
+            [...Array(3)].map((_, i) => (
+              <div key={i} className="event-ticker-item">
+                <div className="event-date-badge">BIENTÔT</div>
+                <div className="event-info"><div className="event-title">Aucune date annoncée pour le moment.</div></div>
+              </div>
+            ))
           )}
         </div>
       </div>
@@ -180,7 +181,11 @@ export const PremiumPage: React.FC = () => {
         <div className="wrapper hero-inner">
           <div className="hero-tag">Nouveaux remixes disponibles</div>
           <h1 className="hero-title">L'expérience <span>sonore</span> de {profile.username}.</h1>
-          <p className="hero-desc">{profile.bio || "Bienvenue sur ma page officielle. Retrouvez ici mes dernières productions et mes prochaines dates."}</p>
+          {/* ✅ Texte court et accrocheur dans le Hero */}
+          <p className="hero-desc">
+            Découvrez les productions exclusives et l'univers unique de {profile.username}. 
+            Plongez dans leur monde musical et vibrez au rythme de leurs dernières sorties.
+          </p>
           
           <div className="hero-actions">
             <a href="#releases" className="btn-primary">Écouter les tracks</a>
@@ -195,7 +200,10 @@ export const PremiumPage: React.FC = () => {
             <div className="about-grid">
               <div className="about-text">
                 <h3>Le son de {profile.username}</h3>
-                <p>{profile.bio || "Bio à venir..."}</p>
+                {/* ✅ C'est ici qu'on affiche la vraie Bio, avec ses sauts de ligne */}
+                <p style={{ whiteSpace: 'pre-wrap', lineHeight: '1.8' }}>
+                  {profile.bio || "Bio à venir..."}
+                </p>
               </div>
               <div className="about-visual">
                 <img src={profile.avatar_url || "/logo.jpg"} alt={profile.username} />
@@ -233,22 +241,27 @@ export const PremiumPage: React.FC = () => {
                   <div className="event-date">{new Date(event.event_date).toLocaleDateString('fr-FR')}</div>
                   <h4>{event.title}</h4><p>{event.city}</p>
                 </div>
-              )) : <p style={{ color: '#666' }}>Aucune date pour l'instant.</p>}
+              )) : <p style={{ color: '#666', fontSize: '0.85rem' }}>Aucune date pour l'instant.</p>}
             </div>
 
             <div className="sidebar-widget">
               <div className="sidebar-title">Réseaux</div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '10px' }}>
                 {profile.instagram_url && (
-                  <a href={profile.instagram_url} target="_blank" rel="noreferrer" style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#0d1512', border: '1px solid #E1306C', color: '#E1306C', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}>IG</a>
+                  <a href={profile.instagram_url} target="_blank" rel="noreferrer" style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#0d1512', border: '1px solid #E1306C', color: '#E1306C', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', fontWeight: 'bold' }}>IG</a>
                 )}
                 {profile.spotify_url && (
-                  <a href={profile.spotify_url} target="_blank" rel="noreferrer" style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#0d1512', border: '1px solid #1DB954', color: '#1DB954', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}>SP</a>
+                  <a href={profile.spotify_url} target="_blank" rel="noreferrer" style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#0d1512', border: '1px solid #1DB954', color: '#1DB954', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', fontWeight: 'bold' }}>SP</a>
                 )}
                 {profile.soundcloud_url && (
-                  <a href={profile.soundcloud_url} target="_blank" rel="noreferrer" style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#0d1512', border: '1px solid #FF5500', color: '#FF5500', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}>SC</a>
+                  <a href={profile.soundcloud_url} target="_blank" rel="noreferrer" style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#0d1512', border: '1px solid #FF5500', color: '#FF5500', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', fontWeight: 'bold' }}>SC</a>
                 )}
-                {/* Tu pourras ajouter les autres réseaux ici */}
+                {profile.tiktok_url && (
+                  <a href={profile.tiktok_url} target="_blank" rel="noreferrer" style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#0d1512', border: '1px solid #fff', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', fontWeight: 'bold' }}>TK</a>
+                )}
+                {profile.youtube_url && (
+                  <a href={profile.youtube_url} target="_blank" rel="noreferrer" style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#0d1512', border: '1px solid #FF0000', color: '#FF0000', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', fontWeight: 'bold' }}>YT</a>
+                )}
               </div>
             </div>
 
@@ -259,7 +272,7 @@ export const PremiumPage: React.FC = () => {
       <section className="contact-section" id="contact">
         <div className="wrapper">
           <h2>Prêt à enflammer votre scène ?</h2>
-          <p>Disponible pour clubs, festivals et événements privés.</p>
+          <p>{profile.username} est disponible pour clubs, festivals et événements privés.</p>
           <a href={gmailContactLink} target="_blank" rel="noopener noreferrer" className="contact-email">
             Contacter {profile.username} &rarr;
           </a>

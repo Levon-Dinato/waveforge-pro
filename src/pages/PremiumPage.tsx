@@ -106,6 +106,20 @@ export const PremiumPage: React.FC = () => {
     });
   };
 
+  // ✅ Petit rendu de fausse waveform pour les sons MP3
+  const renderMiniWaveform = (peaks: number[]) => {
+    if (!peaks || peaks.length === 0) return null;
+    // On prend un échantillon de peaks pour faire une jolie barre
+    const displayPeaks = peaks.filter((_, i) => i % 10 === 0).slice(0, 60);
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: '2px', height: '30px', marginTop: '10px', width: '100%', opacity: 0.6 }}>
+        {displayPeaks.map((p, i) => (
+          <div key={i} style={{ flex: 1, height: `${Math.max(p, 15)}%`, background: 'var(--accent)', borderRadius: '2px' }} />
+        ))}
+      </div>
+    );
+  };
+
   if (loading) return <div style={{ background: '#050a10', color: '#fff', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Chargement...</div>;
   if (!profile) return <div style={{ background: '#050a10', color: '#fff', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Artiste introuvable.</div>;
 
@@ -220,70 +234,106 @@ export const PremiumPage: React.FC = () => {
               )}
             </div>
             
-            <div className="tracklist">
-              <div className="track-header"><div></div><div>Titre / Artiste</div><div>Genre</div><div style={{ textAlign: 'right' }}>Actions</div></div>
-              
+            {/* ✅ NOUVEAU STYLE DE LISTE (Cartes séparées) */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {tracks.length > 0 ? (
                 tracks.map((track) => {
                   const isPlayable = track.audio_url && track.audio_url.length > 0;
                   const iframeSrc = getIframeSrc(track.embed_code);
 
                   return (
-                    <div key={track.id} style={{ marginBottom: 0 }}>
-                      <div 
-                        className="track-row" 
-                        onClick={() => isPlayable && handlePlayTrack(track)}
-                        style={{ cursor: isPlayable ? 'pointer' : 'default', borderBottom: iframeSrc ? 'none' : '1px solid var(--border)' }}
-                      >
-                        <div className="track-play" style={{ cursor: isPlayable ? 'pointer' : 'default', background: isPlayable ? '#112436' : 'rgba(255,255,255,0.05)', border: isPlayable ? 'none' : '1px solid #333' }}>
-                          {isPlayable ? (
-                            currentTrack?.id === track.id && isPlaying ? '⏸' : '▶'
-                          ) : (
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={themeColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-                          )}
+                    <div 
+                      key={track.id} 
+                      style={{ 
+                        background: 'linear-gradient(145deg, rgba(13, 22, 33, 0.95), rgba(6, 13, 20, 0.95))', 
+                        border: '1px solid #233b54', 
+                        borderRadius: '12px', 
+                        overflow: 'hidden',
+                        boxShadow: '0 8px 20px rgba(0,0,0,0.3)',
+                        transition: 'transform 0.2s',
+                        // Ajoute un léger effet au survol si c'est jouable
+                        cursor: isPlayable ? 'pointer' : 'default'
+                      }}
+                      onClick={() => isPlayable && handlePlayTrack(track)}
+                      onMouseEnter={(e) => { if (isPlayable) e.currentTarget.style.borderColor = themeColor; }}
+                      onMouseLeave={(e) => { if (isPlayable) e.currentTarget.style.borderColor = '#233b54'; }}
+                    >
+                      {/* En-tête de la carte */}
+                      <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: iframeSrc || isPlayable ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
+                        
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                          
+                          {/* Bouton Play / Icone EXT */}
+                          <div style={{ 
+                            width: '40px', height: '40px', borderRadius: '50%', 
+                            background: isPlayable ? (currentTrack?.id === track.id && isPlaying ? themeColor : 'rgba(255,255,255,0.1)') : 'rgba(255,255,255,0.05)', 
+                            border: isPlayable ? 'none' : '1px solid #333',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            color: isPlayable ? (currentTrack?.id === track.id && isPlaying ? '#000' : '#fff') : themeColor,
+                            fontSize: '14px'
+                          }}>
+                            {isPlayable ? (
+                              currentTrack?.id === track.id && isPlaying ? '⏸' : '▶'
+                            ) : (
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                            )}
+                          </div>
+
+                          {/* Cover */}
+                          <div style={{ width: '40px', height: '40px', background: track.cover_url ? `url(${track.cover_url}) center/cover` : '#222', borderRadius: '6px' }} />
+
+                          {/* Titre / Artiste */}
+                          <div style={{ minWidth: 0 }}>
+                            <div style={{ fontSize: '15px', fontWeight: 'bold', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.title}</div>
+                            <div style={{ fontSize: '12px', color: '#8c9f98', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.artist}</div>
+                          </div>
                         </div>
-                        
-                        <div className="track-info"><h4>{track.title}</h4><p>{track.artist}</p></div>
-                        <div className="track-genre">{track.genre}</div>
-                        
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }} onClick={(e) => e.stopPropagation()}>
+
+                        {/* Infos / Actions */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                          <div style={{ fontSize: '12px', color: '#8c9f98', fontWeight: '600' }}>{track.genre}</div>
+                          
                           {isPlayable ? (
-                            <span className="track-bpm">{track.bpm} BPM</span>
+                            <div style={{ fontSize: '12px', color: '#8c9f98', fontWeight: '600' }}>{track.bpm} BPM</div>
                           ) : track.purchase_url ? (
-                            <a href={track.purchase_url} target="_blank" rel="noopener noreferrer" style={{ background: 'transparent', color: themeColor, padding: '6px 12px', borderRadius: '4px', fontSize: '11px', fontWeight: '800', textDecoration: 'none', textTransform: 'uppercase', border: `1px solid ${themeColor}` }}>
+                            <a 
+                              href={track.purchase_url} 
+                              target="_blank" 
+                              rel="noopener noreferrer" 
+                              onClick={(e) => e.stopPropagation()} 
+                              style={{ 
+                                background: 'transparent', color: themeColor, padding: '6px 14px', 
+                                borderRadius: '6px', fontSize: '11px', fontWeight: '800', 
+                                textDecoration: 'none', textTransform: 'uppercase', border: `1px solid ${themeColor}` 
+                              }}
+                            >
                               Acheter
                             </a>
                           ) : null}
                         </div>
                       </div>
-                      
-                      {/* ✅ IFRAME BEATPORT HARMONISÉ (Fond transparent, aligné, arrondi) */}
+
+                      {/* ✅ IFRAME BEATPORT (Style intégré au conteneur) */}
                       {iframeSrc && (
-                        <div style={{ 
-                          padding: '0 24px 24px 24px', // Même padding que le track-row
-                          background: 'transparent', // On laisse le fond de la tracklist apparaître
-                          display: 'flex',
-                          justifyContent: 'center',
-                        }}>
-                          <div style={{ 
-                            width: '100%', 
-                            maxWidth: '100%', // Prend toute la largeur disponible
-                            borderRadius: '8px', 
-                            overflow: 'hidden', 
-                            border: '1px solid #233b54', // Bordure assortie au thème
-                            boxShadow: '0 4px 15px rgba(0,0,0,0.3)'
-                          }}>
-                            <iframe 
-                              src={iframeSrc} 
-                              width="100%" 
-                              height="162" 
-                              frameBorder="0" 
-                              scrolling="no" 
-                              style={{ display: 'block', width: '100%' }}
-                            ></iframe>
-                          </div>
+                        <div style={{ padding: '16px', background: 'rgba(0,0,0,0.2)' }}>
+                          <iframe 
+                            src={iframeSrc} 
+                            width="100%" 
+                            height="162" 
+                            frameBorder="0" 
+                            scrolling="no" 
+                            style={{ display: 'block', width: '100%', borderRadius: '8px', border: '1px solid #233b54' }}
+                          ></iframe>
                         </div>
                       )}
+
+                      {/* ✅ FAUSSE WAVEFORM POUR LES MP3 (Style Beatport) */}
+                      {isPlayable && !iframeSrc && (
+                        <div style={{ padding: '0 20px 16px 20px', background: 'rgba(0,0,0,0.1)' }}>
+                          {renderMiniWaveform(track.peaks)}
+                        </div>
+                      )}
+
                     </div>
                   );
                 })

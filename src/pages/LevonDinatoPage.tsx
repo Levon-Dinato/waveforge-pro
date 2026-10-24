@@ -103,9 +103,7 @@ export const LevonDinatoPage: React.FC = () => {
     try {
       const date = new Date(dateStr);
       return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }).toUpperCase();
-    } catch {
-      return 'DATE';
-    }
+    } catch { return 'DATE'; }
   };
 
   const handleShare = async () => {
@@ -124,7 +122,7 @@ export const LevonDinatoPage: React.FC = () => {
     }
   };
 
-  const gmailUpsellLink = "https://mail.google.com/mail/?view=cm&fs=1&to=djcontrolradiotv1@gmail.com&su=Demande%20de%20Page%20Premium%20DJ&body=Salut,%20je%20suis%20int%C3%A9ress%C3%A9%20par%20une%20page%20premium%20comme%20celle%20de%20Levon%20%26%20Dinato.%20Mon%20pseudo%20est%20:%20";
+  // Lien de contact pour le booking (gardé tel quel)
   const gmailContactLink = "https://mail.google.com/mail/?view=cm&fs=1&to=djcontrolradiotv1@gmail.com&su=Booking%20Levon%20%26%20Dinato&body=Salut,%20je%20souhaite%20vous%20contacter%20pour%20un%20booking.";
 
   return (
@@ -174,16 +172,9 @@ export const LevonDinatoPage: React.FC = () => {
             [...events, ...events, ...events].map((event, index) => (
               <div key={index} className="event-ticker-item">
                 <div className="event-date-badge">{formatTickerDate(event.event_date)}</div>
-                
-                {/* ✅ CORRECTIF : Balise img classique avec fallback si pas d'image */}
                 <div className="event-cover">
-                  {event.image_url ? (
-                    <img src={event.image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  ) : (
-                    <div className="event-cover-fallback">🎵</div>
-                  )}
+                  {event.image_url ? <img src={event.image_url} alt="" /> : <div className="event-cover-fallback">🎵</div>}
                 </div>
-                
                 <div className="event-info">
                   <div className="event-title">{event.title}</div>
                   <div className="event-location">{event.location} {event.city ? `, ${event.city}` : ''}</div>
@@ -191,10 +182,12 @@ export const LevonDinatoPage: React.FC = () => {
               </div>
             ))
           ) : (
-            <div className="event-ticker-item">
-              <div className="event-date-badge">BIENTÔT</div>
-              <div className="event-info"><div className="event-title">Chargement des dates...</div></div>
-            </div>
+            [...Array(3)].map((_, i) => (
+              <div key={i} className="event-ticker-item">
+                <div className="event-date-badge">BIENTÔT</div>
+                <div className="event-info"><div className="event-title">Aucune date annoncée pour le moment.</div></div>
+              </div>
+            ))
           )}
         </div>
       </div>
@@ -223,9 +216,10 @@ export const LevonDinatoPage: React.FC = () => {
               Partager
             </button>
 
-            <a href={gmailUpsellLink} target="_blank" rel="noopener noreferrer" className="btn-outline-hero">
+            {/* ✅ REDIRECTION VERS L'ABONNEMENT */}
+            <button onClick={() => navigate('/settings')} className="btn-outline-hero">
               ✨ Créer ma page Premium
-            </a>
+            </button>
           </div>
 
           <div className="hero-stats">
@@ -359,9 +353,10 @@ export const LevonDinatoPage: React.FC = () => {
               <p style={{ fontSize: '0.85rem', color: '#fff', marginBottom: '15px', lineHeight: 1.4 }}>
                 Envie d'une page aussi pro pour ton profil ?
               </p>
-              <a href={gmailUpsellLink} target="_blank" rel="noopener noreferrer" className="btn-primary" style={{ width: '100%', fontSize: '0.75rem', padding: '10px', boxShadow: 'none' }}>
+              {/* ✅ REDIRECTION VERS L'ABONNEMENT */}
+              <button onClick={() => navigate('/settings')} className="btn-primary" style={{ width: '100%', fontSize: '0.75rem', padding: '10px', boxShadow: 'none' }}>
                 Me contacter
-              </a>
+              </button>
             </div>
 
           </div>
@@ -375,9 +370,10 @@ export const LevonDinatoPage: React.FC = () => {
               <span className="upsell-tag">Exclusivité DropZone</span>
               <h2>Envie de te démarquer avec une page comme celle-ci ?</h2>
               <p>Ne laisse plus ton profil ressembler à tous les autres. Obtiens ta propre page officielle sur-mesure avec ton design et ton lecteur audio intégré.</p>
-              <a href={gmailUpsellLink} target="_blank" rel="noopener noreferrer" className="btn-primary">
+              {/* ✅ REDIRECTION VERS L'ABONNEMENT */}
+              <button onClick={() => navigate('/settings')} className="btn-primary">
                 🚀 Je veux la même page
-              </a>
+              </button>
             </div>
             <div className="upsell-visual">
               <img src="/logo.jpg" alt="Page Premium" />

@@ -1,21 +1,26 @@
 // src/pages/PremiumPage.tsx
 import React, { useState, useRef, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { useNavigate, useParams, Link } from 'react-router-dom'; // ✅ Ajout de Link
+import { useNavigate, useParams, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { useAuth } from '../contexts/AuthContext'; // ✅ Ajout de useAuth
+import { useAuth } from '../contexts/AuthContext';
+// ⚠️ IMPORTANT : Remplace "UploadModal" par le nom exact de ton composant d'upload utilisé sur la page Nouveautés
+import { UploadModal } from '../components/UploadModal'; 
 import './LevonDinato.css';
 
 export const PremiumPage: React.FC = () => {
   const navigate = useNavigate();
   const { username } = useParams<{ username: string }>();
-  const { user } = useAuth(); // ✅ Récupération de l'utilisateur connecté
+  const { user } = useAuth();
   
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<any>(null);
   const [tracks, setTracks] = useState<any[]>([]);
   const [events, setEvents] = useState<any[]>([]);
   
+  // ✅ État pour la modale d'upload
+  const [isUploadOpen, setIsUploadOpen] = useState(false);
+
   const [currentTrack, setCurrentTrack] = useState<{ title: string; artist: string; src: string } | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -24,37 +29,40 @@ export const PremiumPage: React.FC = () => {
   
   const audioRef = useRef<HTMLAudioElement>(null);
 
+  // ✅ J'ai sorti la fonction fetchData pour pouvoir la rappeler après un upload
+  const fetchData = async () => {
+    if (!username) return;
+    setLoading(true);
+    const isId = username?.includes('-');
+    const query = supabase.from('profiles').select('*');
+    
+    const { data: profileData } = isId 
+      ? await query.eq('id', username).single()
+      : await query.ilike('username', username || '').single();
+
+    if (profileData) {
+      setProfile(profileData);
+
+      const { data: tracksData } = await supabase
+        .from('tracks')
+        .select('*')
+        .eq('user_id', profileData.id)
+        .order('created_at', { ascending: false });
+      if (tracksData) setTracks(tracksData);
+
+      const today = new Date().toISOString().split('T')[0];
+      const { data: eventsData } = await supabase
+        .from('events')
+        .select('*')
+        .eq('created_by', profileData.id)
+        .gte('event_date', today)
+        .order('event_date', { ascending: true });
+      if (eventsData) setEvents(eventsData);
+    }
+    setLoading(false);
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      const isId = username?.includes('-');
-      const query = supabase.from('profiles').select('*');
-      
-      const { data: profileData } = isId 
-        ? await query.eq('id', username).single()
-        : await query.ilike('username', username || '').single();
-
-      if (profileData) {
-        setProfile(profileData);
-
-        const { data: tracksData } = await supabase
-          .from('tracks')
-          .select('*')
-          .eq('user_id', profileData.id)
-          .order('created_at', { ascending: false });
-        if (tracksData) setTracks(tracksData);
-
-        const today = new Date().toISOString().split('T')[0];
-        const { data: eventsData } = await supabase
-          .from('events')
-          .select('*')
-          .eq('created_by', profileData.id)
-          .gte('event_date', today)
-          .order('event_date', { ascending: true });
-        if (eventsData) setEvents(eventsData);
-      }
-      setLoading(false);
-    };
     fetchData();
   }, [username]);
 
@@ -117,8 +125,6 @@ export const PremiumPage: React.FC = () => {
 
   const gmailContactLink = `https://mail.google.com/mail/?view=cm&fs=1&to=djcontrolradiotv1@gmail.com&su=Booking%20${profile.username}&body=Salut,%20je%20souhaite%20vous%20contacter%20pour%20un%20booking.`;
   const themeColor = profile.theme_color || '#00d9ff';
-  
-  // ✅ Vérification si le visiteur est le propriétaire de la page
   const isOwner = user?.id === profile.id;
 
   return (
@@ -129,7 +135,7 @@ export const PremiumPage: React.FC = () => {
         <meta property="og:image" content={profile.avatar_url || '/og-levon-dinato.jpg'} />
       </Helmet>
 
-      {/* ✅ BARRE D'ÉDITION (uniquement visible par le propriétaire) */}
+      {/* ✅ BOUTON FLOTTANT MODIFIER (uniquement visible par le propriétaire) */}
       {isOwner && (
         <div style={{ position: 'fixed', bottom: 20, right: 20, zIndex: 9999, display: 'flex', gap: 10 }}>
           <Link 
@@ -195,8 +201,6 @@ export const PremiumPage: React.FC = () => {
         </video>
         <div className="wrapper hero-inner">
           <div className="hero-tag">{profile.hero_tagline || "Nouveaux remixes disponibles"}</div>
-          
-          {/* ✅ TITRE ET DESCRIPTION DYNAMIQUES */}
           <h1 className="hero-title">
             {profile.hero_title ? profile.hero_title : `L'expérience sonore de ${profile.username}.`}
           </h1>
@@ -234,13 +238,31 @@ export const PremiumPage: React.FC = () => {
           </section>
 
           <section id="releases">
-            {/* ✅ BOUTON AJOUTER UN SON (uniquement pour le propriétaire) */}
+            {/* ✅ BOUTON D'UPLOAD IDENTIQUE À LA PAGE NOUVEAUTÉS */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border)', paddingBottom: '12px', marginBottom: '24px' }}>
               <h2 className="section-title" style={{ border: 'none', margin: 0, padding: 0 }}>Dernières Sorties</h2>
               {isOwner && (
-                <Link to="/studio" style={{ background: 'rgba(0, 217, 255, 0.1)', color: themeColor, padding: '8px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: '700', textDecoration: 'none', border: `1px solid ${themeColor}`, transition: 'all 0.2s' }}>
-                  + Ajouter un son
-                </Link>
+                <button 
+                  onClick={() => setIsUploadOpen(true)} 
+                  style={{ 
+                    background: '#fff', // ✅ Bouton blanc comme sur ta capture
+                    color: '#000', 
+                    padding: '10px 20px', 
+                    borderRadius: '6px', 
+                    fontSize: '14px', 
+                    fontWeight: '700', 
+                    border: 'none', 
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    transition: 'transform 0.2s'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+                  onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                >
+                  + Uploader
+                </button>
               )}
             </div>
             
@@ -326,6 +348,18 @@ export const PremiumPage: React.FC = () => {
         </div>
       )}
       <audio ref={audioRef} onTimeUpdate={handleTimeUpdate} />
+
+      {/* ✅ LA MODALE D'UPLOAD S'AFFICHE ICI */}
+      {isUploadOpen && (
+        <UploadModal 
+          onClose={() => setIsUploadOpen(false)} 
+          onSuccess={() => {
+            setIsUploadOpen(false);
+            fetchData(); // Rafraîchit la liste des musiques après l'upload
+          }} 
+        />
+      )}
+
     </div>
   );
 };

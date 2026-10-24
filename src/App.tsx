@@ -37,8 +37,11 @@ const FeedPage = lazy(() => import('./pages/FeedPage').then((m) => ({ default: m
 const ToolsPage = lazy(() => import('./pages/ToolsPage').then((m) => ({ default: m.ToolsPage })));
 const AdminPage = lazy(() => import('./pages/AdminPage').then((m) => ({ default: m.AdminPage }))); 
 
-// ✅ NOUVEAU : Import de la page Levon & Dinato
+// ✅ Import de la page Levon & Dinato (Démo)
 const LevonDinatoPage = lazy(() => import('./pages/LevonDinatoPage').then((m) => ({ default: m.LevonDinatoPage })));
+
+// ✅ NOUVEAU : Import de la page Premium dynamique
+const PremiumPage = lazy(() => import('./pages/PremiumPage').then((m) => ({ default: m.PremiumPage })));
 
 const PageLoader = () => (
   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', flexDirection: 'column', gap: 16 }}>
@@ -67,8 +70,11 @@ export default function App() {
                       {/* ROUTE MIXER (Plein écran) */}
                       <Route path="/mixer" element={<PrivateRoute><MixerPage /></PrivateRoute>} />
 
-                      {/* ✅ NOUVELLE ROUTE LEVON & DINATO (Plein écran) */}
+                      {/* ✅ PAGE PREMIUM DÉMO (Levon & Dinato) */}
                       <Route path="/levon-dinato" element={<LevonDinatoPage />} />
+
+                      {/* ✅ NOUVELLE PAGE PREMIUM DYNAMIQUE (Pour tous les artistes) */}
+                      <Route path="/premium/:username" element={<PremiumPage />} />
 
                       {/* ROUTES AVEC LE LAYOUT PRINCIPAL */}
                       <Route path="/" element={

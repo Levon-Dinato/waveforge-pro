@@ -4,8 +4,6 @@ import { Helmet } from 'react-helmet-async';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
-// ⚠️ IMPORTANT : Remplace "UploadModal" par le nom exact de ton composant d'upload utilisé sur la page Nouveautés
-import { UploadModal } from '../components/UploadModal'; 
 import './LevonDinato.css';
 
 export const PremiumPage: React.FC = () => {
@@ -18,8 +16,7 @@ export const PremiumPage: React.FC = () => {
   const [tracks, setTracks] = useState<any[]>([]);
   const [events, setEvents] = useState<any[]>([]);
   
-  // ✅ État pour la modale d'upload
-  const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const [isUploadOpen, setIsUploadOpen] = useState(false); // Gardé pour plus tard
 
   const [currentTrack, setCurrentTrack] = useState<{ title: string; artist: string; src: string } | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -29,7 +26,6 @@ export const PremiumPage: React.FC = () => {
   
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  // ✅ J'ai sorti la fonction fetchData pour pouvoir la rappeler après un upload
   const fetchData = async () => {
     if (!username) return;
     setLoading(true);
@@ -42,21 +38,10 @@ export const PremiumPage: React.FC = () => {
 
     if (profileData) {
       setProfile(profileData);
-
-      const { data: tracksData } = await supabase
-        .from('tracks')
-        .select('*')
-        .eq('user_id', profileData.id)
-        .order('created_at', { ascending: false });
+      const { data: tracksData } = await supabase.from('tracks').select('*').eq('user_id', profileData.id).order('created_at', { ascending: false });
       if (tracksData) setTracks(tracksData);
-
       const today = new Date().toISOString().split('T')[0];
-      const { data: eventsData } = await supabase
-        .from('events')
-        .select('*')
-        .eq('created_by', profileData.id)
-        .gte('event_date', today)
-        .order('event_date', { ascending: true });
+      const { data: eventsData } = await supabase.from('events').select('*').eq('created_by', profileData.id).gte('event_date', today).order('event_date', { ascending: true });
       if (eventsData) setEvents(eventsData);
     }
     setLoading(false);
@@ -135,7 +120,6 @@ export const PremiumPage: React.FC = () => {
         <meta property="og:image" content={profile.avatar_url || '/og-levon-dinato.jpg'} />
       </Helmet>
 
-      {/* ✅ BOUTON FLOTTANT MODIFIER (uniquement visible par le propriétaire) */}
       {isOwner && (
         <div style={{ position: 'fixed', bottom: 20, right: 20, zIndex: 9999, display: 'flex', gap: 10 }}>
           <Link 
@@ -148,9 +132,7 @@ export const PremiumPage: React.FC = () => {
       )}
 
       <div className="top-bar">
-        <button onClick={() => navigate('/')} className="back-btn">
-          <span>←</span> Retour au site
-        </button>
+        <button onClick={() => navigate('/')} className="back-btn"><span>←</span> Retour au site</button>
       </div>
 
       <header className="nav">
@@ -163,9 +145,7 @@ export const PremiumPage: React.FC = () => {
             <li><a href="#about">À propos</a></li>
             <li><a href="#releases">Releases</a></li>
           </ul>
-          <div className="nav-actions">
-            <a href="#contact" className="btn-primary">Booking</a>
-          </div>
+          <div className="nav-actions"><a href="#contact" className="btn-primary">Booking</a></div>
         </div>
       </header>
 
@@ -188,7 +168,7 @@ export const PremiumPage: React.FC = () => {
             [...Array(3)].map((_, i) => (
               <div key={i} className="event-ticker-item">
                 <div className="event-date-badge">BIENTÔT</div>
-                <div className="event-info"><div className="event-title">Aucune date annoncée pour le moment.</div></div>
+                <div className="event-info"><div className="event-title">Aucune date annoncée.</div></div>
               </div>
             ))
           )}
@@ -196,21 +176,12 @@ export const PremiumPage: React.FC = () => {
       </div>
 
       <section className="hero">
-        <video className="bg-video" autoPlay muted loop playsInline>
-          <source src="/background.mp4" type="video/mp4" />
-        </video>
+        <video className="bg-video" autoPlay muted loop playsInline><source src="/background.mp4" type="video/mp4" /></video>
         <div className="wrapper hero-inner">
           <div className="hero-tag">{profile.hero_tagline || "Nouveaux remixes disponibles"}</div>
-          <h1 className="hero-title">
-            {profile.hero_title ? profile.hero_title : `L'expérience sonore de ${profile.username}.`}
-          </h1>
-          <p className="hero-desc">
-            {profile.hero_description || `Découvrez les productions exclusives et l'univers unique de ${profile.username}. Plongez dans leur monde musical et vibrez au rythme de leurs dernières sorties.`}
-          </p>
-          
-          <div className="hero-actions">
-            <a href="#releases" className="btn-primary">Écouter les tracks</a>
-          </div>
+          <h1 className="hero-title">{profile.hero_title ? profile.hero_title : `L'expérience sonore de ${profile.username}.`}</h1>
+          <p className="hero-desc">{profile.hero_description || `Découvrez les productions exclusives et l'univers unique de ${profile.username}. Plongez dans leur monde musical et vibrez au rythme de leurs dernières sorties.`}</p>
+          <div className="hero-actions"><a href="#releases" className="btn-primary">Écouter les tracks</a></div>
         </div>
       </section>
 
@@ -218,19 +189,11 @@ export const PremiumPage: React.FC = () => {
         <div className="content">
           <section id="about">
             <div className="section-header"><h2 className="section-title">L'Artiste</h2></div>
-            
-            <div 
-              style={{ 
-                display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: '40px', padding: '40px', alignItems: 'center', justifyContent: 'space-between',
-                background: 'linear-gradient(145deg, rgba(13, 22, 33, 0.95), rgba(6, 13, 20, 0.95))',
-                border: '1px solid rgba(0, 217, 255, 0.15)', borderRadius: '16px', boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5)'
-              }}
-            >
+            <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: '40px', padding: '40px', alignItems: 'center', justifyContent: 'space-between', background: 'linear-gradient(145deg, rgba(13, 22, 33, 0.95), rgba(6, 13, 20, 0.95))', border: '1px solid rgba(0, 217, 255, 0.15)', borderRadius: '16px', boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5)' }}>
               <div style={{ flex: '1 1 300px' }}>
                 <h3 style={{ fontSize: '2rem', fontWeight: 900, marginBottom: '16px', color: '#fff' }}>{profile.username}</h3>
                 <p style={{ color: '#8c9f98', fontSize: '1.1rem', margin: 0 }}>Découvrez son univers musical exclusif et ses dernières sorties.</p>
               </div>
-              
               <div style={{ flex: '0 0 350px', width: '100%', maxWidth: '350px', borderRadius: '16px', overflow: 'hidden', border: `1px solid ${themeColor}`, boxShadow: `0 10px 30px ${themeColor}40`, margin: '0 auto' }}>
                 <img src={profile.avatar_url || "/logo.jpg"} alt={profile.username} style={{ width: '100%', height: 'auto', display: 'block', objectFit: 'cover' }} />
               </div>
@@ -238,28 +201,12 @@ export const PremiumPage: React.FC = () => {
           </section>
 
           <section id="releases">
-            {/* ✅ BOUTON D'UPLOAD IDENTIQUE À LA PAGE NOUVEAUTÉS */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border)', paddingBottom: '12px', marginBottom: '24px' }}>
               <h2 className="section-title" style={{ border: 'none', margin: 0, padding: 0 }}>Dernières Sorties</h2>
               {isOwner && (
                 <button 
                   onClick={() => setIsUploadOpen(true)} 
-                  style={{ 
-                    background: '#fff', // ✅ Bouton blanc comme sur ta capture
-                    color: '#000', 
-                    padding: '10px 20px', 
-                    borderRadius: '6px', 
-                    fontSize: '14px', 
-                    fontWeight: '700', 
-                    border: 'none', 
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    transition: 'transform 0.2s'
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-                  onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                  style={{ background: '#fff', color: '#000', padding: '10px 20px', borderRadius: '6px', fontSize: '14px', fontWeight: '700', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', transition: 'transform 0.2s' }}
                 >
                   + Uploader
                 </button>
@@ -268,7 +215,6 @@ export const PremiumPage: React.FC = () => {
             
             <div className="tracklist">
               <div className="track-header"><div></div><div>Titre / Artiste</div><div>Genre</div><div style={{ textAlign: 'right' }}>BPM</div></div>
-              
               {tracks.length > 0 ? (
                 tracks.map((track) => (
                   <div key={track.id} className="track-row" onClick={() => handlePlayTrack(track)}>
@@ -328,17 +274,12 @@ export const PremiumPage: React.FC = () => {
       </section>
 
       <footer className="footer">
-        <div className="wrapper footer-inner">
-          <div>© 2026 {profile.username}. Tous droits réservés.</div>
-        </div>
+        <div className="wrapper footer-inner"><div>© 2026 {profile.username}. Tous droits réservés.</div></div>
       </footer>
 
       {currentTrack && (
         <div className="audio-player active">
-          <div className="audio-info">
-            <div className="audio-title">{currentTrack.title}</div>
-            <div className="audio-artist">{currentTrack.artist}</div>
-          </div>
+          <div className="audio-info"><div className="audio-title">{currentTrack.title}</div><div className="audio-artist">{currentTrack.artist}</div></div>
           <div className="audio-controls"><button className="audio-btn" onClick={togglePlay}>{isPlaying ? '⏸' : '▶'}</button></div>
           <div className="audio-progress-wrap">
             <span className="audio-time">{formatTime(currentTime)}</span>
@@ -349,15 +290,16 @@ export const PremiumPage: React.FC = () => {
       )}
       <audio ref={audioRef} onTimeUpdate={handleTimeUpdate} />
 
-      {/* ✅ LA MODALE D'UPLOAD S'AFFICHE ICI */}
+      {/* ⚠️ PLACEHOLDER : La modale d'upload. Remplace ceci par ton composant plus tard */}
       {isUploadOpen && (
-        <UploadModal 
-          onClose={() => setIsUploadOpen(false)} 
-          onSuccess={() => {
-            setIsUploadOpen(false);
-            fetchData(); // Rafraîchit la liste des musiques après l'upload
-          }} 
-        />
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: '#121212', padding: 40, borderRadius: 12, textAlign: 'center', border: '1px solid #333' }}>
+            <h3 style={{ fontSize: 20, marginBottom: 16 }}>Oups !</h3>
+            <p style={{ marginBottom: 20, color: '#aaa' }}>Le composant d'upload n'est pas encore branché ici.<br/>Va dans tes réglages pour uploader des sons.</p>
+            <Link to="/studio" style={{ padding: '10px 20px', background: '#fff', color: '#000', borderRadius: 8, textDecoration: 'none', fontWeight: 'bold' }}>Aller au Studio</Link>
+            <button onClick={() => setIsUploadOpen(false)} style={{ marginLeft: 10, padding: '10px 20px', background: 'transparent', color: '#888', border: '1px solid #444', borderRadius: 8, cursor: 'pointer' }}>Fermer</button>
+          </div>
+        </div>
       )}
 
     </div>

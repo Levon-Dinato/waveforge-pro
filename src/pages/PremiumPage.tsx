@@ -114,9 +114,15 @@ export const PremiumPage: React.FC = () => {
   if (!profile) return <div style={{ background: '#050a10', color: '#fff', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Artiste introuvable.</div>;
 
   const gmailContactLink = `https://mail.google.com/mail/?view=cm&fs=1&to=djcontrolradiotv1@gmail.com&su=Booking%20${profile.username}&body=Salut,%20je%20souhaite%20vous%20contacter%20pour%20un%20booking.`;
+  
+  // ✅ Récupération de la couleur du profil (avec fallback cyan)
+  const themeColor = profile.theme_color || '#00d9ff';
 
   return (
-    <div className="levon-page">
+    <div 
+      className="levon-page"
+      style={{ '--accent': themeColor } as React.CSSProperties} // ✅ Applique la couleur dynamiquement
+    >
       <Helmet>
         <title>{profile.username} — Page Officielle</title>
         <meta property="og:title" content={`${profile.username} — DJ & Production`} />
@@ -176,7 +182,8 @@ export const PremiumPage: React.FC = () => {
           <source src="/background.mp4" type="video/mp4" />
         </video>
         <div className="wrapper hero-inner">
-          <div className="hero-tag">Nouveaux remixes disponibles</div>
+          {/* ✅ Phrase d'accroche dynamique */}
+          <div className="hero-tag">{profile.hero_tagline || "Nouveaux remixes disponibles"}</div>
           <h1 className="hero-title">L'expérience <span>sonore</span> de {profile.username}.</h1>
           <p className="hero-desc">
             Découvrez les productions exclusives et l'univers unique de {profile.username}. 
@@ -194,7 +201,7 @@ export const PremiumPage: React.FC = () => {
           <section id="about">
             <div className="section-header"><h2 className="section-title">L'Artiste</h2></div>
             
-            {/* ✅ MODULE PRINCIPAL : JUSTE L'IMAGE ET UN TEXTE COURT */}
+            {/* ✅ MODULE PRINCIPAL (Image + Texte court) */}
             <div 
               style={{ 
                 display: 'flex', 
@@ -202,7 +209,7 @@ export const PremiumPage: React.FC = () => {
                 flexWrap: 'wrap', 
                 gap: '40px', 
                 padding: '40px', 
-                alignItems: 'center', // Centre l'image et le texte
+                alignItems: 'center',
                 justifyContent: 'space-between',
                 background: 'linear-gradient(145deg, rgba(13, 22, 33, 0.95), rgba(6, 13, 20, 0.95))',
                 border: '1px solid rgba(0, 217, 255, 0.15)',
@@ -226,8 +233,8 @@ export const PremiumPage: React.FC = () => {
                   maxWidth: '350px',
                   borderRadius: '16px', 
                   overflow: 'hidden', 
-                  border: '1px solid rgba(0, 217, 255, 0.3)', 
-                  boxShadow: '0 10px 30px rgba(0, 0, 0, 0.8)',
+                  border: `1px solid ${themeColor}`, // Bordure avec la couleur du thème
+                  boxShadow: `0 10px 30px ${themeColor}40`, // Ombre avec la couleur du thème
                   margin: '0 auto'
                 }}
               >
@@ -294,7 +301,7 @@ export const PremiumPage: React.FC = () => {
               </div>
             </div>
 
-            {/* ✅ LA BIO EST MAINTENANT ICI, EN DESSOUS DES RÉSEAUX */}
+            {/* ✅ LA BIO EST ICI, EN DESSOUS DES RÉSEAUX */}
             <div className="sidebar-widget">
               <div className="sidebar-title">Biographie</div>
               <p style={{ whiteSpace: 'pre-wrap', lineHeight: '1.6', color: '#8c9f98', fontSize: '0.85rem' }}>
@@ -310,7 +317,7 @@ export const PremiumPage: React.FC = () => {
         <div className="wrapper">
           <h2>Prêt à enflammer votre scène ?</h2>
           <p>{profile.username} est disponible pour clubs, festivals et événements privés.</p>
-          <a href={gmailContactLink} target="_blank" rel="noopener noreferrer" className="contact-email">
+          <a href={gmailContactLink} target="_blank" rel="noopener noreferrer" className="contact-email" style={{ borderColor: themeColor, color: themeColor }}>
             Contacter {profile.username} &rarr;
           </a>
         </div>

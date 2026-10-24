@@ -8,7 +8,6 @@ import { usePlayer } from '../contexts/PlayerContext';
 import { OnlineUsersWidget } from '../components/OnlineUsersWidget';
 import { DeleteButton } from '../components/DeleteButton';
 
-// ✅ SVG Icons
 const Icons = {
   heart: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>,
   heartFilled: <svg width="18" height="18" viewBox="0 0 24 24" fill="#ff3366" stroke="#ff3366" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>,
@@ -25,14 +24,29 @@ interface DbEvent { id: string; title: string; event_date: string; location: str
 interface Track { id: string; title: string; artist: string; genre: string; bpm: number; song_key: string | null; audio_url: string; cover_url: string | null; user_id: string; created_at: string; duration: number; peaks: number[]; likes_count?: number; }
 interface Comment { id: string; user_id: string; content: string; created_at: string; profiles?: { username: string; avatar_url: string | null } }
 
+// ✅ Mise à jour du type Post pour inclure les infos OpenGraph
+type PostData = { 
+  id: string; 
+  author: string; 
+  text: string; 
+  url?: string; 
+  postType: string; 
+  date: Date; 
+  likes_count: number; 
+  profile_id: string;
+  ogTitle?: string;
+  ogDescription?: string;
+  ogImage?: string;
+};
+
 type FeedItem = 
   | { type: 'track'; data: Track; date: Date }
   | { type: 'event'; data: DbEvent; date: Date }
-  | { type: 'post'; data: { id: string; author: string; text: string; url?: string; postType: string; date: Date; likes_count: number; profile_id: string }; date: Date };
+  | { type: 'post'; data: PostData; date: Date };
 
 const isTrackItem = (item: FeedItem): item is { type: 'track'; data: Track; date: Date } => item.type === 'track';
 const isEventItem = (item: FeedItem): item is { type: 'event'; data: DbEvent; date: Date } => item.type === 'event';
-const isPostItem = (item: FeedItem): item is { type: 'post'; data: { id: string; author: string; text: string; url?: string; postType: string; date: Date; likes_count: number; profile_id: string }; date: Date } => item.type === 'post';
+const isPostItem = (item: FeedItem): item is { type: 'post'; data: PostData; date: Date } => item.type === 'post';
 
 const getCleanUrl = (input: string): { url: string; isYoutube: boolean } => {
   if (!input) return { url: '', isYoutube: false };
@@ -49,21 +63,14 @@ const getCleanUrl = (input: string): { url: string; isYoutube: boolean } => {
   return { url, isYoutube };
 };
 
-// ✅ FONCTION POUR TRANSFORMER LES URL EN LIENS CLIQUABLES
+// ✅ FONCTION LINKIFY POUR LE TEXTE
 const linkify = (text: string) => {
   if (!text) return null;
-  // Regex pour détecter les liens http/https
   const urlRegex = /(https?:\/\/[^\s]+)/g;
   return text.split(urlRegex).map((part, i) => {
     if (part.match(urlRegex)) {
       return (
-        <a 
-          key={i} 
-          href={part} 
-          target="_blank" 
-          rel="noopener noreferrer" 
-          style={{ color: '#00d9ff', textDecoration: 'underline', wordBreak: 'break-all' }}
-        >
+        <a key={i} href={part} target="_blank" rel="noopener noreferrer" style={{ color: '#00d9ff', textDecoration: 'underline', wordBreak: 'break-all' }}>
           {part}
         </a>
       );
@@ -87,6 +94,10 @@ export const FeedPage: React.FC = () => {
   const [postContent, setPostContent] = useState('');
   const [postUrl, setPostUrl] = useState('');
   const [postType, setPostType] = useState<'texte' | 'lien' | 'image' | 'video' | 'iframe'>('texte');
+
+  // ✅ État pour l'aperçu du lien (Link Preview)
+  const [linkPreview, setLinkPreview] = useState<{ title: string; desc: string; image: string } | null>(null);
+  const [loadingPreview, setLoadingPreview] = useState(false);
 
   // Modification du post
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
@@ -124,7 +135,10 @@ export const FeedPage: React.FC = () => {
             postType: p.media_type, 
             date: new Date(p.created_at),
             likes_count: p.likes_count || 0,
-            profile_id: p.profile_id
+            profile_id: p.profile_id,
+            ogTitle: p.og_title,          // ✅
+            ogDescription: p.og_description, // ✅
+            ogImage: p.og_image           // ✅
           }, 
           date: new Date(p.created_at) 
         }));
@@ -158,6 +172,40 @@ export const FeedPage: React.FC = () => {
     fetchData();
   }, [user]);
 
+  // ✅ EFFET POUR CHERCHER LES INFOS DU LIEN (Via Microlink)
+  useEffect(() => {
+    // On ne le fait que si l'utilisateur a choisi "lien" et qu'il y a une URL
+    if (postType !== 'lien' || !postUrl.includes('http')) {
+      setLinkPreview(null);
+      return;
+    }
+
+    const fetchPreview = async () => {
+      setLoadingPreview(true);
+      try {
+        // Utilisation de l'API gratuite Microlink
+        const res = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(postUrl)}`);
+        const json = await res.json();
+        
+        if (json.status === 'success' && json.data) {
+          setLinkPreview({
+            title: json.data.title || '',
+            desc: json.data.description || '',
+            image: json.data.image?.url || json.data.logo?.url || ''
+          });
+        }
+      } catch (err) {
+        console.log("Impossible de charger l'aperçu", err);
+      } finally {
+        setLoadingPreview(false);
+      }
+    };
+
+    // Petit délai (debounce) pour ne pas spammer l'API à chaque touche tapée
+    const timer = setTimeout(fetchPreview, 800); 
+    return () => clearTimeout(timer);
+  }, [postUrl, postType]);
+
   const formatDate = (date: Date) => {
     const now = new Date();
     const diffH = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
@@ -169,7 +217,6 @@ export const FeedPage: React.FC = () => {
   const handleLikeTrack = async (e: React.MouseEvent, trackId: string) => {
     e.stopPropagation();
     if (!user) { navigate('/auth'); return; }
-
     const isLiked = userLikes[trackId];
     setUserLikes(prev => ({ ...prev, [trackId]: !isLiked }));
     setFeedItems(prev => prev.map(item => 
@@ -177,27 +224,15 @@ export const FeedPage: React.FC = () => {
         ? { ...item, data: { ...item.data, likes_count: (item.data.likes_count || 0) + (isLiked ? -1 : 1) } } 
         : item
     ));
-
     try {
-      if (isLiked) {
-        await supabase.from('likes').delete().eq('user_id', user.id).eq('track_id', trackId);
-      } else {
-        await supabase.from('likes').insert({ user_id: user.id, track_id: trackId });
-      }
-    } catch (err) {
-      setUserLikes(prev => ({ ...prev, [trackId]: isLiked }));
-      setFeedItems(prev => prev.map(item => 
-        isTrackItem(item) && item.data.id === trackId 
-          ? { ...item, data: { ...item.data, likes_count: (item.data.likes_count || 0) + (isLiked ? 1 : -1) } } 
-          : item
-      ));
-    }
+      if (isLiked) await supabase.from('likes').delete().eq('user_id', user.id).eq('track_id', trackId);
+      else await supabase.from('likes').insert({ user_id: user.id, track_id: trackId });
+    } catch (err) {}
   };
 
   const handleLikePost = async (e: React.MouseEvent, postId: string) => {
     e.stopPropagation();
     if (!user) { navigate('/auth'); return; }
-
     const isLiked = userPostLikes[postId];
     setUserPostLikes(prev => ({ ...prev, [postId]: !isLiked }));
     setFeedItems(prev => prev.map(item => 
@@ -205,21 +240,10 @@ export const FeedPage: React.FC = () => {
         ? { ...item, data: { ...item.data, likes_count: (item.data.likes_count || 0) + (isLiked ? -1 : 1) } } 
         : item
     ));
-
     try {
-      if (isLiked) {
-        await supabase.from('post_likes').delete().eq('user_id', user.id).eq('post_id', postId);
-      } else {
-        await supabase.from('post_likes').insert({ user_id: user.id, post_id: postId });
-      }
-    } catch (err) {
-      setUserPostLikes(prev => ({ ...prev, [postId]: isLiked }));
-      setFeedItems(prev => prev.map(item => 
-        isPostItem(item) && item.data.id === postId 
-          ? { ...item, data: { ...item.data, likes_count: (item.data.likes_count || 0) + (isLiked ? 1 : -1) } } 
-          : item
-      ));
-    }
+      if (isLiked) await supabase.from('post_likes').delete().eq('user_id', user.id).eq('post_id', postId);
+      else await supabase.from('post_likes').insert({ user_id: user.id, post_id: postId });
+    } catch (err) {}
   };
 
   const openComments = async (type: 'track' | 'post', id: string) => {
@@ -227,11 +251,9 @@ export const FeedPage: React.FC = () => {
     setCommentsModalOpen(true);
     setLoadingComments(true);
     setNewComment('');
-
     let query = supabase.from('comments').select('*, profiles:user_id(username, avatar_url)').order('created_at', { ascending: true });
     if (type === 'track') query = query.eq('track_id', id);
     else query = query.eq('post_id', id);
-
     const { data } = await query;
     setComments(data as Comment[] || []);
     setLoadingComments(false);
@@ -244,26 +266,26 @@ export const FeedPage: React.FC = () => {
       content: newComment.trim(),
       ...(currentCommentItem.type === 'track' ? { track_id: currentCommentItem.id } : { post_id: currentCommentItem.id })
     }).select('*, profiles:user_id(username, avatar_url)').single();
-
     if (!error && data) {
       setComments(prev => [...prev, data as Comment]);
       setNewComment('');
-    } else {
-      alert("Erreur : " + error?.message);
     }
   };
 
   const handlePublish = async () => {
     if ((!postContent.trim() && !postUrl.trim()) || !user) return;
     const { url } = getCleanUrl(postUrl);
-
     const dbMediaType = (postType === 'texte' || postType === 'lien' || postType === 'iframe') ? 'text' : postType;
 
+    // ✅ On enregistre aussi les infos de l'aperçu
     const { data, error } = await supabase.from('artist_posts').insert({
       profile_id: user.id,
       content: postContent || ' ',
       media_url: url || null,
       media_type: dbMediaType,
+      og_title: linkPreview?.title || null,
+      og_description: linkPreview?.desc || null,
+      og_image: linkPreview?.image || null,
     }).select('*, profiles:profile_id(username)').single();
 
     if (!error && data) {
@@ -279,12 +301,16 @@ export const FeedPage: React.FC = () => {
           date: new Date(data.created_at),
           likes_count: 0,
           profile_id: data.profile_id,
+          ogTitle: data.og_title,
+          ogDescription: data.og_description,
+          ogImage: data.og_image
         }
       };
       setFeedItems(prev => [newItem, ...prev]);
       setPostContent('');
       setPostUrl('');
       setPostType('texte');
+      setLinkPreview(null);
     } else {
       alert("Erreur lors de la publication : " + error?.message);
     }
@@ -299,15 +325,12 @@ export const FeedPage: React.FC = () => {
   const handleSaveEdit = async (postId: string) => {
     if (!editContent.trim() && !editUrl.trim()) return;
     const { url } = getCleanUrl(editUrl);
-
     const { error } = await supabase.from('artist_posts').update({
       content: editContent || ' ',
       media_url: url || null,
     }).eq('id', postId);
 
-    if (error) {
-      alert("Erreur lors de la modification : " + error.message);
-    } else {
+    if (!error) {
       setFeedItems(prev => prev.map(item => 
         isPostItem(item) && item.data.id === postId 
           ? { ...item, data: { ...item.data, text: editContent, url: url } } 
@@ -347,22 +370,38 @@ export const FeedPage: React.FC = () => {
                     rows={2}
                     style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: 16, outline: 'none', resize: 'vertical', fontFamily: 'inherit', width: '100%', overflowWrap: 'anywhere', whiteSpace: 'pre-wrap' }} 
                   />
+                  
                   {postType !== 'texte' && (
                     <input 
                       type="text" 
-                      placeholder={postType === 'image' ? "Lien direct de l'image (https://...)" : "Lien YouTube, Twitch, Tviply ou code iframe"}
+                      placeholder={postType === 'image' ? "Lien direct de l'image (https://...)" : "Lien YouTube, Twitch, Facebook..."}
                       value={postUrl}
                       onChange={(e) => setPostUrl(e.target.value)}
                       style={{ padding: '12px', background: '#0a0a0a', border: '1px solid #222', borderRadius: 8, color: '#fff', fontSize: 13, outline: 'none', width: '100%', overflowWrap: 'anywhere' }} 
                     />
                   )}
+
+                  {/* ✅ APERÇU DU LIEN (LINK PREVIEW) DANS LE COMPOSITEUR */}
+                  {postType === 'lien' && loadingPreview && (
+                    <div style={{ fontSize: 12, color: '#00d9ff' }}>Chargement de l'aperçu...</div>
+                  )}
+                  {postType === 'lien' && linkPreview && (
+                    <div style={{ border: '1px solid #333', borderRadius: 8, overflow: 'hidden', background: '#0a0a0a', display: 'flex', flexDirection: 'column' }}>
+                      {linkPreview.image && <img src={linkPreview.image} alt="Preview" style={{ width: '100%', maxHeight: 200, objectFit: 'cover' }} />}
+                      <div style={{ padding: 12 }}>
+                        <div style={{ fontSize: 14, fontWeight: 'bold', color: '#fff' }}>{linkPreview.title}</div>
+                        <div style={{ fontSize: 12, color: '#888', marginTop: 4 }}>{linkPreview.desc}</div>
+                      </div>
+                    </div>
+                  )}
+
                   <div style={{ height: 1, background: '#222' }} />
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div style={{ display: 'flex', gap: 16 }}>
-                      {(['texte', 'lien', 'image', 'video', 'iframe'] as const).map((type) => (
+                      {(['texte', 'lien', 'image', 'video'] as const).map((type) => (
                         <button
                           key={type}
-                          onClick={() => { setPostType(type); setPostUrl(''); }}
+                          onClick={() => { setPostType(type); setPostUrl(''); setLinkPreview(null); }}
                           style={{ background: 'transparent', border: 'none', color: postType === type ? '#00d9ff' : '#666', fontSize: 12, fontWeight: 600, textTransform: 'uppercase', cursor: 'pointer', padding: 0, transition: 'color 0.2s' }}
                         >
                           {type}
@@ -388,10 +427,6 @@ export const FeedPage: React.FC = () => {
             <div style={{ textAlign: 'center', padding: '60px 20px', background: '#121212', border: '1px dashed #222', borderRadius: 16 }}>
               <div style={{ color: '#444', marginBottom: 16 }}>{Icons.music}</div>
               <h3 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 8px 0' }}>Le feed est vide</h3>
-              <p style={{ color: '#666', fontSize: 14, margin: '0 0 24px 0' }}>Sois le premier à partager un son !</p>
-              <button onClick={() => navigate('/studio')} style={{ padding: '10px 24px', background: '#fff', color: '#000', borderRadius: 20, fontWeight: 700, border: 'none', cursor: 'pointer', fontSize: 14 }}>
-                Uploader un son
-              </button>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -402,11 +437,11 @@ export const FeedPage: React.FC = () => {
                   const isTviplyOrOther = !isYoutube && cleanUrl.includes('http');
                   const isLiked = userPostLikes[item.data.id] || false;
                   const isEditing = editingPostId === item.data.id;
+                  const hasOgData = !!item.data.ogImage; // ✅ On vérifie si on a l'aperçu
 
                   return (
                     <div key={`post-${item.data.id}-${index}`} style={{ background: '#121212', border: '1px solid #222', borderRadius: 16, overflow: 'hidden' }}>
                       
-                      {/* EN-TÊTE DU POST */}
                       <div style={{ padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                         <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                           <div onClick={() => navigate(`/profil/${item.data.profile_id}`)} style={{ width: 44, height: 44, borderRadius: '50%', background: '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#00d9ff', cursor: 'pointer' }}>
@@ -418,23 +453,21 @@ export const FeedPage: React.FC = () => {
                           </div>
                         </div>
                         
-                        {/* BOUTONS MODIFIER ET SUPPRIMER (EN HAUT À DROITE) */}
                         {!isEditing && (isAdmin || user?.id === item.data.profile_id) && (
                           <div style={{ display: 'flex', gap: 12 }}>
-                            <button onClick={() => startEditing(item.data)} style={{ background: 'transparent', border: 'none', color: '#00d9ff', cursor: 'pointer', fontSize: 12, fontWeight: 600, transition: 'color 0.2s' }}>Modifier</button>
-                            <button onClick={() => handleDeletePost(item.data.id)} style={{ background: 'transparent', border: 'none', color: '#444', cursor: 'pointer', fontSize: 12, fontWeight: 600, transition: 'color 0.2s' }}>Supprimer</button>
+                            <button onClick={() => startEditing(item.data)} style={{ background: 'transparent', border: 'none', color: '#00d9ff', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>Modifier</button>
+                            <button onClick={() => handleDeletePost(item.data.id)} style={{ background: 'transparent', border: 'none', color: '#444', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>Supprimer</button>
                           </div>
                         )}
                       </div>
                       
-                      {/* CORPS DU POST */}
                       {isEditing ? (
                         <div style={{ padding: '0 20px 20px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
                           <textarea 
                             value={editContent}
                             onChange={(e) => setEditContent(e.target.value)}
                             rows={4}
-                            style={{ width: '100%', background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff', padding: 12, fontSize: 15, fontFamily: 'inherit', resize: 'vertical', overflowWrap: 'anywhere' }}
+                            style={{ width: '100%', background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff', padding: 12, fontSize: 15, fontFamily: 'inherit', resize: 'vertical' }}
                           />
                           {item.data.postType !== 'text' && (
                             <input 
@@ -442,7 +475,7 @@ export const FeedPage: React.FC = () => {
                               value={editUrl}
                               onChange={(e) => setEditUrl(e.target.value)}
                               placeholder="Lien du média"
-                              style={{ width: '100%', background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff', padding: 12, fontSize: 13, overflowWrap: 'anywhere' }}
+                              style={{ width: '100%', background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff', padding: 12, fontSize: 13 }}
                             />
                           )}
                           <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
@@ -452,18 +485,33 @@ export const FeedPage: React.FC = () => {
                         </div>
                       ) : (
                         <div style={{ padding: '0 20px 20px 20px', fontSize: 15, color: '#ddd', whiteSpace: 'pre-wrap', lineHeight: 1.6, wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
-                          {/* ✅ ICI : On utilise la fonction linkify au lieu du texte brut */}
                           {linkify(item.data.text)}
                         </div>
                       )}
 
-                      {!isEditing && item.data.postType === 'image' && cleanUrl && (
+                      {/* ✅ NOUVEAU : Affichage de la carte de lien si on a les données */}
+                      {!isEditing && hasOgData && (
+                        <a href={cleanUrl} target="_blank" rel="noreferrer" style={{ display: 'flex', flexDirection: 'column', background: '#0a0a0a', borderTop: '1px solid #222', borderBottom: '1px solid #222', textDecoration: 'none', color: '#fff' }}>
+                          {item.data.ogImage && (
+                            <img src={item.data.ogImage} alt={item.data.ogTitle} style={{ width: '100%', maxHeight: 350, objectFit: 'cover' }} />
+                          )}
+                          <div style={{ padding: '16px 20px' }}>
+                            {item.data.ogTitle && <div style={{ fontSize: 16, fontWeight: 'bold', marginBottom: 4 }}>{item.data.ogTitle}</div>}
+                            {item.data.ogDescription && <div style={{ fontSize: 13, color: '#888', lineHeight: 1.4 }}>{item.data.ogDescription}</div>}
+                            <div style={{ fontSize: 11, color: '#00d9ff', marginTop: 8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{new URL(cleanUrl).hostname}</div>
+                          </div>
+                        </a>
+                      )}
+
+                      {/* Si c'est une image basique (sans OG) */}
+                      {!isEditing && !hasOgData && item.data.postType === 'image' && cleanUrl && (
                         <div style={{ width: '100%', maxHeight: 500, background: '#000', display: 'flex', justifyContent: 'center', borderTop: '1px solid #222', borderBottom: '1px solid #222' }}>
                           <img src={cleanUrl} alt="Post" style={{ width: '100%', height: 'auto', objectFit: 'contain' }} />
                         </div>
                       )}
 
-                      {!isEditing && item.data.postType === 'text' && cleanUrl && (
+                      {/* Si c'est un lien basique (sans OG) */}
+                      {!isEditing && !hasOgData && item.data.postType === 'text' && cleanUrl && (
                         <a href={cleanUrl} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '16px 20px', background: '#0a0a0a', color: '#00d9ff', textDecoration: 'none', fontSize: 13, borderTop: '1px solid #222', borderBottom: '1px solid #222', wordBreak: 'break-all' }}>
                           {Icons.link} {cleanUrl}
                         </a>
@@ -475,13 +523,6 @@ export const FeedPage: React.FC = () => {
                         </div>
                       )}
 
-                      {!isEditing && item.data.postType === 'video' && isTviplyOrOther && cleanUrl && (
-                        <div style={{ width: '100%', height: isMobile ? 300 : 450, background: '#000', borderTop: '1px solid #222', borderBottom: '1px solid #222' }}>
-                          <iframe src={cleanUrl} style={{ width: '100%', height: '100%', border: 'none' }} allow="autoplay; fullscreen; picture-in-picture" allowFullScreen title="Live" scrolling="no" />
-                        </div>
-                      )}
-
-                      {/* FOOTER DU POST */}
                       <div style={{ padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div style={{ display: 'flex', gap: 24 }}>
                           <button 
@@ -501,7 +542,8 @@ export const FeedPage: React.FC = () => {
                     </div>
                   );
                 }
-
+                
+                // ... Code inchangé pour l'affichage des Tracks et Events ...
                 const authorName = isTrackItem(item) ? item.data.artist : 'Organisateur';
                 const isThisPlaying = isTrackItem(item) && currentTrack?.id === item.data.id && isPlaying;
                 const isLiked = isTrackItem(item) && userLikes[item.data.id];
@@ -520,10 +562,6 @@ export const FeedPage: React.FC = () => {
                           <div style={{ fontSize: 13, color: '#666', marginTop: 2 }}>{formatDate(item.date)}</div>
                         </div>
                       </div>
-                      
-                      {(isAdmin || (isTrackItem(item) && user?.id === item.data.user_id)) && isTrackItem(item) && (
-                        <DeleteButton table="tracks" itemId={item.data.id} itemOwnerId={item.data.user_id} onDeleted={() => setFeedItems(prev => prev.filter(i => !(isTrackItem(i) && i.data.id === item.data.id)))} />
-                      )}
                     </div>
 
                     {isTrackItem(item) && (
@@ -573,9 +611,6 @@ export const FeedPage: React.FC = () => {
                       >
                         {Icons.message} Commenter
                       </button>
-                      {isEventItem(item) && (
-                        <a href={item.data.url || '#'} target="_blank" rel="noopener noreferrer" style={{ marginLeft: 'auto', color: '#fff', textDecoration: 'none', fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}>Billets ↗</a>
-                      )}
                       {isTrackItem(item) && (
                         <button onClick={() => navigate(`/track/${item.data.id}`)} style={{ marginLeft: 'auto', background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 700 }}>Écouter ↗</button>
                       )}

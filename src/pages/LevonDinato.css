@@ -101,7 +101,20 @@ div.levon-page .event-ticker-item {
   background: #0a121a !important; height: 100%; 
 }
 div.levon-page .event-date-badge { background: var(--accent) !important; color: #000 !important; font-size: 0.65rem; font-weight: 900; padding: 4px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
-div.levon-page .event-cover { width: 28px; height: 28px; border-radius: 4px; object-fit: cover; border: 1px solid var(--border-light); }
+
+/* ✅ CORRECTIF : Image en background pour éviter l'icône cassée */
+div.levon-page .event-cover {
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-color: #1a1a1a;
+  border: 1px solid var(--border-light);
+  flex-shrink: 0;
+}
+
 div.levon-page .event-info { display: flex !important; flex-direction: column !important; justify-content: center !important; }
 div.levon-page .event-title { color: #fff !important; font-size: 0.8rem; font-weight: 700; white-space: nowrap; line-height: 1.2; }
 div.levon-page .event-location { color: var(--text-muted) !important; font-size: 0.65rem; white-space: nowrap; max-width: 250px; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; margin-top: 2px; }

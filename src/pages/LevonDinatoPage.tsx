@@ -104,21 +104,17 @@ export const LevonDinatoPage: React.FC = () => {
       <Helmet>
         <title>Levon & Dinato — DJ & Production Officiel</title>
         <meta name="description" content="Découvrez les productions Funky House, Nu-Disco et Tech House du duo Levon & Dinato. Un set conçu pour faire vibrer les dancefloors." />
-        
-        {/* Open Graph (Facebook, Discord, WhatsApp, LinkedIn) */}
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://waveforge-pro-one.vercel.app/levon-dinato" />
         <meta property="og:title" content="Levon & Dinato — DJ & Production Officiel" />
         <meta property="og:description" content="Découvrez les productions Funky House, Nu-Disco et Tech House du duo Levon & Dinato." />
-        <meta property="og:image" content="https://waveforge-pro-one.vercel.app/logo.jpg" />
+        <meta property="og:image" content="https://waveforge-pro-one.vercel.app/og-levon-dinato.jpg" />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
-
-        {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Levon & Dinato — DJ & Production Officiel" />
         <meta name="twitter:description" content="Découvrez les productions Funky House, Nu-Disco et Tech House du duo Levon & Dinato." />
-        <meta name="twitter:image" content="https://waveforge-pro-one.vercel.app/logo.jpg" />
+        <meta name="twitter:image" content="https://waveforge-pro-one.vercel.app/og-levon-dinato.jpg" />
       </Helmet>
 
       <div className="top-bar">
@@ -149,7 +145,13 @@ export const LevonDinatoPage: React.FC = () => {
           {[...EVENTS, ...EVENTS, ...EVENTS].map((event, index) => (
             <div key={index} className="event-ticker-item">
               <div className="event-date-badge">{event.date}</div>
-              <img src={event.image} alt="" className="event-cover" />
+              
+              {/* ✅ CORRECTIF : Utilisation de background-image pour éviter l'icône cassée */}
+              <div 
+                className="event-cover" 
+                style={{ backgroundImage: `url(${event.image})` }} 
+              />
+              
               <div className="event-info">
                 <div className="event-title">{event.title}</div>
                 <div className="event-location">{event.location}</div>

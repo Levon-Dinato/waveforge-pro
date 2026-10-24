@@ -193,27 +193,42 @@ export const PremiumPage: React.FC = () => {
         <div className="content">
           <section id="about">
             <div className="section-header"><h2 className="section-title">À propos</h2></div>
-            <div className="about-grid">
-              <div className="about-text">
-                <h3>Le son de {profile.username}</h3>
-                <p style={{ whiteSpace: 'pre-wrap', lineHeight: '1.8' }}>
+            
+            {/* ✅ CORRECTIF ULTIME : Flexbox forcé en inline pour ne jamais casser */}
+            <div 
+              className="about-grid" 
+              style={{ 
+                display: 'flex', 
+                flexWrap: 'wrap', 
+                gap: '40px', 
+                padding: '40px', 
+                alignItems: 'flex-start',
+                background: 'linear-gradient(145deg, rgba(13, 22, 33, 0.95), rgba(6, 13, 20, 0.95))',
+                border: '1px solid rgba(0, 217, 255, 0.15)',
+                borderRadius: '16px',
+                boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5)'
+              }}
+            >
+              <div style={{ flex: '1 1 300px', minWidth: 0 }}>
+                <h3 style={{ fontSize: '1.3rem', fontWeight: 800, marginBottom: '16px', color: '#fff' }}>Le son de {profile.username}</h3>
+                <p style={{ whiteSpace: 'pre-wrap', lineHeight: '1.8', color: 'var(--text-muted)' }}>
                   {profile.bio || "Bio à venir..."}
                 </p>
               </div>
               
-              {/* ✅ Image bien calibrée */}
               <div 
-                className="about-visual" 
                 style={{ 
-                  width: '100%', 
+                  flex: '0 0 100%', 
+                  maxWidth: '350px', 
                   height: '450px', 
-                  margin: '0 auto', 
                   borderRadius: '12px', 
                   overflow: 'hidden', 
                   background: '#000',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center'
+                  justifyContent: 'center',
+                  margin: '0 auto',
+                  boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
                 }}
               >
                 <img 

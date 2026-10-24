@@ -10,7 +10,7 @@ interface Artist {
   avatar_url: string | null;
   city?: string;
   country?: string;
-  is_premium?: boolean; // ✅ NOUVEAU
+  is_premium?: boolean;
   trackCount: number;
 }
 
@@ -25,7 +25,6 @@ export const ArtistsPage: React.FC = () => {
     const fetchArtists = async () => {
       setLoading(true);
       try {
-        // ✅ On récupère aussi la colonne is_premium
         const { data: profilesData, error: profilesError } = await supabase
           .from('profiles')
           .select('id, username, avatar_url, city, country, is_premium');
@@ -126,9 +125,19 @@ export const ArtistsPage: React.FC = () => {
             gap: isMobile ? 12 : 24 
           }}>
             {filteredArtists.map((artist) => {
-              // ✅ Si l'artiste est premium, on pointe vers sa page /premium/
-              const isPremium = artist.is_premium === true;
-              const targetUrl = isPremium ? `/premium/${artist.username}` : `/profil/${artist.id}`;
+              // ✅ 1. Détection de Levon & Dinato pour la page BETA
+              const cleanName = artist.username.replace(/\s/g, '').toLowerCase();
+              const isLevonDinato = cleanName === 'levon&dinato';
+              
+              // ✅ 2. Détection du Premium pour les autres
+              const isPremium = artist.is_premium === true || isLevonDinato;
+
+              // ✅ 3. Logique d'URL
+              const targetUrl = isLevonDinato 
+                ? '/levon-dinato' 
+                : isPremium 
+                  ? `/premium/${artist.username}` 
+                  : `/profil/${artist.id}`;
 
               return (
                 <Link 
@@ -167,7 +176,7 @@ export const ArtistsPage: React.FC = () => {
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                       <h3 className="artist-name" style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap' }}>
                         {artist.username}
-                        {/* ✅ BADGE PREMIUM DYNAMIQUE */}
+                        {/* ✅ BADGE PREMIUM */}
                         {isPremium && <span className="premium-badge-artist">PREMIUM</span>}
                       </h3>
                       <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>

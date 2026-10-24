@@ -12,15 +12,17 @@ export const SettingsPage: React.FC = () => {
   const [message, setMessage] = useState('');
   
   const [isPremium, setIsPremium] = useState(false);
-
   const [myTracks, setMyTracks] = useState<any[]>([]);
   const [editingTrackId, setEditingTrackId] = useState<string | null>(null);
   const [editTrackForm, setEditTrackForm] = useState({ title: '', genre: '', bpm: 0 });
 
+  // ✅ Nouveau state pour l'upload d'image
+  const [uploadingImage, setUploadingImage] = useState(false);
+
   const [form, setForm] = useState({
     username: '', bio: '', hero_tagline: 'Nouveaux remixes disponibles', hero_title: '', hero_description: '',
-    theme_color: '#00d9ff', avatar_url: '', instagram_url: '', spotify_url: '',
-    soundcloud_url: '', tiktok_url: '', youtube_url: ''
+    theme_color: '#00d9ff', avatar_url: '', background_video_url: '', // ✅ Nouveau champ
+    instagram_url: '', spotify_url: '', soundcloud_url: '', tiktok_url: '', youtube_url: ''
   });
 
   useEffect(() => {
@@ -34,6 +36,7 @@ export const SettingsPage: React.FC = () => {
           hero_tagline: data.hero_tagline || 'Nouveaux remixes disponibles',
           hero_title: data.hero_title || '', hero_description: data.hero_description || '',
           theme_color: data.theme_color || '#00d9ff', avatar_url: data.avatar_url || '',
+          background_video_url: data.background_video_url || '', // ✅ Nouveau
           instagram_url: data.instagram_url || '', spotify_url: data.spotify_url || '',
           soundcloud_url: data.soundcloud_url || '', tiktok_url: data.tiktok_url || '',
           youtube_url: data.youtube_url || ''
@@ -43,6 +46,32 @@ export const SettingsPage: React.FC = () => {
     };
     fetchProfile();
   }, [user]);
+
+  // ✅ Fonction d'upload d'image
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    setUploadingImage(true);
+    try {
+      // On génère un nom unique pour éviter les conflits
+      const fileName = `${user?.id}-${Date.now()}.${file.name.split('.').pop()}`;
+      
+      const { error: uploadError } = await supabase.storage.from('media').upload(fileName, file);
+      if (uploadError) throw uploadError;
+
+      // On récupère l'URL publique
+      const { data } = supabase.storage.from('media').getPublicUrl(fileName);
+      
+      // On met à jour le formulaire
+      setForm(prev => ({ ...prev, avatar_url: data.publicUrl }));
+    } catch (error) {
+      console.error("Erreur upload:", error);
+      alert("Erreur lors de l'upload de l'image.");
+    } finally {
+      setUploadingImage(false);
+    }
+  };
 
   const fetchMyTracks = async () => {
     if (!user) return;
@@ -61,6 +90,7 @@ export const SettingsPage: React.FC = () => {
       username: form.username, bio: form.bio, hero_tagline: form.hero_tagline,
       hero_title: form.hero_title, hero_description: form.hero_description,
       theme_color: form.theme_color, avatar_url: form.avatar_url,
+      background_video_url: form.background_video_url, // ✅ Sauvegarde
       instagram_url: form.instagram_url, spotify_url: form.spotify_url,
       soundcloud_url: form.soundcloud_url, tiktok_url: form.tiktok_url,
       youtube_url: form.youtube_url
@@ -116,40 +146,22 @@ export const SettingsPage: React.FC = () => {
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14 }}>✅ Page officielle sur-mesure</div>
           </div>
 
-          {/* ✅ CLARIFICATION DU PRIX ET DE LA DURÉE (30 EUROS) */}
-          <div style={{ 
-            background: 'rgba(0, 217, 255, 0.1)', 
-            border: '1px solid rgba(0, 217, 255, 0.3)', 
-            borderRadius: 12, 
-            padding: '16px', 
-            marginBottom: 24 
-          }}>
-            <div style={{ fontSize: 26, fontWeight: 900, color: '#00d9ff', marginBottom: 4 }}>
-              30 € / an
-            </div>
-            <div style={{ fontSize: 14, color: '#fff', fontWeight: 600 }}>
-              Abonnement annuel DropZone Premium
-            </div>
-            <div style={{ fontSize: 12, color: '#888', marginTop: 4 }}>
-              (Soit seulement 2,50 € par mois)
-            </div>
+          <div style={{ background: 'rgba(0, 217, 255, 0.1)', border: '1px solid rgba(0, 217, 255, 0.3)', borderRadius: 12, padding: '16px', marginBottom: 24 }}>
+            <div style={{ fontSize: 26, fontWeight: 900, color: '#00d9ff', marginBottom: 4 }}>30 € / an</div>
+            <div style={{ fontSize: 14, color: '#fff', fontWeight: 600 }}>Abonnement annuel DropZone Premium</div>
+            <div style={{ fontSize: 12, color: '#888', marginTop: 4 }}>(Soit seulement 2,50 € par mois)</div>
           </div>
           
           <div style={{ background: '#fff', borderRadius: 8, padding: '10px', display: 'inline-block', minWidth: '250px' }}>
             <PayPalButton />
           </div>
-          
-          <p style={{ color: '#666', fontSize: 12, marginTop: 20 }}>
-            Paiement sécurisé via PayPal.<br/>
-            Annulable à tout moment depuis votre compte PayPal.
-          </p>
         </div>
       </div>
     );
   }
 
   // ==========================================
-  // ESPACE PREMIUM (Si isPremium = true)
+  // ESPACE PREMIUM
   // ==========================================
   return (
     <div style={{ maxWidth: 800, margin: '0 auto', padding: '40px 20px', color: '#fff', fontFamily: 'Inter, sans-serif' }}>
@@ -164,7 +176,13 @@ export const SettingsPage: React.FC = () => {
       </div>
       
       <p style={{ color: '#888', marginBottom: 30 }}>Gère ton identité et ta musique.</p>
-      
+
+      {message && (
+        <div style={{ padding: 16, background: message.includes('Erreur') ? 'rgba(255,0,0,0.1)' : 'rgba(0,217,255,0.1)', border: `1px solid ${message.includes('Erreur') ? '#ff3366' : form.theme_color}`, borderRadius: 8, marginBottom: 24, color: message.includes('Erreur') ? '#ff3366' : form.theme_color }}>
+          {message}
+        </div>
+      )}
+
       {/* SECTION MUSIQUE */}
       <div style={{ background: '#121212', padding: 24, borderRadius: 12, border: '1px solid #222', marginBottom: 24 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
@@ -210,6 +228,7 @@ export const SettingsPage: React.FC = () => {
       <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
         <div style={{ background: '#121212', padding: 24, borderRadius: 12, border: '1px solid #222' }}>
           <h2 style={{ fontSize: 18, marginBottom: 20, color: '#fff' }}>Identité & Thème</h2>
+          
           <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
             <div style={{ flex: '1 1 300px', display: 'flex', flexDirection: 'column', gap: 8 }}>
               <label style={{ fontSize: 13, color: '#aaa' }}>Pseudo (URL)</label>
@@ -223,9 +242,36 @@ export const SettingsPage: React.FC = () => {
               </div>
             </div>
           </div>
+
+          {/* ✅ UPLOAD D'IMAGE */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 20 }}>
-            <label style={{ fontSize: 13, color: '#aaa' }}>Image de profil (URL)</label>
-            <input type="url" value={form.avatar_url} onChange={(e) => setForm({ ...form, avatar_url: e.target.value })} placeholder="https://..." style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+            <label style={{ fontSize: 13, color: '#aaa' }}>Image de profil (Avatar)</label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+              {form.avatar_url && (
+                <img src={form.avatar_url} alt="Avatar" style={{ width: 50, height: 50, borderRadius: '50%', objectFit: 'cover', border: '2px solid #333' }} />
+              )}
+              <input 
+                type="file" 
+                accept="image/*" 
+                onChange={handleImageUpload} 
+                disabled={uploadingImage}
+                style={{ flex: 1, padding: 10, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} 
+              />
+            </div>
+            {uploadingImage && <span style={{ fontSize: 12, color: '#00d9ff' }}>Upload en cours...</span>}
+          </div>
+
+          {/* ✅ CHAMP VIDÉO */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 20 }}>
+            <label style={{ fontSize: 13, color: '#aaa' }}>URL de la vidéo de fond (MP4)</label>
+            <input 
+              type="url" 
+              value={form.background_video_url} 
+              onChange={(e) => setForm({ ...form, background_video_url: e.target.value })} 
+              placeholder="https://exemple.com/ma-video.mp4" 
+              style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} 
+            />
+            <span style={{ fontSize: 11, color: '#666' }}>Laisse vide pour utiliser la vidéo par défaut.</span>
           </div>
         </div>
 

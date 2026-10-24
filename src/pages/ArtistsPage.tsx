@@ -24,7 +24,6 @@ export const ArtistsPage: React.FC = () => {
     const fetchArtists = async () => {
       setLoading(true);
       try {
-        // 1. On récupère tous les profils
         const { data: profilesData, error: profilesError } = await supabase
           .from('profiles')
           .select('id, username, avatar_url, city, country');
@@ -32,14 +31,12 @@ export const ArtistsPage: React.FC = () => {
         if (profilesError) throw profilesError;
         if (!profilesData) return;
 
-        // 2. On récupère juste les user_id de la table tracks pour compter en local
         const { data: tracksData, error: tracksError } = await supabase
           .from('tracks')
           .select('user_id');
 
         if (tracksError) throw tracksError;
 
-        // 3. On compte les sons par artiste en JS
         const trackCounts: Record<string, number> = {};
         tracksData?.forEach((t) => {
           if (t.user_id) {
@@ -47,14 +44,12 @@ export const ArtistsPage: React.FC = () => {
           }
         });
 
-        // 4. On fusionne les données
         const artistsWithCounts = profilesData.map((profile) => ({
           ...profile,
           username: profile.username || 'Artiste Inconnu',
           trackCount: trackCounts[profile.id] || 0,
         }));
 
-        // On trie par nombre de morceaux décroissant
         setArtists(artistsWithCounts.sort((a, b) => b.trackCount - a.trackCount));
       } catch (err) {
         console.error("Erreur chargement artistes:", err);
@@ -76,6 +71,19 @@ export const ArtistsPage: React.FC = () => {
         .artist-card:hover { border-color: #3a3a3a !important; background: #1e1e1e !important; }
         .artist-card:hover .artist-avatar { transform: scale(1.05); }
         .artist-card:hover .artist-name { color: #00d9ff !important; }
+        
+        .premium-badge-artist {
+          background: linear-gradient(135deg, #00d9ff, #0077ff);
+          color: #000;
+          font-size: 0.55rem;
+          font-weight: 900;
+          padding: 2px 6px;
+          border-radius: 4px;
+          margin-left: 6px;
+          vertical-align: middle;
+          letter-spacing: 0.5px;
+          box-shadow: 0 0 10px rgba(0,217,255,0.3);
+        }
       `}</style>
 
       {/* HEADER */}
@@ -87,7 +95,6 @@ export const ArtistsPage: React.FC = () => {
           Les DJs et producteurs qui font vibrer DropZone.
         </p>
         
-        {/* Barre de recherche */}
         <div style={{ marginTop: 24, maxWidth: 400 }}>
           <input 
             type="text" 
@@ -95,15 +102,8 @@ export const ArtistsPage: React.FC = () => {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             style={{ 
-              width: '100%', 
-              padding: '10px 14px', 
-              background: '#1a1a1a', 
-              border: '1px solid #2a2a2a', 
-              borderRadius: 6, 
-              color: '#fff', 
-              fontSize: '13px',
-              outline: 'none',
-              transition: 'border-color 0.2s'
+              width: '100%', padding: '10px 14px', background: '#1a1a1a', border: '1px solid #2a2a2a', 
+              borderRadius: 6, color: '#fff', fontSize: '13px', outline: 'none', transition: 'border-color 0.2s'
             }} 
             onFocus={(e) => e.target.style.borderColor = '#00d9ff'}
             onBlur={(e) => e.target.style.borderColor = '#2a2a2a'}
@@ -124,10 +124,10 @@ export const ArtistsPage: React.FC = () => {
             gap: isMobile ? 12 : 24 
           }}>
             {filteredArtists.map((artist) => {
-              // ✅ LOGIQUE : On vérifie si c'est Levon&Dinato
-              const isLevonDinato = artist.username.toLowerCase().includes('levon');
+              // ✅ CORRECTION : Vérification stricte du nom (sans espace insécable ni casse)
+              const cleanName = artist.username.replace(/\s/g, '').toLowerCase();
+              const isLevonDinato = cleanName === 'levon&dinato';
               
-              // ✅ Destination : soit la page spéciale, soit le profil classique
               const targetUrl = isLevonDinato ? '/levon-dinato' : `/profil/${artist.id}`;
 
               return (
@@ -139,30 +139,19 @@ export const ArtistsPage: React.FC = () => {
                   <div 
                     className="artist-card"
                     style={{
-                      background: isLevonDinato ? 'rgba(0, 217, 255, 0.03)' : '#181818', // Légère teinte pour Levon
-                      border: isLevonDinato ? '1px solid rgba(0, 217, 255, 0.3)' : '1px solid #2a2a2a', // Bordure cyan
-                      borderRadius: 12,
-                      padding: '24px 16px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      textAlign: 'center',
-                      gap: 16,
-                      transition: 'all 0.2s ease',
-                      cursor: 'pointer',
-                      height: '100%',
+                      background: isLevonDinato ? 'rgba(0, 217, 255, 0.03)' : '#181818',
+                      border: isLevonDinato ? '1px solid rgba(0, 217, 255, 0.4)' : '1px solid #2a2a2a',
+                      borderRadius: 12, padding: '24px 16px', display: 'flex', flexDirection: 'column',
+                      alignItems: 'center', textAlign: 'center', gap: 16, transition: 'all 0.2s ease',
+                      cursor: 'pointer', height: '100%',
                     }}
                   >
-                    {/* Avatar circulaire */}
+                    {/* Avatar */}
                     <div className="artist-avatar" style={{ 
-                      width: isMobile ? 80 : 100, 
-                      height: isMobile ? 80 : 100, 
-                      borderRadius: '50%', 
-                      flexShrink: 0,
-                      background: '#121212', 
-                      overflow: 'hidden',
+                      width: isMobile ? 80 : 100, height: isMobile ? 80 : 100, borderRadius: '50%', flexShrink: 0,
+                      background: '#121212', overflow: 'hidden',
                       border: isLevonDinato ? '2px solid #00d9ff' : '2px solid #2a2a2a',
-                      boxShadow: isLevonDinato ? '0 0 15px rgba(0, 217, 255, 0.2)' : '0 4px 12px rgba(0,0,0,0.5)',
+                      boxShadow: isLevonDinato ? '0 0 20px rgba(0, 217, 255, 0.2)' : '0 4px 12px rgba(0,0,0,0.5)',
                       transition: 'transform 0.2s ease',
                     }}>
                       {artist.avatar_url ? (
@@ -176,21 +165,21 @@ export const ArtistsPage: React.FC = () => {
 
                     {/* Infos */}
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                      <h3 className="artist-name" style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%', transition: 'color 0.2s' }}>
+                      <h3 className="artist-name" style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap' }}>
                         {artist.username}
+                        {/* ✅ BADGE PREMIUM */}
+                        {isLevonDinato && <span className="premium-badge-artist">PREMIUM</span>}
                       </h3>
                       <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>
                         {artist.city ? `${artist.city}${artist.country ? `, ${artist.country}` : ''}` : 'France'}
                       </div>
                     </div>
 
-                    {/* Badge */}
+                    {/* Badge de comptage / Site officiel */}
                     <div style={{ 
-                      display: 'inline-flex', alignItems: 'center', gap: 6, 
-                      padding: '4px 10px', 
+                      display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 10px', 
                       background: isLevonDinato ? '#00d9ff' : 'rgba(0, 217, 255, 0.1)', 
-                      color: isLevonDinato ? '#000' : '#00d9ff', 
-                      borderRadius: 20, fontSize: 11, fontWeight: 700,
+                      color: isLevonDinato ? '#000' : '#00d9ff', borderRadius: 20, fontSize: 11, fontWeight: 700,
                       border: isLevonDinato ? 'none' : '1px solid rgba(0, 217, 255, 0.2)'
                     }}>
                       {isLevonDinato ? 'SITE OFFICIEL' : `${artist.trackCount} ${artist.trackCount > 1 ? 'morceaux' : 'morceau'}`}

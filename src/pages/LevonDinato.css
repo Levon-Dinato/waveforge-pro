@@ -1,5 +1,6 @@
 /* src/pages/LevonDinato.css */
-.levon-page {
+
+div.levon-page {
   --bg: #050a10; 
   --bg-card: #0a121a;
   --border: #162536;
@@ -10,270 +11,224 @@
   --accent-gradient: linear-gradient(135deg, #00d9ff 0%, #0077ff 100%);
   --font-main: 'Inter', -apple-system, sans-serif;
   
-  background-color: var(--bg); 
-  color: var(--text); 
-  font-family: var(--font-main); 
+  background-color: var(--bg) !important; 
+  color: var(--text) !important; 
+  font-family: var(--font-main) !important; 
   overflow-x: hidden; 
   line-height: 1.6; 
   padding-bottom: 90px;
   min-height: 100vh;
+  width: 100%;
+  position: relative;
+  z-index: 1;
 }
 
-.levon-page * { margin: 0; padding: 0; box-sizing: border-box; }
-.levon-page [id] { scroll-margin-top: 120px; }
-.levon-page a { color: inherit; text-decoration: none; }
-.levon-page button { font-family: inherit; background: none; border: none; cursor: pointer; color: inherit; }
-.levon-page ::selection { background: var(--accent); color: #000; }
+div.levon-page * { margin: 0; padding: 0; box-sizing: border-box; }
+div.levon-page a { color: inherit; text-decoration: none !important; }
+div.levon-page ul, div.levon-page li { list-style: none !important; }
+div.levon-page button { font-family: inherit; background: none; border: none; cursor: pointer; color: inherit; }
+div.levon-page .wrapper { width: 100%; max-width: 1400px; margin: 0 auto; padding-inline: 5%; }
 
-.levon-page .wrapper { width: 100%; max-width: 1400px; margin: 0 auto; padding-inline: 5%; }
+/* ✅ AJOUT : Décalage pour que les liens ne soient pas cachés par les barres fixes */
+div.levon-page #about,
+div.levon-page #services,
+div.levon-page #releases,
+div.levon-page #contact {
+  scroll-margin-top: 180px;
+}
 
 /* BARRE RETOUR AU SITE */
-.levon-page .top-bar {
-  position: fixed; top: 0; left: 0; right: 0; height: 32px; z-index: 101;
-  background: #050a10; border-bottom: 1px solid var(--border);
-  display: flex; align-items: center; padding: 0 16px;
+div.levon-page .top-bar { 
+  position: fixed !important; top: 0; left: 0; right: 0; 
+  height: 32px; z-index: 1001 !important; 
+  background: #050a10 !important; border-bottom: 1px solid var(--border) !important; 
+  display: flex !important; align-items: center; padding: 0 16px; 
 }
-.levon-page .back-btn {
-  display: flex; align-items: center; gap: 6px;
-  color: var(--text-muted); font-size: 0.8rem; font-weight: 600;
-  transition: color 0.2s;
-}
-.levon-page .back-btn:hover { color: var(--accent); }
-.levon-page .back-btn span { font-size: 1.1rem; }
-
-/* EFFET SLIDE */
-.levon-page .slide-transition {
-  position: fixed; inset: 0; z-index: 9999;
-  background: var(--bg); border-left: 4px solid var(--accent);
-  pointer-events: none; transform: translateX(100%);
-  display: flex; justify-content: center; align-items: center;
-  box-shadow: -10px 0 30px rgba(0, 217, 255, 0.2);
-}
-.levon-page .slide-transition.active { animation: slideWipe 0.8s cubic-bezier(0.77, 0, 0.175, 1) forwards; pointer-events: auto; }
-.levon-page .slide-transition span { color: var(--accent); font-size: 1.5rem; font-weight: 800; letter-spacing: 2px; opacity: 0; transform: scale(0.9); transition: all 0.3s ease; }
-.levon-page .slide-transition.active span { opacity: 1; transform: scale(1); transition-delay: 0.3s; }
-@keyframes slideWipe { 0% { transform: translateX(100%); } 40% { transform: translateX(0); } 60% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
+div.levon-page .back-btn { display: flex; align-items: center; gap: 6px; color: var(--text-muted); font-size: 0.8rem; font-weight: 600; transition: color 0.2s; }
+div.levon-page .back-btn:hover { color: var(--accent); }
 
 /* NAVBAR */
-.levon-page .nav { position: fixed; top: 32px; left: 0; right: 0; z-index: 100; background: rgba(5, 10, 16, 0.85); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); }
-.levon-page .nav-inner { display: flex; justify-content: space-between; align-items: center; padding-top: 16px; padding-bottom: 16px; }
-.levon-page .logo img { height: 40px; border-radius: 4px; }
-.levon-page .nav-links { display: flex; gap: 32px; }
-.levon-page .nav-links a { font-size: 0.85rem; font-weight: 600; color: var(--text-muted); transition: all 0.3s; }
-.levon-page .nav-links a:hover { color: var(--accent); text-shadow: 0 0 15px rgba(0, 217, 255, 0.6); transform: translateY(-2px); }
-.levon-page .nav-actions { display: flex; align-items: center; gap: 16px; }
-
-/* BOUTONS 3D */
-.levon-page .btn-primary { 
-  display: inline-flex; align-items: center; justify-content: center; padding: 12px 28px; 
-  background: linear-gradient(180deg, #10202e 0%, #060b10 100%); color: var(--accent); 
-  border-radius: 6px; font-size: 0.85rem; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;
-  border: 1px solid rgba(0, 217, 255, 0.4);
-  box-shadow: 0 6px 0 #000, 0 8px 15px rgba(0,0,0,0.6), 0 0 15px rgba(0, 217, 255, 0.2), inset 0 1px 0 rgba(255,255,255,0.2);
-  transition: all 0.15s cubic-bezier(0.25, 0.8, 0.25, 1); position: relative; overflow: hidden;
+div.levon-page .nav { 
+  position: fixed !important; top: 32px; left: 0; right: 0; 
+  height: 72px; z-index: 1000 !important; 
+  background: rgba(5, 10, 16, 0.98) !important; backdrop-filter: blur(12px); 
+  border-bottom: 1px solid var(--border) !important; 
 }
-.levon-page .btn-primary::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 50%; background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, transparent 100%); pointer-events: none; }
-.levon-page .btn-primary:hover { color: #fff; text-shadow: 0 0 10px var(--accent); border-color: var(--accent); transform: translateY(-3px); box-shadow: 0 9px 0 #000, 0 12px 20px rgba(0,0,0,0.7), 0 0 25px rgba(0, 217, 255, 0.5), inset 0 1px 0 rgba(255,255,255,0.3); }
-.levon-page .btn-primary:active { transform: translateY(4px); box-shadow: 0 2px 0 #000, 0 4px 8px rgba(0,0,0,0.8), 0 0 15px rgba(0, 217, 255, 0.3), inset 0 1px 0 rgba(255,255,255,0.1); }
-
-.levon-page .btn-outline-hero { padding: 12px 24px; font-size: 0.95rem; border: 1px solid var(--border-light); border-radius: 6px; font-weight: 700; transition: all 0.3s; background: rgba(255,255,255,0.03); backdrop-filter: blur(5px); text-transform: uppercase; letter-spacing: 1px; display: inline-flex; align-items: center; }
-.levon-page .btn-outline-hero:hover { background: rgba(0,217,255,0.1); border-color: var(--accent); color: #fff; text-shadow: 0 0 10px var(--accent); }
-
-.levon-page .burger { display: none; flex-direction: column; gap: 5px; }
-.levon-page .burger span { width: 22px; height: 2px; background: var(--text); transition: 0.3s; }
-
-/* MENU MOBILE */
-.levon-page .mobile-menu { position: fixed; top: 32px; inset: 32px 0 0 0; background: var(--bg); z-index: 99; display: flex; flex-direction: column; padding: 40px 5% 40px; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
-.levon-page .mobile-menu.open { opacity: 1; pointer-events: auto; }
-.levon-page .mobile-menu a { font-size: 1.5rem; font-weight: 600; padding: 20px 0; border-bottom: 1px solid var(--border); }
-
-/* HERO & VIDEO CORRIGÉE */
-.levon-page .hero { 
-  position: relative; 
-  min-height: 90vh; 
-  display: flex; 
-  align-items: center; 
-  border-bottom: 1px solid var(--border); 
-  overflow: hidden; 
-  background-color: #000; 
+div.levon-page .nav-inner { 
+  display: flex !important; justify-content: space-between !important; 
+  align-items: center !important; height: 100%; padding: 0 5%; 
 }
-.levon-page .bg-video { 
-  position: absolute; 
-  top: 0; left: 0;
-  width: 100%; 
-  height: 100%; 
-  object-fit: cover; 
-  z-index: 0; 
-  opacity: 0.4; 
-  pointer-events: none;
+div.levon-page .logo { display: flex !important; align-items: center !important; }
+div.levon-page .logo img { height: 40px !important; width: auto !important; max-width: none !important; border-radius: 4px; }
+div.levon-page .premium-badge { background: var(--accent-gradient); color: #000; font-size: 0.6rem; font-weight: 900; padding: 2px 8px; border-radius: 4px; margin-left: 12px; letter-spacing: 1px; }
+div.levon-page .nav-links { display: flex !important; gap: 32px; }
+div.levon-page .nav-links a { font-size: 0.85rem; font-weight: 600; color: var(--text-muted) !important; transition: all 0.3s; }
+div.levon-page .nav-links a:hover { color: var(--accent) !important; }
+div.levon-page .nav-actions { display: flex !important; align-items: center !important; gap: 16px; }
+
+/* BOUTONS */
+div.levon-page .btn-primary { 
+  display: inline-flex !important; align-items: center !important; justify-content: center !important; 
+  padding: 12px 28px; background: linear-gradient(180deg, #10202e 0%, #060b10 100%) !important; 
+  color: var(--accent) !important; border-radius: 6px; font-size: 0.85rem; font-weight: 800; 
+  letter-spacing: 1px; text-transform: uppercase; border: 1px solid rgba(0, 217, 255, 0.4) !important; 
+  box-shadow: 0 6px 0 #000, 0 8px 15px rgba(0,0,0,0.6), 0 0 15px rgba(0, 217, 255, 0.2), inset 0 1px 0 rgba(255,255,255,0.2); 
+  transition: all 0.15s; position: relative; overflow: hidden; text-decoration: none !important; 
 }
-.levon-page .hero::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to bottom, rgba(5,10,16,0.6) 0%, rgba(5,10,16,0.9) 100%);
-  z-index: 1;
-  pointer-events: none;
+div.levon-page .btn-primary:hover { color: #fff !important; border-color: var(--accent) !important; transform: translateY(-3px); box-shadow: 0 9px 0 #000, 0 12px 20px rgba(0,0,0,0.7), 0 0 25px rgba(0, 217, 255, 0.5); }
+div.levon-page .btn-outline-hero { 
+  padding: 12px 24px; font-size: 0.95rem; border: 1px solid var(--border-light); border-radius: 6px; 
+  font-weight: 700; background: rgba(255,255,255,0.05); text-transform: uppercase; letter-spacing: 1px; 
+  display: inline-flex; align-items: center; gap: 8px; text-decoration: none !important; color: var(--text) !important; 
 }
-.levon-page .hero-inner { 
-  padding-top: 160px; 
-  padding-bottom: 60px; 
-  display: flex; 
-  flex-direction: column; 
-  align-items: center; 
-  text-align: center; 
-  position: relative; 
-  z-index: 10; 
+div.levon-page .btn-outline-hero:hover { background: rgba(0,217,255,0.1); border-color: var(--accent) !important; color: #fff !important; }
+
+/* ✅ BANDEAU D'ÉVÉNEMENTS DÉFILANT */
+div.levon-page .event-ticker-wrapper { 
+  position: fixed !important; 
+  top: 104px; 
+  left: 0; right: 0; z-index: 999 !important; 
+  background: #050a10 !important; 
+  border-bottom: 1px solid var(--border) !important; 
+  overflow: hidden; width: 100%; 
+  height: 56px; 
 }
-.levon-page .hero-tag { display: inline-block; padding: 8px 16px; border: 1px solid var(--border-light); border-radius: 20px; font-size: 0.75rem; font-weight: 700; color: var(--accent); margin-bottom: 24px; background: rgba(0, 217, 255, 0.05); box-shadow: 0 0 15px rgba(0, 217, 255, 0.1); }
-.levon-page .hero-title { font-size: clamp(2.5rem, 5vw, 4.5rem); font-weight: 900; line-height: 1.1; letter-spacing: -2px; margin-bottom: 24px; max-width: 900px; }
-.levon-page .hero-title span { color: var(--accent); text-shadow: 0 0 30px rgba(0, 217, 255, 0.6); }
-.levon-page .hero-desc { font-size: 1.1rem; color: var(--text-muted); max-width: 600px; margin-bottom: 40px; font-weight: 400; }
-.levon-page .hero-actions { display: flex; gap: 16px; margin-bottom: 60px; }
-.levon-page .hero-stats { display: flex; justify-content: center; gap: 60px; border-top: 1px solid var(--border); padding-top: 30px; }
-.levon-page .stat-item h4 { font-size: 2rem; font-weight: 800; color: var(--text); text-shadow: 0 0 15px rgba(255, 255, 255, 0.2); }
-.levon-page .stat-item p { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 600;}
+div.levon-page .event-ticker { display: flex !important; width: max-content; animation: ticker 25s linear infinite; height: 100%; }
+div.levon-page .event-ticker:hover { animation-play-state: paused; }
+div.levon-page .event-ticker-item { 
+  display: flex !important; align-items: center !important; gap: 12px; 
+  padding: 0 24px; border-right: 1px solid var(--border); 
+  background: #0a121a !important; height: 100%; 
+}
+div.levon-page .event-date-badge { background: var(--accent) !important; color: #000 !important; font-size: 0.65rem; font-weight: 900; padding: 4px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
+div.levon-page .event-cover { width: 28px; height: 28px; border-radius: 4px; object-fit: cover; border: 1px solid var(--border-light); }
+div.levon-page .event-info { display: flex !important; flex-direction: column !important; justify-content: center !important; }
+div.levon-page .event-title { color: #fff !important; font-size: 0.8rem; font-weight: 700; white-space: nowrap; line-height: 1.2; }
+div.levon-page .event-location { color: var(--text-muted) !important; font-size: 0.65rem; white-space: nowrap; max-width: 250px; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; margin-top: 2px; }
+@keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-33.33%); } }
+
+/* HERO & VIDEO */
+div.levon-page .hero { 
+  position: relative !important; 
+  min-height: 90vh !important; 
+  display: flex !important; align-items: center !important; justify-content: center !important;
+  overflow: hidden !important; 
+  background-color: #000 !important; 
+  padding-top: 160px !important; 
+}
+div.levon-page .bg-video { position: absolute !important; top: 0; left: 0; width: 100% !important; height: 100% !important; object-fit: cover !important; z-index: 0 !important; opacity: 0.4 !important; filter: grayscale(100%) sepia(100%) hue-rotate(180deg) !important; mix-blend-mode: screen !important; pointer-events: none; }
+div.levon-page .hero::after { content: ''; position: absolute !important; inset: 0; background: linear-gradient(to bottom, rgba(5,10,16,0.3) 0%, rgba(5,10,16,0.95) 100%) !important; z-index: 1 !important; pointer-events: none; }
+div.levon-page .hero-inner { 
+  display: flex !important; flex-direction: column !important; align-items: center !important; 
+  text-align: center !important; position: relative !important; z-index: 10 !important; 
+}
+div.levon-page .hero-tag { display: inline-block !important; padding: 8px 16px; border: 1px solid var(--border-light); border-radius: 20px; font-size: 0.75rem; font-weight: 700; color: var(--accent) !important; margin-bottom: 24px; background: rgba(0, 217, 255, 0.1) !important; }
+div.levon-page .hero-title { font-size: clamp(2.5rem, 5vw, 4.5rem) !important; font-weight: 900 !important; line-height: 1.1 !important; letter-spacing: -2px; margin-bottom: 24px; max-width: 900px; color: #fff !important; }
+div.levon-page .hero-title span { color: var(--accent) !important; }
+div.levon-page .hero-desc { font-size: 1.1rem; color: var(--text-muted) !important; max-width: 600px; margin-bottom: 40px; }
+div.levon-page .hero-actions { display: flex !important; gap: 16px; margin-bottom: 60px; flex-wrap: wrap; justify-content: center; }
+div.levon-page .hero-stats { display: flex !important; justify-content: center !important; gap: 60px; border-top: 1px solid var(--border); padding-top: 30px; }
+div.levon-page .stat-item h4 { font-size: 2rem; font-weight: 800; color: var(--text) !important; }
+div.levon-page .stat-item p { font-size: 0.75rem; color: var(--text-muted) !important; text-transform: uppercase; font-weight: 600;}
 
 /* LAYOUT */
-.levon-page .container { padding-block: 80px; display: flex; gap: 60px; align-items: flex-start; }
-.levon-page .content { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 60px; }
-.levon-page .sidebar { width: 340px; flex-shrink: 0; }
-.levon-page .section-header { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 24px; }
-.levon-page .section-title { font-size: 1.4rem; font-weight: 800; letter-spacing: -0.5px; color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.1); }
+div.levon-page .container { padding-block: 80px; display: flex !important; gap: 60px; align-items: flex-start !important; }
+div.levon-page .content { flex: 1 !important; min-width: 0; display: flex !important; flex-direction: column !important; gap: 60px; }
+div.levon-page .sidebar { width: 340px !important; flex-shrink: 0 !important; }
+div.levon-page .section-header { border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 24px; }
+div.levon-page .section-title { font-size: 1.4rem; font-weight: 800; color: #fff !important; }
 
-/* CONTAINERS 3D */
-.levon-page .about-grid, .levon-page .service-card, .levon-page .sidebar-widget, .levon-page .tracklist { 
-  background: linear-gradient(145deg, rgba(13, 22, 33, 0.9), rgba(6, 13, 20, 0.9)); backdrop-filter: blur(10px);
-  border: 1px solid rgba(0, 217, 255, 0.1); border-radius: 16px; 
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05), inset 0 -1px 0 rgba(0, 0, 0, 0.8);
-  transition: all 0.3s ease; position: relative; overflow: hidden;
-}
-.levon-page .about-grid:hover, .levon-page .service-card:hover, .levon-page .sidebar-widget:hover, .levon-page .tracklist:hover {
-  border-color: rgba(0, 217, 255, 0.4); box-shadow: 0 30px 60px rgba(0, 0, 0, 0.7), 0 0 30px rgba(0, 217, 255, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1); transform: translateY(-4px);
-}
-
-/* ABOUT */
-.levon-page .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; padding: 40px; }
-.levon-page .about-text h3 { font-size: 1.3rem; font-weight: 800; margin-bottom: 16px; color: var(--text); letter-spacing: -0.5px; }
-.levon-page .about-text p { font-size: 0.95rem; color: var(--text-muted); margin-bottom: 24px; }
-.levon-page .member-box { margin-bottom: 20px; padding-left: 16px; border-left: 3px solid var(--accent); background: linear-gradient(90deg, rgba(0,217,255,0.05) 0%, transparent 100%); padding: 10px 16px; border-radius: 0 8px 8px 0; }
-.levon-page .member-box h4 { font-size: 1rem; font-weight: 700; color: var(--text); }
-.levon-page .member-box p { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0; }
-.levon-page .about-visual { background: #000; border-radius: 12px; border: 1px solid var(--border); display: flex; justify-content: center; align-items: center; overflow: hidden; min-height: 300px; box-shadow: inset 0 0 20px rgba(0,0,0,1); }
-.levon-page .about-visual img { width: 100%; height: 100%; object-fit: cover; }
-
-/* SOCIAL */
-.levon-page .social-grid { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 30px; }
-.levon-page .social-btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; background: linear-gradient(145deg, rgba(13, 22, 33, 0.9), rgba(6, 13, 20, 0.9)); border: 1px solid rgba(0, 217, 255, 0.2); border-radius: 8px; color: #fff; font-size: 0.85rem; font-weight: 600; box-shadow: 0 4px 0 #000, 0 5px 10px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1); transition: all 0.15s; position: relative; overflow: hidden; }
-.levon-page .social-btn::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 50%; background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, transparent 100%); pointer-events: none; }
-.levon-page .social-btn:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-3px); box-shadow: 0 7px 0 #000, 0 10px 15px rgba(0,0,0,0.6), 0 0 20px rgba(0, 217, 255, 0.4), inset 0 1px 0 rgba(255,255,255,0.2); }
-.levon-page .social-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #000, 0 3px 6px rgba(0,0,0,0.5); }
-.levon-page .social-icon { width: 18px; height: 18px; fill: currentColor; }
+/* CARTES ET CONTENEURS */
+div.levon-page .about-grid, div.levon-page .service-card, div.levon-page .sidebar-widget, div.levon-page .tracklist { background: linear-gradient(145deg, rgba(13, 22, 33, 0.95), rgba(6, 13, 20, 0.95)) !important; backdrop-filter: blur(10px); border: 1px solid rgba(0, 217, 255, 0.15) !important; border-radius: 16px !important; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5) !important; transition: all 0.3s ease; }
+div.levon-page .about-grid { display: grid !important; grid-template-columns: 1fr 1fr; gap: 30px; padding: 40px; }
+div.levon-page .about-text h3 { font-size: 1.3rem; font-weight: 800; margin-bottom: 16px; color: #fff !important; }
+div.levon-page .about-text p { color: var(--text-muted) !important; margin-bottom: 24px; }
+div.levon-page .member-box { margin-bottom: 20px; padding: 10px 16px; border-left: 3px solid var(--accent); background: rgba(0,217,255,0.05); }
+div.levon-page .member-box h4 { color: #fff !important; font-weight: 700; }
+div.levon-page .member-box p { color: var(--text-muted) !important; margin: 0; font-size: 0.9rem; }
+div.levon-page .about-visual { background: #000; border-radius: 12px; overflow: hidden; display: flex; justify-content: center; }
+div.levon-page .about-visual img { width: 100%; height: 100%; object-fit: cover; }
 
 /* SERVICES */
-.levon-page .services-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
-.levon-page .service-card { padding: 30px; }
-.levon-page .service-icon { font-size: 2rem; margin-bottom: 16px; display: block; filter: drop-shadow(0 0 10px rgba(255,255,255,0.2)); }
-.levon-page .service-card h4 { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; color: var(--text); }
-.levon-page .service-card p { font-size: 0.85rem; color: var(--text-muted); }
+div.levon-page .services-grid { display: grid !important; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+div.levon-page .service-card { padding: 30px; }
+div.levon-page .service-icon { font-size: 2rem; margin-bottom: 16px; display: block; }
+div.levon-page .service-card h4 { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; color: #fff !important; }
+div.levon-page .service-card p { color: var(--text-muted) !important; font-size: 0.9rem; }
 
 /* TRACKLIST */
-.levon-page .track-header { display: grid; grid-template-columns: 60px 2fr 1fr 80px; gap: 16px; padding: 20px 24px; border-bottom: 1px solid var(--border); font-size: 0.75rem; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; text-align: left; background: rgba(0, 217, 255, 0.03); }
-.levon-page .track-row { display: grid; grid-template-columns: 60px 2fr 1fr 80px; gap: 16px; align-items: center; padding: 16px 24px; border-bottom: 1px solid var(--border); transition: all 0.3s; cursor: pointer; text-align: left; }
-.levon-page .track-row:last-child { border-bottom: none; }
-.levon-page .track-row:hover { background: rgba(0, 217, 255, 0.05); border-left: 3px solid var(--accent); padding-left: 21px; }
-.levon-page .track-play { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(180deg, #112436 0%, #08111a 100%); border: 1px solid rgba(0, 217, 255, 0.3); display: flex; justify-content: center; align-items: center; font-size: 0.8rem; color: var(--accent); transition: 0.15s; box-shadow: 0 4px 0 #000, 0 5px 10px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1); }
-.levon-page .track-row:hover .track-play { border-color: var(--accent); color: #fff; background: var(--accent-gradient); box-shadow: 0 4px 0 #000, 0 8px 15px rgba(0, 217, 255, 0.4), inset 0 1px 0 rgba(255,255,255,0.4); transform: translateY(-2px); }
-.levon-page .track-row:active .track-play { transform: translateY(2px); box-shadow: 0 1px 0 #000, 0 2px 5px rgba(0,0,0,0.5); }
-.levon-page .track-info { display: flex; flex-direction: column; min-width: 0; }
-.levon-page .track-info h4 { font-size: 1rem; font-weight: 700; margin-bottom: 2px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.levon-page .track-info p { font-size: 0.85rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.levon-page .track-genre { font-size: 0.85rem; color: var(--accent); font-weight: 600; }
-.levon-page .track-bpm { font-size: 0.85rem; color: var(--text-muted); font-family: monospace; text-align: right; }
-
-/* GALLERY */
-.levon-page .gallery-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
-.levon-page .gallery-item { aspect-ratio: 4/3; background: linear-gradient(145deg, #0d1621, #060d14); border: 1px solid var(--border); border-radius: 16px; display: flex; justify-content: center; align-items: center; font-size: 0.85rem; color: var(--text-dark); transition: all 0.3s ease; overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05); }
-.levon-page .gallery-item:hover { border-color: var(--accent); box-shadow: 0 15px 30px rgba(0,0,0,0.6), 0 0 20px rgba(0, 217, 255, 0.2), inset 0 1px 0 rgba(255,255,255,0.1); transform: translateY(-4px); }
+div.levon-page .track-header { display: grid !important; grid-template-columns: 60px 2fr 1fr 80px; gap: 16px; padding: 20px 24px; border-bottom: 1px solid var(--border); color: var(--accent) !important; font-weight: 700; text-transform: uppercase; font-size: 0.75rem; }
+div.levon-page .track-row { display: grid !important; grid-template-columns: 60px 2fr 1fr 80px; gap: 16px; align-items: center !important; padding: 16px 24px; border-bottom: 1px solid var(--border); cursor: pointer; }
+div.levon-page .track-row:hover { background: rgba(0, 217, 255, 0.05); }
+div.levon-page .track-play { width: 40px; height: 40px; border-radius: 50%; background: #112436; display: flex !important; justify-content: center !important; align-items: center !important; color: var(--accent) !important; }
+div.levon-page .track-info h4 { color: #fff !important; font-weight: 700; margin: 0; font-size: 1rem; }
+div.levon-page .track-info p { color: var(--text-muted) !important; margin: 0; font-size: 0.85rem; }
+div.levon-page .track-genre { color: var(--accent) !important; font-weight: 600; font-size: 0.85rem; }
+div.levon-page .track-bpm { color: var(--text-muted) !important; font-family: monospace; text-align: right; font-size: 0.85rem; }
 
 /* SIDEBAR */
-.levon-page .sidebar-inner { position: sticky; top: 100px; display: flex; flex-direction: column; gap: 24px; }
-.levon-page .sidebar-widget { padding: 24px; width: 100%; }
-.levon-page .sidebar-title { font-size: 0.85rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; color: #fff; margin-bottom: 20px; display: flex; align-items: center; gap: 8px;}
-.levon-page .sidebar-title::before { content: ''; display: block; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 10px var(--accent); }
-.levon-page .top-list { display: flex; flex-direction: column; gap: 16px; }
-.levon-page .top-item { display: flex; align-items: center; gap: 16px; text-align: left; padding: 8px; border-radius: 8px; transition: background 0.2s;}
-.levon-page .top-item:hover { background: rgba(255,255,255,0.03); }
-.levon-page .top-num { font-size: 1rem; font-weight: 900; color: var(--text-dark); width: 20px; flex-shrink: 0; font-style: italic; }
-.levon-page .top-item:nth-child(1) .top-num { color: var(--accent); text-shadow: 0 0 10px rgba(0, 217, 255, 0.6); }
-.levon-page .top-item:nth-child(2) .top-num { color: var(--text); }
-.levon-page .top-item:nth-child(3) .top-num { color: var(--text); }
-.levon-page .top-info { display: flex; flex-direction: column; min-width: 0; flex: 1; }
-.levon-page .top-info h4 { font-size: 0.9rem; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.levon-page .top-info p { font-size: 0.75rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+div.levon-page .sidebar-inner { position: sticky !important; top: 180px; display: flex !important; flex-direction: column !important; gap: 24px; }
+div.levon-page .sidebar-widget { padding: 24px; }
+div.levon-page .sidebar-title { font-size: 0.85rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #fff !important; margin-bottom: 20px; }
+div.levon-page .top-item { display: flex !important; align-items: center !important; gap: 16px; padding: 8px 0; }
+div.levon-page .top-num { font-size: 1rem; font-weight: 900; color: var(--accent) !important; width: 20px; font-style: italic; }
+div.levon-page .top-info h4 { color: #fff !important; font-size: 0.9rem; margin: 0; }
+div.levon-page .top-info p { color: var(--text-muted) !important; font-size: 0.75rem; margin: 0; }
+div.levon-page .event-item { padding: 16px 0; border-bottom: 1px solid var(--border-light); }
+div.levon-page .event-date { font-size: 0.75rem; font-weight: 800; color: var(--accent) !important; margin-bottom: 6px; }
+div.levon-page .event-item h4 { color: #fff !important; font-size: 1rem; margin-bottom: 4px; }
+div.levon-page .event-item p { color: var(--text-muted) !important; font-size: 0.85rem; margin: 0; }
 
-/* DATES */
-.levon-page .event-item { padding: 16px 0; border-bottom: 1px solid var(--border-light); cursor: pointer; transition: all 0.2s ease; }
-.levon-page .event-item:hover { padding-left: 12px; border-left: 3px solid var(--accent); background: rgba(0, 217, 255, 0.05); border-radius: 0 8px 8px 0; }
-.levon-page .event-item:last-child { border-bottom: none; padding-bottom: 0; }
-.levon-page .event-item:first-child { padding-top: 0; }
-.levon-page .event-date { font-size: 0.75rem; font-weight: 800; color: var(--accent); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
-.levon-page .event-item h4 { font-size: 1rem; font-weight: 700; margin-bottom: 4px; color: var(--text); }
-.levon-page .event-item p { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0; }
+/* UPSELL (VENTE) */
+div.levon-page .upsell-section { padding-block: 100px; background: linear-gradient(180deg, var(--bg) 0%, #0a121a 100%) !important; border-top: 1px solid var(--border); }
+div.levon-page .upsell-grid { display: grid !important; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center !important; }
+div.levon-page .upsell-tag { display: inline-block !important; padding: 6px 12px; border: 1px solid var(--accent); border-radius: 20px; font-size: 0.7rem; font-weight: 800; color: var(--accent) !important; background: rgba(0,217,255,0.1); text-transform: uppercase; margin-bottom: 20px; }
+div.levon-page .upsell-text h2 { font-size: 2.5rem; font-weight: 900; color: #fff !important; margin-bottom: 20px; }
+div.levon-page .upsell-text p { font-size: 1.1rem; color: var(--text-muted) !important; margin-bottom: 30px; }
+div.levon-page .upsell-visual { display: flex !important; justify-content: center !important; }
+div.levon-page .upsell-visual img { width: 80%; max-width: 300px; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
 
-/* CONTACT */
-.levon-page .contact-section { border-top: 1px solid var(--border); padding-block: 100px; text-align: center; background: radial-gradient(circle at 50% 100%, rgba(0, 217, 255, 0.1) 0%, var(--bg) 70%); }
-.levon-page .contact-section h2 { font-size: 2.5rem; font-weight: 900; letter-spacing: -1px; margin-bottom: 16px; color: var(--text); text-shadow: 0 0 20px rgba(255,255,255,0.2); }
-.levon-page .contact-section p { color: var(--text-muted); margin-bottom: 40px; font-size: 1.1rem; }
-.levon-page .contact-email { display: inline-flex; align-items: center; gap: 12px; font-size: 1.1rem; font-weight: 800; color: var(--accent); background: linear-gradient(180deg, #10202e 0%, #060b10 100%); padding: 20px 44px; border-radius: 12px; border: 1px solid rgba(0, 217, 255, 0.4); position: relative; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 8px 0 #000, 0 15px 25px rgba(0,0,0,0.6), 0 0 20px rgba(0, 217, 255, 0.2), inset 0 1px 0 rgba(255,255,255,0.2); transition: all 0.15s cubic-bezier(0.25, 0.8, 0.25, 1); }
-.levon-page .contact-email::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 50%; background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, transparent 100%); border-radius: 12px 12px 0 0; pointer-events: none; }
-.levon-page .contact-email:hover { color: #fff; text-shadow: 0 0 10px var(--accent); border-color: var(--accent); transform: translateY(-4px); box-shadow: 0 12px 0 #000, 0 20px 30px rgba(0,0,0,0.7), 0 0 30px rgba(0, 217, 255, 0.6), inset 0 1px 0 rgba(255,255,255,0.3); }
-.levon-page .contact-email:active { transform: translateY(4px); box-shadow: 0 4px 0 #000, 0 8px 15px rgba(0,0,0,0.8), 0 0 15px rgba(0, 217, 255, 0.3), inset 0 1px 0 rgba(255,255,255,0.1); }
+/* CONTACT & FOOTER */
+div.levon-page .contact-section { padding-block: 100px; text-align: center; }
+div.levon-page .contact-section h2 { font-size: 2.5rem; font-weight: 900; color: #fff !important; margin-bottom: 16px; }
+div.levon-page .contact-section p { color: var(--text-muted) !important; margin-bottom: 40px; }
+div.levon-page .contact-email { display: inline-flex !important; align-items: center !important; gap: 12px; font-size: 1.1rem; font-weight: 800; color: var(--accent) !important; background: #10202e !important; padding: 20px 44px; border-radius: 12px; border: 1px solid var(--accent) !important; text-decoration: none !important; }
+div.levon-page .footer { border-top: 1px solid var(--border); padding: 32px 0; text-align: center; color: var(--text-muted) !important; font-size: 0.85rem; }
 
-/* FOOTER */
-.levon-page .footer { border-top: 1px solid var(--border); background: var(--bg); }
-.levon-page .footer-inner { padding-block: 32px; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; color: var(--text-muted); flex-wrap: wrap; gap: 16px; }
-.levon-page .footer-links a { margin-left: 24px; transition: color 0.2s; font-weight: 500;}
-.levon-page .footer-links a:hover { color: var(--accent); text-shadow: 0 0 10px var(--accent); }
-
-/* AUDIO PLAYER */
-.levon-page .audio-player { position: fixed; bottom: 0; left: 0; right: 0; z-index: 200; background: rgba(10, 18, 26, 0.95); backdrop-filter: blur(15px); border-top: 1px solid rgba(0, 217, 255, 0.3); display: flex; align-items: center; padding: 15px 24px; gap: 20px; transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.77, 0, 0.175, 1); box-shadow: 0 -10px 40px rgba(0,0,0,0.8); }
-.levon-page .audio-player.active { transform: translateY(0); }
-.levon-page .audio-info { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-.levon-page .audio-title { font-size: 1rem; font-weight: 800; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 0 10px rgba(255,255,255,0.2); }
-.levon-page .audio-artist { font-size: 0.8rem; color: var(--accent); font-weight: 600; }
-.levon-page .audio-controls { display: flex; align-items: center; gap: 16px; }
-.levon-page .audio-btn { width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(180deg, #112436 0%, #08111a 100%); color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; transition: all 0.15s; flex-shrink: 0; border: 1px solid rgba(0, 217, 255, 0.4); box-shadow: 0 6px 0 #000, 0 8px 15px rgba(0,0,0,0.6), 0 0 15px rgba(0, 217, 255, 0.2), inset 0 1px 0 rgba(255,255,255,0.2); }
-.levon-page .audio-btn:hover { color: #fff; border-color: var(--accent); transform: translateY(-3px); box-shadow: 0 9px 0 #000, 0 12px 20px rgba(0,0,0,0.7), 0 0 25px rgba(0, 217, 255, 0.5), inset 0 1px 0 rgba(255,255,255,0.3); }
-.levon-page .audio-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 #000, 0 4px 8px rgba(0,0,0,0.8), 0 0 10px rgba(0, 217, 255, 0.3), inset 0 1px 0 rgba(255,255,255,0.1); }
-.levon-page .audio-progress-wrap { flex: 2; display: flex; align-items: center; gap: 12px; }
-.levon-page .audio-progress { flex: 1; height: 8px; background: #000; border-radius: 4px; cursor: pointer; position: relative; box-shadow: inset 0 2px 4px rgba(0,0,0,1), 0 1px 0 rgba(255,255,255,0.1); }
-.levon-page .audio-progress-bar { height: 100%; background: var(--accent); border-radius: 4px; width: 0%; transition: width 0.1s linear; box-shadow: 0 0 15px rgba(0, 217, 255, 0.8); }
-.levon-page .audio-time { font-size: 0.8rem; color: var(--text-muted); font-family: monospace; min-width: 45px; text-align: center; font-weight: 600; }
+/* LECTEUR AUDIO FLOTTANT */
+div.levon-page .audio-player { position: fixed !important; bottom: 0; left: 0; right: 0; z-index: 2000 !important; background: rgba(10, 18, 26, 0.98) !important; backdrop-filter: blur(15px); border-top: 1px solid rgba(0, 217, 255, 0.3) !important; display: flex !important; align-items: center !important; padding: 15px 24px; gap: 20px; transform: translateY(100%); transition: transform 0.4s ease; }
+div.levon-page .audio-player.active { transform: translateY(0) !important; }
+div.levon-page .audio-info { flex: 1 !important; min-width: 0; display: flex !important; flex-direction: column !important; }
+div.levon-page .audio-title { font-size: 1rem; font-weight: 800; color: #fff !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+div.levon-page .audio-artist { font-size: 0.8rem; color: var(--accent) !important; font-weight: 600; }
+div.levon-page .audio-controls { display: flex !important; align-items: center !important; gap: 16px; }
+div.levon-page .audio-btn { width: 50px !important; height: 50px !important; border-radius: 50% !important; background: linear-gradient(180deg, #112436 0%, #08111a 100%) !important; color: var(--accent) !important; display: flex !important; align-items: center !important; justify-content: center !important; font-size: 1.2rem; border: 1px solid rgba(0, 217, 255, 0.4) !important; }
+div.levon-page .audio-btn:hover { color: #fff !important; border-color: var(--accent) !important; }
+div.levon-page .audio-progress-wrap { flex: 2 !important; display: flex !important; align-items: center !important; gap: 12px; }
+div.levon-page .audio-progress { flex: 1 !important; height: 8px; background: #000 !important; border-radius: 4px; cursor: pointer; }
+div.levon-page .audio-progress-bar { height: 100%; background: var(--accent) !important; border-radius: 4px; width: 0%; transition: width 0.1s linear; }
+div.levon-page .audio-time { font-size: 0.8rem; color: var(--text-muted) !important; font-family: monospace; min-width: 45px; text-align: center; }
 
 /* RESPONSIVE */
 @media (max-width: 1024px) {
-  .levon-page .container { flex-direction: column; gap: 40px; }
-  .levon-page .sidebar { width: 100%; }
-  .levon-page .sidebar-inner { position: static; display: grid; grid-template-columns: 1fr 1fr; }
-  .levon-page .about-grid { grid-template-columns: 1fr; }
+  div.levon-page .container { flex-direction: column !important; gap: 40px; }
+  div.levon-page .sidebar { width: 100% !important; }
+  div.levon-page .sidebar-inner { position: static !important; display: grid !important; grid-template-columns: 1fr 1fr; }
+  div.levon-page .about-grid { grid-template-columns: 1fr !important; }
+  div.levon-page .upsell-grid { grid-template-columns: 1fr !important; text-align: center; }
+  div.levon-page .event-ticker-wrapper { top: 64px; height: 50px; }
+  div.levon-page .hero { padding-top: 140px !important; }
 }
+
 @media (max-width: 768px) {
-  .levon-page .nav-links { display: none; }
-  .levon-page .burger { display: flex; }
-  .levon-page .logo img { height: 30px; }
-  .levon-page .hero-actions { flex-direction: column; width: 100%; max-width: 300px; }
-  .levon-page .hero-actions a { text-align: center; }
-  .levon-page .hero-stats { flex-direction: column; gap: 20px; text-align: center; }
-  .levon-page .services-grid { grid-template-columns: 1fr; }
-  .levon-page .track-header { display: none; }
-  .levon-page .track-row { grid-template-columns: 40px 1fr 80px; gap: 12px; }
-  .levon-page .track-genre { display: none; }
-  .levon-page .sidebar-inner { grid-template-columns: 1fr; }
-  .levon-page .gallery-grid { grid-template-columns: 1fr; }
-  .levon-page .audio-player { flex-direction: column; padding: 15px; gap: 12px; }
-  .levon-page .audio-controls { width: 100%; justify-content: space-between; }
-  .levon-page .audio-progress-wrap { width: 100%; }
-  .levon-page .contact-email { font-size: 0.9rem; padding: 16px 24px; width: 100%; justify-content: center; word-break: break-all;}
-  .levon-page .btn-primary { padding: 14px 24px; font-size: 0.95rem;}
+  div.levon-page .nav-links { display: none !important; }
+  div.levon-page .logo img { height: 30px !important; }
+  div.levon-page .hero-actions { flex-direction: column !important; width: 100%; max-width: 300px; }
+  div.levon-page .hero-stats { flex-direction: column !important; gap: 20px; text-align: center; }
+  div.levon-page .services-grid { grid-template-columns: 1fr !important; }
+  div.levon-page .track-header { display: none !important; }
+  div.levon-page .track-row { grid-template-columns: 40px 1fr 80px !important; gap: 12px; }
+  div.levon-page .track-genre { display: none !important; }
+  div.levon-page .sidebar-inner { grid-template-columns: 1fr !important; }
+  div.levon-page .audio-player { flex-direction: column !important; padding: 15px; gap: 12px; }
 }

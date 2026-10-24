@@ -21,9 +21,6 @@ const Icons = {
   music: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>,
 };
 
-// ============================================================
-// TYPES
-// ============================================================
 interface DbEvent { id: string; title: string; event_date: string; location: string | null; city: string | null; url: string | null; image_url: string | null; created_at?: string; }
 interface Track { id: string; title: string; artist: string; genre: string; bpm: number; song_key: string | null; audio_url: string; cover_url: string | null; user_id: string; created_at: string; duration: number; peaks: number[]; likes_count?: number; }
 interface Comment { id: string; user_id: string; content: string; created_at: string; profiles?: { username: string; avatar_url: string | null } }
@@ -52,9 +49,29 @@ const getCleanUrl = (input: string): { url: string; isYoutube: boolean } => {
   return { url, isYoutube };
 };
 
-// ============================================================
-// PAGE
-// ============================================================
+// ✅ FONCTION POUR TRANSFORMER LES URL EN LIENS CLIQUABLES
+const linkify = (text: string) => {
+  if (!text) return null;
+  // Regex pour détecter les liens http/https
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  return text.split(urlRegex).map((part, i) => {
+    if (part.match(urlRegex)) {
+      return (
+        <a 
+          key={i} 
+          href={part} 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          style={{ color: '#00d9ff', textDecoration: 'underline', wordBreak: 'break-all' }}
+        >
+          {part}
+        </a>
+      );
+    }
+    return part;
+  });
+};
+
 export const FeedPage: React.FC = () => {
   const { user, username, isAdmin } = useAuth();
   const navigate = useNavigate();
@@ -69,7 +86,12 @@ export const FeedPage: React.FC = () => {
   // Post form
   const [postContent, setPostContent] = useState('');
   const [postUrl, setPostUrl] = useState('');
-  const [postType, setPostType] = useState<'texte' | 'lien' | 'image' | 'video'>('texte');
+  const [postType, setPostType] = useState<'texte' | 'lien' | 'image' | 'video' | 'iframe'>('texte');
+
+  // Modification du post
+  const [editingPostId, setEditingPostId] = useState<string | null>(null);
+  const [editContent, setEditContent] = useState('');
+  const [editUrl, setEditUrl] = useState('');
 
   // Likes & Comments
   const [userLikes, setUserLikes] = useState<Record<string, boolean>>({});
@@ -80,7 +102,6 @@ export const FeedPage: React.FC = () => {
   const [newComment, setNewComment] = useState('');
   const [loadingComments, setLoadingComments] = useState(false);
 
-  // Chargement
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -116,7 +137,6 @@ export const FeedPage: React.FC = () => {
 
         if (eventsData) setUpcomingEvents(eventsData.slice(0, 3) as DbEvent[]);
 
-        // Charger les likes de l'utilisateur
         if (user) {
           const { data: trackLikes } = await supabase.from('likes').select('track_id').eq('user_id', user.id);
           const { data: postLikes } = await supabase.from('post_likes').select('post_id').eq('user_id', user.id);
@@ -146,7 +166,6 @@ export const FeedPage: React.FC = () => {
     return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
   };
 
-  // ✅ LIKE UN TRACK
   const handleLikeTrack = async (e: React.MouseEvent, trackId: string) => {
     e.stopPropagation();
     if (!user) { navigate('/auth'); return; }
@@ -166,7 +185,6 @@ export const FeedPage: React.FC = () => {
         await supabase.from('likes').insert({ user_id: user.id, track_id: trackId });
       }
     } catch (err) {
-      // Rollback
       setUserLikes(prev => ({ ...prev, [trackId]: isLiked }));
       setFeedItems(prev => prev.map(item => 
         isTrackItem(item) && item.data.id === trackId 
@@ -176,7 +194,6 @@ export const FeedPage: React.FC = () => {
     }
   };
 
-  // ✅ LIKE UN POST
   const handleLikePost = async (e: React.MouseEvent, postId: string) => {
     e.stopPropagation();
     if (!user) { navigate('/auth'); return; }
@@ -205,7 +222,6 @@ export const FeedPage: React.FC = () => {
     }
   };
 
-  // ✅ OUVRIR LES COMMENTAIRES
   const openComments = async (type: 'track' | 'post', id: string) => {
     setCurrentCommentItem({ type, id });
     setCommentsModalOpen(true);
@@ -221,7 +237,6 @@ export const FeedPage: React.FC = () => {
     setLoadingComments(false);
   };
 
-  // ✅ AJOUTER UN COMMENTAIRE
   const submitComment = async () => {
     if (!newComment.trim() || !user || !currentCommentItem) return;
     const { data, error } = await supabase.from('comments').insert({
@@ -238,16 +253,17 @@ export const FeedPage: React.FC = () => {
     }
   };
 
-  // Publier un post
   const handlePublish = async () => {
     if ((!postContent.trim() && !postUrl.trim()) || !user) return;
     const { url } = getCleanUrl(postUrl);
+
+    const dbMediaType = (postType === 'texte' || postType === 'lien' || postType === 'iframe') ? 'text' : postType;
 
     const { data, error } = await supabase.from('artist_posts').insert({
       profile_id: user.id,
       content: postContent || ' ',
       media_url: url || null,
-      media_type: postType === 'video' ? 'video' : postType,
+      media_type: dbMediaType,
     }).select('*, profiles:profile_id(username)').single();
 
     if (!error && data) {
@@ -274,7 +290,33 @@ export const FeedPage: React.FC = () => {
     }
   };
 
-  // Supprimer un post (localement)
+  const startEditing = (post: any) => {
+    setEditingPostId(post.id);
+    setEditContent(post.text);
+    setEditUrl(post.url || '');
+  };
+
+  const handleSaveEdit = async (postId: string) => {
+    if (!editContent.trim() && !editUrl.trim()) return;
+    const { url } = getCleanUrl(editUrl);
+
+    const { error } = await supabase.from('artist_posts').update({
+      content: editContent || ' ',
+      media_url: url || null,
+    }).eq('id', postId);
+
+    if (error) {
+      alert("Erreur lors de la modification : " + error.message);
+    } else {
+      setFeedItems(prev => prev.map(item => 
+        isPostItem(item) && item.data.id === postId 
+          ? { ...item, data: { ...item.data, text: editContent, url: url } } 
+          : item
+      ));
+      setEditingPostId(null);
+    }
+  };
+
   const handleDeletePost = async (postId: string) => {
     if (!window.confirm("Supprimer définitivement ce post ?")) return;
     await supabase.from('artist_posts').delete().eq('id', postId);
@@ -283,12 +325,9 @@ export const FeedPage: React.FC = () => {
 
   return (
     <div style={{ background: '#0a0a0a', minHeight: '100vh', color: '#fff', fontFamily: 'Inter, sans-serif', paddingBottom: 120 }}>
-      
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '16px' : '40px 24px', display: 'flex', gap: 40, alignItems: 'flex-start' }}>
         
-        {/* COLONNE PRINCIPALE (FEED) */}
         <div style={{ flex: 1, maxWidth: 680, minWidth: 0 }}>
-          
           <div style={{ marginBottom: 32 }}>
             <h1 style={{ fontSize: isMobile ? 28 : 36, fontWeight: 800, margin: 0, letterSpacing: '-1px' }}>Fil d'<span style={{ color: '#00d9ff' }}>actualité</span></h1>
             <p style={{ color: '#666', fontSize: 14, marginTop: 8 }}>Toutes les dernières pépites et les prochains événements.</p>
@@ -306,7 +345,7 @@ export const FeedPage: React.FC = () => {
                     value={postContent}
                     onChange={(e) => setPostContent(e.target.value)}
                     rows={2}
-                    style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: 16, outline: 'none', resize: 'none', fontFamily: 'inherit' }} 
+                    style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: 16, outline: 'none', resize: 'vertical', fontFamily: 'inherit', width: '100%', overflowWrap: 'anywhere', whiteSpace: 'pre-wrap' }} 
                   />
                   {postType !== 'texte' && (
                     <input 
@@ -314,13 +353,13 @@ export const FeedPage: React.FC = () => {
                       placeholder={postType === 'image' ? "Lien direct de l'image (https://...)" : "Lien YouTube, Twitch, Tviply ou code iframe"}
                       value={postUrl}
                       onChange={(e) => setPostUrl(e.target.value)}
-                      style={{ padding: '12px', background: '#0a0a0a', border: '1px solid #222', borderRadius: 8, color: '#fff', fontSize: 13, outline: 'none', width: '100%' }} 
+                      style={{ padding: '12px', background: '#0a0a0a', border: '1px solid #222', borderRadius: 8, color: '#fff', fontSize: 13, outline: 'none', width: '100%', overflowWrap: 'anywhere' }} 
                     />
                   )}
                   <div style={{ height: 1, background: '#222' }} />
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div style={{ display: 'flex', gap: 16 }}>
-                      {(['texte', 'lien', 'image', 'video'] as const).map((type) => (
+                      {(['texte', 'lien', 'image', 'video', 'iframe'] as const).map((type) => (
                         <button
                           key={type}
                           onClick={() => { setPostType(type); setPostUrl(''); }}
@@ -362,9 +401,12 @@ export const FeedPage: React.FC = () => {
                   const { isYoutube, url: cleanUrl } = getCleanUrl(item.data.url || '');
                   const isTviplyOrOther = !isYoutube && cleanUrl.includes('http');
                   const isLiked = userPostLikes[item.data.id] || false;
+                  const isEditing = editingPostId === item.data.id;
 
                   return (
                     <div key={`post-${item.data.id}-${index}`} style={{ background: '#121212', border: '1px solid #222', borderRadius: 16, overflow: 'hidden' }}>
+                      
+                      {/* EN-TÊTE DU POST */}
                       <div style={{ padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                         <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                           <div onClick={() => navigate(`/profil/${item.data.profile_id}`)} style={{ width: 44, height: 44, borderRadius: '50%', background: '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#00d9ff', cursor: 'pointer' }}>
@@ -375,36 +417,71 @@ export const FeedPage: React.FC = () => {
                             <div style={{ fontSize: 13, color: '#666', marginTop: 2 }}>{formatDate(item.date)}</div>
                           </div>
                         </div>
+                        
+                        {/* BOUTONS MODIFIER ET SUPPRIMER (EN HAUT À DROITE) */}
+                        {!isEditing && (isAdmin || user?.id === item.data.profile_id) && (
+                          <div style={{ display: 'flex', gap: 12 }}>
+                            <button onClick={() => startEditing(item.data)} style={{ background: 'transparent', border: 'none', color: '#00d9ff', cursor: 'pointer', fontSize: 12, fontWeight: 600, transition: 'color 0.2s' }}>Modifier</button>
+                            <button onClick={() => handleDeletePost(item.data.id)} style={{ background: 'transparent', border: 'none', color: '#444', cursor: 'pointer', fontSize: 12, fontWeight: 600, transition: 'color 0.2s' }}>Supprimer</button>
+                          </div>
+                        )}
                       </div>
                       
-                      <div style={{ padding: '0 20px 20px 20px', fontSize: 15, color: '#ddd', whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>
-                        {item.data.text}
-                      </div>
+                      {/* CORPS DU POST */}
+                      {isEditing ? (
+                        <div style={{ padding: '0 20px 20px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                          <textarea 
+                            value={editContent}
+                            onChange={(e) => setEditContent(e.target.value)}
+                            rows={4}
+                            style={{ width: '100%', background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff', padding: 12, fontSize: 15, fontFamily: 'inherit', resize: 'vertical', overflowWrap: 'anywhere' }}
+                          />
+                          {item.data.postType !== 'text' && (
+                            <input 
+                              type="text"
+                              value={editUrl}
+                              onChange={(e) => setEditUrl(e.target.value)}
+                              placeholder="Lien du média"
+                              style={{ width: '100%', background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff', padding: 12, fontSize: 13, overflowWrap: 'anywhere' }}
+                            />
+                          )}
+                          <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
+                            <button onClick={() => handleSaveEdit(item.data.id)} style={{ padding: '8px 16px', background: '#00d9ff', color: '#000', border: 'none', borderRadius: 8, fontWeight: 700, cursor: 'pointer', fontSize: 13 }}>Enregistrer</button>
+                            <button onClick={() => setEditingPostId(null)} style={{ padding: '8px 16px', background: 'transparent', color: '#888', border: '1px solid #333', borderRadius: 8, fontWeight: 600, cursor: 'pointer', fontSize: 13 }}>Annuler</button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div style={{ padding: '0 20px 20px 20px', fontSize: 15, color: '#ddd', whiteSpace: 'pre-wrap', lineHeight: 1.6, wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
+                          {/* ✅ ICI : On utilise la fonction linkify au lieu du texte brut */}
+                          {linkify(item.data.text)}
+                        </div>
+                      )}
 
-                      {item.data.postType === 'image' && cleanUrl && (
+                      {!isEditing && item.data.postType === 'image' && cleanUrl && (
                         <div style={{ width: '100%', maxHeight: 500, background: '#000', display: 'flex', justifyContent: 'center', borderTop: '1px solid #222', borderBottom: '1px solid #222' }}>
                           <img src={cleanUrl} alt="Post" style={{ width: '100%', height: 'auto', objectFit: 'contain' }} />
                         </div>
                       )}
 
-                      {item.data.postType === 'lien' && cleanUrl && (
+                      {!isEditing && item.data.postType === 'text' && cleanUrl && (
                         <a href={cleanUrl} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '16px 20px', background: '#0a0a0a', color: '#00d9ff', textDecoration: 'none', fontSize: 13, borderTop: '1px solid #222', borderBottom: '1px solid #222', wordBreak: 'break-all' }}>
                           {Icons.link} {cleanUrl}
                         </a>
                       )}
 
-                      {item.data.postType === 'video' && isYoutube && cleanUrl && (
+                      {!isEditing && item.data.postType === 'video' && isYoutube && cleanUrl && (
                         <div style={{ position: 'relative', width: '100%', paddingBottom: '56.25%', background: '#000', borderTop: '1px solid #222', borderBottom: '1px solid #222' }}>
                           <iframe src={cleanUrl} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none' }} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen title="YouTube" scrolling="no" />
                         </div>
                       )}
 
-                      {item.data.postType === 'video' && isTviplyOrOther && cleanUrl && (
+                      {!isEditing && item.data.postType === 'video' && isTviplyOrOther && cleanUrl && (
                         <div style={{ width: '100%', height: isMobile ? 300 : 450, background: '#000', borderTop: '1px solid #222', borderBottom: '1px solid #222' }}>
                           <iframe src={cleanUrl} style={{ width: '100%', height: '100%', border: 'none' }} allow="autoplay; fullscreen; picture-in-picture" allowFullScreen title="Live" scrolling="no" />
                         </div>
                       )}
 
+                      {/* FOOTER DU POST */}
                       <div style={{ padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div style={{ display: 'flex', gap: 24 }}>
                           <button 
@@ -420,9 +497,6 @@ export const FeedPage: React.FC = () => {
                             {Icons.message} Commenter
                           </button>
                         </div>
-                        {(isAdmin || user?.id === item.data.profile_id) && (
-                          <button onClick={() => handleDeletePost(item.data.id)} style={{ background: 'transparent', border: 'none', color: '#444', cursor: 'pointer', fontSize: 12, fontWeight: 600, transition: 'color 0.2s' }}>Supprimer</button>
-                        )}
                       </div>
                     </div>
                   );
@@ -434,7 +508,6 @@ export const FeedPage: React.FC = () => {
                 
                 return (
                   <div key={`${item.type}-${item.data.id}-${index}`} style={{ background: '#121212', border: '1px solid #222', borderRadius: 16, overflow: 'hidden' }}>
-                    
                     <div style={{ padding: '20px 20px 16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                         <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center', color: item.type === 'track' ? '#00d9ff' : '#ff3366', fontWeight: 'bold' }}>
@@ -514,7 +587,6 @@ export const FeedPage: React.FC = () => {
           )}
         </div>
 
-        {/* COLONNE DROITE */}
         {!isMobile && (
           <aside style={{ width: 320, flexShrink: 0, position: 'sticky', top: 32, alignSelf: 'flex-start', display: 'flex', flexDirection: 'column', gap: 24 }}>
             <div style={{ background: '#121212', border: '1px solid #222', borderRadius: 16, padding: 20 }}>
@@ -551,7 +623,6 @@ export const FeedPage: React.FC = () => {
         )}
       </div>
 
-      {/* MODALE DE COMMENTAIRES */}
       {commentsModalOpen && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
           <div style={{ background: '#121212', border: '1px solid #222', borderRadius: 16, padding: 24, width: '100%', maxWidth: 500, maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>

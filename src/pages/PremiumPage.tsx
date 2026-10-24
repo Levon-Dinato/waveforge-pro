@@ -8,8 +8,8 @@ import { usePlayer } from '../contexts/PlayerContext';
 import { GlobalPlayer } from '../components/GlobalPlayer';
 import './LevonDinato.css';
 
-// ✅ COMPOSANT CANVAS WAVEFORM (Statique, coloré si en lecture)
-const CanvasWaveform: React.FC<{ peaks: number[]; isPlaying: boolean; themeColor: string }> = ({ peaks, isPlaying, themeColor }) => {
+// ✅ COMPOSANT CANVAS WAVEFORM (Avec barre de progression réelle)
+const CanvasWaveform: React.FC<{ peaks: number[]; isPlaying: boolean; themeColor: string; progress: number }> = ({ peaks, isPlaying, themeColor, progress }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -33,24 +33,12 @@ const CanvasWaveform: React.FC<{ peaks: number[]; isPlaying: boolean; themeColor
 
     const centerY = H / 2;
     const maxAmplitude = H * 0.45;
+    const playedX = progress * W;
 
-    if (isPlaying) {
-      // ✅ Si en lecture : Waveform cyan avec effet néon
-      const gradient = ctx.createLinearGradient(0, 0, 0, H);
-      gradient.addColorStop(0, 'rgba(0, 217, 255, 0.2)');
-      gradient.addColorStop(0.5, 'rgba(0, 217, 255, 1)');
-      gradient.addColorStop(1, 'rgba(0, 217, 255, 0.2)');
+    // ÉTAPE 1 : Waveform grise (non jouée)
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.shadowBlur = 0;
 
-      ctx.fillStyle = gradient;
-      ctx.shadowColor = themeColor;
-      ctx.shadowBlur = 6;
-    } else {
-      // ✅ Sinon : Waveform grise simple
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-      ctx.shadowBlur = 0;
-    }
-
-    // Dessin des barres (300 barres pour un effet dense et fin)
     const barCount = 300;
     const step = Math.ceil(peaks.length / barCount);
     const displayPeaks = peaks.filter((_: any, i: number) => i % step === 0).slice(0, barCount);
@@ -60,12 +48,50 @@ const CanvasWaveform: React.FC<{ peaks: number[]; isPlaying: boolean; themeColor
       const val = displayPeaks[i] > 1 ? displayPeaks[i] / 100 : displayPeaks[i];
       const barHeight = Math.max(val * maxAmplitude, 2);
       
-      // Barre de 1px de large
-      ctx.fillRect(x, centerY - barHeight, 1, barHeight * 2);
+      if (x >= playedX) {
+        ctx.fillRect(x, centerY - barHeight, 1, barHeight * 2);
+      }
     }
 
-    ctx.shadowBlur = 0;
-  }, [peaks, isPlaying, themeColor]);
+    // ÉTAPE 2 : Waveform cyan (jouée) avec effet néon
+    if (isPlaying || progress > 0) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(0, 0, playedX, H);
+      ctx.clip();
+
+      const gradient = ctx.createLinearGradient(0, 0, 0, H);
+      gradient.addColorStop(0, 'rgba(0, 217, 255, 0.2)');
+      gradient.addColorStop(0.5, 'rgba(0, 217, 255, 1)');
+      gradient.addColorStop(1, 'rgba(0, 217, 255, 0.2)');
+
+      ctx.fillStyle = gradient;
+      ctx.shadowColor = themeColor;
+      ctx.shadowBlur = 6;
+
+      for (let i = 0; i < displayPeaks.length; i++) {
+        const x = (i / displayPeaks.length) * W;
+        const val = displayPeaks[i] > 1 ? displayPeaks[i] / 100 : displayPeaks[i];
+        const barHeight = Math.max(val * maxAmplitude, 2);
+        ctx.fillRect(x, centerY - barHeight, 1, barHeight * 2);
+      }
+      ctx.shadowBlur = 0;
+      ctx.restore();
+    }
+
+    // ÉTAPE 3 : Tête de lecture (Ligne blanche)
+    if (isPlaying || progress > 0) {
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 2;
+      ctx.shadowColor = '#fff';
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      ctx.moveTo(playedX, 0);
+      ctx.lineTo(playedX, H);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
+  }, [peaks, isPlaying, themeColor, progress]);
 
   return <canvas ref={canvasRef} style={{ width: '100%', height: '70px', display: 'block', borderRadius: '8px' }} />;
 };
@@ -74,7 +100,9 @@ export const PremiumPage: React.FC = () => {
   const navigate = useNavigate();
   const { username } = useParams<{ username: string }>();
   const { user } = useAuth();
-  const { play, currentTrack, isPlaying, togglePlay, stop } = usePlayer();
+  
+  // ✅ On récupère currentTime et duration du player global
+  const { play, currentTrack, isPlaying, togglePlay, stop, currentTime, duration } = usePlayer();
   
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<any>(null);
@@ -298,6 +326,9 @@ export const PremiumPage: React.FC = () => {
                   const isPlayable = track.audio_url && track.audio_url.length > 0;
                   const iframeSrc = getIframeSrc(track.embed_code);
                   const isThisPlaying = currentTrack?.id === track.id && isPlaying;
+                  
+                  // ✅ Calcul de la progression pour CETTE carte spécifique
+                  const trackProgress = isThisPlaying && duration > 0 ? (currentTime / duration) : 0;
 
                   return (
                     <div 
@@ -380,11 +411,12 @@ export const PremiumPage: React.FC = () => {
 
                       {isPlayable && !iframeSrc && (
                         <div style={{ padding: '0 20px 20px 20px' }}>
-                          {/* ✅ Appel du composant CanvasWaveform sans prop progress */}
+                          {/* ✅ On passe la vraie progression calculée */}
                           <CanvasWaveform 
                             peaks={track.peaks} 
                             isPlaying={isThisPlaying}
                             themeColor={themeColor}
+                            progress={trackProgress}
                           />
                         </div>
                       )}

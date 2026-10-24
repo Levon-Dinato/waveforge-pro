@@ -1,9 +1,9 @@
 // src/components/GlobalPlayer.tsx
 import React, { useRef, useEffect, useMemo } from 'react';
-import { usePlayer, type PlayerTrack } from '../contexts/PlayerContext';
+import { usePlayer } from '../contexts/PlayerContext';
 
 interface GlobalPlayerProps {
-  currentTrack: PlayerTrack | null;
+  currentTrack: any;
   isPlaying: boolean;
   onTogglePlay: () => void;
   onStop: () => void;
@@ -13,7 +13,6 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
   const { currentTime, duration, seek } = usePlayer();
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  // Génère une fausse waveform stable (qui ne change pas à chaque re-render) si les vraies données manquent
   const mockPeaks = useMemo(() => {
     return Array.from({ length: 120 }, () => Math.random() * 0.6 + 0.2);
   }, [currentTrack?.id]);
@@ -41,7 +40,6 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
     ctx.scale(DPR, DPR);
     ctx.clearRect(0, 0, W, H);
 
-    // 🛡️ Vérification des peaks (vrais ou faux)
     let rawPeaks = currentTrack.peaks as any;
     let safePeaks: number[] = [];
 
@@ -54,7 +52,6 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
       } catch (e) {}
     }
 
-    // Si aucune vraie donnée, on utilise la fausse waveform pour le style
     if (safePeaks.length === 0) {
       safePeaks = mockPeaks;
     }
@@ -66,7 +63,7 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
     if (displayedPeaks.length === 0) return;
 
     const barWidth = W / displayedPeaks.length;
-    const gap = 2; // Espace entre les barres
+    const gap = 2;
     const playedRatio = duration > 0 ? Math.min(1, currentTime / duration) : 0;
 
     displayedPeaks.forEach((peak, index) => {
@@ -78,7 +75,6 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
       
       const isPlayed = (index / displayedPeaks.length) <= playedRatio;
       
-      // ✅ Style "Pro" : Dégradé cyan pour la partie jouée, gris translucide pour le reste
       if (isPlayed) {
         const gradient = ctx.createLinearGradient(0, y, 0, y + barHeight);
         gradient.addColorStop(0, '#00d9ff');
@@ -91,8 +87,7 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
         ctx.shadowBlur = 0;
       }
 
-      // Dessin de la barre avec des coins arrondis si possible
-      const r = Math.min(2, barWidth / 2); // Rayon des coins
+      const r = Math.min(2, barWidth / 2);
       ctx.beginPath();
       if (ctx.roundRect) {
         ctx.roundRect(x, y, Math.max(barWidth - gap, 1), barHeight, r);
@@ -121,13 +116,11 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
       background: 'rgba(10, 10, 15, 0.95)', backdropFilter: 'blur(20px)',
       borderTop: '1px solid #222',
     }}>
-      {/* ✅ CONTENEUR CENTRÉ (max-width) pour ne pas étirer la barre à l'infini */}
       <div style={{
         maxWidth: 1200, margin: '0 auto', height: '80px',
         display: 'flex', alignItems: 'center', gap: '24px', padding: '0 24px'
       }}>
         
-        {/* 1. Infos de la musique (Gauche) */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, width: '260px', flexShrink: 0 }}>
           <div style={{ 
             width: 44, height: 44, borderRadius: 8, 
@@ -140,9 +133,7 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
           </div>
         </div>
 
-        {/* 2. Contrôles & Waveform (Centre) */}
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 16 }}>
-          
           <button onClick={onTogglePlay} style={{ 
             width: 36, height: 36, borderRadius: '50%', background: '#fff', color: '#000', 
             border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', 
@@ -162,13 +153,8 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
             {formatTime(currentTime)}
           </span>
           
-          {/* ✅ LA WAVEFORM */}
           <div style={{ flex: 1, height: 32, position: 'relative', display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
-            <canvas 
-              ref={canvasRef}
-              onClick={handleSeek}
-              style={{ width: '100%', height: '100%' }}
-            />
+            <canvas ref={canvasRef} onClick={handleSeek} style={{ width: '100%', height: '100%' }} />
           </div>
           
           <span style={{ fontSize: 11, fontFamily: 'monospace', color: '#888', width: 35 }}>
@@ -176,8 +162,20 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
           </span>
         </div>
 
-        {/* 3. Fermer (Droite) */}
-        <div style={{ display: 'flex', gap: 12, alignItems: 'center', width: '40px', justifyContent: 'flex-end' }}>
+        <div style={{ display: 'flex', gap: 16, alignItems: 'center', justifyContent: 'flex-end', width: '80px' }}>
+          
+          {/* ✅ BOUTON DOWNLOAD AJOUTÉ ICI */}
+          <a 
+            href={currentTrack.audio_url} 
+            download={`${currentTrack.artist} - ${currentTrack.title}.mp3`}
+            title="Télécharger ce son"
+            style={{ background: 'transparent', border: 'none', color: '#666', cursor: 'pointer', display: 'flex', alignItems: 'center', textDecoration: 'none', transition: 'color 0.2s' }}
+            onMouseEnter={(e) => e.currentTarget.style.color = '#00d9ff'}
+            onMouseLeave={(e) => e.currentTarget.style.color = '#666'}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          </a>
+
           <button onClick={onStop} style={{ background: 'transparent', border: 'none', color: '#666', cursor: 'pointer', display: 'flex', alignItems: 'center' }} title="Fermer le lecteur">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
           </button>

@@ -17,6 +17,8 @@ const Icons = {
   pause: <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>,
   edit: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>,
   trash: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>,
+  // ✅ NOUVELLE ICÔNE DOWNLOAD
+  download: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>,
 };
 
 interface Track {
@@ -62,7 +64,6 @@ const INPUT_STYLE: React.CSSProperties = {
   transition: 'border-color 0.2s',
 };
 
-// ✅ MODIFICATION ICI : 24 heures au lieu de 7 jours
 const isNew = (createdAt: string): boolean => {
   const created = new Date(createdAt).getTime();
   const twentyFourHoursAgo = Date.now() - 24 * 60 * 60 * 1000;
@@ -594,7 +595,7 @@ export const NouveautesPage: React.FC = () => {
               </div>
               
               <div style={{ background: '#121212', border: '1px solid #222', borderRadius: 12, overflow: 'hidden' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '48px 48px minmax(200px, 2fr) 1fr 1fr 80px', gap: 16, padding: '12px 16px', borderBottom: '1px solid #222', fontSize: 11, color: '#666', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '48px 48px minmax(200px, 2fr) 1fr 1fr 120px', gap: 16, padding: '12px 16px', borderBottom: '1px solid #222', fontSize: 11, color: '#666', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                   <div></div><div></div><div>Titre / Artistes</div><div>Genre</div><div>BPM / Clé</div><div style={{ textAlign: 'right' }}>Actions</div>
                 </div>
 
@@ -604,7 +605,7 @@ export const NouveautesPage: React.FC = () => {
                   const isLiked = userLikes[track.id] || false;
 
                   return (
-                    <div key={track.id} className="list-row" style={{ display: 'grid', gridTemplateColumns: '48px 48px minmax(200px, 2fr) 1fr 1fr 80px', gap: 16, padding: '12px 16px', alignItems: 'center', borderBottom: '1px solid #222', cursor: 'pointer' }}>
+                    <div key={track.id} className="list-row" style={{ display: 'grid', gridTemplateColumns: '48px 48px minmax(200px, 2fr) 1fr 1fr 120px', gap: 16, padding: '12px 16px', alignItems: 'center', borderBottom: '1px solid #222', cursor: 'pointer' }}>
                       <button onClick={(e) => handlePlayTrack(e, track)} style={{ width: 36, height: 36, borderRadius: '50%', background: isThisPlaying ? '#00d9ff' : 'transparent', border: isThisPlaying ? 'none' : '1px solid #444', color: isThisPlaying ? '#000' : '#888', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }}>
                         {isThisPlaying ? Icons.pause : Icons.play}
                       </button>
@@ -619,10 +620,15 @@ export const NouveautesPage: React.FC = () => {
                       <div style={{ fontSize: 13, color: '#aaa', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.genre || '—'}</div>
                       <div style={{ fontSize: 13, color: '#aaa', whiteSpace: 'nowrap', fontFamily: 'monospace' }}>{track.bpm ? `${track.bpm} BPM` : '—'} · {track.song_key || '—'}</div>
 
-                      <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', gap: 16, justifyContent: 'flex-end', alignItems: 'center' }}>
                         <button onClick={(e) => { e.stopPropagation(); handleLike(track.id); }} style={{ background: 'transparent', border: 'none', color: isLiked ? '#ff3366' : '#555', cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', gap: 6, padding: 0 }}>
                           {isLiked ? '❤️' : '🤍'} <span style={{ fontSize: 12, color: '#666' }}>{track.likes_count}</span>
                         </button>
+                        <div className="row-actions" style={{ display: 'flex', gap: 12, opacity: 0, transition: 'opacity 0.2s' }}>
+                          <a href={track.audio_url} download={`${track.artist} - ${track.title}.mp3`} onClick={(e) => e.stopPropagation()} title="Télécharger" style={{ background: 'transparent', border: 'none', color: '#888', cursor: 'pointer', display: 'flex', alignItems: 'center', textDecoration: 'none', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#00d9ff'} onMouseLeave={(e) => e.currentTarget.style.color = '#888'}>
+                            {Icons.download}
+                          </a>
+                        </div>
                       </div>
                     </div>
                   );
@@ -692,6 +698,20 @@ export const NouveautesPage: React.FC = () => {
                       </button>
 
                       <div className="row-actions" style={{ display: 'flex', gap: 12, opacity: 0, transition: 'opacity 0.2s' }}>
+                        
+                        {/* ✅ BOUTON DOWNLOAD DANS LES ACTIONS */}
+                        <a 
+                          href={track.audio_url} 
+                          download={`${track.artist} - ${track.title}.mp3`} 
+                          onClick={(e) => e.stopPropagation()}
+                          title="Télécharger"
+                          style={{ background: 'transparent', border: 'none', color: '#888', cursor: 'pointer', display: 'flex', alignItems: 'center', textDecoration: 'none', transition: 'color 0.2s' }}
+                          onMouseEnter={(e) => e.currentTarget.style.color = '#00d9ff'}
+                          onMouseLeave={(e) => e.currentTarget.style.color = '#888'}
+                        >
+                          {Icons.download}
+                        </a>
+
                         <div onClick={(e) => e.stopPropagation()}>
                           <ShareButton url={`${window.location.origin}/share/${track.id}`} title={`${track.title} — ${track.artist}`} text={`Écoute "${track.title}" par ${track.artist} sur DropZone DJ 🎵`} variant="icon" size="small" label="" position="bottom" />
                         </div>

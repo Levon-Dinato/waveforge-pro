@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { PayPalButton } from '../components/PayPalButton'; // ✅ Import du bouton PayPal
 
 export const SettingsPage: React.FC = () => {
   const { user } = useAuth();
@@ -18,6 +19,7 @@ export const SettingsPage: React.FC = () => {
   const [editingTrackId, setEditingTrackId] = useState<string | null>(null);
   const [editTrackForm, setEditTrackForm] = useState({ title: '', genre: '', bpm: 0 });
 
+  // État du formulaire de profil
   const [form, setForm] = useState({
     username: '',
     bio: '',
@@ -127,29 +129,50 @@ export const SettingsPage: React.FC = () => {
 
   if (loading) return <div style={{ padding: 40, color: '#fff', textAlign: 'center' }}>Chargement...</div>;
 
+  // ==========================================
   // ÉCRAN DE BLOCAGE : Si l'utilisateur n'est pas Premium
+  // ==========================================
   if (!isPremium) {
-    const gmailPremiumLink = `https://mail.google.com/mail/?view=cm&fs=1&to=djcontrolradiotv1@gmail.com&su=Demande%20d'acc%C3%A8s%20Premium&body=Salut,%20je%20suis%20${form.username || 'un artiste'}%20et%20je%20souhaite%20passer%20ma%20page%20en%20Premium.`;
-    
     return (
       <div style={{ maxWidth: 800, margin: '0 auto', padding: '60px 20px', color: '#fff', fontFamily: 'Inter, sans-serif', display: 'flex', justifyContent: 'center' }}>
-        <div style={{ background: 'linear-gradient(145deg, rgba(13, 22, 33, 0.95), rgba(6, 13, 20, 0.95))', border: '1px solid rgba(0, 217, 255, 0.3)', borderRadius: 24, padding: '50px 40px', textAlign: 'center', maxWidth: 600, boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
+        <div style={{ 
+          background: 'linear-gradient(145deg, rgba(13, 22, 33, 0.95), rgba(6, 13, 20, 0.95))', 
+          border: '1px solid rgba(0, 217, 255, 0.3)', 
+          borderRadius: 24, 
+          padding: '50px 40px', 
+          textAlign: 'center',
+          maxWidth: 600,
+          boxShadow: '0 20px 50px rgba(0,0,0,0.5), 0 0 40px rgba(0,217,255,0.1)'
+        }}>
           <div style={{ fontSize: 50, marginBottom: 20 }}>✨</div>
           <h1 style={{ fontSize: 32, fontWeight: 900, marginBottom: 16 }}>Passez à la vitesse supérieure</h1>
-          <p style={{ color: '#8c9f98', fontSize: 16, lineHeight: 1.6, marginBottom: 30 }}>La personnalisation et la gestion de votre musique sont réservées aux membres Premium.</p>
+          <p style={{ color: '#8c9f98', fontSize: 16, lineHeight: 1.6, marginBottom: 30 }}>
+            La personnalisation de votre page (couleurs, bio, réseaux) et la gestion de votre musique sont réservées aux membres <strong>Premium</strong>.
+          </p>
+          
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 40, textAlign: 'left', background: '#0a0a0a', padding: 24, borderRadius: 12, border: '1px solid #222' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14 }}>✅ Couleur de site personnalisée</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14 }}>✅ Biographie et réseaux sociaux</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14 }}>✅ Gestion de votre musique</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14 }}>✅ Page officielle sur-mesure</div>
           </div>
-          <a href={gmailPremiumLink} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', padding: '16px 32px', background: '#10202e', color: '#00d9ff', borderRadius: 8, fontSize: 16, fontWeight: 800, textDecoration: 'none', border: '1px solid #00d9ff', boxShadow: '0 10px 20px rgba(0,0,0,0.5)' }}>🚀 Débloquer mon accès Premium</a>
+          
+          {/* ✅ LE BOUTON PAYPAL EST ICI */}
+          <div style={{ background: '#fff', borderRadius: 8, padding: '10px', display: 'inline-block', minWidth: '250px' }}>
+            <PayPalButton />
+          </div>
+          
+          <p style={{ color: '#666', fontSize: 12, marginTop: 20 }}>
+            Paiement sécurisé via PayPal. Votre accès sera activé dès réception du paiement.
+          </p>
         </div>
       </div>
     );
   }
 
-  // SI L'UTILISATEUR EST PREMIUM : On affiche le formulaire complet
+  // ==========================================
+  // SI L'UTILISATEUR EST PREMIUM : On affiche le formulaire
+  // ==========================================
   return (
     <div style={{ maxWidth: 800, margin: '0 auto', padding: '40px 20px', color: '#fff', fontFamily: 'Inter, sans-serif' }}>
       
@@ -176,7 +199,6 @@ export const SettingsPage: React.FC = () => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
           <h2 style={{ fontSize: 18, color: '#fff', margin: 0 }}>Ma Musique ({myTracks.length})</h2>
           
-          {/* ✅ Lien vers la page Nouveautés pour uploader */}
           <Link 
             to="/nouveautes" 
             style={{ background: '#fff', color: '#000', padding: '8px 16px', borderRadius: 6, fontWeight: 800, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}

@@ -35,7 +35,10 @@ const TrackPage = lazy(() => import('./pages/TrackPage').then((m) => ({ default:
 const EventsPage = lazy(() => import('./pages/EventsPage').then((m) => ({ default: m.EventsPage })));
 const FeedPage = lazy(() => import('./pages/FeedPage').then((m) => ({ default: m.FeedPage })));
 const ToolsPage = lazy(() => import('./pages/ToolsPage').then((m) => ({ default: m.ToolsPage })));
-const AdminPage = lazy(() => import('./pages/AdminPage').then((m) => ({ default: m.AdminPage }))); // ✅ NOUVEAU
+const AdminPage = lazy(() => import('./pages/AdminPage').then((m) => ({ default: m.AdminPage }))); 
+
+// ✅ NOUVEAU : Import de la page Levon & Dinato
+const LevonDinatoPage = lazy(() => import('./pages/LevonDinatoPage').then((m) => ({ default: m.LevonDinatoPage })));
 
 const PageLoader = () => (
   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', flexDirection: 'column', gap: 16 }}>
@@ -63,6 +66,9 @@ export default function App() {
 
                       {/* ROUTE MIXER (Plein écran) */}
                       <Route path="/mixer" element={<PrivateRoute><MixerPage /></PrivateRoute>} />
+
+                      {/* ✅ NOUVELLE ROUTE LEVON & DINATO (Plein écran) */}
+                      <Route path="/levon-dinato" element={<LevonDinatoPage />} />
 
                       {/* ROUTES AVEC LE LAYOUT PRINCIPAL */}
                       <Route path="/" element={

@@ -192,37 +192,56 @@ export const PremiumPage: React.FC = () => {
       <div className="wrapper container">
         <div className="content">
           <section id="about">
-            <div className="section-header"><h2 className="section-title">À propos</h2></div>
+            <div className="section-header"><h2 className="section-title">Le Duo / Le Son</h2></div>
             
-            {/* ✅ CORRECTIF ULTIME : On force l'affichage en bloc simple */}
+            {/* ✅ MISE EN PAGE : Le texte à gauche, l'image dans un module à droite */}
             <div 
               style={{ 
-                display: 'block', 
+                display: 'flex', 
+                flexWrap: 'wrap', 
+                gap: '40px', 
+                padding: '40px', 
+                alignItems: 'flex-start', // Très important : l'image reste en haut et ne s'étire pas
                 background: 'linear-gradient(145deg, rgba(13, 22, 33, 0.95), rgba(6, 13, 20, 0.95))',
                 border: '1px solid rgba(0, 217, 255, 0.15)',
                 borderRadius: '16px',
-                padding: '30px',
                 boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5)'
               }}
             >
-              <h3 style={{ fontSize: '1.3rem', fontWeight: 800, marginBottom: '16px', color: '#fff' }}>Le son de {profile.username}</h3>
-              <p style={{ whiteSpace: 'pre-wrap', lineHeight: '1.8', color: '#8c9f98', marginBottom: '30px' }}>
-                {profile.bio || "Bio à venir..."}
-              </p>
+              {/* Colonne de gauche : Textes (prend tout l'espace restant) */}
+              <div style={{ flex: '1 1 400px', minWidth: '300px', minWidth: 0 }}>
+                <h3 style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: '20px', color: '#fff' }}>
+                  Le son de {profile.username}
+                </h3>
+                
+                {/* Bio complète avec retour à la ligne */}
+                <p style={{ whiteSpace: 'pre-wrap', lineHeight: '1.8', color: '#8c9f98', fontSize: '1rem' }}>
+                  {profile.bio || "Bio à venir..."}
+                </p>
+              </div>
               
-              {/* Image placée en dessous du texte, avec une taille fixe max */}
-              <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+              {/* Colonne de droite : Le module avec l'image (largeur fixe 350px) */}
+              <div 
+                style={{ 
+                  flex: '0 1 350px', 
+                  width: '100%',
+                  maxWidth: '350px', 
+                  margin: '0 auto', // Centre le module s'il passe en dessous sur mobile
+                  borderRadius: '16px', 
+                  overflow: 'hidden', 
+                  border: '1px solid rgba(0, 217, 255, 0.3)', // Petite bordure cyan
+                  boxShadow: '0 10px 30px rgba(0, 0, 0, 0.6)',
+                  background: '#000'
+                }}
+              >
                 <img 
                   src={profile.avatar_url || "/logo.jpg"} 
                   alt={profile.username} 
                   style={{ 
                     width: '100%', 
-                    maxWidth: '400px', 
-                    height: 'auto', 
-                    maxHeight: '400px',
-                    objectFit: 'cover', 
-                    borderRadius: '12px',
-                    display: 'block'
+                    height: '400px', // Hauteur fixe pour faire un beau rectangle
+                    objectFit: 'cover', // Remplit le cadre sans se déformer
+                    display: 'block' 
                   }} 
                 />
               </div>

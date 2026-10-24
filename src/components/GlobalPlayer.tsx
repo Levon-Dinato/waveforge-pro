@@ -31,7 +31,6 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
   const { currentTime, duration, seek } = usePlayer();
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  // Génère des faux peaks stables si les vraies données manquent
   const mockPeaks = useMemo(() => {
     return Array.from({ length: 150 }, () => Math.random() * 70 + 30);
   }, [currentTrack?.id]);
@@ -43,7 +42,6 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
   };
 
-  // ✅ DESSIN DE LA WAVEFORM (Même style que la page Premium)
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || !currentTrack) return;
@@ -58,7 +56,6 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
     canvas.height = H * DPR;
     ctx.scale(DPR, DPR);
 
-    // Fond transparent (le lecteur a déjà son fond)
     ctx.clearRect(0, 0, W, H);
 
     let rawPeaks = currentTrack.peaks as any;
@@ -77,8 +74,8 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
       safePeaks = mockPeaks;
     }
 
-    // Limiter le nombre de barres pour que ce soit dense et propre
-    const barCount = 150;
+    // ✅ On augmente le nombre de barres pour qu'elles soient très fines
+    const barCount = 300;
     const step = Math.ceil(safePeaks.length / barCount);
     const displayPeaks = safePeaks.filter((_: any, i: number) => i % step === 0).slice(0, barCount);
 
@@ -91,12 +88,12 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
     ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
     for (let i = 0; i < displayPeaks.length; i++) {
       const x = (i / displayPeaks.length) * W;
-      const barWidth = W / displayPeaks.length;
       const val = displayPeaks[i] > 1 ? displayPeaks[i] / 100 : displayPeaks[i];
       const barHeight = Math.max(val * maxAmplitude, 2);
 
       if (x >= playedX) {
-        ctx.fillRect(x, centerY - barHeight, barWidth * 0.8, barHeight * 2);
+        // ✅ Barre de 1px de large
+        ctx.fillRect(x, centerY - barHeight, 1, barHeight * 2);
       }
     }
 
@@ -113,15 +110,15 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
 
     ctx.fillStyle = gradient;
     ctx.shadowColor = '#00d9ff';
-    ctx.shadowBlur = 8;
+    ctx.shadowBlur = 6;
 
     for (let i = 0; i < displayPeaks.length; i++) {
       const x = (i / displayPeaks.length) * W;
-      const barWidth = W / displayPeaks.length;
       const val = displayPeaks[i] > 1 ? displayPeaks[i] / 100 : displayPeaks[i];
       const barHeight = Math.max(val * maxAmplitude, 2);
 
-      ctx.fillRect(x, centerY - barHeight, barWidth * 0.8, barHeight * 2);
+      // ✅ Barre de 1px de large
+      ctx.fillRect(x, centerY - barHeight, 1, barHeight * 2);
     }
     ctx.shadowBlur = 0;
     ctx.restore();
@@ -131,7 +128,7 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
       ctx.strokeStyle = '#fff';
       ctx.lineWidth = 2;
       ctx.shadowColor = '#fff';
-      ctx.shadowBlur = 10;
+      ctx.shadowBlur = 8;
       ctx.beginPath();
       ctx.moveTo(playedX, 0);
       ctx.lineTo(playedX, H);
@@ -161,7 +158,6 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
         display: 'flex', alignItems: 'center', gap: '24px', padding: '0 24px'
       }}>
         
-        {/* Infos musique */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, width: '260px', flexShrink: 0 }}>
           <div style={{ 
             width: 44, height: 44, borderRadius: 8, 
@@ -174,7 +170,6 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
           </div>
         </div>
 
-        {/* Contrôles & Waveform */}
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 16 }}>
           <button onClick={onTogglePlay} style={{ 
             width: 36, height: 36, borderRadius: '50%', background: '#fff', color: '#000', 
@@ -195,8 +190,8 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
             {formatTime(currentTime)}
           </span>
           
-          {/* ✅ CANVAS WAVEFORM */}
-          <div style={{ flex: 1, height: 40, position: 'relative', display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+          {/* ✅ CANVAS WAVEFORM AVEC TRAITS FINS */}
+          <div style={{ flex: 1, height: 50, position: 'relative', display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
             <canvas ref={canvasRef} onClick={handleSeek} style={{ width: '100%', height: '100%' }} />
           </div>
           
@@ -205,7 +200,6 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
           </span>
         </div>
 
-        {/* Boutons */}
         <div style={{ display: 'flex', gap: 16, alignItems: 'center', justifyContent: 'flex-end', width: '80px' }}>
           
           <button 

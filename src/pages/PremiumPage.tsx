@@ -20,7 +20,6 @@ export const PremiumPage: React.FC = () => {
   const [events, setEvents] = useState<any[]>([]);
   const [gallery, setGallery] = useState<any[]>([]);
 
-  // ✅ Fonction pour extraire l'URL src d'un code iframe Beatport
   const getIframeSrc = (embedCode: string) => {
     if (!embedCode) return null;
     if (embedCode.startsWith('http')) return embedCode;
@@ -42,7 +41,6 @@ export const PremiumPage: React.FC = () => {
         const { data: profileData, error: profileError } = await query.single();
 
         if (profileError) {
-          console.error("Erreur profil:", profileError);
           setProfile(null);
           setLoading(false);
           return;
@@ -53,7 +51,6 @@ export const PremiumPage: React.FC = () => {
 
           const { data: tracksData } = await supabase.from('tracks').select('*').eq('user_id', profileData.id).order('created_at', { ascending: false });
           
-          // ✅ On s'assure que les peaks sont bien parsés en tableau
           if (tracksData) {
             const formattedTracks = tracksData.map(t => {
               let parsedPeaks = [];
@@ -119,18 +116,47 @@ export const PremiumPage: React.FC = () => {
     });
   };
 
-  // ✅ Petit rendu de fausse waveform pour les sons MP3 (blindé)
-  const renderMiniWaveform = (peaks: any) => {
-    // Si pas de peaks ou si ce n'est pas un tableau, on ne fait rien
-    if (!peaks || !Array.isArray(peaks) || peaks.length === 0) return null;
+  // ✅ NOUVELLE WAVEFORM PRO (Style Beatport)
+  const renderProWaveform = (peaks: any, isPlaying: boolean) => {
+    if (!peaks || !Array.isArray(peaks) || peaks.length === 0) {
+      // Si pas de peaks, on génère une fausse waveform réaliste
+      peaks = Array.from({ length: 80 }, () => Math.random() * 80 + 20);
+    }
+
+    // On échantillonne pour avoir environ 80 barres
+    const step = Math.ceil(peaks.length / 80);
+    const displayPeaks = peaks.filter((_: any, i: number) => i % step === 0).slice(0, 80);
     
-    // On prend un échantillon de peaks pour faire une jolie barre
-    const displayPeaks = peaks.filter((_, i) => i % 10 === 0).slice(0, 60);
+    // On simule une progression de lecture à 30% si c'est en cours, sinon 0
+    const progress = isPlaying ? 0.3 : 0; 
+
     return (
-      <div style={{ display: 'flex', alignItems: 'center', gap: '2px', height: '30px', marginTop: '10px', width: '100%', opacity: 0.6 }}>
-        {displayPeaks.map((p, i) => (
-          <div key={i} style={{ flex: 1, height: `${Math.max(p, 15)}%`, background: 'var(--accent)', borderRadius: '2px' }} />
-        ))}
+      <div style={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        gap: '1.5px', 
+        height: '50px', 
+        marginTop: '16px', 
+        width: '100%',
+        background: 'rgba(0,0,0,0.2)',
+        borderRadius: '8px',
+        padding: '8px'
+      }}>
+        {displayPeaks.map((p: number, i: number) => {
+          const isPlayed = (i / displayPeaks.length) <= progress;
+          return (
+            <div 
+              key={i} 
+              style={{ 
+                flex: 1, 
+                height: `${Math.max(p, 10)}%`, 
+                background: isPlayed ? 'var(--accent)' : 'rgba(255,255,255,0.15)', 
+                borderRadius: '2px',
+                transition: 'height 0.2s ease'
+              }} 
+            />
+          );
+        })}
       </div>
     );
   };
@@ -249,11 +275,13 @@ export const PremiumPage: React.FC = () => {
               )}
             </div>
             
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {/* ✅ LISTE UNIFIÉE */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               {tracks.length > 0 ? (
                 tracks.map((track) => {
                   const isPlayable = track.audio_url && track.audio_url.length > 0;
                   const iframeSrc = getIframeSrc(track.embed_code);
+                  const isThisPlaying = currentTrack?.id === track.id && isPlaying;
 
                   return (
                     <div 
@@ -261,9 +289,9 @@ export const PremiumPage: React.FC = () => {
                       style={{ 
                         background: 'linear-gradient(145deg, rgba(13, 22, 33, 0.95), rgba(6, 13, 20, 0.95))', 
                         border: '1px solid #233b54', 
-                        borderRadius: '12px', 
+                        borderRadius: '16px', 
                         overflow: 'hidden',
-                        boxShadow: '0 8px 20px rgba(0,0,0,0.3)',
+                        boxShadow: '0 10px 25px rgba(0,0,0,0.4)',
                         transition: 'transform 0.2s',
                         cursor: isPlayable ? 'pointer' : 'default'
                       }}
@@ -271,40 +299,40 @@ export const PremiumPage: React.FC = () => {
                       onMouseEnter={(e) => { if (isPlayable) e.currentTarget.style.borderColor = themeColor; }}
                       onMouseLeave={(e) => { if (isPlayable) e.currentTarget.style.borderColor = '#233b54'; }}
                     >
-                      {/* En-tête de la carte */}
-                      <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: iframeSrc || isPlayable ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
-                        
+                      
+                      {/* EN-TÊTE (Titre & Play) */}
+                      <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                           
                           {/* Bouton Play / Icone EXT */}
                           <div style={{ 
-                            width: '40px', height: '40px', borderRadius: '50%', 
-                            background: isPlayable ? (currentTrack?.id === track.id && isPlaying ? themeColor : 'rgba(255,255,255,0.1)') : 'rgba(255,255,255,0.05)', 
+                            width: '44px', height: '44px', borderRadius: '50%', 
+                            background: isPlayable ? (isThisPlaying ? themeColor : 'rgba(255,255,255,0.1)') : 'rgba(255,255,255,0.05)', 
                             border: isPlayable ? 'none' : '1px solid #333',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            color: isPlayable ? (currentTrack?.id === track.id && isPlaying ? '#000' : '#fff') : themeColor,
-                            fontSize: '14px'
+                            color: isPlayable ? (isThisPlaying ? '#000' : '#fff') : themeColor,
+                            fontSize: '16px'
                           }}>
                             {isPlayable ? (
-                              currentTrack?.id === track.id && isPlaying ? '⏸' : '▶'
+                              isThisPlaying ? '⏸' : '▶'
                             ) : (
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
                             )}
                           </div>
 
                           {/* Cover */}
-                          <div style={{ width: '40px', height: '40px', background: track.cover_url ? `url(${track.cover_url}) center/cover` : '#222', borderRadius: '6px' }} />
+                          <div style={{ width: '48px', height: '48px', background: track.cover_url ? `url(${track.cover_url}) center/cover` : '#222', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }} />
 
                           {/* Titre / Artiste */}
                           <div style={{ minWidth: 0 }}>
-                            <div style={{ fontSize: '15px', fontWeight: 'bold', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.title}</div>
-                            <div style={{ fontSize: '12px', color: '#8c9f98', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.artist}</div>
+                            <div style={{ fontSize: '16px', fontWeight: '800', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.title}</div>
+                            <div style={{ fontSize: '13px', color: '#8c9f98', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: '2px' }}>{track.artist}</div>
                           </div>
                         </div>
 
-                        {/* Infos / Actions */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                          <div style={{ fontSize: '12px', color: '#8c9f98', fontWeight: '600' }}>{track.genre}</div>
+                        {/* Actions (Genre, BPM, Acheter) */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+                          <div style={{ fontSize: '12px', color: '#8c9f98', fontWeight: '600', textTransform: 'uppercase' }}>{track.genre}</div>
                           
                           {isPlayable ? (
                             <div style={{ fontSize: '12px', color: '#8c9f98', fontWeight: '600' }}>{track.bpm} BPM</div>
@@ -315,8 +343,8 @@ export const PremiumPage: React.FC = () => {
                               rel="noopener noreferrer" 
                               onClick={(e) => e.stopPropagation()} 
                               style={{ 
-                                background: 'transparent', color: themeColor, padding: '6px 14px', 
-                                borderRadius: '6px', fontSize: '11px', fontWeight: '800', 
+                                background: 'transparent', color: themeColor, padding: '8px 16px', 
+                                borderRadius: '6px', fontSize: '12px', fontWeight: '800', 
                                 textDecoration: 'none', textTransform: 'uppercase', border: `1px solid ${themeColor}` 
                               }}
                             >
@@ -326,24 +354,24 @@ export const PremiumPage: React.FC = () => {
                         </div>
                       </div>
 
-                      {/* ✅ IFRAME BEATPORT (Style intégré au conteneur) */}
+                      {/* ✅ LECTEUR BEATPORT (Même style que le lecteur MP3) */}
                       {iframeSrc && (
-                        <div style={{ padding: '16px', background: 'rgba(0,0,0,0.2)' }}>
+                        <div style={{ padding: '0 20px 20px 20px' }}>
                           <iframe 
                             src={iframeSrc} 
                             width="100%" 
                             height="162" 
                             frameBorder="0" 
                             scrolling="no" 
-                            style={{ display: 'block', width: '100%', borderRadius: '8px', border: '1px solid #233b54' }}
+                            style={{ display: 'block', width: '100%', borderRadius: '8px', border: '1px solid #162536', background: '#000' }}
                           ></iframe>
                         </div>
                       )}
 
-                      {/* ✅ FAUSSE WAVEFORM POUR LES MP3 (Style Beatport) */}
+                      {/* ✅ LECTEUR MP3 (Waveform Pro) */}
                       {isPlayable && !iframeSrc && (
-                        <div style={{ padding: '0 20px 16px 20px', background: 'rgba(0,0,0,0.1)' }}>
-                          {renderMiniWaveform(track.peaks)}
+                        <div style={{ padding: '0 20px 20px 20px' }}>
+                          {renderProWaveform(track.peaks, isThisPlaying)}
                         </div>
                       )}
 

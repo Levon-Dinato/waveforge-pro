@@ -1,176 +1,187 @@
 // src/components/GlobalPlayer.tsx
-import React, { useRef, useEffect } from 'react';
-import { usePlayer } from '../contexts/PlayerContext';
+import React, { useRef, useEffect, useMemo } from 'react';
+import { usePlayer, type PlayerTrack } from '../contexts/PlayerContext';
 
-export const GlobalPlayer: React.FC = () => {
-  const { 
-    currentTrack, 
-    isPlaying, 
-    togglePlay, 
-    currentTime, 
-    duration, 
-    volume, 
-    setVolume, 
-    seek, 
-    stop 
-  } = usePlayer();
+interface GlobalPlayerProps {
+  currentTrack: PlayerTrack | null;
+  isPlaying: boolean;
+  onTogglePlay: () => void;
+  onStop: () => void;
+}
 
+export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlaying, onTogglePlay, onStop }) => {
+  const { currentTime, duration, seek } = usePlayer();
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
+  // Génère une fausse waveform stable (qui ne change pas à chaque re-render) si les vraies données manquent
+  const mockPeaks = useMemo(() => {
+    return Array.from({ length: 120 }, () => Math.random() * 0.6 + 0.2);
+  }, [currentTrack?.id]);
+
   const formatTime = (time: number) => {
-    if (!isFinite(time)) return '0:00';
+    if (isNaN(time) || time === 0) return "0:00";
     const mins = Math.floor(time / 60);
     const secs = Math.floor(time % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
   };
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || !currentTrack) return;
+
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    let rawPeaks = currentTrack.peaks;
-    if (typeof rawPeaks === 'string') {
-      try { rawPeaks = JSON.parse(rawPeaks); } catch (e) { rawPeaks = []; }
+    const DPR = window.devicePixelRatio || 1;
+    const W = canvas.clientWidth;
+    const H = canvas.clientHeight;
+
+    canvas.width = W * DPR;
+    canvas.height = H * DPR;
+    ctx.scale(DPR, DPR);
+    ctx.clearRect(0, 0, W, H);
+
+    // 🛡️ Vérification des peaks (vrais ou faux)
+    let rawPeaks = currentTrack.peaks as any;
+    let safePeaks: number[] = [];
+
+    if (Array.isArray(rawPeaks) && rawPeaks.length > 0) {
+      safePeaks = rawPeaks;
+    } else if (typeof rawPeaks === 'string') {
+      try {
+        const parsed = JSON.parse(rawPeaks);
+        if (Array.isArray(parsed) && parsed.length > 0) safePeaks = parsed;
+      } catch (e) {}
     }
-    const peaks = Array.isArray(rawPeaks) && rawPeaks.length > 0 ? rawPeaks : Array(100).fill(20); 
 
-    const width = canvas.width;
-    const height = canvas.height;
-    const barWidth = width / peaks.length;
-    const progressRatio = duration > 0 ? currentTime / duration : 0;
+    // Si aucune vraie donnée, on utilise la fausse waveform pour le style
+    if (safePeaks.length === 0) {
+      safePeaks = mockPeaks;
+    }
 
-    ctx.clearRect(0, 0, width, height);
+    const maxBars = 120;
+    const step = Math.ceil(safePeaks.length / maxBars);
+    const displayedPeaks = safePeaks.filter((_, i) => i % step === 0);
+    
+    if (displayedPeaks.length === 0) return;
 
-    peaks.forEach((peak, i) => {
-      const barHeight = Math.max(2, (peak / 100) * height);
-      const x = i * barWidth;
-      const y = (height - barHeight) / 2;
+    const barWidth = W / displayedPeaks.length;
+    const gap = 2; // Espace entre les barres
+    const playedRatio = duration > 0 ? Math.min(1, currentTime / duration) : 0;
 
-      if (i / peaks.length < progressRatio) {
-        ctx.fillStyle = '#00d9ff';
-      } else {
-        ctx.fillStyle = '#333333';
-      }
+    displayedPeaks.forEach((peak, index) => {
+      const safePeak = typeof peak === 'number' && !isNaN(peak) ? peak : 0.2;
       
-      ctx.beginPath();
-      ctx.roundRect(x, y, Math.max(1, barWidth - 1), barHeight, 2);
-      ctx.fill();
-    });
-  }, [currentTrack, currentTime, duration]);
+      const x = index * barWidth;
+      const barHeight = Math.max(Math.min(safePeak * H * 0.8, H), 3); 
+      const y = (H - barHeight) / 2;
+      
+      const isPlayed = (index / displayedPeaks.length) <= playedRatio;
+      
+      // ✅ Style "Pro" : Dégradé cyan pour la partie jouée, gris translucide pour le reste
+      if (isPlayed) {
+        const gradient = ctx.createLinearGradient(0, y, 0, y + barHeight);
+        gradient.addColorStop(0, '#00d9ff');
+        gradient.addColorStop(1, '#0077ff');
+        ctx.fillStyle = gradient;
+        ctx.shadowColor = '#00d9ff';
+        ctx.shadowBlur = 4;
+      } else {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+        ctx.shadowBlur = 0;
+      }
 
-  // ✅ NOUVELLE FONCTION : Force le téléchargement
-  const handleDownload = async () => {
-    if (!currentTrack) return;
-    try {
-      const response = await fetch(currentTrack.audio_url);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${currentTrack.artist} - ${currentTrack.title}.mp3`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error("Erreur de téléchargement", error);
-      alert("Impossible de télécharger le fichier. Vérifiez votre connexion.");
-    }
+      // Dessin de la barre avec des coins arrondis si possible
+      const r = Math.min(2, barWidth / 2); // Rayon des coins
+      ctx.beginPath();
+      if (ctx.roundRect) {
+        ctx.roundRect(x, y, Math.max(barWidth - gap, 1), barHeight, r);
+        ctx.fill();
+      } else {
+        ctx.fillRect(x, y, Math.max(barWidth - gap, 1), barHeight);
+      }
+    });
+
+    ctx.shadowBlur = 0;
+  }, [currentTrack, currentTime, duration, mockPeaks]);
+
+  const handleSeek = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!currentTrack || !duration) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const ratio = clickX / rect.width;
+    seek(ratio);
   };
 
   if (!currentTrack) return null;
 
   return (
     <div style={{
-      position: 'fixed', bottom: 0, left: 0, right: 0, height: 90,
-      background: '#121212', borderTop: '1px solid #2a2a2a',
-      display: 'flex', alignItems: 'center', padding: '0 24px',
-      zIndex: 9999, fontFamily: 'Inter, sans-serif', color: '#fff',
+      position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1000,
+      background: 'rgba(10, 10, 15, 0.95)', backdropFilter: 'blur(20px)',
+      borderTop: '1px solid #222',
     }}>
-      
-      {/* GAUCHE */}
-      <div style={{ display: 'flex', alignItems: 'center', width: '30%', gap: 12, flexShrink: 0 }}>
-        <div style={{ 
-          width: 56, height: 56, borderRadius: 4, 
-          background: currentTrack.cover_url ? `url(${currentTrack.cover_url}) center/cover` : '#222',
-          border: '1px solid #333', flexShrink: 0
-        }} />
-        <div style={{ overflow: 'hidden', flex: 1 }}>
-          <div style={{ fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            {currentTrack.title}
-          </div>
-          <div style={{ fontSize: 11, color: '#888', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            {currentTrack.artist}
-          </div>
-          <div style={{ display: 'flex', gap: 6, fontSize: 10, color: '#666', marginTop: 4 }}>
-            {currentTrack.bpm && <span style={{ color: '#fff', background: '#2a2a2a', padding: '1px 4px', borderRadius: 2 }}>{currentTrack.bpm} BPM</span>}
-            {currentTrack.song_key && <span style={{ color: '#fff', background: '#2a2a2a', padding: '1px 4px', borderRadius: 2 }}>{currentTrack.song_key}</span>}
-          </div>
-        </div>
-      </div>
-
-      {/* CENTRE */}
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 16, padding: '0 24px', minWidth: 0 }}>
-        <span style={{ fontSize: 11, color: '#888', fontFamily: 'monospace', width: 40, textAlign: 'right', flexShrink: 0 }}>
-          {formatTime(currentTime)}
-        </span>
+      {/* ✅ CONTENEUR CENTRÉ (max-width) pour ne pas étirer la barre à l'infini */}
+      <div style={{
+        maxWidth: 1200, margin: '0 auto', height: '80px',
+        display: 'flex', alignItems: 'center', gap: '24px', padding: '0 24px'
+      }}>
         
-        <div style={{ flex: 1, height: 40, position: 'relative', cursor: 'pointer' }} onClick={(e) => {
-            const rect = e.currentTarget.getBoundingClientRect();
-            const percent = (e.clientX - rect.left) / rect.width;
-            seek(percent);
-        }}>
-          <canvas ref={canvasRef} width={800} height={40} style={{ width: '100%', height: '100%' }} />
+        {/* 1. Infos de la musique (Gauche) */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, width: '260px', flexShrink: 0 }}>
+          <div style={{ 
+            width: 44, height: 44, borderRadius: 8, 
+            background: currentTrack.cover_url ? `url(${currentTrack.cover_url}) center/cover` : '#1a1a1a',
+            boxShadow: '0 4px 10px rgba(0,0,0,0.3)'
+          }} />
+          <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{currentTrack.title}</div>
+            <div style={{ fontSize: 11, color: '#888', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: 2 }}>{currentTrack.artist}</div>
+          </div>
         </div>
 
-        <span style={{ fontSize: 11, color: '#888', fontFamily: 'monospace', width: 40, flexShrink: 0 }}>
-          {formatTime(duration)}
-        </span>
-      </div>
-
-      {/* DROITE */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', width: '30%', gap: 16, flexShrink: 0 }}>
-        
-        <button 
-          onClick={togglePlay}
-          style={{ 
-            width: 44, height: 44, borderRadius: '50%', background: '#fff', border: 'none', 
-            display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-            color: '#000', fontSize: 18, paddingLeft: isPlaying ? 0 : 3, flexShrink: 0
+        {/* 2. Contrôles & Waveform (Centre) */}
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 16 }}>
+          
+          <button onClick={onTogglePlay} style={{ 
+            width: 36, height: 36, borderRadius: '50%', background: '#fff', color: '#000', 
+            border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', 
+            cursor: 'pointer', transition: 'transform 0.1s' 
           }}
-        >
-          {isPlaying ? '⏸' : '▶'}
-        </button>
+          onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+          onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+          >
+            {isPlaying ? (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+            ) : (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: 2 }}><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            )}
+          </button>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, width: 100 }}>
-          <span style={{ fontSize: 14, color: '#888' }}>🔊</span>
-          <input 
-            type="range" min="0" max="1" step="0.01" 
-            value={volume} 
-            onChange={(e) => setVolume(parseFloat(e.target.value))}
-            style={{ width: '100%', accentColor: '#fff', height: 4 } as any} 
-          />
+          <span style={{ fontSize: 11, fontFamily: 'monospace', color: '#888', width: 35, textAlign: 'right' }}>
+            {formatTime(currentTime)}
+          </span>
+          
+          {/* ✅ LA WAVEFORM */}
+          <div style={{ flex: 1, height: 32, position: 'relative', display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+            <canvas 
+              ref={canvasRef}
+              onClick={handleSeek}
+              style={{ width: '100%', height: '100%' }}
+            />
+          </div>
+          
+          <span style={{ fontSize: 11, fontFamily: 'monospace', color: '#888', width: 35 }}>
+            {formatTime(duration)}
+          </span>
         </div>
 
-        {/* ✅ BOUTON DE TÉLÉCHARGEMENT CORRIGÉ */}
-        <button 
-          onClick={handleDownload}
-          style={{ 
-            background: 'rgba(0, 217, 255, 0.1)', border: 'none', color: '#00d9ff', 
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            width: 32, height: 32, borderRadius: '50%', cursor: 'pointer',
-            fontSize: 16, flexShrink: 0
-          }}
-          title="Télécharger le morceau"
-        >
-          ⬇️
-        </button>
-
-        <button onClick={stop} style={{ background: 'transparent', border: 'none', color: '#666', cursor: 'pointer', fontSize: 18, padding: 8, flexShrink: 0 }}>
-          ✕
-        </button>
+        {/* 3. Fermer (Droite) */}
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center', width: '40px', justifyContent: 'flex-end' }}>
+          <button onClick={onStop} style={{ background: 'transparent', border: 'none', color: '#666', cursor: 'pointer', display: 'flex', alignItems: 'center' }} title="Fermer le lecteur">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
 
       </div>
     </div>

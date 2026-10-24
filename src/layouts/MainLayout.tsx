@@ -6,9 +6,6 @@ import { usePlayer } from '../contexts/PlayerContext';
 import { GlobalPlayer } from '../components/GlobalPlayer';
 import { useIsMobile } from '../hooks/useIsMobile';
 
-// ============================================================
-// ICONS (SVG Minimalist Pro)
-// ============================================================
 const Icons = {
   home: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>,
   feed: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 11a9 9 0 0 1 9 9" /><path d="M4 4a16 16 0 0 1 16 16" /><circle cx="5" cy="19" r="1" /></svg>,
@@ -18,7 +15,6 @@ const Icons = {
   genres: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" /></svg>,
   artists: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>,
   tools: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" /></svg>,
-  mixer: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><line x1="9" y1="3" x2="9" y2="21" /><line x1="15" y1="3" x2="15" y2="21" /><circle cx="6" cy="12" r="1.5" fill="currentColor" /><circle cx="12" cy="8" r="1.5" fill="currentColor" /><circle cx="18" cy="16" r="1.5" fill="currentColor" /></svg>,
   help: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>,
   settings: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" /></svg>,
   admin: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>,
@@ -34,18 +30,18 @@ const NAV_ITEMS = [
   { path: '/genres', label: 'Genres', icon: Icons.genres },
   { path: '/artists', label: 'Artistes', icon: Icons.artists },
   { path: '/tools', label: 'Outils DJ', icon: Icons.tools },
-  { path: '/mixer', label: 'Mixer', icon: Icons.mixer },
+  // ✅ Mixer retiré du menu principal
   { path: '/help', label: 'Guide', icon: Icons.help },
   { path: '/settings', label: 'Réglages', icon: Icons.settings },
 ];
 
-// ✅ Mobile : 5 onglets + bouton Menu
+// ✅ Mobile : 5 onglets + bouton Menu (Mixer remplacé par Artistes)
 const MOBILE_NAV = [
   { path: '/', label: 'Accueil', icon: Icons.home, exact: true },
   { path: '/nouveautes', label: 'Sorties', icon: Icons.new },
   { path: '/feed', label: 'Feed', icon: Icons.feed },
-  { path: '/mixer', label: 'Mixer', icon: Icons.mixer },
-  { path: '#menu', label: 'Menu', icon: Icons.menu }, // Action spéciale
+  { path: '/artists', label: 'Artistes', icon: Icons.artists }, // ✅ Remplacé ici
+  { path: '#menu', label: 'Menu', icon: Icons.menu },
 ];
 
 export const MainLayout: React.FC = () => {
@@ -57,12 +53,10 @@ export const MainLayout: React.FC = () => {
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Fermer le menu mobile au changement de route
   useEffect(() => {
     setMobileMenuOpen(false);
   }, [location.pathname]);
 
-  // Refresh profile
   useEffect(() => {
     if (user?.id) refreshProfile();
   }, [user?.id, refreshProfile]);
@@ -70,18 +64,13 @@ export const MainLayout: React.FC = () => {
   const displayName = profile?.username || user?.email?.split('@')[0] || 'Artiste';
   const avatarUrl = profile?.avatar_url;
 
-  // ============================================================
-  // VERSION MOBILE (Bottom Tab Bar + Drawer)
-  // ============================================================
   if (isMobile) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: '#0a0a0a', color: '#fff', paddingBottom: currentTrack ? 160 : 70 }}>
         
-        {/* Header mobile */}
         <header style={{ position: 'sticky', top: 0, zIndex: 50, background: 'rgba(10, 10, 10, 0.9)', backdropFilter: 'blur(10px)', borderBottom: '1px solid #222', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
-            {/* ✅ LOGO OFFICIEL ICI */}
-            <img src="/icons/icon-192.png" alt="DropZone DJ" style={{ width: 40, height: 40, objectFit: 'contain', borderRadius: 12 }} />
+            <img src="/icons/icon-192.png" alt="DropZone DJ" style={{ width: 32, height: 32, objectFit: 'contain', borderRadius: 8 }} />
             <span style={{ fontWeight: 800, fontSize: '1rem', color: '#fff', letterSpacing: '-0.5px' }}>DROPZONE <span style={{ color: '#00d9ff' }}>DJ</span></span>
           </Link>
           <Link to={`/profil/${user?.id}`} style={{ width: 34, height: 34, borderRadius: '50%', overflow: 'hidden', background: '#1a1a1a', border: '1px solid #333', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#00d9ff', fontWeight: 700, fontSize: 13, textDecoration: 'none' }}>
@@ -99,7 +88,6 @@ export const MainLayout: React.FC = () => {
           </div>
         )}
 
-        {/* ✅ Drawer Mobile (Tous les liens) */}
         {mobileMenuOpen && (
           <>
             <div onClick={() => setMobileMenuOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 90, backdropFilter: 'blur(4px)' }} />
@@ -119,7 +107,7 @@ export const MainLayout: React.FC = () => {
                       to={item.path}
                       style={{ 
                         display: 'flex', alignItems: 'center', gap: 12, 
-                        padding: '12px 16px', borderBottom: '1px solid #1a1a1a', // ✅ Trait de séparation
+                        padding: '12px 16px', borderBottom: '1px solid #1a1a1a', 
                         textDecoration: 'none', color: isActive ? '#00d9ff' : '#888',
                         fontWeight: isActive ? 700 : 500, fontSize: 14,
                         borderLeft: isActive ? '2px solid #00d9ff' : '2px solid transparent',
@@ -146,7 +134,6 @@ export const MainLayout: React.FC = () => {
           </>
         )}
 
-        {/* ✅ Bottom Tab Bar */}
         <nav style={{ 
           position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50,
           background: 'rgba(10, 10, 10, 0.95)', backdropFilter: 'blur(20px)',
@@ -183,15 +170,11 @@ export const MainLayout: React.FC = () => {
     );
   }
 
-  // ============================================================
-  // VERSION DESKTOP
-  // ============================================================
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#0a0a0a', color: '#fff' }}>
       
       <aside style={{ width: 240, background: '#0a0a0a', borderRight: '1px solid #222', display: 'flex', flexDirection: 'column', position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 50 }}>
         <div style={{ padding: '24px 20px', borderBottom: '1px solid #222', display: 'flex', alignItems: 'center', gap: 12 }}>
-          {/* ✅ LOGO OFFICIEL ICI AUSSI */}
           <img src="/icons/icon-192.png" alt="DropZone DJ" style={{ width: 36, height: 36, objectFit: 'contain', borderRadius: 8 }} />
           <span style={{ fontWeight: 800, fontSize: '1.1rem', letterSpacing: '-0.5px' }}>DropZone DJ</span>
         </div>
@@ -206,13 +189,13 @@ export const MainLayout: React.FC = () => {
                 style={{
                   display: 'flex', alignItems: 'center', gap: 12,
                   padding: '12px 16px', 
-                  borderBottom: '1px solid #1a1a1a', // ✅ Trait de séparation
+                  borderBottom: '1px solid #1a1a1a',
                   textDecoration: 'none',
                   color: isActive ? '#00d9ff' : '#888',
                   background: isActive ? 'rgba(0, 217, 255, 0.05)' : 'transparent',
                   fontWeight: isActive ? 700 : 500, fontSize: '0.9rem',
                   borderLeft: isActive ? '2px solid #00d9ff' : '2px solid transparent',
-                  transition: 'all 0.2s' // ✅ Transition fluide
+                  transition: 'all 0.2s'
                 }}
                 onMouseEnter={(e) => { 
                   if (!isActive) { 

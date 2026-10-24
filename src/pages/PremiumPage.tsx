@@ -116,45 +116,64 @@ export const PremiumPage: React.FC = () => {
     });
   };
 
-  // ✅ NOUVELLE WAVEFORM DENSE (Style Beatport)
+  // ✅ WAVEFORM ULTRA-RÉALISTE (Style Beatport)
   const renderProWaveform = (peaks: any, isPlaying: boolean) => {
     if (!peaks || !Array.isArray(peaks) || peaks.length === 0) {
       peaks = Array.from({ length: 100 }, () => Math.random() * 80 + 20);
     }
 
-    // On augmente le nombre de barres pour un effet dense
-    const barCount = 120;
+    // On crée 80 barres pour un effet dense
+    const barCount = 80;
     const step = Math.ceil(peaks.length / barCount);
     const displayPeaks = peaks.filter((_: any, i: number) => i % step === 0).slice(0, barCount);
     
+    // Simulation de progression (30% si en cours, sinon 0)
     const progress = isPlaying ? 0.35 : 0; 
+    const playedIndex = Math.floor(displayPeaks.length * progress);
 
     return (
       <div style={{ 
         display: 'flex', 
         alignItems: 'center', 
-        height: '50px', 
+        justifyContent: 'space-between', // Espacement régulier
+        height: '70px', // ✅ Plus épais
         marginTop: '16px', 
         width: '100%',
-        background: '#000', // Fond noir pur
+        background: '#000', 
         borderRadius: '8px',
-        padding: '8px 12px',
-        gap: '0px' // Aucun espace entre les barres
+        padding: '10px 20px',
+        position: 'relative', // Pour la tête de lecture
+        overflow: 'hidden'
       }}>
         {displayPeaks.map((p: number, i: number) => {
-          const isPlayed = (i / displayPeaks.length) <= progress;
+          const isPlayed = i <= playedIndex;
           return (
             <div 
               key={i} 
               style={{ 
-                flex: 1, 
-                height: `${Math.max(p, 10)}%`, 
-                background: isPlayed ? 'var(--accent)' : 'rgba(255,255,255,0.15)', 
-                // On enlève le border-radius pour un effet continu
+                width: '2px', // ✅ Barres fines
+                height: `${Math.max(p, 15)}%`, // ✅ Hauteur variable
+                background: isPlayed ? 'var(--accent)' : 'rgba(255,255,255,0.3)', // ✅ Couleurs Beatport
+                borderRadius: '1px'
               }} 
             />
           );
         })}
+
+        {/* ✅ TÊTE DE LECTURE (Ligne verticale blanche) */}
+        {isPlaying && (
+          <div style={{
+            position: 'absolute',
+            left: `${20 + (progress * 100)}%`, 
+            top: 0,
+            bottom: 0,
+            width: '2px',
+            background: '#fff',
+            boxShadow: '0 0 8px #fff',
+            zIndex: 10,
+            opacity: 0.8
+          }} />
+        )}
       </div>
     );
   };
@@ -273,7 +292,6 @@ export const PremiumPage: React.FC = () => {
               )}
             </div>
             
-            {/* ✅ LISTE UNIFIÉE AVEC FOND NOIR */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               {tracks.length > 0 ? (
                 tracks.map((track) => {
@@ -285,8 +303,8 @@ export const PremiumPage: React.FC = () => {
                     <div 
                       key={track.id} 
                       style={{ 
-                        background: '#000000', // ✅ FOND NOIR PUR
-                        border: '1px solid #222222', // ✅ BORDURE SOMBRE
+                        background: '#000000', 
+                        border: '1px solid #222222', 
                         borderRadius: '16px', 
                         overflow: 'hidden',
                         boxShadow: '0 10px 25px rgba(0,0,0,0.4)',
@@ -298,11 +316,9 @@ export const PremiumPage: React.FC = () => {
                       onMouseLeave={(e) => { if (isPlayable) e.currentTarget.style.borderColor = '#222222'; }}
                     >
                       
-                      {/* EN-TÊTE (Titre & Play) */}
                       <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                           
-                          {/* Bouton Play / Icone EXT */}
                           <div style={{ 
                             width: '44px', height: '44px', borderRadius: '50%', 
                             background: isPlayable ? (isThisPlaying ? themeColor : 'rgba(255,255,255,0.1)') : 'rgba(255,255,255,0.05)', 
@@ -318,17 +334,14 @@ export const PremiumPage: React.FC = () => {
                             )}
                           </div>
 
-                          {/* Cover */}
                           <div style={{ width: '48px', height: '48px', background: track.cover_url ? `url(${track.cover_url}) center/cover` : '#111', borderRadius: '8px', border: '1px solid #333' }} />
 
-                          {/* Titre / Artiste */}
                           <div style={{ minWidth: 0 }}>
                             <div style={{ fontSize: '16px', fontWeight: '800', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.title}</div>
                             <div style={{ fontSize: '13px', color: '#8c9f98', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: '2px' }}>{track.artist}</div>
                           </div>
                         </div>
 
-                        {/* Actions (Genre, BPM, Acheter) */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
                           <div style={{ fontSize: '12px', color: '#8c9f98', fontWeight: '600', textTransform: 'uppercase' }}>{track.genre}</div>
                           
@@ -352,7 +365,6 @@ export const PremiumPage: React.FC = () => {
                         </div>
                       </div>
 
-                      {/* ✅ LECTEUR BEATPORT (Intégré au fond noir) */}
                       {iframeSrc && (
                         <div style={{ padding: '0 20px 20px 20px' }}>
                           <iframe 
@@ -366,7 +378,6 @@ export const PremiumPage: React.FC = () => {
                         </div>
                       )}
 
-                      {/* ✅ LECTEUR MP3 (Waveform Dense et Continue) */}
                       {isPlayable && !iframeSrc && (
                         <div style={{ padding: '0 20px 20px 20px' }}>
                           {renderProWaveform(track.peaks, isThisPlaying)}

@@ -11,27 +11,40 @@ export const PayPalButton: React.FC = () => {
   const paypalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // ✅ On crée un intervalle pour vérifier si le script PayPal est chargé
+    // On vérifie toutes les 500ms si le script PayPal est chargé
     const interval = setInterval(() => {
       if (window.paypal && paypalRef.current) {
-        // Dès qu'il est là, on arrête de vérifier
         clearInterval(interval);
-        
-        // On vide le conteneur pour éviter les doublons (si React recharge le composant)
-        paypalRef.current.innerHTML = '';
+        paypalRef.current.innerHTML = ''; // On nettoie le conteneur
 
         try {
-          // On affiche le bouton hébergé PayPal
-          window.paypal.HostedButtons({
-            hostedButtonId: "W7684MWNUGDXL", // Ton ID de bouton
+          window.paypal.Buttons({
+            style: {
+              shape: 'rect',
+              color: 'gold',
+              layout: 'vertical',
+              label: 'subscribe'
+            },
+            createSubscription: function(data: any, actions: any) {
+              return actions.subscription.create({
+                // ✅ C'est ton ID de plan d'abonnement
+                plan_id: 'P-6S823680KU642853FNLOLY7A' 
+              });
+            },
+            onApprove: function(data: any, actions: any) {
+              // ✅ Cette fonction se déclenche quand le paiement est validé
+              alert(`Abonnement réussi ! ID : ${data.subscriptionID}`);
+              
+              // 💡 Plus tard : Envoie le data.subscriptionID à Supabase pour valider 
+              // le compte Premium automatiquement
+            }
           }).render(paypalRef.current);
         } catch (error) {
-          console.error("Erreur de rendu PayPal:", error);
+          console.error("Erreur d'affichage du bouton PayPal :", error);
         }
       }
-    }, 500); // On vérifie toutes les 500ms
+    }, 500);
 
-    // Nettoyage si le composant est démonté
     return () => clearInterval(interval);
   }, []);
 
@@ -39,7 +52,7 @@ export const PayPalButton: React.FC = () => {
     <div 
       ref={paypalRef} 
       style={{ 
-        minHeight: '120px', // Hauteur minimale pour éviter que la page saute
+        minHeight: '150px', 
         display: 'flex', 
         justifyContent: 'center', 
         alignItems: 'center',

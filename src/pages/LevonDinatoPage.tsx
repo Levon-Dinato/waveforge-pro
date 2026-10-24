@@ -1,9 +1,11 @@
 // src/pages/LevonDinatoPage.tsx
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { Helmet } from 'react-helmet-async';
+import { useNavigate } from 'react-router-dom';
 import './LevonDinato.css';
 
 export const LevonDinatoPage: React.FC = () => {
+  const navigate = useNavigate();
   const [currentTrack, setCurrentTrack] = useState<{ title: string; artist: string; src: string } | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -84,32 +86,27 @@ export const LevonDinatoPage: React.FC = () => {
     }, 400);
   };
 
-  useEffect(() => {
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('visible');
-        }
-      });
-    }, { threshold: 0.1 });
-
-    document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
-    return () => observer.disconnect();
-  }, []);
-
   return (
     <div className="levon-page">
       <Helmet>
         <title>Levon & Dinato — DJ & Production Officiel</title>
       </Helmet>
 
+      {/* TOP BAR */}
+      <div className="top-bar">
+        <button onClick={() => navigate('/')} className="back-btn">
+          <span>←</span> Retour au site
+        </button>
+      </div>
+
       <div className={`slide-transition ${isTransitioning ? 'active' : ''}`}>
         <span>LEVON & DINATO</span>
       </div>
 
+      {/* NAVBAR */}
       <header className="nav">
         <div className="wrapper nav-inner">
-          <a href="/" className="logo">
+          <a href="#" className="logo">
             <img src="/logo.jpg" alt="Levon & Dinato" />
           </a>
           <ul className="nav-links">
@@ -135,21 +132,23 @@ export const LevonDinatoPage: React.FC = () => {
         <a href="#contact" onClick={(e) => { handleNavClick(e, 'contact'); setMobileMenuOpen(false); }} style={{ color: 'var(--accent)' }}>Booking</a>
       </div>
 
+      {/* HERO AVEC VIDEO */}
       <section className="hero">
         <video className="bg-video" autoPlay muted loop playsInline>
           <source src="/background.mp4" type="video/mp4" />
         </video>
+        
         <div className="wrapper hero-inner">
-          <div className="hero-tag fade-in">Nouveaux remixes disponibles</div>
-          <h1 className="hero-title fade-in">L'expérience <span>sonore</span> ultime.</h1>
-          <p className="hero-desc fade-in">Découvrez les productions Funky House, Nu-Disco et Tech House du duo Levon & Dinato. Un set conçu pour faire vibrer les dancefloors et marquer les esprits.</p>
+          <div className="hero-tag">Nouveaux remixes disponibles</div>
+          <h1 className="hero-title">L'expérience <span>sonore</span> ultime.</h1>
+          <p className="hero-desc">Découvrez les productions Funky House, Nu-Disco et Tech House du duo Levon & Dinato. Un set conçu pour faire vibrer les dancefloors et marquer les esprits.</p>
           
-          <div className="hero-actions fade-in">
+          <div className="hero-actions">
             <a href="#releases" className="btn-primary" onClick={(e) => handleNavClick(e, 'releases')} style={{ fontSize: '0.95rem' }}>Écouter les tracks</a>
             <a href="#contact" onClick={(e) => handleNavClick(e, 'contact')} className="btn-outline-hero">Nous contacter</a>
           </div>
 
-          <div className="hero-stats fade-in">
+          <div className="hero-stats">
             <div className="stat-item"><h4>12+</h4><p>Années d'expérience</p></div>
             <div className="stat-item"><h4>50+</h4><p>Tracks & Remixes</p></div>
             <div className="stat-item"><h4>100%</h4><p>Pistes en feu</p></div>
@@ -159,7 +158,7 @@ export const LevonDinatoPage: React.FC = () => {
 
       <div className="wrapper container">
         <div className="content">
-          <section id="about" className="fade-in">
+          <section id="about">
             <div className="section-header"><h2 className="section-title">Le Duo</h2></div>
             <div className="about-grid">
               <div className="about-text">
@@ -198,7 +197,7 @@ export const LevonDinatoPage: React.FC = () => {
             </div>
           </section>
 
-          <section id="services" className="fade-in">
+          <section id="services">
             <div className="section-header"><h2 className="section-title">Prestations</h2></div>
             <div className="services-grid">
               <div className="service-card"><span className="service-icon">🎧</span><h4>Clubs & Festivals</h4><p>Sets dynamiques, transitions propres et énergie communicative. On lit la foule et on enflamme la piste.</p></div>
@@ -208,7 +207,7 @@ export const LevonDinatoPage: React.FC = () => {
             </div>
           </section>
 
-          <section id="releases" className="fade-in">
+          <section id="releases">
             <div className="section-header"><h2 className="section-title">Dernières Sorties</h2></div>
             <div className="tracklist">
               <div className="track-header"><div></div><div>Titre / Artiste</div><div>Genre</div><div style={{ textAlign: 'right' }}>BPM</div></div>
@@ -245,7 +244,7 @@ export const LevonDinatoPage: React.FC = () => {
             </div>
           </section>
 
-          <section id="gallery" className="fade-in">
+          <section id="gallery">
             <div className="section-header"><h2 className="section-title">Galerie Live</h2></div>
             <div className="gallery-grid">
               <div className="gallery-item">[ Photo Live 01 ]</div>
@@ -256,7 +255,7 @@ export const LevonDinatoPage: React.FC = () => {
           </section>
         </div>
 
-        <aside className="sidebar fade-in">
+        <aside className="sidebar">
           <div className="sidebar-inner">
             <div className="sidebar-widget">
               <div className="sidebar-title">Top Tracks</div>
@@ -265,7 +264,6 @@ export const LevonDinatoPage: React.FC = () => {
                 <div className="top-item"><div className="top-num">2</div><div className="top-info"><h4>Training Season</h4><p>Dance / Pop</p></div></div>
                 <div className="top-item"><div className="top-num">3</div><div className="top-info"><h4>Hey Brother (Remix)</h4><p>Electro House</p></div></div>
                 <div className="top-item"><div className="top-num">4</div><div className="top-info"><h4>Blade (Remix)</h4><p>Hard Dance</p></div></div>
-                {/* ✅ LA FAUTE DE FRAPPE ÉTAIT ICI */}
                 <div className="top-item"><div className="top-num">5</div><div className="top-info"><h4>And I Feel It Rising Up</h4><p>Dance / K-Pop</p></div></div>
               </div>
             </div>
@@ -281,7 +279,7 @@ export const LevonDinatoPage: React.FC = () => {
       </div>
 
       <section className="contact-section" id="contact">
-        <div className="wrapper fade-in">
+        <div className="wrapper">
           <h2>Prêt à enflammer votre scène ?</h2>
           <p>Disponibles pour clubs, festivals et événements privés.</p>
           <a href="mailto:djcontrolradiotv1@gmail.com" className="contact-email">djcontrolradiotv1@gmail.com &rarr;</a>

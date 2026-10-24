@@ -20,15 +20,26 @@
 }
 
 .levon-page * { margin: 0; padding: 0; box-sizing: border-box; }
-.levon-page [id] { scroll-margin-top: 100px; }
+.levon-page [id] { scroll-margin-top: 120px; }
 .levon-page a { color: inherit; text-decoration: none; }
 .levon-page button { font-family: inherit; background: none; border: none; cursor: pointer; color: inherit; }
 .levon-page ::selection { background: var(--accent); color: #000; }
 
-.levon-page .fade-in { opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease-out, transform 0.6s ease-out; }
-.levon-page .fade-in.visible { opacity: 1; transform: translateY(0); }
-
 .levon-page .wrapper { width: 100%; max-width: 1400px; margin: 0 auto; padding-inline: 5%; }
+
+/* BARRE RETOUR AU SITE */
+.levon-page .top-bar {
+  position: fixed; top: 0; left: 0; right: 0; height: 32px; z-index: 101;
+  background: #050a10; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; padding: 0 16px;
+}
+.levon-page .back-btn {
+  display: flex; align-items: center; gap: 6px;
+  color: var(--text-muted); font-size: 0.8rem; font-weight: 600;
+  transition: color 0.2s;
+}
+.levon-page .back-btn:hover { color: var(--accent); }
+.levon-page .back-btn span { font-size: 1.1rem; }
 
 /* EFFET SLIDE */
 .levon-page .slide-transition {
@@ -44,7 +55,7 @@
 @keyframes slideWipe { 0% { transform: translateX(100%); } 40% { transform: translateX(0); } 60% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
 
 /* NAVBAR */
-.levon-page .nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: rgba(5, 10, 16, 0.85); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); }
+.levon-page .nav { position: fixed; top: 32px; left: 0; right: 0; z-index: 100; background: rgba(5, 10, 16, 0.85); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); }
 .levon-page .nav-inner { display: flex; justify-content: space-between; align-items: center; padding-top: 16px; padding-bottom: 16px; }
 .levon-page .logo img { height: 40px; border-radius: 4px; }
 .levon-page .nav-links { display: flex; gap: 32px; }
@@ -72,14 +83,48 @@
 .levon-page .burger span { width: 22px; height: 2px; background: var(--text); transition: 0.3s; }
 
 /* MENU MOBILE */
-.levon-page .mobile-menu { position: fixed; inset: 0; background: var(--bg); z-index: 99; display: flex; flex-direction: column; padding: 100px 5% 40px; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+.levon-page .mobile-menu { position: fixed; top: 32px; inset: 32px 0 0 0; background: var(--bg); z-index: 99; display: flex; flex-direction: column; padding: 40px 5% 40px; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
 .levon-page .mobile-menu.open { opacity: 1; pointer-events: auto; }
 .levon-page .mobile-menu a { font-size: 1.5rem; font-weight: 600; padding: 20px 0; border-bottom: 1px solid var(--border); }
 
-/* HERO */
-.levon-page .hero { position: relative; min-height: 90vh; display: flex; align-items: center; border-bottom: 1px solid var(--border); }
-.levon-page .bg-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -2; opacity: 0.15; filter: grayscale(100%) sepia(100%) hue-rotate(180deg); mix-blend-mode: screen; }
-.levon-page .hero-inner { padding-top: 120px; padding-bottom: 60px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+/* HERO & VIDEO CORRIGÉE */
+.levon-page .hero { 
+  position: relative; 
+  min-height: 90vh; 
+  display: flex; 
+  align-items: center; 
+  border-bottom: 1px solid var(--border); 
+  overflow: hidden; 
+  background-color: #000; 
+}
+.levon-page .bg-video { 
+  position: absolute; 
+  top: 0; left: 0;
+  width: 100%; 
+  height: 100%; 
+  object-fit: cover; 
+  z-index: 0; 
+  opacity: 0.4; 
+  pointer-events: none;
+}
+.levon-page .hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(5,10,16,0.6) 0%, rgba(5,10,16,0.9) 100%);
+  z-index: 1;
+  pointer-events: none;
+}
+.levon-page .hero-inner { 
+  padding-top: 160px; 
+  padding-bottom: 60px; 
+  display: flex; 
+  flex-direction: column; 
+  align-items: center; 
+  text-align: center; 
+  position: relative; 
+  z-index: 10; 
+}
 .levon-page .hero-tag { display: inline-block; padding: 8px 16px; border: 1px solid var(--border-light); border-radius: 20px; font-size: 0.75rem; font-weight: 700; color: var(--accent); margin-bottom: 24px; background: rgba(0, 217, 255, 0.05); box-shadow: 0 0 15px rgba(0, 217, 255, 0.1); }
 .levon-page .hero-title { font-size: clamp(2.5rem, 5vw, 4.5rem); font-weight: 900; line-height: 1.1; letter-spacing: -2px; margin-bottom: 24px; max-width: 900px; }
 .levon-page .hero-title span { color: var(--accent); text-shadow: 0 0 30px rgba(0, 217, 255, 0.6); }

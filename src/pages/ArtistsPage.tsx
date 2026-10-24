@@ -24,7 +24,6 @@ export const ArtistsPage: React.FC = () => {
     const fetchArtists = async () => {
       setLoading(true);
       try {
-        // ✅ OPTIMISATION : 2 requêtes au lieu de N+1
         // 1. On récupère tous les profils
         const { data: profilesData, error: profilesError } = await supabase
           .from('profiles')
@@ -40,7 +39,7 @@ export const ArtistsPage: React.FC = () => {
 
         if (tracksError) throw tracksError;
 
-        // 3. On compte les sons par artiste en JS (ultra rapide)
+        // 3. On compte les sons par artiste en JS
         const trackCounts: Record<string, number> = {};
         tracksData?.forEach((t) => {
           if (t.user_id) {
@@ -88,7 +87,7 @@ export const ArtistsPage: React.FC = () => {
           Les DJs et producteurs qui font vibrer DropZone.
         </p>
         
-        {/* Barre de recherche - Style aligné sur Nouveautés */}
+        {/* Barre de recherche */}
         <div style={{ marginTop: 24, maxWidth: 400 }}>
           <input 
             type="text" 
@@ -124,74 +123,82 @@ export const ArtistsPage: React.FC = () => {
             gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fill, minmax(200px, 1fr))', 
             gap: isMobile ? 12 : 24 
           }}>
-            {filteredArtists.map((artist) => (
-              <Link 
-                key={artist.id} 
-                to={`/profil/${artist.id}`}
-                style={{ textDecoration: 'none', display: 'block' }}
-              >
-                <div 
-                  className="artist-card"
-                  style={{
-                    background: '#181818',
-                    border: '1px solid #2a2a2a',
-                    borderRadius: 12,
-                    padding: '24px 16px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    textAlign: 'center',
-                    gap: 16,
-                    transition: 'all 0.2s ease',
-                    cursor: 'pointer',
-                    height: '100%',
-                  }}
-                >
-                  {/* Avatar circulaire */}
-                  <div className="artist-avatar" style={{ 
-                    width: isMobile ? 80 : 100, 
-                    height: isMobile ? 80 : 100, 
-                    borderRadius: '50%', 
-                    flexShrink: 0,
-                    background: '#121212', 
-                    overflow: 'hidden',
-                    border: '2px solid #2a2a2a',
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
-                    transition: 'transform 0.2s ease',
-                  }}>
-                    {artist.avatar_url ? (
-                      <img src={artist.avatar_url} alt={artist.username} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    ) : (
-                      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, color: '#666', fontWeight: 800 }}>
-                        {artist.username.charAt(0).toUpperCase()}
-                      </div>
-                    )}
-                  </div>
+            {filteredArtists.map((artist) => {
+              // ✅ LOGIQUE : On vérifie si c'est Levon&Dinato
+              const isLevonDinato = artist.username.toLowerCase().includes('levon');
+              
+              // ✅ Destination : soit la page spéciale, soit le profil classique
+              const targetUrl = isLevonDinato ? '/levon-dinato' : `/profil/${artist.id}`;
 
-                  {/* Infos */}
-                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <h3 className="artist-name" style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%', transition: 'color 0.2s' }}>
-                      {artist.username}
-                    </h3>
-                    <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>
-                      {artist.city ? `${artist.city}${artist.country ? `, ${artist.country}` : ''}` : 'France'}
+              return (
+                <Link 
+                  key={artist.id} 
+                  to={targetUrl}
+                  style={{ textDecoration: 'none', display: 'block' }}
+                >
+                  <div 
+                    className="artist-card"
+                    style={{
+                      background: isLevonDinato ? 'rgba(0, 217, 255, 0.03)' : '#181818', // Légère teinte pour Levon
+                      border: isLevonDinato ? '1px solid rgba(0, 217, 255, 0.3)' : '1px solid #2a2a2a', // Bordure cyan
+                      borderRadius: 12,
+                      padding: '24px 16px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      textAlign: 'center',
+                      gap: 16,
+                      transition: 'all 0.2s ease',
+                      cursor: 'pointer',
+                      height: '100%',
+                    }}
+                  >
+                    {/* Avatar circulaire */}
+                    <div className="artist-avatar" style={{ 
+                      width: isMobile ? 80 : 100, 
+                      height: isMobile ? 80 : 100, 
+                      borderRadius: '50%', 
+                      flexShrink: 0,
+                      background: '#121212', 
+                      overflow: 'hidden',
+                      border: isLevonDinato ? '2px solid #00d9ff' : '2px solid #2a2a2a',
+                      boxShadow: isLevonDinato ? '0 0 15px rgba(0, 217, 255, 0.2)' : '0 4px 12px rgba(0,0,0,0.5)',
+                      transition: 'transform 0.2s ease',
+                    }}>
+                      {artist.avatar_url ? (
+                        <img src={artist.avatar_url} alt={artist.username} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : (
+                        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, color: '#666', fontWeight: 800 }}>
+                          {artist.username.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Infos */}
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                      <h3 className="artist-name" style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%', transition: 'color 0.2s' }}>
+                        {artist.username}
+                      </h3>
+                      <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>
+                        {artist.city ? `${artist.city}${artist.country ? `, ${artist.country}` : ''}` : 'France'}
+                      </div>
+                    </div>
+
+                    {/* Badge */}
+                    <div style={{ 
+                      display: 'inline-flex', alignItems: 'center', gap: 6, 
+                      padding: '4px 10px', 
+                      background: isLevonDinato ? '#00d9ff' : 'rgba(0, 217, 255, 0.1)', 
+                      color: isLevonDinato ? '#000' : '#00d9ff', 
+                      borderRadius: 20, fontSize: 11, fontWeight: 700,
+                      border: isLevonDinato ? 'none' : '1px solid rgba(0, 217, 255, 0.2)'
+                    }}>
+                      {isLevonDinato ? 'SITE OFFICIEL' : `${artist.trackCount} ${artist.trackCount > 1 ? 'morceaux' : 'morceau'}`}
                     </div>
                   </div>
-
-                  {/* Badge de comptage */}
-                  <div style={{ 
-                    display: 'inline-flex', alignItems: 'center', gap: 6, 
-                    padding: '4px 10px', 
-                    background: 'rgba(0, 217, 255, 0.1)', 
-                    color: '#00d9ff', 
-                    borderRadius: 20, fontSize: 11, fontWeight: 600,
-                    border: '1px solid rgba(0, 217, 255, 0.2)'
-                  }}>
-                    {artist.trackCount} {artist.trackCount > 1 ? 'morceaux' : 'morceau'}
-                  </div>
-                </div>
-              </Link>
-            ))}
+                </Link>
+              );
+            })}
           </div>
         )}
       </div>

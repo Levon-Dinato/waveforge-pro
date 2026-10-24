@@ -132,8 +132,7 @@ export const PremiumPage: React.FC = () => {
       <header className="nav">
         <div className="wrapper nav-inner">
           <a href="#" className="logo">
-            {/* ✅ Logo arrondi */}
-            <img src={profile.avatar_url || "/logo.jpg"} alt={profile.username} style={{ borderRadius: '50%', objectFit: 'cover' }} />
+            <img src={profile.avatar_url || "/logo.jpg"} alt={profile.username} style={{ borderRadius: '50%', objectFit: 'cover', width: '40px', height: '40px' }} />
             <span className="premium-badge">PREMIUM</span>
           </a>
           <ul className="nav-links">
@@ -146,7 +145,6 @@ export const PremiumPage: React.FC = () => {
         </div>
       </header>
 
-      {/* Bandeau des événements */}
       <div className="event-ticker-wrapper">
         <div className="event-ticker">
           {events.length > 0 ? (
@@ -163,7 +161,6 @@ export const PremiumPage: React.FC = () => {
               </div>
             ))
           ) : (
-            // ✅ On duplique le message pour que l'animation reste fluide
             [...Array(3)].map((_, i) => (
               <div key={i} className="event-ticker-item">
                 <div className="event-date-badge">BIENTÔT</div>
@@ -181,7 +178,6 @@ export const PremiumPage: React.FC = () => {
         <div className="wrapper hero-inner">
           <div className="hero-tag">Nouveaux remixes disponibles</div>
           <h1 className="hero-title">L'expérience <span>sonore</span> de {profile.username}.</h1>
-          {/* ✅ Texte court et accrocheur dans le Hero */}
           <p className="hero-desc">
             Découvrez les productions exclusives et l'univers unique de {profile.username}. 
             Plongez dans leur monde musical et vibrez au rythme de leurs dernières sorties.
@@ -200,14 +196,33 @@ export const PremiumPage: React.FC = () => {
             <div className="about-grid">
               <div className="about-text">
                 <h3>Le son de {profile.username}</h3>
-                {/* ✅ C'est ici qu'on affiche la vraie Bio, avec ses sauts de ligne */}
                 <p style={{ whiteSpace: 'pre-wrap', lineHeight: '1.8' }}>
                   {profile.bio || "Bio à venir..."}
                 </p>
               </div>
-              <div className="about-visual">
-                <img src={profile.avatar_url || "/logo.jpg"} alt={profile.username} />
+              
+              {/* ✅ Image bien calibrée */}
+              <div 
+                className="about-visual" 
+                style={{ 
+                  width: '100%', 
+                  height: '450px', 
+                  margin: '0 auto', 
+                  borderRadius: '12px', 
+                  overflow: 'hidden', 
+                  background: '#000',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <img 
+                  src={profile.avatar_url || "/logo.jpg"} 
+                  alt={profile.username} 
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                />
               </div>
+
             </div>
           </section>
 

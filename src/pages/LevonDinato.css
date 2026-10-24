@@ -7,7 +7,7 @@ div.levon-page {
   --border-light: #233b54;
   --text: #ffffff;
   --text-muted: #8c9f98; 
-  --accent: #00d9ff; /* ✅ Le cyan par défaut */
+  --accent: #00d9ff; 
   --accent-gradient: linear-gradient(135deg, var(--accent) 0%, #0077ff 100%);
   --font-main: 'Inter', -apple-system, sans-serif;
   
@@ -121,21 +121,46 @@ div.levon-page .event-title { color: #fff !important; font-size: 0.8rem; font-we
 div.levon-page .event-location { color: var(--text-muted) !important; font-size: 0.65rem; white-space: nowrap; max-width: 250px; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; margin-top: 2px; }
 @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-33.33%); } }
 
-/* HERO & VIDEO */
+/* ✅ HERO & VIDEO (CORRIGÉ POUR LE PLEIN ÉCRAN) */
 div.levon-page .hero { 
   position: relative !important; 
-  min-height: 80vh !important; 
+  width: 100% !important;
+  height: 100vh !important; /* ✅ Force la hauteur de l'écran */
+  min-height: 800px !important;
   display: flex !important; align-items: center !important; justify-content: center !important;
   overflow: hidden !important; 
   background-color: #000 !important; 
-  padding-top: 160px !important; 
+  padding-top: 100px !important; 
 }
-div.levon-page .bg-video { position: absolute !important; top: 0; left: 0; width: 100% !important; height: 100% !important; object-fit: cover !important; z-index: 0 !important; opacity: 0.4 !important; filter: grayscale(100%) sepia(100%) hue-rotate(180deg) !important; mix-blend-mode: screen !important; pointer-events: none; }
-div.levon-page .hero::after { content: ''; position: absolute !important; inset: 0; background: linear-gradient(to bottom, rgba(5,10,16,0.3) 0%, rgba(5,10,16,0.95) 100%) !important; z-index: 1 !important; pointer-events: none; }
+
+div.levon-page .bg-video { 
+  position: absolute !important; 
+  top: 0; left: 0; 
+  width: 100% !important; 
+  height: 100% !important; 
+  object-fit: cover !important; /* ✅ Force la vidéo à couvrir sans bandes noires */
+  z-index: 0 !important; 
+  opacity: 0.6 !important;
+  filter: grayscale(100%) sepia(100%) hue-rotate(180deg) !important; 
+  mix-blend-mode: screen !important; 
+  pointer-events: none; 
+}
+
+div.levon-page .hero::after { 
+  content: ''; 
+  position: absolute !important; 
+  inset: 0; 
+  background: linear-gradient(to bottom, rgba(5,10,16,0.2) 0%, rgba(5,10,16,0.95) 100%) !important; 
+  z-index: 1 !important; 
+  pointer-events: none; 
+}
+
 div.levon-page .hero-inner { 
   display: flex !important; flex-direction: column !important; align-items: center !important; 
   text-align: center !important; position: relative !important; z-index: 10 !important; 
+  width: 100%;
 }
+
 div.levon-page .hero-tag { display: inline-block !important; padding: 8px 16px; border: 1px solid var(--border-light); border-radius: 20px; font-size: 0.75rem; font-weight: 700; color: var(--accent) !important; margin-bottom: 24px; background: rgba(0, 217, 255, 0.1) !important; }
 div.levon-page .hero-title { font-size: clamp(2.5rem, 5vw, 4.5rem) !important; font-weight: 900 !important; line-height: 1.1 !important; letter-spacing: -2px; margin-bottom: 24px; max-width: 900px; color: #fff !important; }
 div.levon-page .hero-title span { color: var(--accent) !important; }

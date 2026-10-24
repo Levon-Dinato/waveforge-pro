@@ -127,13 +127,9 @@ export const PremiumPage: React.FC = () => {
         <meta property="og:image" content={profile.avatar_url || '/og-levon-dinato.jpg'} />
       </Helmet>
 
-      {/* ✅ BOUTON MODIFIER (Propriétaire uniquement) */}
       {isOwner && (
         <div style={{ position: 'fixed', bottom: 20, right: 20, zIndex: 9999, display: 'flex', gap: 10 }}>
-          <Link 
-            to="/settings" 
-            style={{ background: themeColor, color: '#000', padding: '12px 24px', borderRadius: 30, fontWeight: 800, textDecoration: 'none', boxShadow: '0 10px 20px rgba(0,0,0,0.5)' }}
-          >
+          <Link to="/settings" style={{ background: themeColor, color: '#000', padding: '12px 24px', borderRadius: 30, fontWeight: 800, textDecoration: 'none', boxShadow: '0 10px 20px rgba(0,0,0,0.5)' }}>
             ✏️ Modifier ma page
           </Link>
         </div>
@@ -188,8 +184,16 @@ export const PremiumPage: React.FC = () => {
       </div>
 
       <section className="hero">
-        {/* ✅ VIDÉO DYNAMIQUE : Utilise celle du profil, sinon la vidéo par défaut */}
-        <video className="bg-video" autoPlay muted loop playsInline>
+        {/* ✅ Ajout du poster pour affichage instantané */}
+        <video 
+          className="bg-video" 
+          autoPlay 
+          muted 
+          loop 
+          playsInline
+          poster={profile.avatar_url || "/logo.jpg"}
+          style={{ objectFit: 'cover' }}
+        >
           <source src={profile.background_video_url || "/background.mp4"} type="video/mp4" />
         </video>
         
@@ -274,21 +278,11 @@ export const PremiumPage: React.FC = () => {
             <div className="sidebar-widget">
               <div className="sidebar-title">Réseaux</div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '10px' }}>
-                {profile.instagram_url && (
-                  <a href={profile.instagram_url} target="_blank" rel="noreferrer" style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#0d1512', border: '1px solid #E1306C', color: '#E1306C', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', fontWeight: 'bold' }}>IG</a>
-                )}
-                {profile.spotify_url && (
-                  <a href={profile.spotify_url} target="_blank" rel="noreferrer" style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#0d1512', border: '1px solid #1DB954', color: '#1DB954', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', fontWeight: 'bold' }}>SP</a>
-                )}
-                {profile.soundcloud_url && (
-                  <a href={profile.soundcloud_url} target="_blank" rel="noreferrer" style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#0d1512', border: '1px solid #FF5500', color: '#FF5500', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', fontWeight: 'bold' }}>SC</a>
-                )}
-                {profile.tiktok_url && (
-                  <a href={profile.tiktok_url} target="_blank" rel="noreferrer" style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#0d1512', border: '1px solid #fff', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', fontWeight: 'bold' }}>TK</a>
-                )}
-                {profile.youtube_url && (
-                  <a href={profile.youtube_url} target="_blank" rel="noreferrer" style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#0d1512', border: '1px solid #FF0000', color: '#FF0000', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', fontWeight: 'bold' }}>YT</a>
-                )}
+                {profile.instagram_url && <a href={profile.instagram_url} target="_blank" rel="noreferrer" style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#0d1512', border: '1px solid #E1306C', color: '#E1306C', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', fontWeight: 'bold' }}>IG</a>}
+                {profile.spotify_url && <a href={profile.spotify_url} target="_blank" rel="noreferrer" style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#0d1512', border: '1px solid #1DB954', color: '#1DB954', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', fontWeight: 'bold' }}>SP</a>}
+                {profile.soundcloud_url && <a href={profile.soundcloud_url} target="_blank" rel="noreferrer" style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#0d1512', border: '1px solid #FF5500', color: '#FF5500', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', fontWeight: 'bold' }}>SC</a>}
+                {profile.tiktok_url && <a href={profile.tiktok_url} target="_blank" rel="noreferrer" style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#0d1512', border: '1px solid #fff', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', fontWeight: 'bold' }}>TK</a>}
+                {profile.youtube_url && <a href={profile.youtube_url} target="_blank" rel="noreferrer" style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#0d1512', border: '1px solid #FF0000', color: '#FF0000', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', fontWeight: 'bold' }}>YT</a>}
               </div>
             </div>
 

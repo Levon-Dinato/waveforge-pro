@@ -8,7 +8,6 @@ import { useIsMobile } from '../hooks/useIsMobile';
 import { usePlayer } from '../contexts/PlayerContext';
 import { EventsTicker } from '../components/EventsTicker';
 
-// ✅ SVG Icons
 const Icons = {
   play: <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>,
   pause: <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>,
@@ -117,7 +116,7 @@ export const HomePage = () => {
         gap: isMobile ? 32 : 48 
       }}>
 
-        {/* 1. HERO SECTION (La vitrine) */}
+        {/* 1. HERO SECTION */}
         <div style={{ 
           position: 'relative',
           borderRadius: 24, 
@@ -128,8 +127,13 @@ export const HomePage = () => {
           background: '#000',
           boxShadow: '0 20px 40px rgba(0,0,0,0.5)'
         }}>
+          {/* ✅ OPTIMISATION : Ajout de poster et preload="metadata" */}
           <video
-            autoPlay loop muted playsInline
+            autoPlay 
+            loop 
+            muted 
+            playsInline
+            poster="/og-image.jpg" 
             style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.4 }}
           >
             <source src="/videos/hero-video.mp4" type="video/mp4" />
@@ -153,7 +157,6 @@ export const HomePage = () => {
             maxWidth: 600
           }}>
             
-            {/* Petit badge de bienvenue */}
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(0, 217, 255, 0.1)', border: '1px solid rgba(0, 217, 255, 0.3)', padding: '6px 16px', borderRadius: 20, fontSize: 12, fontWeight: 700, color: '#00d9ff', width: 'fit-content', marginBottom: 24 }}>
               <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#00d9ff', boxShadow: '0 0 8px #00d9ff' }} />
               LA PLATEFORME DES DJS INDÉPENDANTS
@@ -197,7 +200,7 @@ export const HomePage = () => {
           </div>
         </div>
 
-        {/* 2. BARRE DE STATS (Preuve sociale) */}
+        {/* 2. BARRE DE STATS */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, padding: '24px 0', borderBottom: '1px solid #222' }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
             <div style={{ color: '#00d9ff', marginBottom: 4 }}>{Icons.headphones}</div>
@@ -216,13 +219,14 @@ export const HomePage = () => {
           </div>
         </div>
 
-        {/* 3. TRACK À LA UNE (Le gros point d'accroche) */}
+        {/* 3. TRACK À LA UNE */}
         {featured && (
           <div style={{ 
             display: 'flex', flexDirection: isMobile ? 'column' : 'row',
             background: '#121212', border: '1px solid #222', borderRadius: 24, overflow: 'hidden',
             height: isMobile ? 'auto' : 320
           }}>
+            {/* ✅ OPTIMISATION : Ajout de loading="lazy" sur l'image de fond */}
             <div style={{ 
               width: isMobile ? '100%' : 320, height: isMobile ? 280 : '100%', 
               background: featured.cover_url ? `url(${featured.cover_url}) center/cover` : '#111', 
@@ -266,7 +270,7 @@ export const HomePage = () => {
           </div>
         )}
 
-        {/* 4. GRILLE PRINCIPALE (Top 10 + Nouvelles sorties) */}
+        {/* 4. GRILLE PRINCIPALE */}
         <div style={{ display: 'flex', gap: isMobile ? 20 : 40, alignItems: 'flex-start', flexDirection: isMobile ? 'column' : 'row' }}>
           
           <div style={{ flex: 1, minWidth: 0, width: '100%' }}>
@@ -285,7 +289,8 @@ export const HomePage = () => {
                 <h3 style={{ fontSize: 14, fontWeight: 800, color: '#fff', margin: '0 0 20px 0', letterSpacing: '1px', textTransform: 'uppercase' }}>Top 10 Chart</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                   {top10.map((track, idx) => (
-                    <div key={track.id} onClick={() => navigate(`/track/${track.id}`)} style={{ display: 'flex', alignItems: 'center', gap: 16, cursor: 'pointer', group: 'true' }}>
+                    // ✅ CORRECTIF : Suppression de group: 'true' qui n'est pas valide en React
+                    <div key={track.id} onClick={() => navigate(`/track/${track.id}`)} style={{ display: 'flex', alignItems: 'center', gap: 16, cursor: 'pointer' }}>
                       <span style={{ fontSize: 20, fontWeight: 900, fontStyle: 'italic', color: idx < 3 ? '#00d9ff' : '#333', width: 24 }}>0{idx + 1}</span>
                       <div style={{ width: 44, height: 44, borderRadius: 6, background: track.cover_url ? `url(${track.cover_url}) center/cover` : '#222', flexShrink: 0 }} />
                       <div style={{ flex: 1, minWidth: 0 }}>

@@ -15,13 +15,11 @@ export const SettingsPage: React.FC = () => {
   const [myTracks, setMyTracks] = useState<any[]>([]);
   const [editingTrackId, setEditingTrackId] = useState<string | null>(null);
   const [editTrackForm, setEditTrackForm] = useState({ title: '', genre: '', bpm: 0 });
-
-  // ✅ Nouveau state pour l'upload d'image
   const [uploadingImage, setUploadingImage] = useState(false);
 
   const [form, setForm] = useState({
     username: '', bio: '', hero_tagline: 'Nouveaux remixes disponibles', hero_title: '', hero_description: '',
-    theme_color: '#00d9ff', avatar_url: '', background_video_url: '', // ✅ Nouveau champ
+    theme_color: '#00d9ff', avatar_url: '', background_video_url: '',
     instagram_url: '', spotify_url: '', soundcloud_url: '', tiktok_url: '', youtube_url: ''
   });
 
@@ -36,7 +34,7 @@ export const SettingsPage: React.FC = () => {
           hero_tagline: data.hero_tagline || 'Nouveaux remixes disponibles',
           hero_title: data.hero_title || '', hero_description: data.hero_description || '',
           theme_color: data.theme_color || '#00d9ff', avatar_url: data.avatar_url || '',
-          background_video_url: data.background_video_url || '', // ✅ Nouveau
+          background_video_url: data.background_video_url || '',
           instagram_url: data.instagram_url || '', spotify_url: data.spotify_url || '',
           soundcloud_url: data.soundcloud_url || '', tiktok_url: data.tiktok_url || '',
           youtube_url: data.youtube_url || ''
@@ -47,23 +45,17 @@ export const SettingsPage: React.FC = () => {
     fetchProfile();
   }, [user]);
 
-  // ✅ Fonction d'upload d'image
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     
     setUploadingImage(true);
     try {
-      // On génère un nom unique pour éviter les conflits
       const fileName = `${user?.id}-${Date.now()}.${file.name.split('.').pop()}`;
-      
       const { error: uploadError } = await supabase.storage.from('media').upload(fileName, file);
       if (uploadError) throw uploadError;
 
-      // On récupère l'URL publique
       const { data } = supabase.storage.from('media').getPublicUrl(fileName);
-      
-      // On met à jour le formulaire
       setForm(prev => ({ ...prev, avatar_url: data.publicUrl }));
     } catch (error) {
       console.error("Erreur upload:", error);
@@ -90,7 +82,7 @@ export const SettingsPage: React.FC = () => {
       username: form.username, bio: form.bio, hero_tagline: form.hero_tagline,
       hero_title: form.hero_title, hero_description: form.hero_description,
       theme_color: form.theme_color, avatar_url: form.avatar_url,
-      background_video_url: form.background_video_url, // ✅ Sauvegarde
+      background_video_url: form.background_video_url,
       instagram_url: form.instagram_url, spotify_url: form.spotify_url,
       soundcloud_url: form.soundcloud_url, tiktok_url: form.tiktok_url,
       youtube_url: form.youtube_url
@@ -224,6 +216,19 @@ export const SettingsPage: React.FC = () => {
         </div>
       </div>
 
+      {/* ✅ NOUVELLE SECTION : MES ÉVÉNEMENTS */}
+      <div style={{ background: '#121212', padding: 24, borderRadius: 12, border: '1px solid #222', marginBottom: 24 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+          <h2 style={{ fontSize: 18, color: '#fff', margin: 0 }}>Mes Dates / Événements</h2>
+          <Link to="/events" style={{ background: '#fff', color: '#000', padding: '8px 16px', borderRadius: 6, fontWeight: 800, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
+            + Ajouter une date
+          </Link>
+        </div>
+        <p style={{ color: '#666', fontSize: 14, margin: 0 }}>
+          Les événements que tu ajoutes apparaîtront automatiquement sur ton bandeau et sur ta page Premium.
+        </p>
+      </div>
+
       {/* FORMULAIRE DE PROFIL */}
       <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
         <div style={{ background: '#121212', padding: 24, borderRadius: 12, border: '1px solid #222' }}>
@@ -243,34 +248,20 @@ export const SettingsPage: React.FC = () => {
             </div>
           </div>
 
-          {/* ✅ UPLOAD D'IMAGE */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 20 }}>
             <label style={{ fontSize: 13, color: '#aaa' }}>Image de profil (Avatar)</label>
             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
               {form.avatar_url && (
                 <img src={form.avatar_url} alt="Avatar" style={{ width: 50, height: 50, borderRadius: '50%', objectFit: 'cover', border: '2px solid #333' }} />
               )}
-              <input 
-                type="file" 
-                accept="image/*" 
-                onChange={handleImageUpload} 
-                disabled={uploadingImage}
-                style={{ flex: 1, padding: 10, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} 
-              />
+              <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploadingImage} style={{ flex: 1, padding: 10, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
             </div>
             {uploadingImage && <span style={{ fontSize: 12, color: '#00d9ff' }}>Upload en cours...</span>}
           </div>
 
-          {/* ✅ CHAMP VIDÉO */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 20 }}>
             <label style={{ fontSize: 13, color: '#aaa' }}>URL de la vidéo de fond (MP4)</label>
-            <input 
-              type="url" 
-              value={form.background_video_url} 
-              onChange={(e) => setForm({ ...form, background_video_url: e.target.value })} 
-              placeholder="https://exemple.com/ma-video.mp4" 
-              style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} 
-            />
+            <input type="url" value={form.background_video_url} onChange={(e) => setForm({ ...form, background_video_url: e.target.value })} placeholder="https://exemple.com/ma-video.mp4" style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
             <span style={{ fontSize: 11, color: '#666' }}>Laisse vide pour utiliser la vidéo par défaut.</span>
           </div>
         </div>

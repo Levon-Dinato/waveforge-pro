@@ -116,31 +116,30 @@ export const PremiumPage: React.FC = () => {
     });
   };
 
-  // ✅ NOUVELLE WAVEFORM PRO (Style Beatport)
+  // ✅ NOUVELLE WAVEFORM DENSE (Style Beatport)
   const renderProWaveform = (peaks: any, isPlaying: boolean) => {
     if (!peaks || !Array.isArray(peaks) || peaks.length === 0) {
-      // Si pas de peaks, on génère une fausse waveform réaliste
-      peaks = Array.from({ length: 80 }, () => Math.random() * 80 + 20);
+      peaks = Array.from({ length: 100 }, () => Math.random() * 80 + 20);
     }
 
-    // On échantillonne pour avoir environ 80 barres
-    const step = Math.ceil(peaks.length / 80);
-    const displayPeaks = peaks.filter((_: any, i: number) => i % step === 0).slice(0, 80);
+    // On augmente le nombre de barres pour un effet dense
+    const barCount = 120;
+    const step = Math.ceil(peaks.length / barCount);
+    const displayPeaks = peaks.filter((_: any, i: number) => i % step === 0).slice(0, barCount);
     
-    // On simule une progression de lecture à 30% si c'est en cours, sinon 0
-    const progress = isPlaying ? 0.3 : 0; 
+    const progress = isPlaying ? 0.35 : 0; 
 
     return (
       <div style={{ 
         display: 'flex', 
         alignItems: 'center', 
-        gap: '1.5px', 
         height: '50px', 
         marginTop: '16px', 
         width: '100%',
-        background: 'rgba(0,0,0,0.2)',
+        background: '#000', // Fond noir pur
         borderRadius: '8px',
-        padding: '8px'
+        padding: '8px 12px',
+        gap: '0px' // Aucun espace entre les barres
       }}>
         {displayPeaks.map((p: number, i: number) => {
           const isPlayed = (i / displayPeaks.length) <= progress;
@@ -151,8 +150,7 @@ export const PremiumPage: React.FC = () => {
                 flex: 1, 
                 height: `${Math.max(p, 10)}%`, 
                 background: isPlayed ? 'var(--accent)' : 'rgba(255,255,255,0.15)', 
-                borderRadius: '2px',
-                transition: 'height 0.2s ease'
+                // On enlève le border-radius pour un effet continu
               }} 
             />
           );
@@ -275,7 +273,7 @@ export const PremiumPage: React.FC = () => {
               )}
             </div>
             
-            {/* ✅ LISTE UNIFIÉE */}
+            {/* ✅ LISTE UNIFIÉE AVEC FOND NOIR */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               {tracks.length > 0 ? (
                 tracks.map((track) => {
@@ -287,8 +285,8 @@ export const PremiumPage: React.FC = () => {
                     <div 
                       key={track.id} 
                       style={{ 
-                        background: 'linear-gradient(145deg, rgba(13, 22, 33, 0.95), rgba(6, 13, 20, 0.95))', 
-                        border: '1px solid #233b54', 
+                        background: '#000000', // ✅ FOND NOIR PUR
+                        border: '1px solid #222222', // ✅ BORDURE SOMBRE
                         borderRadius: '16px', 
                         overflow: 'hidden',
                         boxShadow: '0 10px 25px rgba(0,0,0,0.4)',
@@ -297,7 +295,7 @@ export const PremiumPage: React.FC = () => {
                       }}
                       onClick={() => isPlayable && handlePlayTrack(track)}
                       onMouseEnter={(e) => { if (isPlayable) e.currentTarget.style.borderColor = themeColor; }}
-                      onMouseLeave={(e) => { if (isPlayable) e.currentTarget.style.borderColor = '#233b54'; }}
+                      onMouseLeave={(e) => { if (isPlayable) e.currentTarget.style.borderColor = '#222222'; }}
                     >
                       
                       {/* EN-TÊTE (Titre & Play) */}
@@ -321,7 +319,7 @@ export const PremiumPage: React.FC = () => {
                           </div>
 
                           {/* Cover */}
-                          <div style={{ width: '48px', height: '48px', background: track.cover_url ? `url(${track.cover_url}) center/cover` : '#222', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }} />
+                          <div style={{ width: '48px', height: '48px', background: track.cover_url ? `url(${track.cover_url}) center/cover` : '#111', borderRadius: '8px', border: '1px solid #333' }} />
 
                           {/* Titre / Artiste */}
                           <div style={{ minWidth: 0 }}>
@@ -354,7 +352,7 @@ export const PremiumPage: React.FC = () => {
                         </div>
                       </div>
 
-                      {/* ✅ LECTEUR BEATPORT (Même style que le lecteur MP3) */}
+                      {/* ✅ LECTEUR BEATPORT (Intégré au fond noir) */}
                       {iframeSrc && (
                         <div style={{ padding: '0 20px 20px 20px' }}>
                           <iframe 
@@ -363,12 +361,12 @@ export const PremiumPage: React.FC = () => {
                             height="162" 
                             frameBorder="0" 
                             scrolling="no" 
-                            style={{ display: 'block', width: '100%', borderRadius: '8px', border: '1px solid #162536', background: '#000' }}
+                            style={{ display: 'block', width: '100%', borderRadius: '8px', border: '1px solid #222', background: '#000' }}
                           ></iframe>
                         </div>
                       )}
 
-                      {/* ✅ LECTEUR MP3 (Waveform Pro) */}
+                      {/* ✅ LECTEUR MP3 (Waveform Dense et Continue) */}
                       {isPlayable && !iframeSrc && (
                         <div style={{ padding: '0 20px 20px 20px' }}>
                           {renderProWaveform(track.peaks, isThisPlaying)}

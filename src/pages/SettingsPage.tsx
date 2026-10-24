@@ -10,13 +10,16 @@ export const SettingsPage: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   
-  // ✅ NOUVEAU : État pour savoir si l'utilisateur est Premium
+  // État pour savoir si l'utilisateur est Premium
   const [isPremium, setIsPremium] = useState(false);
 
+  // ✅ Le formulaire contient maintenant TOUS les champs modifiables
   const [form, setForm] = useState({
     username: '',
     bio: '',
     hero_tagline: 'Nouveaux remixes disponibles',
+    hero_title: '', // ✅ Nouveau
+    hero_description: '', // ✅ Nouveau
     theme_color: '#00d9ff',
     avatar_url: '',
     instagram_url: '',
@@ -31,13 +34,14 @@ export const SettingsPage: React.FC = () => {
     const fetchProfile = async () => {
       const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single();
       if (data) {
-        // ✅ On vérifie le statut premium
         setIsPremium(data.is_premium || false);
         
         setForm({
           username: data.username || '',
           bio: data.bio || '',
           hero_tagline: data.hero_tagline || 'Nouveaux remixes disponibles',
+          hero_title: data.hero_title || '',
+          hero_description: data.hero_description || '',
           theme_color: data.theme_color || '#00d9ff',
           avatar_url: data.avatar_url || '',
           instagram_url: data.instagram_url || '',
@@ -62,6 +66,8 @@ export const SettingsPage: React.FC = () => {
       username: form.username,
       bio: form.bio,
       hero_tagline: form.hero_tagline,
+      hero_title: form.hero_title, // ✅ Sauvegarde
+      hero_description: form.hero_description, // ✅ Sauvegarde
       theme_color: form.theme_color,
       avatar_url: form.avatar_url,
       instagram_url: form.instagram_url,
@@ -104,8 +110,8 @@ export const SettingsPage: React.FC = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 40, textAlign: 'left', background: '#0a0a0a', padding: 24, borderRadius: 12, border: '1px solid #222' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14 }}>✅ Couleur de site personnalisée</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14 }}>✅ Biographie et réseaux sociaux</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14 }}>✅ Page officielle sur-mesure (ex: /premium/votre-nom)</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14 }}>✅ Un design digne des plus grands artistes</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14 }}>✅ Personnalisation de la bannière d'accueil</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14 }}>✅ Page officielle sur-mesure</div>
           </div>
           
           <a 
@@ -132,13 +138,16 @@ export const SettingsPage: React.FC = () => {
     );
   }
 
-  // ✅ SI L'UTILISATEUR EST PREMIUM : On affiche le formulaire
+  // ✅ SI L'UTILISATEUR EST PREMIUM : On affiche le formulaire complet
   return (
     <div style={{ maxWidth: 800, margin: '0 auto', padding: '40px 20px', color: '#fff', fontFamily: 'Inter, sans-serif' }}>
       
+      {/* En-tête */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16, marginBottom: 10 }}>
         <div>
-          <h1 style={{ fontSize: 32, fontWeight: 800, margin: 0 }}>Mon Profil Public <span style={{ fontSize: 12, background: '#00d9ff', color: '#000', padding: '4px 8px', borderRadius: 4, verticalAlign: 'middle', marginLeft: 10 }}>PREMIUM</span></h1>
+          <h1 style={{ fontSize: 32, fontWeight: 800, margin: 0 }}>
+            Mon Profil Public <span style={{ fontSize: 12, background: '#00d9ff', color: '#000', padding: '4px 8px', borderRadius: 4, verticalAlign: 'middle', marginLeft: 10 }}>PREMIUM</span>
+          </h1>
         </div>
         
         {form.username && (
@@ -154,6 +163,7 @@ export const SettingsPage: React.FC = () => {
       
       <p style={{ color: '#888', marginBottom: 30 }}>Modifie tes informations, elles s'afficheront instantanément sur ta page Premium.</p>
 
+      {/* Message de succès/erreur */}
       {message && (
         <div style={{ padding: 16, background: message.includes('Erreur') ? 'rgba(255,0,0,0.1)' : 'rgba(0,217,255,0.1)', border: `1px solid ${message.includes('Erreur') ? '#ff3366' : form.theme_color}`, borderRadius: 8, marginBottom: 24, color: message.includes('Erreur') ? '#ff3366' : form.theme_color }}>
           {message}
@@ -162,7 +172,7 @@ export const SettingsPage: React.FC = () => {
 
       <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
         
-        {/* IDENTITÉ & THÈME */}
+        {/* 1. IDENTITÉ & THÈME */}
         <div style={{ background: '#121212', padding: 24, borderRadius: 12, border: '1px solid #222' }}>
           <h2 style={{ fontSize: 18, marginBottom: 20, color: '#fff' }}>Identité & Thème</h2>
           
@@ -185,14 +195,47 @@ export const SettingsPage: React.FC = () => {
             <label style={{ fontSize: 13, color: '#aaa' }}>Image de profil (Lien URL)</label>
             <input type="url" value={form.avatar_url} onChange={(e) => setForm({ ...form, avatar_url: e.target.value })} placeholder="https://..." style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
           </div>
+        </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 20 }}>
-            <label style={{ fontSize: 13, color: '#aaa' }}>Phrase d'accroche (Bannière)</label>
-            <input type="text" value={form.hero_tagline} onChange={(e) => setForm({ ...form, hero_tagline: e.target.value })} style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+        {/* 2. BANNIÈRE D'ACCUEIL (HERO) */}
+        <div style={{ background: '#121212', padding: 24, borderRadius: 12, border: '1px solid #222' }}>
+          <h2 style={{ fontSize: 18, marginBottom: 20, color: '#fff' }}>Bannière d'accueil</h2>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
+            <label style={{ fontSize: 13, color: '#aaa' }}>Petit badge (en haut)</label>
+            <input 
+              type="text" 
+              value={form.hero_tagline} 
+              onChange={(e) => setForm({ ...form, hero_tagline: e.target.value })} 
+              placeholder="Ex: Nouveaux remixes disponibles"
+              style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} 
+            />
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
+            <label style={{ fontSize: 13, color: '#aaa' }}>Titre principal</label>
+            <input 
+              type="text" 
+              value={form.hero_title} 
+              onChange={(e) => setForm({ ...form, hero_title: e.target.value })} 
+              placeholder="Ex: L'expérience sonore ultime."
+              style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} 
+            />
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <label style={{ fontSize: 13, color: '#aaa' }}>Description (Texte sous le titre)</label>
+            <textarea 
+              value={form.hero_description} 
+              onChange={(e) => setForm({ ...form, hero_description: e.target.value })} 
+              rows={3}
+              placeholder="Ex: Découvrez les productions Funky House..."
+              style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff', resize: 'vertical' }} 
+            />
           </div>
         </div>
 
-        {/* BIOGRAPHIE */}
+        {/* 3. BIOGRAPHIE */}
         <div style={{ background: '#121212', padding: 24, borderRadius: 12, border: '1px solid #222' }}>
           <h2 style={{ fontSize: 18, marginBottom: 20, color: '#fff' }}>Biographie</h2>
           <textarea 
@@ -204,7 +247,7 @@ export const SettingsPage: React.FC = () => {
           />
         </div>
 
-        {/* RÉSEAUX SOCIAUX */}
+        {/* 4. RÉSEAUX SOCIAUX */}
         <div style={{ background: '#121212', padding: 24, borderRadius: 12, border: '1px solid #222' }}>
           <h2 style={{ fontSize: 18, marginBottom: 20, color: '#fff' }}>Réseaux Sociaux</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>

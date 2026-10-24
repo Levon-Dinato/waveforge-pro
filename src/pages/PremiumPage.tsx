@@ -192,46 +192,55 @@ export const PremiumPage: React.FC = () => {
       <div className="wrapper container">
         <div className="content">
           <section id="about">
-            <div className="section-header"><h2 className="section-title">Le Duo / Le Son</h2></div>
+            <div className="section-header"><h2 className="section-title">À propos</h2></div>
             
-            {/* ✅ MISE EN PAGE : Le texte à gauche, l'image dans un module à droite */}
+            {/* ✅ LE MODULE EXACT COMME SUR L'IMAGE */}
             <div 
               style={{ 
                 display: 'flex', 
+                flexDirection: 'row', // Force l'alignement horizontal
                 flexWrap: 'wrap', 
                 gap: '40px', 
                 padding: '40px', 
-                alignItems: 'flex-start', // Très important : l'image reste en haut et ne s'étire pas
+                alignItems: 'flex-start', 
                 background: 'linear-gradient(145deg, rgba(13, 22, 33, 0.95), rgba(6, 13, 20, 0.95))',
                 border: '1px solid rgba(0, 217, 255, 0.15)',
                 borderRadius: '16px',
-                boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5)'
+                boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5)',
+                width: '100%',
+                boxSizing: 'border-box'
               }}
             >
-              {/* Colonne de gauche : Textes (prend tout l'espace restant) */}
-              <div style={{ flex: '1 1 400px', minWidth: '300px', minWidth: 0 }}>
+              {/* COLONNE GAUCHE : La Bio Extended */}
+              <div style={{ flex: '1 1 400px', minWidth: '300px', maxWidth: '100%' }}>
                 <h3 style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: '20px', color: '#fff' }}>
                   Le son de {profile.username}
                 </h3>
                 
-                {/* Bio complète avec retour à la ligne */}
-                <p style={{ whiteSpace: 'pre-wrap', lineHeight: '1.8', color: '#8c9f98', fontSize: '1rem' }}>
+                {/* Le texte de la bio qui prend toute la place à gauche */}
+                <p style={{ 
+                  whiteSpace: 'pre-wrap', 
+                  lineHeight: '1.8', 
+                  color: '#8c9f98', 
+                  fontSize: '0.95rem',
+                  margin: 0
+                }}>
                   {profile.bio || "Bio à venir..."}
                 </p>
               </div>
               
-              {/* Colonne de droite : Le module avec l'image (largeur fixe 350px) */}
+              {/* COLONNE DROITE : L'image avec une bordure propre (taille fixe) */}
               <div 
                 style={{ 
-                  flex: '0 1 350px', 
-                  width: '100%',
-                  maxWidth: '350px', 
-                  margin: '0 auto', // Centre le module s'il passe en dessous sur mobile
-                  borderRadius: '16px', 
+                  flex: '0 0 350px', // Taille fixe de 350px
+                  width: '350px',
+                  maxWidth: '100%', // S'adapte si l'écran est petit
+                  borderRadius: '12px', 
                   overflow: 'hidden', 
-                  border: '1px solid rgba(0, 217, 255, 0.3)', // Petite bordure cyan
-                  boxShadow: '0 10px 30px rgba(0, 0, 0, 0.6)',
-                  background: '#000'
+                  border: '1px solid rgba(255, 255, 255, 0.1)', 
+                  boxShadow: '0 10px 30px rgba(0, 0, 0, 0.8)',
+                  background: '#000',
+                  display: 'flex'
                 }}
               >
                 <img 
@@ -239,9 +248,8 @@ export const PremiumPage: React.FC = () => {
                   alt={profile.username} 
                   style={{ 
                     width: '100%', 
-                    height: '400px', // Hauteur fixe pour faire un beau rectangle
-                    objectFit: 'cover', // Remplit le cadre sans se déformer
-                    display: 'block' 
+                    height: 'auto', // L'image garde son ratio
+                    display: 'block'
                   }} 
                 />
               </div>

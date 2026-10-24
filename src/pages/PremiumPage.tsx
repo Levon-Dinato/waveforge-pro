@@ -229,7 +229,7 @@ export const PremiumPage: React.FC = () => {
                   const iframeSrc = getIframeSrc(track.embed_code);
 
                   return (
-                    <div key={track.id} style={{ marginBottom: 0 }}> {/* Pas de margin entre les rows, on gère avec les bordures */}
+                    <div key={track.id} style={{ marginBottom: 0 }}>
                       <div 
                         className="track-row" 
                         onClick={() => isPlayable && handlePlayTrack(track)}
@@ -239,7 +239,6 @@ export const PremiumPage: React.FC = () => {
                           {isPlayable ? (
                             currentTrack?.id === track.id && isPlaying ? '⏸' : '▶'
                           ) : (
-                            // ✅ Icône "Lien Externe" plus propre
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={themeColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
                           )}
                         </div>
@@ -258,23 +257,21 @@ export const PremiumPage: React.FC = () => {
                         </div>
                       </div>
                       
-                      {/* ✅ IFRAME BEATPORT HARMONISÉ */}
+                      {/* ✅ IFRAME BEATPORT HARMONISÉ (Fond transparent, aligné, arrondi) */}
                       {iframeSrc && (
                         <div style={{ 
-                          padding: '0 20px 20px 20px', // Aligné avec le padding du track-row
-                          background: 'rgba(0,0,0,0.2)', // Léger fond pour intégrer l'iframe
-                          borderBottom: '1px solid var(--border)',
-                          borderLeft: `3px solid ${themeColor}`, // Petite touche de couleur
+                          padding: '0 24px 24px 24px', // Même padding que le track-row
+                          background: 'transparent', // On laisse le fond de la tracklist apparaître
                           display: 'flex',
                           justifyContent: 'center',
                         }}>
                           <div style={{ 
                             width: '100%', 
-                            maxWidth: '800px', // Plus large
-                            borderRadius: '12px', 
+                            maxWidth: '100%', // Prend toute la largeur disponible
+                            borderRadius: '8px', 
                             overflow: 'hidden', 
-                            border: '1px solid #333',
-                            boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
+                            border: '1px solid #233b54', // Bordure assortie au thème
+                            boxShadow: '0 4px 15px rgba(0,0,0,0.3)'
                           }}>
                             <iframe 
                               src={iframeSrc} 

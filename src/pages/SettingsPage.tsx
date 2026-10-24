@@ -1,6 +1,6 @@
 // src/pages/SettingsPage.tsx
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom'; // ✅ Import de Link
+import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -9,6 +9,9 @@ export const SettingsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
+  
+  // ✅ NOUVEAU : État pour savoir si l'utilisateur est Premium
+  const [isPremium, setIsPremium] = useState(false);
 
   const [form, setForm] = useState({
     username: '',
@@ -28,6 +31,9 @@ export const SettingsPage: React.FC = () => {
     const fetchProfile = async () => {
       const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single();
       if (data) {
+        // ✅ On vérifie le statut premium
+        setIsPremium(data.is_premium || false);
+        
         setForm({
           username: data.username || '',
           bio: data.bio || '',
@@ -75,28 +81,71 @@ export const SettingsPage: React.FC = () => {
 
   if (loading) return <div style={{ padding: 40, color: '#fff', textAlign: 'center' }}>Chargement...</div>;
 
+  // ✅ ÉCRAN DE BLOCAGE : Si l'utilisateur n'est pas Premium
+  if (!isPremium) {
+    const gmailPremiumLink = `https://mail.google.com/mail/?view=cm&fs=1&to=djcontrolradiotv1@gmail.com&su=Demande%20d'acc%C3%A8s%20Premium&body=Salut,%20je%20suis%20${form.username || 'un artiste'}%20et%20je%20souhaite%20passer%20ma%20page%20en%20Premium.%20Voici%20mon%20profil%20:%20https://waveforge-pro-one.vercel.app/premium/${form.username || ''}`;
+    
+    return (
+      <div style={{ maxWidth: 800, margin: '0 auto', padding: '60px 20px', color: '#fff', fontFamily: 'Inter, sans-serif', display: 'flex', justifyContent: 'center' }}>
+        <div style={{ 
+          background: 'linear-gradient(145deg, rgba(13, 22, 33, 0.95), rgba(6, 13, 20, 0.95))', 
+          border: '1px solid rgba(0, 217, 255, 0.3)', 
+          borderRadius: 24, 
+          padding: '50px 40px', 
+          textAlign: 'center',
+          maxWidth: 600,
+          boxShadow: '0 20px 50px rgba(0,0,0,0.5), 0 0 40px rgba(0,217,255,0.1)'
+        }}>
+          <div style={{ fontSize: 50, marginBottom: 20 }}>✨</div>
+          <h1 style={{ fontSize: 32, fontWeight: 900, marginBottom: 16 }}>Passez à la vitesse supérieure</h1>
+          <p style={{ color: '#8c9f98', fontSize: 16, lineHeight: 1.6, marginBottom: 30 }}>
+            La personnalisation de votre page (couleurs, bio, réseaux) est une fonctionnalité réservée aux membres <strong>Premium</strong>.
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 40, textAlign: 'left', background: '#0a0a0a', padding: 24, borderRadius: 12, border: '1px solid #222' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14 }}>✅ Couleur de site personnalisée</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14 }}>✅ Biographie et réseaux sociaux</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14 }}>✅ Page officielle sur-mesure (ex: /premium/votre-nom)</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14 }}>✅ Un design digne des plus grands artistes</div>
+          </div>
+          
+          <a 
+            href={gmailPremiumLink} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            style={{ 
+              display: 'inline-block',
+              padding: '16px 32px', 
+              background: 'linear-gradient(180deg, #10202e 0%, #060b10 100%)', 
+              color: '#00d9ff', 
+              borderRadius: 8, 
+              fontSize: 16, 
+              fontWeight: 800, 
+              textDecoration: 'none',
+              border: '1px solid #00d9ff',
+              boxShadow: '0 10px 20px rgba(0,0,0,0.5), 0 0 20px rgba(0,217,255,0.2)'
+            }}
+          >
+            🚀 Débloquer mon accès Premium
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  // ✅ SI L'UTILISATEUR EST PREMIUM : On affiche le formulaire
   return (
     <div style={{ maxWidth: 800, margin: '0 auto', padding: '40px 20px', color: '#fff', fontFamily: 'Inter, sans-serif' }}>
       
-      {/* ✅ EN-TÊTE AVEC LE BOUTON POUR VOIR LA PAGE PUBLIQUE */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16, marginBottom: 10 }}>
-        <h1 style={{ fontSize: 32, fontWeight: 800, margin: 0 }}>Mon Profil Public</h1>
+        <div>
+          <h1 style={{ fontSize: 32, fontWeight: 800, margin: 0 }}>Mon Profil Public <span style={{ fontSize: 12, background: '#00d9ff', color: '#000', padding: '4px 8px', borderRadius: 4, verticalAlign: 'middle', marginLeft: 10 }}>PREMIUM</span></h1>
+        </div>
         
         {form.username && (
           <Link 
             to={`/premium/${form.username}`} 
             target="_blank"
-            style={{ 
-              padding: '10px 20px', 
-              background: form.theme_color, 
-              color: '#000', 
-              borderRadius: 8, 
-              fontWeight: 700, 
-              textDecoration: 'none',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8
-            }}
+            style={{ padding: '10px 20px', background: form.theme_color, color: '#000', borderRadius: 8, fontWeight: 700, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8 }}
           >
             Voir ma page publique ↗
           </Link>

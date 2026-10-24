@@ -15,7 +15,11 @@ export const SettingsPage: React.FC = () => {
   const [myTracks, setMyTracks] = useState<any[]>([]);
   const [editingTrackId, setEditingTrackId] = useState<string | null>(null);
   const [editTrackForm, setEditTrackForm] = useState({ title: '', genre: '', bpm: 0 });
+  
+  // ✅ États pour les images
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadingGallery, setUploadingGallery] = useState(false);
+  const [galleryImages, setGalleryImages] = useState<any[]>([]);
 
   const [form, setForm] = useState({
     username: '', bio: '', hero_tagline: 'Nouveaux remixes disponibles', hero_title: '', hero_description: '',
@@ -38,10 +42,8 @@ export const SettingsPage: React.FC = () => {
           background_video_url: data.background_video_url || '',
           instagram_url: data.instagram_url || '', spotify_url: data.spotify_url || '',
           soundcloud_url: data.soundcloud_url || '', tiktok_url: data.tiktok_url || '',
-          youtube_url: data.youtube_url || '',
-          beatport_url: data.beatport_url || '',
-          x_url: data.x_url || '',
-          facebook_url: data.facebook_url || ''
+          youtube_url: data.youtube_url || '', beatport_url: data.beatport_url || '',
+          x_url: data.x_url || '', facebook_url: data.facebook_url || ''
         });
       }
       setLoading(false);
@@ -49,24 +51,77 @@ export const SettingsPage: React.FC = () => {
     fetchProfile();
   }, [user]);
 
+  // ✅ Charger la galerie
+  const fetchGallery = async () => {
+    if (!user) return;
+    const { data } = await supabase.from('profile_gallery').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
+    if (data) setGalleryImages(data);
+  };
+
+  useEffect(() => { 
+    if (user) fetchGallery(); 
+  }, [user]);
+
+  // ✅ Upload de l'Avatar (avec dossier user_id)
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     
     setUploadingImage(true);
     try {
-      const fileName = `${user?.id}-${Date.now()}.${file.name.split('.').pop()}`;
+      const fileName = `${user?.id}/avatar-${Date.now()}.${file.name.split('.').pop()}`;
       const { error: uploadError } = await supabase.storage.from('media').upload(fileName, file);
       if (uploadError) throw uploadError;
 
       const { data } = supabase.storage.from('media').getPublicUrl(fileName);
       setForm(prev => ({ ...prev, avatar_url: data.publicUrl }));
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erreur upload:", error);
-      alert("Erreur lors de l'upload de l'image.");
+      alert("Erreur lors de l'upload de l'image: " + error.message);
     } finally {
       setUploadingImage(false);
     }
+  };
+
+  // ✅ Upload MULTIPLE de la Galerie
+  const handleGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    
+    setUploadingGallery(true);
+    try {
+      const uploadPromises = Array.from(files).map(async (file) => {
+        const fileName = `${user?.id}/gallery-${Date.now()}-${Math.random().toString(36).substring(7)}.${file.name.split('.').pop()}`;
+        const { error } = await supabase.storage.from('media').upload(fileName, file);
+        if (error) throw error;
+        
+        const { data } = supabase.storage.from('media').getPublicUrl(fileName);
+        return { user_id: user?.id, image_url: data.publicUrl };
+      });
+
+      const newImages = await Promise.all(uploadPromises);
+      const { error: dbError } = await supabase.from('profile_gallery').insert(newImages);
+      
+      if (dbError) throw dbError;
+      fetchGallery(); // Recharger
+    } catch (error: any) {
+      console.error("Erreur galerie:", error);
+      alert("Erreur lors de l'upload: " + error.message);
+    } finally {
+      setUploadingGallery(false);
+    }
+  };
+
+  // ✅ Supprimer une image de la galerie
+  const handleDeleteGalleryImage = async (id: string, url: string) => {
+    if (!window.confirm("Supprimer cette image ?")) return;
+    
+    // Extraire le chemin du fichier de l'URL
+    const filePath = url.split('/media/')[1];
+    
+    await supabase.storage.from('media').remove([filePath]);
+    await supabase.from('profile_gallery').delete().eq('id', id);
+    setGalleryImages(galleryImages.filter(img => img.id !== id));
   };
 
   const fetchMyTracks = async () => {
@@ -89,10 +144,8 @@ export const SettingsPage: React.FC = () => {
       background_video_url: form.background_video_url,
       instagram_url: form.instagram_url, spotify_url: form.spotify_url,
       soundcloud_url: form.soundcloud_url, tiktok_url: form.tiktok_url,
-      youtube_url: form.youtube_url,
-      beatport_url: form.beatport_url,
-      x_url: form.x_url,
-      facebook_url: form.facebook_url
+      youtube_url: form.youtube_url, beatport_url: form.beatport_url,
+      x_url: form.x_url, facebook_url: form.facebook_url
     }).eq('id', user.id);
     if (error) setMessage("Erreur : " + error.message);
     else setMessage("Profil mis à jour avec succès ! ✅");
@@ -128,29 +181,21 @@ export const SettingsPage: React.FC = () => {
   if (!isPremium) {
     return (
       <div style={{ maxWidth: 800, margin: '0 auto', padding: '60px 20px', color: '#fff', fontFamily: 'Inter, sans-serif', display: 'flex', justifyContent: 'center' }}>
-        <div style={{ 
-          background: 'linear-gradient(145deg, rgba(13, 22, 33, 0.95), rgba(6, 13, 20, 0.95))', 
-          border: '1px solid rgba(0, 217, 255, 0.3)', borderRadius: 24, padding: '50px 40px', textAlign: 'center', maxWidth: 600, boxShadow: '0 20px 50px rgba(0,0,0,0.5), 0 0 40px rgba(0,217,255,0.1)'
-        }}>
+        <div style={{ background: 'linear-gradient(145deg, rgba(13, 22, 33, 0.95), rgba(6, 13, 20, 0.95))', border: '1px solid rgba(0, 217, 255, 0.3)', borderRadius: 24, padding: '50px 40px', textAlign: 'center', maxWidth: 600, boxShadow: '0 20px 50px rgba(0,0,0,0.5), 0 0 40px rgba(0,217,255,0.1)' }}>
           <div style={{ fontSize: 50, marginBottom: 20 }}>✨</div>
           <h1 style={{ fontSize: 32, fontWeight: 900, marginBottom: 16 }}>Passez à la vitesse supérieure</h1>
-          <p style={{ color: '#8c9f98', fontSize: 16, lineHeight: 1.6, marginBottom: 30 }}>
-            La personnalisation de votre page et la gestion de votre musique sont réservées aux membres <strong>Premium</strong>.
-          </p>
-          
+          <p style={{ color: '#8c9f98', fontSize: 16, lineHeight: 1.6, marginBottom: 30 }}>La personnalisation de votre page et la gestion de votre musique sont réservées aux membres <strong>Premium</strong>.</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 40, textAlign: 'left', background: '#0a0a0a', padding: 24, borderRadius: 12, border: '1px solid #222' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14 }}>✅ Couleur de site personnalisée</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14 }}>✅ Biographie et réseaux sociaux</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14 }}>✅ Gestion de votre musique</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14 }}>✅ Page officielle sur-mesure</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14 }}>✅ Galerie photos & Page sur-mesure</div>
           </div>
-
           <div style={{ background: 'rgba(0, 217, 255, 0.1)', border: '1px solid rgba(0, 217, 255, 0.3)', borderRadius: 12, padding: '16px', marginBottom: 24 }}>
             <div style={{ fontSize: 26, fontWeight: 900, color: '#00d9ff', marginBottom: 4 }}>30 € / an</div>
             <div style={{ fontSize: 14, color: '#fff', fontWeight: 600 }}>Abonnement annuel DropZone Premium</div>
             <div style={{ fontSize: 12, color: '#888', marginTop: 4 }}>(Soit seulement 2,50 € par mois)</div>
           </div>
-          
           <div style={{ background: '#fff', borderRadius: 8, padding: '10px', display: 'inline-block', minWidth: '250px' }}>
             <PayPalButton />
           </div>
@@ -174,7 +219,7 @@ export const SettingsPage: React.FC = () => {
         )}
       </div>
       
-      <p style={{ color: '#888', marginBottom: 30 }}>Gère ton identité et ta musique.</p>
+      <p style={{ color: '#888', marginBottom: 30 }}>Gère ton identité, ta musique et tes photos.</p>
 
       {message && (
         <div style={{ padding: 16, background: message.includes('Erreur') ? 'rgba(255,0,0,0.1)' : 'rgba(0,217,255,0.1)', border: `1px solid ${message.includes('Erreur') ? '#ff3366' : form.theme_color}`, borderRadius: 8, marginBottom: 24, color: message.includes('Erreur') ? '#ff3366' : form.theme_color }}>
@@ -221,6 +266,35 @@ export const SettingsPage: React.FC = () => {
             ))
           )}
         </div>
+      </div>
+
+      {/* ✅ NOUVELLE SECTION : GALERIE PHOTOS */}
+      <div style={{ background: '#121212', padding: 24, borderRadius: 12, border: '1px solid #222', marginBottom: 24 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+          <h2 style={{ fontSize: 18, color: '#fff', margin: 0 }}>Ma Galerie Photos ({galleryImages.length})</h2>
+          <label style={{ background: '#fff', color: '#000', padding: '8px 16px', borderRadius: 6, fontWeight: 800, cursor: uploadingGallery ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+            {uploadingGallery ? 'Upload...' : '+ Ajouter des photos'}
+            <input type="file" accept="image/*" multiple onChange={handleGalleryUpload} disabled={uploadingGallery} style={{ display: 'none' }} />
+          </label>
+        </div>
+
+        {galleryImages.length === 0 ? (
+          <p style={{ color: '#666', fontSize: 14 }}>Aucune photo pour le moment. Ajoute des photos pour montrer tes meilleurs moments !</p>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 12 }}>
+            {galleryImages.map((img) => (
+              <div key={img.id} style={{ position: 'relative', aspectRatio: '1', borderRadius: 8, overflow: 'hidden', border: '1px solid #333' }}>
+                <img src={img.image_url} alt="Gallery" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <button 
+                  onClick={() => handleDeleteGalleryImage(img.id, img.image_url)}
+                  style={{ position: 'absolute', top: 4, right: 4, background: 'rgba(255,0,0,0.8)', color: '#fff', border: 'none', borderRadius: '50%', width: 24, height: 24, cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                >
+                  X
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* SECTION ÉVÉNEMENTS */}
@@ -280,19 +354,10 @@ export const SettingsPage: React.FC = () => {
             <input type="text" value={form.hero_tagline} onChange={(e) => setForm({ ...form, hero_tagline: e.target.value })} placeholder="Ex: Nouveaux remixes disponibles" style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
           </div>
           
-          {/* ✅ CHAMP TITRE AVEC L'ASTUCE */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
             <label style={{ fontSize: 13, color: '#aaa' }}>Titre principal</label>
-            <input 
-              type="text" 
-              value={form.hero_title} 
-              onChange={(e) => setForm({ ...form, hero_title: e.target.value })} 
-              placeholder="Ex: L'expérience *sonore* ultime." 
-              style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} 
-            />
-            <span style={{ fontSize: 11, color: '#00d9ff' }}>
-              💡 Astuce : Entoure un mot d'astérisques pour le colorer. Ex : L'expérience *sonore* ultime.
-            </span>
+            <input type="text" value={form.hero_title} onChange={(e) => setForm({ ...form, hero_title: e.target.value })} placeholder="Ex: L'expérience *sonore* ultime." style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+            <span style={{ fontSize: 11, color: '#00d9ff' }}>💡 Astuce : Entoure un mot d'astérisques pour le colorer. Ex : L'expérience *sonore* ultime.</span>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>

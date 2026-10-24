@@ -8,6 +8,90 @@ import { usePlayer } from '../contexts/PlayerContext';
 import { GlobalPlayer } from '../components/GlobalPlayer';
 import './LevonDinato.css';
 
+// ✅ COMPOSANT CANVAS WAVEFORM (Style Beatport/Pro)
+const CanvasWaveform: React.FC<{ peaks: number[]; progress: number; isPlaying: boolean; themeColor: string }> = ({ peaks, progress, isPlaying, themeColor }) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const DPR = window.devicePixelRatio || 1;
+    const W = canvas.clientWidth;
+    const H = canvas.clientHeight;
+    canvas.width = W * DPR;
+    canvas.height = H * DPR;
+    ctx.scale(DPR, DPR);
+
+    // Fond
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, W, H);
+
+    // Sécurité si peaks vide
+    if (!peaks || peaks.length === 0) return;
+
+    const centerY = H / 2;
+    const maxAmplitude = H * 0.42;
+    const playedX = progress * W;
+
+    // ÉTAPE 1 : Waveform grise (non jouée)
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+    for (let i = 0; i < peaks.length; i++) {
+      const x = (i / peaks.length) * W;
+      const barWidth = W / peaks.length;
+      // Les peaks peuvent être 0-100 ou 0-1, on normalise
+      const val = peaks[i] > 1 ? peaks[i] / 100 : peaks[i];
+      const barHeight = Math.max(val * maxAmplitude, 2);
+      if (x >= playedX) {
+        ctx.fillRect(x, centerY - barHeight, barWidth * 0.85, barHeight * 2);
+      }
+    }
+
+    // ÉTAPE 2 : Waveform cyan (jouée) - On clip
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(0, 0, playedX, H);
+    ctx.clip();
+
+    const gradient = ctx.createLinearGradient(0, 0, 0, H);
+    gradient.addColorStop(0, 'rgba(0, 217, 255, 0.15)');
+    gradient.addColorStop(0.5, 'rgba(0, 217, 255, 1)');
+    gradient.addColorStop(1, 'rgba(0, 217, 255, 0.15)');
+
+    ctx.fillStyle = gradient;
+    ctx.shadowColor = themeColor;
+    ctx.shadowBlur = 6;
+
+    for (let i = 0; i < peaks.length; i++) {
+      const x = (i / peaks.length) * W;
+      const barWidth = W / peaks.length;
+      const val = peaks[i] > 1 ? peaks[i] / 100 : peaks[i];
+      const barHeight = Math.max(val * maxAmplitude, 2);
+      ctx.fillRect(x, centerY - barHeight, barWidth * 0.85, barHeight * 2);
+    }
+
+    ctx.shadowBlur = 0;
+    ctx.restore();
+
+    // ÉTAPE 3 : Tête de lecture
+    if (isPlaying) {
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 2;
+      ctx.shadowColor = '#fff';
+      ctx.shadowBlur = 10;
+      ctx.beginPath();
+      ctx.moveTo(playedX, 0);
+      ctx.lineTo(playedX, H);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
+  }, [peaks, progress, isPlaying, themeColor]);
+
+  return <canvas ref={canvasRef} style={{ width: '100%', height: '70px', display: 'block', borderRadius: '8px' }} />;
+};
+
 export const PremiumPage: React.FC = () => {
   const navigate = useNavigate();
   const { username } = useParams<{ username: string }>();
@@ -114,68 +198,6 @@ export const PremiumPage: React.FC = () => {
       }
       return <React.Fragment key={index}>{part}</React.Fragment>;
     });
-  };
-
-  // ✅ WAVEFORM ULTRA-RÉALISTE (Style Beatport)
-  const renderProWaveform = (peaks: any, isPlaying: boolean) => {
-    if (!peaks || !Array.isArray(peaks) || peaks.length === 0) {
-      peaks = Array.from({ length: 100 }, () => Math.random() * 80 + 20);
-    }
-
-    // On crée 80 barres pour un effet dense
-    const barCount = 80;
-    const step = Math.ceil(peaks.length / barCount);
-    const displayPeaks = peaks.filter((_: any, i: number) => i % step === 0).slice(0, barCount);
-    
-    // Simulation de progression (30% si en cours, sinon 0)
-    const progress = isPlaying ? 0.35 : 0; 
-    const playedIndex = Math.floor(displayPeaks.length * progress);
-
-    return (
-      <div style={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'space-between', // Espacement régulier
-        height: '70px', // ✅ Plus épais
-        marginTop: '16px', 
-        width: '100%',
-        background: '#000', 
-        borderRadius: '8px',
-        padding: '10px 20px',
-        position: 'relative', // Pour la tête de lecture
-        overflow: 'hidden'
-      }}>
-        {displayPeaks.map((p: number, i: number) => {
-          const isPlayed = i <= playedIndex;
-          return (
-            <div 
-              key={i} 
-              style={{ 
-                width: '2px', // ✅ Barres fines
-                height: `${Math.max(p, 15)}%`, // ✅ Hauteur variable
-                background: isPlayed ? 'var(--accent)' : 'rgba(255,255,255,0.3)', // ✅ Couleurs Beatport
-                borderRadius: '1px'
-              }} 
-            />
-          );
-        })}
-
-        {/* ✅ TÊTE DE LECTURE (Ligne verticale blanche) */}
-        {isPlaying && (
-          <div style={{
-            position: 'absolute',
-            left: `${20 + (progress * 100)}%`, 
-            top: 0,
-            bottom: 0,
-            width: '2px',
-            background: '#fff',
-            boxShadow: '0 0 8px #fff',
-            zIndex: 10,
-            opacity: 0.8
-          }} />
-        )}
-      </div>
-    );
   };
 
   if (loading) return <div style={{ background: '#050a10', color: '#fff', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Chargement...</div>;
@@ -298,6 +320,10 @@ export const PremiumPage: React.FC = () => {
                   const isPlayable = track.audio_url && track.audio_url.length > 0;
                   const iframeSrc = getIframeSrc(track.embed_code);
                   const isThisPlaying = currentTrack?.id === track.id && isPlaying;
+                  // Calcul du progress pour la waveform (0 à 1)
+                  // Si on n'a pas le currentTime précis par track, on met 0 par défaut
+                  // et l'animation ne se fera que sur le lecteur global en bas
+                  const trackProgress = isThisPlaying ? 0.35 : 0;
 
                   return (
                     <div 
@@ -380,7 +406,12 @@ export const PremiumPage: React.FC = () => {
 
                       {isPlayable && !iframeSrc && (
                         <div style={{ padding: '0 20px 20px 20px' }}>
-                          {renderProWaveform(track.peaks, isThisPlaying)}
+                          <CanvasWaveform 
+                            peaks={track.peaks} 
+                            progress={trackProgress} 
+                            isPlaying={isThisPlaying}
+                            themeColor={themeColor}
+                          />
                         </div>
                       )}
 

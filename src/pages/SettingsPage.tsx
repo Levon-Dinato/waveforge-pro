@@ -15,6 +15,11 @@ export const SettingsPage: React.FC = () => {
   const [myTracks, setMyTracks] = useState<any[]>([]);
   const [editingTrackId, setEditingTrackId] = useState<string | null>(null);
   const [editTrackForm, setEditTrackForm] = useState({ title: '', genre: '', bpm: 0, purchase_url: '' });
+  
+  // ✅ Nouveaux états pour l'ajout d'un lien externe
+  const [showLinkForm, setShowLinkForm] = useState(false);
+  const [linkForm, setLinkForm] = useState({ title: '', artist: '', genre: 'Inconnu', purchase_url: '', cover_url: '' });
+
   const [uploadingImage, setUploadingImage] = useState(false);
   const [uploadingGallery, setUploadingGallery] = useState(false);
   const [galleryImages, setGalleryImages] = useState<any[]>([]);
@@ -88,7 +93,7 @@ export const SettingsPage: React.FC = () => {
         const { error } = await supabase.storage.from('media').upload(fileName, file);
         if (error) throw error;
         
-        const { data } = supabase.storage.from('media').getPublicUrl(fileName);
+        const { data } = await supabase.storage.from('media').getPublicUrl(fileName);
         return { user_id: user?.id, image_url: data.publicUrl };
       });
 
@@ -139,6 +144,40 @@ export const SettingsPage: React.FC = () => {
     if (error) setMessage("Erreur : " + error.message);
     else setMessage("Profil mis à jour avec succès ! ✅");
     setSaving(false);
+  };
+
+  // ✅ NOUVELLE FONCTION : Ajouter un lien externe
+  const handleSaveLink = async () => {
+    if (!user || !linkForm.title || !linkForm.purchase_url) {
+      alert("Le titre et le lien Beatport sont obligatoires.");
+      return;
+    }
+    setSaving(true);
+    try {
+      const { data, error } = await supabase.from('tracks').insert({
+        user_id: user.id,
+        title: linkForm.title,
+        artist: linkForm.artist || form.username || 'Artiste',
+        genre: linkForm.genre,
+        purchase_url: linkForm.purchase_url,
+        cover_url: linkForm.cover_url || null,
+        audio_url: linkForm.purchase_url, // On met l'URL Beatport par défaut
+        peaks: [],
+        likes_count: 0,
+        downloads: 0,
+      }).select().single();
+
+      if (error) throw error;
+      if (data) {
+        setMyTracks([data, ...myTracks]);
+        setShowLinkForm(false);
+        setLinkForm({ title: '', artist: '', genre: 'Inconnu', purchase_url: '', cover_url: '' });
+      }
+    } catch (err: any) {
+      alert("Erreur : " + err.message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleDeleteTrack = async (trackId: string) => {
@@ -218,7 +257,7 @@ export const SettingsPage: React.FC = () => {
       
       <p style={{ color: '#888', marginBottom: 30 }}>Gère ton identité, ta musique et tes photos.</p>
 
-      {/* ✅ MESSAGE DE BIENVENUE PREMIUM */}
+      {/* MESSAGE DE BIENVENUE */}
       <div style={{ 
         background: 'linear-gradient(90deg, rgba(0, 217, 255, 0.15) 0%, rgba(10, 18, 26, 0) 100%)', 
         borderLeft: '4px solid #00d9ff', 
@@ -248,13 +287,35 @@ export const SettingsPage: React.FC = () => {
 
       {/* SECTION MUSIQUE */}
       <div style={{ background: '#121212', padding: 24, borderRadius: 12, border: '1px solid #222', marginBottom: 24 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 10 }}>
           <h2 style={{ fontSize: 18, color: '#fff', margin: 0 }}>Ma Musique ({myTracks.length})</h2>
-          <Link to="/nouveautes" style={{ background: '#fff', color: '#000', padding: '8px 16px', borderRadius: 6, fontWeight: 800, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>+ Uploader un son</Link>
+          <div style={{ display: 'flex', gap: 10 }}>
+            {/* ✅ NOUVEAU BOUTON AJOUTER UN LIEN */}
+            <button onClick={() => setShowLinkForm(!showLinkForm)} style={{ background: 'transparent', color: '#00d9ff', border: '1px solid #00d9ff', padding: '8px 16px', borderRadius: 6, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+              {showLinkForm ? 'Annuler' : '+ Ajouter via un lien'}
+            </button>
+            <Link to="/nouveautes" style={{ background: '#fff', color: '#000', padding: '8px 16px', borderRadius: 6, fontWeight: 800, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>+ Uploader un MP3</Link>
+          </div>
         </div>
+
+        {/* ✅ FORMULAIRE D'AJOUT DE LIEN */}
+        {showLinkForm && (
+          <div style={{ background: '#0a0a0a', padding: 20, borderRadius: 8, border: '1px solid #333', marginBottom: 20, display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <h3 style={{ margin: 0, fontSize: 14, color: '#fff' }}>Ajouter une sortie via un lien (Beatport, Traxsource...)</h3>
+            <input type="text" placeholder="Titre du son *" value={linkForm.title} onChange={e => setLinkForm({...linkForm, title: e.target.value})} style={{ padding: 10, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4 }} />
+            <input type="text" placeholder="Artiste (par défaut : ton pseudo)" value={linkForm.artist} onChange={e => setLinkForm({...linkForm, artist: e.target.value})} style={{ padding: 10, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4 }} />
+            <input type="text" placeholder="Genre" value={linkForm.genre} onChange={e => setLinkForm({...linkForm, genre: e.target.value})} style={{ padding: 10, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4 }} />
+            <input type="url" placeholder="Lien Beatport (ou autre) *" value={linkForm.purchase_url} onChange={e => setLinkForm({...linkForm, purchase_url: e.target.value})} style={{ padding: 10, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4 }} />
+            <input type="url" placeholder="Lien de l'image de la cover (optionnel)" value={linkForm.cover_url} onChange={e => setLinkForm({...linkForm, cover_url: e.target.value})} style={{ padding: 10, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4 }} />
+            <button onClick={handleSaveLink} disabled={saving} style={{ padding: '10px', background: '#00d9ff', color: '#000', border: 'none', borderRadius: 4, fontWeight: 'bold', cursor: saving ? 'wait' : 'pointer' }}>
+              {saving ? 'Enregistrement...' : 'Ajouter ce son'}
+            </button>
+          </div>
+        )}
+
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {myTracks.length === 0 ? (
-            <p style={{ color: '#666', fontSize: 14 }}>Tu n'as pas encore de sons. Clique sur "+ Uploader".</p>
+            <p style={{ color: '#666', fontSize: 14 }}>Tu n'as pas encore de sons. Clique sur "+ Uploader" ou "+ Ajouter via un lien".</p>
           ) : (
             myTracks.map(track => (
               <div key={track.id} style={{ display: 'flex', flexDirection: 'column', gap: 12, background: '#0a0a0a', padding: '12px 16px', borderRadius: 8, border: '1px solid #333' }}>

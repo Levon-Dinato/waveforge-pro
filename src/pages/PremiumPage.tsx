@@ -1,13 +1,15 @@
 // src/pages/PremiumPage.tsx
 import React, { useState, useRef, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, Link } from 'react-router-dom'; // ✅ Ajout de Link
 import { supabase } from '../lib/supabase';
+import { useAuth } from '../contexts/AuthContext'; // ✅ Ajout de useAuth
 import './LevonDinato.css';
 
 export const PremiumPage: React.FC = () => {
   const navigate = useNavigate();
   const { username } = useParams<{ username: string }>();
+  const { user } = useAuth(); // ✅ Récupération de l'utilisateur connecté
   
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<any>(null);
@@ -110,24 +112,34 @@ export const PremiumPage: React.FC = () => {
     } catch { return 'DATE'; }
   };
 
-  if (loading) return <div style={{ background: '#050a10', color: '#fff', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Chargement de la page...</div>;
+  if (loading) return <div style={{ background: '#050a10', color: '#fff', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Chargement...</div>;
   if (!profile) return <div style={{ background: '#050a10', color: '#fff', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Artiste introuvable.</div>;
 
   const gmailContactLink = `https://mail.google.com/mail/?view=cm&fs=1&to=djcontrolradiotv1@gmail.com&su=Booking%20${profile.username}&body=Salut,%20je%20souhaite%20vous%20contacter%20pour%20un%20booking.`;
-  
-  // ✅ Récupération de la couleur du profil (avec fallback cyan)
   const themeColor = profile.theme_color || '#00d9ff';
+  
+  // ✅ Vérification si le visiteur est le propriétaire de la page
+  const isOwner = user?.id === profile.id;
 
   return (
-    <div 
-      className="levon-page"
-      style={{ '--accent': themeColor } as React.CSSProperties} // ✅ Applique la couleur dynamiquement
-    >
+    <div className="levon-page" style={{ '--accent': themeColor } as React.CSSProperties}>
       <Helmet>
         <title>{profile.username} — Page Officielle</title>
         <meta property="og:title" content={`${profile.username} — DJ & Production`} />
         <meta property="og:image" content={profile.avatar_url || '/og-levon-dinato.jpg'} />
       </Helmet>
+
+      {/* ✅ BARRE D'ÉDITION (uniquement visible par le propriétaire) */}
+      {isOwner && (
+        <div style={{ position: 'fixed', bottom: 20, right: 20, zIndex: 9999, display: 'flex', gap: 10 }}>
+          <Link 
+            to="/settings" 
+            style={{ background: themeColor, color: '#000', padding: '12px 24px', borderRadius: 30, fontWeight: 800, textDecoration: 'none', boxShadow: '0 10px 20px rgba(0,0,0,0.5)' }}
+          >
+            ✏️ Modifier ma page
+          </Link>
+        </div>
+      )}
 
       <div className="top-bar">
         <button onClick={() => navigate('/')} className="back-btn">
@@ -182,12 +194,14 @@ export const PremiumPage: React.FC = () => {
           <source src="/background.mp4" type="video/mp4" />
         </video>
         <div className="wrapper hero-inner">
-          {/* ✅ Phrase d'accroche dynamique */}
           <div className="hero-tag">{profile.hero_tagline || "Nouveaux remixes disponibles"}</div>
-          <h1 className="hero-title">L'expérience <span>sonore</span> de {profile.username}.</h1>
+          
+          {/* ✅ TITRE ET DESCRIPTION DYNAMIQUES */}
+          <h1 className="hero-title">
+            {profile.hero_title ? profile.hero_title : `L'expérience sonore de ${profile.username}.`}
+          </h1>
           <p className="hero-desc">
-            Découvrez les productions exclusives et l'univers unique de {profile.username}. 
-            Plongez dans leur monde musical et vibrez au rythme de leurs dernières sorties.
+            {profile.hero_description || `Découvrez les productions exclusives et l'univers unique de ${profile.username}. Plongez dans leur monde musical et vibrez au rythme de leurs dernières sorties.`}
           </p>
           
           <div className="hero-actions">
@@ -201,54 +215,35 @@ export const PremiumPage: React.FC = () => {
           <section id="about">
             <div className="section-header"><h2 className="section-title">L'Artiste</h2></div>
             
-            {/* ✅ MODULE PRINCIPAL (Image + Texte court) */}
             <div 
               style={{ 
-                display: 'flex', 
-                flexDirection: 'row', 
-                flexWrap: 'wrap', 
-                gap: '40px', 
-                padding: '40px', 
-                alignItems: 'center',
-                justifyContent: 'space-between',
+                display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: '40px', padding: '40px', alignItems: 'center', justifyContent: 'space-between',
                 background: 'linear-gradient(145deg, rgba(13, 22, 33, 0.95), rgba(6, 13, 20, 0.95))',
-                border: '1px solid rgba(0, 217, 255, 0.15)',
-                borderRadius: '16px',
-                boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5)'
+                border: '1px solid rgba(0, 217, 255, 0.15)', borderRadius: '16px', boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5)'
               }}
             >
               <div style={{ flex: '1 1 300px' }}>
-                <h3 style={{ fontSize: '2rem', fontWeight: 900, marginBottom: '16px', color: '#fff' }}>
-                  {profile.username}
-                </h3>
-                <p style={{ color: '#8c9f98', fontSize: '1.1rem', margin: 0 }}>
-                  Découvrez son univers musical exclusif et ses dernières sorties.
-                </p>
+                <h3 style={{ fontSize: '2rem', fontWeight: 900, marginBottom: '16px', color: '#fff' }}>{profile.username}</h3>
+                <p style={{ color: '#8c9f98', fontSize: '1.1rem', margin: 0 }}>Découvrez son univers musical exclusif et ses dernières sorties.</p>
               </div>
               
-              <div 
-                style={{ 
-                  flex: '0 0 350px', 
-                  width: '100%', 
-                  maxWidth: '350px',
-                  borderRadius: '16px', 
-                  overflow: 'hidden', 
-                  border: `1px solid ${themeColor}`, // Bordure avec la couleur du thème
-                  boxShadow: `0 10px 30px ${themeColor}40`, // Ombre avec la couleur du thème
-                  margin: '0 auto'
-                }}
-              >
-                <img 
-                  src={profile.avatar_url || "/logo.jpg"} 
-                  alt={profile.username} 
-                  style={{ width: '100%', height: 'auto', display: 'block', objectFit: 'cover' }} 
-                />
+              <div style={{ flex: '0 0 350px', width: '100%', maxWidth: '350px', borderRadius: '16px', overflow: 'hidden', border: `1px solid ${themeColor}`, boxShadow: `0 10px 30px ${themeColor}40`, margin: '0 auto' }}>
+                <img src={profile.avatar_url || "/logo.jpg"} alt={profile.username} style={{ width: '100%', height: 'auto', display: 'block', objectFit: 'cover' }} />
               </div>
             </div>
           </section>
 
           <section id="releases">
-            <div className="section-header"><h2 className="section-title">Dernières Sorties</h2></div>
+            {/* ✅ BOUTON AJOUTER UN SON (uniquement pour le propriétaire) */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border)', paddingBottom: '12px', marginBottom: '24px' }}>
+              <h2 className="section-title" style={{ border: 'none', margin: 0, padding: 0 }}>Dernières Sorties</h2>
+              {isOwner && (
+                <Link to="/studio" style={{ background: 'rgba(0, 217, 255, 0.1)', color: themeColor, padding: '8px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: '700', textDecoration: 'none', border: `1px solid ${themeColor}`, transition: 'all 0.2s' }}>
+                  + Ajouter un son
+                </Link>
+              )}
+            </div>
+            
             <div className="tracklist">
               <div className="track-header"><div></div><div>Titre / Artiste</div><div>Genre</div><div style={{ textAlign: 'right' }}>BPM</div></div>
               
@@ -269,7 +264,6 @@ export const PremiumPage: React.FC = () => {
 
         <aside className="sidebar">
           <div className="sidebar-inner">
-            
             <div className="sidebar-widget">
               <div className="sidebar-title">Prochaines Dates</div>
               {events.length > 0 ? events.map(event => (
@@ -283,32 +277,20 @@ export const PremiumPage: React.FC = () => {
             <div className="sidebar-widget">
               <div className="sidebar-title">Réseaux</div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '10px' }}>
-                {profile.instagram_url && (
-                  <a href={profile.instagram_url} target="_blank" rel="noreferrer" style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#0d1512', border: '1px solid #E1306C', color: '#E1306C', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', fontWeight: 'bold' }}>IG</a>
-                )}
-                {profile.spotify_url && (
-                  <a href={profile.spotify_url} target="_blank" rel="noreferrer" style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#0d1512', border: '1px solid #1DB954', color: '#1DB954', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', fontWeight: 'bold' }}>SP</a>
-                )}
-                {profile.soundcloud_url && (
-                  <a href={profile.soundcloud_url} target="_blank" rel="noreferrer" style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#0d1512', border: '1px solid #FF5500', color: '#FF5500', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', fontWeight: 'bold' }}>SC</a>
-                )}
-                {profile.tiktok_url && (
-                  <a href={profile.tiktok_url} target="_blank" rel="noreferrer" style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#0d1512', border: '1px solid #fff', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', fontWeight: 'bold' }}>TK</a>
-                )}
-                {profile.youtube_url && (
-                  <a href={profile.youtube_url} target="_blank" rel="noreferrer" style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#0d1512', border: '1px solid #FF0000', color: '#FF0000', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', fontWeight: 'bold' }}>YT</a>
-                )}
+                {profile.instagram_url && <a href={profile.instagram_url} target="_blank" rel="noreferrer" style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#0d1512', border: '1px solid #E1306C', color: '#E1306C', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', fontWeight: 'bold' }}>IG</a>}
+                {profile.spotify_url && <a href={profile.spotify_url} target="_blank" rel="noreferrer" style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#0d1512', border: '1px solid #1DB954', color: '#1DB954', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', fontWeight: 'bold' }}>SP</a>}
+                {profile.soundcloud_url && <a href={profile.soundcloud_url} target="_blank" rel="noreferrer" style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#0d1512', border: '1px solid #FF5500', color: '#FF5500', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', fontWeight: 'bold' }}>SC</a>}
+                {profile.tiktok_url && <a href={profile.tiktok_url} target="_blank" rel="noreferrer" style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#0d1512', border: '1px solid #fff', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', fontWeight: 'bold' }}>TK</a>}
+                {profile.youtube_url && <a href={profile.youtube_url} target="_blank" rel="noreferrer" style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#0d1512', border: '1px solid #FF0000', color: '#FF0000', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', fontWeight: 'bold' }}>YT</a>}
               </div>
             </div>
 
-            {/* ✅ LA BIO EST ICI, EN DESSOUS DES RÉSEAUX */}
             <div className="sidebar-widget">
               <div className="sidebar-title">Biographie</div>
               <p style={{ whiteSpace: 'pre-wrap', lineHeight: '1.6', color: '#8c9f98', fontSize: '0.85rem' }}>
                 {profile.bio || "Biographie à venir..."}
               </p>
             </div>
-
           </div>
         </aside>
       </div>
@@ -335,19 +317,14 @@ export const PremiumPage: React.FC = () => {
             <div className="audio-title">{currentTrack.title}</div>
             <div className="audio-artist">{currentTrack.artist}</div>
           </div>
-          <div className="audio-controls">
-            <button className="audio-btn" onClick={togglePlay}>{isPlaying ? '⏸' : '▶'}</button>
-          </div>
+          <div className="audio-controls"><button className="audio-btn" onClick={togglePlay}>{isPlaying ? '⏸' : '▶'}</button></div>
           <div className="audio-progress-wrap">
             <span className="audio-time">{formatTime(currentTime)}</span>
-            <div className="audio-progress" onClick={handleSeek}>
-              <div className="audio-progress-bar" style={{ width: `${progress}%` }}></div>
-            </div>
+            <div className="audio-progress" onClick={handleSeek}><div className="audio-progress-bar" style={{ width: `${progress}%` }}></div></div>
             <span className="audio-time">{formatTime(duration)}</span>
           </div>
         </div>
       )}
-
       <audio ref={audioRef} onTimeUpdate={handleTimeUpdate} />
     </div>
   );

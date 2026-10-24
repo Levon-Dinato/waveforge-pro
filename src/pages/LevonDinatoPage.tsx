@@ -1,14 +1,9 @@
 // src/pages/LevonDinatoPage.tsx
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '../lib/supabase';
 import './LevonDinato.css';
-
-const EVENTS = [
-  { date: '31 OCT', title: 'La Générale - Valence Horror Story#3', location: '27 Boulevard Maurice Clerc, 26000 Valence', image: 'https://images.unsplash.com/photo-1571266028243-3716f02d2d2e?w=100&h=100&fit=crop' },
-  { date: '11 NOV', title: 'Drôme & Bass #4 Au Vacarme Exquis', location: 'Vacarme Exquis | VEX, 811 Allée André Revol, Bourg-lès-Valence', image: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=100&h=100&fit=crop' },
-  { date: '30 OCT', title: 'Dream Nation Festival', location: 'Parc des Expositions, Paris', image: 'https://images.unsplash.com/photo-1470229722913-7ea0b3af5b41?w=100&h=100&fit=crop' },
-];
 
 export const LevonDinatoPage: React.FC = () => {
   const navigate = useNavigate();
@@ -19,7 +14,32 @@ export const LevonDinatoPage: React.FC = () => {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   
+  const [events, setEvents] = useState<any[]>([]);
+  
   const audioRef = useRef<HTMLAudioElement>(null);
+
+  useEffect(() => {
+    const fetchEvents = async () => {
+      const today = new Date().toISOString().split('T')[0];
+      const { data } = await supabase
+        .from('events')
+        .select('*')
+        .gte('event_date', today)
+        .order('event_date', { ascending: true })
+        .limit(5);
+
+      if (data && data.length > 0) {
+        setEvents(data);
+      } else {
+        setEvents([
+          { id: 1, event_date: '2026-10-31', title: 'La Générale - Valence Horror Story#3', location: 'Valence', city: 'France', image_url: '/logo.jpg' },
+          { id: 2, event_date: '2026-11-11', title: 'Drôme & Bass #4 Au Vacarme Exquis', location: 'Bourg-lès-Valence', city: 'France', image_url: '/logo.jpg' },
+          { id: 3, event_date: '2026-10-30', title: 'Dream Nation Festival', location: 'Paris', city: 'France', image_url: '/logo.jpg' }
+        ]);
+      }
+    };
+    fetchEvents();
+  }, []);
 
   const handlePlayTrack = (title: string, artist: string, src: string) => {
     if (currentTrack?.src === src) {
@@ -79,6 +99,15 @@ export const LevonDinatoPage: React.FC = () => {
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
   };
 
+  const formatTickerDate = (dateStr: string) => {
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }).toUpperCase();
+    } catch {
+      return 'DATE';
+    }
+  };
+
   const handleShare = async () => {
     const shareData = {
       title: 'Levon & Dinato — DJ & Production Officiel',
@@ -100,7 +129,6 @@ export const LevonDinatoPage: React.FC = () => {
 
   return (
     <div className="levon-page">
-      {/* ✅ BALISES OPEN GRAPH POUR LE PARTAGE */}
       <Helmet>
         <title>Levon & Dinato — DJ & Production Officiel</title>
         <meta name="description" content="Découvrez les productions Funky House, Nu-Disco et Tech House du duo Levon & Dinato. Un set conçu pour faire vibrer les dancefloors." />
@@ -142,22 +170,32 @@ export const LevonDinatoPage: React.FC = () => {
 
       <div className="event-ticker-wrapper">
         <div className="event-ticker">
-          {[...EVENTS, ...EVENTS, ...EVENTS].map((event, index) => (
-            <div key={index} className="event-ticker-item">
-              <div className="event-date-badge">{event.date}</div>
-              
-              {/* ✅ CORRECTIF : Utilisation de background-image pour éviter l'icône cassée */}
-              <div 
-                className="event-cover" 
-                style={{ backgroundImage: `url(${event.image})` }} 
-              />
-              
-              <div className="event-info">
-                <div className="event-title">{event.title}</div>
-                <div className="event-location">{event.location}</div>
+          {events.length > 0 ? (
+            [...events, ...events, ...events].map((event, index) => (
+              <div key={index} className="event-ticker-item">
+                <div className="event-date-badge">{formatTickerDate(event.event_date)}</div>
+                
+                {/* ✅ CORRECTIF : Balise img classique avec fallback si pas d'image */}
+                <div className="event-cover">
+                  {event.image_url ? (
+                    <img src={event.image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : (
+                    <div className="event-cover-fallback">🎵</div>
+                  )}
+                </div>
+                
+                <div className="event-info">
+                  <div className="event-title">{event.title}</div>
+                  <div className="event-location">{event.location} {event.city ? `, ${event.city}` : ''}</div>
+                </div>
               </div>
+            ))
+          ) : (
+            <div className="event-ticker-item">
+              <div className="event-date-badge">BIENTÔT</div>
+              <div className="event-info"><div className="event-title">Chargement des dates...</div></div>
             </div>
-          ))}
+          )}
         </div>
       </div>
 

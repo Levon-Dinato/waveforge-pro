@@ -1,9 +1,11 @@
 // src/pages/PremiumPage.tsx
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { usePlayer } from '../contexts/PlayerContext'; // ✅ Import du lecteur global
+import { GlobalPlayer } from '../components/GlobalPlayer'; // ✅ Import du composant
 import './LevonDinato.css';
 
 export const PremiumPage: React.FC = () => {
@@ -11,19 +13,14 @@ export const PremiumPage: React.FC = () => {
   const { username } = useParams<{ username: string }>();
   const { user } = useAuth();
   
+  // ✅ Utilisation du contexte global pour le lecteur
+  const { play, currentTrack, isPlaying, togglePlay, stop } = usePlayer();
+  
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<any>(null);
   const [tracks, setTracks] = useState<any[]>([]);
   const [events, setEvents] = useState<any[]>([]);
-  const [gallery, setGallery] = useState<any[]>([]); // ✅ Nouvel état
-  
-  const [currentTrack, setCurrentTrack] = useState<{ title: string; artist: string; src: string } | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  
-  const audioRef = useRef<HTMLAudioElement>(null);
+  const [gallery, setGallery] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -55,7 +52,6 @@ export const PremiumPage: React.FC = () => {
           const { data: eventsData } = await supabase.from('events').select('*').eq('created_by', profileData.id).gte('event_date', today).order('event_date', { ascending: true });
           if (eventsData) setEvents(eventsData);
 
-          // ✅ Récupération de la galerie
           const { data: galleryData } = await supabase.from('profile_gallery').select('*').eq('user_id', profileData.id).order('created_at', { ascending: false });
           if (galleryData) setGallery(galleryData);
         }
@@ -68,51 +64,21 @@ export const PremiumPage: React.FC = () => {
     fetchData();
   }, [username]);
 
+  // ✅ Fonction pour lancer une musique via le lecteur global
   const handlePlayTrack = (track: any) => {
-    if (currentTrack?.src === track.audio_url) {
-      if (isPlaying) { audioRef.current?.pause(); setIsPlaying(false); } 
-      else { audioRef.current?.play(); setIsPlaying(true); }
-    } else {
-      setCurrentTrack({ title: track.title, artist: track.artist, src: track.audio_url });
-      setTimeout(() => {
-        if (audioRef.current) {
-          audioRef.current.src = track.audio_url;
-          audioRef.current.play();
-          setIsPlaying(true);
-        }
-      }, 100);
-    }
-  };
-
-  const togglePlay = () => {
-    if (!audioRef.current) return;
-    if (isPlaying) { audioRef.current.pause(); setIsPlaying(false); } 
-    else { audioRef.current.play(); setIsPlaying(true); }
-  };
-
-  const handleTimeUpdate = () => {
-    if (audioRef.current) {
-      const current = audioRef.current.currentTime;
-      const total = audioRef.current.duration;
-      setCurrentTime(current);
-      setDuration(total || 0);
-      setProgress((current / total) * 100);
-    }
-  };
-
-  const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!audioRef.current) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const clickX = e.clientX - rect.left;
-    const newTime = (clickX / rect.width) * audioRef.current.duration;
-    audioRef.current.currentTime = newTime;
-  };
-
-  const formatTime = (time: number) => {
-    if (isNaN(time)) return "00:00";
-    const mins = Math.floor(time / 60);
-    const secs = Math.floor(time % 60);
-    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    play({
+      id: track.id,
+      title: track.title,
+      artist: track.artist,
+      audio_url: track.audio_url,
+      cover_url: track.cover_url,
+      user_id: track.user_id,
+      duration: track.duration,
+      peaks: track.peaks,
+      bpm: track.bpm,
+      song_key: track.song_key,
+      genre: track.genre,
+    });
   };
 
   const formatTickerDate = (dateStr: string) => {
@@ -251,7 +217,8 @@ export const PremiumPage: React.FC = () => {
               {tracks.length > 0 ? (
                 tracks.map((track) => (
                   <div key={track.id} className="track-row" onClick={() => handlePlayTrack(track)}>
-                    <div className="track-play">{currentTrack?.src === track.audio_url && isPlaying ? '⏸' : '▶'}</div>
+                    {/* ✅ Le bouton play affiche l'état global */}
+                    <div className="track-play">{currentTrack?.id === track.id && isPlaying ? '⏸' : '▶'}</div>
                     <div className="track-info"><h4>{track.title}</h4><p>{track.artist}</p></div>
                     <div className="track-genre">{track.genre}</div><div className="track-bpm">{track.bpm} BPM</div>
                   </div>
@@ -262,7 +229,6 @@ export const PremiumPage: React.FC = () => {
             </div>
           </section>
 
-          {/* ✅ SECTION GALERIE PHOTOS (Affichage) */}
           {gallery.length > 0 && (
             <section id="gallery">
               <div className="section-header"><h2 className="section-title">Galerie Photos</h2></div>
@@ -345,26 +311,15 @@ export const PremiumPage: React.FC = () => {
         </div>
       </footer>
 
+      {/* ✅ LE BEAU LECTEUR GLOBAL (centré avec waveform) */}
       {currentTrack && (
-        <div className="audio-player active">
-          <div className="audio-info">
-            <div className="audio-title">{currentTrack.title}</div>
-            <div className="audio-artist">{currentTrack.artist}</div>
-          </div>
-          <div className="audio-controls">
-            <button className="audio-btn" onClick={togglePlay}>{isPlaying ? '⏸' : '▶'}</button>
-          </div>
-          <div className="audio-progress-wrap">
-            <span className="audio-time">{formatTime(currentTime)}</span>
-            <div className="audio-progress" onClick={handleSeek}>
-              <div className="audio-progress-bar" style={{ width: `${progress}%` }}></div>
-            </div>
-            <span className="audio-time">{formatTime(duration)}</span>
-          </div>
-        </div>
+        <GlobalPlayer 
+          currentTrack={currentTrack} 
+          isPlaying={isPlaying} 
+          onTogglePlay={togglePlay} 
+          onStop={stop} 
+        />
       )}
-
-      <audio ref={audioRef} onTimeUpdate={handleTimeUpdate} />
     </div>
   );
 };

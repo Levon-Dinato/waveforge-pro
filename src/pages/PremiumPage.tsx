@@ -52,7 +52,20 @@ export const PremiumPage: React.FC = () => {
           setProfile(profileData);
 
           const { data: tracksData } = await supabase.from('tracks').select('*').eq('user_id', profileData.id).order('created_at', { ascending: false });
-          if (tracksData) setTracks(tracksData);
+          
+          // ✅ On s'assure que les peaks sont bien parsés en tableau
+          if (tracksData) {
+            const formattedTracks = tracksData.map(t => {
+              let parsedPeaks = [];
+              if (typeof t.peaks === 'string') {
+                try { parsedPeaks = JSON.parse(t.peaks); } catch (e) { parsedPeaks = []; }
+              } else if (Array.isArray(t.peaks)) {
+                parsedPeaks = t.peaks;
+              }
+              return { ...t, peaks: parsedPeaks };
+            });
+            setTracks(formattedTracks);
+          }
 
           const today = new Date().toISOString().split('T')[0];
           const { data: eventsData } = await supabase.from('events').select('*').eq('created_by', profileData.id).gte('event_date', today).order('event_date', { ascending: true });
@@ -106,9 +119,11 @@ export const PremiumPage: React.FC = () => {
     });
   };
 
-  // ✅ Petit rendu de fausse waveform pour les sons MP3
-  const renderMiniWaveform = (peaks: number[]) => {
-    if (!peaks || peaks.length === 0) return null;
+  // ✅ Petit rendu de fausse waveform pour les sons MP3 (blindé)
+  const renderMiniWaveform = (peaks: any) => {
+    // Si pas de peaks ou si ce n'est pas un tableau, on ne fait rien
+    if (!peaks || !Array.isArray(peaks) || peaks.length === 0) return null;
+    
     // On prend un échantillon de peaks pour faire une jolie barre
     const displayPeaks = peaks.filter((_, i) => i % 10 === 0).slice(0, 60);
     return (
@@ -234,7 +249,6 @@ export const PremiumPage: React.FC = () => {
               )}
             </div>
             
-            {/* ✅ NOUVEAU STYLE DE LISTE (Cartes séparées) */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {tracks.length > 0 ? (
                 tracks.map((track) => {
@@ -251,7 +265,6 @@ export const PremiumPage: React.FC = () => {
                         overflow: 'hidden',
                         boxShadow: '0 8px 20px rgba(0,0,0,0.3)',
                         transition: 'transform 0.2s',
-                        // Ajoute un léger effet au survol si c'est jouable
                         cursor: isPlayable ? 'pointer' : 'default'
                       }}
                       onClick={() => isPlayable && handlePlayTrack(track)}

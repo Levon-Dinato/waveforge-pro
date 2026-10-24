@@ -17,8 +17,27 @@ const Icons = {
   edit: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>,
   trash: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>,
   download: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>,
-  // ✅ NOUVELLE ICÔNE ACHETER
   buy: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>,
+};
+
+// ✅ FONCTION INFAILLIBLE POUR FORCER LE TÉLÉCHARGEMENT
+const forceDownload = async (url: string, filename: string) => {
+  try {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    const blobUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(blobUrl);
+  } catch (error) {
+    console.error("Erreur lors du téléchargement:", error);
+    // Fallback : ouvrir dans un nouvel onglet si le fetch échoue (CORS)
+    window.open(url, '_blank');
+  }
 };
 
 interface Track {
@@ -37,7 +56,7 @@ interface Track {
   cover_url: string | null;
   created_at: string;
   user_id: string | null;
-  purchase_url: string | null; // ✅
+  purchase_url: string | null;
 }
 
 const PREDEFINED_GENRES = [
@@ -278,7 +297,7 @@ export const NouveautesPage: React.FC = () => {
         likes_count: t.likes_count || 0,
         song_key: t.song_key || null,
         camelot: t.camelot || null,
-        purchase_url: t.purchase_url || null, // ✅
+        purchase_url: t.purchase_url || null,
       }));
       setTracks(normalized);
     }
@@ -626,16 +645,26 @@ export const NouveautesPage: React.FC = () => {
                         </button>
                         <div className="row-actions" style={{ display: 'flex', gap: 12, opacity: 0, transition: 'opacity 0.2s' }}>
                           
-                          {/* ✅ BOUTON ACHETER DANS LES RECOMMANDATIONS */}
+                          {/* ✅ BOUTON ACHETER */}
                           {track.purchase_url && (
                             <a href={track.purchase_url} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} title="Acheter" style={{ background: 'transparent', border: 'none', color: '#00d9ff', cursor: 'pointer', display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
                               {Icons.buy}
                             </a>
                           )}
 
-                          <a href={`${track.audio_url}?download=${encodeURIComponent(`${track.artist} - ${track.title}.mp3`)}`} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} title="Télécharger" style={{ background: 'transparent', border: 'none', color: '#888', cursor: 'pointer', display: 'flex', alignItems: 'center', textDecoration: 'none', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#00d9ff'} onMouseLeave={(e) => e.currentTarget.style.color = '#888'}>
+                          {/* ✅ BOUTON TÉLÉCHARGER INFAILLIBLE */}
+                          <button 
+                            onClick={(e) => { 
+                              e.stopPropagation(); 
+                              forceDownload(track.audio_url, `${track.artist} - ${track.title}.mp3`); 
+                            }} 
+                            title="Télécharger" 
+                            style={{ background: 'transparent', border: 'none', color: '#888', cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'color 0.2s' }} 
+                            onMouseEnter={(e) => e.currentTarget.style.color = '#00d9ff'} 
+                            onMouseLeave={(e) => e.currentTarget.style.color = '#888'}
+                          >
                             {Icons.download}
-                          </a>
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -672,7 +701,6 @@ export const NouveautesPage: React.FC = () => {
                         </select>
                         <input type="number" placeholder="BPM" value={editForm.bpm} onChange={(e) => setEditForm({ ...editForm, bpm: parseInt(e.target.value) || 0 })} style={{ ...INPUT_STYLE, width: 100, padding: '10px' }} />
                       </div>
-                      {/* ✅ NOUVEAU CHAMP LIEN D'ACHAT DANS LE FORMULAIRE DE MODIFICATION */}
                       <input 
                         type="url" 
                         placeholder="Lien d'achat (Beatport, etc.)" 
@@ -715,7 +743,7 @@ export const NouveautesPage: React.FC = () => {
 
                       <div className="row-actions" style={{ display: 'flex', gap: 12, opacity: 0, transition: 'opacity 0.2s' }}>
                         
-                        {/* ✅ BOUTON ACHETER DANS TOUTES LES SORTIES */}
+                        {/* ✅ BOUTON ACHETER */}
                         {track.purchase_url && (
                           <a 
                             href={track.purchase_url} 
@@ -729,18 +757,19 @@ export const NouveautesPage: React.FC = () => {
                           </a>
                         )}
 
-                        <a 
-                          href={`${track.audio_url}?download=${encodeURIComponent(`${track.artist} - ${track.title}.mp3`)}`}
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          onClick={(e) => e.stopPropagation()}
-                          title="Télécharger"
-                          style={{ background: 'transparent', border: 'none', color: '#888', cursor: 'pointer', display: 'flex', alignItems: 'center', textDecoration: 'none', transition: 'color 0.2s' }}
-                          onMouseEnter={(e) => e.currentTarget.style.color = '#00d9ff'}
+                        {/* ✅ BOUTON TÉLÉCHARGER INFAILLIBLE */}
+                        <button 
+                          onClick={(e) => { 
+                            e.stopPropagation(); 
+                            forceDownload(track.audio_url, `${track.artist} - ${track.title}.mp3`); 
+                          }} 
+                          title="Télécharger" 
+                          style={{ background: 'transparent', border: 'none', color: '#888', cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'color 0.2s' }} 
+                          onMouseEnter={(e) => e.currentTarget.style.color = '#00d9ff'} 
                           onMouseLeave={(e) => e.currentTarget.style.color = '#888'}
                         >
                           {Icons.download}
-                        </a>
+                        </button>
 
                         <div onClick={(e) => e.stopPropagation()}>
                           <ShareButton url={`${window.location.origin}/share/${track.id}`} title={`${track.title} — ${track.artist}`} text={`Écoute "${track.title}" par ${track.artist} sur DropZone DJ 🎵`} variant="icon" size="small" label="" position="bottom" />

@@ -9,6 +9,24 @@ interface GlobalPlayerProps {
   onStop: () => void;
 }
 
+const forceDownload = async (url: string, filename: string) => {
+  try {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    const blobUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(blobUrl);
+  } catch (error) {
+    console.error("Erreur lors du téléchargement:", error);
+    window.open(url, '_blank');
+  }
+};
+
 export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlaying, onTogglePlay, onStop }) => {
   const { currentTime, duration, seek } = usePlayer();
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -164,17 +182,16 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
 
         <div style={{ display: 'flex', gap: 16, alignItems: 'center', justifyContent: 'flex-end', width: '80px' }}>
           
-          {/* ✅ BOUTON DOWNLOAD AJOUTÉ ICI */}
-          <a 
-            href={currentTrack.audio_url} 
-            download={`${currentTrack.artist} - ${currentTrack.title}.mp3`}
+          {/* ✅ BOUTON TÉLÉCHARGER INFAILLIBLE */}
+          <button 
+            onClick={() => forceDownload(currentTrack.audio_url, `${currentTrack.artist} - ${currentTrack.title}.mp3`)}
             title="Télécharger ce son"
-            style={{ background: 'transparent', border: 'none', color: '#666', cursor: 'pointer', display: 'flex', alignItems: 'center', textDecoration: 'none', transition: 'color 0.2s' }}
+            style={{ background: 'transparent', border: 'none', color: '#666', cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'color 0.2s' }}
             onMouseEnter={(e) => e.currentTarget.style.color = '#00d9ff'}
             onMouseLeave={(e) => e.currentTarget.style.color = '#666'}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-          </a>
+          </button>
 
           <button onClick={onStop} style={{ background: 'transparent', border: 'none', color: '#666', cursor: 'pointer', display: 'flex', alignItems: 'center' }} title="Fermer le lecteur">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>

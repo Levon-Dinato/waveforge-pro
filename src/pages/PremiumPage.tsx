@@ -192,68 +192,51 @@ export const PremiumPage: React.FC = () => {
       <div className="wrapper container">
         <div className="content">
           <section id="about">
-            <div className="section-header"><h2 className="section-title">À propos</h2></div>
+            <div className="section-header"><h2 className="section-title">L'Artiste</h2></div>
             
-            {/* ✅ LE MODULE EXACT COMME SUR L'IMAGE */}
+            {/* ✅ MODULE PRINCIPAL : JUSTE L'IMAGE ET UN TEXTE COURT */}
             <div 
               style={{ 
                 display: 'flex', 
-                flexDirection: 'row', // Force l'alignement horizontal
+                flexDirection: 'row', 
                 flexWrap: 'wrap', 
                 gap: '40px', 
                 padding: '40px', 
-                alignItems: 'flex-start', 
+                alignItems: 'center', // Centre l'image et le texte
+                justifyContent: 'space-between',
                 background: 'linear-gradient(145deg, rgba(13, 22, 33, 0.95), rgba(6, 13, 20, 0.95))',
                 border: '1px solid rgba(0, 217, 255, 0.15)',
                 borderRadius: '16px',
-                boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5)',
-                width: '100%',
-                boxSizing: 'border-box'
+                boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5)'
               }}
             >
-              {/* COLONNE GAUCHE : La Bio Extended */}
-              <div style={{ flex: '1 1 400px', minWidth: '300px', maxWidth: '100%' }}>
-                <h3 style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: '20px', color: '#fff' }}>
-                  Le son de {profile.username}
+              <div style={{ flex: '1 1 300px' }}>
+                <h3 style={{ fontSize: '2rem', fontWeight: 900, marginBottom: '16px', color: '#fff' }}>
+                  {profile.username}
                 </h3>
-                
-                {/* Le texte de la bio qui prend toute la place à gauche */}
-                <p style={{ 
-                  whiteSpace: 'pre-wrap', 
-                  lineHeight: '1.8', 
-                  color: '#8c9f98', 
-                  fontSize: '0.95rem',
-                  margin: 0
-                }}>
-                  {profile.bio || "Bio à venir..."}
+                <p style={{ color: '#8c9f98', fontSize: '1.1rem', margin: 0 }}>
+                  Découvrez son univers musical exclusif et ses dernières sorties.
                 </p>
               </div>
               
-              {/* COLONNE DROITE : L'image avec une bordure propre (taille fixe) */}
               <div 
                 style={{ 
-                  flex: '0 0 350px', // Taille fixe de 350px
-                  width: '350px',
-                  maxWidth: '100%', // S'adapte si l'écran est petit
-                  borderRadius: '12px', 
+                  flex: '0 0 350px', 
+                  width: '100%', 
+                  maxWidth: '350px',
+                  borderRadius: '16px', 
                   overflow: 'hidden', 
-                  border: '1px solid rgba(255, 255, 255, 0.1)', 
+                  border: '1px solid rgba(0, 217, 255, 0.3)', 
                   boxShadow: '0 10px 30px rgba(0, 0, 0, 0.8)',
-                  background: '#000',
-                  display: 'flex'
+                  margin: '0 auto'
                 }}
               >
                 <img 
                   src={profile.avatar_url || "/logo.jpg"} 
                   alt={profile.username} 
-                  style={{ 
-                    width: '100%', 
-                    height: 'auto', // L'image garde son ratio
-                    display: 'block'
-                  }} 
+                  style={{ width: '100%', height: 'auto', display: 'block', objectFit: 'cover' }} 
                 />
               </div>
-
             </div>
           </section>
 
@@ -309,6 +292,14 @@ export const PremiumPage: React.FC = () => {
                   <a href={profile.youtube_url} target="_blank" rel="noreferrer" style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#0d1512', border: '1px solid #FF0000', color: '#FF0000', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', fontWeight: 'bold' }}>YT</a>
                 )}
               </div>
+            </div>
+
+            {/* ✅ LA BIO EST MAINTENANT ICI, EN DESSOUS DES RÉSEAUX */}
+            <div className="sidebar-widget">
+              <div className="sidebar-title">Biographie</div>
+              <p style={{ whiteSpace: 'pre-wrap', lineHeight: '1.6', color: '#8c9f98', fontSize: '0.85rem' }}>
+                {profile.bio || "Biographie à venir..."}
+              </p>
             </div>
 
           </div>

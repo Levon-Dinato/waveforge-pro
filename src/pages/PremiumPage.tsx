@@ -1,19 +1,17 @@
 // src/pages/PremiumPage.tsx
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import { usePlayer } from '../contexts/PlayerContext'; // ✅ Import du lecteur global
-import { GlobalPlayer } from '../components/GlobalPlayer'; // ✅ Import du composant
+import { usePlayer } from '../contexts/PlayerContext';
+import { GlobalPlayer } from '../components/GlobalPlayer';
 import './LevonDinato.css';
 
 export const PremiumPage: React.FC = () => {
   const navigate = useNavigate();
   const { username } = useParams<{ username: string }>();
   const { user } = useAuth();
-  
-  // ✅ Utilisation du contexte global pour le lecteur
   const { play, currentTrack, isPlaying, togglePlay, stop } = usePlayer();
   
   const [loading, setLoading] = useState(true);
@@ -64,7 +62,6 @@ export const PremiumPage: React.FC = () => {
     fetchData();
   }, [username]);
 
-  // ✅ Fonction pour lancer une musique via le lecteur global
   const handlePlayTrack = (track: any) => {
     play({
       id: track.id,
@@ -213,14 +210,38 @@ export const PremiumPage: React.FC = () => {
               )}
             </div>
             <div className="tracklist">
-              <div className="track-header"><div></div><div>Titre / Artiste</div><div>Genre</div><div style={{ textAlign: 'right' }}>BPM</div></div>
+              <div className="track-header"><div></div><div>Titre / Artiste</div><div>Genre</div><div style={{ textAlign: 'right' }}>Actions</div></div>
               {tracks.length > 0 ? (
                 tracks.map((track) => (
                   <div key={track.id} className="track-row" onClick={() => handlePlayTrack(track)}>
-                    {/* ✅ Le bouton play affiche l'état global */}
                     <div className="track-play">{currentTrack?.id === track.id && isPlaying ? '⏸' : '▶'}</div>
                     <div className="track-info"><h4>{track.title}</h4><p>{track.artist}</p></div>
-                    <div className="track-genre">{track.genre}</div><div className="track-bpm">{track.bpm} BPM</div>
+                    <div className="track-genre">{track.genre}</div>
+                    
+                    {/* ✅ BOUTON ACHETER */}
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }} onClick={(e) => e.stopPropagation()}>
+                      {track.purchase_url ? (
+                        <a 
+                          href={track.purchase_url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          style={{ 
+                            background: themeColor, 
+                            color: '#000', 
+                            padding: '6px 12px', 
+                            borderRadius: '4px', 
+                            fontSize: '11px', 
+                            fontWeight: '800', 
+                            textDecoration: 'none',
+                            textTransform: 'uppercase'
+                          }}
+                        >
+                          Acheter
+                        </a>
+                      ) : (
+                        <span style={{ fontSize: '11px', color: '#666' }}>—</span>
+                      )}
+                    </div>
                   </div>
                 ))
               ) : (
@@ -311,7 +332,6 @@ export const PremiumPage: React.FC = () => {
         </div>
       </footer>
 
-      {/* ✅ LE BEAU LECTEUR GLOBAL (centré avec waveform) */}
       {currentTrack && (
         <GlobalPlayer 
           currentTrack={currentTrack} 

@@ -17,6 +17,8 @@ const Icons = {
   edit: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>,
   trash: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>,
   download: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>,
+  // ✅ NOUVELLE ICÔNE ACHETER
+  buy: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>,
 };
 
 interface Track {
@@ -35,6 +37,7 @@ interface Track {
   cover_url: string | null;
   created_at: string;
   user_id: string | null;
+  purchase_url: string | null; // ✅
 }
 
 const PREDEFINED_GENRES = [
@@ -250,7 +253,7 @@ export const NouveautesPage: React.FC = () => {
   const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
 
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState({ title: '', artist: '', genre: '', bpm: 0 });
+  const [editForm, setEditForm] = useState({ title: '', artist: '', genre: '', bpm: 0, purchase_url: '' });
 
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 20;
@@ -275,6 +278,7 @@ export const NouveautesPage: React.FC = () => {
         likes_count: t.likes_count || 0,
         song_key: t.song_key || null,
         camelot: t.camelot || null,
+        purchase_url: t.purchase_url || null, // ✅
       }));
       setTracks(normalized);
     }
@@ -416,7 +420,7 @@ export const NouveautesPage: React.FC = () => {
       if (inserted) {
         setTracks([inserted, ...tracks]);
         setEditingId(inserted.id);
-        setEditForm({ title: inserted.title, artist: inserted.artist, genre: inserted.genre, bpm: inserted.bpm });
+        setEditForm({ title: inserted.title, artist: inserted.artist, genre: inserted.genre, bpm: inserted.bpm, purchase_url: '' });
       }
       setUploadStatus('');
     } catch (err: any) {
@@ -466,7 +470,7 @@ export const NouveautesPage: React.FC = () => {
   const startEdit = (e: React.MouseEvent, track: Track) => {
     e.stopPropagation();
     setEditingId(track.id);
-    setEditForm({ title: track.title, artist: track.artist, genre: track.genre, bpm: track.bpm });
+    setEditForm({ title: track.title, artist: track.artist, genre: track.genre, bpm: track.bpm, purchase_url: track.purchase_url || '' });
   };
 
   const saveEdit = async () => {
@@ -621,7 +625,14 @@ export const NouveautesPage: React.FC = () => {
                           {isLiked ? '❤️' : '🤍'} <span style={{ fontSize: 12, color: '#666' }}>{track.likes_count}</span>
                         </button>
                         <div className="row-actions" style={{ display: 'flex', gap: 12, opacity: 0, transition: 'opacity 0.2s' }}>
-                          {/* ✅ AJOUT DU ?download= POUR FORCER LE TÉLÉCHARGEMENT */}
+                          
+                          {/* ✅ BOUTON ACHETER DANS LES RECOMMANDATIONS */}
+                          {track.purchase_url && (
+                            <a href={track.purchase_url} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} title="Acheter" style={{ background: 'transparent', border: 'none', color: '#00d9ff', cursor: 'pointer', display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+                              {Icons.buy}
+                            </a>
+                          )}
+
                           <a href={`${track.audio_url}?download=${encodeURIComponent(`${track.artist} - ${track.title}.mp3`)}`} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} title="Télécharger" style={{ background: 'transparent', border: 'none', color: '#888', cursor: 'pointer', display: 'flex', alignItems: 'center', textDecoration: 'none', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#00d9ff'} onMouseLeave={(e) => e.currentTarget.style.color = '#888'}>
                             {Icons.download}
                           </a>
@@ -661,6 +672,14 @@ export const NouveautesPage: React.FC = () => {
                         </select>
                         <input type="number" placeholder="BPM" value={editForm.bpm} onChange={(e) => setEditForm({ ...editForm, bpm: parseInt(e.target.value) || 0 })} style={{ ...INPUT_STYLE, width: 100, padding: '10px' }} />
                       </div>
+                      {/* ✅ NOUVEAU CHAMP LIEN D'ACHAT DANS LE FORMULAIRE DE MODIFICATION */}
+                      <input 
+                        type="url" 
+                        placeholder="Lien d'achat (Beatport, etc.)" 
+                        value={editForm.purchase_url} 
+                        onChange={(e) => setEditForm({ ...editForm, purchase_url: e.target.value })} 
+                        style={{ ...INPUT_STYLE, padding: '10px' }} 
+                      />
                       <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', marginTop: 8 }}>
                         <button onClick={cancelEdit} style={{ padding: '8px 16px', background: 'transparent', border: '1px solid #333', color: '#888', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}>Annuler</button>
                         <button onClick={saveEdit} style={{ padding: '8px 16px', background: '#fff', color: '#000', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 700, fontSize: 13 }}>Enregistrer</button>
@@ -696,7 +715,20 @@ export const NouveautesPage: React.FC = () => {
 
                       <div className="row-actions" style={{ display: 'flex', gap: 12, opacity: 0, transition: 'opacity 0.2s' }}>
                         
-                        {/* ✅ AJOUT DU ?download= POUR FORCER LE TÉLÉCHARGEMENT */}
+                        {/* ✅ BOUTON ACHETER DANS TOUTES LES SORTIES */}
+                        {track.purchase_url && (
+                          <a 
+                            href={track.purchase_url} 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            onClick={(e) => e.stopPropagation()} 
+                            title="Acheter" 
+                            style={{ background: 'transparent', border: 'none', color: '#00d9ff', cursor: 'pointer', display: 'flex', alignItems: 'center', textDecoration: 'none' }}
+                          >
+                            {Icons.buy}
+                          </a>
+                        )}
+
                         <a 
                           href={`${track.audio_url}?download=${encodeURIComponent(`${track.artist} - ${track.title}.mp3`)}`}
                           target="_blank" 

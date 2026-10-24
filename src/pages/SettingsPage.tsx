@@ -14,9 +14,7 @@ export const SettingsPage: React.FC = () => {
   const [isPremium, setIsPremium] = useState(false);
   const [myTracks, setMyTracks] = useState<any[]>([]);
   const [editingTrackId, setEditingTrackId] = useState<string | null>(null);
-  const [editTrackForm, setEditTrackForm] = useState({ title: '', genre: '', bpm: 0 });
-  
-  // ✅ États pour les images
+  const [editTrackForm, setEditTrackForm] = useState({ title: '', genre: '', bpm: 0, purchase_url: '' });
   const [uploadingImage, setUploadingImage] = useState(false);
   const [uploadingGallery, setUploadingGallery] = useState(false);
   const [galleryImages, setGalleryImages] = useState<any[]>([]);
@@ -51,18 +49,14 @@ export const SettingsPage: React.FC = () => {
     fetchProfile();
   }, [user]);
 
-  // ✅ Charger la galerie
   const fetchGallery = async () => {
     if (!user) return;
     const { data } = await supabase.from('profile_gallery').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
     if (data) setGalleryImages(data);
   };
 
-  useEffect(() => { 
-    if (user) fetchGallery(); 
-  }, [user]);
+  useEffect(() => { if (user) fetchGallery(); }, [user]);
 
-  // ✅ Upload de l'Avatar (avec dossier user_id)
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -83,7 +77,6 @@ export const SettingsPage: React.FC = () => {
     }
   };
 
-  // ✅ Upload MULTIPLE de la Galerie
   const handleGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -103,7 +96,7 @@ export const SettingsPage: React.FC = () => {
       const { error: dbError } = await supabase.from('profile_gallery').insert(newImages);
       
       if (dbError) throw dbError;
-      fetchGallery(); // Recharger
+      fetchGallery();
     } catch (error: any) {
       console.error("Erreur galerie:", error);
       alert("Erreur lors de l'upload: " + error.message);
@@ -112,13 +105,9 @@ export const SettingsPage: React.FC = () => {
     }
   };
 
-  // ✅ Supprimer une image de la galerie
   const handleDeleteGalleryImage = async (id: string, url: string) => {
     if (!window.confirm("Supprimer cette image ?")) return;
-    
-    // Extraire le chemin du fichier de l'URL
     const filePath = url.split('/media/')[1];
-    
     await supabase.storage.from('media').remove([filePath]);
     await supabase.from('profile_gallery').delete().eq('id', id);
     setGalleryImages(galleryImages.filter(img => img.id !== id));
@@ -160,12 +149,20 @@ export const SettingsPage: React.FC = () => {
 
   const startEditingTrack = (track: any) => {
     setEditingTrackId(track.id);
-    setEditTrackForm({ title: track.title, genre: track.genre || '', bpm: track.bpm || 0 });
+    setEditTrackForm({ 
+      title: track.title, 
+      genre: track.genre || '', 
+      bpm: track.bpm || 0,
+      purchase_url: track.purchase_url || ''
+    });
   };
 
   const handleSaveTrackEdit = async (trackId: string) => {
     const { error } = await supabase.from('tracks').update({
-      title: editTrackForm.title, genre: editTrackForm.genre, bpm: Number(editTrackForm.bpm)
+      title: editTrackForm.title, 
+      genre: editTrackForm.genre, 
+      bpm: Number(editTrackForm.bpm),
+      purchase_url: editTrackForm.purchase_url
     }).eq('id', trackId);
     if (!error) {
       setMyTracks(myTracks.map(t => t.id === trackId ? { ...t, ...editTrackForm } : t));
@@ -188,7 +185,7 @@ export const SettingsPage: React.FC = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 40, textAlign: 'left', background: '#0a0a0a', padding: 24, borderRadius: 12, border: '1px solid #222' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14 }}>✅ Couleur de site personnalisée</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14 }}>✅ Biographie et réseaux sociaux</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14 }}>✅ Gestion de votre musique</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14 }}>✅ Gestion de votre musique & Liens d'achat</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14 }}>✅ Galerie photos & Page sur-mesure</div>
           </div>
           <div style={{ background: 'rgba(0, 217, 255, 0.1)', border: '1px solid rgba(0, 217, 255, 0.3)', borderRadius: 12, padding: '16px', marginBottom: 24 }}>
@@ -221,6 +218,28 @@ export const SettingsPage: React.FC = () => {
       
       <p style={{ color: '#888', marginBottom: 30 }}>Gère ton identité, ta musique et tes photos.</p>
 
+      {/* ✅ MESSAGE DE BIENVENUE PREMIUM */}
+      <div style={{ 
+        background: 'linear-gradient(90deg, rgba(0, 217, 255, 0.15) 0%, rgba(10, 18, 26, 0) 100%)', 
+        borderLeft: '4px solid #00d9ff', 
+        borderRadius: '0 12px 12px 0', 
+        padding: '20px 24px', 
+        marginBottom: '30px',
+        display: 'flex',
+        alignItems: 'flex-start',
+        gap: '16px'
+      }}>
+        <div style={{ fontSize: '28px', marginTop: '-4px' }}>🚀</div>
+        <div>
+          <h3 style={{ margin: '0 0 6px 0', fontSize: '16px', color: '#fff', fontWeight: 800 }}>
+            Bienvenue dans ton espace Premium !
+          </h3>
+          <p style={{ margin: 0, fontSize: '13px', color: '#a0aec0', lineHeight: '1.5' }}>
+            Ton abonnement est actif. N'oublie pas de <strong>partager le lien de ta page</strong> sur tes réseaux sociaux, sur tes flyers ou en bio de ton Instagram. Chaque visiteur peut écouter tes sons, voir tes dates et cliquer sur tes liens Beatport. Bonne promo ! 🎧🔥
+          </p>
+        </div>
+      </div>
+
       {message && (
         <div style={{ padding: 16, background: message.includes('Erreur') ? 'rgba(255,0,0,0.1)' : 'rgba(0,217,255,0.1)', border: `1px solid ${message.includes('Erreur') ? '#ff3366' : form.theme_color}`, borderRadius: 8, marginBottom: 24, color: message.includes('Erreur') ? '#ff3366' : form.theme_color }}>
           {message}
@@ -238,17 +257,28 @@ export const SettingsPage: React.FC = () => {
             <p style={{ color: '#666', fontSize: 14 }}>Tu n'as pas encore de sons. Clique sur "+ Uploader".</p>
           ) : (
             myTracks.map(track => (
-              <div key={track.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#0a0a0a', padding: '12px 16px', borderRadius: 8, border: '1px solid #333' }}>
+              <div key={track.id} style={{ display: 'flex', flexDirection: 'column', gap: 12, background: '#0a0a0a', padding: '12px 16px', borderRadius: 8, border: '1px solid #333' }}>
                 {editingTrackId === track.id ? (
-                  <div style={{ display: 'flex', gap: 10, flex: 1, alignItems: 'center', flexWrap: 'wrap' }}>
-                    <input type="text" value={editTrackForm.title} onChange={e => setEditTrackForm({...editTrackForm, title: e.target.value})} style={{ flex: 1, padding: 8, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4, minWidth: 150 }} placeholder="Titre" />
-                    <input type="text" value={editTrackForm.genre} onChange={e => setEditTrackForm({...editTrackForm, genre: e.target.value})} style={{ width: 120, padding: 8, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4 }} placeholder="Genre" />
-                    <input type="number" value={editTrackForm.bpm} onChange={e => setEditTrackForm({...editTrackForm, bpm: Number(e.target.value)})} style={{ width: 80, padding: 8, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4 }} placeholder="BPM" />
-                    <button onClick={() => handleSaveTrackEdit(track.id)} style={{ background: form.theme_color, color: '#000', border: 'none', padding: '8px 12px', borderRadius: 4, cursor: 'pointer', fontWeight: 'bold' }}>OK</button>
-                    <button onClick={() => setEditingTrackId(null)} style={{ background: 'transparent', color: '#888', border: '1px solid #444', padding: '8px 12px', borderRadius: 4, cursor: 'pointer' }}>X</button>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                      <input type="text" value={editTrackForm.title} onChange={e => setEditTrackForm({...editTrackForm, title: e.target.value})} style={{ flex: 1, padding: 8, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4, minWidth: 150 }} placeholder="Titre" />
+                      <input type="text" value={editTrackForm.genre} onChange={e => setEditTrackForm({...editTrackForm, genre: e.target.value})} style={{ width: 120, padding: 8, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4 }} placeholder="Genre" />
+                      <input type="number" value={editTrackForm.bpm} onChange={e => setEditTrackForm({...editTrackForm, bpm: Number(e.target.value)})} style={{ width: 80, padding: 8, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4 }} placeholder="BPM" />
+                    </div>
+                    <input 
+                      type="url" 
+                      value={editTrackForm.purchase_url} 
+                      onChange={e => setEditTrackForm({...editTrackForm, purchase_url: e.target.value})} 
+                      style={{ width: '100%', padding: 8, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4 }} 
+                      placeholder="Lien d'achat (ex: Beatport, Traxsource, Bandcamp...)" 
+                    />
+                    <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
+                      <button onClick={() => handleSaveTrackEdit(track.id)} style={{ background: form.theme_color, color: '#000', border: 'none', padding: '8px 12px', borderRadius: 4, cursor: 'pointer', fontWeight: 'bold' }}>Enregistrer</button>
+                      <button onClick={() => setEditingTrackId(null)} style={{ background: 'transparent', color: '#888', border: '1px solid #444', padding: '8px 12px', borderRadius: 4, cursor: 'pointer' }}>Annuler</button>
+                    </div>
                   </div>
                 ) : (
-                  <>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                       <div style={{ width: 40, height: 40, background: track.cover_url ? `url(${track.cover_url}) center/cover` : '#222', borderRadius: 4 }} />
                       <div>
@@ -260,7 +290,7 @@ export const SettingsPage: React.FC = () => {
                       <button onClick={() => startEditingTrack(track)} style={{ background: 'transparent', color: form.theme_color, border: `1px solid ${form.theme_color}`, padding: '6px 12px', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}>Modifier</button>
                       <button onClick={() => handleDeleteTrack(track.id)} style={{ background: 'transparent', color: '#ff3366', border: '1px solid #ff3366', padding: '6px 12px', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}>Suppr.</button>
                     </div>
-                  </>
+                  </div>
                 )}
               </div>
             ))
@@ -268,7 +298,7 @@ export const SettingsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* ✅ NOUVELLE SECTION : GALERIE PHOTOS */}
+      {/* SECTION GALERIE */}
       <div style={{ background: '#121212', padding: 24, borderRadius: 12, border: '1px solid #222', marginBottom: 24 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
           <h2 style={{ fontSize: 18, color: '#fff', margin: 0 }}>Ma Galerie Photos ({galleryImages.length})</h2>
@@ -277,20 +307,14 @@ export const SettingsPage: React.FC = () => {
             <input type="file" accept="image/*" multiple onChange={handleGalleryUpload} disabled={uploadingGallery} style={{ display: 'none' }} />
           </label>
         </div>
-
         {galleryImages.length === 0 ? (
-          <p style={{ color: '#666', fontSize: 14 }}>Aucune photo pour le moment. Ajoute des photos pour montrer tes meilleurs moments !</p>
+          <p style={{ color: '#666', fontSize: 14 }}>Aucune photo pour le moment.</p>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 12 }}>
             {galleryImages.map((img) => (
               <div key={img.id} style={{ position: 'relative', aspectRatio: '1', borderRadius: 8, overflow: 'hidden', border: '1px solid #333' }}>
                 <img src={img.image_url} alt="Gallery" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                <button 
-                  onClick={() => handleDeleteGalleryImage(img.id, img.image_url)}
-                  style={{ position: 'absolute', top: 4, right: 4, background: 'rgba(255,0,0,0.8)', color: '#fff', border: 'none', borderRadius: '50%', width: 24, height: 24, cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                >
-                  X
-                </button>
+                <button onClick={() => handleDeleteGalleryImage(img.id, img.image_url)} style={{ position: 'absolute', top: 4, right: 4, background: 'rgba(255,0,0,0.8)', color: '#fff', border: 'none', borderRadius: '50%', width: 24, height: 24, cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>X</button>
               </div>
             ))}
           </div>
@@ -301,13 +325,9 @@ export const SettingsPage: React.FC = () => {
       <div style={{ background: '#121212', padding: 24, borderRadius: 12, border: '1px solid #222', marginBottom: 24 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
           <h2 style={{ fontSize: 18, color: '#fff', margin: 0 }}>Mes Dates / Événements</h2>
-          <Link to="/events" style={{ background: '#fff', color: '#000', padding: '8px 16px', borderRadius: 6, fontWeight: 800, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
-            + Ajouter une date
-          </Link>
+          <Link to="/events" style={{ background: '#fff', color: '#000', padding: '8px 16px', borderRadius: 6, fontWeight: 800, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>+ Ajouter une date</Link>
         </div>
-        <p style={{ color: '#666', fontSize: 14, margin: 0 }}>
-          Les événements que tu ajoutes apparaîtront automatiquement sur ton bandeau et sur ta page Premium.
-        </p>
+        <p style={{ color: '#666', fontSize: 14, margin: 0 }}>Les événements que tu ajoutes apparaîtront sur ton bandeau.</p>
       </div>
 
       {/* FORMULAIRE DE PROFIL */}
@@ -332,9 +352,7 @@ export const SettingsPage: React.FC = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 20 }}>
             <label style={{ fontSize: 13, color: '#aaa' }}>Image de profil (Avatar)</label>
             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-              {form.avatar_url && (
-                <img src={form.avatar_url} alt="Avatar" style={{ width: 50, height: 50, borderRadius: '50%', objectFit: 'cover', border: '2px solid #333' }} />
-              )}
+              {form.avatar_url && <img src={form.avatar_url} alt="Avatar" style={{ width: 50, height: 50, borderRadius: '50%', objectFit: 'cover', border: '2px solid #333' }} />}
               <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploadingImage} style={{ flex: 1, padding: 10, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
             </div>
             {uploadingImage && <span style={{ fontSize: 12, color: '#00d9ff' }}>Upload en cours...</span>}
@@ -343,7 +361,6 @@ export const SettingsPage: React.FC = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 20 }}>
             <label style={{ fontSize: 13, color: '#aaa' }}>URL de la vidéo de fond (MP4)</label>
             <input type="url" value={form.background_video_url} onChange={(e) => setForm({ ...form, background_video_url: e.target.value })} placeholder="https://exemple.com/ma-video.mp4" style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
-            <span style={{ fontSize: 11, color: '#666' }}>Laisse vide pour utiliser la vidéo par défaut.</span>
           </div>
         </div>
 
@@ -353,13 +370,11 @@ export const SettingsPage: React.FC = () => {
             <label style={{ fontSize: 13, color: '#aaa' }}>Badge supérieur</label>
             <input type="text" value={form.hero_tagline} onChange={(e) => setForm({ ...form, hero_tagline: e.target.value })} placeholder="Ex: Nouveaux remixes disponibles" style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
           </div>
-          
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
             <label style={{ fontSize: 13, color: '#aaa' }}>Titre principal</label>
             <input type="text" value={form.hero_title} onChange={(e) => setForm({ ...form, hero_title: e.target.value })} placeholder="Ex: L'expérience *sonore* ultime." style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
-            <span style={{ fontSize: 11, color: '#00d9ff' }}>💡 Astuce : Entoure un mot d'astérisques pour le colorer. Ex : L'expérience *sonore* ultime.</span>
+            <span style={{ fontSize: 11, color: '#00d9ff' }}>💡 Astuce : Entoure un mot d'astérisques pour le colorer.</span>
           </div>
-
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <label style={{ fontSize: 13, color: '#aaa' }}>Description</label>
             <textarea value={form.hero_description} onChange={(e) => setForm({ ...form, hero_description: e.target.value })} rows={3} style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff', resize: 'vertical' }} />

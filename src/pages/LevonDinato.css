@@ -59,7 +59,7 @@ div.levon-page .nav-inner {
   align-items: center !important; height: 100%; padding: 0 5%; 
 }
 div.levon-page .logo { display: flex !important; align-items: center !important; }
-div.levon-page .logo img { height: 40px !important; width: auto !important; max-width: none !important; border-radius: 4px; }
+div.levon-page .logo img { height: 40px !important; width: auto !important; max-width: none !important; border-radius: 50% !important; object-fit: cover; }
 div.levon-page .premium-badge { background: var(--accent-gradient); color: #000; font-size: 0.6rem; font-weight: 900; padding: 2px 8px; border-radius: 4px; margin-left: 12px; letter-spacing: 1px; }
 div.levon-page .nav-links { display: flex !important; gap: 32px; }
 div.levon-page .nav-links a { font-size: 0.85rem; font-weight: 600; color: var(--text-muted) !important; transition: all 0.3s; }
@@ -104,30 +104,20 @@ div.levon-page .event-date-badge { background: var(--accent) !important; color: 
 
 /* ✅ CORRECTIF : Image en background avec fallback */
 div.levon-page .event-cover {
-  position: relative; /* Pour positionner l'icône en absolu */
+  position: relative;
   width: 28px;
   height: 28px;
   border-radius: 4px;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-color: #1a1a1a; /* Couleur de fond si l'image ne charge pas */
+  background-color: #1a1a1a;
   border: 1px solid var(--border-light);
   flex-shrink: 0;
   overflow: hidden;
-}
-
-div.levon-page .event-cover-fallback {
-  position: absolute;
-  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
-  color: rgba(255,255,255,0.2);
-  background: linear-gradient(135deg, #10202e 0%, #0a121a 100%);
-  z-index: 0;
 }
+div.levon-page .event-cover img { width: 100%; height: 100%; object-fit: cover; }
+div.levon-page .event-cover-fallback { font-size: 14px; color: rgba(255,255,255,0.2); }
 
 div.levon-page .event-info { display: flex !important; flex-direction: column !important; justify-content: center !important; }
 div.levon-page .event-title { color: #fff !important; font-size: 0.8rem; font-weight: 700; white-space: nowrap; line-height: 1.2; }
@@ -137,7 +127,7 @@ div.levon-page .event-location { color: var(--text-muted) !important; font-size:
 /* HERO & VIDEO */
 div.levon-page .hero { 
   position: relative !important; 
-  min-height: 90vh !important; 
+  min-height: 80vh !important; /* Réduit un peu pour éviter un vide trop grand */
   display: flex !important; align-items: center !important; justify-content: center !important;
   overflow: hidden !important; 
   background-color: #000 !important; 
@@ -167,13 +157,35 @@ div.levon-page .section-title { font-size: 1.4rem; font-weight: 800; color: #fff
 
 /* CARTES ET CONTENEURS */
 div.levon-page .about-grid, div.levon-page .service-card, div.levon-page .sidebar-widget, div.levon-page .tracklist { background: linear-gradient(145deg, rgba(13, 22, 33, 0.95), rgba(6, 13, 20, 0.95)) !important; backdrop-filter: blur(10px); border: 1px solid rgba(0, 217, 255, 0.15) !important; border-radius: 16px !important; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5) !important; transition: all 0.3s ease; }
-div.levon-page .about-grid { display: grid !important; grid-template-columns: 1fr 1fr; gap: 30px; padding: 40px; }
+
+/* ✅ CORRECTIF : Alignement de la grille "À propos" */
+div.levon-page .about-grid { 
+  display: grid !important; 
+  grid-template-columns: 1fr 1fr; 
+  gap: 40px; 
+  padding: 40px; 
+  align-items: start !important; /* Aligne l'image en haut, pas au centre */
+}
 div.levon-page .about-text h3 { font-size: 1.3rem; font-weight: 800; margin-bottom: 16px; color: #fff !important; }
 div.levon-page .about-text p { color: var(--text-muted) !important; margin-bottom: 24px; }
 div.levon-page .member-box { margin-bottom: 20px; padding: 10px 16px; border-left: 3px solid var(--accent); background: rgba(0,217,255,0.05); }
 div.levon-page .member-box h4 { color: #fff !important; font-weight: 700; }
 div.levon-page .member-box p { color: var(--text-muted) !important; margin: 0; font-size: 0.9rem; }
-div.levon-page .about-visual { background: #000; border-radius: 12px; overflow: hidden; display: flex; justify-content: center; }
+
+/* ✅ CORRECTIF : L'image ne s'étire plus à l'infini */
+div.levon-page .about-visual { 
+  background: #000; 
+  border-radius: 12px; 
+  overflow: hidden; 
+  display: flex; 
+  justify-content: center; 
+  align-items: center;
+  width: 100%; 
+  max-width: 400px; /* Limite la largeur max */
+  aspect-ratio: 4 / 5; /* Format portrait propre (type flyer) */
+  margin: 0 auto; /* Centre dans sa colonne */
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
 div.levon-page .about-visual img { width: 100%; height: 100%; object-fit: cover; }
 
 /* SERVICES */
@@ -242,6 +254,7 @@ div.levon-page .audio-time { font-size: 0.8rem; color: var(--text-muted) !import
   div.levon-page .sidebar { width: 100% !important; }
   div.levon-page .sidebar-inner { position: static !important; display: grid !important; grid-template-columns: 1fr 1fr; }
   div.levon-page .about-grid { grid-template-columns: 1fr !important; }
+  div.levon-page .about-visual { margin-bottom: 20px; max-width: 100%; aspect-ratio: 16 / 9; } /* Sur mobile on passe en mode paysage */
   div.levon-page .upsell-grid { grid-template-columns: 1fr !important; text-align: center; }
   div.levon-page .event-ticker-wrapper { top: 64px; height: 50px; }
   div.levon-page .hero { padding-top: 140px !important; }

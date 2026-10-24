@@ -23,9 +23,7 @@ export const PremiumPage: React.FC = () => {
   // ✅ Fonction pour extraire l'URL src d'un code iframe Beatport
   const getIframeSrc = (embedCode: string) => {
     if (!embedCode) return null;
-    // Si c'est déjà juste une URL
     if (embedCode.startsWith('http')) return embedCode;
-    // Si c'est un code iframe, on extrait le src
     const match = embedCode.match(/src=["'](.*?)["']/);
     return match ? match[1] : null;
   };
@@ -73,7 +71,6 @@ export const PremiumPage: React.FC = () => {
   }, [username]);
 
   const handlePlayTrack = (track: any) => {
-    // On ne joue que si c'est un vrai fichier audio
     if (track.audio_url && track.audio_url.length > 0) {
       play({
         id: track.id,
@@ -232,17 +229,18 @@ export const PremiumPage: React.FC = () => {
                   const iframeSrc = getIframeSrc(track.embed_code);
 
                   return (
-                    <div key={track.id} style={{ marginBottom: 12 }}>
+                    <div key={track.id} style={{ marginBottom: 0 }}> {/* Pas de margin entre les rows, on gère avec les bordures */}
                       <div 
                         className="track-row" 
                         onClick={() => isPlayable && handlePlayTrack(track)}
                         style={{ cursor: isPlayable ? 'pointer' : 'default', borderBottom: iframeSrc ? 'none' : '1px solid var(--border)' }}
                       >
-                        <div className="track-play" style={{ cursor: isPlayable ? 'pointer' : 'default', background: isPlayable ? '#112436' : 'transparent', border: isPlayable ? 'none' : '1px solid #444' }}>
+                        <div className="track-play" style={{ cursor: isPlayable ? 'pointer' : 'default', background: isPlayable ? '#112436' : 'rgba(255,255,255,0.05)', border: isPlayable ? 'none' : '1px solid #333' }}>
                           {isPlayable ? (
                             currentTrack?.id === track.id && isPlaying ? '⏸' : '▶'
                           ) : (
-                            <span style={{ fontSize: '10px', fontWeight: 'bold', color: '#00d9ff' }}>EXT</span>
+                            // ✅ Icône "Lien Externe" plus propre
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={themeColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
                           )}
                         </div>
                         
@@ -253,24 +251,40 @@ export const PremiumPage: React.FC = () => {
                           {isPlayable ? (
                             <span className="track-bpm">{track.bpm} BPM</span>
                           ) : track.purchase_url ? (
-                            <a href={track.purchase_url} target="_blank" rel="noopener noreferrer" style={{ background: themeColor, color: '#000', padding: '6px 12px', borderRadius: '4px', fontSize: '10px', fontWeight: '900', textDecoration: 'none', textTransform: 'uppercase' }}>
+                            <a href={track.purchase_url} target="_blank" rel="noopener noreferrer" style={{ background: 'transparent', color: themeColor, padding: '6px 12px', borderRadius: '4px', fontSize: '11px', fontWeight: '800', textDecoration: 'none', textTransform: 'uppercase', border: `1px solid ${themeColor}` }}>
                               Acheter
                             </a>
                           ) : null}
                         </div>
                       </div>
                       
-                      {/* ✅ AFFICHAGE DU LECTEUR BEATPORT (Si le code iframe est présent) */}
+                      {/* ✅ IFRAME BEATPORT HARMONISÉ */}
                       {iframeSrc && (
-                        <div style={{ padding: '10px 20px 20px 20px', display: 'flex', justifyContent: 'center' }}>
-                          <iframe 
-                            src={iframeSrc} 
-                            width="100%" 
-                            height="162" 
-                            frameBorder="0" 
-                            scrolling="no" 
-                            style={{ maxWidth: '600px', borderRadius: '8px' }}
-                          ></iframe>
+                        <div style={{ 
+                          padding: '0 20px 20px 20px', // Aligné avec le padding du track-row
+                          background: 'rgba(0,0,0,0.2)', // Léger fond pour intégrer l'iframe
+                          borderBottom: '1px solid var(--border)',
+                          borderLeft: `3px solid ${themeColor}`, // Petite touche de couleur
+                          display: 'flex',
+                          justifyContent: 'center',
+                        }}>
+                          <div style={{ 
+                            width: '100%', 
+                            maxWidth: '800px', // Plus large
+                            borderRadius: '12px', 
+                            overflow: 'hidden', 
+                            border: '1px solid #333',
+                            boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
+                          }}>
+                            <iframe 
+                              src={iframeSrc} 
+                              width="100%" 
+                              height="162" 
+                              frameBorder="0" 
+                              scrolling="no" 
+                              style={{ display: 'block', width: '100%' }}
+                            ></iframe>
+                          </div>
                         </div>
                       )}
                     </div>

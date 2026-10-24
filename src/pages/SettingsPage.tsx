@@ -1,5 +1,6 @@
 // src/pages/SettingsPage.tsx
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom'; // ✅ Import de Link
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -76,8 +77,33 @@ export const SettingsPage: React.FC = () => {
 
   return (
     <div style={{ maxWidth: 800, margin: '0 auto', padding: '40px 20px', color: '#fff', fontFamily: 'Inter, sans-serif' }}>
-      <h1 style={{ fontSize: 32, fontWeight: 800, marginBottom: 10 }}>Mon Profil Public</h1>
-      <p style={{ color: '#888', marginBottom: 30 }}>Ces informations seront affichées sur ta page Premium.</p>
+      
+      {/* ✅ EN-TÊTE AVEC LE BOUTON POUR VOIR LA PAGE PUBLIQUE */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16, marginBottom: 10 }}>
+        <h1 style={{ fontSize: 32, fontWeight: 800, margin: 0 }}>Mon Profil Public</h1>
+        
+        {form.username && (
+          <Link 
+            to={`/premium/${form.username}`} 
+            target="_blank"
+            style={{ 
+              padding: '10px 20px', 
+              background: form.theme_color, 
+              color: '#000', 
+              borderRadius: 8, 
+              fontWeight: 700, 
+              textDecoration: 'none',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8
+            }}
+          >
+            Voir ma page publique ↗
+          </Link>
+        )}
+      </div>
+      
+      <p style={{ color: '#888', marginBottom: 30 }}>Modifie tes informations, elles s'afficheront instantanément sur ta page Premium.</p>
 
       {message && (
         <div style={{ padding: 16, background: message.includes('Erreur') ? 'rgba(255,0,0,0.1)' : 'rgba(0,217,255,0.1)', border: `1px solid ${message.includes('Erreur') ? '#ff3366' : form.theme_color}`, borderRadius: 8, marginBottom: 24, color: message.includes('Erreur') ? '#ff3366' : form.theme_color }}>

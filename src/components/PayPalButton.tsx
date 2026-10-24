@@ -11,11 +11,10 @@ export const PayPalButton: React.FC = () => {
   const paypalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // On vérifie toutes les 500ms si le script PayPal est chargé
     const interval = setInterval(() => {
       if (window.paypal && paypalRef.current) {
         clearInterval(interval);
-        paypalRef.current.innerHTML = ''; // On nettoie le conteneur
+        paypalRef.current.innerHTML = '';
 
         try {
           window.paypal.Buttons({
@@ -27,16 +26,15 @@ export const PayPalButton: React.FC = () => {
             },
             createSubscription: function(data: any, actions: any) {
               return actions.subscription.create({
-                // ✅ C'est ton ID de plan d'abonnement
-                plan_id: 'P-6S823680KU642853FNLOLY7A' 
+                plan_id: 'P-6S823680KU642853FNLOLY7A' // Ton Plan ID annuel
               });
             },
             onApprove: function(data: any, actions: any) {
-              // ✅ Cette fonction se déclenche quand le paiement est validé
-              alert(`Abonnement réussi ! ID : ${data.subscriptionID}`);
+              // ✅ Message de succès clair
+              alert(`Félicitations ! Votre abonnement Premium de 1 an est activé.\n\nID d'abonnement : ${data.subscriptionID}\n\nVotre accès sera débloqué très prochainement.`);
               
-              // 💡 Plus tard : Envoie le data.subscriptionID à Supabase pour valider 
-              // le compte Premium automatiquement
+              // 💡 Recharge la page pour que l'utilisateur voie son espace (une fois validé manuellement par toi)
+              window.location.reload();
             }
           }).render(paypalRef.current);
         } catch (error) {

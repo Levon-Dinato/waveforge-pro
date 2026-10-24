@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import { PayPalButton } from '../components/PayPalButton'; // ✅ Import du bouton PayPal
+import { PayPalButton } from '../components/PayPalButton';
 
 export const SettingsPage: React.FC = () => {
   const { user } = useAuth();
@@ -11,28 +11,16 @@ export const SettingsPage: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   
-  // État pour savoir si l'utilisateur est Premium
   const [isPremium, setIsPremium] = useState(false);
 
-  // États pour la gestion de la musique
   const [myTracks, setMyTracks] = useState<any[]>([]);
   const [editingTrackId, setEditingTrackId] = useState<string | null>(null);
   const [editTrackForm, setEditTrackForm] = useState({ title: '', genre: '', bpm: 0 });
 
-  // État du formulaire de profil
   const [form, setForm] = useState({
-    username: '',
-    bio: '',
-    hero_tagline: 'Nouveaux remixes disponibles',
-    hero_title: '',
-    hero_description: '',
-    theme_color: '#00d9ff',
-    avatar_url: '',
-    instagram_url: '',
-    spotify_url: '',
-    soundcloud_url: '',
-    tiktok_url: '',
-    youtube_url: ''
+    username: '', bio: '', hero_tagline: 'Nouveaux remixes disponibles', hero_title: '', hero_description: '',
+    theme_color: '#00d9ff', avatar_url: '', instagram_url: '', spotify_url: '',
+    soundcloud_url: '', tiktok_url: '', youtube_url: ''
   });
 
   useEffect(() => {
@@ -42,17 +30,12 @@ export const SettingsPage: React.FC = () => {
       if (data) {
         setIsPremium(data.is_premium || false);
         setForm({
-          username: data.username || '',
-          bio: data.bio || '',
+          username: data.username || '', bio: data.bio || '',
           hero_tagline: data.hero_tagline || 'Nouveaux remixes disponibles',
-          hero_title: data.hero_title || '',
-          hero_description: data.hero_description || '',
-          theme_color: data.theme_color || '#00d9ff',
-          avatar_url: data.avatar_url || '',
-          instagram_url: data.instagram_url || '',
-          spotify_url: data.spotify_url || '',
-          soundcloud_url: data.soundcloud_url || '',
-          tiktok_url: data.tiktok_url || '',
+          hero_title: data.hero_title || '', hero_description: data.hero_description || '',
+          theme_color: data.theme_color || '#00d9ff', avatar_url: data.avatar_url || '',
+          instagram_url: data.instagram_url || '', spotify_url: data.spotify_url || '',
+          soundcloud_url: data.soundcloud_url || '', tiktok_url: data.tiktok_url || '',
           youtube_url: data.youtube_url || ''
         });
       }
@@ -61,54 +44,38 @@ export const SettingsPage: React.FC = () => {
     fetchProfile();
   }, [user]);
 
-  // Charger les musiques de l'artiste
   const fetchMyTracks = async () => {
     if (!user) return;
     const { data } = await supabase.from('tracks').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
     if (data) setMyTracks(data);
   };
 
-  useEffect(() => {
-    fetchMyTracks();
-  }, [user]);
+  useEffect(() => { fetchMyTracks(); }, [user]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
     setSaving(true);
     setMessage('');
-
     const { error } = await supabase.from('profiles').update({
-      username: form.username,
-      bio: form.bio,
-      hero_tagline: form.hero_tagline,
-      hero_title: form.hero_title,
-      hero_description: form.hero_description,
-      theme_color: form.theme_color,
-      avatar_url: form.avatar_url,
-      instagram_url: form.instagram_url,
-      spotify_url: form.spotify_url,
-      soundcloud_url: form.soundcloud_url,
-      tiktok_url: form.tiktok_url,
+      username: form.username, bio: form.bio, hero_tagline: form.hero_tagline,
+      hero_title: form.hero_title, hero_description: form.hero_description,
+      theme_color: form.theme_color, avatar_url: form.avatar_url,
+      instagram_url: form.instagram_url, spotify_url: form.spotify_url,
+      soundcloud_url: form.soundcloud_url, tiktok_url: form.tiktok_url,
       youtube_url: form.youtube_url
     }).eq('id', user.id);
-
-    if (error) {
-      setMessage("Erreur : " + error.message);
-    } else {
-      setMessage("Profil mis à jour avec succès ! ✅");
-    }
+    if (error) setMessage("Erreur : " + error.message);
+    else setMessage("Profil mis à jour avec succès ! ✅");
     setSaving(false);
   };
 
-  // Supprimer un son
   const handleDeleteTrack = async (trackId: string) => {
     if (!window.confirm("Supprimer définitivement ce son ?")) return;
     await supabase.from('tracks').delete().eq('id', trackId);
     setMyTracks(myTracks.filter(t => t.id !== trackId));
   };
 
-  // Modifier un son existant
   const startEditingTrack = (track: any) => {
     setEditingTrackId(track.id);
     setEditTrackForm({ title: track.title, genre: track.genre || '', bpm: track.bpm || 0 });
@@ -116,11 +83,8 @@ export const SettingsPage: React.FC = () => {
 
   const handleSaveTrackEdit = async (trackId: string) => {
     const { error } = await supabase.from('tracks').update({
-      title: editTrackForm.title,
-      genre: editTrackForm.genre,
-      bpm: Number(editTrackForm.bpm)
+      title: editTrackForm.title, genre: editTrackForm.genre, bpm: Number(editTrackForm.bpm)
     }).eq('id', trackId);
-
     if (!error) {
       setMyTracks(myTracks.map(t => t.id === trackId ? { ...t, ...editTrackForm } : t));
       setEditingTrackId(null);
@@ -130,24 +94,19 @@ export const SettingsPage: React.FC = () => {
   if (loading) return <div style={{ padding: 40, color: '#fff', textAlign: 'center' }}>Chargement...</div>;
 
   // ==========================================
-  // ÉCRAN DE BLOCAGE : Si l'utilisateur n'est pas Premium
+  // ÉCRAN DE VENTE (NON PREMIUM)
   // ==========================================
   if (!isPremium) {
     return (
       <div style={{ maxWidth: 800, margin: '0 auto', padding: '60px 20px', color: '#fff', fontFamily: 'Inter, sans-serif', display: 'flex', justifyContent: 'center' }}>
         <div style={{ 
           background: 'linear-gradient(145deg, rgba(13, 22, 33, 0.95), rgba(6, 13, 20, 0.95))', 
-          border: '1px solid rgba(0, 217, 255, 0.3)', 
-          borderRadius: 24, 
-          padding: '50px 40px', 
-          textAlign: 'center',
-          maxWidth: 600,
-          boxShadow: '0 20px 50px rgba(0,0,0,0.5), 0 0 40px rgba(0,217,255,0.1)'
+          border: '1px solid rgba(0, 217, 255, 0.3)', borderRadius: 24, padding: '50px 40px', textAlign: 'center', maxWidth: 600, boxShadow: '0 20px 50px rgba(0,0,0,0.5), 0 0 40px rgba(0,217,255,0.1)'
         }}>
           <div style={{ fontSize: 50, marginBottom: 20 }}>✨</div>
           <h1 style={{ fontSize: 32, fontWeight: 900, marginBottom: 16 }}>Passez à la vitesse supérieure</h1>
           <p style={{ color: '#8c9f98', fontSize: 16, lineHeight: 1.6, marginBottom: 30 }}>
-            La personnalisation de votre page (couleurs, bio, réseaux) et la gestion de votre musique sont réservées aux membres <strong>Premium</strong>.
+            La personnalisation de votre page et la gestion de votre musique sont réservées aux membres <strong>Premium</strong>.
           </p>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 40, textAlign: 'left', background: '#0a0a0a', padding: 24, borderRadius: 12, border: '1px solid #222' }}>
@@ -156,14 +115,33 @@ export const SettingsPage: React.FC = () => {
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14 }}>✅ Gestion de votre musique</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14 }}>✅ Page officielle sur-mesure</div>
           </div>
+
+          {/* ✅ CLARIFICATION DU PRIX ET DE LA DURÉE (30 EUROS) */}
+          <div style={{ 
+            background: 'rgba(0, 217, 255, 0.1)', 
+            border: '1px solid rgba(0, 217, 255, 0.3)', 
+            borderRadius: 12, 
+            padding: '16px', 
+            marginBottom: 24 
+          }}>
+            <div style={{ fontSize: 26, fontWeight: 900, color: '#00d9ff', marginBottom: 4 }}>
+              30 € / an
+            </div>
+            <div style={{ fontSize: 14, color: '#fff', fontWeight: 600 }}>
+              Abonnement annuel DropZone Premium
+            </div>
+            <div style={{ fontSize: 12, color: '#888', marginTop: 4 }}>
+              (Soit seulement 2,50 € par mois)
+            </div>
+          </div>
           
-          {/* ✅ LE BOUTON PAYPAL EST ICI */}
           <div style={{ background: '#fff', borderRadius: 8, padding: '10px', display: 'inline-block', minWidth: '250px' }}>
             <PayPalButton />
           </div>
           
           <p style={{ color: '#666', fontSize: 12, marginTop: 20 }}>
-            Paiement sécurisé via PayPal. Votre accès sera activé dès réception du paiement.
+            Paiement sécurisé via PayPal.<br/>
+            Annulable à tout moment depuis votre compte PayPal.
           </p>
         </div>
       </div>
@@ -171,7 +149,7 @@ export const SettingsPage: React.FC = () => {
   }
 
   // ==========================================
-  // SI L'UTILISATEUR EST PREMIUM : On affiche le formulaire
+  // ESPACE PREMIUM (Si isPremium = true)
   // ==========================================
   return (
     <div style={{ maxWidth: 800, margin: '0 auto', padding: '40px 20px', color: '#fff', fontFamily: 'Inter, sans-serif' }}>
@@ -184,29 +162,15 @@ export const SettingsPage: React.FC = () => {
           <Link to={`/premium/${form.username}`} target="_blank" style={{ padding: '10px 20px', background: form.theme_color, color: '#000', borderRadius: 8, fontWeight: 700, textDecoration: 'none' }}>Voir ma page ↗</Link>
         )}
       </div>
+      
       <p style={{ color: '#888', marginBottom: 30 }}>Gère ton identité et ta musique.</p>
-
-      {message && (
-        <div style={{ padding: 16, background: message.includes('Erreur') ? 'rgba(255,0,0,0.1)' : 'rgba(0,217,255,0.1)', border: `1px solid ${message.includes('Erreur') ? '#ff3366' : form.theme_color}`, borderRadius: 8, marginBottom: 24, color: message.includes('Erreur') ? '#ff3366' : form.theme_color }}>
-          {message}
-        </div>
-      )}
-
-      {/* =========================================
-          SECTION 1 : GESTION DE LA MUSIQUE
-      ========================================= */}
+      
+      {/* SECTION MUSIQUE */}
       <div style={{ background: '#121212', padding: 24, borderRadius: 12, border: '1px solid #222', marginBottom: 24 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
           <h2 style={{ fontSize: 18, color: '#fff', margin: 0 }}>Ma Musique ({myTracks.length})</h2>
-          
-          <Link 
-            to="/nouveautes" 
-            style={{ background: '#fff', color: '#000', padding: '8px 16px', borderRadius: 6, fontWeight: 800, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}
-          >
-            + Uploader un son
-          </Link>
+          <Link to="/nouveautes" style={{ background: '#fff', color: '#000', padding: '8px 16px', borderRadius: 6, fontWeight: 800, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>+ Uploader un son</Link>
         </div>
-
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {myTracks.length === 0 ? (
             <p style={{ color: '#666', fontSize: 14 }}>Tu n'as pas encore de sons. Clique sur "+ Uploader".</p>
@@ -242,11 +206,8 @@ export const SettingsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* =========================================
-          SECTION 2 : LE PROFIL (Formulaire)
-      ========================================= */}
+      {/* FORMULAIRE DE PROFIL */}
       <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-        
         <div style={{ background: '#121212', padding: 24, borderRadius: 12, border: '1px solid #222' }}>
           <h2 style={{ fontSize: 18, marginBottom: 20, color: '#fff' }}>Identité & Thème</h2>
           <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>

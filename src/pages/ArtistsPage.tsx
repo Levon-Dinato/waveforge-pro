@@ -10,6 +10,7 @@ interface Artist {
   avatar_url: string | null;
   city?: string;
   country?: string;
+  is_premium?: boolean; // ✅ NOUVEAU
   trackCount: number;
 }
 
@@ -24,9 +25,10 @@ export const ArtistsPage: React.FC = () => {
     const fetchArtists = async () => {
       setLoading(true);
       try {
+        // ✅ On récupère aussi la colonne is_premium
         const { data: profilesData, error: profilesError } = await supabase
           .from('profiles')
-          .select('id, username, avatar_url, city, country');
+          .select('id, username, avatar_url, city, country, is_premium');
 
         if (profilesError) throw profilesError;
         if (!profilesData) return;
@@ -124,11 +126,9 @@ export const ArtistsPage: React.FC = () => {
             gap: isMobile ? 12 : 24 
           }}>
             {filteredArtists.map((artist) => {
-              // ✅ CORRECTION : Vérification stricte du nom (sans espace insécable ni casse)
-              const cleanName = artist.username.replace(/\s/g, '').toLowerCase();
-              const isLevonDinato = cleanName === 'levon&dinato';
-              
-              const targetUrl = isLevonDinato ? '/levon-dinato' : `/profil/${artist.id}`;
+              // ✅ Si l'artiste est premium, on pointe vers sa page /premium/
+              const isPremium = artist.is_premium === true;
+              const targetUrl = isPremium ? `/premium/${artist.username}` : `/profil/${artist.id}`;
 
               return (
                 <Link 
@@ -139,8 +139,8 @@ export const ArtistsPage: React.FC = () => {
                   <div 
                     className="artist-card"
                     style={{
-                      background: isLevonDinato ? 'rgba(0, 217, 255, 0.03)' : '#181818',
-                      border: isLevonDinato ? '1px solid rgba(0, 217, 255, 0.4)' : '1px solid #2a2a2a',
+                      background: isPremium ? 'rgba(0, 217, 255, 0.03)' : '#181818',
+                      border: isPremium ? '1px solid rgba(0, 217, 255, 0.4)' : '1px solid #2a2a2a',
                       borderRadius: 12, padding: '24px 16px', display: 'flex', flexDirection: 'column',
                       alignItems: 'center', textAlign: 'center', gap: 16, transition: 'all 0.2s ease',
                       cursor: 'pointer', height: '100%',
@@ -150,8 +150,8 @@ export const ArtistsPage: React.FC = () => {
                     <div className="artist-avatar" style={{ 
                       width: isMobile ? 80 : 100, height: isMobile ? 80 : 100, borderRadius: '50%', flexShrink: 0,
                       background: '#121212', overflow: 'hidden',
-                      border: isLevonDinato ? '2px solid #00d9ff' : '2px solid #2a2a2a',
-                      boxShadow: isLevonDinato ? '0 0 20px rgba(0, 217, 255, 0.2)' : '0 4px 12px rgba(0,0,0,0.5)',
+                      border: isPremium ? '2px solid #00d9ff' : '2px solid #2a2a2a',
+                      boxShadow: isPremium ? '0 0 20px rgba(0, 217, 255, 0.2)' : '0 4px 12px rgba(0,0,0,0.5)',
                       transition: 'transform 0.2s ease',
                     }}>
                       {artist.avatar_url ? (
@@ -167,8 +167,8 @@ export const ArtistsPage: React.FC = () => {
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                       <h3 className="artist-name" style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap' }}>
                         {artist.username}
-                        {/* ✅ BADGE PREMIUM */}
-                        {isLevonDinato && <span className="premium-badge-artist">PREMIUM</span>}
+                        {/* ✅ BADGE PREMIUM DYNAMIQUE */}
+                        {isPremium && <span className="premium-badge-artist">PREMIUM</span>}
                       </h3>
                       <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>
                         {artist.city ? `${artist.city}${artist.country ? `, ${artist.country}` : ''}` : 'France'}
@@ -178,11 +178,11 @@ export const ArtistsPage: React.FC = () => {
                     {/* Badge de comptage / Site officiel */}
                     <div style={{ 
                       display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 10px', 
-                      background: isLevonDinato ? '#00d9ff' : 'rgba(0, 217, 255, 0.1)', 
-                      color: isLevonDinato ? '#000' : '#00d9ff', borderRadius: 20, fontSize: 11, fontWeight: 700,
-                      border: isLevonDinato ? 'none' : '1px solid rgba(0, 217, 255, 0.2)'
+                      background: isPremium ? '#00d9ff' : 'rgba(0, 217, 255, 0.1)', 
+                      color: isPremium ? '#000' : '#00d9ff', borderRadius: 20, fontSize: 11, fontWeight: 700,
+                      border: isPremium ? 'none' : '1px solid rgba(0, 217, 255, 0.2)'
                     }}>
-                      {isLevonDinato ? 'SITE OFFICIEL' : `${artist.trackCount} ${artist.trackCount > 1 ? 'morceaux' : 'morceau'}`}
+                      {isPremium ? 'SITE OFFICIEL' : `${artist.trackCount} ${artist.trackCount > 1 ? 'morceaux' : 'morceau'}`}
                     </div>
                   </div>
                 </Link>

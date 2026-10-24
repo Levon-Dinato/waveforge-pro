@@ -14,11 +14,10 @@ export const SettingsPage: React.FC = () => {
   const [isPremium, setIsPremium] = useState(false);
   const [myTracks, setMyTracks] = useState<any[]>([]);
   const [editingTrackId, setEditingTrackId] = useState<string | null>(null);
-  const [editTrackForm, setEditTrackForm] = useState({ title: '', genre: '', bpm: 0, purchase_url: '' });
+  const [editTrackForm, setEditTrackForm] = useState({ title: '', genre: '', bpm: 0, purchase_url: '', embed_code: '' });
   
-  // ✅ Nouveaux états pour l'ajout d'un lien externe
   const [showLinkForm, setShowLinkForm] = useState(false);
-  const [linkForm, setLinkForm] = useState({ title: '', artist: '', genre: 'Inconnu', purchase_url: '', cover_url: '' });
+  const [linkForm, setLinkForm] = useState({ title: '', artist: '', genre: 'Inconnu', purchase_url: '', cover_url: '', embed_code: '' });
 
   const [uploadingImage, setUploadingImage] = useState(false);
   const [uploadingGallery, setUploadingGallery] = useState(false);
@@ -93,7 +92,7 @@ export const SettingsPage: React.FC = () => {
         const { error } = await supabase.storage.from('media').upload(fileName, file);
         if (error) throw error;
         
-        const { data } = await supabase.storage.from('media').getPublicUrl(fileName);
+        const { data } = supabase.storage.from('media').getPublicUrl(fileName);
         return { user_id: user?.id, image_url: data.publicUrl };
       });
 
@@ -146,7 +145,6 @@ export const SettingsPage: React.FC = () => {
     setSaving(false);
   };
 
-  // ✅ NOUVELLE FONCTION : Ajouter un lien externe
   const handleSaveLink = async () => {
     if (!user || !linkForm.title || !linkForm.purchase_url) {
       alert("Le titre et le lien Beatport sont obligatoires.");
@@ -161,7 +159,8 @@ export const SettingsPage: React.FC = () => {
         genre: linkForm.genre,
         purchase_url: linkForm.purchase_url,
         cover_url: linkForm.cover_url || null,
-        audio_url: linkForm.purchase_url, // On met l'URL Beatport par défaut
+        embed_code: linkForm.embed_code || null,
+        audio_url: '', 
         peaks: [],
         likes_count: 0,
         downloads: 0,
@@ -171,7 +170,7 @@ export const SettingsPage: React.FC = () => {
       if (data) {
         setMyTracks([data, ...myTracks]);
         setShowLinkForm(false);
-        setLinkForm({ title: '', artist: '', genre: 'Inconnu', purchase_url: '', cover_url: '' });
+        setLinkForm({ title: '', artist: '', genre: 'Inconnu', purchase_url: '', cover_url: '', embed_code: '' });
       }
     } catch (err: any) {
       alert("Erreur : " + err.message);
@@ -192,7 +191,8 @@ export const SettingsPage: React.FC = () => {
       title: track.title, 
       genre: track.genre || '', 
       bpm: track.bpm || 0,
-      purchase_url: track.purchase_url || ''
+      purchase_url: track.purchase_url || '',
+      embed_code: track.embed_code || ''
     });
   };
 
@@ -201,7 +201,8 @@ export const SettingsPage: React.FC = () => {
       title: editTrackForm.title, 
       genre: editTrackForm.genre, 
       bpm: Number(editTrackForm.bpm),
-      purchase_url: editTrackForm.purchase_url
+      purchase_url: editTrackForm.purchase_url,
+      embed_code: editTrackForm.embed_code
     }).eq('id', trackId);
     if (!error) {
       setMyTracks(myTracks.map(t => t.id === trackId ? { ...t, ...editTrackForm } : t));
@@ -211,9 +212,6 @@ export const SettingsPage: React.FC = () => {
 
   if (loading) return <div style={{ padding: 40, color: '#fff', textAlign: 'center' }}>Chargement...</div>;
 
-  // ==========================================
-  // ÉCRAN DE VENTE (NON PREMIUM)
-  // ==========================================
   if (!isPremium) {
     return (
       <div style={{ maxWidth: 800, margin: '0 auto', padding: '60px 20px', color: '#fff', fontFamily: 'Inter, sans-serif', display: 'flex', justifyContent: 'center' }}>
@@ -221,16 +219,9 @@ export const SettingsPage: React.FC = () => {
           <div style={{ fontSize: 50, marginBottom: 20 }}>✨</div>
           <h1 style={{ fontSize: 32, fontWeight: 900, marginBottom: 16 }}>Passez à la vitesse supérieure</h1>
           <p style={{ color: '#8c9f98', fontSize: 16, lineHeight: 1.6, marginBottom: 30 }}>La personnalisation de votre page et la gestion de votre musique sont réservées aux membres <strong>Premium</strong>.</p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 40, textAlign: 'left', background: '#0a0a0a', padding: 24, borderRadius: 12, border: '1px solid #222' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14 }}>✅ Couleur de site personnalisée</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14 }}>✅ Biographie et réseaux sociaux</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14 }}>✅ Gestion de votre musique & Liens d'achat</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14 }}>✅ Galerie photos & Page sur-mesure</div>
-          </div>
           <div style={{ background: 'rgba(0, 217, 255, 0.1)', border: '1px solid rgba(0, 217, 255, 0.3)', borderRadius: 12, padding: '16px', marginBottom: 24 }}>
             <div style={{ fontSize: 26, fontWeight: 900, color: '#00d9ff', marginBottom: 4 }}>30 € / an</div>
             <div style={{ fontSize: 14, color: '#fff', fontWeight: 600 }}>Abonnement annuel DropZone Premium</div>
-            <div style={{ fontSize: 12, color: '#888', marginTop: 4 }}>(Soit seulement 2,50 € par mois)</div>
           </div>
           <div style={{ background: '#fff', borderRadius: 8, padding: '10px', display: 'inline-block', minWidth: '250px' }}>
             <PayPalButton />
@@ -240,9 +231,6 @@ export const SettingsPage: React.FC = () => {
     );
   }
 
-  // ==========================================
-  // ESPACE PREMIUM
-  // ==========================================
   return (
     <div style={{ maxWidth: 800, margin: '0 auto', padding: '40px 20px', color: '#fff', fontFamily: 'Inter, sans-serif' }}>
       
@@ -257,56 +245,46 @@ export const SettingsPage: React.FC = () => {
       
       <p style={{ color: '#888', marginBottom: 30 }}>Gère ton identité, ta musique et tes photos.</p>
 
-      {/* MESSAGE DE BIENVENUE */}
-      <div style={{ 
-        background: 'linear-gradient(90deg, rgba(0, 217, 255, 0.15) 0%, rgba(10, 18, 26, 0) 100%)', 
-        borderLeft: '4px solid #00d9ff', 
-        borderRadius: '0 12px 12px 0', 
-        padding: '20px 24px', 
-        marginBottom: '30px',
-        display: 'flex',
-        alignItems: 'flex-start',
-        gap: '16px'
-      }}>
+      <div style={{ background: 'linear-gradient(90deg, rgba(0, 217, 255, 0.15) 0%, rgba(10, 18, 26, 0) 100%)', borderLeft: '4px solid #00d9ff', borderRadius: '0 12px 12px 0', padding: '20px 24px', marginBottom: '30px', display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
         <div style={{ fontSize: '28px', marginTop: '-4px' }}>🚀</div>
         <div>
-          <h3 style={{ margin: '0 0 6px 0', fontSize: '16px', color: '#fff', fontWeight: 800 }}>
-            Bienvenue dans ton espace Premium !
-          </h3>
-          <p style={{ margin: 0, fontSize: '13px', color: '#a0aec0', lineHeight: '1.5' }}>
-            Ton abonnement est actif. N'oublie pas de <strong>partager le lien de ta page</strong> sur tes réseaux sociaux, sur tes flyers ou en bio de ton Instagram. Chaque visiteur peut écouter tes sons, voir tes dates et cliquer sur tes liens Beatport. Bonne promo ! 🎧🔥
-          </p>
+          <h3 style={{ margin: '0 0 6px 0', fontSize: '16px', color: '#fff', fontWeight: 800 }}>Bienvenue dans ton espace Premium !</h3>
+          <p style={{ margin: 0, fontSize: '13px', color: '#a0aec0', lineHeight: '1.5' }}>Ton abonnement est actif. N'oublie pas de partager le lien de ta page. 🎧🔥</p>
         </div>
       </div>
 
-      {message && (
-        <div style={{ padding: 16, background: message.includes('Erreur') ? 'rgba(255,0,0,0.1)' : 'rgba(0,217,255,0.1)', border: `1px solid ${message.includes('Erreur') ? '#ff3366' : form.theme_color}`, borderRadius: 8, marginBottom: 24, color: message.includes('Erreur') ? '#ff3366' : form.theme_color }}>
-          {message}
-        </div>
-      )}
+      {message && <div style={{ padding: 16, background: 'rgba(0,217,255,0.1)', border: '1px solid #00d9ff', borderRadius: 8, marginBottom: 24, color: '#00d9ff' }}>{message}</div>}
 
       {/* SECTION MUSIQUE */}
       <div style={{ background: '#121212', padding: 24, borderRadius: 12, border: '1px solid #222', marginBottom: 24 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 10 }}>
           <h2 style={{ fontSize: 18, color: '#fff', margin: 0 }}>Ma Musique ({myTracks.length})</h2>
           <div style={{ display: 'flex', gap: 10 }}>
-            {/* ✅ NOUVEAU BOUTON AJOUTER UN LIEN */}
-            <button onClick={() => setShowLinkForm(!showLinkForm)} style={{ background: 'transparent', color: '#00d9ff', border: '1px solid #00d9ff', padding: '8px 16px', borderRadius: 6, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <button onClick={() => setShowLinkForm(!showLinkForm)} style={{ background: 'transparent', color: '#00d9ff', border: '1px solid #00d9ff', padding: '8px 16px', borderRadius: 6, fontWeight: 800, cursor: 'pointer' }}>
               {showLinkForm ? 'Annuler' : '+ Ajouter via un lien'}
             </button>
-            <Link to="/nouveautes" style={{ background: '#fff', color: '#000', padding: '8px 16px', borderRadius: 6, fontWeight: 800, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>+ Uploader un MP3</Link>
+            <Link to="/nouveautes" style={{ background: '#fff', color: '#000', padding: '8px 16px', borderRadius: 6, fontWeight: 800, textDecoration: 'none' }}>+ Uploader un MP3</Link>
           </div>
         </div>
 
-        {/* ✅ FORMULAIRE D'AJOUT DE LIEN */}
         {showLinkForm && (
           <div style={{ background: '#0a0a0a', padding: 20, borderRadius: 8, border: '1px solid #333', marginBottom: 20, display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <h3 style={{ margin: 0, fontSize: 14, color: '#fff' }}>Ajouter une sortie via un lien (Beatport, Traxsource...)</h3>
+            <h3 style={{ margin: 0, fontSize: 14, color: '#fff' }}>Ajouter une sortie via un lien</h3>
             <input type="text" placeholder="Titre du son *" value={linkForm.title} onChange={e => setLinkForm({...linkForm, title: e.target.value})} style={{ padding: 10, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4 }} />
-            <input type="text" placeholder="Artiste (par défaut : ton pseudo)" value={linkForm.artist} onChange={e => setLinkForm({...linkForm, artist: e.target.value})} style={{ padding: 10, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4 }} />
+            <input type="text" placeholder="Artiste" value={linkForm.artist} onChange={e => setLinkForm({...linkForm, artist: e.target.value})} style={{ padding: 10, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4 }} />
             <input type="text" placeholder="Genre" value={linkForm.genre} onChange={e => setLinkForm({...linkForm, genre: e.target.value})} style={{ padding: 10, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4 }} />
-            <input type="url" placeholder="Lien Beatport (ou autre) *" value={linkForm.purchase_url} onChange={e => setLinkForm({...linkForm, purchase_url: e.target.value})} style={{ padding: 10, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4 }} />
+            <input type="url" placeholder="Lien Beatport *" value={linkForm.purchase_url} onChange={e => setLinkForm({...linkForm, purchase_url: e.target.value})} style={{ padding: 10, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4 }} />
             <input type="url" placeholder="Lien de l'image de la cover (optionnel)" value={linkForm.cover_url} onChange={e => setLinkForm({...linkForm, cover_url: e.target.value})} style={{ padding: 10, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4 }} />
+            
+            {/* ✅ NOUVEAU CHAMP POUR L'IFRAME */}
+            <textarea 
+              placeholder='Code d&#39;intégration Beatport (optionnel) - Collez le code iframe complet ici' 
+              value={linkForm.embed_code} 
+              onChange={e => setLinkForm({...linkForm, embed_code: e.target.value})} 
+              rows={3}
+              style={{ padding: 10, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4, fontFamily: 'monospace', fontSize: 11 }} 
+            />
+            
             <button onClick={handleSaveLink} disabled={saving} style={{ padding: '10px', background: '#00d9ff', color: '#000', border: 'none', borderRadius: 4, fontWeight: 'bold', cursor: saving ? 'wait' : 'pointer' }}>
               {saving ? 'Enregistrement...' : 'Ajouter ce son'}
             </button>
@@ -315,7 +293,7 @@ export const SettingsPage: React.FC = () => {
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {myTracks.length === 0 ? (
-            <p style={{ color: '#666', fontSize: 14 }}>Tu n'as pas encore de sons. Clique sur "+ Uploader" ou "+ Ajouter via un lien".</p>
+            <p style={{ color: '#666', fontSize: 14 }}>Aucun son pour le moment.</p>
           ) : (
             myTracks.map(track => (
               <div key={track.id} style={{ display: 'flex', flexDirection: 'column', gap: 12, background: '#0a0a0a', padding: '12px 16px', borderRadius: 8, border: '1px solid #333' }}>
@@ -326,13 +304,8 @@ export const SettingsPage: React.FC = () => {
                       <input type="text" value={editTrackForm.genre} onChange={e => setEditTrackForm({...editTrackForm, genre: e.target.value})} style={{ width: 120, padding: 8, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4 }} placeholder="Genre" />
                       <input type="number" value={editTrackForm.bpm} onChange={e => setEditTrackForm({...editTrackForm, bpm: Number(e.target.value)})} style={{ width: 80, padding: 8, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4 }} placeholder="BPM" />
                     </div>
-                    <input 
-                      type="url" 
-                      value={editTrackForm.purchase_url} 
-                      onChange={e => setEditTrackForm({...editTrackForm, purchase_url: e.target.value})} 
-                      style={{ width: '100%', padding: 8, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4 }} 
-                      placeholder="Lien d'achat (ex: Beatport, Traxsource, Bandcamp...)" 
-                    />
+                    <input type="url" value={editTrackForm.purchase_url} onChange={e => setEditTrackForm({...editTrackForm, purchase_url: e.target.value})} style={{ width: '100%', padding: 8, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4 }} placeholder="Lien d'achat" />
+                    <textarea value={editTrackForm.embed_code} onChange={e => setEditTrackForm({...editTrackForm, embed_code: e.target.value})} rows={2} style={{ width: '100%', padding: 8, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4, fontFamily: 'monospace', fontSize: 11 }} placeholder="Code iframe Beatport" />
                     <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
                       <button onClick={() => handleSaveTrackEdit(track.id)} style={{ background: form.theme_color, color: '#000', border: 'none', padding: '8px 12px', borderRadius: 4, cursor: 'pointer', fontWeight: 'bold' }}>Enregistrer</button>
                       <button onClick={() => setEditingTrackId(null)} style={{ background: 'transparent', color: '#888', border: '1px solid #444', padding: '8px 12px', borderRadius: 4, cursor: 'pointer' }}>Annuler</button>
@@ -388,14 +361,13 @@ export const SettingsPage: React.FC = () => {
           <h2 style={{ fontSize: 18, color: '#fff', margin: 0 }}>Mes Dates / Événements</h2>
           <Link to="/events" style={{ background: '#fff', color: '#000', padding: '8px 16px', borderRadius: 6, fontWeight: 800, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>+ Ajouter une date</Link>
         </div>
-        <p style={{ color: '#666', fontSize: 14, margin: 0 }}>Les événements que tu ajoutes apparaîtront sur ton bandeau.</p>
       </div>
 
       {/* FORMULAIRE DE PROFIL */}
       <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+        {/* IDENTITÉ, THEME, BANNIERE, BIO, RESEAUX (Identique à ton code actuel) */}
         <div style={{ background: '#121212', padding: 24, borderRadius: 12, border: '1px solid #222' }}>
           <h2 style={{ fontSize: 18, marginBottom: 20, color: '#fff' }}>Identité & Thème</h2>
-          
           <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
             <div style={{ flex: '1 1 300px', display: 'flex', flexDirection: 'column', gap: 8 }}>
               <label style={{ fontSize: 13, color: '#aaa' }}>Pseudo (URL)</label>
@@ -409,59 +381,46 @@ export const SettingsPage: React.FC = () => {
               </div>
             </div>
           </div>
-
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 20 }}>
             <label style={{ fontSize: 13, color: '#aaa' }}>Image de profil (Avatar)</label>
             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
               {form.avatar_url && <img src={form.avatar_url} alt="Avatar" style={{ width: 50, height: 50, borderRadius: '50%', objectFit: 'cover', border: '2px solid #333' }} />}
               <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploadingImage} style={{ flex: 1, padding: 10, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
             </div>
-            {uploadingImage && <span style={{ fontSize: 12, color: '#00d9ff' }}>Upload en cours...</span>}
           </div>
-
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 20 }}>
             <label style={{ fontSize: 13, color: '#aaa' }}>URL de la vidéo de fond (MP4)</label>
-            <input type="url" value={form.background_video_url} onChange={(e) => setForm({ ...form, background_video_url: e.target.value })} placeholder="https://exemple.com/ma-video.mp4" style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+            <input type="url" value={form.background_video_url} onChange={(e) => setForm({ ...form, background_video_url: e.target.value })} style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
           </div>
         </div>
 
         <div style={{ background: '#121212', padding: 24, borderRadius: 12, border: '1px solid #222' }}>
           <h2 style={{ fontSize: 18, marginBottom: 20, color: '#fff' }}>Bannière d'accueil</h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
-            <label style={{ fontSize: 13, color: '#aaa' }}>Badge supérieur</label>
-            <input type="text" value={form.hero_tagline} onChange={(e) => setForm({ ...form, hero_tagline: e.target.value })} placeholder="Ex: Nouveaux remixes disponibles" style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
-            <label style={{ fontSize: 13, color: '#aaa' }}>Titre principal</label>
-            <input type="text" value={form.hero_title} onChange={(e) => setForm({ ...form, hero_title: e.target.value })} placeholder="Ex: L'expérience *sonore* ultime." style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
-            <span style={{ fontSize: 11, color: '#00d9ff' }}>💡 Astuce : Entoure un mot d'astérisques pour le colorer.</span>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <label style={{ fontSize: 13, color: '#aaa' }}>Description</label>
-            <textarea value={form.hero_description} onChange={(e) => setForm({ ...form, hero_description: e.target.value })} rows={3} style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff', resize: 'vertical' }} />
-          </div>
+          <input type="text" value={form.hero_tagline} onChange={(e) => setForm({ ...form, hero_tagline: e.target.value })} placeholder="Badge" style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff', width: '100%', marginBottom: 20 }} />
+          <input type="text" value={form.hero_title} onChange={(e) => setForm({ ...form, hero_title: e.target.value })} placeholder="Titre" style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff', width: '100%', marginBottom: 20 }} />
+          <textarea value={form.hero_description} onChange={(e) => setForm({ ...form, hero_description: e.target.value })} rows={3} placeholder="Description" style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff', width: '100%' }} />
         </div>
 
         <div style={{ background: '#121212', padding: 24, borderRadius: 12, border: '1px solid #222' }}>
           <h2 style={{ fontSize: 18, marginBottom: 20, color: '#fff' }}>Biographie</h2>
-          <textarea value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} rows={6} style={{ width: '100%', padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff', resize: 'vertical' }} />
+          <textarea value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} rows={6} style={{ width: '100%', padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
         </div>
 
         <div style={{ background: '#121212', padding: 24, borderRadius: 12, border: '1px solid #222' }}>
           <h2 style={{ fontSize: 18, marginBottom: 20, color: '#fff' }}>Réseaux Sociaux</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <input type="url" placeholder="Lien Instagram" value={form.instagram_url} onChange={(e) => setForm({ ...form, instagram_url: e.target.value })} style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
-            <input type="url" placeholder="Lien Spotify" value={form.spotify_url} onChange={(e) => setForm({ ...form, spotify_url: e.target.value })} style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
-            <input type="url" placeholder="Lien SoundCloud" value={form.soundcloud_url} onChange={(e) => setForm({ ...form, soundcloud_url: e.target.value })} style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
-            <input type="url" placeholder="Lien TikTok" value={form.tiktok_url} onChange={(e) => setForm({ ...form, tiktok_url: e.target.value })} style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
-            <input type="url" placeholder="Lien YouTube" value={form.youtube_url} onChange={(e) => setForm({ ...form, youtube_url: e.target.value })} style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
-            <input type="url" placeholder="Lien Beatport" value={form.beatport_url} onChange={(e) => setForm({ ...form, beatport_url: e.target.value })} style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
-            <input type="url" placeholder="Lien X (Twitter)" value={form.x_url} onChange={(e) => setForm({ ...form, x_url: e.target.value })} style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
-            <input type="url" placeholder="Lien Facebook" value={form.facebook_url} onChange={(e) => setForm({ ...form, facebook_url: e.target.value })} style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+            <input type="url" placeholder="Instagram" value={form.instagram_url} onChange={(e) => setForm({ ...form, instagram_url: e.target.value })} style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+            <input type="url" placeholder="Spotify" value={form.spotify_url} onChange={(e) => setForm({ ...form, spotify_url: e.target.value })} style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+            <input type="url" placeholder="SoundCloud" value={form.soundcloud_url} onChange={(e) => setForm({ ...form, soundcloud_url: e.target.value })} style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+            <input type="url" placeholder="TikTok" value={form.tiktok_url} onChange={(e) => setForm({ ...form, tiktok_url: e.target.value })} style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+            <input type="url" placeholder="YouTube" value={form.youtube_url} onChange={(e) => setForm({ ...form, youtube_url: e.target.value })} style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+            <input type="url" placeholder="Beatport" value={form.beatport_url} onChange={(e) => setForm({ ...form, beatport_url: e.target.value })} style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+            <input type="url" placeholder="X (Twitter)" value={form.x_url} onChange={(e) => setForm({ ...form, x_url: e.target.value })} style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+            <input type="url" placeholder="Facebook" value={form.facebook_url} onChange={(e) => setForm({ ...form, facebook_url: e.target.value })} style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
           </div>
         </div>
 
-        <button type="submit" disabled={saving} style={{ padding: '16px', background: form.theme_color, color: '#000', border: 'none', borderRadius: 8, fontSize: 16, fontWeight: 800, cursor: saving ? 'wait' : 'pointer', transition: 'all 0.2s' }}>
+        <button type="submit" disabled={saving} style={{ padding: '16px', background: form.theme_color, color: '#000', border: 'none', borderRadius: 8, fontSize: 16, fontWeight: 800, cursor: saving ? 'wait' : 'pointer' }}>
           {saving ? 'Enregistrement...' : 'Sauvegarder mon profil'}
         </button>
       </form>

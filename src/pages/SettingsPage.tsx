@@ -20,7 +20,8 @@ export const SettingsPage: React.FC = () => {
   const [form, setForm] = useState({
     username: '', bio: '', hero_tagline: 'Nouveaux remixes disponibles', hero_title: '', hero_description: '',
     theme_color: '#00d9ff', avatar_url: '', background_video_url: '',
-    instagram_url: '', spotify_url: '', soundcloud_url: '', tiktok_url: '', youtube_url: ''
+    instagram_url: '', spotify_url: '', soundcloud_url: '', tiktok_url: '', youtube_url: '',
+    beatport_url: '', x_url: '', facebook_url: '' // ✅ NOUVEAUX CHAMPS
   });
 
   useEffect(() => {
@@ -37,7 +38,10 @@ export const SettingsPage: React.FC = () => {
           background_video_url: data.background_video_url || '',
           instagram_url: data.instagram_url || '', spotify_url: data.spotify_url || '',
           soundcloud_url: data.soundcloud_url || '', tiktok_url: data.tiktok_url || '',
-          youtube_url: data.youtube_url || ''
+          youtube_url: data.youtube_url || '',
+          beatport_url: data.beatport_url || '', // ✅
+          x_url: data.x_url || '', // ✅
+          facebook_url: data.facebook_url || '' // ✅
         });
       }
       setLoading(false);
@@ -85,7 +89,10 @@ export const SettingsPage: React.FC = () => {
       background_video_url: form.background_video_url,
       instagram_url: form.instagram_url, spotify_url: form.spotify_url,
       soundcloud_url: form.soundcloud_url, tiktok_url: form.tiktok_url,
-      youtube_url: form.youtube_url
+      youtube_url: form.youtube_url,
+      beatport_url: form.beatport_url, // ✅
+      x_url: form.x_url, // ✅
+      facebook_url: form.facebook_url // ✅
     }).eq('id', user.id);
     if (error) setMessage("Erreur : " + error.message);
     else setMessage("Profil mis à jour avec succès ! ✅");
@@ -216,7 +223,7 @@ export const SettingsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* ✅ NOUVELLE SECTION : MES ÉVÉNEMENTS */}
+      {/* SECTION ÉVÉNEMENTS */}
       <div style={{ background: '#121212', padding: 24, borderRadius: 12, border: '1px solid #222', marginBottom: 24 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
           <h2 style={{ fontSize: 18, color: '#fff', margin: 0 }}>Mes Dates / Événements</h2>
@@ -295,6 +302,11 @@ export const SettingsPage: React.FC = () => {
             <input type="url" placeholder="Lien SoundCloud" value={form.soundcloud_url} onChange={(e) => setForm({ ...form, soundcloud_url: e.target.value })} style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
             <input type="url" placeholder="Lien TikTok" value={form.tiktok_url} onChange={(e) => setForm({ ...form, tiktok_url: e.target.value })} style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
             <input type="url" placeholder="Lien YouTube" value={form.youtube_url} onChange={(e) => setForm({ ...form, youtube_url: e.target.value })} style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+            
+            {/* ✅ NOUVEAUX CHAMPS */}
+            <input type="url" placeholder="Lien Beatport" value={form.beatport_url} onChange={(e) => setForm({ ...form, beatport_url: e.target.value })} style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+            <input type="url" placeholder="Lien X (Twitter)" value={form.x_url} onChange={(e) => setForm({ ...form, x_url: e.target.value })} style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+            <input type="url" placeholder="Lien Facebook" value={form.facebook_url} onChange={(e) => setForm({ ...form, facebook_url: e.target.value })} style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
           </div>
         </div>
 

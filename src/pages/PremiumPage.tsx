@@ -184,7 +184,6 @@ export const PremiumPage: React.FC = () => {
       </div>
 
       <section className="hero">
-        {/* ✅ Ajout du poster pour affichage instantané */}
         <video 
           className="bg-video" 
           autoPlay 
@@ -278,11 +277,34 @@ export const PremiumPage: React.FC = () => {
             <div className="sidebar-widget">
               <div className="sidebar-title">Réseaux</div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '10px' }}>
-                {profile.instagram_url && <a href={profile.instagram_url} target="_blank" rel="noreferrer" style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#0d1512', border: '1px solid #E1306C', color: '#E1306C', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', fontWeight: 'bold' }}>IG</a>}
-                {profile.spotify_url && <a href={profile.spotify_url} target="_blank" rel="noreferrer" style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#0d1512', border: '1px solid #1DB954', color: '#1DB954', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', fontWeight: 'bold' }}>SP</a>}
-                {profile.soundcloud_url && <a href={profile.soundcloud_url} target="_blank" rel="noreferrer" style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#0d1512', border: '1px solid #FF5500', color: '#FF5500', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', fontWeight: 'bold' }}>SC</a>}
-                {profile.tiktok_url && <a href={profile.tiktok_url} target="_blank" rel="noreferrer" style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#0d1512', border: '1px solid #fff', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', fontWeight: 'bold' }}>TK</a>}
-                {profile.youtube_url && <a href={profile.youtube_url} target="_blank" rel="noreferrer" style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#0d1512', border: '1px solid #FF0000', color: '#FF0000', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', fontWeight: 'bold' }}>YT</a>}
+                
+                {/* ✅ RÉSEAUX EXISTANTS */}
+                {profile.instagram_url && (
+                  <a href={profile.instagram_url} target="_blank" rel="noreferrer" style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#0d1512', border: '1px solid #E1306C', color: '#E1306C', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', fontWeight: 'bold' }}>IG</a>
+                )}
+                {profile.spotify_url && (
+                  <a href={profile.spotify_url} target="_blank" rel="noreferrer" style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#0d1512', border: '1px solid #1DB954', color: '#1DB954', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', fontWeight: 'bold' }}>SP</a>
+                )}
+                {profile.soundcloud_url && (
+                  <a href={profile.soundcloud_url} target="_blank" rel="noreferrer" style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#0d1512', border: '1px solid #FF5500', color: '#FF5500', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', fontWeight: 'bold' }}>SC</a>
+                )}
+                {profile.tiktok_url && (
+                  <a href={profile.tiktok_url} target="_blank" rel="noreferrer" style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#0d1512', border: '1px solid #fff', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', fontWeight: 'bold' }}>TK</a>
+                )}
+                {profile.youtube_url && (
+                  <a href={profile.youtube_url} target="_blank" rel="noreferrer" style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#0d1512', border: '1px solid #FF0000', color: '#FF0000', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', fontWeight: 'bold' }}>YT</a>
+                )}
+
+                {/* ✅ NOUVEAUX RÉSEAUX */}
+                {profile.beatport_url && (
+                  <a href={profile.beatport_url} target="_blank" rel="noreferrer" style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#0d1512', border: '1px solid #01FF95', color: '#01FF95', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', fontWeight: 'bold' }}>BP</a>
+                )}
+                {profile.x_url && (
+                  <a href={profile.x_url} target="_blank" rel="noreferrer" style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#0d1512', border: '1px solid #fff', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', fontWeight: 'bold' }}>X</a>
+                )}
+                {profile.facebook_url && (
+                  <a href={profile.facebook_url} target="_blank" rel="noreferrer" style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#0d1512', border: '1px solid #1877F2', color: '#1877F2', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', fontWeight: 'bold' }}>FB</a>
+                )}
               </div>
             </div>
 

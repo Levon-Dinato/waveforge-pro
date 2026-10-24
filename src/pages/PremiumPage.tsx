@@ -8,7 +8,7 @@ import { usePlayer } from '../contexts/PlayerContext';
 import { GlobalPlayer } from '../components/GlobalPlayer';
 import './LevonDinato.css';
 
-// ✅ COMPOSANT CANVAS WAVEFORM (Avec barre de progression réelle)
+// ✅ COMPOSANT CANVAS WAVEFORM (Harmonisé avec Beatport)
 const CanvasWaveform: React.FC<{ peaks: number[]; isPlaying: boolean; themeColor: string; progress: number }> = ({ peaks, isPlaying, themeColor, progress }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -25,10 +25,7 @@ const CanvasWaveform: React.FC<{ peaks: number[]; isPlaying: boolean; themeColor
     canvas.height = H * DPR;
     ctx.scale(DPR, DPR);
 
-    // Fond
     ctx.clearRect(0, 0, W, H);
-
-    // Sécurité si peaks vide
     if (!peaks || peaks.length === 0) return;
 
     const centerY = H / 2;
@@ -36,7 +33,7 @@ const CanvasWaveform: React.FC<{ peaks: number[]; isPlaying: boolean; themeColor
     const playedX = progress * W;
 
     // ÉTAPE 1 : Waveform grise (non jouée)
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)'; // ✅ Plus clair
     ctx.shadowBlur = 0;
 
     const barCount = 300;
@@ -46,14 +43,14 @@ const CanvasWaveform: React.FC<{ peaks: number[]; isPlaying: boolean; themeColor
     for (let i = 0; i < displayPeaks.length; i++) {
       const x = (i / displayPeaks.length) * W;
       const val = displayPeaks[i] > 1 ? displayPeaks[i] / 100 : displayPeaks[i];
-      const barHeight = Math.max(val * maxAmplitude, 2);
+      const barHeight = Math.max(val * maxAmplitude, 2.5); // ✅ Hauteur min un peu plus haute
       
       if (x >= playedX) {
-        ctx.fillRect(x, centerY - barHeight, 1, barHeight * 2);
+        ctx.fillRect(x, centerY - barHeight, 1.5, barHeight * 2); // ✅ Barre de 1.5px
       }
     }
 
-    // ÉTAPE 2 : Waveform cyan (jouée) avec effet néon
+    // ÉTAPE 2 : Waveform cyan (jouée)
     if (isPlaying || progress > 0) {
       ctx.save();
       ctx.beginPath();
@@ -72,14 +69,14 @@ const CanvasWaveform: React.FC<{ peaks: number[]; isPlaying: boolean; themeColor
       for (let i = 0; i < displayPeaks.length; i++) {
         const x = (i / displayPeaks.length) * W;
         const val = displayPeaks[i] > 1 ? displayPeaks[i] / 100 : displayPeaks[i];
-        const barHeight = Math.max(val * maxAmplitude, 2);
-        ctx.fillRect(x, centerY - barHeight, 1, barHeight * 2);
+        const barHeight = Math.max(val * maxAmplitude, 2.5);
+        ctx.fillRect(x, centerY - barHeight, 1.5, barHeight * 2); // ✅ Barre de 1.5px
       }
       ctx.shadowBlur = 0;
       ctx.restore();
     }
 
-    // ÉTAPE 3 : Tête de lecture (Ligne blanche)
+    // ÉTAPE 3 : Tête de lecture
     if (isPlaying || progress > 0) {
       ctx.strokeStyle = '#fff';
       ctx.lineWidth = 2;
@@ -100,8 +97,6 @@ export const PremiumPage: React.FC = () => {
   const navigate = useNavigate();
   const { username } = useParams<{ username: string }>();
   const { user } = useAuth();
-  
-  // ✅ On récupère currentTime et duration du player global
   const { play, currentTrack, isPlaying, togglePlay, stop, currentTime, duration } = usePlayer();
   
   const [loading, setLoading] = useState(true);
@@ -327,7 +322,6 @@ export const PremiumPage: React.FC = () => {
                   const iframeSrc = getIframeSrc(track.embed_code);
                   const isThisPlaying = currentTrack?.id === track.id && isPlaying;
                   
-                  // ✅ Calcul de la progression pour CETTE carte spécifique
                   const trackProgress = isThisPlaying && duration > 0 ? (currentTime / duration) : 0;
 
                   return (
@@ -411,7 +405,6 @@ export const PremiumPage: React.FC = () => {
 
                       {isPlayable && !iframeSrc && (
                         <div style={{ padding: '0 20px 20px 20px' }}>
-                          {/* ✅ On passe la vraie progression calculée */}
                           <CanvasWaveform 
                             peaks={track.peaks} 
                             isPlaying={isThisPlaying}

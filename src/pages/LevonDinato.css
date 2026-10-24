@@ -29,7 +29,7 @@ div.levon-page ul, div.levon-page li { list-style: none !important; }
 div.levon-page button { font-family: inherit; background: none; border: none; cursor: pointer; color: inherit; }
 div.levon-page .wrapper { width: 100%; max-width: 1400px; margin: 0 auto; padding-inline: 5%; }
 
-/* ✅ AJOUT : Décalage pour que les liens ne soient pas cachés par les barres fixes */
+/* ✅ DÉCALAGE POUR LES LIENS D'ANCRAGE (Navbar fixe) */
 div.levon-page #about,
 div.levon-page #services,
 div.levon-page #releases,
@@ -59,7 +59,7 @@ div.levon-page .nav-inner {
   align-items: center !important; height: 100%; padding: 0 5%; 
 }
 div.levon-page .logo { display: flex !important; align-items: center !important; }
-div.levon-page .logo img { height: 40px !important; width: auto !important; max-width: none !important; border-radius: 50% !important; object-fit: cover; }
+div.levon-page .logo img { height: 40px !important; width: 40px !important; border-radius: 50% !important; object-fit: cover !important; }
 div.levon-page .premium-badge { background: var(--accent-gradient); color: #000; font-size: 0.6rem; font-weight: 900; padding: 2px 8px; border-radius: 4px; margin-left: 12px; letter-spacing: 1px; }
 div.levon-page .nav-links { display: flex !important; gap: 32px; }
 div.levon-page .nav-links a { font-size: 0.85rem; font-weight: 600; color: var(--text-muted) !important; transition: all 0.3s; }
@@ -101,8 +101,6 @@ div.levon-page .event-ticker-item {
   background: #0a121a !important; height: 100%; 
 }
 div.levon-page .event-date-badge { background: var(--accent) !important; color: #000 !important; font-size: 0.65rem; font-weight: 900; padding: 4px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
-
-/* ✅ CORRECTIF : Image en background avec fallback */
 div.levon-page .event-cover {
   position: relative;
   width: 28px;
@@ -118,7 +116,6 @@ div.levon-page .event-cover {
 }
 div.levon-page .event-cover img { width: 100%; height: 100%; object-fit: cover; }
 div.levon-page .event-cover-fallback { font-size: 14px; color: rgba(255,255,255,0.2); }
-
 div.levon-page .event-info { display: flex !important; flex-direction: column !important; justify-content: center !important; }
 div.levon-page .event-title { color: #fff !important; font-size: 0.8rem; font-weight: 700; white-space: nowrap; line-height: 1.2; }
 div.levon-page .event-location { color: var(--text-muted) !important; font-size: 0.65rem; white-space: nowrap; max-width: 250px; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; margin-top: 2px; }
@@ -127,7 +124,7 @@ div.levon-page .event-location { color: var(--text-muted) !important; font-size:
 /* HERO & VIDEO */
 div.levon-page .hero { 
   position: relative !important; 
-  min-height: 80vh !important; /* Réduit un peu pour éviter un vide trop grand */
+  min-height: 80vh !important; 
   display: flex !important; align-items: center !important; justify-content: center !important;
   overflow: hidden !important; 
   background-color: #000 !important; 
@@ -148,7 +145,7 @@ div.levon-page .hero-stats { display: flex !important; justify-content: center !
 div.levon-page .stat-item h4 { font-size: 2rem; font-weight: 800; color: var(--text) !important; }
 div.levon-page .stat-item p { font-size: 0.75rem; color: var(--text-muted) !important; text-transform: uppercase; font-weight: 600;}
 
-/* LAYOUT */
+/* LAYOUT PRINCIPAL */
 div.levon-page .container { padding-block: 80px; display: flex !important; gap: 60px; align-items: flex-start !important; }
 div.levon-page .content { flex: 1 !important; min-width: 0; display: flex !important; flex-direction: column !important; gap: 60px; }
 div.levon-page .sidebar { width: 340px !important; flex-shrink: 0 !important; }
@@ -156,23 +153,36 @@ div.levon-page .section-header { border-bottom: 1px solid var(--border); padding
 div.levon-page .section-title { font-size: 1.4rem; font-weight: 800; color: #fff !important; }
 
 /* CARTES ET CONTENEURS */
-div.levon-page .about-grid, div.levon-page .service-card, div.levon-page .sidebar-widget, div.levon-page .tracklist { background: linear-gradient(145deg, rgba(13, 22, 33, 0.95), rgba(6, 13, 20, 0.95)) !important; backdrop-filter: blur(10px); border: 1px solid rgba(0, 217, 255, 0.15) !important; border-radius: 16px !important; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5) !important; transition: all 0.3s ease; }
+div.levon-page .about-grid, div.levon-page .service-card, div.levon-page .sidebar-widget, div.levon-page .tracklist { 
+  background: linear-gradient(145deg, rgba(13, 22, 33, 0.95), rgba(6, 13, 20, 0.95)) !important; 
+  backdrop-filter: blur(10px); border: 1px solid rgba(0, 217, 255, 0.15) !important; 
+  border-radius: 16px !important; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5) !important; 
+  transition: all 0.3s ease; 
+}
 
-/* ✅ CORRECTIF : Alignement de la grille "À propos" */
+/* ✅ GRILLE "À PROPOS" SÉCURISÉE */
 div.levon-page .about-grid { 
   display: grid !important; 
-  grid-template-columns: 1fr 1fr; 
+  grid-template-columns: 1fr 350px !important; /* Le texte prend l'espace, l'image a 350px fixe */
   gap: 40px; 
   padding: 40px; 
-  align-items: start !important; /* Aligne l'image en haut, pas au centre */
+  align-items: start !important; 
+  width: 100% !important; 
+  box-sizing: border-box !important;
 }
+
+div.levon-page .about-text { 
+  min-width: 0 !important; /* Empêche le texte long de casser la grille */
+  word-wrap: break-word !important; 
+}
+
 div.levon-page .about-text h3 { font-size: 1.3rem; font-weight: 800; margin-bottom: 16px; color: #fff !important; }
 div.levon-page .about-text p { color: var(--text-muted) !important; margin-bottom: 24px; }
 div.levon-page .member-box { margin-bottom: 20px; padding: 10px 16px; border-left: 3px solid var(--accent); background: rgba(0,217,255,0.05); }
 div.levon-page .member-box h4 { color: #fff !important; font-weight: 700; }
 div.levon-page .member-box p { color: var(--text-muted) !important; margin: 0; font-size: 0.9rem; }
 
-/* ✅ CORRECTIF : L'image ne s'étire plus à l'infini */
+/* ✅ IMAGE SÉCURISÉE */
 div.levon-page .about-visual { 
   background: #000; 
   border-radius: 12px; 
@@ -180,10 +190,8 @@ div.levon-page .about-visual {
   display: flex; 
   justify-content: center; 
   align-items: center;
-  width: 100%; 
-  max-width: 400px; /* Limite la largeur max */
-  aspect-ratio: 4 / 5; /* Format portrait propre (type flyer) */
-  margin: 0 auto; /* Centre dans sa colonne */
+  width: 100% !important; 
+  max-height: 450px !important; 
   box-shadow: 0 10px 30px rgba(0,0,0,0.5);
 }
 div.levon-page .about-visual img { width: 100%; height: 100%; object-fit: cover; }
@@ -253,8 +261,8 @@ div.levon-page .audio-time { font-size: 0.8rem; color: var(--text-muted) !import
   div.levon-page .container { flex-direction: column !important; gap: 40px; }
   div.levon-page .sidebar { width: 100% !important; }
   div.levon-page .sidebar-inner { position: static !important; display: grid !important; grid-template-columns: 1fr 1fr; }
-  div.levon-page .about-grid { grid-template-columns: 1fr !important; }
-  div.levon-page .about-visual { margin-bottom: 20px; max-width: 100%; aspect-ratio: 16 / 9; } /* Sur mobile on passe en mode paysage */
+  div.levon-page .about-grid { grid-template-columns: 1fr !important; } /* On passe sur 1 colonne */
+  div.levon-page .about-visual { margin-bottom: 20px; max-height: 350px !important; }
   div.levon-page .upsell-grid { grid-template-columns: 1fr !important; text-align: center; }
   div.levon-page .event-ticker-wrapper { top: 64px; height: 50px; }
   div.levon-page .hero { padding-top: 140px !important; }
@@ -262,7 +270,7 @@ div.levon-page .audio-time { font-size: 0.8rem; color: var(--text-muted) !import
 
 @media (max-width: 768px) {
   div.levon-page .nav-links { display: none !important; }
-  div.levon-page .logo img { height: 30px !important; }
+  div.levon-page .logo img { height: 30px !important; width: 30px !important; }
   div.levon-page .hero-actions { flex-direction: column !important; width: 100%; max-width: 300px; }
   div.levon-page .hero-stats { flex-direction: column !important; gap: 20px; text-align: center; }
   div.levon-page .services-grid { grid-template-columns: 1fr !important; }

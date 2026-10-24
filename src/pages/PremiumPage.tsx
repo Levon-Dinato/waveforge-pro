@@ -26,34 +26,54 @@ export const PremiumPage: React.FC = () => {
 
   useEffect(() => {
     const fetchData = async () => {
+      if (!username) return;
       setLoading(true);
-      const isId = username?.includes('-');
-      const query = supabase.from('profiles').select('*');
       
-      const { data: profileData } = isId 
-        ? await query.eq('id', username).single()
-        : await query.ilike('username', username || '').single();
+      try {
+        // ✅ CORRECTIF 1 : Utilisation d'une Regex pour vérifier si c'est un UUID
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(username);
+        
+        let query = supabase.from('profiles').select('*');
+        if (isUUID) {
+          query = query.eq('id', username);
+        } else {
+          query = query.ilike('username', username);
+        }
 
-      if (profileData) {
-        setProfile(profileData);
+        const { data: profileData, error: profileError } = await query.single();
 
-        const { data: tracksData } = await supabase
-          .from('tracks')
-          .select('*')
-          .eq('user_id', profileData.id)
-          .order('created_at', { ascending: false });
-        if (tracksData) setTracks(tracksData);
+        // ✅ CORRECTIF 2 : Gestion de l'erreur si le profil n'existe pas
+        if (profileError) {
+          console.error("Erreur de chargement du profil:", profileError);
+          setProfile(null);
+          setLoading(false);
+          return;
+        }
 
-        const today = new Date().toISOString().split('T')[0];
-        const { data: eventsData } = await supabase
-          .from('events')
-          .select('*')
-          .eq('created_by', profileData.id)
-          .gte('event_date', today)
-          .order('event_date', { ascending: true });
-        if (eventsData) setEvents(eventsData);
+        if (profileData) {
+          setProfile(profileData);
+
+          const { data: tracksData } = await supabase
+            .from('tracks')
+            .select('*')
+            .eq('user_id', profileData.id)
+            .order('created_at', { ascending: false });
+          if (tracksData) setTracks(tracksData);
+
+          const today = new Date().toISOString().split('T')[0];
+          const { data: eventsData } = await supabase
+            .from('events')
+            .select('*')
+            .eq('created_by', profileData.id)
+            .gte('event_date', today)
+            .order('event_date', { ascending: true });
+          if (eventsData) setEvents(eventsData);
+        }
+      } catch (err) {
+        console.error("Erreur inattendue:", err);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
     fetchData();
   }, [username]);
@@ -90,6 +110,7 @@ export const PremiumPage: React.FC = () => {
     }
   };
 
+  // ✅ CORRECTIF 3 : Typage explicite de l'événement
   const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!audioRef.current) return;
     const rect = e.currentTarget.getBoundingClientRect();
@@ -112,12 +133,31 @@ export const PremiumPage: React.FC = () => {
     } catch { return 'DATE'; }
   };
 
+  // ✅ CORRECTIF 4 : Type de retour explicite pour renderTitle
+  const renderTitle = (title: string): React.ReactNode => {
+    if (!title) return null;
+    const parts = title.split(/(\*.*?\*)/g);
+    
+    return parts.map((part, index) => {
+      if (part.startsWith('*') && part.endsWith('*') && part.length > 2) {
+        return (
+          <span key={index} style={{ color: 'var(--accent)' }}>
+            {part.slice(1, -1)}
+          </span>
+        );
+      }
+      return <React.Fragment key={index}>{part}</React.Fragment>;
+    });
+  };
+
   if (loading) return <div style={{ background: '#050a10', color: '#fff', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Chargement...</div>;
   if (!profile) return <div style={{ background: '#050a10', color: '#fff', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Artiste introuvable.</div>;
 
   const gmailContactLink = `https://mail.google.com/mail/?view=cm&fs=1&to=djcontrolradiotv1@gmail.com&su=Booking%20${profile.username}&body=Salut,%20je%20souhaite%20vous%20contacter%20pour%20un%20booking.`;
   const themeColor = profile.theme_color || '#00d9ff';
-  const isOwner = user?.id === profile.id;
+  
+  // ✅ CORRECTIF 5 : Sécurisation de l'accès à profile.id
+  const isOwner = user && profile && user.id === profile.id;
 
   return (
     <div className="levon-page" style={{ '--accent': themeColor } as React.CSSProperties}>
@@ -198,9 +238,13 @@ export const PremiumPage: React.FC = () => {
         
         <div className="wrapper hero-inner">
           <div className="hero-tag">{profile.hero_tagline || "Nouveaux remixes disponibles"}</div>
+          
           <h1 className="hero-title">
-            {profile.hero_title ? profile.hero_title : `L'expérience sonore de ${profile.username}.`}
+            {profile.hero_title 
+              ? renderTitle(profile.hero_title) 
+              : renderTitle(`L'expérience *sonore* de ${profile.username}.`)}
           </h1>
+          
           <p className="hero-desc">
             {profile.hero_description || `Découvrez les productions exclusives et l'univers unique de ${profile.username}. Plongez dans leur monde musical et vibrez au rythme de leurs dernières sorties.`}
           </p>
@@ -278,7 +322,6 @@ export const PremiumPage: React.FC = () => {
               <div className="sidebar-title">Réseaux</div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '10px' }}>
                 
-                {/* ✅ LOGOS SVG OFFICIELS */}
                 {profile.instagram_url && (
                   <a href={profile.instagram_url} target="_blank" rel="noopener noreferrer" title="Instagram" style={{ width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #E1306C', background: '#0d1512', color: '#E1306C', textDecoration: 'none', transition: 'transform 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'} onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}>
                     <svg viewBox="0 0 24 24" style={{ width: '18px', height: '18px', fill: 'currentColor' }}><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm3.98-10.181a1.44 1.44 0 11-2.88 0 1.44 1.44 0 012.88 0z"/></svg>

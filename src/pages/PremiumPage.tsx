@@ -17,7 +17,6 @@ const CanvasWaveform: React.FC<{
   isCurrent: boolean; 
   onSeek: (ratio: number) => void;
 }> = ({ peaks, isPlaying, themeColor, progress, isCurrent, onSeek }) => {
-  // ... (Le code du CanvasWaveform reste inchangé, je le garde pour que tu aies le fichier complet)
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [dragProgress, setDragProgress] = useState<number | null>(null);
   const isDraggingRef = useRef(false);
@@ -288,13 +287,12 @@ export const PremiumPage: React.FC = () => {
   const themeColor = profile.theme_color || '#00d9ff';
   const isOwner = user && profile && user.id === profile.id;
 
-  // ✅ DÉFINITION DU FOND DU PLAYER (Image, Couleur, ou Noir par défaut)
+  // ✅ DÉFINITION DU FOND (Voile moins sombre pour voir l'image)
   const playerBgImage = profile.player_bg_image_url;
   const playerBgColor = profile.player_bg_color || '#000000';
   
-  // Si une image est définie, on met un voile sombre pour la lisibilité du texte
   const cardBackground = playerBgImage 
-    ? `linear-gradient(rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.85)), url(${playerBgImage}) center/cover`
+    ? `linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.8)), url(${playerBgImage}) center/cover` // 60% à 80% d'opacité
     : playerBgColor;
 
   return (
@@ -417,16 +415,14 @@ export const PremiumPage: React.FC = () => {
                     <div 
                       key={track.id} 
                       style={{ 
-                        // ✅ APPLICATION DU FOND DYNAMIQUE
-                        background: cardBackground, 
+                        background: cardBackground, // ✅ Application du fond
                         border: '1px solid #222222', 
                         borderRadius: '16px', 
                         overflow: 'hidden',
                         boxShadow: '0 10px 25px rgba(0,0,0,0.4)',
                         transition: 'all 0.2s',
-                        cursor: isPlayable ? 'pointer' : 'default',
-                        // Un léger flou si c'est une image pour un effet premium
-                        backdropFilter: playerBgImage ? 'blur(10px)' : 'none' 
+                        cursor: isPlayable ? 'pointer' : 'default'
+                        // ✅ Le backdropFilter a été enlevé ici car il ne servait à rien
                       }}
                       onClick={() => isPlayable && handlePlayTrack(track)}
                       onMouseEnter={(e) => { if (isPlayable) e.currentTarget.style.borderColor = themeColor; }}
@@ -443,7 +439,7 @@ export const PremiumPage: React.FC = () => {
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                             color: isPlayable ? (isThisPlaying ? '#000' : '#fff') : themeColor,
                             fontSize: '16px',
-                            backdropFilter: 'blur(5px)' // Assure la lisibilité du bouton sur image
+                            backdropFilter: 'blur(5px)' 
                           }}>
                             {isPlayable ? (
                               isThisPlaying ? '⏸' : '▶'
@@ -467,7 +463,7 @@ export const PremiumPage: React.FC = () => {
                             <button 
                               onClick={(e) => handleDownload(e, track.audio_url, `${track.artist} - ${track.title}.mp3`)}
                               style={{ 
-                                background: 'rgba(0,0,0,0.4)', color: themeColor, padding: '8px 16px', 
+                                background: 'rgba(0,0,0,0.5)', color: themeColor, padding: '8px 16px', 
                                 borderRadius: '6px', fontSize: '12px', fontWeight: '800', 
                                 border: `1px solid ${themeColor}`, cursor: 'pointer',
                                 display: 'flex', alignItems: 'center', gap: '6px',
@@ -575,7 +571,6 @@ export const PremiumPage: React.FC = () => {
             </div>
           </section>
 
-          {/* ... (Le reste de la page : Galerie, Sidebar, Contact, Footer) ... */}
           {gallery.length > 0 && (
             <section id="gallery">
               <div className="section-header"><h2 className="section-title">Galerie Photos</h2></div>
@@ -604,7 +599,12 @@ export const PremiumPage: React.FC = () => {
 
             <div className="sidebar-widget">
               <div className="sidebar-title">Réseaux</div>
-              {/* ... (Code des réseaux sociaux inchangé) ... */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '10px' }}>
+                {profile.instagram_url && (
+                  <a href={profile.instagram_url} target="_blank" rel="noopener noreferrer" style={{ width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #E1306C', background: '#0d1512', color: '#E1306C', textDecoration: 'none' }}><svg viewBox="0 0 24 24" style={{ width: '18px', height: '18px', fill: 'currentColor' }}><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm3.98-10.181a1.44 1.44 0 11-2.88 0 1.44 1.44 0 012.88 0z"/></svg></a>
+                )}
+                {/* ... (autres réseaux) ... */}
+              </div>
             </div>
 
             <div className="sidebar-widget">

@@ -254,17 +254,13 @@ export const PremiumPage: React.FC = () => {
   const themeColor = profile.theme_color || '#00d9ff';
   const isOwner = user && profile && user.id === profile.id;
 
-  // ✅ SYSTÈME DE MODULES & TEXTES DYNAMIQUES
-  // On récupère les paramètres sauvegardés dans le JSON `settings` de Supabase.
-  // Si rien n'est défini, on utilise les valeurs par défaut ci-dessous.
+  // ✅ GESTION DES MODULES ET DES PRESTATIONS DYNAMIQUES
   const settings = profile.settings || {};
   
-  // Textes modifiables
   const heroTitle = settings.hero_title || profile.hero_title || `L'expérience *sonore* ultime.`;
   const heroDesc = settings.hero_description || profile.hero_description || `Découvrez les productions Funky House, Nu-Disco et Tech House du duo ${profile.username}. Un set conçu pour faire vibrer les dancefloors et marquer les esprits.`;
   const bio = settings.bio || profile.bio || "Levon & Dinato est un duo électrisant qui fusionne leurs influences uniques pour créer un son reconnaissable et contagieux. Unis par une passion commune pour la Funky House, la Nu-Disco, la Tech House et l'Electro Dance.";
   
-  // Modules (par défaut, tout est affiché. Tu peux les désactiver en mettant `false` dans le JSON settings de Supabase)
   const showStats = settings.show_stats !== false;
   const showDuo = settings.show_duo !== false;
   const showPrestations = settings.show_prestations !== false;
@@ -272,8 +268,8 @@ export const PremiumPage: React.FC = () => {
   const showSidebarTop = settings.show_sidebar_top !== false;
   const showSidebarDates = settings.show_sidebar_dates !== false;
 
-  // Contenu des prestations modifiables
-  const prestations = settings.prestations || [
+  // Prestations personnalisables (ou par défaut)
+  const prestations = settings.prestations && settings.prestations.length > 0 ? settings.prestations : [
     { title: 'Clubs & Festivals', desc: 'Sets dynamiques et énergie communicative.' },
     { title: 'Événements Privés', desc: 'Ambiance sur mesure pour vos invités.' },
     { title: 'Corporate', desc: 'Soirées d\'entreprise et lancements.' },
@@ -304,6 +300,10 @@ export const PremiumPage: React.FC = () => {
         .nav-link:hover { color: #fff; }
         .btn-primary { background: #fff; color: #000; padding: 12px 28px; border-radius: 8px; font-size: 14px; font-weight: 800; text-decoration: none; transition: transform 0.2s; display: inline-flex; align-items: center; gap: 8px; }
         .btn-primary:hover { transform: scale(1.02); }
+
+        /* ✅ CORRECTION DU GLISSEMENT (Smooth Scroll + Espacement) */
+        html { scroll-behavior: smooth; }
+        section[id] { scroll-margin-top: 100px; }
         
         @media (max-width: 900px) {
           .layout-grid { flex-direction: column !important; }
@@ -373,7 +373,8 @@ export const PremiumPage: React.FC = () => {
             </a>
             <button onClick={() => navigator.clipboard.writeText(window.location.href).then(() => alert('Lien copié !'))} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '16px 32px', borderRadius: 8, fontSize: 14, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
-              PARTAGER            </button>
+              PARTAGER
+            </button>
           </div>
 
           {showStats && (
@@ -417,7 +418,6 @@ export const PremiumPage: React.FC = () => {
         
         <div style={{ flex: 1, minWidth: 0 }}>
           
-          {/* SECTION LE DUO (Modulable via showDuo) */}
           {showDuo && (
             <section id="duo" style={{ marginBottom: 80 }}>
               <h2 style={{ fontSize: 24, fontWeight: 800, marginBottom: 24, letterSpacing: '-0.5px' }}>{settings.duo_title || 'Le Duo'}</h2>
@@ -437,7 +437,6 @@ export const PremiumPage: React.FC = () => {
             </section>
           )}
 
-          {/* SECTION PRESTATIONS (Modulable via showPrestations) */}
           {showPrestations && (
             <section id="prestations" style={{ marginBottom: 80 }}>
                <h2 style={{ fontSize: 24, fontWeight: 800, marginBottom: 24, letterSpacing: '-0.5px' }}>{settings.prestations_title || 'Prestations'}</h2>
@@ -452,7 +451,6 @@ export const PremiumPage: React.FC = () => {
             </section>
           )}
 
-          {/* ✅ SECTION RELEASES (Modulable via showReleases) */}
           {showReleases && (
             <section id="releases">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 24 }}>
@@ -498,9 +496,7 @@ export const PremiumPage: React.FC = () => {
                   const customCardStyle = {
                     backgroundColor: cardBgImage ? '#000000' : (cardBgColor || '#0a0a0f'),
                     backgroundImage: cardBgImage ? `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.8)), url("${cardBgImage}")` : 'none',
-                    backgroundSize: 'cover', 
-                    backgroundPosition: 'center', 
-                    backgroundRepeat: 'no-repeat',
+                    backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat',
                   };
 
                   return (
@@ -510,14 +506,9 @@ export const PremiumPage: React.FC = () => {
                       onClick={() => isPlayable && handlePlayTrack(track)}
                       style={{ 
                         ...customCardStyle,
-                        display: 'flex', 
-                        flexDirection: 'column',
-                        padding: '24px', 
-                        borderRadius: 16, 
-                        cursor: isPlayable ? 'pointer' : 'default', 
-                        border: '1px solid rgba(255,255,255,0.05)',
-                        position: 'relative',
-                        overflow: 'hidden',
+                        display: 'flex', flexDirection: 'column', padding: '24px', borderRadius: 16, 
+                        cursor: isPlayable ? 'pointer' : 'default', border: '1px solid rgba(255,255,255,0.05)',
+                        position: 'relative', overflow: 'hidden',
                       }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20, zIndex: 1 }}>
@@ -608,7 +599,6 @@ export const PremiumPage: React.FC = () => {
             </div>
           </div>
 
-          {/* SIDEBAR TOP TRACKS (Modulable via showSidebarTop) */}
           {showSidebarTop && topTracks.length > 0 && (
             <div style={{ marginBottom: 40 }}>
               <h3 style={{ fontSize: 14, fontWeight: 800, margin: '0 0 16px 0', color: '#fff' }}>Top Tracks</h3>
@@ -626,7 +616,6 @@ export const PremiumPage: React.FC = () => {
             </div>
           )}
 
-          {/* SIDEBAR DATES (Modulable via showSidebarDates) */}
           {showSidebarDates && (
             <div>
               <h3 style={{ fontSize: 14, fontWeight: 800, margin: '0 0 16px 0', color: '#fff' }}>Prochaines Dates</h3>
@@ -653,7 +642,7 @@ export const PremiumPage: React.FC = () => {
         </aside>
       </div>
 
-      {/* ✅ NOUVEAU FOOTER */}
+      {/* FOOTER */}
       <footer style={{ borderTop: '1px solid rgba(255,255,255,0.08)', background: '#020202', padding: '60px 24px 30px 24px' }}>
         <div style={{ maxWidth: 1400, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 40 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 40 }}>

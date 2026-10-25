@@ -11,6 +11,7 @@ import './LevonDinato.css';
 const CanvasWaveform: React.FC<{ 
   peaks: number[]; isPlaying: boolean; themeColor: string; progress: number; isCurrent: boolean; onSeek: (ratio: number) => void;
 }> = ({ peaks, isPlaying, themeColor, progress, isCurrent, onSeek }) => {
+  // ... (Le code du CanvasWaveform reste identique)
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [dragProgress, setDragProgress] = useState<number | null>(null);
   const isDraggingRef = useRef(false);
@@ -127,7 +128,7 @@ const CanvasWaveform: React.FC<{
   return (
     <canvas 
       ref={canvasRef} onMouseDown={handleMouseDown} onClick={(e) => { if (isCurrent) e.stopPropagation(); }}
-      style={{ width: '100%', height: '90px', display: 'block', borderRadius: '8px', cursor: isCurrent ? 'pointer' : 'default' }} 
+      style={{ width: '100%', height: '90px', display: 'block', borderRadius: '8px', cursor: isCurrent ? 'pointer' : 'default', touchAction: 'none' }} 
     />
   );
 };
@@ -259,12 +260,40 @@ export const PremiumPage: React.FC = () => {
 
   return (
     <div className="levon-page" style={{ '--accent': themeColor } as React.CSSProperties}>
+      
+      {/* ✅ AJOUT DES STYLES RESPONSIVES POUR MOBILE */}
+      <style>{`
+        @media (max-width: 768px) {
+          .wrapper.container { flex-direction: column; padding: 10px; }
+          .content { width: 100%; }
+          .sidebar { width: 100%; margin-top: 30px; }
+          .nav-links { display: none; }
+          .hero-title { font-size: 2rem !important; }
+          .hero-desc { font-size: 0.95rem !important; }
+          
+          /* Cartes de musique sur mobile */
+          .track-card-header { flex-direction: column; align-items: flex-start !important; gap: 16px; }
+          .track-card-actions { width: 100%; justify-content: space-between; }
+          
+          /* Grille de galerie sur mobile */
+          .gallery-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important; }
+          
+          /* Top bar mobile */
+          .top-bar { padding: 10px 16px !important; }
+          
+          /* Écraser certains padding trop grands */
+          .hero-inner { padding: 40px 16px !important; }
+        }
+      `}</style>
+
       <Helmet>
         <title>{profile.username} — Page Officielle</title>
+        <meta property="og:title" content={`${profile.username} — DJ & Production`} />
+        <meta property="og:image" content={profile.avatar_url || '/og-levon-dinato.jpg'} />
       </Helmet>
 
       {isOwner && (
-        <div style={{ position: 'fixed', bottom: 20, right: 20, zIndex: 9999, display: 'flex', gap: 10 }}>
+        <div style={{ position: 'fixed', bottom: 90, right: 20, zIndex: 9999, display: 'flex', gap: 10 }}>
           <Link to="/settings" style={{ background: themeColor, color: '#000', padding: '12px 24px', borderRadius: 30, fontWeight: 800, textDecoration: 'none', boxShadow: '0 10px 20px rgba(0,0,0,0.5)' }}>
             ✏️ Modifier ma page
           </Link>
@@ -343,12 +372,12 @@ export const PremiumPage: React.FC = () => {
         <div className="content">
           <section id="about">
             <div className="section-header"><h2 className="section-title">L'Artiste</h2></div>
-            <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: '40px', padding: '40px', alignItems: 'center', justifyContent: 'space-between', background: 'linear-gradient(145deg, rgba(13, 22, 33, 0.95), rgba(6, 13, 20, 0.95))', border: '1px solid rgba(0, 217, 255, 0.15)', borderRadius: '16px', boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5)' }}>
-              <div style={{ flex: '1 1 300px' }}>
+            <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: '20px', padding: '20px', alignItems: 'center', justifyContent: 'space-between', background: 'linear-gradient(145deg, rgba(13, 22, 33, 0.95), rgba(6, 13, 20, 0.95))', border: '1px solid rgba(0, 217, 255, 0.15)', borderRadius: '16px', boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5)' }}>
+              <div style={{ flex: '1 1 100%' }}>
                 <h3 style={{ fontSize: '2rem', fontWeight: 900, marginBottom: '16px', color: '#fff' }}>{profile.username}</h3>
-                <p style={{ color: '#8c9f98', fontSize: '1.1rem', margin: 0 }}>Découvrez son univers musical exclusif et ses dernières sorties.</p>
+                <p style={{ color: '#8c9f98', fontSize: '1rem', margin: 0 }}>Découvrez son univers musical exclusif et ses dernières sorties.</p>
               </div>
-              <div style={{ flex: '0 0 350px', width: '100%', maxWidth: '350px', borderRadius: '16px', overflow: 'hidden', border: `1px solid ${themeColor}`, boxShadow: `0 10px 30px ${themeColor}40`, margin: '0 auto' }}>
+              <div style={{ flex: '0 0 100%', width: '100%', maxWidth: '300px', borderRadius: '16px', overflow: 'hidden', border: `1px solid ${themeColor}`, boxShadow: `0 10px 30px ${themeColor}40`, margin: '0 auto' }}>
                 <img src={profile.avatar_url || "/logo.jpg"} alt={profile.username} style={{ width: '100%', height: 'auto', display: 'block', objectFit: 'cover' }} />
               </div>
             </div>
@@ -358,7 +387,7 @@ export const PremiumPage: React.FC = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border)', paddingBottom: '12px', marginBottom: '24px' }}>
               <h2 className="section-title" style={{ border: 'none', margin: 0, padding: 0 }}>Dernières Sorties</h2>
               {isOwner && (
-                <Link to="/nouveautes" style={{ background: '#fff', color: '#000', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: '700', textDecoration: 'none' }}>+ Ajouter un son</Link>
+                <Link to="/nouveautes" style={{ background: '#fff', color: '#000', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: '700', textDecoration: 'none' }}>+ Ajouter</Link>
               )}
             </div>
             
@@ -372,7 +401,6 @@ export const PremiumPage: React.FC = () => {
                   const trackProgress = isThisPlaying && duration > 0 ? (currentTime / duration) : 0;
                   const isBeatport = !!iframeSrc;
 
-                  // ✅ Personnalisation PAR TRACK (avec fallback noir par défaut)
                   const cardBgColor = track.player_bg_color || '#000000';
                   const cardBgImage = track.player_bg_image_url;
                   const customCardStyle = {
@@ -397,11 +425,12 @@ export const PremiumPage: React.FC = () => {
                       onMouseLeave={(e) => { if (isPlayable) e.currentTarget.style.borderColor = '#222222'; }}
                     >
                       
-                      <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                      {/* ✅ CLASSES AJOUTÉES POUR LE RESPONSIVE */}
+                      <div className="track-card-header" style={{ padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                           
                           <div style={{ 
-                            width: '44px', height: '44px', borderRadius: '50%', 
+                            width: '40px', height: '40px', borderRadius: '50%', flexShrink: 0,
                             background: isPlayable ? (isThisPlaying ? themeColor : 'rgba(0,0,0,0.5)') : 'rgba(0,0,0,0.3)', 
                             border: isPlayable ? 'none' : '1px solid #333',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -413,36 +442,36 @@ export const PremiumPage: React.FC = () => {
                             )}
                           </div>
 
-                          <div style={{ width: '48px', height: '48px', background: track.cover_url ? `url(${track.cover_url}) center/cover` : '#111', borderRadius: '8px', border: '1px solid #333' }} />
+                          <div style={{ width: '44px', height: '44px', flexShrink: 0, background: track.cover_url ? `url(${track.cover_url}) center/cover` : '#111', borderRadius: '8px', border: '1px solid #333' }} />
 
                           <div style={{ minWidth: 0 }}>
-                            <div style={{ fontSize: '16px', fontWeight: '800', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.title}</div>
-                            <div style={{ fontSize: '13px', color: '#ccc', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: '2px' }}>{track.artist}</div>
+                            <div style={{ fontSize: '15px', fontWeight: '800', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.title}</div>
+                            <div style={{ fontSize: '12px', color: '#ccc', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: '2px' }}>{track.artist}</div>
                           </div>
                         </div>
 
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-                          <div style={{ fontSize: '12px', color: '#ccc', fontWeight: '600', textTransform: 'uppercase' }}>{track.genre}</div>
+                        <div className="track-card-actions" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                          <div style={{ fontSize: '11px', color: '#ccc', fontWeight: '600', textTransform: 'uppercase' }}>{track.genre}</div>
                           
                           {isPlayable && (
                             <button 
                               onClick={(e) => handleDownload(e, track.audio_url, `${track.artist} - ${track.title}.mp3`)}
                               style={{ 
-                                background: 'rgba(0,0,0,0.5)', color: themeColor, padding: '8px 16px', 
-                                borderRadius: '6px', fontSize: '12px', fontWeight: '800', 
+                                background: 'rgba(0,0,0,0.5)', color: themeColor, padding: '6px 12px', 
+                                borderRadius: '6px', fontSize: '11px', fontWeight: '800', 
                                 border: `1px solid ${themeColor}`, cursor: 'pointer',
                                 display: 'flex', alignItems: 'center', gap: '6px', backdropFilter: 'blur(5px)'
                               }}
                             >
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                              Télécharger
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                              <span className="desktop-only-text">Télécharger</span>
                             </button>
                           )}
                         </div>
                       </div>
 
                       {iframeSrc && (
-                        <div style={{ padding: '0 20px 20px 20px', position: 'relative', zIndex: 10, overflow: 'hidden', borderRadius: '8px' }} onClick={(e) => e.stopPropagation()}>
+                        <div style={{ padding: '0 16px 16px 16px', position: 'relative', zIndex: 10, overflow: 'hidden', borderRadius: '8px' }} onClick={(e) => e.stopPropagation()}>
                           <iframe 
                             src={iframeSrc} width="100%" height="162" frameBorder="0" scrolling="no"
                             allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
@@ -453,21 +482,21 @@ export const PremiumPage: React.FC = () => {
                       )}
 
                       {isPlayable && !iframeSrc && (
-                        <div style={{ padding: '0 20px 20px 20px' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '12px', padding: '0 4px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={themeColor} strokeWidth="2.5"><path d="M12 2a3 3 0 0 0-3 3v14a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path><path d="M5 10a3 3 0 0 0-3 3v4a3 3 0 0 0 6 0v-4a3 3 0 0 0-3-3z"></path><path d="M19 7a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0v-7a3 3 0 0 0-3-3z"></path></svg>
-                              <span style={{ color: themeColor, fontWeight: '900', fontSize: '18px', fontFamily: 'system-ui, -apple-system, sans-serif', letterSpacing: '-0.5px' }}>Dropzone</span>
+                        <div style={{ padding: '0 16px 16px 16px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '12px', padding: '0' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={themeColor} strokeWidth="2.5"><path d="M12 2a3 3 0 0 0-3 3v14a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path><path d="M5 10a3 3 0 0 0-3 3v4a3 3 0 0 0 6 0v-4a3 3 0 0 0-3-3z"></path><path d="M19 7a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0v-7a3 3 0 0 0-3-3z"></path></svg>
+                              <span style={{ color: themeColor, fontWeight: '900', fontSize: '16px', fontFamily: 'system-ui, -apple-system, sans-serif', letterSpacing: '-0.5px' }}>Dropzone</span>
                             </div>
 
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                                <div style={{ fontSize: '18px', fontWeight: '800', fontFamily: 'monospace', display: 'flex', alignItems: 'baseline', gap: '6px' }}>
+                                <div style={{ fontSize: '16px', fontWeight: '800', fontFamily: 'monospace', display: 'flex', alignItems: 'baseline', gap: '4px' }}>
                                   <span style={{ color: themeColor }}>{formatTime(isThisPlaying ? currentTime : 0)}</span>
-                                  <span style={{ color: '#888', fontSize: '14px' }}>/</span>
+                                  <span style={{ color: '#888', fontSize: '12px' }}>/</span>
                                   <span style={{ color: '#ccc' }}>{formatTime(duration || track.duration)}</span>
                                 </div>
-                                <div style={{ fontSize: '12px', color: '#ccc', fontWeight: '600', display: 'flex', gap: '16px', marginTop: '4px' }}>
+                                <div style={{ fontSize: '11px', color: '#ccc', fontWeight: '600', display: 'flex', gap: '12px', marginTop: '2px' }}>
                                   <span>{track.bpm} BPM</span>
                                   {track.song_key && <span>{track.song_key}</span>}
                                 </div>
@@ -475,11 +504,11 @@ export const PremiumPage: React.FC = () => {
 
                               <button
                                 onClick={(e) => handleShare(e, track)} title="Partager ce son"
-                                style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'rgba(0,0,0,0.5)', border: '1px solid #333', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', cursor: 'pointer', transition: 'all 0.2s' }}
+                                style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(0,0,0,0.5)', border: '1px solid #333', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', cursor: 'pointer', transition: 'all 0.2s' }}
                                 onMouseEnter={(e) => { e.currentTarget.style.borderColor = themeColor; e.currentTarget.style.color = themeColor; }}
                                 onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#333'; e.currentTarget.style.color = '#fff'; }}
                               >
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
                               </button>
                             </div>
                           </div>
@@ -499,7 +528,8 @@ export const PremiumPage: React.FC = () => {
           {gallery.length > 0 && (
             <section id="gallery">
               <div className="section-header"><h2 className="section-title">Galerie Photos</h2></div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px' }}>
+              {/* ✅ Classe gallery-grid pour le responsive */}
+              <div className="gallery-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px' }}>
                 {gallery.map((img) => (
                   <div key={img.id} style={{ aspectRatio: '1', borderRadius: '12px', overflow: 'hidden', border: '1px solid #333', boxShadow: '0 4px 12px rgba(0,0,0,0.3)', transition: 'transform 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.03)'} onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}>
                     <img src={img.image_url} alt="Galerie" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -544,7 +574,7 @@ export const PremiumPage: React.FC = () => {
 
       <footer className="footer">
         <div className="wrapper footer-inner">
-          <div>© 2026 {profile.username}. Tous droits réservés.</div>
+          <div style={{ textAlign: 'center' }}>© 2026 {profile.username}. Tous droits réservés.</div>
         </div>
       </footer>
 

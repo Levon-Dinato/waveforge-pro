@@ -14,7 +14,17 @@ export const SettingsPage: React.FC = () => {
   const [isPremium, setIsPremium] = useState(false);
   const [myTracks, setMyTracks] = useState<any[]>([]);
   const [editingTrackId, setEditingTrackId] = useState<string | null>(null);
-  const [editTrackForm, setEditTrackForm] = useState({ title: '', genre: '', bpm: 0, purchase_url: '', embed_code: '' });
+  
+  // ✅ Ajout des champs de personnalisation dans le formulaire de modification
+  const [editTrackForm, setEditTrackForm] = useState({ 
+    title: '', 
+    genre: '', 
+    bpm: 0, 
+    purchase_url: '', 
+    embed_code: '',
+    player_bg_color: '#000000',
+    player_bg_image_url: ''
+  });
   
   const [showLinkForm, setShowLinkForm] = useState(false);
   const [linkForm, setLinkForm] = useState({ title: '', artist: '', genre: 'Inconnu', purchase_url: '', cover_url: '', embed_code: '' });
@@ -23,11 +33,9 @@ export const SettingsPage: React.FC = () => {
   const [uploadingGallery, setUploadingGallery] = useState(false);
   const [galleryImages, setGalleryImages] = useState<any[]>([]);
 
-  // ✅ Ajout des champs player_bg_color et player_bg_image_url
   const [form, setForm] = useState({
     username: '', bio: '', hero_tagline: 'Nouveaux remixes disponibles', hero_title: '', hero_description: '',
     theme_color: '#00d9ff', avatar_url: '', background_video_url: '',
-    player_bg_color: '#000000', player_bg_image_url: '', // ✅ Nouveaux champs
     instagram_url: '', spotify_url: '', soundcloud_url: '', tiktok_url: '', youtube_url: '',
     beatport_url: '', x_url: '', facebook_url: ''
   });
@@ -44,8 +52,6 @@ export const SettingsPage: React.FC = () => {
           hero_title: data.hero_title || '', hero_description: data.hero_description || '',
           theme_color: data.theme_color || '#00d9ff', avatar_url: data.avatar_url || '',
           background_video_url: data.background_video_url || '',
-          player_bg_color: data.player_bg_color || '#000000', // ✅ Récupération
-          player_bg_image_url: data.player_bg_image_url || '', // ✅ Récupération
           instagram_url: data.instagram_url || '', spotify_url: data.spotify_url || '',
           soundcloud_url: data.soundcloud_url || '', tiktok_url: data.tiktok_url || '',
           youtube_url: data.youtube_url || '', beatport_url: data.beatport_url || '',
@@ -68,49 +74,37 @@ export const SettingsPage: React.FC = () => {
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    
     setUploadingImage(true);
     try {
       const fileName = `${user?.id}/avatar-${Date.now()}.${file.name.split('.').pop()}`;
       const { error: uploadError } = await supabase.storage.from('media').upload(fileName, file);
       if (uploadError) throw uploadError;
-
       const { data } = supabase.storage.from('media').getPublicUrl(fileName);
       setForm(prev => ({ ...prev, avatar_url: data.publicUrl }));
     } catch (error: any) {
-      console.error("Erreur upload:", error);
-      alert("Erreur lors de l'upload de l'image: " + error.message);
-    } finally {
-      setUploadingImage(false);
-    }
+      alert("Erreur : " + error.message);
+    } finally { setUploadingImage(false); }
   };
 
   const handleGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
-    
     setUploadingGallery(true);
     try {
       const uploadPromises = Array.from(files).map(async (file) => {
         const fileName = `${user?.id}/gallery-${Date.now()}-${Math.random().toString(36).substring(7)}.${file.name.split('.').pop()}`;
         const { error } = await supabase.storage.from('media').upload(fileName, file);
         if (error) throw error;
-        
         const { data } = supabase.storage.from('media').getPublicUrl(fileName);
         return { user_id: user?.id, image_url: data.publicUrl };
       });
-
       const newImages = await Promise.all(uploadPromises);
       const { error: dbError } = await supabase.from('profile_gallery').insert(newImages);
-      
       if (dbError) throw dbError;
       fetchGallery();
     } catch (error: any) {
-      console.error("Erreur galerie:", error);
-      alert("Erreur lors de l'upload: " + error.message);
-    } finally {
-      setUploadingGallery(false);
-    }
+      alert("Erreur : " + error.message);
+    } finally { setUploadingGallery(false); }
   };
 
   const handleDeleteGalleryImage = async (id: string, url: string) => {
@@ -134,21 +128,16 @@ export const SettingsPage: React.FC = () => {
     if (!user) return;
     setSaving(true);
     setMessage('');
-    
-    // ✅ Ajout des champs à la mise à jour
     const { error } = await supabase.from('profiles').update({
       username: form.username, bio: form.bio, hero_tagline: form.hero_tagline,
       hero_title: form.hero_title, hero_description: form.hero_description,
       theme_color: form.theme_color, avatar_url: form.avatar_url,
       background_video_url: form.background_video_url,
-      player_bg_color: form.player_bg_color,         // ✅ Nouveau
-      player_bg_image_url: form.player_bg_image_url, // ✅ Nouveau
       instagram_url: form.instagram_url, spotify_url: form.spotify_url,
       soundcloud_url: form.soundcloud_url, tiktok_url: form.tiktok_url,
       youtube_url: form.youtube_url, beatport_url: form.beatport_url,
       x_url: form.x_url, facebook_url: form.facebook_url
     }).eq('id', user.id);
-    
     if (error) setMessage("Erreur : " + error.message);
     else setMessage("Profil mis à jour avec succès ! ✅");
     setSaving(false);
@@ -183,9 +172,7 @@ export const SettingsPage: React.FC = () => {
       }
     } catch (err: any) {
       alert("Erreur : " + err.message);
-    } finally {
-      setSaving(false);
-    }
+    } finally { setSaving(false); }
   };
 
   const handleDeleteTrack = async (trackId: string) => {
@@ -194,6 +181,7 @@ export const SettingsPage: React.FC = () => {
     setMyTracks(myTracks.filter(t => t.id !== trackId));
   };
 
+  // ✅ Mise à jour pour charger les couleurs de la piste
   const startEditingTrack = (track: any) => {
     setEditingTrackId(track.id);
     setEditTrackForm({ 
@@ -201,21 +189,29 @@ export const SettingsPage: React.FC = () => {
       genre: track.genre || '', 
       bpm: track.bpm || 0,
       purchase_url: track.purchase_url || '',
-      embed_code: track.embed_code || ''
+      embed_code: track.embed_code || '',
+      player_bg_color: track.player_bg_color || '#000000',
+      player_bg_image_url: track.player_bg_image_url || ''
     });
   };
 
+  // ✅ Mise à jour pour sauvegarder les couleurs de la piste
   const handleSaveTrackEdit = async (trackId: string) => {
     const { error } = await supabase.from('tracks').update({
       title: editTrackForm.title, 
       genre: editTrackForm.genre, 
       bpm: Number(editTrackForm.bpm),
       purchase_url: editTrackForm.purchase_url,
-      embed_code: editTrackForm.embed_code
+      embed_code: editTrackForm.embed_code,
+      player_bg_color: editTrackForm.player_bg_color,
+      player_bg_image_url: editTrackForm.player_bg_image_url
     }).eq('id', trackId);
+    
     if (!error) {
       setMyTracks(myTracks.map(t => t.id === trackId ? { ...t, ...editTrackForm } : t));
       setEditingTrackId(null);
+    } else {
+      alert("Erreur de sauvegarde : " + error.message);
     }
   };
 
@@ -253,14 +249,6 @@ export const SettingsPage: React.FC = () => {
       </div>
       
       <p style={{ color: '#888', marginBottom: 30 }}>Gère ton identité, ta musique et tes photos.</p>
-
-      <div style={{ background: 'linear-gradient(90deg, rgba(0, 217, 255, 0.15) 0%, rgba(10, 18, 26, 0) 100%)', borderLeft: '4px solid #00d9ff', borderRadius: '0 12px 12px 0', padding: '20px 24px', marginBottom: '30px', display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
-        <div style={{ fontSize: '28px', marginTop: '-4px' }}>🚀</div>
-        <div>
-          <h3 style={{ margin: '0 0 6px 0', fontSize: '16px', color: '#fff', fontWeight: 800 }}>Bienvenue dans ton espace Premium !</h3>
-          <p style={{ margin: 0, fontSize: '13px', color: '#a0aec0', lineHeight: '1.5' }}>Ton abonnement est actif. N'oublie pas de partager le lien de ta page. 🎧🔥</p>
-        </div>
-      </div>
 
       {message && <div style={{ padding: 16, background: 'rgba(0,217,255,0.1)', border: '1px solid #00d9ff', borderRadius: 8, marginBottom: 24, color: '#00d9ff' }}>{message}</div>}
 
@@ -314,6 +302,19 @@ export const SettingsPage: React.FC = () => {
                     </div>
                     <input type="url" value={editTrackForm.purchase_url} onChange={e => setEditTrackForm({...editTrackForm, purchase_url: e.target.value})} style={{ width: '100%', padding: 8, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4 }} placeholder="Lien d'achat" />
                     <textarea value={editTrackForm.embed_code} onChange={e => setEditTrackForm({...editTrackForm, embed_code: e.target.value})} rows={2} style={{ width: '100%', padding: 8, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4, fontFamily: 'monospace', fontSize: 11 }} placeholder="Code iframe Beatport" />
+                    
+                    {/* ✅ NOUVEAUX CHAMPS DE PERSONNALISATION DU PLAYER POUR CHAQUE SON */}
+                    <div style={{ padding: 12, background: '#121212', borderRadius: 8, border: '1px dashed #444', marginTop: 4 }}>
+                      <p style={{ margin: '0 0 10px 0', fontSize: 12, color: '#aaa', fontWeight: 'bold' }}>Personnalisation visuelle du Player (Optionnel)</p>
+                      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <label style={{ fontSize: 12, color: '#888' }}>Couleur :</label>
+                          <input type="color" value={editTrackForm.player_bg_color} onChange={e => setEditTrackForm({...editTrackForm, player_bg_color: e.target.value})} style={{ width: 30, height: 30, padding: 0, background: 'transparent', border: 'none', cursor: 'pointer' }} />
+                        </div>
+                        <input type="url" placeholder="URL d'une image de fond (https://...)" value={editTrackForm.player_bg_image_url} onChange={e => setEditTrackForm({...editTrackForm, player_bg_image_url: e.target.value})} style={{ flex: 1, minWidth: 200, padding: 8, background: '#0a0a0a', border: '1px solid #444', color: '#fff', borderRadius: 4, fontSize: 12 }} />
+                      </div>
+                    </div>
+
                     <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
                       <button onClick={() => handleSaveTrackEdit(track.id)} style={{ background: form.theme_color, color: '#000', border: 'none', padding: '8px 12px', borderRadius: 4, cursor: 'pointer', fontWeight: 'bold' }}>Enregistrer</button>
                       <button onClick={() => setEditingTrackId(null)} style={{ background: 'transparent', color: '#888', border: '1px solid #444', padding: '8px 12px', borderRadius: 4, cursor: 'pointer' }}>Annuler</button>
@@ -363,17 +364,8 @@ export const SettingsPage: React.FC = () => {
         )}
       </div>
 
-      {/* SECTION ÉVÉNEMENTS */}
-      <div style={{ background: '#121212', padding: 24, borderRadius: 12, border: '1px solid #222', marginBottom: 24 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <h2 style={{ fontSize: 18, color: '#fff', margin: 0 }}>Mes Dates / Événements</h2>
-          <Link to="/events" style={{ background: '#fff', color: '#000', padding: '8px 16px', borderRadius: 6, fontWeight: 800, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>+ Ajouter une date</Link>
-        </div>
-      </div>
-
       {/* FORMULAIRE DE PROFIL */}
       <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-        {/* IDENTITÉ, THEME, BANNIERE, BIO, RESEAUX */}
         <div style={{ background: '#121212', padding: 24, borderRadius: 12, border: '1px solid #222' }}>
           <h2 style={{ fontSize: 18, marginBottom: 20, color: '#fff' }}>Identité & Thème</h2>
           <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
@@ -400,45 +392,6 @@ export const SettingsPage: React.FC = () => {
             <label style={{ fontSize: 13, color: '#aaa' }}>URL de la vidéo de fond (MP4)</label>
             <input type="url" value={form.background_video_url} onChange={(e) => setForm({ ...form, background_video_url: e.target.value })} style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
           </div>
-        </div>
-
-        {/* ✅ NOUVELLE SECTION : PERSONNALISATION DU PLAYER */}
-        <div style={{ background: '#121212', padding: 24, borderRadius: 12, border: '1px solid #222' }}>
-          <h2 style={{ fontSize: 18, marginBottom: 20, color: '#fff' }}>Personnalisation du Player</h2>
-          
-          <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
-            <div style={{ flex: '1 1 200px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <label style={{ fontSize: 13, color: '#aaa' }}>Couleur de fond du Player</label>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <input 
-                  type="color" 
-                  value={form.player_bg_color} 
-                  onChange={(e) => setForm({ ...form, player_bg_color: e.target.value })} 
-                  style={{ width: 50, height: 40, padding: 0, background: 'transparent', border: 'none', cursor: 'pointer' }} 
-                />
-                <input 
-                  type="text" 
-                  value={form.player_bg_color} 
-                  onChange={(e) => setForm({ ...form, player_bg_color: e.target.value })} 
-                  style={{ flex: 1, padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} 
-                />
-              </div>
-            </div>
-
-            <div style={{ flex: '1 1 300px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <label style={{ fontSize: 13, color: '#aaa' }}>Image de fond du Player (URL)</label>
-              <input 
-                type="url" 
-                placeholder="https://exemple.com/mon-image.jpg"
-                value={form.player_bg_image_url} 
-                onChange={(e) => setForm({ ...form, player_bg_image_url: e.target.value })} 
-                style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} 
-              />
-            </div>
-          </div>
-          <p style={{ fontSize: 11, color: '#666', marginTop: 10 }}>
-            * Si tu renseignes une image, elle prendra le dessus sur la couleur. Un filtre sombre sera appliqué pour garder le texte et la waveform lisibles.
-          </p>
         </div>
 
         <div style={{ background: '#121212', padding: 24, borderRadius: 12, border: '1px solid #222' }}>

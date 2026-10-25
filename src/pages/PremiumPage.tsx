@@ -8,22 +8,14 @@ import { usePlayer } from '../contexts/PlayerContext';
 import { GlobalPlayer } from '../components/GlobalPlayer';
 import './LevonDinato.css';
 
-// ✅ COMPOSANT CANVAS WAVEFORM (Inchangé)
 const CanvasWaveform: React.FC<{ 
-  peaks: number[]; 
-  isPlaying: boolean; 
-  themeColor: string; 
-  progress: number; 
-  isCurrent: boolean; 
-  onSeek: (ratio: number) => void;
+  peaks: number[]; isPlaying: boolean; themeColor: string; progress: number; isCurrent: boolean; onSeek: (ratio: number) => void;
 }> = ({ peaks, isPlaying, themeColor, progress, isCurrent, onSeek }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [dragProgress, setDragProgress] = useState<number | null>(null);
   const isDraggingRef = useRef(false);
 
-  useEffect(() => {
-    if (!isDraggingRef.current) setDragProgress(null);
-  }, [progress]);
+  useEffect(() => { if (!isDraggingRef.current) setDragProgress(null); }, [progress]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -34,10 +26,8 @@ const CanvasWaveform: React.FC<{
     const DPR = window.devicePixelRatio || 1;
     const W = canvas.clientWidth;
     const H = canvas.clientHeight;
-    canvas.width = W * DPR;
-    canvas.height = H * DPR;
+    canvas.width = W * DPR; canvas.height = H * DPR;
     ctx.scale(DPR, DPR);
-
     ctx.clearRect(0, 0, W, H);
     if (!peaks || peaks.length === 0) return;
 
@@ -136,9 +126,7 @@ const CanvasWaveform: React.FC<{
 
   return (
     <canvas 
-      ref={canvasRef} 
-      onMouseDown={handleMouseDown} 
-      onClick={(e) => { if (isCurrent) e.stopPropagation(); }}
+      ref={canvasRef} onMouseDown={handleMouseDown} onClick={(e) => { if (isCurrent) e.stopPropagation(); }}
       style={{ width: '100%', height: '90px', display: 'block', borderRadius: '8px', cursor: isCurrent ? 'pointer' : 'default' }} 
     />
   );
@@ -170,31 +158,17 @@ export const PremiumPage: React.FC = () => {
       const blob = await response.blob();
       const blobUrl = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
-      link.href = blobUrl;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(blobUrl);
-    } catch (error) {
-      window.open(url, '_blank');
-    }
+      link.href = blobUrl; link.download = filename;
+      document.body.appendChild(link); link.click();
+      document.body.removeChild(link); window.URL.revokeObjectURL(blobUrl);
+    } catch (error) { window.open(url, '_blank'); }
   };
 
   const handleShare = async (e: React.MouseEvent, track: any) => {
     e.stopPropagation();
-    const shareData = {
-      title: `${track.title} - ${track.artist}`,
-      text: `Écoute ${track.title} de ${track.artist} sur Dropzone !`,
-      url: window.location.href,
-    };
-
-    if (navigator.share) {
-      try { await navigator.share(shareData); } catch (err) {}
-    } else {
-      navigator.clipboard.writeText(window.location.href);
-      alert('Lien copié dans le presse-papier !');
-    }
+    const shareData = { title: `${track.title} - ${track.artist}`, text: `Écoute ${track.title} de ${track.artist} sur Dropzone !`, url: window.location.href };
+    if (navigator.share) { try { await navigator.share(shareData); } catch (err) {} } 
+    else { navigator.clipboard.writeText(window.location.href); alert('Lien copié dans le presse-papier !'); }
   };
 
   const getIframeSrc = (embedCode: string) => {
@@ -243,11 +217,7 @@ export const PremiumPage: React.FC = () => {
           const { data: galleryData } = await supabase.from('profile_gallery').select('*').eq('user_id', profileData.id).order('created_at', { ascending: false });
           if (galleryData) setGallery(galleryData);
         }
-      } catch (err) {
-        console.error("Erreur inattendue:", err);
-      } finally {
-        setLoading(false);
-      }
+      } catch (err) { console.error(err); } finally { setLoading(false); }
     };
     fetchData();
   }, [username]);
@@ -287,24 +257,10 @@ export const PremiumPage: React.FC = () => {
   const themeColor = profile.theme_color || '#00d9ff';
   const isOwner = user && profile && user.id === profile.id;
 
-  // ✅ SÉCURISATION DU FOND
-  const playerBgImage = profile.player_bg_image_url ? profile.player_bg_image_url.trim() : null;
-  const playerBgColor = profile.player_bg_color || '#000000';
-  
-  const customCardStyle = {
-    backgroundColor: playerBgColor,
-    backgroundImage: playerBgImage ? `linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.8)), url("${playerBgImage}")` : 'none',
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
-    backgroundRepeat: 'no-repeat',
-  };
-
   return (
     <div className="levon-page" style={{ '--accent': themeColor } as React.CSSProperties}>
       <Helmet>
         <title>{profile.username} — Page Officielle</title>
-        <meta property="og:title" content={`${profile.username} — DJ & Production`} />
-        <meta property="og:image" content={profile.avatar_url || '/og-levon-dinato.jpg'} />
       </Helmet>
 
       {isOwner && (
@@ -414,22 +370,26 @@ export const PremiumPage: React.FC = () => {
                   const isThisPlaying = currentTrack?.id === track.id && isPlaying;
                   const isCurrentTrack = currentTrack?.id === track.id;
                   const trackProgress = isThisPlaying && duration > 0 ? (currentTime / duration) : 0;
-
-                  // ✅ CONDITION : Si c'est une iframe Beatport, on force le fond noir.
-                  // Sinon, on applique l'image ou la couleur personnalisée.
                   const isBeatport = !!iframeSrc;
+
+                  // ✅ Personnalisation PAR TRACK (avec fallback noir par défaut)
+                  const cardBgColor = track.player_bg_color || '#000000';
+                  const cardBgImage = track.player_bg_image_url;
+                  const customCardStyle = {
+                    backgroundColor: cardBgColor,
+                    backgroundImage: cardBgImage ? `linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.8)), url("${cardBgImage}")` : 'none',
+                    backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat',
+                  };
+                  
                   const currentBackgroundStyle = isBeatport ? { backgroundColor: '#000000' } : customCardStyle;
 
                   return (
                     <div 
                       key={track.id} 
                       style={{ 
-                        ...currentBackgroundStyle, // ✅ Application conditionnelle
-                        border: '1px solid #222222', 
-                        borderRadius: '16px', 
-                        overflow: 'hidden',
-                        boxShadow: '0 10px 25px rgba(0,0,0,0.4)',
-                        transition: 'all 0.2s',
+                        ...currentBackgroundStyle,
+                        border: '1px solid #222222', borderRadius: '16px', overflow: 'hidden',
+                        boxShadow: '0 10px 25px rgba(0,0,0,0.4)', transition: 'all 0.2s',
                         cursor: isPlayable ? 'pointer' : 'default'
                       }}
                       onClick={() => isPlayable && handlePlayTrack(track)}
@@ -446,13 +406,10 @@ export const PremiumPage: React.FC = () => {
                             border: isPlayable ? 'none' : '1px solid #333',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                             color: isPlayable ? (isThisPlaying ? '#000' : '#fff') : themeColor,
-                            fontSize: '16px',
-                            backdropFilter: 'blur(5px)' 
+                            fontSize: '16px', backdropFilter: 'blur(5px)' 
                           }}>
-                            {isPlayable ? (
-                              isThisPlaying ? '⏸' : '▶'
-                            ) : (
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                            {isPlayable ? (isThisPlaying ? '⏸' : '▶') : (
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
                             )}
                           </div>
 
@@ -474,11 +431,10 @@ export const PremiumPage: React.FC = () => {
                                 background: 'rgba(0,0,0,0.5)', color: themeColor, padding: '8px 16px', 
                                 borderRadius: '6px', fontSize: '12px', fontWeight: '800', 
                                 border: `1px solid ${themeColor}`, cursor: 'pointer',
-                                display: 'flex', alignItems: 'center', gap: '6px',
-                                backdropFilter: 'blur(5px)'
+                                display: 'flex', alignItems: 'center', gap: '6px', backdropFilter: 'blur(5px)'
                               }}
                             >
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                               Télécharger
                             </button>
                           )}
@@ -486,47 +442,25 @@ export const PremiumPage: React.FC = () => {
                       </div>
 
                       {iframeSrc && (
-                        <div 
-                          style={{ padding: '0 20px 20px 20px', position: 'relative', zIndex: 10, overflow: 'hidden', borderRadius: '8px' }}
-                          onClick={(e) => e.stopPropagation()} 
-                        >
+                        <div style={{ padding: '0 20px 20px 20px', position: 'relative', zIndex: 10, overflow: 'hidden', borderRadius: '8px' }} onClick={(e) => e.stopPropagation()}>
                           <iframe 
-                            src={iframeSrc} 
-                            width="100%" 
-                            height="162" 
-                            frameBorder="0"
-                            scrolling="no"
+                            src={iframeSrc} width="100%" height="162" frameBorder="0" scrolling="no"
                             allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
                             sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-presentation"
-                            style={{ 
-                              display: 'block', width: '100%', height: '162px',
-                              borderRadius: '8px', border: 'none', background: '#000', overflow: 'hidden' 
-                            }}
+                            style={{ display: 'block', width: '100%', height: '162px', borderRadius: '8px', border: 'none', background: '#000', overflow: 'hidden' }}
                           ></iframe>
                         </div>
                       )}
 
                       {isPlayable && !iframeSrc && (
                         <div style={{ padding: '0 20px 20px 20px' }}>
-                          
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '12px', padding: '0 4px' }}>
-                            
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={themeColor} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M12 2a3 3 0 0 0-3 3v14a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path>
-                                <path d="M5 10a3 3 0 0 0-3 3v4a3 3 0 0 0 6 0v-4a3 3 0 0 0-3-3z"></path>
-                                <path d="M19 7a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0v-7a3 3 0 0 0-3-3z"></path>
-                              </svg>
-                              <span style={{ 
-                                color: themeColor, fontWeight: '900', fontSize: '18px', 
-                                fontFamily: 'system-ui, -apple-system, sans-serif', letterSpacing: '-0.5px'
-                              }}>
-                                Dropzone
-                              </span>
+                              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={themeColor} strokeWidth="2.5"><path d="M12 2a3 3 0 0 0-3 3v14a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path><path d="M5 10a3 3 0 0 0-3 3v4a3 3 0 0 0 6 0v-4a3 3 0 0 0-3-3z"></path><path d="M19 7a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0v-7a3 3 0 0 0-3-3z"></path></svg>
+                              <span style={{ color: themeColor, fontWeight: '900', fontSize: '18px', fontFamily: 'system-ui, -apple-system, sans-serif', letterSpacing: '-0.5px' }}>Dropzone</span>
                             </div>
 
                             <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                              
                               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
                                 <div style={{ fontSize: '18px', fontWeight: '800', fontFamily: 'monospace', display: 'flex', alignItems: 'baseline', gap: '6px' }}>
                                   <span style={{ color: themeColor }}>{formatTime(isThisPlaying ? currentTime : 0)}</span>
@@ -540,34 +474,17 @@ export const PremiumPage: React.FC = () => {
                               </div>
 
                               <button
-                                onClick={(e) => handleShare(e, track)}
-                                title="Partager ce son"
-                                style={{
-                                  width: '36px', height: '36px', borderRadius: '50%',
-                                  background: 'rgba(0,0,0,0.5)', border: '1px solid #333',
-                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                  color: '#fff', cursor: 'pointer', transition: 'all 0.2s'
-                                }}
+                                onClick={(e) => handleShare(e, track)} title="Partager ce son"
+                                style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'rgba(0,0,0,0.5)', border: '1px solid #333', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', cursor: 'pointer', transition: 'all 0.2s' }}
                                 onMouseEnter={(e) => { e.currentTarget.style.borderColor = themeColor; e.currentTarget.style.color = themeColor; }}
                                 onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#333'; e.currentTarget.style.color = '#fff'; }}
                               >
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                  <circle cx="18" cy="5" r="3"></circle>
-                                  <circle cx="6" cy="12" r="3"></circle>
-                                  <circle cx="18" cy="19" r="3"></circle>
-                                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
-                                  <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
-                                </svg>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
                               </button>
-
                             </div>
                           </div>
                           
-                          <CanvasWaveform 
-                            peaks={track.peaks} isPlaying={isThisPlaying}
-                            themeColor={themeColor} progress={trackProgress}
-                            isCurrent={isCurrentTrack} onSeek={seek}
-                          />
+                          <CanvasWaveform peaks={track.peaks} isPlaying={isThisPlaying} themeColor={themeColor} progress={trackProgress} isCurrent={isCurrentTrack} onSeek={seek} />
                         </div>
                       )}
                     </div>
@@ -606,11 +523,6 @@ export const PremiumPage: React.FC = () => {
             </div>
 
             <div className="sidebar-widget">
-              <div className="sidebar-title">Réseaux</div>
-              {/* ... */}
-            </div>
-
-            <div className="sidebar-widget">
               <div className="sidebar-title">Biographie</div>
               <p style={{ whiteSpace: 'pre-wrap', lineHeight: '1.6', color: '#8c9f98', fontSize: '0.85rem' }}>
                 {profile.bio || "Biographie à venir..."}
@@ -637,10 +549,7 @@ export const PremiumPage: React.FC = () => {
       </footer>
 
       {currentTrack && (
-        <GlobalPlayer 
-          currentTrack={currentTrack} isPlaying={isPlaying} 
-          onTogglePlay={togglePlay} onStop={stop} 
-        />
+        <GlobalPlayer currentTrack={currentTrack} isPlaying={isPlaying} onTogglePlay={togglePlay} onStop={stop} />
       )}
     </div>
   );

@@ -61,7 +61,8 @@ export const MainLayout: React.FC = () => {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: '#0a0a0a', color: '#fff', overflowX: 'hidden', width: '100%', maxWidth: '100vw' }}>
         
-        <header style={{ position: 'sticky', top: 0, zIndex: 50, background: 'rgba(10, 10, 10, 0.9)', backdropFilter: 'blur(10px)', borderBottom: '1px solid #222', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        {/* ✅ SUPPRESSION DU FLOU (backdropFilter) SUR LE HEADER MOBILE */}
+        <header style={{ position: 'sticky', top: 0, zIndex: 50, background: '#0a0a0a', borderBottom: '1px solid #222', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
             <img src="/icons/icon-192.png" alt="DropZone DJ" style={{ width: 32, height: 32, objectFit: 'contain', borderRadius: 8 }} />
             <span style={{ fontWeight: 800, fontSize: '1rem', color: '#fff', letterSpacing: '-0.5px' }}>DROPZONE <span style={{ color: '#00d9ff' }}>DJ</span></span>
@@ -71,7 +72,6 @@ export const MainLayout: React.FC = () => {
           </Link>
         </header>
 
-        {/* ✅ Sécurité anti-débordement + Place pour le player en bas */}
         <main style={{ flex: 1, padding: '16px 12px', paddingBottom: currentTrack ? 140 : 80, overflowX: 'hidden', width: '100%', maxWidth: '100vw' }}>
           <Outlet />
         </main>
@@ -80,7 +80,7 @@ export const MainLayout: React.FC = () => {
 
         {mobileMenuOpen && (
           <>
-            <div onClick={() => setMobileMenuOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 90, backdropFilter: 'blur(4px)' }} />
+            <div onClick={() => setMobileMenuOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 90 }} />
             <aside style={{ position: 'fixed', top: 0, left: 0, bottom: 0, width: 280, background: '#0a0a0a', borderRight: '1px solid #222', zIndex: 100, display: 'flex', flexDirection: 'column', padding: '24px 16px', overflowY: 'auto', animation: 'slideIn 0.2s ease-out' }}>
               <style>{`@keyframes slideIn { from { transform: translateX(-100%); } to { transform: translateX(0); } }`}</style>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
@@ -92,29 +92,14 @@ export const MainLayout: React.FC = () => {
                 {NAV_ITEMS.map(item => {
                   const isActive = item.exact ? location.pathname === item.path : location.pathname.startsWith(item.path);
                   return (
-                    <NavLink 
-                      key={item.path} 
-                      to={item.path}
-                      style={{ 
-                        display: 'flex', alignItems: 'center', gap: 12, 
-                        padding: '12px 16px', borderBottom: '1px solid #1a1a1a', 
-                        textDecoration: 'none', color: isActive ? '#00d9ff' : '#888',
-                        fontWeight: isActive ? 700 : 500, fontSize: 14,
-                        borderLeft: isActive ? '2px solid #00d9ff' : '2px solid transparent',
-                        transition: 'all 0.2s'
-                      }}
-                    >
+                    <NavLink key={item.path} to={item.path} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: '1px solid #1a1a1a', textDecoration: 'none', color: isActive ? '#00d9ff' : '#888', fontWeight: isActive ? 700 : 500, fontSize: 14, borderLeft: isActive ? '2px solid #00d9ff' : '2px solid transparent' }}>
                       <span style={{ display: 'flex' }}>{item.icon}</span>
                       {item.label}
                     </NavLink>
                   );
                 })}
-                
                 {isAdmin && (
-                  <NavLink 
-                    to="/admin" 
-                    style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: '1px solid #1a1a1a', textDecoration: 'none', color: '#ff4444', fontWeight: 700, fontSize: 14, marginTop: 8, border: '1px solid rgba(255, 68, 68, 0.2)', borderRadius: 8 }}
-                  >
+                  <NavLink to="/admin" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: '1px solid #1a1a1a', textDecoration: 'none', color: '#ff4444', fontWeight: 700, fontSize: 14, marginTop: 8, border: '1px solid rgba(255, 68, 68, 0.2)', borderRadius: 8 }}>
                     <span style={{ display: 'flex' }}>{Icons.admin}</span>
                     Panel Admin
                   </NavLink>
@@ -124,10 +109,10 @@ export const MainLayout: React.FC = () => {
           </>
         )}
 
+        {/* ✅ SUPPRESSION DU FLOU (backdropFilter) SUR LA NAV MOBILE */}
         <nav style={{ 
           position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50,
-          background: 'rgba(10, 10, 10, 0.95)', backdropFilter: 'blur(20px)',
-          borderTop: '1px solid #222',
+          background: '#0a0a0a', borderTop: '1px solid #222',
           display: 'flex', justifyContent: 'space-around', alignItems: 'center',
           padding: '8px 4px',
           paddingBottom: 'calc(8px + env(safe-area-inset-bottom))',
@@ -135,22 +120,9 @@ export const MainLayout: React.FC = () => {
           {MOBILE_NAV.map(item => {
             const isMenu = item.path === '#menu';
             const isActive = !isMenu && (item.exact ? location.pathname === item.path : location.pathname.startsWith(item.path));
-            
             return (
-              <button 
-                key={item.path} 
-                onClick={() => isMenu ? setMobileMenuOpen(true) : navigate(item.path)}
-                style={{
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
-                  padding: '6px 12px', borderRadius: 12, textDecoration: 'none',
-                  background: 'transparent', border: 'none',
-                  color: isActive ? '#00d9ff' : '#666',
-                  cursor: 'pointer', minWidth: 60,
-                }}
-              >
-                <div style={{ transform: isActive ? 'scale(1.1)' : 'scale(1)', transition: 'transform 0.2s' }}>
-                  {item.icon}
-                </div>
+              <button key={item.path} onClick={() => isMenu ? setMobileMenuOpen(true) : navigate(item.path)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 12, background: 'transparent', border: 'none', color: isActive ? '#00d9ff' : '#666', cursor: 'pointer', minWidth: 60 }}>
+                <div style={{ transform: isActive ? 'scale(1.1)' : 'scale(1)', transition: 'transform 0.1s' }}>{item.icon}</div>
                 <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.2px' }}>{item.label}</span>
               </button>
             );
@@ -160,10 +132,9 @@ export const MainLayout: React.FC = () => {
     );
   }
 
-  // --- VERSION DESKTOP ---
+  // --- VERSION DESKTOP (Inchangée) ---
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#0a0a0a', color: '#fff' }}>
-      
       <aside style={{ width: 240, background: '#0a0a0a', borderRight: '1px solid #222', display: 'flex', flexDirection: 'column', position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 50 }}>
         <div style={{ padding: '24px 20px', borderBottom: '1px solid #222', display: 'flex', alignItems: 'center', gap: 12 }}>
           <img src="/icons/icon-192.png" alt="DropZone DJ" style={{ width: 36, height: 36, objectFit: 'contain', borderRadius: 8 }} />
@@ -174,20 +145,7 @@ export const MainLayout: React.FC = () => {
           {NAV_ITEMS.map(item => {
             const isActive = item.exact ? location.pathname === item.path : location.pathname.startsWith(item.path);
             return (
-              <NavLink 
-                key={item.path} 
-                to={item.path}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 12,
-                  padding: '12px 16px', 
-                  borderBottom: '1px solid #1a1a1a',
-                  textDecoration: 'none',
-                  color: isActive ? '#00d9ff' : '#888',
-                  background: isActive ? 'rgba(0, 217, 255, 0.05)' : 'transparent',
-                  fontWeight: isActive ? 700 : 500, fontSize: '0.9rem',
-                  borderLeft: isActive ? '2px solid #00d9ff' : '2px solid transparent',
-                  transition: 'all 0.2s'
-                }}
+              <NavLink key={item.path} to={item.path} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: '1px solid #1a1a1a', textDecoration: 'none', color: isActive ? '#00d9ff' : '#888', background: isActive ? 'rgba(0, 217, 255, 0.05)' : 'transparent', fontWeight: isActive ? 700 : 500, fontSize: '0.9rem', borderLeft: isActive ? '2px solid #00d9ff' : '2px solid transparent', transition: 'all 0.2s' }}
                 onMouseEnter={(e) => { if (!isActive) { e.currentTarget.style.background = '#121212'; e.currentTarget.style.color = '#fff'; } }}
                 onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#888'; } }}
               >
@@ -196,24 +154,15 @@ export const MainLayout: React.FC = () => {
               </NavLink>
             );
           })}
-
           {isAdmin && (
-            <NavLink 
-              to="/admin" 
-              style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', textDecoration: 'none', color: '#ff4444', background: 'rgba(255, 68, 68, 0.05)', fontWeight: 700, fontSize: '0.9rem', marginTop: 16, border: '1px solid rgba(255, 68, 68, 0.2)', borderRadius: 8, transition: 'all 0.2s' }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255, 68, 68, 0.1)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255, 68, 68, 0.05)'; }}
-            >
+            <NavLink to="/admin" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', textDecoration: 'none', color: '#ff4444', background: 'rgba(255, 68, 68, 0.05)', fontWeight: 700, fontSize: '0.9rem', marginTop: 16, border: '1px solid rgba(255, 68, 68, 0.2)', borderRadius: 8 }}>
               <span style={{ display: 'flex' }}>{Icons.admin}</span>
               Panel Admin
             </NavLink>
           )}
         </nav>
 
-        <Link to={`/profil/${user?.id}`} style={{ padding: '16px 20px', borderTop: '1px solid #222', display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none', color: '#fff', transition: 'background 0.15s' }}
-          onMouseEnter={(e) => e.currentTarget.style.background = '#111'}
-          onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-        >
+        <Link to={`/profil/${user?.id}`} style={{ padding: '16px 20px', borderTop: '1px solid #222', display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none', color: '#fff' }} onMouseEnter={(e) => e.currentTarget.style.background = '#111'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
           <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#1a1f2e', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#00d9ff', fontWeight: 700, fontSize: 13, border: '1px solid #333' }}>
             {avatarUrl ? <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : displayName.charAt(0).toUpperCase()}
           </div>
@@ -229,7 +178,6 @@ export const MainLayout: React.FC = () => {
           <Outlet />
         </main>
       </div>
-
       {currentTrack && <GlobalPlayer currentTrack={currentTrack} isPlaying={isPlaying} onTogglePlay={togglePlay} onStop={stop} />}
     </div>
   );

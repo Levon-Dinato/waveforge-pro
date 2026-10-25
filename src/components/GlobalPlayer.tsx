@@ -22,7 +22,6 @@ const forceDownload = async (url: string, filename: string) => {
     document.body.removeChild(link);
     window.URL.revokeObjectURL(blobUrl);
   } catch (error) {
-    console.error("Erreur lors du téléchargement:", error);
     window.open(url, '_blank');
   }
 };
@@ -32,7 +31,6 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isMobile, setIsMobile] = useState(false);
 
-  // Détection de la taille de l'écran
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth <= 768);
     checkMobile();
@@ -83,7 +81,8 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
       safePeaks = mockPeaks;
     }
 
-    const barCount = 300;
+    // ✅ Réduction du nombre de barres sur mobile pour soulager le processeur
+    const barCount = isMobile ? 150 : 300;
     const step = Math.ceil(safePeaks.length / barCount);
     const displayPeaks = safePeaks.filter((_: any, i: number) => i % step === 0).slice(0, barCount);
 
@@ -98,9 +97,7 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
       const x = (i / displayPeaks.length) * W;
       const val = displayPeaks[i] > 1 ? displayPeaks[i] / 100 : displayPeaks[i];
       const barHeight = Math.max(val * maxAmplitude, 2);
-      if (x >= playedX) {
-        ctx.fillRect(x, centerY - barHeight, 1, barHeight * 2);
-      }
+      if (x >= playedX) ctx.fillRect(x, centerY - barHeight, 1, barHeight * 2);
     }
 
     // Partie jouée
@@ -116,7 +113,7 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
 
     ctx.fillStyle = gradient;
     ctx.shadowColor = '#00d9ff';
-    ctx.shadowBlur = 6;
+    ctx.shadowBlur = isMobile ? 2 : 6; // ✅ Moins d'ombre sur mobile
 
     for (let i = 0; i < displayPeaks.length; i++) {
       const x = (i / displayPeaks.length) * W;
@@ -132,7 +129,7 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
       ctx.strokeStyle = '#fff';
       ctx.lineWidth = 2;
       ctx.shadowColor = '#fff';
-      ctx.shadowBlur = 8;
+      ctx.shadowBlur = 4;
       ctx.beginPath();
       ctx.moveTo(playedX, 0);
       ctx.lineTo(playedX, H);
@@ -154,20 +151,19 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
   return (
     <div style={{
       position: 'fixed', 
-      bottom: isMobile ? 70 : 0, // ✅ Sur mobile, on le place au-dessus de la barre de nav
+      bottom: isMobile ? 70 : 0, 
       left: 0, right: 0, zIndex: 1000,
-      background: 'rgba(10, 10, 15, 0.95)', backdropFilter: 'blur(20px)',
+      background: '#0a0a0a', // ✅ Plus de flou (backdropFilter), juste du noir opaque
       borderTop: '1px solid #222',
     }}>
       <div style={{
         maxWidth: 1200, margin: '0 auto', 
-        height: isMobile ? '60px' : '80px', // ✅ Plus compact sur mobile
+        height: isMobile ? '60px' : '80px', 
         display: 'flex', alignItems: 'center', 
         gap: isMobile ? '12px' : '24px', 
         padding: isMobile ? '0 12px' : '0 24px'
       }}>
         
-        {/* Infos musique */}
         <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 12, width: isMobile ? 'auto' : '260px', flexShrink: 0 }}>
           <div style={{ 
             width: isMobile ? 36 : 44, height: isMobile ? 36 : 44, borderRadius: 8, 
@@ -180,7 +176,6 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
           </div>
         </div>
 
-        {/* Contrôles */}
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 16 }}>
           <button onClick={onTogglePlay} style={{ 
             width: isMobile ? 30 : 36, height: isMobile ? 30 : 36, borderRadius: '50%', background: '#fff', color: '#000', 
@@ -194,7 +189,6 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
             )}
           </button>
 
-          {/* Temps cachés sur mobile pour gagner de la place */}
           {!isMobile && (
             <span style={{ fontSize: 11, fontFamily: 'monospace', color: '#888', width: 35, textAlign: 'right' }}>
               {formatTime(currentTime)}
@@ -212,10 +206,7 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
           )}
         </div>
 
-        {/* Actions (Télécharger / Fermer) */}
         <div style={{ display: 'flex', gap: isMobile ? 8 : 16, alignItems: 'center', justifyContent: 'flex-end', width: isMobile ? 'auto' : '80px' }}>
-          
-          {/* Bouton télécharger caché sur mobile */}
           {!isMobile && (
             <button 
               onClick={() => forceDownload(currentTrack.audio_url, `${currentTrack.artist} - ${currentTrack.title}.mp3`)}

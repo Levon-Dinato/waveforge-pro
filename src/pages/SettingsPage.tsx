@@ -15,15 +15,10 @@ export const SettingsPage: React.FC = () => {
   const [myTracks, setMyTracks] = useState<any[]>([]);
   const [editingTrackId, setEditingTrackId] = useState<string | null>(null);
   
-  // ✅ Ajout des champs de personnalisation dans le formulaire de modification
+  // ✅ Champs de personnalisation du player (existant)
   const [editTrackForm, setEditTrackForm] = useState({ 
-    title: '', 
-    genre: '', 
-    bpm: 0, 
-    purchase_url: '', 
-    embed_code: '',
-    player_bg_color: '#000000',
-    player_bg_image_url: ''
+    title: '', genre: '', bpm: 0, purchase_url: '', embed_code: '',
+    player_bg_color: '#000000', player_bg_image_url: ''
   });
   
   const [showLinkForm, setShowLinkForm] = useState(false);
@@ -38,6 +33,19 @@ export const SettingsPage: React.FC = () => {
     theme_color: '#00d9ff', avatar_url: '', background_video_url: '',
     instagram_url: '', spotify_url: '', soundcloud_url: '', tiktok_url: '', youtube_url: '',
     beatport_url: '', x_url: '', facebook_url: ''
+  });
+
+  // ✅ NOUVEAU : État pour les réglages avancés de la page premium
+  const [settings, setSettings] = useState({
+    duo_title: 'Le Duo',
+    prestations_title: 'Prestations',
+    releases_title: 'Dernières Sorties',
+    show_stats: true,
+    show_duo: true,
+    show_prestations: true,
+    show_releases: true,
+    show_sidebar_top: true,
+    show_sidebar_dates: true,
   });
 
   useEffect(() => {
@@ -57,6 +65,21 @@ export const SettingsPage: React.FC = () => {
           youtube_url: data.youtube_url || '', beatport_url: data.beatport_url || '',
           x_url: data.x_url || '', facebook_url: data.facebook_url || ''
         });
+
+        // ✅ On charge les modules depuis la colonne settings (JSON)
+        if (data.settings) {
+          setSettings({
+            duo_title: data.settings.duo_title || 'Le Duo',
+            prestations_title: data.settings.prestations_title || 'Prestations',
+            releases_title: data.settings.releases_title || 'Dernières Sorties',
+            show_stats: data.settings.show_stats !== false,
+            show_duo: data.settings.show_duo !== false,
+            show_prestations: data.settings.show_prestations !== false,
+            show_releases: data.settings.show_releases !== false,
+            show_sidebar_top: data.settings.show_sidebar_top !== false,
+            show_sidebar_dates: data.settings.show_sidebar_dates !== false,
+          });
+        }
       }
       setLoading(false);
     };
@@ -136,10 +159,11 @@ export const SettingsPage: React.FC = () => {
       instagram_url: form.instagram_url, spotify_url: form.spotify_url,
       soundcloud_url: form.soundcloud_url, tiktok_url: form.tiktok_url,
       youtube_url: form.youtube_url, beatport_url: form.beatport_url,
-      x_url: form.x_url, facebook_url: form.facebook_url
+      x_url: form.x_url, facebook_url: form.facebook_url,
+      settings: settings // ✅ On sauvegarde les réglages avancés dans le JSON
     }).eq('id', user.id);
     if (error) setMessage("Erreur : " + error.message);
-    else setMessage("Profil mis à jour avec succès ! ✅");
+    else setMessage("Profil et modules mis à jour avec succès ! ✅");
     setSaving(false);
   };
 
@@ -181,30 +205,20 @@ export const SettingsPage: React.FC = () => {
     setMyTracks(myTracks.filter(t => t.id !== trackId));
   };
 
-  // ✅ Mise à jour pour charger les couleurs de la piste
   const startEditingTrack = (track: any) => {
     setEditingTrackId(track.id);
     setEditTrackForm({ 
-      title: track.title, 
-      genre: track.genre || '', 
-      bpm: track.bpm || 0,
-      purchase_url: track.purchase_url || '',
-      embed_code: track.embed_code || '',
-      player_bg_color: track.player_bg_color || '#000000',
-      player_bg_image_url: track.player_bg_image_url || ''
+      title: track.title, genre: track.genre || '', bpm: track.bpm || 0,
+      purchase_url: track.purchase_url || '', embed_code: track.embed_code || '',
+      player_bg_color: track.player_bg_color || '#000000', player_bg_image_url: track.player_bg_image_url || ''
     });
   };
 
-  // ✅ Mise à jour pour sauvegarder les couleurs de la piste
   const handleSaveTrackEdit = async (trackId: string) => {
     const { error } = await supabase.from('tracks').update({
-      title: editTrackForm.title, 
-      genre: editTrackForm.genre, 
-      bpm: Number(editTrackForm.bpm),
-      purchase_url: editTrackForm.purchase_url,
-      embed_code: editTrackForm.embed_code,
-      player_bg_color: editTrackForm.player_bg_color,
-      player_bg_image_url: editTrackForm.player_bg_image_url
+      title: editTrackForm.title, genre: editTrackForm.genre, bpm: Number(editTrackForm.bpm),
+      purchase_url: editTrackForm.purchase_url, embed_code: editTrackForm.embed_code,
+      player_bg_color: editTrackForm.player_bg_color, player_bg_image_url: editTrackForm.player_bg_image_url
     }).eq('id', trackId);
     
     if (!error) {
@@ -248,9 +262,55 @@ export const SettingsPage: React.FC = () => {
         )}
       </div>
       
-      <p style={{ color: '#888', marginBottom: 30 }}>Gère ton identité, ta musique et tes photos.</p>
+      <p style={{ color: '#888', marginBottom: 30 }}>Gère ton identité, ta musique, tes photos et les modules de ta page.</p>
 
       {message && <div style={{ padding: 16, background: 'rgba(0,217,255,0.1)', border: '1px solid #00d9ff', borderRadius: 8, marginBottom: 24, color: '#00d9ff' }}>{message}</div>}
+
+      {/* ✅ NOUVELLE CARTE : PERSONNALISATION DE LA PAGE PREMIUM */}
+      <div style={{ background: '#121212', padding: 24, borderRadius: 12, border: '1px solid #222', marginBottom: 24 }}>
+        <h2 style={{ fontSize: 18, color: '#fff', margin: '0 0 20px 0' }}>🎛️ Modules de la page Premium</h2>
+        
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+            <div style={{ flex: 1, minWidth: 200 }}>
+              <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>Titre du module "Le Duo"</label>
+              <input type="text" value={settings.duo_title} onChange={(e) => setSettings({...settings, duo_title: e.target.value})} style={{ width: '100%', padding: 10, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+            </div>
+            <div style={{ flex: 1, minWidth: 200 }}>
+              <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>Titre du module "Prestations"</label>
+              <input type="text" value={settings.prestations_title} onChange={(e) => setSettings({...settings, prestations_title: e.target.value})} style={{ width: '100%', padding: 10, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+            </div>
+            <div style={{ flex: 1, minWidth: 200 }}>
+              <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>Titre du module "Releases"</label>
+              <input type="text" value={settings.releases_title} onChange={(e) => setSettings({...settings, releases_title: e.target.value})} style={{ width: '100%', padding: 10, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+            </div>
+          </div>
+
+          <div style={{ marginTop: 12 }}>
+            <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Afficher / Masquer les sections :</label>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
+              {[
+                { key: 'show_stats', label: 'Statistiques (Hero)' },
+                { key: 'show_duo', label: 'Section Le Duo' },
+                { key: 'show_prestations', label: 'Section Prestations' },
+                { key: 'show_releases', label: 'Section Dernières Sorties' },
+                { key: 'show_sidebar_top', label: 'Sidebar : Top Tracks' },
+                { key: 'show_sidebar_dates', label: 'Sidebar : Prochaines Dates' },
+              ].map((item) => (
+                <label key={item.key} style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', fontSize: 14, background: '#0a0a0a', padding: 12, borderRadius: 8, border: '1px solid #222' }}>
+                  <input 
+                    type="checkbox" 
+                    checked={(settings as any)[item.key]} 
+                    onChange={(e) => setSettings({ ...settings, [item.key]: e.target.checked })} 
+                    style={{ width: 18, height: 18, accentColor: '#00d9ff', cursor: 'pointer' }} 
+                  />
+                  {item.label}
+                </label>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* SECTION MUSIQUE */}
       <div style={{ background: '#121212', padding: 24, borderRadius: 12, border: '1px solid #222', marginBottom: 24 }}>
@@ -303,7 +363,6 @@ export const SettingsPage: React.FC = () => {
                     <input type="url" value={editTrackForm.purchase_url} onChange={e => setEditTrackForm({...editTrackForm, purchase_url: e.target.value})} style={{ width: '100%', padding: 8, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4 }} placeholder="Lien d'achat" />
                     <textarea value={editTrackForm.embed_code} onChange={e => setEditTrackForm({...editTrackForm, embed_code: e.target.value})} rows={2} style={{ width: '100%', padding: 8, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4, fontFamily: 'monospace', fontSize: 11 }} placeholder="Code iframe Beatport" />
                     
-                    {/* ✅ NOUVEAUX CHAMPS DE PERSONNALISATION DU PLAYER POUR CHAQUE SON */}
                     <div style={{ padding: 12, background: '#121212', borderRadius: 8, border: '1px dashed #444', marginTop: 4 }}>
                       <p style={{ margin: '0 0 10px 0', fontSize: 12, color: '#aaa', fontWeight: 'bold' }}>Personnalisation visuelle du Player (Optionnel)</p>
                       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
@@ -421,7 +480,7 @@ export const SettingsPage: React.FC = () => {
         </div>
 
         <button type="submit" disabled={saving} style={{ padding: '16px', background: form.theme_color, color: '#000', border: 'none', borderRadius: 8, fontSize: 16, fontWeight: 800, cursor: saving ? 'wait' : 'pointer' }}>
-          {saving ? 'Enregistrement...' : 'Sauvegarder mon profil'}
+          {saving ? 'Enregistrement...' : 'Sauvegarder toutes les modifications'}
         </button>
       </form>
     </div>

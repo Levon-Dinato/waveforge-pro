@@ -223,10 +223,6 @@ export const PremiumPage: React.FC = () => {
 
         if (profileData) {
           setProfile(profileData);
-          // ✅ VERIFICATION DANS LA CONSOLE
-          console.log("Données du profil chargées :", profileData);
-          console.log("URL de l'image de fond :", profileData.player_bg_image_url);
-          
           const { data: tracksData } = await supabase.from('tracks').select('*').eq('user_id', profileData.id).order('created_at', { ascending: false });
           
           if (tracksData) {
@@ -295,8 +291,7 @@ export const PremiumPage: React.FC = () => {
   const playerBgImage = profile.player_bg_image_url ? profile.player_bg_image_url.trim() : null;
   const playerBgColor = profile.player_bg_color || '#000000';
   
-  // On applique l'image et la couleur séparément pour éviter les bugs
-  const cardBgStyle = {
+  const customCardStyle = {
     backgroundColor: playerBgColor,
     backgroundImage: playerBgImage ? `linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.8)), url("${playerBgImage}")` : 'none',
     backgroundSize: 'cover',
@@ -420,11 +415,16 @@ export const PremiumPage: React.FC = () => {
                   const isCurrentTrack = currentTrack?.id === track.id;
                   const trackProgress = isThisPlaying && duration > 0 ? (currentTime / duration) : 0;
 
+                  // ✅ CONDITION : Si c'est une iframe Beatport, on force le fond noir.
+                  // Sinon, on applique l'image ou la couleur personnalisée.
+                  const isBeatport = !!iframeSrc;
+                  const currentBackgroundStyle = isBeatport ? { backgroundColor: '#000000' } : customCardStyle;
+
                   return (
                     <div 
                       key={track.id} 
                       style={{ 
-                        ...cardBgStyle, // ✅ Application sécurisée du fond
+                        ...currentBackgroundStyle, // ✅ Application conditionnelle
                         border: '1px solid #222222', 
                         borderRadius: '16px', 
                         overflow: 'hidden',
@@ -607,7 +607,7 @@ export const PremiumPage: React.FC = () => {
 
             <div className="sidebar-widget">
               <div className="sidebar-title">Réseaux</div>
-              {/* ... (Réseaux) ... */}
+              {/* ... */}
             </div>
 
             <div className="sidebar-widget">

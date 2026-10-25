@@ -7,6 +7,7 @@ import { GlobalPlayer } from '../components/GlobalPlayer';
 import { useIsMobile } from '../hooks/useIsMobile';
 
 const Icons = {
+  // ... (Tes icônes restent identiques)
   home: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>,
   feed: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 11a9 9 0 0 1 9 9" /><path d="M4 4a16 16 0 0 1 16 16" /><circle cx="5" cy="19" r="1" /></svg>,
   new: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M2 12h20" /></svg>,
@@ -30,17 +31,15 @@ const NAV_ITEMS = [
   { path: '/genres', label: 'Genres', icon: Icons.genres },
   { path: '/artists', label: 'Artistes', icon: Icons.artists },
   { path: '/tools', label: 'Outils DJ', icon: Icons.tools },
-  // ✅ Mixer retiré du menu principal
   { path: '/help', label: 'Guide', icon: Icons.help },
   { path: '/settings', label: 'Réglages', icon: Icons.settings },
 ];
 
-// ✅ Mobile : 5 onglets + bouton Menu (Mixer remplacé par Artistes)
 const MOBILE_NAV = [
   { path: '/', label: 'Accueil', icon: Icons.home, exact: true },
   { path: '/nouveautes', label: 'Sorties', icon: Icons.new },
   { path: '/feed', label: 'Feed', icon: Icons.feed },
-  { path: '/artists', label: 'Artistes', icon: Icons.artists }, // ✅ Remplacé ici
+  { path: '/artists', label: 'Artistes', icon: Icons.artists },
   { path: '#menu', label: 'Menu', icon: Icons.menu },
 ];
 
@@ -53,20 +52,15 @@ export const MainLayout: React.FC = () => {
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  useEffect(() => {
-    setMobileMenuOpen(false);
-  }, [location.pathname]);
-
-  useEffect(() => {
-    if (user?.id) refreshProfile();
-  }, [user?.id, refreshProfile]);
+  useEffect(() => { setMobileMenuOpen(false); }, [location.pathname]);
+  useEffect(() => { if (user?.id) refreshProfile(); }, [user?.id, refreshProfile]);
 
   const displayName = profile?.username || user?.email?.split('@')[0] || 'Artiste';
   const avatarUrl = profile?.avatar_url;
 
   if (isMobile) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: '#0a0a0a', color: '#fff', paddingBottom: currentTrack ? 160 : 70 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: '#0a0a0a', color: '#fff' }}>
         
         <header style={{ position: 'sticky', top: 0, zIndex: 50, background: 'rgba(10, 10, 10, 0.9)', backdropFilter: 'blur(10px)', borderBottom: '1px solid #222', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
@@ -78,15 +72,12 @@ export const MainLayout: React.FC = () => {
           </Link>
         </header>
 
-        <main style={{ flex: 1, padding: '16px 12px' }}>
+        {/* ✅ Ajout du padding pour laisser la place au lecteur en bas */}
+        <main style={{ flex: 1, padding: '16px 12px', paddingBottom: currentTrack ? 140 : 80 }}>
           <Outlet />
         </main>
 
-        {currentTrack && (
-          <div style={{ position: 'fixed', bottom: 60, left: 0, right: 0, zIndex: 49 }}>
-             <GlobalPlayer currentTrack={currentTrack} isPlaying={isPlaying} onTogglePlay={togglePlay} onStop={stop} />
-          </div>
-        )}
+        {currentTrack && <GlobalPlayer currentTrack={currentTrack} isPlaying={isPlaying} onTogglePlay={togglePlay} onStop={stop} />}
 
         {mobileMenuOpen && (
           <>
@@ -170,6 +161,7 @@ export const MainLayout: React.FC = () => {
     );
   }
 
+  // --- VERSION DESKTOP (inchangée) ---
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#0a0a0a', color: '#fff' }}>
       
@@ -197,18 +189,8 @@ export const MainLayout: React.FC = () => {
                   borderLeft: isActive ? '2px solid #00d9ff' : '2px solid transparent',
                   transition: 'all 0.2s'
                 }}
-                onMouseEnter={(e) => { 
-                  if (!isActive) { 
-                    e.currentTarget.style.background = '#121212'; 
-                    e.currentTarget.style.color = '#fff'; 
-                  } 
-                }}
-                onMouseLeave={(e) => { 
-                  if (!isActive) { 
-                    e.currentTarget.style.background = 'transparent'; 
-                    e.currentTarget.style.color = '#888'; 
-                  } 
-                }}
+                onMouseEnter={(e) => { if (!isActive) { e.currentTarget.style.background = '#121212'; e.currentTarget.style.color = '#fff'; } }}
+                onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#888'; } }}
               >
                 <span style={{ display: 'flex' }}>{item.icon}</span>
                 {item.label}

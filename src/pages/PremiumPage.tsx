@@ -8,15 +8,15 @@ import { usePlayer } from '../contexts/PlayerContext';
 import { GlobalPlayer } from '../components/GlobalPlayer';
 import './LevonDinato.css';
 
-// ✅ VRAIS LOGOS SVG OFFICIELS
+// ✅ VRAIS LOGOS SVG
 const SocialIcons = {
-  tiktok: <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/></svg>,
-  spotify: <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.24 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>,
-  x: <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"/></svg>,
-  youtube: <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>,
-  facebook: <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>,
-  instagram: <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>,
-  soundcloud: <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M23.998 14.766c-.06 1.63-1.418 2.93-3.078 2.93H11.29c-.286 0-.521-.23-.521-.511V8.16c0-.23.157-.427.382-.485.585-.153 1.284-.229 1.939-.229 3.187 0 5.93 2.145 6.662 5.218 1.991.033 3.613 1.562 3.613 3.445l.012 1.63zM9.82 7.246c-.102 0-.19.038-.26.104-.09.084-.146.206-.146.338v9.539c0 .261.2.477.459.503H1.662c-.911 0-1.656-.744-1.656-1.656v-5.41c0-.915.745-1.656 1.656-1.656h.134c.06-1.244.58-2.35 1.404-3.144.825-.795 1.94-1.29 3.198-1.29.685 0 1.338.152 1.92.426.16.077.25.238.25.414v1.99z"/></svg>,
+  tiktok: <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/></svg>,
+  spotify: <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.24 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>,
+  x: <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"/></svg>,
+  youtube: <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>,
+  facebook: <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>,
+  instagram: <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>,
+  soundcloud: <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M23.998 14.766c-.06 1.63-1.418 2.93-3.078 2.93H11.29c-.286 0-.521-.23-.521-.511V8.16c0-.23.157-.427.382-.485.585-.153 1.284-.229 1.939-.229 3.187 0 5.93 2.145 6.662 5.218 1.991.033 3.613 1.562 3.613 3.445l.012 1.63zM9.82 7.246c-.102 0-.19.038-.26.104-.09.084-.146.206-.146.338v9.539c0 .261.2.477.459.503H1.662c-.911 0-1.656-.744-1.656-1.656v-5.41c0-.915.745-1.656 1.656-1.656h.134c.06-1.244.58-2.35 1.404-3.144.825-.795 1.94-1.29 3.198-1.29.685 0 1.338.152 1.92.426.16.077.25.238.25.414v1.99z"/></svg>,
 };
 
 const CanvasWaveform: React.FC<{ 
@@ -51,14 +51,14 @@ const CanvasWaveform: React.FC<{
     const step = Math.ceil(peaks.length / barCount);
     const displayPeaks = peaks.filter((_: any, i: number) => i % step === 0).slice(0, barCount);
 
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
     ctx.shadowBlur = 0;
 
     for (let i = 0; i < displayPeaks.length; i++) {
       const x = (i / displayPeaks.length) * W;
       const val = displayPeaks[i] > 1 ? displayPeaks[i] / 100 : displayPeaks[i];
-      const barHeight = Math.max(val * maxAmplitude, 2.5); 
-      if (x >= playedX) ctx.fillRect(x, centerY - barHeight, 1, barHeight * 2);
+      const barHeight = Math.max(val * maxAmplitude, 1.5); 
+      if (x >= playedX) ctx.fillRect(x, centerY - barHeight, 1.5, barHeight * 2);
     }
 
     if (isPlaying || displayProgress > 0) {
@@ -66,18 +66,14 @@ const CanvasWaveform: React.FC<{
       ctx.beginPath();
       ctx.rect(0, 0, playedX, H);
       ctx.clip();
-      const gradient = ctx.createLinearGradient(0, 0, 0, H);
-      gradient.addColorStop(0, 'rgba(0, 217, 255, 0.2)');
-      gradient.addColorStop(0.5, 'rgba(0, 217, 255, 1)');
-      gradient.addColorStop(1, 'rgba(0, 217, 255, 0.2)');
-      ctx.fillStyle = gradient;
+      ctx.fillStyle = themeColor;
       ctx.shadowColor = themeColor;
-      ctx.shadowBlur = 6;
+      ctx.shadowBlur = 10;
       for (let i = 0; i < displayPeaks.length; i++) {
         const x = (i / displayPeaks.length) * W;
         const val = displayPeaks[i] > 1 ? displayPeaks[i] / 100 : displayPeaks[i];
-        const barHeight = Math.max(val * maxAmplitude, 2.5);
-        ctx.fillRect(x, centerY - barHeight, 1, barHeight * 2);
+        const barHeight = Math.max(val * maxAmplitude, 1.5);
+        ctx.fillRect(x, centerY - barHeight, 1.5, barHeight * 2);
       }
       ctx.shadowBlur = 0;
       ctx.restore();
@@ -85,7 +81,7 @@ const CanvasWaveform: React.FC<{
 
     if (isPlaying || displayProgress > 0) {
       ctx.strokeStyle = '#fff';
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 1.5;
       ctx.shadowColor = '#fff';
       ctx.shadowBlur = 8;
       ctx.beginPath();
@@ -138,16 +134,16 @@ const CanvasWaveform: React.FC<{
   return (
     <canvas 
       ref={canvasRef} onMouseDown={handleMouseDown} onClick={(e) => { if (isCurrent) e.stopPropagation(); }}
-      style={{ width: '100%', height: '90px', display: 'block', borderRadius: '8px', cursor: isCurrent ? 'pointer' : 'default', touchAction: 'none' }} 
+      style={{ width: '100%', height: '40px', display: 'block', cursor: isCurrent ? 'pointer' : 'default', touchAction: 'none', opacity: isCurrent ? 1 : 0.6 }} 
     />
   );
 };
 
 const PRESTATIONS_DATA = [
-  { icon: '🎧', title: 'Clubs & Festivals', desc: 'Sets dynamiques, transitions propres et énergie communicative.' },
-  { icon: '🥂', title: 'Soirées Privées & VIP', desc: 'Ambiance club sur mesure pour vos événements exclusifs.' },
-  { icon: '🏢', title: 'Événements Pro', desc: 'Soirées d\'entreprise, lancements de produit et galas.' },
-  { icon: '💎', title: 'Production & Remix', desc: 'Création de tracks originales et remixes sur mesure.' },
+  { title: 'Clubs & Festivals', desc: 'Sets dynamiques et énergie communicative.' },
+  { title: 'Événements Privés', desc: 'Ambiance sur mesure pour vos invités.' },
+  { title: 'Corporate', desc: 'Soirées d\'entreprise et lancements.' },
+  { title: 'Production', desc: 'Création de tracks originales et remixes.' },
 ];
 
 export const PremiumPage: React.FC = () => {
@@ -180,13 +176,6 @@ export const PremiumPage: React.FC = () => {
       document.body.appendChild(link); link.click();
       document.body.removeChild(link); window.URL.revokeObjectURL(blobUrl);
     } catch (error) { window.open(url, '_blank'); }
-  };
-
-  const handleShare = async (e: React.MouseEvent, track: any) => {
-    e.stopPropagation();
-    const shareData = { title: `${track.title} - ${track.artist}`, text: `Écoute ${track.title} de ${track.artist} sur Dropzone !`, url: window.location.href };
-    if (navigator.share) { try { await navigator.share(shareData); } catch (err) {} } 
-    else { navigator.clipboard.writeText(window.location.href); alert('Lien copié dans le presse-papier !'); }
   };
 
   const getIframeSrc = (embedCode: string) => {
@@ -250,13 +239,6 @@ export const PremiumPage: React.FC = () => {
     }
   };
 
-  const formatTickerDate = (dateStr: string) => {
-    try {
-      const date = new Date(dateStr);
-      return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }).toUpperCase();
-    } catch { return 'DATE'; }
-  };
-
   const renderTitle = (title: string): React.ReactNode => {
     if (!title) return null;
     const parts = title.split(/(\*.*?\*)/g);
@@ -269,425 +251,438 @@ export const PremiumPage: React.FC = () => {
   };
 
   const topTracks = useMemo(() => {
-    return [...tracks]
-      .sort((a, b) => (b.likes_count || 0) - (a.likes_count || 0) || (b.downloads || 0) - (a.downloads || 0))
-      .slice(0, 5);
+    return [...tracks].sort((a, b) => (b.likes_count || 0) - (a.likes_count || 0)).slice(0, 5);
   }, [tracks]);
 
-  if (loading) return <div style={{ background: '#050a10', color: '#fff', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Chargement...</div>;
-  if (!profile) return <div style={{ background: '#050a10', color: '#fff', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Artiste introuvable.</div>;
+  if (loading) return <div style={{ background: '#000', color: '#fff', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Chargement...</div>;
+  if (!profile) return <div style={{ background: '#000', color: '#fff', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Artiste introuvable.</div>;
 
   const gmailContactLink = `https://mail.google.com/mail/?view=cm&fs=1&to=djcontrolradiotv1@gmail.com&su=Booking%20${profile.username}&body=Salut,%20je%20souhaite%20vous%20contacter%20pour%20un%20booking.`;
   const themeColor = profile.theme_color || '#00d9ff';
   const isOwner = user && profile && user.id === profile.id;
 
-  // ✅ CONFIGURATION DES RÉSEAUX AVEC LES VRAIS LOGOS
   const socials = [
-    { key: 'tiktok_url', logo: SocialIcons.tiktok, color: '#ffffff', bg: 'rgba(255,255,255,0.1)' },
-    { key: 'spotify_url', logo: SocialIcons.spotify, color: '#1DB954', bg: 'rgba(29, 185, 84, 0.1)' },
-    { key: 'x_url', logo: SocialIcons.x, color: '#ffffff', bg: 'rgba(255,255,255,0.1)' },
-    { key: 'youtube_url', logo: SocialIcons.youtube, color: '#FF0000', bg: 'rgba(255, 0, 0, 0.1)' },
-    { key: 'facebook_url', logo: SocialIcons.facebook, color: '#1877F2', bg: 'rgba(24, 119, 242, 0.1)' },
-    { key: 'instagram_url', logo: SocialIcons.instagram, color: '#E1306C', bg: 'rgba(225, 48, 108, 0.1)' },
-    { key: 'soundcloud_url', logo: SocialIcons.soundcloud, color: '#FF5500', bg: 'rgba(255, 85, 0, 0.1)' },
+    { key: 'tiktok_url', logo: SocialIcons.tiktok, color: '#ffffff' },
+    { key: 'spotify_url', logo: SocialIcons.spotify, color: '#1DB954' },
+    { key: 'x_url', logo: SocialIcons.x, color: '#ffffff' },
+    { key: 'youtube_url', logo: SocialIcons.youtube, color: '#FF0000' },
+    { key: 'facebook_url', logo: SocialIcons.facebook, color: '#1877F2' },
+    { key: 'instagram_url', logo: SocialIcons.instagram, color: '#E1306C' },
+    { key: 'soundcloud_url', logo: SocialIcons.soundcloud, color: '#FF5500' },
   ].filter(s => profile[s.key]);
 
   return (
-    <div className="levon-page" style={{ '--accent': themeColor } as React.CSSProperties}>
+    <div style={{ background: '#050505', minHeight: '100vh', color: '#fff', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif', '--accent': themeColor } as React.CSSProperties}>
       
       <style>{`
-        @media (max-width: 768px) {
-          .wrapper.container { flex-direction: column; padding: 10px; }
-          .content { width: 100%; }
-          .sidebar { width: 100%; margin-top: 30px; }
-          .nav-links { display: none; }
-          .hero-title { font-size: 2rem !important; }
-          .hero-desc { font-size: 0.95rem !important; }
-          .track-card-header { flex-direction: column; align-items: flex-start !important; gap: 16px; }
-          .track-card-actions { width: 100%; justify-content: space-between; }
-          .gallery-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important; }
-          .top-bar { padding: 10px 16px !important; }
-          .hero-inner { padding: 40px 16px !important; }
-          .prestations-grid { grid-template-columns: 1fr !important; }
-        }
+        .hover-row { transition: background 0.2s; }
+        .hover-row:hover { background: rgba(255,255,255,0.03); }
+        .hover-row:hover .play-btn { opacity: 1; transform: scale(1); }
+        .play-btn { opacity: 0; transform: scale(0.9); transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .hover-img { transition: transform 0.3s; }
+        .hover-row:hover .hover-img { transform: scale(1.05); }
+        .nav-link { color: rgba(255,255,255,0.5); text-decoration: none; font-size: 14px; font-weight: 600; transition: color 0.2s; }
+        .nav-link:hover { color: #fff; }
+        .btn-primary { background: #fff; color: #000; padding: 12px 28px; border-radius: 8px; font-size: 14px; font-weight: 800; text-decoration: none; transition: transform 0.2s; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-primary:hover { transform: scale(1.02); }
         
-        section[id] { scroll-margin-top: 150px; }
+        @media (max-width: 900px) {
+          .layout-grid { flex-direction: column !important; }
+          .sidebar { width: 100% !important; border-left: none !important; padding-left: 0 !important; }
+          .hero-title { font-size: 3.5rem !important; }
+        }
       `}</style>
 
       <Helmet>
-        <title>{profile.username} — Page Officielle</title>
-        <meta property="og:title" content={`${profile.username} — DJ & Production`} />
-        <meta property="og:image" content={profile.avatar_url || '/og-levon-dinato.jpg'} />
+        <title>{profile.username} — Artiste</title>
       </Helmet>
 
-      {isOwner && (
-        <div style={{ position: 'fixed', bottom: 90, right: 20, zIndex: 9999, display: 'flex', gap: 10 }}>
-          <Link to="/settings" style={{ background: themeColor, color: '#000', padding: '12px 24px', borderRadius: 30, fontWeight: 800, textDecoration: 'none', boxShadow: '0 10px 20px rgba(0,0,0,0.5)' }}>
-            ✏️ Modifier ma page
-          </Link>
-        </div>
-      )}
-
-      <div className="top-bar">
-        <button onClick={() => navigate('/')} className="back-btn">
-          <span>←</span> Retour au site
-        </button>
-      </div>
-
-      <header className="nav">
-        <div className="wrapper nav-inner">
-          <a href="#" className="logo">
-            <img src={profile.avatar_url || "/logo.jpg"} alt={profile.username} style={{ borderRadius: '50%', objectFit: 'cover', width: '40px', height: '40px' }} />
-            <span className="premium-badge">PREMIUM</span>
-          </a>
-          <ul className="nav-links">
-            <li><a href="#about">À propos</a></li>
-            <li><a href="#prestations">Prestations</a></li>
-            <li><a href="#releases">Releases</a></li>
-            {gallery.length > 0 && <li><a href="#gallery">Galerie</a></li>}
-          </ul>
-          <div className="nav-actions">
-            <a href="#contact" className="btn-primary">Booking</a>
+      {/* NAVIGATION FIXE */}
+      <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, height: 72, background: 'rgba(5,5,5,0.8)', backdropFilter: 'blur(20px)', zIndex: 1000, borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+        <div style={{ maxWidth: 1400, margin: '0 auto', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
+            <button onClick={() => navigate('/')} style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: 20, cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <img src={profile.avatar_url || "/logo.jpg"} alt="Avatar" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover' }} />
+              <span style={{ fontSize: 16, fontWeight: 800, letterSpacing: '-0.5px' }}>{profile.username}</span>
+              <span style={{ fontSize: 10, fontWeight: 800, background: themeColor, color: '#000', padding: '2px 6px', borderRadius: 4, letterSpacing: '0.5px' }}>PRO</span>
+            </div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 24 }} className="nav-links">
+            <a href="#duo" className="nav-link">Le Duo</a>
+            <a href="#prestations" className="nav-link">Prestations</a>
+            <a href="#releases" className="nav-link">Releases</a>
+          </div>
+          <div>
+            <a href={gmailContactLink} target="_blank" rel="noopener noreferrer" className="btn-primary" style={{ padding: '8px 20px', fontSize: 12 }}>Booking</a>
           </div>
         </div>
-      </header>
+      </nav>
 
-      <div className="event-ticker-wrapper">
-        <div className="event-ticker">
-          {events.length > 0 ? (
-            [...events, ...events, ...events].map((event, index) => (
-              <div key={index} className="event-ticker-item">
-                <div className="event-date-badge">{formatTickerDate(event.event_date)}</div>
-                <div className="event-cover">
-                  {event.image_url ? <img src={event.image_url} alt="" /> : <div className="event-cover-fallback">🎵</div>}
-                </div>
-                <div className="event-info">
-                  <div className="event-title">{event.title}</div>
-                  <div className="event-location">{event.location}</div>
-                </div>
-              </div>
-            ))
-          ) : (
-            [...Array(3)].map((_, i) => (
-              <div key={i} className="event-ticker-item">
-                <div className="event-date-badge">BIENTÔT</div>
-                <div className="event-info"><div className="event-title">Aucune date annoncée pour le moment.</div></div>
-              </div>
-            ))
-          )}
-        </div>
-      </div>
-
-      <section className="hero">
-        <video className="bg-video" autoPlay muted loop playsInline poster={profile.avatar_url || "/logo.jpg"} style={{ objectFit: 'cover' }}>
-          <source src={profile.background_video_url || "/background.mp4"} type="video/mp4" />
-        </video>
+      {/* HERO SECTION */}
+      <section style={{ position: 'relative', minHeight: '95vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', background: '#050505', paddingTop: 72 }}>
         
-        <div className="wrapper hero-inner">
-          <div className="hero-tag">{profile.hero_tagline || "Nouveaux remixes disponibles"}</div>
-          <h1 className="hero-title">
-            {profile.hero_title ? renderTitle(profile.hero_title) : renderTitle(`L'expérience *sonore* de ${profile.username}.`)}
+        <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
+          <video 
+            autoPlay muted loop playsInline poster={profile.avatar_url || "/logo.jpg"} 
+            style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.8, filter: 'grayscale(85%) contrast(130%) brightness(0.6) blur(2px)', transform: 'scale(1.05)' }}
+          >
+            <source src={profile.background_video_url || "/background.mp4"} type="video/mp4" />
+          </video>
+          <div style={{ position: 'absolute', inset: 0, background: themeColor, mixBlendMode: 'overlay', opacity: 0.15 }} />
+          <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at center, transparent 0%, rgba(5,5,5,0.8) 100%)' }} />
+        </div>
+        
+        <div style={{ position: 'relative', zIndex: 10, textAlign: 'center', maxWidth: 1000, padding: '0 24px' }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(10px)', padding: '8px 20px', borderRadius: 50, border: `1px solid ${themeColor}60`, marginBottom: 24 }}>
+            <span style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: '#fff' }}>Nouveaux remixes disponibles</span>
+          </div>
+          
+          <h1 className="hero-title" style={{ fontSize: 'clamp(3.5rem, 8vw, 6rem)', fontWeight: 900, lineHeight: 1.1, letterSpacing: '-3px', marginBottom: 24, textShadow: '0 10px 40px rgba(0,0,0,0.8)' }}>
+            {profile.hero_title ? renderTitle(profile.hero_title) : renderTitle(`L'expérience *sonore* ultime.`)}
           </h1>
-          <p className="hero-desc">
-            {profile.hero_description || `Découvrez les productions exclusives et l'univers unique de ${profile.username}. Plongez dans leur monde musical et vibrez au rythme de leurs dernières sorties.`}
+          
+          <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 'clamp(1rem, 2vw, 1.2rem)', lineHeight: 1.6, marginBottom: 40, maxWidth: 600, margin: '0 auto 40px auto', textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>
+            {profile.hero_description || `Découvrez les productions Funky House, Nu-Disco et Tech House du duo ${profile.username}. Un set conçu pour faire vibrer les dancefloors et marquer les esprits.`}
           </p>
-          <div className="hero-actions">
-            <a href="#releases" className="btn-primary">Écouter les tracks</a>
+          
+          <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
+            <a href="#releases" className="btn-primary" style={{ background: 'transparent', border: `1px solid ${themeColor}`, color: themeColor, padding: '16px 32px', fontSize: 14 }}>
+              ÉCOUTER LES TRACKS
+            </a>
+            <button onClick={() => navigator.clipboard.writeText(window.location.href).then(() => alert('Lien copié !'))} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '16px 32px', borderRadius: 8, fontSize: 14, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+              PARTAGER
+            </button>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 60, marginTop: 60, paddingTop: 40, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 32, fontWeight: 900, color: '#fff' }}>12+</div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}>Années d'expérience</div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 32, fontWeight: 900, color: '#fff' }}>50+</div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}>Tracks & Remixes</div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 32, fontWeight: 900, color: '#fff' }}>100%</div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}>Pistes en feu</div>
+            </div>
           </div>
         </div>
       </section>
 
-      <div className="wrapper container">
-        <div className="content">
+      {/* EVENT TICKER */}
+      <div style={{ background: '#0a0f18', borderTop: '1px solid #1e293b', borderBottom: '1px solid #1e293b', padding: '12px 0', overflow: 'hidden', position: 'relative', zIndex: 20 }}>
+        <div style={{ display: 'flex', gap: 24, width: 'max-content', animation: 'scroll 30s linear infinite' }}>
+          {events.length > 0 ? (
+            [...events, ...events, ...events].map((event, index) => (
+              <div key={index} style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', padding: '8px 16px', borderRadius: 50 }}>
+                <span style={{ fontSize: 11, fontWeight: 800, color: themeColor, background: `${themeColor}15`, padding: '4px 8px', borderRadius: 4 }}>{new Date(event.event_date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }).toUpperCase()}</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>{event.title}</span>
+                <span style={{ fontSize: 12, color: '#666' }}>{event.location || event.city}</span>
+              </div>
+            ))
+          ) : (
+             <div style={{ fontSize: 13, color: '#666', padding: '0 20px' }}>Aucune date annoncée pour le moment.</div>
+          )}
+        </div>
+      </div>
+
+      {/* MAIN CONTENT */}
+      <div className="layout-grid" style={{ maxWidth: 1400, margin: '0 auto', display: 'flex', gap: 80, padding: '80px 24px 100px 24px', alignItems: 'flex-start' }}>
+        
+        <div style={{ flex: 1, minWidth: 0 }}>
           
-          <section id="about">
-            <div className="section-header"><h2 className="section-title">L'Artiste</h2></div>
-            <div style={{ 
-              display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: '40px', padding: '40px', alignItems: 'center', 
-              background: 'linear-gradient(145deg, rgba(13, 22, 33, 0.95), rgba(6, 13, 20, 0.95))', 
-              border: '1px solid rgba(0, 217, 255, 0.15)', borderRadius: '16px', boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5)' 
-            }}>
-              <div style={{ flex: '1 1 300px', minWidth: 0 }}>
-                <h3 style={{ fontSize: '2rem', fontWeight: 900, marginBottom: '16px', color: '#fff', letterSpacing: '-0.5px' }}>
-                  {profile.username}
-                </h3>
-                <p style={{ color: '#8c9f98', fontSize: '1rem', margin: '0 0 32px 0', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
-                  {profile.bio || "Découvrez son univers musical exclusif et ses dernières sorties."}
-                </p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  {profile.music_style && (
-                    <div style={{ background: '#0a0a0a', borderLeft: `3px solid ${themeColor}`, padding: '16px 20px', borderRadius: '0 8px 8px 0', borderTop: '1px solid #222', borderRight: '1px solid #222', borderBottom: '1px solid #222' }}>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: '#fff', marginBottom: 4 }}>Styles Musicaux</div>
-                      <div style={{ fontSize: 13, color: '#888' }}>{profile.music_style}</div>
-                    </div>
-                  )}
-                  {profile.influences && (
-                    <div style={{ background: '#0a0a0a', borderLeft: '3px solid #8a2be2', padding: '16px 20px', borderRadius: '0 8px 8px 0', borderTop: '1px solid #222', borderRight: '1px solid #222', borderBottom: '1px solid #222' }}>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: '#fff', marginBottom: 4 }}>Influences</div>
-                      <div style={{ fontSize: 13, color: '#888' }}>{profile.influences}</div>
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div style={{ flex: '0 1 350px', margin: '0 auto' }}>
-                <div style={{ width: '100%', aspectRatio: '1/1', borderRadius: 16, overflow: 'hidden', border: `2px solid ${themeColor}`, boxShadow: `0 10px 30px ${themeColor}40`, background: '#111' }}>
-                  <img src={profile.avatar_url || "/logo.jpg"} alt={profile.username} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                </div>
+          {/* SECTION LE DUO (SANS L'IMAGE) */}
+          <section id="duo" style={{ marginBottom: 80 }}>
+            <h2 style={{ fontSize: 24, fontWeight: 800, marginBottom: 24, letterSpacing: '-0.5px' }}>Le Duo</h2>
+            <div style={{ background: 'rgba(255,255,255,0.02)', padding: '40px', borderRadius: 16, border: '1px solid rgba(255,255,255,0.08)', position: 'relative', overflow: 'hidden' }}>
+              <div style={{ position: 'absolute', top: 0, left: 0, width: 4, height: '100%', background: themeColor }} />
+              <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 18, lineHeight: 1.9, margin: 0, whiteSpace: 'pre-wrap' }}>
+                {profile.bio || "Levon & Dinato est un duo électrisant qui fusionne leurs influences uniques pour créer un son reconnaissable et contagieux. Unis par une passion commune pour la Funky House, la Nu-Disco, la Tech House et l'Electro Dance."}
+              </p>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 32 }}>
+                {profile.music_style && profile.music_style.split(',').map((style: string, i: number) => (
+                  <span key={i} style={{ border: `1px solid ${themeColor}40`, background: `${themeColor}10`, padding: '8px 16px', borderRadius: 20, fontSize: 13, fontWeight: 700, color: themeColor }}>
+                    {style.trim()}
+                  </span>
+                ))}
               </div>
             </div>
           </section>
 
-          <section id="prestations">
-            <div className="section-header"><h2 className="section-title">Prestations</h2></div>
-            <div className="prestations-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
-              {PRESTATIONS_DATA.map((item, index) => (
-                <div 
-                  key={index} 
-                  style={{ 
-                    background: 'linear-gradient(145deg, rgba(13, 22, 33, 0.95), rgba(6, 13, 20, 0.95))', 
-                    border: '1px solid rgba(0, 217, 255, 0.15)', 
-                    borderRadius: '16px', 
-                    padding: '32px',
-                    transition: 'all 0.3s ease',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '12px'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = themeColor;
-                    e.currentTarget.style.boxShadow = `0 10px 30px ${themeColor}20`;
-                    e.currentTarget.style.transform = 'translateY(-4px)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = 'rgba(0, 217, 255, 0.15)';
-                    e.currentTarget.style.boxShadow = 'none';
-                    e.currentTarget.style.transform = 'translateY(0)';
-                  }}
-                >
-                  <div style={{ fontSize: '32px', marginBottom: '8px' }}>{item.icon}</div>
-                  <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#fff', margin: 0 }}>{item.title}</h3>
-                  <p style={{ fontSize: '14px', color: '#8c9f98', margin: 0, lineHeight: 1.5 }}>{item.desc}</p>
-                </div>
-              ))}
-            </div>
+          {/* SECTION PRESTATIONS */}
+          <section id="prestations" style={{ marginBottom: 80 }}>
+             <h2 style={{ fontSize: 24, fontWeight: 800, marginBottom: 24, letterSpacing: '-0.5px' }}>Prestations</h2>
+             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 20 }}>
+               {PRESTATIONS_DATA.map((item, i) => (
+                 <div key={i} style={{ padding: 32, border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, background: 'rgba(255,255,255,0.02)' }}>
+                   <h3 style={{ fontSize: 16, fontWeight: 800, margin: '0 0 8px 0', color: '#fff' }}>{item.title}</h3>
+                   <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', margin: 0, lineHeight: 1.6 }}>{item.desc}</p>
+                 </div>
+               ))}
+             </div>
           </section>
 
+          {/* ✅ SECTION RELEASES */}
           <section id="releases">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border)', paddingBottom: '12px', marginBottom: '24px' }}>
-              <h2 className="section-title" style={{ border: 'none', margin: 0, padding: 0 }}>Dernières Sorties</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 24 }}>
+              <h2 style={{ fontSize: 24, fontWeight: 800, margin: 0, letterSpacing: '-0.5px' }}>Dernières Sorties</h2>
               {isOwner && (
-                <Link to="/nouveautes" style={{ background: '#fff', color: '#000', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: '700', textDecoration: 'none' }}>+ Ajouter</Link>
+                <Link to="/nouveautes" style={{ color: themeColor, fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>Gérer</Link>
               )}
             </div>
             
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              {tracks.length > 0 ? (
-                tracks.map((track) => {
-                  const isPlayable = track.audio_url && track.audio_url.length > 0;
-                  const iframeSrc = getIframeSrc(track.embed_code);
-                  const isThisPlaying = currentTrack?.id === track.id && isPlaying;
-                  const isCurrentTrack = currentTrack?.id === track.id;
-                  const trackProgress = isThisPlaying && duration > 0 ? (currentTime / duration) : 0;
-                  const isBeatport = !!iframeSrc;
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {tracks.length > 0 ? tracks.map((track, index) => {
+                const isPlayable = track.audio_url && track.audio_url.length > 0;
+                const isThisPlaying = currentTrack?.id === track.id && isPlaying;
+                const isCurrentTrack = currentTrack?.id === track.id;
+                const iframeSrc = getIframeSrc(track.embed_code);
+                const isBeatport = !!iframeSrc;
 
-                  const cardBgColor = track.player_bg_color || '#000000';
-                  const cardBgImage = track.player_bg_image_url;
-                  const customCardStyle = {
-                    backgroundColor: cardBgColor,
-                    backgroundImage: cardBgImage ? `linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.8)), url("${cardBgImage}")` : 'none',
-                    backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat',
-                  };
-                  
-                  const currentBackgroundStyle = isBeatport ? { backgroundColor: '#000000' } : customCardStyle;
-
+                if (isBeatport) {
                   return (
-                    <div 
-                      key={track.id} 
-                      style={{ 
-                        ...currentBackgroundStyle,
-                        border: '1px solid #222222', borderRadius: '16px', overflow: 'hidden',
-                        boxShadow: '0 10px 25px rgba(0,0,0,0.4)', transition: 'all 0.2s',
-                        cursor: isPlayable ? 'pointer' : 'default'
-                      }}
-                      onClick={() => isPlayable && handlePlayTrack(track)}
-                      onMouseEnter={(e) => { if (isPlayable) e.currentTarget.style.borderColor = themeColor; }}
-                      onMouseLeave={(e) => { if (isPlayable) e.currentTarget.style.borderColor = '#222222'; }}
-                    >
-                      <div className="track-card-header" style={{ padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                          <div style={{ 
-                            width: '40px', height: '40px', borderRadius: '50%', flexShrink: 0,
-                            background: isPlayable ? (isThisPlaying ? themeColor : 'rgba(0,0,0,0.5)') : 'rgba(0,0,0,0.3)', 
-                            border: isPlayable ? 'none' : '1px solid #333',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            color: isPlayable ? (isThisPlaying ? '#000' : '#fff') : themeColor,
-                            fontSize: '16px', backdropFilter: 'blur(5px)' 
-                          }}>
-                            {isPlayable ? (isThisPlaying ? '⏸' : '▶') : (
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-                            )}
-                          </div>
-                          <div style={{ width: '44px', height: '44px', flexShrink: 0, background: track.cover_url ? `url(${track.cover_url}) center/cover` : '#111', borderRadius: '8px', border: '1px solid #333' }} />
-                          <div style={{ minWidth: 0 }}>
-                            <div style={{ fontSize: '15px', fontWeight: '800', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.title}</div>
-                            <div style={{ fontSize: '12px', color: '#ccc', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: '2px' }}>{track.artist}</div>
-                          </div>
+                    <div key={track.id} style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: 16, overflow: 'hidden', padding: 24 }}>
+                      <div style={{ display: 'flex', gap: 20, alignItems: 'center', marginBottom: 20 }}>
+                        <div style={{ width: 80, height: 80, borderRadius: 8, overflow: 'hidden', flexShrink: 0, background: '#111', border: '1px solid rgba(255,255,255,0.1)' }}>
+                          {track.cover_url ? <img src={track.cover_url} alt={track.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : null}
                         </div>
-                        <div className="track-card-actions" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                          <div style={{ fontSize: '11px', color: '#ccc', fontWeight: '600', textTransform: 'uppercase' }}>{track.genre}</div>
-                          {isPlayable && (
-                            <button onClick={(e) => handleDownload(e, track.audio_url, `${track.artist} - ${track.title}.mp3`)} style={{ background: 'rgba(0,0,0,0.5)', color: themeColor, padding: '6px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: '800', border: `1px solid ${themeColor}`, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', backdropFilter: 'blur(5px)' }}>
-                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                              <span className="desktop-only-text">Télécharger</span>
-                            </button>
-                          )}
+                        <div style={{ flex: 1 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
+                            <h3 style={{ fontSize: 20, fontWeight: 900, color: '#fff', margin: 0 }}>{track.title}</h3>
+                            <span style={{ fontSize: 10, fontWeight: 800, color: '#01FF95', background: 'rgba(1, 255, 149, 0.1)', padding: '2px 8px', borderRadius: 4, border: '1px solid rgba(1, 255, 149, 0.2)' }}>BEATPORT</span>
+                          </div>
+                          <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)' }}>{track.artist} • {track.genre}</div>
                         </div>
                       </div>
-                      {iframeSrc && (
-                        <div style={{ padding: '0 16px 16px 16px', position: 'relative', zIndex: 10, overflow: 'hidden', borderRadius: '8px' }} onClick={(e) => e.stopPropagation()}>
-                          <iframe src={iframeSrc} width="100%" height="162" frameBorder="0" scrolling="no" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-presentation" style={{ display: 'block', width: '100%', height: '162px', borderRadius: '8px', border: 'none', background: '#000', overflow: 'hidden' }}></iframe>
-                        </div>
-                      )}
-                      {isPlayable && !iframeSrc && (
-                        <div style={{ padding: '0 16px 16px 16px' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '12px', padding: '0' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={themeColor} strokeWidth="2.5"><path d="M12 2a3 3 0 0 0-3 3v14a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path><path d="M5 10a3 3 0 0 0-3 3v4a3 3 0 0 0 6 0v-4a3 3 0 0 0-3-3z"></path><path d="M19 7a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0v-7a3 3 0 0 0-3-3z"></path></svg>
-                              <span style={{ color: themeColor, fontWeight: '900', fontSize: '16px', fontFamily: 'system-ui, -apple-system, sans-serif', letterSpacing: '-0.5px' }}>Dropzone</span>
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                                <div style={{ fontSize: '16px', fontWeight: '800', fontFamily: 'monospace', display: 'flex', alignItems: 'baseline', gap: '4px' }}>
-                                  <span style={{ color: themeColor }}>{formatTime(isThisPlaying ? currentTime : 0)}</span>
-                                  <span style={{ color: '#888', fontSize: '12px' }}>/</span>
-                                  <span style={{ color: '#ccc' }}>{formatTime(duration || track.duration)}</span>
-                                </div>
-                                <div style={{ fontSize: '11px', color: '#ccc', fontWeight: '600', display: 'flex', gap: '12px', marginTop: '2px' }}>
-                                  <span>{track.bpm} BPM</span>
-                                  {track.song_key && <span>{track.song_key}</span>}
-                                </div>
-                              </div>
-                              <button onClick={(e) => handleShare(e, track)} title="Partager ce son" style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(0,0,0,0.5)', border: '1px solid #333', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', cursor: 'pointer', transition: 'all 0.2s' }} onMouseEnter={(e) => { e.currentTarget.style.borderColor = themeColor; e.currentTarget.style.color = themeColor; }} onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#333'; e.currentTarget.style.color = '#fff'; }}>
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
-                              </button>
-                            </div>
-                          </div>
-                          <CanvasWaveform peaks={track.peaks} isPlaying={isThisPlaying} themeColor={themeColor} progress={trackProgress} isCurrent={isCurrentTrack} onSeek={seek} />
-                        </div>
-                      )}
+                      <div style={{ borderRadius: 12, overflow: 'hidden', background: '#000', width: '100%' }}>
+                        <iframe src={iframeSrc!} width="100%" height="162" frameBorder="0" scrolling="no" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-presentation" style={{ display: 'block', width: '100%' }}></iframe>
+                      </div>
                     </div>
                   );
-                })
-              ) : (
-                <div style={{ padding: '20px', color: '#888' }}>Aucune musique pour le moment.</div>
+                }
+
+                const cardBgColor = track.player_bg_color || '#000000';
+                const cardBgImage = track.player_bg_image_url;
+                
+                const customCardStyle = {
+                  backgroundColor: cardBgImage ? '#000000' : (cardBgColor || '#0a0a0f'),
+                  backgroundImage: cardBgImage ? `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.8)), url("${cardBgImage}")` : 'none',
+                  backgroundSize: 'cover', 
+                  backgroundPosition: 'center', 
+                  backgroundRepeat: 'no-repeat',
+                };
+
+                return (
+                  <div 
+                    key={track.id} 
+                    className="hover-row"
+                    onClick={() => isPlayable && handlePlayTrack(track)}
+                    style={{ 
+                      ...customCardStyle,
+                      display: 'flex', 
+                      flexDirection: 'column',
+                      padding: '24px', 
+                      borderRadius: 16, 
+                      cursor: isPlayable ? 'pointer' : 'default', 
+                      border: '1px solid rgba(255,255,255,0.05)',
+                      position: 'relative',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20, zIndex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                        <div style={{ width: 56, height: 56, borderRadius: 8, overflow: 'hidden', flexShrink: 0, background: '#111', border: '1px solid rgba(255,255,255,0.1)' }}>
+                          {track.cover_url ? <img src={track.cover_url} alt={track.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : null}
+                        </div>
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
+                            <h3 style={{ fontSize: 18, fontWeight: 900, color: '#fff', margin: 0 }}>{track.title}</h3>
+                            <span style={{ fontSize: 10, fontWeight: 800, color: '#fff', background: 'rgba(255,255,255,0.1)', padding: '2px 8px', borderRadius: 4 }}>{track.genre}</span>
+                          </div>
+                          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)' }}>{track.artist}</div>
+                        </div>
+                      </div>
+                      
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                         {isPlayable && (
+                           <button onClick={(e) => handleDownload(e, track.audio_url, `${track.artist} - ${track.title}.mp3`)} style={{ background: 'transparent', border: `1px solid ${themeColor}`, borderRadius: 6, padding: '6px 16px', color: themeColor, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 700, transition: 'all 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.background = `${themeColor}20`} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                              Télécharger
+                           </button>
+                         )}
+                         <button style={{ width: 40, height: 40, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                           {isThisPlaying ? (
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+                           ) : (
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: 2 }}><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                           )}
+                         </button>
+                      </div>
+                    </div>
+
+                    <div style={{ background: 'rgba(0,0,0,0.4)', borderRadius: 12, padding: '12px 16px', zIndex: 1, border: '1px solid rgba(255,255,255,0.05)' }}>
+                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, alignItems: 'center' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={themeColor} strokeWidth="2.5"><path d="M12 2a3 3 0 0 0-3 3v14a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path><path d="M5 10a3 3 0 0 0-3 3v4a3 3 0 0 0 6 0v-4a3 3 0 0 0-3-3z"></path><path d="M19 7a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0v-7a3 3 0 0 0-3-3z"></path></svg>
+                            <span style={{ color: themeColor, fontWeight: 900, fontSize: '14px', fontFamily: 'system-ui, -apple-system, sans-serif', letterSpacing: '-0.5px' }}>Dropzone</span>
+                          </div>
+                          
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                            <div style={{ fontSize: 13, fontWeight: 800, fontFamily: 'monospace', display: 'flex', alignItems: 'baseline', gap: 4 }}>
+                              <span style={{ color: themeColor }}>{formatTime(isThisPlaying ? currentTime : 0)}</span>
+                              <span style={{ color: '#888', fontSize: 11 }}>/</span>
+                              <span style={{ color: '#ccc' }}>{formatTime(track.duration)}</span>
+                            </div>
+                            <div style={{ fontSize: 11, color: '#ccc', fontWeight: 600, display: 'flex', gap: 12 }}>
+                              <span>{track.bpm} BPM</span>
+                              <span>{track.song_key || '—'}</span>
+                            </div>
+                          </div>
+                       </div>
+                       
+                       <CanvasWaveform 
+                          peaks={track.peaks} 
+                          isPlaying={isThisPlaying} 
+                          themeColor={themeColor} 
+                          progress={isThisPlaying && duration > 0 ? currentTime / duration : 0} 
+                          isCurrent={isCurrentTrack} 
+                          onSeek={seek} 
+                       />
+                    </div>
+                  </div>
+                );
+              }) : (
+                <div style={{ padding: '40px 0', color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>Aucune sortie disponible.</div>
               )}
             </div>
           </section>
+        </div>
 
-          {gallery.length > 0 && (
-            <section id="gallery">
-              <div className="section-header"><h2 className="section-title">Galerie Photos</h2></div>
-              <div className="gallery-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px' }}>
-                {gallery.map((img) => (
-                  <div key={img.id} style={{ aspectRatio: '1', borderRadius: '12px', overflow: 'hidden', border: '1px solid #333', boxShadow: '0 4px 12px rgba(0,0,0,0.3)', transition: 'transform 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.03)'} onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}>
-                    <img src={img.image_url} alt="Galerie" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        {/* RIGHT COLUMN */}
+        <aside className="sidebar" style={{ width: 320, flexShrink: 0, paddingLeft: 40, borderLeft: '1px solid rgba(255,255,255,0.08)' }}>
+          <div style={{ marginBottom: 40 }}>
+            <div style={{ width: '100%', aspectRatio: '1/1', borderRadius: 8, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', marginBottom: 20 }}>
+               <img src={profile.avatar_url || "/logo.jpg"} alt={profile.username} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+               <span style={{ fontSize: 12, fontWeight: 800, color: 'rgba(255,255,255,0.4)', letterSpacing: '1px', textTransform: 'uppercase' }}>Réseaux</span>
+               <div style={{ display: 'flex', gap: 12 }}>
+                 {socials.slice(0, 4).map(s => (
+                   <a key={s.key} href={profile[s.key]} target="_blank" rel="noreferrer" style={{ color: 'rgba(255,255,255,0.6)', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = s.color} onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.6)'}>
+                     {s.logo}
+                   </a>
+                 ))}
+               </div>
+            </div>
+          </div>
+
+          {topTracks.length > 0 && (
+            <div style={{ marginBottom: 40 }}>
+              <h3 style={{ fontSize: 14, fontWeight: 800, margin: '0 0 16px 0', color: '#fff' }}>Top Tracks</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                {topTracks.map((track, index) => (
+                  <div key={track.id} style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }} onClick={() => handlePlayTrack(track)}>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: index === 0 ? themeColor : 'rgba(255,255,255,0.2)', width: 16 }}>{index + 1}</div>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.title}</div>
+                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.genre}</div>
+                    </div>
                   </div>
                 ))}
               </div>
-            </section>
+            </div>
           )}
-        </div>
 
-        <aside className="sidebar" style={{ width: 340, flexShrink: 0 }}>
-          <div className="sidebar-inner" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-            
-            {topTracks.length > 0 && (
-              <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '16px', padding: '24px' }}>
-                <div style={{ fontSize: '12px', fontWeight: 800, color: '#fff', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '16px' }}>Top Tracks</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  {topTracks.map((track, index) => (
-                    <div key={track.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }} onClick={() => handlePlayTrack(track)}>
-                      <div style={{ fontSize: '14px', fontWeight: 900, color: themeColor, fontStyle: 'italic', width: '16px' }}>{index + 1}</div>
-                      <div style={{ minWidth: 0 }}>
-                        <div style={{ fontSize: '13px', fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.title}</div>
-                        <div style={{ fontSize: '11px', color: '#888', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.genre}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+          <div>
+            <h3 style={{ fontSize: 14, fontWeight: 800, margin: '0 0 16px 0', color: '#fff' }}>Prochaines Dates</h3>
+            {events.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                {events.map(e => (
+                   <div key={e.id} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                     <div style={{ fontSize: 11, color: themeColor, fontWeight: 800, letterSpacing: '0.5px' }}>{new Date(e.event_date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }).toUpperCase()}</div>
+                     <div style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>{e.title}</div>
+                     <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>{e.city}</div>
+                   </div>
+                ))}
               </div>
+            ) : (
+              <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', margin: 0 }}>Aucune date prévue.</p>
             )}
+          </div>
 
-            <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '16px', padding: '24px' }}>
-              <div style={{ fontSize: '12px', fontWeight: 800, color: '#fff', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '16px' }}>Prochaines Dates</div>
-              {events.length > 0 ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  {events.map((event, index) => (
-                    <div key={event.id} style={{ display: 'flex', flexDirection: 'column', gap: '4px', paddingBottom: index !== events.length - 1 ? '16px' : 0, borderBottom: index !== events.length - 1 ? '1px solid #1e293b' : 'none' }}>
-                      <div style={{ fontSize: '11px', color: themeColor, fontWeight: 700 }}>{new Date(event.event_date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
-                      <div style={{ fontSize: '14px', fontWeight: 800, color: '#fff' }}>{event.title}</div>
-                      <div style={{ fontSize: '12px', color: '#888' }}>{event.city || event.location}</div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p style={{ color: '#666', fontSize: '13px', margin: 0 }}>Aucune date pour l'instant.</p>
-              )}
-            </div>
-
-            {/* ✅ MODULE RÉSEAUX AVEC LES VRAIS LOGOS */}
-            {socials.length > 0 && (
-              <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '16px', padding: '24px' }}>
-                <div style={{ fontSize: '12px', fontWeight: 800, color: '#fff', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '16px' }}>Réseaux</div>
-                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                  {socials.map((social) => (
-                    <a key={social.key} href={profile[social.key]} target="_blank" rel="noopener noreferrer" title={social.key} style={{ 
-                      width: '42px', height: '42px', borderRadius: '50%', background: social.bg, border: `1px solid ${social.color}`, 
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', color: social.color, transition: 'all 0.2s',
-                      textDecoration: 'none'
-                    }}
-                    onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.1)'; e.currentTarget.style.boxShadow = `0 0 15px ${social.color}60`; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = 'none'; }}
-                    >
-                      {social.logo}
-                    </a>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div style={{ background: 'linear-gradient(145deg, #0f172a 0%, #0a101f 100%)', border: `1px solid ${themeColor}40`, borderRadius: '16px', padding: '24px', textAlign: 'center' }}>
-              <div style={{ fontSize: '13px', fontWeight: 800, color: '#fff', marginBottom: '8px' }}>✨ PAGE PREMIUM</div>
-              <p style={{ color: '#888', fontSize: '13px', margin: '0 0 16px 0', lineHeight: 1.5 }}>Envie d'une page aussi pro pour ton profil ?</p>
-              <a href={gmailContactLink} target="_blank" rel="noopener noreferrer" style={{ 
-                display: 'block', width: '100%', padding: '12px', borderRadius: '8px', 
-                border: `1px solid ${themeColor}`, color: themeColor, fontSize: '12px', fontWeight: 800, 
-                textDecoration: 'none', textTransform: 'uppercase', letterSpacing: '1px', transition: 'all 0.2s'
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = `${themeColor}15`; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
-              >
-                Me contacter
-              </a>
-            </div>
-
+          <div style={{ marginTop: 60, padding: 24, background: 'rgba(255,255,255,0.02)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
+            <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.8)', fontWeight: 600, margin: '0 0 16px 0' }}>Disponible pour Booking</p>
+            <a href={gmailContactLink} target="_blank" rel="noreferrer" style={{ display: 'block', width: '100%', padding: '12px', background: '#fff', color: '#000', textDecoration: 'none', fontSize: 13, fontWeight: 800, borderRadius: 6, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Contacter</a>
           </div>
         </aside>
       </div>
 
-      <section className="contact-section" id="contact">
-        <div className="wrapper">
-          <h2>Prêt à enflammer votre scène ?</h2>
-          <p>{profile.username} est disponible pour clubs, festivals et événements privés.</p>
-          <a href={gmailContactLink} target="_blank" rel="noopener noreferrer" className="contact-email" style={{ borderColor: themeColor, color: themeColor }}>
-            Contacter {profile.username} &rarr;
-          </a>
-        </div>
-      </section>
+      {/* ✅ NOUVEAU FOOTER */}
+      <footer style={{ borderTop: '1px solid rgba(255,255,255,0.08)', background: '#020202', padding: '60px 24px 30px 24px' }}>
+        <div style={{ maxWidth: 1400, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 40 }}>
+          
+          {/* Top section du footer */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 40 }}>
+            
+            {/* Logo & Description */}
+            <div style={{ flex: '1 1 300px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+                <img src={profile.avatar_url || "/logo.jpg"} alt="Logo" style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', border: `1px solid ${themeColor}60` }} />
+                <span style={{ fontSize: 18, fontWeight: 900, letterSpacing: '-0.5px' }}>{profile.username}</span>
+              </div>
+              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13, lineHeight: 1.6, maxWidth: 300, margin: 0 }}>
+                Plongez dans l'univers sonore unique de {profile.username}. Des productions exclusives pour faire vibrer vos dancefloors.
+              </p>
+            </div>
 
-      <footer className="footer">
-        <div className="wrapper footer-inner">
-          <div style={{ textAlign: 'center' }}>© 2026 {profile.username}. Tous droits réservés.</div>
+            {/* Liens de navigation */}
+            <div style={{ display: 'flex', gap: 60, flexWrap: 'wrap' }}>
+              <div>
+                <h4 style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', color: '#fff', marginBottom: 16 }}>Navigation</h4>
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <li><a href="#duo" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none', fontSize: 13, transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#fff'} onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.5)'}>Le Duo</a></li>
+                  <li><a href="#prestations" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none', fontSize: 13, transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#fff'} onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.5)'}>Prestations</a></li>
+                  <li><a href="#releases" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none', fontSize: 13, transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#fff'} onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.5)'}>Dernières Sorties</a></li>
+                </ul>
+              </div>
+              <div>
+                <h4 style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', color: '#fff', marginBottom: 16 }}>Plateforme</h4>
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <li><Link to="/" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none', fontSize: 13, transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#fff'} onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.5)'}>Accueil</Link></li>
+                  <li><Link to="/nouveautes" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none', fontSize: 13, transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#fff'} onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.5)'}>Nouveautés</Link></li>
+                  <li><Link to="/artists" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none', fontSize: 13, transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#fff'} onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.5)'}>Artistes</Link></li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Réseaux Sociaux */}
+            <div style={{ flex: '1 1 200px' }}>
+              <h4 style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', color: '#fff', marginBottom: 16 }}>Suivez l'artiste</h4>
+              <div style={{ display: 'flex', gap: 12 }}>
+                {socials.map(s => (
+                  <a key={s.key} href={profile[s.key]} target="_blank" rel="noreferrer" style={{ color: 'rgba(255,255,255,0.5)', transition: 'all 0.2s' }} onMouseEnter={(e) => { e.currentTarget.style.color = s.color; e.currentTarget.style.transform = 'translateY(-2px)' }} onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.5)'; e.currentTarget.style.transform = 'translateY(0)' }}>
+                    {s.logo}
+                  </a>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Ligne de séparation et Copyright */}
+          <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
+            <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12, margin: 0 }}>
+              © {new Date().getFullYear()} {profile.username}. Tous droits réservés.
+            </p>
+            <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12, margin: 0 }}>
+              Propulsé par <span style={{ color: themeColor, fontWeight: 700 }}>Dropzone</span>
+            </p>
+          </div>
         </div>
       </footer>
 
@@ -697,3 +692,5 @@ export const PremiumPage: React.FC = () => {
     </div>
   );
 };
+
+export default PremiumPage;

@@ -7,7 +7,6 @@ import { GlobalPlayer } from '../components/GlobalPlayer';
 import { useIsMobile } from '../hooks/useIsMobile';
 
 const Icons = {
-  // ... (Tes icônes restent identiques)
   home: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>,
   feed: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 11a9 9 0 0 1 9 9" /><path d="M4 4a16 16 0 0 1 16 16" /><circle cx="5" cy="19" r="1" /></svg>,
   new: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M2 12h20" /></svg>,
@@ -60,20 +59,20 @@ export const MainLayout: React.FC = () => {
 
   if (isMobile) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: '#0a0a0a', color: '#fff' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: '#0a0a0a', color: '#fff', overflowX: 'hidden', width: '100%', maxWidth: '100vw' }}>
         
         <header style={{ position: 'sticky', top: 0, zIndex: 50, background: 'rgba(10, 10, 10, 0.9)', backdropFilter: 'blur(10px)', borderBottom: '1px solid #222', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
             <img src="/icons/icon-192.png" alt="DropZone DJ" style={{ width: 32, height: 32, objectFit: 'contain', borderRadius: 8 }} />
             <span style={{ fontWeight: 800, fontSize: '1rem', color: '#fff', letterSpacing: '-0.5px' }}>DROPZONE <span style={{ color: '#00d9ff' }}>DJ</span></span>
           </Link>
-          <Link to={`/profil/${user?.id}`} style={{ width: 34, height: 34, borderRadius: '50%', overflow: 'hidden', background: '#1a1a1a', border: '1px solid #333', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#00d9ff', fontWeight: 700, fontSize: 13, textDecoration: 'none' }}>
+          <Link to={`/profil/${user?.id}`} className="avatar-circle" style={{ width: 34, height: 34, overflow: 'hidden', background: '#1a1a1a', border: '1px solid #333', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#00d9ff', fontWeight: 700, fontSize: 13, textDecoration: 'none' }}>
             {avatarUrl ? <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : displayName.charAt(0).toUpperCase()}
           </Link>
         </header>
 
-        {/* ✅ Ajout du padding pour laisser la place au lecteur en bas */}
-        <main style={{ flex: 1, padding: '16px 12px', paddingBottom: currentTrack ? 140 : 80 }}>
+        {/* ✅ Sécurité anti-débordement + Place pour le player en bas */}
+        <main style={{ flex: 1, padding: '16px 12px', paddingBottom: currentTrack ? 140 : 80, overflowX: 'hidden', width: '100%', maxWidth: '100vw' }}>
           <Outlet />
         </main>
 
@@ -161,7 +160,7 @@ export const MainLayout: React.FC = () => {
     );
   }
 
-  // --- VERSION DESKTOP (inchangée) ---
+  // --- VERSION DESKTOP ---
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#0a0a0a', color: '#fff' }}>
       

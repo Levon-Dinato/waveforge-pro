@@ -4,9 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import { OnlineUsersWidget } from '../components/OnlineUsersWidget';
 import { ShareButton } from '../components/ShareButton';
 import { supabase, AUDIO_BUCKET } from '../lib/supabase';
-import { detectBPM } from '../audio/bpmDetector';
-import { detectKey } from '../audio/keyDetector';
-import { parseBlob } from 'music-metadata';
 import { useAuth } from '../contexts/AuthContext';
 import { usePlayer } from '../contexts/PlayerContext';
 import { useIsMobile } from '../hooks/useIsMobile';
@@ -42,34 +39,24 @@ interface Track {
   likes_count: number; downloads: number; audio_url: string; duration: number; peaks: number[]; cover_url: string | null; created_at: string; user_id: string | null; purchase_url: string | null;
 }
 
-const PREDEFINED_GENRES = ['Afro House', 'Amapiano', 'Ambient', 'Bass House / UK Garage', 'Big Room / Mainstage', 'Breakbeat', 'Chillout / Downtempo', 'Club House', 'Dance / Electro Pop', 'Deep House', 'Disco / Nu Disco', 'Drum & Bass', 'Dubstep', 'Electro', 'Electro House', 'Electronica', 'Funky House', 'Future House', 'Hard Techno', 'Hardcore', 'Hardstyle', 'Hip-Hop', 'House', 'Indie Dance', 'Jackin House', 'Latin / Afro House', 'Melodic House & Techno', 'Minimal / Deep Tech', 'Organic House / Downtempo', 'Progressive House', 'Psytrance', 'Reggaeton', 'Tech House', 'Techno', 'Trance', 'Trap', 'Vocal House', 'Inconnu'];
-
 const INPUT_STYLE: React.CSSProperties = { padding: '10px 14px', background: '#0a0a0a', border: '1px solid #222', borderRadius: '8px', color: '#fff', fontFamily: 'Inter, sans-serif', fontSize: '13px', outline: 'none', width: '100%' };
 const isNew = (createdAt: string): boolean => (Date.now() - new Date(createdAt).getTime()) < 24 * 60 * 60 * 1000;
 
 export const NouveautesPage: React.FC = () => {
-  const { user, username } = useAuth(); 
+  const { user } = useAuth(); 
   const navigate = useNavigate();
-  const isMobile = useIsMobile(1024);
+  // ✅ Seuil à 768px pour dissocier strictement le mobile
+  const isMobile = useIsMobile(768); 
   const { currentTrack, isPlaying, play, stop } = usePlayer();
 
   const [tracks, setTracks] = useState<Track[]>([]);
   const [userLikes, setUserLikes] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState(false);
-  const [uploadStatus, setUploadStatus] = useState('');
-
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState<'recent' | 'likes' | 'bpm' | 'title'>('recent');
   const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
-
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ title: '', artist: '', genre: '', bpm: 0, purchase_url: '' });
-
-  const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 20;
 
   useEffect(() => {
     loadTracks();
@@ -155,25 +142,18 @@ export const NouveautesPage: React.FC = () => {
     return list;
   }, [tracks, search, sortBy, selectedGenre]);
 
-  useEffect(() => { setCurrentPage(1); }, [search, sortBy, selectedGenre]);
-  const totalPages = Math.max(1, Math.ceil(visibleTracks.length / ITEMS_PER_PAGE));
-  const safeCurrentPage = Math.min(currentPage, totalPages);
-  const paginatedTracks = visibleTracks.slice((safeCurrentPage - 1) * ITEMS_PER_PAGE, safeCurrentPage * ITEMS_PER_PAGE);
-
   return (
     <div style={{ padding: isMobile ? '16px 12px' : '32px 24px', fontFamily: 'Inter, sans-serif', color: '#fff', paddingBottom: 100, background: '#0a0a0a', minHeight: '100vh', width: '100%', boxSizing: 'border-box', overflowX: 'hidden' }}>
-      <style>{`.list-row:hover { background: #121212 !important; } .list-row:hover .row-actions { opacity: 1 !important; }`}</style>
-      <input type="file" accept="audio/*" ref={fileInputRef} onChange={() => {}} style={{ display: 'none' }} />
-
       <div style={{ display: 'flex', gap: 32, alignItems: 'flex-start', width: '100%', maxWidth: 1600, margin: '0 auto' }}>
         
+        {/* ✅ SIDEBAR GAUCHE (Desktop uniquement) */}
         {!isMobile && (
           <aside style={{ width: 200, flexShrink: 0, position: 'sticky', top: 32 }}>
             <div style={{ padding: '0 0 16px 0' }}>
               <h3 style={{ fontSize: 11, fontWeight: 800, letterSpacing: '1px', padding: '0 12px 16px', margin: 0, color: '#666', textTransform: 'uppercase', borderBottom: '1px solid #222' }}>Genres</h3>
               <div onClick={() => setSelectedGenre(null)} style={{ padding: '10px 12px', fontSize: 13, cursor: 'pointer', marginTop: 8, color: selectedGenre === null ? '#00d9ff' : '#888', fontWeight: selectedGenre === null ? 600 : 400, borderLeft: selectedGenre === null ? '2px solid #00d9ff' : '2px solid transparent', borderBottom: '1px solid #1a1a1a' }}>Tous les sons</div>
               <div style={{ maxHeight: 'calc(100vh - 300px)', overflowY: 'auto' }}>
-                {Array.from(new Set(tracks.map(t => (t.genre || 'Inconnu').trim()))).sort().map((genre, index) => (
+                {Array.from(new Set(tracks.map(t => (t.genre || 'Inconnu').trim()))).sort().map((genre) => (
                   <div key={genre} onClick={() => setSelectedGenre(genre)} style={{ padding: '10px 12px', fontSize: 13, cursor: 'pointer', color: selectedGenre === genre ? '#00d9ff' : '#888', fontWeight: selectedGenre === genre ? 600 : 400, borderLeft: selectedGenre === genre ? '2px solid #00d9ff' : '2px solid transparent', borderBottom: '1px solid #1a1a1a' }}>{genre}</div>
                 ))}
               </div>
@@ -181,6 +161,7 @@ export const NouveautesPage: React.FC = () => {
           </aside>
         )}
 
+        {/* ✅ CONTENU PRINCIPAL */}
         <main style={{ flex: 1, minWidth: 0, width: '100%' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
             <div>
@@ -204,111 +185,107 @@ export const NouveautesPage: React.FC = () => {
             </select>
           </div>
 
-          <div style={{ background: '#121212', border: '1px solid #222', borderRadius: 12, overflow: 'hidden' }}>
+          <div style={{ background: '#121212', border: '1px solid #222', borderRadius: 12, overflow: 'hidden', width: '100%' }}>
             
-            {/* ✅ TABLE HEADER (Caché sur mobile) */}
+            {/* ✅ EN-TÊTE DU TABLEAU (Desktop uniquement) */}
             {!isMobile && (
-              <div style={{ display: 'grid', gridTemplateColumns: '48px 48px minmax(200px, 2fr) 1fr 1fr 120px', gap: 16, padding: '12px 16px', borderBottom: '1px solid #222', fontSize: 11, color: '#666', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '40px 40px minmax(200px, 1fr) 120px 120px 100px', gap: 16, padding: '12px 16px', borderBottom: '1px solid #222', fontSize: 11, color: '#666', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                 <div></div><div></div><div>Titre / Artistes</div><div>Genre</div><div>BPM / Clé</div><div style={{ textAlign: 'right' }}>Actions</div>
               </div>
             )}
 
             {loading ? (
               <div style={{ textAlign: 'center', color: '#666', padding: 40 }}>Chargement...</div>
-            ) : paginatedTracks.map((track) => {
-              const isThisCurrent = currentTrack?.id === track.id;
-              const isThisPlaying = isThisCurrent && isPlaying;
+            ) : visibleTracks.map((track) => {
+              const isThisPlaying = currentTrack?.id === track.id && isPlaying;
               const isLiked = userLikes[track.id] || false;
               const isOwner = user?.id === track.user_id;
 
-              return (
-                <div key={track.id} className="list-row" style={{ 
-                  display: isMobile ? 'flex' : 'grid', 
-                  flexDirection: isMobile ? 'column' : undefined,
-                  gridTemplateColumns: isMobile ? undefined : '48px 48px minmax(200px, 2fr) 1fr 1fr 120px', 
-                  gap: isMobile ? 12 : 16, 
-                  padding: isMobile ? '16px' : '12px 16px', 
-                  alignItems: 'center', 
-                  borderBottom: '1px solid #222', 
-                  cursor: 'pointer' 
-                }}>
-                  
-                  {/* ✅ VUE MOBILE (Flex) / VUE DESKTOP (Grid) */}
-                  <div style={{ display: 'flex', gap: 12, alignItems: 'center', width: '100%', minWidth: 0 }}>
-                    <button onClick={(e) => handlePlayTrack(e, track)} style={{ width: 36, height: 36, flexShrink: 0, borderRadius: '50%', background: isThisPlaying ? '#00d9ff' : 'transparent', border: isThisPlaying ? 'none' : '1px solid #444', color: isThisPlaying ? '#000' : '#888', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                      {isThisPlaying ? Icons.pause : Icons.play}
-                    </button>
-                    
-                    <div onClick={() => navigate(`/track/${track.id}`)} style={{ width: 44, height: 44, flexShrink: 0, borderRadius: 6, background: track.cover_url ? `url(${track.cover_url}) center/cover` : '#1a1a1a', border: '1px solid #222', position: 'relative' }}>
-                      {isNew(track.created_at) && <span style={{ position: 'absolute', top: -4, right: -4, fontSize: 8, padding: '1px 4px', background: '#fff', color: '#000', borderRadius: 3, fontWeight: 900, zIndex: 2 }}>NEW</span>}
+              // ✅ VUE MOBILE (Cartes empilées)
+              if (isMobile) {
+                return (
+                  <div key={track.id} style={{ padding: '16px', borderBottom: '1px solid #222', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                      <button onClick={(e) => handlePlayTrack(e, track)} style={{ width: 36, height: 36, flexShrink: 0, borderRadius: '50%', background: isThisPlaying ? '#00d9ff' : 'transparent', border: isThisPlaying ? 'none' : '1px solid #444', color: isThisPlaying ? '#000' : '#888', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                        {isThisPlaying ? Icons.pause : Icons.play}
+                      </button>
+                      <div style={{ width: 44, height: 44, flexShrink: 0, borderRadius: 6, background: track.cover_url ? `url(${track.cover_url}) center/cover` : '#1a1a1a', border: '1px solid #222', position: 'relative' }}>
+                        {isNew(track.created_at) && <span style={{ position: 'absolute', top: -4, right: -4, fontSize: 8, padding: '1px 4px', background: '#fff', color: '#000', borderRadius: 3, fontWeight: 900, zIndex: 2 }}>NEW</span>}
+                      </div>
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: 2 }}>{track.title}</div>
+                        <div style={{ fontSize: 12, color: '#888', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.artist}</div>
+                      </div>
                     </div>
-
-                    <div onClick={() => navigate(`/track/${track.id}`)} style={{ minWidth: 0, flex: 1 }}>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: isThisPlaying ? '#00d9ff' : '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: 2 }}>{track.title}</div>
-                      <div style={{ fontSize: 12, color: '#888', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.artist}</div>
+                    <div style={{ display: 'flex', gap: 8, fontSize: 11, color: '#888', paddingLeft: 48 }}>
+                      <span>{track.genre || '—'}</span> • <span>{track.bpm} BPM</span> {track.song_key && <span>• {track.song_key}</span>}
+                    </div>
+                    <div style={{ display: 'flex', gap: 16, paddingLeft: 48 }}>
+                       <button onClick={() => handleLike(track.id)} style={{ background: 'transparent', border: 'none', color: isLiked ? '#ff3366' : '#555', fontSize: 13 }}>{isLiked ? '❤️' : '🤍'} {track.likes_count}</button>
+                       <button onClick={(e) => forceDownload(track.audio_url, `${track.artist} - ${track.title}.mp3`)} style={{ background: 'transparent', border: 'none', color: '#888' }}>{Icons.download}</button>
+                       {isOwner && <button onClick={(e) => startEdit(e, track)} style={{ background: 'transparent', border: 'none', color: '#888' }}>{Icons.edit}</button>}
+                       {isOwner && <button onClick={(e) => handleDelete(e, track.id)} style={{ background: 'transparent', border: 'none', color: '#ff5c5c' }}>{Icons.trash}</button>}
                     </div>
                   </div>
+                );
+              }
 
-                  {/* Infos Desktop */}
-                  {!isMobile && (
-                    <>
-                      <div style={{ fontSize: 13, color: '#aaa', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.genre || '—'}</div>
-                      <div style={{ fontSize: 13, color: '#aaa', whiteSpace: 'nowrap', fontFamily: 'monospace' }}>{track.bpm ? `${track.bpm} BPM` : '—'} · {track.song_key || '—'}</div>
-                    </>
-                  )}
-
-                  {/* Infos Mobile (sous le titre) */}
-                  {isMobile && (
-                    <div style={{ display: 'flex', gap: 12, fontSize: 11, color: '#888', marginTop: 4, paddingLeft: 48 }}>
-                      <span>{track.genre || '—'}</span>
-                      <span>•</span>
-                      <span>{track.bpm ? `${track.bpm} BPM` : '—'} {track.song_key || ''}</span>
-                    </div>
-                  )}
-
-                  <div style={{ display: 'flex', gap: 16, justifyContent: isMobile ? 'flex-start' : 'flex-end', alignItems: 'center', width: '100%', paddingLeft: isMobile ? 48 : 0, marginTop: isMobile ? 8 : 0 }}>
-                    <button onClick={(e) => { e.stopPropagation(); handleLike(track.id); }} style={{ background: 'transparent', border: 'none', color: isLiked ? '#ff3366' : '#555', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', gap: 4, padding: 0 }}>
+              // ✅ VUE DESKTOP (Tableau)
+              return (
+                <div key={track.id} style={{ display: 'grid', gridTemplateColumns: '40px 40px minmax(200px, 1fr) 120px 120px 100px', gap: 16, padding: '12px 16px', alignItems: 'center', borderBottom: '1px solid #222', cursor: 'pointer' }}>
+                  <button onClick={(e) => handlePlayTrack(e, track)} style={{ width: 36, height: 36, borderRadius: '50%', background: isThisPlaying ? '#00d9ff' : 'transparent', border: isThisPlaying ? 'none' : '1px solid #444', color: isThisPlaying ? '#000' : '#888', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                    {isThisPlaying ? Icons.pause : Icons.play}
+                  </button>
+                  <div onClick={() => navigate(`/track/${track.id}`)} style={{ width: 44, height: 44, borderRadius: 6, background: track.cover_url ? `url(${track.cover_url}) center/cover` : '#1a1a1a', border: '1px solid #222', flexShrink: 0, position: 'relative' }}>
+                    {isNew(track.created_at) && <span style={{ position: 'absolute', top: -4, right: -4, fontSize: 8, padding: '1px 4px', background: '#fff', color: '#000', borderRadius: 3, fontWeight: 900, zIndex: 2 }}>NEW</span>}
+                  </div>
+                  <div onClick={() => navigate(`/track/${track.id}`)} style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: isThisPlaying ? '#00d9ff' : '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: 2 }}>{track.title}</div>
+                    <div style={{ fontSize: 12, color: '#888', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.artist}</div>
+                  </div>
+                  <div style={{ fontSize: 13, color: '#aaa', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.genre || '—'}</div>
+                  <div style={{ fontSize: 13, color: '#aaa', whiteSpace: 'nowrap', fontFamily: 'monospace' }}>{track.bpm ? `${track.bpm}` : '—'} · {track.song_key || '—'}</div>
+                  <div style={{ display: 'flex', gap: 16, justifyContent: 'flex-end', alignItems: 'center' }}>
+                    <button onClick={() => handleLike(track.id)} style={{ background: 'transparent', border: 'none', color: isLiked ? '#ff3366' : '#555', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', gap: 4 }}>
                       {isLiked ? '❤️' : '🤍'} <span style={{ color: '#666' }}>{track.likes_count}</span>
                     </button>
-
-                    <div style={{ display: 'flex', gap: 12, opacity: isMobile ? 1 : 0, transition: 'opacity 0.2s' }} className="row-actions">
-                      {track.purchase_url && <a href={track.purchase_url} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} style={{ color: '#00d9ff', display: 'flex', alignItems: 'center' }}>{Icons.buy}</a>}
-                      <button onClick={(e) => { e.stopPropagation(); forceDownload(track.audio_url, `${track.artist} - ${track.title}.mp3`); }} style={{ background: 'transparent', border: 'none', color: '#888', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>{Icons.download}</button>
-                      
-                      {!isMobile && (
-                        <div onClick={(e) => e.stopPropagation()}>
-                          <ShareButton url={`${window.location.origin}/share/${track.id}`} title={`${track.title} — ${track.artist}`} text={`Écoute "${track.title}" par ${track.artist} sur DropZone DJ 🎵`} variant="icon" size="small" label="" position="bottom" />
-                        </div>
-                      )}
-
-                      {isOwner && (
-                        <>
-                          <button onClick={(e) => startEdit(e, track)} style={{ background: 'transparent', border: 'none', color: '#888', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>{Icons.edit}</button>
-                          <button onClick={(e) => handleDelete(e, track.id)} style={{ background: 'transparent', border: 'none', color: '#ff5c5c', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>{Icons.trash}</button>
-                        </>
-                      )}
+                    <div style={{ display: 'flex', gap: 12 }}>
+                      {track.purchase_url && <a href={track.purchase_url} target="_blank" rel="noopener noreferrer" style={{ color: '#00d9ff', display: 'flex', alignItems: 'center' }}>{Icons.buy}</a>}
+                      <button onClick={(e) => forceDownload(track.audio_url, `${track.artist} - ${track.title}.mp3`)} style={{ background: 'transparent', border: 'none', color: '#888', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>{Icons.download}</button>
+                      <ShareButton url={`${window.location.origin}/share/${track.id}`} title={`${track.title} — ${track.artist}`} text={`Écoute sur DropZone DJ 🎵`} variant="icon" size="small" label="" position="bottom" />
+                      {isOwner && <button onClick={(e) => startEdit(e, track)} style={{ background: 'transparent', border: 'none', color: '#888', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>{Icons.edit}</button>}
+                      {isOwner && <button onClick={(e) => handleDelete(e, track.id)} style={{ background: 'transparent', border: 'none', color: '#ff5c5c', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>{Icons.trash}</button>}
                     </div>
                   </div>
                 </div>
               );
             })}
           </div>
-
-          {!loading && totalPages > 1 && (
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 16, marginTop: 32 }}>
-              <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={safeCurrentPage === 1} style={{ background: 'transparent', border: '1px solid #222', color: safeCurrentPage === 1 ? '#444' : '#fff', padding: '6px 12px', borderRadius: 6 }}>←</button>
-              <span style={{ fontSize: 12, color: '#888' }}>Page {safeCurrentPage} sur {totalPages}</span>
-              <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={safeCurrentPage === totalPages} style={{ background: 'transparent', border: '1px solid #222', color: safeCurrentPage === totalPages ? '#444' : '#fff', padding: '6px 12px', borderRadius: 6 }}>→</button>
-            </div>
-          )}
         </main>
 
+        {/* ✅ SIDEBAR DROITE (Desktop uniquement) */}
         {!isMobile && (
           <aside style={{ width: 280, flexShrink: 0, position: 'sticky', top: 32, display: 'flex', flexDirection: 'column', gap: 24 }}>
-             {/* ... (Sidebar desktop) ... */}
+            <div style={{ background: '#121212', border: '1px solid #222', borderRadius: 12, padding: 20 }}>
+              <h3 style={{ fontSize: 11, fontWeight: 800, letterSpacing: '1px', margin: '0 0 16px 0', color: '#fff', textTransform: 'uppercase' }}>Top 10</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {tracks.slice(0, 10).map((track, index) => (
+                  <div key={track.id} style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }} onClick={() => navigate(`/track/${track.id}`)}>
+                    <div style={{ width: 20, textAlign: 'center', fontSize: 13, color: index < 3 ? '#00d9ff' : '#555', fontWeight: 900, fontStyle: 'italic' }}>{index + 1}</div>
+                    <div style={{ width: 36, height: 36, borderRadius: 4, background: track.cover_url ? `url(${track.cover_url}) center/cover` : '#1a1a1a', flexShrink: 0, border: '1px solid #222' }} />
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.title}</div>
+                      <div style={{ fontSize: 11, color: '#888', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.artist}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div style={{ background: '#121212', border: '1px solid #222', borderRadius: 12, padding: 20 }}>
+              <OnlineUsersWidget />
+            </div>
           </aside>
         )}
-
       </div>
     </div>
   );

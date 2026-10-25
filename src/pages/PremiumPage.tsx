@@ -8,7 +8,6 @@ import { usePlayer } from '../contexts/PlayerContext';
 import { GlobalPlayer } from '../components/GlobalPlayer';
 import './LevonDinato.css';
 
-// ✅ VRAIS LOGOS SVG
 const SocialIcons = {
   tiktok: <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/></svg>,
   spotify: <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.24 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>,
@@ -254,9 +253,7 @@ export const PremiumPage: React.FC = () => {
   const themeColor = profile.theme_color || '#00d9ff';
   const isOwner = user && profile && user.id === profile.id;
 
-  // ✅ GESTION DES MODULES ET DES PRESTATIONS DYNAMIQUES
   const settings = profile.settings || {};
-  
   const heroTitle = settings.hero_title || profile.hero_title || `L'expérience *sonore* ultime.`;
   const heroDesc = settings.hero_description || profile.hero_description || `Découvrez les productions Funky House, Nu-Disco et Tech House du duo ${profile.username}. Un set conçu pour faire vibrer les dancefloors et marquer les esprits.`;
   const bio = settings.bio || profile.bio || "Levon & Dinato est un duo électrisant qui fusionne leurs influences uniques pour créer un son reconnaissable et contagieux. Unis par une passion commune pour la Funky House, la Nu-Disco, la Tech House et l'Electro Dance.";
@@ -268,7 +265,6 @@ export const PremiumPage: React.FC = () => {
   const showSidebarTop = settings.show_sidebar_top !== false;
   const showSidebarDates = settings.show_sidebar_dates !== false;
 
-  // Prestations personnalisables (ou par défaut)
   const prestations = settings.prestations && settings.prestations.length > 0 ? settings.prestations : [
     { title: 'Clubs & Festivals', desc: 'Sets dynamiques et énergie communicative.' },
     { title: 'Événements Privés', desc: 'Ambiance sur mesure pour vos invités.' },
@@ -301,7 +297,6 @@ export const PremiumPage: React.FC = () => {
         .btn-primary { background: #fff; color: #000; padding: 12px 28px; border-radius: 8px; font-size: 14px; font-weight: 800; text-decoration: none; transition: transform 0.2s; display: inline-flex; align-items: center; gap: 8px; }
         .btn-primary:hover { transform: scale(1.02); }
 
-        /* ✅ CORRECTION DU GLISSEMENT (Smooth Scroll + Espacement) */
         html { scroll-behavior: smooth; }
         section[id] { scroll-margin-top: 100px; }
         

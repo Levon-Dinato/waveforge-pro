@@ -325,7 +325,8 @@ export const PremiumPage: React.FC = () => {
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 24 }} className="nav-links">
-            <a href="#duo" className="nav-link">Le Duo</a>
+            {/* ✅ Lien changé en "Bio" */}
+            <a href="#duo" className="nav-link">Bio</a>
             <a href="#prestations" className="nav-link">Prestations</a>
             <a href="#releases" className="nav-link">Releases</a>
           </div>
@@ -415,7 +416,8 @@ export const PremiumPage: React.FC = () => {
           
           {showDuo && (
             <section id="duo" style={{ marginBottom: 80 }}>
-              <h2 style={{ fontSize: 24, fontWeight: 800, marginBottom: 24, letterSpacing: '-0.5px' }}>{settings.duo_title || 'Le Duo'}</h2>
+              {/* ✅ Titre dynamique qui s'adapte ("Bio" par défaut maintenant) */}
+              <h2 style={{ fontSize: 24, fontWeight: 800, marginBottom: 24, letterSpacing: '-0.5px' }}>{settings.duo_title || 'Bio'}</h2>
               <div style={{ background: 'rgba(255,255,255,0.02)', padding: '40px', borderRadius: 16, border: '1px solid rgba(255,255,255,0.08)', position: 'relative', overflow: 'hidden' }}>
                 <div style={{ position: 'absolute', top: 0, left: 0, width: 4, height: '100%', background: themeColor }} />
                 <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 18, lineHeight: 1.9, margin: 0, whiteSpace: 'pre-wrap' }}>
@@ -655,7 +657,7 @@ export const PremiumPage: React.FC = () => {
               <div>
                 <h4 style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', color: '#fff', marginBottom: 16 }}>Navigation</h4>
                 <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  <li><a href="#duo" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none', fontSize: 13, transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#fff'} onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.5)'}>Le Duo</a></li>
+                  <li><a href="#duo" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none', fontSize: 13, transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#fff'} onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.5)'}>Bio</a></li>
                   <li><a href="#prestations" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none', fontSize: 13, transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#fff'} onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.5)'}>Prestations</a></li>
                   <li><a href="#releases" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none', fontSize: 13, transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#fff'} onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.5)'}>Dernières Sorties</a></li>
                 </ul>

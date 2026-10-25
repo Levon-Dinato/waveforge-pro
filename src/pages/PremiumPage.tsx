@@ -254,10 +254,15 @@ export const PremiumPage: React.FC = () => {
   const isOwner = user && profile && user.id === profile.id;
 
   const settings = profile.settings || {};
-  const heroTitle = settings.hero_title || profile.hero_title || `L'expérience *sonore* ultime.`;
-  const heroDesc = settings.hero_description || profile.hero_description || `Découvrez les productions Funky House, Nu-Disco et Tech House du duo ${profile.username}. Un set conçu pour faire vibrer les dancefloors et marquer les esprits.`;
-  const bio = settings.bio || profile.bio || "Levon & Dinato est un duo électrisant qui fusionne leurs influences uniques pour créer un son reconnaissable et contagieux. Unis par une passion commune pour la Funky House, la Nu-Disco, la Tech House et l'Electro Dance.";
   
+  // ✅ CORRECTION : On donne la priorité aux colonnes de base (profile) AVANT le JSON (settings)
+  const heroTitle = profile.hero_title || settings.hero_title || `L'expérience *sonore* ultime.`;
+  const heroDesc = profile.hero_description || settings.hero_description || `Découvrez les productions Funky House, Nu-Disco et Tech House du duo ${profile.username}. Un set conçu pour faire vibrer les dancefloors et marquer les esprits.`;
+  const bio = profile.bio || settings.bio || "Levon & Dinato est un duo électrisant qui fusionne leurs influences uniques pour créer un son reconnaissable et contagieux. Unis par une passion commune pour la Funky House, la Nu-Disco, la Tech House et l'Electro Dance.";
+  
+  // ✅ CORRECTION : Le badge lit d'abord ton champ "Bannière d'accueil", puis le JSON, puis le texte par défaut.
+  const heroTagline = profile.hero_tagline || settings.hero_tagline || "Nouveaux remixes disponibles";
+
   const showStats = settings.show_stats !== false;
   const showDuo = settings.show_duo !== false;
   const showPrestations = settings.show_prestations !== false;
@@ -325,7 +330,6 @@ export const PremiumPage: React.FC = () => {
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 24 }} className="nav-links">
-            {/* ✅ Lien changé en "Bio" */}
             <a href="#duo" className="nav-link">Bio</a>
             <a href="#prestations" className="nav-link">Prestations</a>
             <a href="#releases" className="nav-link">Releases</a>
@@ -352,7 +356,8 @@ export const PremiumPage: React.FC = () => {
         
         <div style={{ position: 'relative', zIndex: 10, textAlign: 'center', maxWidth: 1000, padding: '0 24px' }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(10px)', padding: '8px 20px', borderRadius: 50, border: `1px solid ${themeColor}60`, marginBottom: 24 }}>
-            <span style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: '#fff' }}>{settings.hero_tagline || "Nouveaux remixes disponibles"}</span>
+            {/* ✅ Affiche bien "Official Page" */}
+            <span style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: '#fff' }}>{heroTagline}</span>
           </div>
           
           <h1 className="hero-title" style={{ fontSize: 'clamp(3.5rem, 8vw, 6rem)', fontWeight: 900, lineHeight: 1.1, letterSpacing: '-3px', marginBottom: 24, textShadow: '0 10px 40px rgba(0,0,0,0.8)' }}>
@@ -416,7 +421,6 @@ export const PremiumPage: React.FC = () => {
           
           {showDuo && (
             <section id="duo" style={{ marginBottom: 80 }}>
-              {/* ✅ Titre dynamique qui s'adapte ("Bio" par défaut maintenant) */}
               <h2 style={{ fontSize: 24, fontWeight: 800, marginBottom: 24, letterSpacing: '-0.5px' }}>{settings.duo_title || 'Bio'}</h2>
               <div style={{ background: 'rgba(255,255,255,0.02)', padding: '40px', borderRadius: 16, border: '1px solid rgba(255,255,255,0.08)', position: 'relative', overflow: 'hidden' }}>
                 <div style={{ position: 'absolute', top: 0, left: 0, width: 4, height: '100%', background: themeColor }} />

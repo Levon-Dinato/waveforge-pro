@@ -23,9 +23,11 @@ export const SettingsPage: React.FC = () => {
   const [uploadingGallery, setUploadingGallery] = useState(false);
   const [galleryImages, setGalleryImages] = useState<any[]>([]);
 
+  // ✅ Ajout des champs player_bg_color et player_bg_image_url
   const [form, setForm] = useState({
     username: '', bio: '', hero_tagline: 'Nouveaux remixes disponibles', hero_title: '', hero_description: '',
     theme_color: '#00d9ff', avatar_url: '', background_video_url: '',
+    player_bg_color: '#000000', player_bg_image_url: '', // ✅ Nouveaux champs
     instagram_url: '', spotify_url: '', soundcloud_url: '', tiktok_url: '', youtube_url: '',
     beatport_url: '', x_url: '', facebook_url: ''
   });
@@ -42,6 +44,8 @@ export const SettingsPage: React.FC = () => {
           hero_title: data.hero_title || '', hero_description: data.hero_description || '',
           theme_color: data.theme_color || '#00d9ff', avatar_url: data.avatar_url || '',
           background_video_url: data.background_video_url || '',
+          player_bg_color: data.player_bg_color || '#000000', // ✅ Récupération
+          player_bg_image_url: data.player_bg_image_url || '', // ✅ Récupération
           instagram_url: data.instagram_url || '', spotify_url: data.spotify_url || '',
           soundcloud_url: data.soundcloud_url || '', tiktok_url: data.tiktok_url || '',
           youtube_url: data.youtube_url || '', beatport_url: data.beatport_url || '',
@@ -130,16 +134,21 @@ export const SettingsPage: React.FC = () => {
     if (!user) return;
     setSaving(true);
     setMessage('');
+    
+    // ✅ Ajout des champs à la mise à jour
     const { error } = await supabase.from('profiles').update({
       username: form.username, bio: form.bio, hero_tagline: form.hero_tagline,
       hero_title: form.hero_title, hero_description: form.hero_description,
       theme_color: form.theme_color, avatar_url: form.avatar_url,
       background_video_url: form.background_video_url,
+      player_bg_color: form.player_bg_color,         // ✅ Nouveau
+      player_bg_image_url: form.player_bg_image_url, // ✅ Nouveau
       instagram_url: form.instagram_url, spotify_url: form.spotify_url,
       soundcloud_url: form.soundcloud_url, tiktok_url: form.tiktok_url,
       youtube_url: form.youtube_url, beatport_url: form.beatport_url,
       x_url: form.x_url, facebook_url: form.facebook_url
     }).eq('id', user.id);
+    
     if (error) setMessage("Erreur : " + error.message);
     else setMessage("Profil mis à jour avec succès ! ✅");
     setSaving(false);
@@ -276,7 +285,6 @@ export const SettingsPage: React.FC = () => {
             <input type="url" placeholder="Lien Beatport *" value={linkForm.purchase_url} onChange={e => setLinkForm({...linkForm, purchase_url: e.target.value})} style={{ padding: 10, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4 }} />
             <input type="url" placeholder="Lien de l'image de la cover (optionnel)" value={linkForm.cover_url} onChange={e => setLinkForm({...linkForm, cover_url: e.target.value})} style={{ padding: 10, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4 }} />
             
-            {/* ✅ NOUVEAU CHAMP POUR L'IFRAME */}
             <textarea 
               placeholder='Code d&#39;intégration Beatport (optionnel) - Collez le code iframe complet ici' 
               value={linkForm.embed_code} 
@@ -365,7 +373,7 @@ export const SettingsPage: React.FC = () => {
 
       {/* FORMULAIRE DE PROFIL */}
       <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-        {/* IDENTITÉ, THEME, BANNIERE, BIO, RESEAUX (Identique à ton code actuel) */}
+        {/* IDENTITÉ, THEME, BANNIERE, BIO, RESEAUX */}
         <div style={{ background: '#121212', padding: 24, borderRadius: 12, border: '1px solid #222' }}>
           <h2 style={{ fontSize: 18, marginBottom: 20, color: '#fff' }}>Identité & Thème</h2>
           <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
@@ -392,6 +400,45 @@ export const SettingsPage: React.FC = () => {
             <label style={{ fontSize: 13, color: '#aaa' }}>URL de la vidéo de fond (MP4)</label>
             <input type="url" value={form.background_video_url} onChange={(e) => setForm({ ...form, background_video_url: e.target.value })} style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
           </div>
+        </div>
+
+        {/* ✅ NOUVELLE SECTION : PERSONNALISATION DU PLAYER */}
+        <div style={{ background: '#121212', padding: 24, borderRadius: 12, border: '1px solid #222' }}>
+          <h2 style={{ fontSize: 18, marginBottom: 20, color: '#fff' }}>Personnalisation du Player</h2>
+          
+          <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
+            <div style={{ flex: '1 1 200px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <label style={{ fontSize: 13, color: '#aaa' }}>Couleur de fond du Player</label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <input 
+                  type="color" 
+                  value={form.player_bg_color} 
+                  onChange={(e) => setForm({ ...form, player_bg_color: e.target.value })} 
+                  style={{ width: 50, height: 40, padding: 0, background: 'transparent', border: 'none', cursor: 'pointer' }} 
+                />
+                <input 
+                  type="text" 
+                  value={form.player_bg_color} 
+                  onChange={(e) => setForm({ ...form, player_bg_color: e.target.value })} 
+                  style={{ flex: 1, padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} 
+                />
+              </div>
+            </div>
+
+            <div style={{ flex: '1 1 300px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <label style={{ fontSize: 13, color: '#aaa' }}>Image de fond du Player (URL)</label>
+              <input 
+                type="url" 
+                placeholder="https://exemple.com/mon-image.jpg"
+                value={form.player_bg_image_url} 
+                onChange={(e) => setForm({ ...form, player_bg_image_url: e.target.value })} 
+                style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} 
+              />
+            </div>
+          </div>
+          <p style={{ fontSize: 11, color: '#666', marginTop: 10 }}>
+            * Si tu renseignes une image, elle prendra le dessus sur la couleur. Un filtre sombre sera appliqué pour garder le texte et la waveform lisibles.
+          </p>
         </div>
 
         <div style={{ background: '#121212', padding: 24, borderRadius: 12, border: '1px solid #222' }}>

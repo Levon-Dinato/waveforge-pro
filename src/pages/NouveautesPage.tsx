@@ -45,7 +45,6 @@ const isNew = (createdAt: string): boolean => (Date.now() - new Date(createdAt).
 export const NouveautesPage: React.FC = () => {
   const { user } = useAuth(); 
   const navigate = useNavigate();
-  // ✅ Seuil à 768px pour dissocier strictement le mobile
   const isMobile = useIsMobile(768); 
   const { currentTrack, isPlaying, play, stop } = usePlayer();
 
@@ -57,6 +56,10 @@ export const NouveautesPage: React.FC = () => {
   const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ title: '', artist: '', genre: '', bpm: 0, purchase_url: '' });
+
+  // ✅ ÉTATS POUR LA PAGINATION
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 20;
 
   useEffect(() => {
     loadTracks();
@@ -126,6 +129,7 @@ export const NouveautesPage: React.FC = () => {
     setEditingId(null);
   };
 
+  // ✅ LOGIQUE DE PAGINATION
   const visibleTracks = useMemo(() => {
     let list = [...tracks];
     if (selectedGenre) list = list.filter((t) => (t.genre || 'Inconnu').trim() === selectedGenre);
@@ -142,11 +146,20 @@ export const NouveautesPage: React.FC = () => {
     return list;
   }, [tracks, search, sortBy, selectedGenre]);
 
+  // Revenir à la page 1 si on change de filtre
+  useEffect(() => { setCurrentPage(1); }, [search, sortBy, selectedGenre]);
+
+  const totalPages = Math.max(1, Math.ceil(visibleTracks.length / ITEMS_PER_PAGE));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  
+  // ✅ Découpage des sons pour la page actuelle
+  const paginatedTracks = visibleTracks.slice((safeCurrentPage - 1) * ITEMS_PER_PAGE, safeCurrentPage * ITEMS_PER_PAGE);
+
   return (
     <div style={{ padding: isMobile ? '16px 12px' : '32px 24px', fontFamily: 'Inter, sans-serif', color: '#fff', paddingBottom: 100, background: '#0a0a0a', minHeight: '100vh', width: '100%', boxSizing: 'border-box', overflowX: 'hidden' }}>
       <div style={{ display: 'flex', gap: 32, alignItems: 'flex-start', width: '100%', maxWidth: 1600, margin: '0 auto' }}>
         
-        {/* ✅ SIDEBAR GAUCHE (Desktop uniquement) */}
+        {/* SIDEBAR GAUCHE (Genres) */}
         {!isMobile && (
           <aside style={{ width: 200, flexShrink: 0, position: 'sticky', top: 32 }}>
             <div style={{ padding: '0 0 16px 0' }}>
@@ -161,7 +174,7 @@ export const NouveautesPage: React.FC = () => {
           </aside>
         )}
 
-        {/* ✅ CONTENU PRINCIPAL */}
+        {/* CONTENU PRINCIPAL */}
         <main style={{ flex: 1, minWidth: 0, width: '100%' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
             <div>
@@ -187,7 +200,6 @@ export const NouveautesPage: React.FC = () => {
 
           <div style={{ background: '#121212', border: '1px solid #222', borderRadius: 12, overflow: 'hidden', width: '100%' }}>
             
-            {/* ✅ EN-TÊTE DU TABLEAU (Desktop uniquement) */}
             {!isMobile && (
               <div style={{ display: 'grid', gridTemplateColumns: '40px 40px minmax(200px, 1fr) 120px 120px 100px', gap: 16, padding: '12px 16px', borderBottom: '1px solid #222', fontSize: 11, color: '#666', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                 <div></div><div></div><div>Titre / Artistes</div><div>Genre</div><div>BPM / Clé</div><div style={{ textAlign: 'right' }}>Actions</div>
@@ -196,12 +208,11 @@ export const NouveautesPage: React.FC = () => {
 
             {loading ? (
               <div style={{ textAlign: 'center', color: '#666', padding: 40 }}>Chargement...</div>
-            ) : visibleTracks.map((track) => {
+            ) : paginatedTracks.map((track) => { // ✅ Utilisation de paginatedTracks
               const isThisPlaying = currentTrack?.id === track.id && isPlaying;
               const isLiked = userLikes[track.id] || false;
               const isOwner = user?.id === track.user_id;
 
-              // ✅ VUE MOBILE (Cartes empilées)
               if (isMobile) {
                 return (
                   <div key={track.id} style={{ padding: '16px', borderBottom: '1px solid #222', display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -230,7 +241,6 @@ export const NouveautesPage: React.FC = () => {
                 );
               }
 
-              // ✅ VUE DESKTOP (Tableau)
               return (
                 <div key={track.id} style={{ display: 'grid', gridTemplateColumns: '40px 40px minmax(200px, 1fr) 120px 120px 100px', gap: 16, padding: '12px 16px', alignItems: 'center', borderBottom: '1px solid #222', cursor: 'pointer' }}>
                   <button onClick={(e) => handlePlayTrack(e, track)} style={{ width: 36, height: 36, borderRadius: '50%', background: isThisPlaying ? '#00d9ff' : 'transparent', border: isThisPlaying ? 'none' : '1px solid #444', color: isThisPlaying ? '#000' : '#888', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
@@ -261,9 +271,30 @@ export const NouveautesPage: React.FC = () => {
               );
             })}
           </div>
+
+          {/* ✅ BLOC DE PAGINATION RAJOUTÉ ICI */}
+          {!loading && totalPages > 1 && (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 16, marginTop: 32 }}>
+              <button 
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))} 
+                disabled={safeCurrentPage === 1} 
+                style={{ background: 'transparent', border: '1px solid #222', color: safeCurrentPage === 1 ? '#444' : '#fff', padding: '8px 16px', borderRadius: 8, cursor: safeCurrentPage === 1 ? 'not-allowed' : 'pointer', fontSize: 13, transition: 'all 0.2s' }}
+              >
+                ←
+              </button>
+              <span style={{ fontSize: 13, color: '#888', fontWeight: 600 }}>Page {safeCurrentPage} sur {totalPages}</span>
+              <button 
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} 
+                disabled={safeCurrentPage === totalPages} 
+                style={{ background: 'transparent', border: '1px solid #222', color: safeCurrentPage === totalPages ? '#444' : '#fff', padding: '8px 16px', borderRadius: 8, cursor: safeCurrentPage === totalPages ? 'not-allowed' : 'pointer', fontSize: 13, transition: 'all 0.2s' }}
+              >
+                →
+              </button>
+            </div>
+          )}
         </main>
 
-        {/* ✅ SIDEBAR DROITE (Desktop uniquement) */}
+        {/* SIDEBAR DROITE (Top 10) */}
         {!isMobile && (
           <aside style={{ width: 280, flexShrink: 0, position: 'sticky', top: 32, display: 'flex', flexDirection: 'column', gap: 24 }}>
             <div style={{ background: '#121212', border: '1px solid #222', borderRadius: 12, padding: 20 }}>

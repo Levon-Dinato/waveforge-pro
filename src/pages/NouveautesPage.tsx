@@ -1,6 +1,7 @@
 // src/pages/NouveautesPage.tsx
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { parseBlob } from 'music-metadata'; // ✅ Pour lire les tags
 import { OnlineUsersWidget } from '../components/OnlineUsersWidget';
 import { ShareButton } from '../components/ShareButton';
 import { supabase, AUDIO_BUCKET } from '../lib/supabase';
@@ -54,10 +55,19 @@ export const NouveautesPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState<'recent' | 'likes' | 'bpm' | 'title'>('recent');
   const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
+  
+  // ✅ États pour l'édition
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ title: '', artist: '', genre: '', bpm: 0, purchase_url: '' });
 
-  // ✅ ÉTATS POUR LA PAGINATION
+  // ✅ États pour la modale d'upload
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadForm, setUploadForm] = useState({ title: '', artist: '', genre: '', bpm: '', song_key: '' });
+  const [audioFile, setAudioFile] = useState<File | null>(null);
+  const [coverFile, setCoverFile] = useState<File | null>(null);
+
+  // ✅ Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 20;
 
@@ -129,7 +139,93 @@ export const NouveautesPage: React.FC = () => {
     setEditingId(null);
   };
 
-  // ✅ LOGIQUE DE PAGINATION
+  // ✅ Lecture des tags ID3 et de la pochette
+  const handleAudioFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setAudioFile(file);
+
+    try {
+      const metadata = await parseBlob(file);
+      const { common } = metadata;
+
+      setUploadForm(prev => ({
+        ...prev,
+        title: common.title || prev.title,
+        artist: common.artist || prev.artist,
+        genre: common.genre?.[0] || prev.genre,
+        bpm: common.bpm ? String(common.bpm) : prev.bpm,
+        song_key: common.key || prev.song_key
+      }));
+
+      if (common.picture && common.picture.length > 0) {
+        const pic = common.picture[0];
+        const blob = new Blob([new Uint8Array(pic.data)], { type: pic.format });
+        const coverFileFromTag = new File([blob], `cover-${Date.now()}.jpg`, { type: pic.format });
+        setCoverFile(coverFileFromTag); 
+      }
+    } catch (err) {
+      console.warn("Impossible de lire les tags ID3", err);
+    }
+  };
+
+  // ✅ Envoi du son
+  const handleUploadSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return alert("Connecte-toi pour uploader.");
+    if (!audioFile) return alert("Sélectionne un fichier audio.");
+    if (!uploadForm.title || !uploadForm.artist) return alert("Titre et Artiste obligatoires.");
+
+    setUploading(true);
+    try {
+      const audioExt = audioFile.name.split('.').pop();
+      const audioName = `${user.id}/${Date.now()}-audio.${audioExt}`;
+      const { error: audioError } = await supabase.storage.from(AUDIO_BUCKET).upload(audioName, audioFile);
+      if (audioError) throw audioError;
+      const { data: audioUrlData } = supabase.storage.from(AUDIO_BUCKET).getPublicUrl(audioName);
+
+      let coverUrl = null;
+      if (coverFile) {
+        const coverExt = coverFile.name.split('.').pop();
+        const coverName = `${user.id}/${Date.now()}-cover.${coverExt}`;
+        const { error: coverError } = await supabase.storage.from(AUDIO_BUCKET).upload(coverName, coverFile);
+        if (!coverError) {
+          const { data: coverUrlData } = supabase.storage.from(AUDIO_BUCKET).getPublicUrl(coverName);
+          coverUrl = coverUrlData.publicUrl;
+        }
+      }
+
+      const { data, error: dbError } = await supabase.from('tracks').insert({
+        user_id: user.id,
+        title: uploadForm.title,
+        artist: uploadForm.artist,
+        genre: uploadForm.genre || 'Inconnu',
+        bpm: Number(uploadForm.bpm) || 0,
+        song_key: uploadForm.song_key || null,
+        audio_url: audioUrlData.publicUrl,
+        cover_url: coverUrl,
+        peaks: [],
+        duration: 0,
+        likes_count: 0,
+        downloads: 0
+      }).select().single();
+
+      if (dbError) throw dbError;
+
+      if (data) setTracks((prev) => [data, ...prev]);
+      
+      setShowUploadModal(false);
+      setUploadForm({ title: '', artist: '', genre: '', bpm: '', song_key: '' });
+      setAudioFile(null);
+      setCoverFile(null);
+      alert("Son uploadé avec succès ! 🎵");
+    } catch (err: any) {
+      alert("Erreur lors de l'upload : " + err.message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const visibleTracks = useMemo(() => {
     let list = [...tracks];
     if (selectedGenre) list = list.filter((t) => (t.genre || 'Inconnu').trim() === selectedGenre);
@@ -146,20 +242,17 @@ export const NouveautesPage: React.FC = () => {
     return list;
   }, [tracks, search, sortBy, selectedGenre]);
 
-  // Revenir à la page 1 si on change de filtre
   useEffect(() => { setCurrentPage(1); }, [search, sortBy, selectedGenre]);
 
   const totalPages = Math.max(1, Math.ceil(visibleTracks.length / ITEMS_PER_PAGE));
   const safeCurrentPage = Math.min(currentPage, totalPages);
-  
-  // ✅ Découpage des sons pour la page actuelle
   const paginatedTracks = visibleTracks.slice((safeCurrentPage - 1) * ITEMS_PER_PAGE, safeCurrentPage * ITEMS_PER_PAGE);
 
   return (
     <div style={{ padding: isMobile ? '16px 12px' : '32px 24px', fontFamily: 'Inter, sans-serif', color: '#fff', paddingBottom: 100, background: '#0a0a0a', minHeight: '100vh', width: '100%', boxSizing: 'border-box', overflowX: 'hidden' }}>
       <div style={{ display: 'flex', gap: 32, alignItems: 'flex-start', width: '100%', maxWidth: 1600, margin: '0 auto' }}>
         
-        {/* SIDEBAR GAUCHE (Genres) */}
+        {/* SIDEBAR GAUCHE */}
         {!isMobile && (
           <aside style={{ width: 200, flexShrink: 0, position: 'sticky', top: 32 }}>
             <div style={{ padding: '0 0 16px 0' }}>
@@ -182,7 +275,8 @@ export const NouveautesPage: React.FC = () => {
               <p style={{ color: '#666', fontSize: 13, marginTop: 6 }}>Découvrez les derniers sons.</p>
             </div>
             {user && (
-              <button onClick={() => navigate('/settings')} style={{ padding: '10px 16px', background: '#fff', color: '#000', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 700, fontSize: 12 }}>
+              // ✅ Ouvre la modale au lieu de rediriger vers /settings
+              <button onClick={() => setShowUploadModal(true)} style={{ padding: '10px 16px', background: '#fff', color: '#000', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 700, fontSize: 12 }}>
                 + Uploader
               </button>
             )}
@@ -208,10 +302,29 @@ export const NouveautesPage: React.FC = () => {
 
             {loading ? (
               <div style={{ textAlign: 'center', color: '#666', padding: 40 }}>Chargement...</div>
-            ) : paginatedTracks.map((track) => { // ✅ Utilisation de paginatedTracks
+            ) : paginatedTracks.map((track) => {
               const isThisPlaying = currentTrack?.id === track.id && isPlaying;
               const isLiked = userLikes[track.id] || false;
               const isOwner = user?.id === track.user_id;
+
+              // ✅ FORMULAIRE D'ÉDITION
+              if (editingId === track.id) {
+                return (
+                  <div key={track.id} style={{ padding: '16px', borderBottom: '1px solid #222', display: 'flex', flexDirection: 'column', gap: 12, background: '#1a1a1a' }}>
+                    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                      <input type="text" value={editForm.title} onChange={e => setEditForm({...editForm, title: e.target.value})} style={{ flex: 1, padding: 8, background: '#0a0a0a', border: '1px solid #444', color: '#fff', borderRadius: 4, minWidth: 150 }} placeholder="Titre" />
+                      <input type="text" value={editForm.artist} onChange={e => setEditForm({...editForm, artist: e.target.value})} style={{ flex: 1, padding: 8, background: '#0a0a0a', border: '1px solid #444', color: '#fff', borderRadius: 4, minWidth: 150 }} placeholder="Artiste" />
+                      <input type="text" value={editForm.genre} onChange={e => setEditForm({...editForm, genre: e.target.value})} style={{ width: 120, padding: 8, background: '#0a0a0a', border: '1px solid #444', color: '#fff', borderRadius: 4 }} placeholder="Genre" />
+                      <input type="number" value={editForm.bpm} onChange={e => setEditForm({...editForm, bpm: Number(e.target.value)})} style={{ width: 80, padding: 8, background: '#0a0a0a', border: '1px solid #444', color: '#fff', borderRadius: 4 }} placeholder="BPM" />
+                      <input type="url" value={editForm.purchase_url} onChange={e => setEditForm({...editForm, purchase_url: e.target.value})} style={{ flex: 1, padding: 8, background: '#0a0a0a', border: '1px solid #444', color: '#fff', borderRadius: 4, minWidth: 150 }} placeholder="Lien d'achat" />
+                    </div>
+                    <div style={{ display: 'flex', gap: 10 }}>
+                      <button onClick={saveEdit} style={{ background: '#00d9ff', color: '#000', border: 'none', padding: '8px 16px', borderRadius: 4, cursor: 'pointer', fontWeight: 'bold' }}>Enregistrer</button>
+                      <button onClick={() => setEditingId(null)} style={{ background: 'transparent', color: '#888', border: '1px solid #444', padding: '8px 16px', borderRadius: 4, cursor: 'pointer' }}>Annuler</button>
+                    </div>
+                  </div>
+                );
+              }
 
               if (isMobile) {
                 return (
@@ -272,29 +385,21 @@ export const NouveautesPage: React.FC = () => {
             })}
           </div>
 
-          {/* ✅ BLOC DE PAGINATION RAJOUTÉ ICI */}
+          {/* PAGINATION */}
           {!loading && totalPages > 1 && (
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 16, marginTop: 32 }}>
-              <button 
-                onClick={() => setCurrentPage(p => Math.max(1, p - 1))} 
-                disabled={safeCurrentPage === 1} 
-                style={{ background: 'transparent', border: '1px solid #222', color: safeCurrentPage === 1 ? '#444' : '#fff', padding: '8px 16px', borderRadius: 8, cursor: safeCurrentPage === 1 ? 'not-allowed' : 'pointer', fontSize: 13, transition: 'all 0.2s' }}
-              >
+              <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={safeCurrentPage === 1} style={{ background: 'transparent', border: '1px solid #222', color: safeCurrentPage === 1 ? '#444' : '#fff', padding: '8px 16px', borderRadius: 8, cursor: safeCurrentPage === 1 ? 'not-allowed' : 'pointer', fontSize: 13 }}>
                 ←
               </button>
               <span style={{ fontSize: 13, color: '#888', fontWeight: 600 }}>Page {safeCurrentPage} sur {totalPages}</span>
-              <button 
-                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} 
-                disabled={safeCurrentPage === totalPages} 
-                style={{ background: 'transparent', border: '1px solid #222', color: safeCurrentPage === totalPages ? '#444' : '#fff', padding: '8px 16px', borderRadius: 8, cursor: safeCurrentPage === totalPages ? 'not-allowed' : 'pointer', fontSize: 13, transition: 'all 0.2s' }}
-              >
+              <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={safeCurrentPage === totalPages} style={{ background: 'transparent', border: '1px solid #222', color: safeCurrentPage === totalPages ? '#444' : '#fff', padding: '8px 16px', borderRadius: 8, cursor: safeCurrentPage === totalPages ? 'not-allowed' : 'pointer', fontSize: 13 }}>
                 →
               </button>
             </div>
           )}
         </main>
 
-        {/* SIDEBAR DROITE (Top 10) */}
+        {/* SIDEBAR DROITE */}
         {!isMobile && (
           <aside style={{ width: 280, flexShrink: 0, position: 'sticky', top: 32, display: 'flex', flexDirection: 'column', gap: 24 }}>
             <div style={{ background: '#121212', border: '1px solid #222', borderRadius: 12, padding: 20 }}>
@@ -318,6 +423,66 @@ export const NouveautesPage: React.FC = () => {
           </aside>
         )}
       </div>
+
+      {/* ✅ MODALE D'UPLOAD DIRECT */}
+      {showUploadModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div style={{ background: '#121212', border: '1px solid #222', borderRadius: 16, padding: 32, width: '100%', maxWidth: 500, maxHeight: '90vh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+              <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: '#fff' }}>Uploader un son</h2>
+              <button onClick={() => setShowUploadModal(false)} style={{ background: 'transparent', border: 'none', color: '#888', fontSize: 20, cursor: 'pointer' }}>✕</button>
+            </div>
+
+            <form onSubmit={handleUploadSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div>
+                <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>Fichier Audio (MP3, WAV) *</label>
+                <input type="file" accept="audio/*" onChange={handleAudioFileChange} required style={{ width: '100%', padding: 10, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+                {audioFile && <p style={{ fontSize: 11, color: '#00d9ff', marginTop: 4 }}>Fichier sélectionné : {audioFile.name}</p>}
+              </div>
+              
+              <div>
+                <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>Image de couverture (Optionnel)</label>
+                <input type="file" accept="image/*" onChange={(e) => setCoverFile(e.target.files?.[0] || null)} style={{ width: '100%', padding: 10, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+                {coverFile && (
+                  <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <img src={URL.createObjectURL(coverFile)} alt="Cover preview" style={{ width: 50, height: 50, borderRadius: 6, objectFit: 'cover', border: '1px solid #333' }} />
+                    <span style={{ fontSize: 11, color: '#00d9ff' }}>Pochette chargée ✓</span>
+                  </div>
+                )}
+              </div>
+
+              <div style={{ display: 'flex', gap: 12 }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>Titre *</label>
+                  <input type="text" value={uploadForm.title} onChange={e => setUploadForm({...uploadForm, title: e.target.value})} required style={{ width: '100%', padding: 10, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>Artiste *</label>
+                  <input type="text" value={uploadForm.artist} onChange={e => setUploadForm({...uploadForm, artist: e.target.value})} required style={{ width: '100%', padding: 10, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: 12 }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>Genre</label>
+                  <input type="text" value={uploadForm.genre} onChange={e => setUploadForm({...uploadForm, genre: e.target.value})} placeholder="Ex: Techno" style={{ width: '100%', padding: 10, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>BPM</label>
+                  <input type="number" value={uploadForm.bpm} onChange={e => setUploadForm({...uploadForm, bpm: e.target.value})} placeholder="128" style={{ width: '100%', padding: 10, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>Clé</label>
+                  <input type="text" value={uploadForm.song_key} onChange={e => setUploadForm({...uploadForm, song_key: e.target.value})} placeholder="Am" style={{ width: '100%', padding: 10, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+                </div>
+              </div>
+
+              <button type="submit" disabled={uploading} style={{ marginTop: 12, padding: 14, background: '#00d9ff', color: '#000', border: 'none', borderRadius: 8, fontWeight: 800, fontSize: 14, cursor: uploading ? 'wait' : 'pointer' }}>
+                {uploading ? 'Upload en cours...' : 'Publier le son'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

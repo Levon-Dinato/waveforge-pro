@@ -41,7 +41,8 @@ export const SettingsPage: React.FC = () => {
     theme_color: '#00d9ff', avatar_url: '', background_video_url: '',
     instagram_url: '', spotify_url: '', soundcloud_url: '', tiktok_url: '', youtube_url: '',
     beatport_url: '', x_url: '', facebook_url: '',
-    booking_email: '' // ✅ Nouveau champ
+    booking_email: '',
+    parcours_images: [] as string[] // ✅ Nouveau champ pour les affiches du parcours
   });
 
   const [settings, setSettings] = useState({
@@ -78,7 +79,8 @@ export const SettingsPage: React.FC = () => {
           soundcloud_url: data.soundcloud_url || '', tiktok_url: data.tiktok_url || '',
           youtube_url: data.youtube_url || '', beatport_url: data.beatport_url || '',
           x_url: data.x_url || '', facebook_url: data.facebook_url || '',
-          booking_email: data.booking_email || ''
+          booking_email: data.booking_email || '',
+          parcours_images: data.parcours_images || []
         });
 
         if (data.settings) {
@@ -191,6 +193,26 @@ export const SettingsPage: React.FC = () => {
     await supabase.storage.from('media').remove([filePath]);
     await supabase.from('profile_gallery').delete().eq('id', id);
     setGalleryImages(galleryImages.filter(img => img.id !== id));
+  };
+
+  // ✅ Upload des affiches du parcours
+  const handleParcoursUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0 || !user) return;
+    setUploadingGallery(true);
+    try {
+      const uploadPromises = Array.from(files).map(async (file) => {
+        const fileName = `${user.id}/parcours-${Date.now()}-${Math.random().toString(36).substring(7)}.${file.name.split('.').pop()}`;
+        const { error } = await supabase.storage.from('media').upload(fileName, file);
+        if (error) throw error;
+        const { data } = supabase.storage.from('media').getPublicUrl(fileName);
+        return data.publicUrl;
+      });
+      const newUrls = await Promise.all(uploadPromises);
+      setForm(prev => ({ ...prev, parcours_images: [...prev.parcours_images, ...newUrls] }));
+    } catch (error: any) {
+      alert("Erreur : " + error.message);
+    } finally { setUploadingGallery(false); }
   };
 
   const handleAudioFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -332,7 +354,8 @@ export const SettingsPage: React.FC = () => {
       soundcloud_url: form.soundcloud_url, tiktok_url: form.tiktok_url,
       youtube_url: form.youtube_url, beatport_url: form.beatport_url,
       x_url: form.x_url, facebook_url: form.facebook_url,
-      booking_email: form.booking_email, // ✅ Nouveau champ
+      booking_email: form.booking_email,
+      parcours_images: form.parcours_images, // ✅ Ajout
       settings: settings
     }).eq('id', user.id);
     
@@ -652,6 +675,29 @@ export const SettingsPage: React.FC = () => {
         </div>
       </div>
 
+      {/* ✅ SECTION AFFICHES DU PARCOURS */}
+      <div style={{ background: '#121212', padding: 24, borderRadius: 12, border: '1px solid #222', marginBottom: 24 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+          <h2 style={{ fontSize: 18, color: '#fff', margin: 0 }}>Affiches du Parcours ({form.parcours_images.length})</h2>
+          <label style={{ background: '#fff', color: '#000', padding: '8px 16px', borderRadius: 6, fontWeight: 800, cursor: uploadingGallery ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+            {uploadingGallery ? 'Upload...' : '+ Ajouter des affiches'}
+            <input type="file" accept="image/*" multiple onChange={handleParcoursUpload} disabled={uploadingGallery} style={{ display: 'none' }} />
+          </label>
+        </div>
+        {form.parcours_images.length === 0 ? (
+          <p style={{ color: '#666', fontSize: 14 }}>Aucune affiche pour le moment.</p>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 12 }}>
+            {form.parcours_images.map((url, idx) => (
+              <div key={idx} style={{ position: 'relative', aspectRatio: '3/4', borderRadius: 8, overflow: 'hidden', border: '1px solid #333' }}>
+                <img src={url} alt={`Affiche ${idx + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <button onClick={() => setForm(prev => ({ ...prev, parcours_images: prev.parcours_images.filter((_, i) => i !== idx) }))} style={{ position: 'absolute', top: 4, right: 4, background: 'rgba(255,0,0,0.8)', color: '#fff', border: 'none', borderRadius: '50%', width: 24, height: 24, cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>X</button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       <div style={{ background: '#121212', padding: 24, borderRadius: 12, border: '1px solid #222', marginBottom: 24 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
           <h2 style={{ fontSize: 18, color: '#fff', margin: 0 }}>Ma Galerie Photos ({galleryImages.length})</h2>
@@ -759,7 +805,6 @@ export const SettingsPage: React.FC = () => {
           <textarea value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} rows={6} style={{ width: '100%', padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
         </div>
 
-        {/* ✅ Nouvelle section Booking */}
         <div style={{ background: '#121212', padding: 24, borderRadius: 12, border: '1px solid #222' }}>
           <h2 style={{ fontSize: 18, marginBottom: 20, color: '#fff' }}>Booking</h2>
           <label style={{ fontSize: 13, color: '#aaa', display: 'block', marginBottom: 8 }}>Adresse email pour le booking</label>

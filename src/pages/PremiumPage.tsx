@@ -319,6 +319,9 @@ export const PremiumPage: React.FC = () => {
   const showSidebarTop = settings.show_sidebar_top !== false;
   const showSidebarDates = settings.show_sidebar_dates !== false;
 
+  // ✅ AFFICHES DÉDIÉES AU PARCOURS (indépendantes de la galerie globale)
+  const parcoursImages = profile.parcours_images || [];
+
   const prestations = settings.prestations && settings.prestations.length > 0 ? settings.prestations : [
     { title: 'Clubs & Festivals', desc: 'Sets dynamiques et énergie communicative.' },
     { title: 'Événements Privés', desc: 'Ambiance sur mesure pour vos invités.' },
@@ -499,7 +502,7 @@ export const PremiumPage: React.FC = () => {
         
         {showDuo && (
           <section id="duo" style={{ marginBottom: isMobile ? 40 : 120 }}>
-            <div className="section-subtitle">Bio</div>
+            <div className="section-subtitle">{settings.duo_title || 'Bio'}</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: isMobile ? 20 : 60, alignItems: 'start' }}>
               
               <div style={{ position: 'relative' }}>
@@ -599,7 +602,7 @@ export const PremiumPage: React.FC = () => {
 
         {showPrestations && (
           <section id="prestations" style={{ marginBottom: isMobile ? 40 : 120, paddingTop: isMobile ? 40 : 80, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-            <div className="section-subtitle">Parcours</div>
+            <div className="section-subtitle">{settings.prestations_title || 'Parcours'}</div>
             <h2 className="section-title">Un parcours visible,<br/>des événements qui parlent.</h2>
             
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: isMobile ? 20 : 60, marginTop: isMobile ? 20 : 60 }}>
@@ -633,17 +636,17 @@ export const PremiumPage: React.FC = () => {
                 </div>
               </div>
               
-              {/* ✅ GALERIE D'AFFICHES RÉINTÉGRÉE ICI */}
+              {/* ✅ AFFICHES DU PARCOURS (indépendantes de la galerie globale) */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: isMobile ? 8 : 16 }}>
-                {gallery && gallery.length > 0 ? (
-                  gallery.slice(0, 4).map((img) => (
+                {parcoursImages && parcoursImages.length > 0 ? (
+                  parcoursImages.slice(0, 4).map((url: string, i: number) => (
                     <div 
-                      key={img.id} 
+                      key={i} 
                       className="gallery-item" 
                       style={{ aspectRatio: '3/4' }}
-                      onClick={() => setLightboxImage(img.image_url)}
+                      onClick={() => setLightboxImage(url)}
                     >
-                      <img src={img.image_url} alt="Affiche événement" />
+                      <img src={url} alt={`Affiche parcours ${i + 1}`} />
                       <div className="gallery-btn">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
                       </div>

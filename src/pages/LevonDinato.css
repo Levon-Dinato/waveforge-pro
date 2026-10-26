@@ -121,11 +121,11 @@ div.levon-page .event-title { color: #fff !important; font-size: 0.8rem; font-we
 div.levon-page .event-location { color: var(--text-muted) !important; font-size: 0.65rem; white-space: nowrap; max-width: 250px; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; margin-top: 2px; }
 @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-33.33%); } }
 
-/* ✅ HERO & VIDEO (CORRIGÉ POUR LE PLEIN ÉCRAN) */
+/* ✅ HERO & VIDEO */
 div.levon-page .hero { 
   position: relative !important; 
   width: 100% !important;
-  height: 100vh !important; /* ✅ Force la hauteur de l'écran */
+  height: 100vh !important;
   min-height: 800px !important;
   display: flex !important; align-items: center !important; justify-content: center !important;
   overflow: hidden !important; 
@@ -138,7 +138,7 @@ div.levon-page .bg-video {
   top: 0; left: 0; 
   width: 100% !important; 
   height: 100% !important; 
-  object-fit: cover !important; /* ✅ Force la vidéo à couvrir sans bandes noires */
+  object-fit: cover !important; 
   z-index: 0 !important; 
   opacity: 0.6 !important;
   filter: grayscale(100%) sepia(100%) hue-rotate(180deg) !important; 
@@ -274,6 +274,64 @@ div.levon-page .audio-progress-wrap { flex: 2 !important; display: flex !importa
 div.levon-page .audio-progress { flex: 1 !important; height: 8px; background: #000 !important; border-radius: 4px; cursor: pointer; }
 div.levon-page .audio-progress-bar { height: 100%; background: var(--accent) !important; border-radius: 4px; width: 0%; transition: width 0.1s linear; }
 div.levon-page .audio-time { font-size: 0.8rem; color: var(--text-muted) !important; font-family: monospace; min-width: 45px; text-align: center; }
+
+/* =========================================================
+   ✅ EFFET LUMIÈRE INFINIE (SERPENTIN) - VERSION CORRIGÉE
+   ========================================================= */
+@keyframes borderRotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.premium-glow {
+  position: relative;
+  overflow: hidden; 
+  border-radius: inherit; 
+  z-index: 1;
+}
+
+/* La lumière */
+.premium-glow::before {
+  content: "";
+  position: absolute;
+  top: -50%; left: -50%; 
+  width: 200%; height: 200%;
+  background: conic-gradient(
+    from 0deg, 
+    transparent 0%, 
+    transparent 60%, 
+    var(--accent, #00d9ff) 80%, 
+    #ffffff 90%, 
+    var(--accent, #00d9ff) 100%
+  );
+  animation: borderRotate 4s linear infinite;
+  z-index: -2; 
+  pointer-events: none;
+}
+
+/* Le masque : On force une couleur sombre unie pour éviter les fuites de lumière */
+.premium-glow::after {
+  content: "";
+  position: absolute;
+  inset: 2px; 
+  background: #0a0a0f; /* Couleur unie sombre (plus de "inherit" transparent) */
+  border-radius: inherit;
+  z-index: -1; 
+  pointer-events: none;
+}
+
+/* Cas spécifique : Si la carte a une image de fond, on la met DANS le masque */
+.premium-glow.has-bg-image::after {
+  background-color: #0a0a0f;
+  background-size: cover;
+  background-position: center;
+}
+
+/* Pour que les images restent au-dessus */
+.premium-glow img {
+  position: relative;
+  z-index: 2;
+}
 
 /* RESPONSIVE */
 @media (max-width: 1024px) {

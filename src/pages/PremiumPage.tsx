@@ -9,7 +9,6 @@ import * as GlobalPlayerModule from '../components/GlobalPlayer';
 import * as ArrowButtonModule from '../components/ArrowButton';
 import './LevonDinato.css';
 
-// ✅ Sécurité pour les imports
 const GlobalPlayer = (GlobalPlayerModule as any).GlobalPlayer || (GlobalPlayerModule as any).default || null;
 const ArrowButton = (ArrowButtonModule as any).ArrowButton || (ArrowButtonModule as any).default || null;
 
@@ -31,7 +30,7 @@ const CanvasWaveform: React.FC<{
   const isDraggingRef = useRef(false);
 
   const mockPeaks = useMemo(() => {
-    return Array.from({ length: 250 }, () => Math.random() * 70 + 30);
+    return Array.from({ length: 150 }, () => Math.random() * 70 + 30);
   }, [peaks]);
 
   useEffect(() => { if (!isDraggingRef.current) setDragProgress(null); }, [progress]);
@@ -319,7 +318,6 @@ export const PremiumPage: React.FC = () => {
   const showSidebarTop = settings.show_sidebar_top !== false;
   const showSidebarDates = settings.show_sidebar_dates !== false;
 
-  // ✅ AFFICHES DÉDIÉES AU PARCOURS (indépendantes de la galerie globale)
   const parcoursImages = profile.parcours_images || [];
 
   const prestations = settings.prestations && settings.prestations.length > 0 ? settings.prestations : [
@@ -366,7 +364,7 @@ export const PremiumPage: React.FC = () => {
         .gallery-item img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s; }
         .gallery-item:hover img { transform: scale(1.05); }
         .gallery-item:hover .gallery-btn { opacity: 1; transform: translateY(0); }
-        .gallery-btn { position: absolute; bottom: 16px; right: 16px; width: 44px; height: 44px; border-radius: 50%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); display: flex; alignItems: center; justifyContent: center; opacity: 0; transform: translateY(10px); transition: all 0.3s; color: #fff; }
+        .gallery-btn { position: absolute; bottom: 16px; right: 16px; width: 44px; height: 44px; border-radius: 50%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); display: flex; alignItems: center; justifyContent: center; opacity: 0; transform: translateY(10px); transition: all 0.3s; color: #fff; z-index: 3; }
 
         html { scroll-behavior: smooth; }
         section[id] { scroll-margin-top: 100px; }
@@ -505,14 +503,17 @@ export const PremiumPage: React.FC = () => {
             <div className="section-subtitle">{settings.duo_title || 'Bio'}</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: isMobile ? 20 : 60, alignItems: 'start' }}>
               
-              <div style={{ position: 'relative' }}>
+              {/* ✅ LISERÉ LUMIÈRE AJOUTÉ ICI (Carte Photo de Profil) */}
+              <div className="premium-glow" style={{ position: 'relative', borderRadius: 12, padding: 2 }}>
                 <div style={{ 
                   width: '100%', 
                   aspectRatio: isMobile ? '1/1' : '4/5', 
-                  borderRadius: 12, 
+                  borderRadius: 10, 
                   overflow: 'hidden', 
                   border: '1px solid rgba(255,255,255,0.1)',
-                  boxShadow: '0 20px 40px rgba(0,0,0,0.5)'
+                  boxShadow: '0 20px 40px rgba(0,0,0,0.5)',
+                  position: 'relative',
+                  zIndex: 2
                 }}>
                   <img 
                     src={profile.avatar_url || "/logo.jpg"} 
@@ -520,7 +521,7 @@ export const PremiumPage: React.FC = () => {
                     style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
                   />
                 </div>
-                <div style={{ position: 'absolute', bottom: -10, left: 20, width: 60, height: 4, background: themeColor, borderRadius: 2 }} />
+                <div style={{ position: 'absolute', bottom: -10, left: 20, width: 60, height: 4, background: themeColor, borderRadius: 2, zIndex: 3 }} />
               </div>
 
               <div>
@@ -615,7 +616,11 @@ export const PremiumPage: React.FC = () => {
                   Ils montrent une présence régulière sur le terrain, auprès de publics fidèles et de promoteurs qui lui font confiance pour porter l'énergie de leurs événements.
                 </p>
                 
-                <div style={{ background: 'rgba(255,255,255,0.02)', padding: isMobile ? 20 : 32, borderRadius: 16, border: '1px solid rgba(255,255,255,0.06)' }}>
+                {/* ✅ LISERÉ LUMIÈRE SUR LA CARTE PRESTATIONS */}
+                <div 
+                  className="premium-glow bg-transparent"
+                  style={{ background: 'rgba(255,255,255,0.02)', padding: isMobile ? 20 : 32, borderRadius: 16, border: '1px solid rgba(255,255,255,0.06)' }}
+                >
                   <h3 style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: themeColor, marginBottom: 24 }}>
                     Pourquoi ça compte
                   </h3>
@@ -636,17 +641,17 @@ export const PremiumPage: React.FC = () => {
                 </div>
               </div>
               
-              {/* ✅ AFFICHES DU PARCOURS AGRANDIES */}
+              {/* ✅ AFFICHES DU PARCOURS AVEC LISERÉ LUMIÈRE */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: isMobile ? 12 : 24 }}>
                 {parcoursImages && parcoursImages.length > 0 ? (
                   parcoursImages.slice(0, 4).map((url: string, i: number) => (
                     <div 
                       key={i} 
-                      className="gallery-item" 
-                      style={{ aspectRatio: '3/4' }}
+                      className="gallery-item premium-glow" /* ✅ LISERÉ LUMIÈRE */
+                      style={{ aspectRatio: '3/4', padding: 2 }}
                       onClick={() => setLightboxImage(url)}
                     >
-                      <img src={url} alt={`Affiche parcours ${i + 1}`} />
+                      <img src={url} alt={`Affiche parcours ${i + 1}`} style={{ borderRadius: 6 }} />
                       <div className="gallery-btn">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
                       </div>
@@ -683,14 +688,15 @@ export const PremiumPage: React.FC = () => {
               {gallery.map((img) => (
                 <div 
                   key={img.id} 
-                  className="gallery-item" 
-                  style={{ aspectRatio: '16/9' }}
+                  className="gallery-item premium-glow" /* ✅ LISERÉ LUMIÈRE GALERIE */
+                  style={{ aspectRatio: '16/9', padding: 2 }}
                   onClick={() => setLightboxImage(img.image_url)}
                 >
                   <img 
                     src={img.image_url} 
                     alt="Galerie" 
                     loading="lazy"
+                    style={{ borderRadius: 6 }}
                   />
                   <div className="gallery-btn">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
@@ -728,7 +734,7 @@ export const PremiumPage: React.FC = () => {
                 if (isExternalEmbed) {
                   const isAudioCom = iframeSrc?.includes('audio.com');
                   return (
-                    <div key={track.id} style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.06)', borderRadius: 16, overflow: 'hidden', padding: 24 }}>
+                    <div key={track.id} className="premium-glow bg-transparent" style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.06)', borderRadius: 16, overflow: 'hidden', padding: 24 }}>
                       <div style={{ display: 'flex', gap: 20, alignItems: 'center', marginBottom: 16 }}>
                         <div style={{ width: 60, height: 60, borderRadius: 8, overflow: 'hidden', flexShrink: 0, background: '#111' }}>
                           {track.cover_url ? <img src={track.cover_url} alt={track.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : null}
@@ -757,16 +763,18 @@ export const PremiumPage: React.FC = () => {
                 return (
                   <div 
                     key={track.id} 
-                    className="hover-row"
+                    className={`hover-row premium-glow ${cardBgImage ? 'has-bg-image' : ''}`} /* ✅ LISERÉ LUMIÈRE LECTEUR */
                     onClick={() => isPlayable && handlePlayTrack(track)}
                     style={{ 
                       ...customCardStyle,
                       display: 'flex', flexDirection: 'column', padding: isMobile ? '16px' : '24px', borderRadius: 20, 
                       cursor: isPlayable ? 'pointer' : 'default', border: '1px solid rgba(255,255,255,0.06)',
-                      position: 'relative', overflow: 'hidden',
-                    }}
+                      position: 'relative', 
+                      // On passe l'image de fond au CSS pour que le masque l'utilise
+                      '--bg-image': cardBgImage ? `url("${cardBgImage}")` : 'none'
+                    } as React.CSSProperties}
                   >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: isMobile ? 12 : 20, zIndex: 1, flexDirection: isMobile ? 'column' : 'row', gap: 16 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: isMobile ? 12 : 20, zIndex: 2, flexDirection: isMobile ? 'column' : 'row', gap: 16 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                         <div style={{ width: 64, height: 64, borderRadius: 12, overflow: 'hidden', flexShrink: 0, background: '#111', border: '1px solid rgba(255,255,255,0.1)' }}>
                           {track.cover_url ? <img src={track.cover_url} alt={track.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : null}
@@ -797,7 +805,7 @@ export const PremiumPage: React.FC = () => {
                       </div>
                     </div>
 
-                    <div style={{ background: 'rgba(0,0,0,0.5)', borderRadius: 12, padding: isMobile ? '8px 12px' : '12px 20px', zIndex: 1, border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div style={{ background: 'rgba(0,0,0,0.5)', borderRadius: 12, padding: isMobile ? '8px 12px' : '12px 20px', zIndex: 2, border: '1px solid rgba(255,255,255,0.05)' }}>
                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={themeColor} strokeWidth="2.5"><path d="M12 2a3 3 0 0 0-3 3v14a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path><path d="M5 10a3 3 0 0 0-3 3v4a3 3 0 0 0 6 0v-4a3 3 0 0 0-3-3z"></path><path d="M19 7a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0v-7a3 3 0 0 0-3-3z"></path></svg>

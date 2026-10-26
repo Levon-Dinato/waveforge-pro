@@ -13,7 +13,7 @@ import { PrivateRoute } from './components/PrivateRoute';
 import { PageTransition } from './components/PageTransition';
 import './styles.css';
 
-// Lazy loading de toutes les pages
+// ... Tes imports lazy (inchangés) ...
 const HomePage = lazy(() => import('./pages/HomePage').then((m) => ({ default: m.HomePage })));
 const StudioPage = lazy(() => import('./pages/StudioPage').then((m) => ({ default: m.StudioPage })));
 const StemsPage = lazy(() => import('./pages/StemsPage').then((m) => ({ default: m.StemsPage })));
@@ -38,7 +38,6 @@ const EventsPage = lazy(() => import('./pages/EventsPage').then((m) => ({ defaul
 const FeedPage = lazy(() => import('./pages/FeedPage').then((m) => ({ default: m.FeedPage })));
 const ToolsPage = lazy(() => import('./pages/ToolsPage').then((m) => ({ default: m.ToolsPage })));
 const AdminPage = lazy(() => import('./pages/AdminPage').then((m) => ({ default: m.AdminPage }))); 
-
 const LevonDinatoPage = lazy(() => import('./pages/LevonDinatoPage').then((m) => ({ default: m.LevonDinatoPage })));
 const PremiumPage = lazy(() => import('./pages/PremiumPage').then((m) => ({ default: m.PremiumPage })));
 
@@ -50,26 +49,29 @@ const PageLoader = () => (
   </div>
 );
 
-function AppRoutes() {
+// ✅ On extrait les routes pour utiliser useLocation
+function AnimatedRoutes() {
   const location = useLocation();
 
   return (
     <AnimatePresence mode="wait">
+      {/* LA CLÉ (key) EST LE SECRET : Elle force l'animation à chaque changement d'URL */}
       <Routes location={location} key={location.pathname}>
         
-        {/* ✅ PAGES PLEIN ÉCRAN : ON NE MET PAS DE PAGETRANSITION (Pour ne pas casser la navbar fixe et les ancres) */}
+        {/* PAGES PLEIN ÉCRAN (Pas de transition wrapper pour éviter de casser le CSS fixe) */}
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/mixer" element={<PrivateRoute><MixerPage /></PrivateRoute>} />
         <Route path="/levon-dinato" element={<LevonDinatoPage />} />
         <Route path="/premium/:username" element={<PremiumPage />} />
 
-        {/* ROUTES AVEC LE LAYOUT PRINCIPAL (Dashboard) : ON MET LA TRANSITION */}
+        {/* DASHBOARD (Avec layout et transitions) */}
         <Route path="/" element={
           <PrivateRoute>
             <MainLayout />
           </PrivateRoute>
         }>
+          {/* On enveloppe chaque page enfant avec PageTransition */}
           <Route index element={<PageTransition><HomePage /></PageTransition>} />
           <Route path="feed" element={<PageTransition><FeedPage /></PageTransition>} />
           <Route path="nouveautes" element={<PageTransition><NouveautesPage /></PageTransition>} />
@@ -109,7 +111,7 @@ export default function App() {
               <BrowserRouter>
                 <WindowsProvider>
                   <Suspense fallback={<PageLoader />}>
-                    <AppRoutes />
+                    <AnimatedRoutes />
                   </Suspense>
                 </WindowsProvider>
               </BrowserRouter>

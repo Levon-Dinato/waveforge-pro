@@ -5,9 +5,13 @@ import { useNavigate, useParams, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { usePlayer } from '../contexts/PlayerContext';
-import { GlobalPlayer } from '../components/GlobalPlayer';
-import { ArrowButton } from '../components/ArrowButton';
+import * as GlobalPlayerModule from '../components/GlobalPlayer';
+import * as ArrowButtonModule from '../components/ArrowButton';
 import './LevonDinato.css';
+
+// ✅ On utilise le composant qui existe réellement
+const GlobalPlayer = (GlobalPlayerModule as any).GlobalPlayer || (GlobalPlayerModule as any).default || null;
+const ArrowButton = (ArrowButtonModule as any).ArrowButton || (ArrowButtonModule as any).default || null;
 
 const SocialIcons = {
   tiktok: <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/></svg>,
@@ -19,15 +23,6 @@ const SocialIcons = {
   soundcloud: <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M23.998 14.766c-.06 1.63-1.418 2.93-3.078 2.93H11.29c-.286 0-.521-.23-.521-.511V8.16c0-.23.157-.427.382-.485.585-.153 1.284-.229 1.939-.229 3.187 0 5.93 2.145 6.662 5.218 1.991.033 3.613 1.562 3.613 3.445l.012 1.63zM9.82 7.246c-.102 0-.19.038-.26.104-.09.084-.146.206-.146.338v9.539c0 .261.2.477.459.503H1.662c-.911 0-1.656-.744-1.656-1.656v-5.41c0-.915.745-1.656 1.656-1.656h.134c.06-1.244.58-2.35 1.404-3.144.825-.795 1.94-1.29 3.198-1.29.685 0 1.338.152 1.92.426.16.077.25.238.25.414v1.99z"/></svg>,
 };
 
-// ✅ Génère une fausse waveform si les peaks sont absents (pour que ça reste joli)
-const generateFakePeaks = (count = 100) => {
-  return Array.from({ length: count }, (_, i) => {
-    const base = Math.sin(i / 5) * 0.4 + 0.6;
-    const noise = Math.random() * 0.3;
-    return Math.min(1, base + noise);
-  });
-};
-
 const CanvasWaveform: React.FC<{ 
   peaks: number[]; isPlaying: boolean; themeColor: string; progress: number; isCurrent: boolean; onSeek: (ratio: number) => void;
 }> = ({ peaks, isPlaying, themeColor, progress, isCurrent, onSeek }) => {
@@ -35,10 +30,8 @@ const CanvasWaveform: React.FC<{
   const [dragProgress, setDragProgress] = useState<number | null>(null);
   const isDraggingRef = useRef(false);
 
-  // ✅ Utilise les vrais peaks s'ils existent, sinon génère une waveform de secours
-  const displayPeaks = useMemo(() => {
-    if (peaks && peaks.length > 10) return peaks;
-    return generateFakePeaks(150);
+  const mockPeaks = useMemo(() => {
+    return Array.from({ length: 150 }, () => Math.random() * 70 + 30);
   }, [peaks]);
 
   useEffect(() => { if (!isDraggingRef.current) setDragProgress(null); }, [progress]);
@@ -56,49 +49,65 @@ const CanvasWaveform: React.FC<{
     ctx.scale(DPR, DPR);
     ctx.clearRect(0, 0, W, H);
 
+    let safePeaks: number[] = [];
+    if (Array.isArray(peaks) && peaks.length > 0) {
+      safePeaks = peaks;
+    } else if (typeof peaks === 'string') {
+      try {
+        const parsed = JSON.parse(peaks);
+        if (Array.isArray(parsed) && parsed.length > 0) safePeaks = parsed;
+      } catch (e) {}
+    }
+    if (safePeaks.length === 0) safePeaks = mockPeaks;
+
     const centerY = H / 2;
     const maxAmplitude = H * 0.45;
     const displayProgress = dragProgress !== null ? dragProgress : progress;
     const playedX = displayProgress * W;
 
-    const barCount = 500;
-    const step = Math.ceil(displayPeaks.length / barCount);
-    const peaksToDraw = displayPeaks.filter((_: any, i: number) => i % step === 0).slice(0, barCount);
+    const barCount = 300;
+    const step = Math.max(1, Math.floor(safePeaks.length / barCount));
+    const displayPeaks = safePeaks.filter((_: any, i: number) => i % step === 0).slice(0, barCount);
 
-    // Couleur de base des barres (gris clair)
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
-    ctx.shadowBlur = 0;
-
-    for (let i = 0; i < peaksToDraw.length; i++) {
-      const x = (i / peaksToDraw.length) * W;
-      const val = peaksToDraw[i] > 1 ? peaksToDraw[i] / 100 : peaksToDraw[i];
-      const barHeight = Math.max(val * maxAmplitude, 1.5); 
-      if (x >= playedX) ctx.fillRect(x, centerY - barHeight, 1.5, barHeight * 2);
+    // Partie non jouée
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+    for (let i = 0; i < displayPeaks.length; i++) {
+      const x = (i / displayPeaks.length) * W;
+      const val = displayPeaks[i] > 1 ? displayPeaks[i] / 100 : displayPeaks[i];
+      const barHeight = Math.max(val * maxAmplitude, 2);
+      if (x >= playedX) ctx.fillRect(x, centerY - barHeight, 1, barHeight * 2);
     }
 
-    // Couleur de la partie jouée (thème)
+    // Partie jouée
     if (isPlaying || displayProgress > 0) {
       ctx.save();
       ctx.beginPath();
       ctx.rect(0, 0, playedX, H);
       ctx.clip();
-      ctx.fillStyle = themeColor;
+
+      const gradient = ctx.createLinearGradient(0, 0, 0, H);
+      gradient.addColorStop(0, `${themeColor}20`);
+      gradient.addColorStop(0.5, themeColor);
+      gradient.addColorStop(1, `${themeColor}20`);
+
+      ctx.fillStyle = gradient;
       ctx.shadowColor = themeColor;
-      ctx.shadowBlur = 8;
-      for (let i = 0; i < peaksToDraw.length; i++) {
-        const x = (i / peaksToDraw.length) * W;
-        const val = peaksToDraw[i] > 1 ? peaksToDraw[i] / 100 : peaksToDraw[i];
-        const barHeight = Math.max(val * maxAmplitude, 1.5);
-        ctx.fillRect(x, centerY - barHeight, 1.5, barHeight * 2);
+      ctx.shadowBlur = 6;
+
+      for (let i = 0; i < displayPeaks.length; i++) {
+        const x = (i / displayPeaks.length) * W;
+        const val = displayPeaks[i] > 1 ? displayPeaks[i] / 100 : displayPeaks[i];
+        const barHeight = Math.max(val * maxAmplitude, 2);
+        ctx.fillRect(x, centerY - barHeight, 1, barHeight * 2);
       }
       ctx.shadowBlur = 0;
       ctx.restore();
     }
 
-    // Ligne de lecture
+    // Tête de lecture
     if (isPlaying || displayProgress > 0) {
       ctx.strokeStyle = '#fff';
-      ctx.lineWidth = 1;
+      ctx.lineWidth = 2;
       ctx.shadowColor = '#fff';
       ctx.shadowBlur = 4;
       ctx.beginPath();
@@ -107,7 +116,7 @@ const CanvasWaveform: React.FC<{
       ctx.stroke();
       ctx.shadowBlur = 0;
     }
-  }, [displayPeaks, isPlaying, themeColor, progress, dragProgress]);
+  }, [peaks, mockPeaks, isPlaying, themeColor, progress, dragProgress]);
 
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (!isCurrent) return;
@@ -360,7 +369,6 @@ export const PremiumPage: React.FC = () => {
         <title>{profile.username} — Artiste</title>
       </Helmet>
 
-      {/* LIGHTBOX PLEIN ÉCRAN */}
       {lightboxImage && (
         <div 
           onClick={() => setLightboxImage(null)}
@@ -371,7 +379,6 @@ export const PremiumPage: React.FC = () => {
         </div>
       )}
 
-      {/* NAVIGATION FIXE */}
       <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, height: 72, background: 'rgba(5,5,5,0.7)', backdropFilter: 'blur(24px)', zIndex: 1000, borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
         <div style={{ maxWidth: 1400, margin: '0 auto', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
@@ -391,18 +398,21 @@ export const PremiumPage: React.FC = () => {
             <a href="#releases" className="nav-link">Musique</a>
           </div>
           <div>
-            <ArrowButton 
-              label="Booking" 
-              color={themeColor} 
-              href={gmailContactLink} 
-              variant="outline"
-              icon={<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>}
-            />
+            {ArrowButton ? (
+              <ArrowButton 
+                label="Booking" 
+                color={themeColor} 
+                href={gmailContactLink} 
+                variant="outline"
+                icon={<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>}
+              />
+            ) : (
+              <a href={gmailContactLink} target="_blank" rel="noopener noreferrer" style={{ padding: '8px 20px', fontSize: 12, background: themeColor, color: '#000', borderRadius: 6, fontWeight: 700, textDecoration: 'none' }}>Booking</a>
+            )}
           </div>
         </div>
       </nav>
 
-      {/* HERO SECTION */}
       <section style={{ position: 'relative', minHeight: '95vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', background: '#050505', paddingTop: 72 }}>
         
         <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
@@ -438,27 +448,34 @@ export const PremiumPage: React.FC = () => {
           </p>
           
           <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <ArrowButton 
-              label="Écouter les tracks" 
-              color={themeColor} 
-              href="#releases" 
-              icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>}
-            />
-            <ArrowButton 
-              label="Partager" 
-              color={themeColor} 
-              onClick={() => navigator.clipboard.writeText(window.location.href).then(() => alert('Lien copié !'))} 
-              variant="outline"
-              icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>}
-            />
+            {ArrowButton ? (
+              <>
+                <ArrowButton 
+                  label="Écouter les tracks" 
+                  color={themeColor} 
+                  href="#releases" 
+                  icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>}
+                />
+                <ArrowButton 
+                  label="Partager" 
+                  color={themeColor} 
+                  onClick={() => navigator.clipboard.writeText(window.location.href).then(() => alert('Lien copié !'))} 
+                  variant="outline"
+                  icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>}
+                />
+              </>
+            ) : (
+              <>
+                <a href="#releases" style={{ background: 'transparent', border: `1px solid ${themeColor}`, color: themeColor, padding: '16px 32px', fontSize: 14, borderRadius: 8, fontWeight: 800, textDecoration: 'none' }}>ÉCOUTER LES TRACKS</a>
+                <button onClick={() => navigator.clipboard.writeText(window.location.href).then(() => alert('Lien copié !'))} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '16px 32px', borderRadius: 8, fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>PARTAGER</button>
+              </>
+            )}
           </div>
         </div>
       </section>
 
-      {/* CONTENU PRINCIPAL */}
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '100px 24px' }}>
         
-        {/* SECTION BIO */}
         {showDuo && (
           <section id="duo" style={{ marginBottom: 120 }}>
             <div className="section-subtitle">Bio</div>
@@ -503,7 +520,6 @@ export const PremiumPage: React.FC = () => {
           </section>
         )}
 
-        {/* SECTION ÉCOUTER SUR SOUNDCLOUD */}
         {soundcloudUrl && (
           <section style={{ marginBottom: 120, paddingTop: 80, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
             <div className="section-subtitle">Écouter</div>
@@ -560,7 +576,6 @@ export const PremiumPage: React.FC = () => {
           </section>
         )}
 
-        {/* SECTION RÉFÉRENCES / PRESTATIONS */}
         {showPrestations && (
           <section id="prestations" style={{ marginBottom: 120, paddingTop: 80, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
             <div className="section-subtitle">Parcours</div>
@@ -624,7 +639,6 @@ export const PremiumPage: React.FC = () => {
           </section>
         )}
 
-        {/* SECTION GALERIE */}
         {gallery && gallery.length > 0 && (
           <section id="gallery" style={{ marginBottom: 120, paddingTop: 80, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 40 }}>
@@ -662,7 +676,6 @@ export const PremiumPage: React.FC = () => {
           </section>
         )}
 
-        {/* SECTION MUSIQUE (Avec Waveform) */}
         {showReleases && (
           <section id="releases" style={{ paddingTop: 80, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
             <div className="section-subtitle">Écouter</div>
@@ -707,7 +720,6 @@ export const PremiumPage: React.FC = () => {
                   );
                 }
 
-                // TON LECTEUR AVEC FOND ET WAVEFORM
                 const cardBgColor = track.player_bg_color || '#000000';
                 const cardBgImage = track.player_bg_image_url;
                 
@@ -800,7 +812,6 @@ export const PremiumPage: React.FC = () => {
 
       </div>
 
-      {/* FOOTER */}
       <footer style={{ borderTop: '1px solid rgba(255,255,255,0.06)', background: '#020202', padding: '60px 24px 30px 24px' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 40 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 40 }}>
@@ -856,7 +867,7 @@ export const PremiumPage: React.FC = () => {
         </div>
       </footer>
 
-      {currentTrack && (
+      {currentTrack && GlobalPlayer && (
         <GlobalPlayer currentTrack={currentTrack} isPlaying={isPlaying} onTogglePlay={togglePlay} onStop={stop} />
       )}
     </div>

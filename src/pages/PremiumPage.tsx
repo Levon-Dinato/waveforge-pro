@@ -19,12 +19,27 @@ const SocialIcons = {
   soundcloud: <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M23.998 14.766c-.06 1.63-1.418 2.93-3.078 2.93H11.29c-.286 0-.521-.23-.521-.511V8.16c0-.23.157-.427.382-.485.585-.153 1.284-.229 1.939-.229 3.187 0 5.93 2.145 6.662 5.218 1.991.033 3.613 1.562 3.613 3.445l.012 1.63zM9.82 7.246c-.102 0-.19.038-.26.104-.09.084-.146.206-.146.338v9.539c0 .261.2.477.459.503H1.662c-.911 0-1.656-.744-1.656-1.656v-5.41c0-.915.745-1.656 1.656-1.656h.134c.06-1.244.58-2.35 1.404-3.144.825-.795 1.94-1.29 3.198-1.29.685 0 1.338.152 1.92.426.16.077.25.238.25.414v1.99z"/></svg>,
 };
 
+// ✅ Génère une fausse waveform si les peaks sont absents (pour que ça reste joli)
+const generateFakePeaks = (count = 100) => {
+  return Array.from({ length: count }, (_, i) => {
+    const base = Math.sin(i / 5) * 0.4 + 0.6;
+    const noise = Math.random() * 0.3;
+    return Math.min(1, base + noise);
+  });
+};
+
 const CanvasWaveform: React.FC<{ 
   peaks: number[]; isPlaying: boolean; themeColor: string; progress: number; isCurrent: boolean; onSeek: (ratio: number) => void;
 }> = ({ peaks, isPlaying, themeColor, progress, isCurrent, onSeek }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [dragProgress, setDragProgress] = useState<number | null>(null);
   const isDraggingRef = useRef(false);
+
+  // ✅ Utilise les vrais peaks s'ils existent, sinon génère une waveform de secours
+  const displayPeaks = useMemo(() => {
+    if (peaks && peaks.length > 10) return peaks;
+    return generateFakePeaks(150);
+  }, [peaks]);
 
   useEffect(() => { if (!isDraggingRef.current) setDragProgress(null); }, [progress]);
 
@@ -40,7 +55,6 @@ const CanvasWaveform: React.FC<{
     canvas.width = W * DPR; canvas.height = H * DPR;
     ctx.scale(DPR, DPR);
     ctx.clearRect(0, 0, W, H);
-    if (!peaks || peaks.length === 0) return;
 
     const centerY = H / 2;
     const maxAmplitude = H * 0.45;
@@ -48,19 +62,21 @@ const CanvasWaveform: React.FC<{
     const playedX = displayProgress * W;
 
     const barCount = 500;
-    const step = Math.ceil(peaks.length / barCount);
-    const displayPeaks = peaks.filter((_: any, i: number) => i % step === 0).slice(0, barCount);
+    const step = Math.ceil(displayPeaks.length / barCount);
+    const peaksToDraw = displayPeaks.filter((_: any, i: number) => i % step === 0).slice(0, barCount);
 
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+    // Couleur de base des barres (gris clair)
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
     ctx.shadowBlur = 0;
 
-    for (let i = 0; i < displayPeaks.length; i++) {
-      const x = (i / displayPeaks.length) * W;
-      const val = displayPeaks[i] > 1 ? displayPeaks[i] / 100 : displayPeaks[i];
+    for (let i = 0; i < peaksToDraw.length; i++) {
+      const x = (i / peaksToDraw.length) * W;
+      const val = peaksToDraw[i] > 1 ? peaksToDraw[i] / 100 : peaksToDraw[i];
       const barHeight = Math.max(val * maxAmplitude, 1.5); 
       if (x >= playedX) ctx.fillRect(x, centerY - barHeight, 1.5, barHeight * 2);
     }
 
+    // Couleur de la partie jouée (thème)
     if (isPlaying || displayProgress > 0) {
       ctx.save();
       ctx.beginPath();
@@ -69,9 +85,9 @@ const CanvasWaveform: React.FC<{
       ctx.fillStyle = themeColor;
       ctx.shadowColor = themeColor;
       ctx.shadowBlur = 8;
-      for (let i = 0; i < displayPeaks.length; i++) {
-        const x = (i / displayPeaks.length) * W;
-        const val = displayPeaks[i] > 1 ? displayPeaks[i] / 100 : displayPeaks[i];
+      for (let i = 0; i < peaksToDraw.length; i++) {
+        const x = (i / peaksToDraw.length) * W;
+        const val = peaksToDraw[i] > 1 ? peaksToDraw[i] / 100 : peaksToDraw[i];
         const barHeight = Math.max(val * maxAmplitude, 1.5);
         ctx.fillRect(x, centerY - barHeight, 1.5, barHeight * 2);
       }
@@ -79,6 +95,7 @@ const CanvasWaveform: React.FC<{
       ctx.restore();
     }
 
+    // Ligne de lecture
     if (isPlaying || displayProgress > 0) {
       ctx.strokeStyle = '#fff';
       ctx.lineWidth = 1;
@@ -90,7 +107,7 @@ const CanvasWaveform: React.FC<{
       ctx.stroke();
       ctx.shadowBlur = 0;
     }
-  }, [peaks, isPlaying, themeColor, progress, dragProgress]);
+  }, [displayPeaks, isPlaying, themeColor, progress, dragProgress]);
 
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (!isCurrent) return;
@@ -134,7 +151,7 @@ const CanvasWaveform: React.FC<{
   return (
     <canvas 
       ref={canvasRef} onMouseDown={handleMouseDown} onClick={(e) => { if (isCurrent) e.stopPropagation(); }}
-      style={{ width: '100%', height: '40px', display: 'block', cursor: isCurrent ? 'pointer' : 'default', touchAction: 'none', opacity: isCurrent ? 1 : 0.4 }} 
+      style={{ width: '100%', height: '40px', display: 'block', cursor: isCurrent ? 'pointer' : 'default', touchAction: 'none', opacity: isCurrent ? 1 : 0.6 }} 
     />
   );
 };
@@ -438,7 +455,7 @@ export const PremiumPage: React.FC = () => {
         </div>
       </section>
 
-      {/* CONTENU PRINCIPAL (Style Press Kit) */}
+      {/* CONTENU PRINCIPAL */}
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '100px 24px' }}>
         
         {/* SECTION BIO */}
@@ -543,7 +560,7 @@ export const PremiumPage: React.FC = () => {
           </section>
         )}
 
-        {/* SECTION RÉFÉRENCES / PRESTATIONS (Avec flyers) */}
+        {/* SECTION RÉFÉRENCES / PRESTATIONS */}
         {showPrestations && (
           <section id="prestations" style={{ marginBottom: 120, paddingTop: 80, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
             <div className="section-subtitle">Parcours</div>
@@ -607,7 +624,7 @@ export const PremiumPage: React.FC = () => {
           </section>
         )}
 
-        {/* SECTION GALERIE (Style horizontal avec Lightbox) */}
+        {/* SECTION GALERIE */}
         {gallery && gallery.length > 0 && (
           <section id="gallery" style={{ marginBottom: 120, paddingTop: 80, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 40 }}>
@@ -645,7 +662,7 @@ export const PremiumPage: React.FC = () => {
           </section>
         )}
 
-        {/* SECTION MUSIQUE (Avec Waveform restaurée !) */}
+        {/* SECTION MUSIQUE (Avec Waveform) */}
         {showReleases && (
           <section id="releases" style={{ paddingTop: 80, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
             <div className="section-subtitle">Écouter</div>
@@ -690,7 +707,7 @@ export const PremiumPage: React.FC = () => {
                   );
                 }
 
-                // TON LECTEUR AVEC FOND PERSONNALISÉ ET WAVEFORM
+                // TON LECTEUR AVEC FOND ET WAVEFORM
                 const cardBgColor = track.player_bg_color || '#000000';
                 const cardBgImage = track.player_bg_image_url;
                 
@@ -763,7 +780,6 @@ export const PremiumPage: React.FC = () => {
                           </div>
                        </div>
                        
-                       {/* ✅ LA WAVEFORM EST DE RETOUR ! */}
                        <CanvasWaveform 
                           peaks={track.peaks} 
                           isPlaying={isThisPlaying} 

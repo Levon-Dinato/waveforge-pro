@@ -385,7 +385,7 @@ export const PremiumPage: React.FC = () => {
         </div>
       </nav>
 
-      {/* HERO SECTION (Vidéo visible et teintée) */}
+      {/* HERO SECTION (Vidéo Noir et Blanc teintée) */}
       <section style={{ position: 'relative', minHeight: '95vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', background: '#050505', paddingTop: 72 }}>
         
         <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
@@ -395,25 +395,25 @@ export const PremiumPage: React.FC = () => {
               width: '100%', 
               height: '100%', 
               objectFit: 'cover', 
-              // ✅ Vidéo un peu sombre mais visible
-              opacity: 0.6, 
-              filter: 'brightness(0.5) contrast(1.2)' 
+              // ✅ EFFET NOIR ET BLANC ATTÉNUÉ
+              filter: 'grayscale(100%) contrast(1.2) brightness(0.6)',
+              opacity: 0.8
             }}
           >
             <source src={profile.background_video_url || "/background.mp4"} type="video/mp4" />
           </video>
 
-          {/* ✅ La couche de couleur assortie au thème (Overlay) */}
+          {/* ✅ La couche de couleur par-dessus le noir et blanc */}
           <div style={{ 
             position: 'absolute', 
             inset: 0, 
             background: themeColor, 
             mixBlendMode: 'overlay', 
-            opacity: 0.35 
+            opacity: 0.4 
           }} />
 
           {/* ✅ Dégradé pour la lisibilité du texte */}
-          <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(to bottom, rgba(5,5,5,0.3) 0%, rgba(5,5,5,0) 40%, rgba(5,5,5,0.8) 80%, #050505 100%)` }} />
+          <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(to bottom, rgba(5,5,5,0.4) 0%, rgba(5,5,5,0) 40%, rgba(5,5,5,0.9) 80%, #050505 100%)` }} />
         </div>
         
         <div style={{ position: 'relative', zIndex: 10, textAlign: 'center', maxWidth: 1000, padding: '0 24px', marginTop: '15vh' }}>

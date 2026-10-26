@@ -1,6 +1,7 @@
 // src/App.tsx
 import { lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { AnimatePresence } from 'framer-motion';
 import { HelmetProvider } from 'react-helmet-async';
 import { AudioEngineProvider } from './contexts/AudioEngineContext';
 import { AuthProvider } from './contexts/AuthContext';
@@ -9,6 +10,7 @@ import { ToastProvider } from './components/ui/Toast';
 import { WindowsProvider } from './components/WindowsManager';
 import { MainLayout } from './layouts/MainLayout';
 import { PrivateRoute } from './components/PrivateRoute';
+import { PageTransition } from './components/PageTransition';
 import './styles.css';
 
 // Lazy loading de toutes les pages
@@ -37,10 +39,7 @@ const FeedPage = lazy(() => import('./pages/FeedPage').then((m) => ({ default: m
 const ToolsPage = lazy(() => import('./pages/ToolsPage').then((m) => ({ default: m.ToolsPage })));
 const AdminPage = lazy(() => import('./pages/AdminPage').then((m) => ({ default: m.AdminPage }))); 
 
-// ✅ Import de la page Levon & Dinato (Démo)
 const LevonDinatoPage = lazy(() => import('./pages/LevonDinatoPage').then((m) => ({ default: m.LevonDinatoPage })));
-
-// ✅ NOUVEAU : Import de la page Premium dynamique
 const PremiumPage = lazy(() => import('./pages/PremiumPage').then((m) => ({ default: m.PremiumPage })));
 
 const PageLoader = () => (
@@ -50,6 +49,55 @@ const PageLoader = () => (
     <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
   </div>
 );
+
+function AppRoutes() {
+  const location = useLocation();
+
+  return (
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        
+        {/* ✅ PAGES PLEIN ÉCRAN : ON NE MET PAS DE PAGETRANSITION (Pour ne pas casser la navbar fixe et les ancres) */}
+        <Route path="/auth" element={<AuthPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/mixer" element={<PrivateRoute><MixerPage /></PrivateRoute>} />
+        <Route path="/levon-dinato" element={<LevonDinatoPage />} />
+        <Route path="/premium/:username" element={<PremiumPage />} />
+
+        {/* ROUTES AVEC LE LAYOUT PRINCIPAL (Dashboard) : ON MET LA TRANSITION */}
+        <Route path="/" element={
+          <PrivateRoute>
+            <MainLayout />
+          </PrivateRoute>
+        }>
+          <Route index element={<PageTransition><HomePage /></PageTransition>} />
+          <Route path="feed" element={<PageTransition><FeedPage /></PageTransition>} />
+          <Route path="nouveautes" element={<PageTransition><NouveautesPage /></PageTransition>} />
+          <Route path="events" element={<PageTransition><EventsPage /></PageTransition>} />
+          <Route path="live" element={<PageTransition><LivePage /></PageTransition>} />
+          <Route path="genres" element={<PageTransition><GenresPage /></PageTransition>} />
+          <Route path="artists" element={<PageTransition><ArtistsPage /></PageTransition>} />
+          <Route path="tools" element={<PageTransition><ToolsPage /></PageTransition>} />
+          <Route path="studio" element={<PageTransition><StudioPage /></PageTransition>} />
+          <Route path="stems" element={<PageTransition><StemsPage /></PageTransition>} />
+          <Route path="mastering" element={<PageTransition><MasteringPage /></PageTransition>} />
+          <Route path="musicgen" element={<PageTransition><MusicGenPage /></PageTransition>} />
+          <Route path="generator" element={<PageTransition><GeneratorPage /></PageTransition>} />
+          <Route path="video" element={<PageTransition><VideoPage /></PageTransition>} />
+          <Route path="cdj" element={<PageTransition><CDJPage /></PageTransition>} />
+          <Route path="help" element={<PageTransition><HelpPage /></PageTransition>} />
+          <Route path="settings" element={<PageTransition><SettingsPage /></PageTransition>} />
+          <Route path="profil/:id" element={<PageTransition><ProfilePage /></PageTransition>} />
+          <Route path="search" element={<PageTransition><SearchPage /></PageTransition>} />
+          <Route path="track/:id" element={<PageTransition><TrackPage /></PageTransition>} />
+          <Route path="admin" element={<PageTransition><AdminPage /></PageTransition>} />
+        </Route>
+
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </AnimatePresence>
+  );
+}
 
 export default function App() {
   return (
@@ -61,54 +109,7 @@ export default function App() {
               <BrowserRouter>
                 <WindowsProvider>
                   <Suspense fallback={<PageLoader />}>
-                    <Routes>
-                      
-                      {/* ROUTES PUBLIQUES */}
-                      <Route path="/auth" element={<AuthPage />} />
-                      <Route path="/reset-password" element={<ResetPasswordPage />} />
-
-                      {/* ROUTE MIXER (Plein écran) */}
-                      <Route path="/mixer" element={<PrivateRoute><MixerPage /></PrivateRoute>} />
-
-                      {/* ✅ PAGE PREMIUM DÉMO (Levon & Dinato) */}
-                      <Route path="/levon-dinato" element={<LevonDinatoPage />} />
-
-                      {/* ✅ NOUVELLE PAGE PREMIUM DYNAMIQUE (Pour tous les artistes) */}
-                      <Route path="/premium/:username" element={<PremiumPage />} />
-
-                      {/* ROUTES AVEC LE LAYOUT PRINCIPAL */}
-                      <Route path="/" element={
-                        <PrivateRoute>
-                          <MainLayout />
-                        </PrivateRoute>
-                      }>
-                        <Route index element={<HomePage />} />
-                        <Route path="feed" element={<FeedPage />} />
-                        <Route path="nouveautes" element={<NouveautesPage />} />
-                        <Route path="events" element={<EventsPage />} />
-                        <Route path="live" element={<LivePage />} />
-                        <Route path="genres" element={<GenresPage />} />
-                        <Route path="artists" element={<ArtistsPage />} />
-                        <Route path="tools" element={<ToolsPage />} />
-                        <Route path="studio" element={<StudioPage />} />
-                        <Route path="stems" element={<StemsPage />} />
-                        <Route path="mastering" element={<MasteringPage />} />
-                        <Route path="musicgen" element={<MusicGenPage />} />
-                        <Route path="generator" element={<GeneratorPage />} />
-                        <Route path="video" element={<VideoPage />} />
-                        <Route path="cdj" element={<CDJPage />} />
-                        <Route path="help" element={<HelpPage />} />
-                        <Route path="settings" element={<SettingsPage />} />
-                        <Route path="profil/:id" element={<ProfilePage />} />
-                        <Route path="search" element={<SearchPage />} />
-                        <Route path="track/:id" element={<TrackPage />} />
-                        
-                        {/* ✅ NOUVELLE ROUTE ADMIN */}
-                        <Route path="admin" element={<AdminPage />} />
-                      </Route>
-
-                      <Route path="*" element={<Navigate to="/" replace />} />
-                    </Routes>
+                    <AppRoutes />
                   </Suspense>
                 </WindowsProvider>
               </BrowserRouter>

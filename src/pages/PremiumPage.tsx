@@ -9,7 +9,7 @@ import * as GlobalPlayerModule from '../components/GlobalPlayer';
 import * as ArrowButtonModule from '../components/ArrowButton';
 import './LevonDinato.css';
 
-// ✅ On utilise le composant qui existe réellement
+// ✅ Sécurité pour les imports
 const GlobalPlayer = (GlobalPlayerModule as any).GlobalPlayer || (GlobalPlayerModule as any).default || null;
 const ArrowButton = (ArrowButtonModule as any).ArrowButton || (ArrowButtonModule as any).default || null;
 
@@ -24,14 +24,14 @@ const SocialIcons = {
 };
 
 const CanvasWaveform: React.FC<{ 
-  peaks: number[]; isPlaying: boolean; themeColor: string; progress: number; isCurrent: boolean; onSeek: (ratio: number) => void;
-}> = ({ peaks, isPlaying, themeColor, progress, isCurrent, onSeek }) => {
+  peaks: number[]; isPlaying: boolean; themeColor: string; progress: number; isCurrent: boolean; onSeek: (ratio: number) => void; isMobile: boolean;
+}> = ({ peaks, isPlaying, themeColor, progress, isCurrent, onSeek, isMobile }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [dragProgress, setDragProgress] = useState<number | null>(null);
   const isDraggingRef = useRef(false);
 
   const mockPeaks = useMemo(() => {
-    return Array.from({ length: 300 }, () => Math.random() * 70 + 30);
+    return Array.from({ length: 150 }, () => Math.random() * 70 + 30);
   }, [peaks]);
 
   useEffect(() => { if (!isDraggingRef.current) setDragProgress(null); }, [progress]);
@@ -65,7 +65,8 @@ const CanvasWaveform: React.FC<{
     const displayProgress = dragProgress !== null ? dragProgress : progress;
     const playedX = displayProgress * W;
 
-    const barCount = 300;
+    // ✅ Moins de barres sur mobile pour économiser le CPU
+    const barCount = isMobile ? 150 : 300;
     const step = Math.max(1, Math.floor(safePeaks.length / barCount));
     const displayPeaks = safePeaks.filter((_: any, i: number) => i % step === 0).slice(0, barCount);
 
@@ -92,7 +93,8 @@ const CanvasWaveform: React.FC<{
 
       ctx.fillStyle = gradient;
       ctx.shadowColor = themeColor;
-      ctx.shadowBlur = 6;
+      // ✅ Moins d'ombre sur mobile pour la fluidité
+      ctx.shadowBlur = isMobile ? 2 : 6; 
 
       for (let i = 0; i < displayPeaks.length; i++) {
         const x = (i / displayPeaks.length) * W;
@@ -116,7 +118,7 @@ const CanvasWaveform: React.FC<{
       ctx.stroke();
       ctx.shadowBlur = 0;
     }
-  }, [peaks, mockPeaks, isPlaying, themeColor, progress, dragProgress]);
+  }, [peaks, mockPeaks, isPlaying, themeColor, progress, dragProgress, isMobile]);
 
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (!isCurrent) return;
@@ -160,9 +162,21 @@ const CanvasWaveform: React.FC<{
   return (
     <canvas 
       ref={canvasRef} onMouseDown={handleMouseDown} onClick={(e) => { if (isCurrent) e.stopPropagation(); }}
-      style={{ width: '100%', height: '40px', display: 'block', cursor: isCurrent ? 'pointer' : 'default', touchAction: 'none', opacity: isCurrent ? 1 : 0.6 }} 
+      style={{ width: '100%', height: isMobile ? '30px' : '40px', display: 'block', cursor: isCurrent ? 'pointer' : 'default', touchAction: 'none', opacity: isCurrent ? 1 : 0.6 }} 
     />
   );
+};
+
+// ✅ Hook pour détecter le mobile
+const useIsMobile = (breakpoint = 768) => {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth <= breakpoint);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, [breakpoint]);
+  return isMobile;
 };
 
 export const PremiumPage: React.FC = () => {
@@ -170,6 +184,7 @@ export const PremiumPage: React.FC = () => {
   const { username } = useParams<{ username: string }>();
   const { user } = useAuth();
   const { play, currentTrack, isPlaying, togglePlay, stop, currentTime, duration, seek } = usePlayer();
+  const isMobile = useIsMobile();
   
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<any>(null);
@@ -379,7 +394,7 @@ export const PremiumPage: React.FC = () => {
         </div>
       )}
 
-      <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, height: 72, background: 'rgba(5,5,5,0.7)', backdropFilter: 'blur(24px)', zIndex: 1000, borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+      <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, height: isMobile ? 60 : 72, background: 'rgba(5,5,5,0.7)', backdropFilter: 'blur(24px)', zIndex: 1000, borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
         <div style={{ maxWidth: 1400, margin: '0 auto', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
             <button onClick={() => navigate('/')} style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: 20, cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
@@ -413,41 +428,56 @@ export const PremiumPage: React.FC = () => {
         </div>
       </nav>
 
-      <section style={{ position: 'relative', minHeight: '95vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', background: '#050505', paddingTop: 72 }}>
+      <section style={{ position: 'relative', minHeight: isMobile ? '80vh' : '95vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', background: '#050505', paddingTop: isMobile ? 60 : 72 }}>
         
         <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
-          <video 
-            autoPlay muted loop playsInline poster={profile.avatar_url || "/logo.jpg"} 
-            style={{ 
-              width: '100%', 
-              height: '100%', 
-              objectFit: 'cover', 
-              opacity: 0.8, 
-              filter: 'grayscale(100%) contrast(1.2) brightness(0.6)' 
-            }}
-          >
-            <source src={profile.background_video_url || "/background.mp4"} type="video/mp4" />
-          </video>
+          {/* ✅ Sur mobile, on désactive la vidéo auto-play pour économiser la batterie et la data */}
+          {!isMobile ? (
+            <video 
+              autoPlay muted loop playsInline poster={profile.avatar_url || "/logo.jpg"} 
+              style={{ 
+                width: '100%', 
+                height: '100%', 
+                objectFit: 'cover', 
+                opacity: 0.8, 
+                filter: 'grayscale(100%) contrast(1.2) brightness(0.6)' 
+              }}
+            >
+              <source src={profile.background_video_url || "/background.mp4"} type="video/mp4" />
+            </video>
+          ) : (
+            <img 
+              src={profile.avatar_url || "/logo.jpg"} 
+              alt="Background" 
+              style={{ 
+                width: '100%', 
+                height: '100%', 
+                objectFit: 'cover', 
+                opacity: 0.8, 
+                filter: 'grayscale(100%) contrast(1.2) brightness(0.6)' 
+              }}
+            />
+          )}
 
           <div style={{ position: 'absolute', inset: 0, background: themeColor, mixBlendMode: 'overlay', opacity: 0.4 }} />
           <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(to bottom, rgba(5,5,5,0.4) 0%, rgba(5,5,5,0) 40%, rgba(5,5,5,0.9) 80%, #050505 100%)` }} />
         </div>
         
-        <div style={{ position: 'relative', zIndex: 10, textAlign: 'center', maxWidth: 1000, padding: '0 24px', marginTop: '15vh' }}>
+        <div style={{ position: 'relative', zIndex: 10, textAlign: 'center', maxWidth: 1000, padding: '0 24px', marginTop: isMobile ? '5vh' : '15vh' }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(10px)', padding: '6px 16px', borderRadius: 50, border: `1px solid rgba(255,255,255,0.1)`, marginBottom: 32 }}>
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: themeColor, boxShadow: `0 0 10px ${themeColor}` }} />
             <span style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: '#fff' }}>{heroTagline}</span>
           </div>
           
-          <h1 className="hero-title" style={{ fontSize: 'clamp(4rem, 10vw, 8rem)', fontWeight: 900, lineHeight: 0.9, letterSpacing: '-0.05em', marginBottom: 32, textShadow: '0 20px 60px rgba(0,0,0,0.9)' }}>
+          <h1 className="hero-title" style={{ fontSize: isMobile ? '2.5rem' : 'clamp(4rem, 10vw, 8rem)', fontWeight: 900, lineHeight: 0.9, letterSpacing: '-0.05em', marginBottom: 32, textShadow: '0 20px 60px rgba(0,0,0,0.9)' }}>
             {renderTitle(heroTitle)}
           </h1>
           
-          <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 'clamp(1.1rem, 2vw, 1.4rem)', fontWeight: 400, lineHeight: 1.6, marginBottom: 48, maxWidth: 700, margin: '0 auto 48px auto', textShadow: '0 4px 20px rgba(0,0,0,0.8)' }}>
+          <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: isMobile ? '0.95rem' : 'clamp(1.1rem, 2vw, 1.4rem)', fontWeight: 400, lineHeight: 1.6, marginBottom: 48, maxWidth: 700, margin: '0 auto 48px auto', textShadow: '0 4px 20px rgba(0,0,0,0.8)' }}>
             {heroDesc}
           </p>
           
-          <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap', flexDirection: isMobile ? 'column' : 'row' }}>
             {ArrowButton ? (
               <>
                 <ArrowButton 
@@ -474,7 +504,7 @@ export const PremiumPage: React.FC = () => {
         </div>
       </section>
 
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '100px 24px' }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '40px 16px' : '100px 24px' }}>
         
         {showDuo && (
           <section id="duo" style={{ marginBottom: 120 }}>
@@ -484,7 +514,7 @@ export const PremiumPage: React.FC = () => {
               <div style={{ position: 'relative' }}>
                 <div style={{ 
                   width: '100%', 
-                  aspectRatio: '4/5', 
+                  aspectRatio: isMobile ? '1/1' : '4/5', 
                   borderRadius: 12, 
                   overflow: 'hidden', 
                   border: '1px solid rgba(255,255,255,0.1)',
@@ -501,11 +531,11 @@ export const PremiumPage: React.FC = () => {
 
               <div>
                 <blockquote style={{ margin: 0, padding: 0, border: 'none' }}>
-                  <p style={{ fontSize: 'clamp(1.5rem, 2.5vw, 2rem)', fontWeight: 600, lineHeight: 1.4, color: '#fff', marginBottom: 40 }}>
+                  <p style={{ fontSize: isMobile ? '1.2rem' : 'clamp(1.5rem, 2.5vw, 2rem)', fontWeight: 600, lineHeight: 1.4, color: '#fff', marginBottom: 40 }}>
                     "{bioQuote}"
                   </p>
                 </blockquote>
-                <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 16, lineHeight: 1.8, fontWeight: 300, whiteSpace: 'pre-wrap' }}>
+                <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: isMobile ? 14 : 16, lineHeight: 1.8, fontWeight: 300, whiteSpace: 'pre-wrap' }}>
                   {bioRest}
                 </p>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 40 }}>
@@ -529,7 +559,7 @@ export const PremiumPage: React.FC = () => {
             
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 60, alignItems: 'center', marginTop: 40 }}>
               <div>
-                <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 16, lineHeight: 1.8, fontWeight: 300, marginBottom: 30 }}>
+                <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: isMobile ? 14 : 16, lineHeight: 1.8, fontWeight: 300, marginBottom: 30 }}>
                   Plongez dans l'univers sonore de {profile.username}. Retrouvez ses dernières productions, ses remixes et ses sets en direct sur sa page officielle SoundCloud.
                 </p>
                 <a 
@@ -565,7 +595,7 @@ export const PremiumPage: React.FC = () => {
               <div style={{ borderRadius: 12, overflow: 'hidden', boxShadow: '0 20px 40px rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.06)' }}>
                 <iframe 
                   width="100%" 
-                  height="350" 
+                  height={isMobile ? "250" : "350"} 
                   scrolling="no" 
                   frameBorder="no" 
                   allow="autoplay" 
@@ -584,10 +614,10 @@ export const PremiumPage: React.FC = () => {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 60, marginTop: 60 }}>
               
               <div>
-                <p style={{ fontSize: 18, color: '#fff', lineHeight: 1.6, marginBottom: 24, fontWeight: 300 }}>
+                <p style={{ fontSize: isMobile ? 16 : 18, color: '#fff', lineHeight: 1.6, marginBottom: 24, fontWeight: 300 }}>
                   Ces moments retracent les événements qui ont marqué le parcours de {profile.username} : clubs, festivals et rendez-vous culturels.
                 </p>
-                <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.5)', lineHeight: 1.8, marginBottom: 40 }}>
+                <p style={{ fontSize: isMobile ? 14 : 16, color: 'rgba(255,255,255,0.5)', lineHeight: 1.8, marginBottom: 40 }}>
                   Ils montrent une présence régulière sur le terrain, auprès de publics fidèles et de promoteurs qui lui font confiance pour porter l'énergie de leurs événements.
                 </p>
                 
@@ -595,7 +625,7 @@ export const PremiumPage: React.FC = () => {
                   <h3 style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: themeColor, marginBottom: 24 }}>
                     Pourquoi ça compte
                   </h3>
-                  <h4 style={{ fontSize: 22, fontWeight: 800, color: '#fff', marginBottom: 24, lineHeight: 1.3 }}>
+                  <h4 style={{ fontSize: isMobile ? 18 : 22, fontWeight: 800, color: '#fff', marginBottom: 24, lineHeight: 1.3 }}>
                     Pour les événements qui doivent marquer les esprits.
                   </h4>
                   <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -612,7 +642,7 @@ export const PremiumPage: React.FC = () => {
                 </div>
               </div>
               
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 16 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 16 }}>
                 {gallery && gallery.length > 0 ? (
                   gallery.slice(0, 4).map((img) => (
                     <div 
@@ -641,7 +671,7 @@ export const PremiumPage: React.FC = () => {
 
         {gallery && gallery.length > 0 && (
           <section id="gallery" style={{ marginBottom: 120, paddingTop: 80, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 40 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 40, flexDirection: isMobile ? 'column' : 'row', gap: 16 }}>
               <div>
                 <div className="section-subtitle">En images</div>
                 <h2 className="section-title" style={{ margin: 0 }}>Galerie</h2>
@@ -654,7 +684,7 @@ export const PremiumPage: React.FC = () => {
               </button>
             </div>
             
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 24 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 24 }}>
               {gallery.map((img) => (
                 <div 
                   key={img.id} 
@@ -736,28 +766,28 @@ export const PremiumPage: React.FC = () => {
                     onClick={() => isPlayable && handlePlayTrack(track)}
                     style={{ 
                       ...customCardStyle,
-                      display: 'flex', flexDirection: 'column', padding: '24px', borderRadius: 20, 
+                      display: 'flex', flexDirection: 'column', padding: isMobile ? '16px' : '24px', borderRadius: 20, 
                       cursor: isPlayable ? 'pointer' : 'default', border: '1px solid rgba(255,255,255,0.06)',
                       position: 'relative', overflow: 'hidden',
                     }}
                   >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20, zIndex: 1 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20, zIndex: 1, flexDirection: isMobile ? 'column' : 'row', gap: 16 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                         <div style={{ width: 64, height: 64, borderRadius: 12, overflow: 'hidden', flexShrink: 0, background: '#111', border: '1px solid rgba(255,255,255,0.1)' }}>
                           {track.cover_url ? <img src={track.cover_url} alt={track.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : null}
                         </div>
                         <div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
-                            <h3 style={{ fontSize: 20, fontWeight: 900, color: '#fff', margin: 0 }}>{track.title}</h3>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4, flexWrap: 'wrap' }}>
+                            <h3 style={{ fontSize: isMobile ? 16 : 20, fontWeight: 900, color: '#fff', margin: 0 }}>{track.title}</h3>
                             <span style={{ fontSize: 10, fontWeight: 800, color: '#fff', background: 'rgba(255,255,255,0.1)', padding: '4px 10px', borderRadius: 6 }}>{track.genre}</span>
                           </div>
                           <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)' }}>{track.artist}</div>
                         </div>
                       </div>
                       
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 16, width: isMobile ? '100%' : 'auto', justifyContent: isMobile ? 'space-between' : 'flex-end' }}>
                          {isPlayable && (
-                           <button onClick={(e) => handleDownload(e, track.audio_url, `${track.artist} - ${track.title}.mp3`)} style={{ background: 'rgba(0,0,0,0.5)', border: `1px solid ${themeColor}`, borderRadius: 8, padding: '8px 20px', color: themeColor, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 700, transition: 'all 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.background = `${themeColor}20`} onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(0,0,0,0.5)'}>
+                           <button onClick={(e) => handleDownload(e, track.audio_url, `${track.artist} - ${track.title}.mp3`)} style={{ background: 'rgba(0,0,0,0.5)', border: `1px solid ${themeColor}`, borderRadius: 8, padding: isMobile ? '6px 12px' : '8px 20px', color: themeColor, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 700, transition: 'all 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.background = `${themeColor}20`} onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(0,0,0,0.5)'}>
                               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                               Télécharger
                            </button>
@@ -772,8 +802,8 @@ export const PremiumPage: React.FC = () => {
                       </div>
                     </div>
 
-                    <div style={{ background: 'rgba(0,0,0,0.5)', borderRadius: 12, padding: '12px 20px', zIndex: 1, border: '1px solid rgba(255,255,255,0.05)' }}>
-                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, alignItems: 'center' }}>
+                    <div style={{ background: 'rgba(0,0,0,0.5)', borderRadius: 12, padding: isMobile ? '8px 12px' : '12px 20px', zIndex: 1, border: '1px solid rgba(255,255,255,0.05)' }}>
+                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={themeColor} strokeWidth="2.5"><path d="M12 2a3 3 0 0 0-3 3v14a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path><path d="M5 10a3 3 0 0 0-3 3v4a3 3 0 0 0 6 0v-4a3 3 0 0 0-3-3z"></path><path d="M19 7a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0v-7a3 3 0 0 0-3-3z"></path></svg>
                             <span style={{ color: themeColor, fontWeight: 900, fontSize: '14px', fontFamily: 'system-ui, -apple-system, sans-serif', letterSpacing: '-0.5px' }}>Dropzone</span>
@@ -799,6 +829,7 @@ export const PremiumPage: React.FC = () => {
                           progress={isThisPlaying && duration > 0 ? currentTime / duration : 0} 
                           isCurrent={isCurrentTrack} 
                           onSeek={seek} 
+                          isMobile={isMobile}
                        />
                     </div>
                   </div>
@@ -814,7 +845,7 @@ export const PremiumPage: React.FC = () => {
 
       <footer style={{ borderTop: '1px solid rgba(255,255,255,0.06)', background: '#020202', padding: '60px 24px 30px 24px' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 40 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 40 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 40, flexDirection: isMobile ? 'column' : 'row' }}>
             <div style={{ flex: '1 1 300px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20 }}>
                 <img src={profile.avatar_url || "/logo.jpg"} alt="Logo" style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', border: `1px solid ${themeColor}40` }} />

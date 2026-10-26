@@ -50,7 +50,7 @@ const CanvasWaveform: React.FC<{
     const step = Math.ceil(peaks.length / barCount);
     const displayPeaks = peaks.filter((_: any, i: number) => i % step === 0).slice(0, barCount);
 
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
     ctx.shadowBlur = 0;
 
     for (let i = 0; i < displayPeaks.length; i++) {
@@ -67,7 +67,7 @@ const CanvasWaveform: React.FC<{
       ctx.clip();
       ctx.fillStyle = themeColor;
       ctx.shadowColor = themeColor;
-      ctx.shadowBlur = 10;
+      ctx.shadowBlur = 8;
       for (let i = 0; i < displayPeaks.length; i++) {
         const x = (i / displayPeaks.length) * W;
         const val = displayPeaks[i] > 1 ? displayPeaks[i] / 100 : displayPeaks[i];
@@ -80,9 +80,9 @@ const CanvasWaveform: React.FC<{
 
     if (isPlaying || displayProgress > 0) {
       ctx.strokeStyle = '#fff';
-      ctx.lineWidth = 1.5;
+      ctx.lineWidth = 1;
       ctx.shadowColor = '#fff';
-      ctx.shadowBlur = 8;
+      ctx.shadowBlur = 4;
       ctx.beginPath();
       ctx.moveTo(playedX, 0);
       ctx.lineTo(playedX, H);
@@ -133,7 +133,7 @@ const CanvasWaveform: React.FC<{
   return (
     <canvas 
       ref={canvasRef} onMouseDown={handleMouseDown} onClick={(e) => { if (isCurrent) e.stopPropagation(); }}
-      style={{ width: '100%', height: '40px', display: 'block', cursor: isCurrent ? 'pointer' : 'default', touchAction: 'none', opacity: isCurrent ? 1 : 0.6 }} 
+      style={{ width: '100%', height: '30px', display: 'block', cursor: isCurrent ? 'pointer' : 'default', touchAction: 'none', opacity: isCurrent ? 1 : 0.4 }} 
     />
   );
 };
@@ -208,7 +208,7 @@ export const PremiumPage: React.FC = () => {
             });
             setTracks(formattedTracks);
 
-            // ✅ NOUVEAU : Calculer la durée pour les liens directs (sans durée en base)
+            // ✅ Calcul de la durée pour les liens externes (Catbox, etc.)
             formattedTracks.forEach(track => {
               if (track.audio_url && (!track.duration || track.duration === 0)) {
                 const audio = new Audio(track.audio_url);
@@ -258,8 +258,8 @@ export const PremiumPage: React.FC = () => {
     return [...tracks].sort((a, b) => (b.likes_count || 0) - (a.likes_count || 0)).slice(0, 5);
   }, [tracks]);
 
-  if (loading) return <div style={{ background: '#000', color: '#fff', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Chargement...</div>;
-  if (!profile) return <div style={{ background: '#000', color: '#fff', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Artiste introuvable.</div>;
+  if (loading) return <div style={{ background: '#050505', color: '#fff', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Chargement...</div>;
+  if (!profile) return <div style={{ background: '#050505', color: '#fff', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Artiste introuvable.</div>;
 
   const gmailContactLink = `https://mail.google.com/mail/?view=cm&fs=1&to=djcontrolradiotv1@gmail.com&su=Booking%20${profile.username}&body=Salut,%20je%20souhaite%20vous%20contacter%20pour%20un%20booking.`;
   const themeColor = profile.theme_color || '#00d9ff';

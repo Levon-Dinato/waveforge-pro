@@ -30,7 +30,8 @@ export const SettingsPage: React.FC = () => {
   });
   
   const [showLinkForm, setShowLinkForm] = useState(false);
-  const [linkForm, setLinkForm] = useState({ title: '', artist: '', genre: 'Inconnu', purchase_url: '', cover_url: '', embed_code: '' });
+  // ✅ On sépare le lien audio du lien d'achat pour plus de clarté
+  const [linkForm, setLinkForm] = useState({ title: '', artist: '', genre: '', purchase_url: '', cover_url: '', embed_code: '', audio_url: '' });
 
   const [uploadingImage, setUploadingImage] = useState(false);
   const [uploadingGallery, setUploadingGallery] = useState(false);
@@ -45,7 +46,7 @@ export const SettingsPage: React.FC = () => {
 
   // ✅ État pour les réglages avancés (Modules + Prestations)
   const [settings, setSettings] = useState({
-    duo_title: 'Le Duo',
+    duo_title: 'Bio',
     prestations_title: 'Prestations',
     releases_title: 'Dernières Sorties',
     show_stats: true,
@@ -261,21 +262,49 @@ export const SettingsPage: React.FC = () => {
   };
 
   const handleSaveLink = async () => {
-    if (!user || !linkForm.title || !linkForm.purchase_url) {
-      alert("Le titre et le lien Beatport sont obligatoires.");
+    if (!user || !linkForm.title) {
+      alert("Le titre est obligatoire.");
       return;
     }
+    
+    // ✅ Si on n'a ni audio_url ni embed_code, on ne peut pas valider
+    if (!linkForm.audio_url && !linkForm.embed_code && !linkForm.purchase_url) {
+      alert("Renseigne au moins un lien (MP3, Beatport) ou un code d'intégration.");
+      return;
+    }
+
     setSaving(true);
     try {
+      // ✅ Logique : on essaie de deviner si le lien fourni est un MP3 direct
+      let finalAudioUrl = '';
+      let finalPurchaseUrl = linkForm.purchase_url;
+
+      // Si l'utilisateur a mis un lien dans "audio_url" (le nouveau champ)
+      if (linkForm.audio_url) {
+        if (linkForm.audio_url.endsWith('.mp3') || linkForm.audio_url.includes('catbox') || linkForm.audio_url.includes('.wav')) {
+          finalAudioUrl = linkForm.audio_url;
+        } else {
+          finalPurchaseUrl = linkForm.audio_url; // Si c'est un lien Beatport, on le bascule dans purchase_url
+        }
+      }
+      
+      // Si l'utilisateur a mis un lien dans "purchase_url" (l'ancien champ), on vérifie si c'est un MP3
+      if (!finalAudioUrl && finalPurchaseUrl) {
+         if (finalPurchaseUrl.endsWith('.mp3') || finalPurchaseUrl.includes('catbox')) {
+             finalAudioUrl = finalPurchaseUrl;
+             finalPurchaseUrl = '';
+         }
+      }
+
       const { data, error } = await supabase.from('tracks').insert({
         user_id: user.id,
         title: linkForm.title,
         artist: linkForm.artist || form.username || 'Artiste',
-        genre: linkForm.genre,
-        purchase_url: linkForm.purchase_url,
+        genre: linkForm.genre || 'Inconnu',
+        purchase_url: finalPurchaseUrl || null,
         cover_url: linkForm.cover_url || null,
         embed_code: linkForm.embed_code || null,
-        audio_url: '', 
+        audio_url: finalAudioUrl, // ✅ C'est ça qui débloquait ton lecteur
         peaks: [],
         likes_count: 0,
         downloads: 0,
@@ -285,7 +314,7 @@ export const SettingsPage: React.FC = () => {
       if (data) {
         setMyTracks([data, ...myTracks]);
         setShowLinkForm(false);
-        setLinkForm({ title: '', artist: '', genre: 'Inconnu', purchase_url: '', cover_url: '', embed_code: '' });
+        setLinkForm({ title: '', artist: '', genre: '', purchase_url: '', cover_url: '', embed_code: '', audio_url: '' });
       }
     } catch (err: any) {
       alert("Erreur : " + err.message);
@@ -366,7 +395,7 @@ export const SettingsPage: React.FC = () => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
             <div style={{ flex: 1, minWidth: 200 }}>
-              <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>Titre "Le Duo"</label>
+              <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>Titre "Bio"</label>
               <input type="text" value={settings.duo_title} onChange={(e) => setSettings({...settings, duo_title: e.target.value})} style={{ width: '100%', padding: 10, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
             </div>
             <div style={{ flex: 1, minWidth: 200 }}>
@@ -384,7 +413,7 @@ export const SettingsPage: React.FC = () => {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
               {[
                 { key: 'show_stats', label: 'Statistiques (Hero)' },
-                { key: 'show_duo', label: 'Section Le Duo' },
+                { key: 'show_duo', label: 'Section Bio' },
                 { key: 'show_prestations', label: 'Section Prestations' },
                 { key: 'show_releases', label: 'Section Dernières Sorties' },
                 { key: 'show_sidebar_top', label: 'Sidebar : Top Tracks' },
@@ -449,13 +478,22 @@ export const SettingsPage: React.FC = () => {
 
         {showLinkForm && (
           <div style={{ background: '#0a0a0a', padding: 20, borderRadius: 8, border: '1px solid #333', marginBottom: 20, display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <h3 style={{ margin: 0, fontSize: 14, color: '#fff' }}>Ajouter une sortie via un lien</h3>
-            <input type="text" placeholder="Titre du son *" value={linkForm.title} onChange={e => setLinkForm({...linkForm, title: e.target.value})} style={{ padding: 10, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4 }} />
-            <input type="text" placeholder="Artiste" value={linkForm.artist} onChange={e => setLinkForm({...linkForm, artist: e.target.value})} style={{ padding: 10, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4 }} />
-            <input type="text" placeholder="Genre" value={linkForm.genre} onChange={e => setLinkForm({...linkForm, genre: e.target.value})} style={{ padding: 10, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4 }} />
-            <input type="url" placeholder="Lien Beatport *" value={linkForm.purchase_url} onChange={e => setLinkForm({...linkForm, purchase_url: e.target.value})} style={{ padding: 10, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4 }} />
+            <h3 style={{ margin: 0, fontSize: 14, color: '#fff' }}>Ajouter une sortie (Lien audio ou Embed)</h3>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <input type="text" placeholder="Titre du son *" value={linkForm.title} onChange={e => setLinkForm({...linkForm, title: e.target.value})} style={{ flex: 2, padding: 10, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4 }} />
+              <input type="text" placeholder="Artiste" value={linkForm.artist} onChange={e => setLinkForm({...linkForm, artist: e.target.value})} style={{ flex: 1, padding: 10, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4 }} />
+              <input type="text" placeholder="Genre (ex: Techno)" value={linkForm.genre} onChange={e => setLinkForm({...linkForm, genre: e.target.value})} style={{ flex: 1, padding: 10, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4 }} />
+            </div>
+            
+            {/* ✅ On sépare les deux types de liens */}
+            <input type="url" placeholder="Lien direct MP3 (ex: Catbox, Dropbox) — Optionnel" value={linkForm.audio_url} onChange={e => setLinkForm({...linkForm, audio_url: e.target.value})} style={{ padding: 10, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4 }} />
+            
+            <input type="url" placeholder="Lien d'achat / Beatport (Optionnel)" value={linkForm.purchase_url} onChange={e => setLinkForm({...linkForm, purchase_url: e.target.value})} style={{ padding: 10, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4 }} />
+            
             <input type="url" placeholder="Lien de l'image de la cover (optionnel)" value={linkForm.cover_url} onChange={e => setLinkForm({...linkForm, cover_url: e.target.value})} style={{ padding: 10, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4 }} />
-            <textarea placeholder="Code d'intégration Beatport (optionnel)" value={linkForm.embed_code} onChange={e => setLinkForm({...linkForm, embed_code: e.target.value})} rows={3} style={{ padding: 10, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4, fontFamily: 'monospace', fontSize: 11 }} />
+            
+            <textarea placeholder="Code d'intégration (Beatport, Audio.com, Traxsource...)" value={linkForm.embed_code} onChange={e => setLinkForm({...linkForm, embed_code: e.target.value})} rows={3} style={{ padding: 10, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4, fontFamily: 'monospace', fontSize: 11 }} />
+            
             <button onClick={handleSaveLink} disabled={saving} style={{ padding: '10px', background: '#00d9ff', color: '#000', border: 'none', borderRadius: 4, fontWeight: 'bold', cursor: saving ? 'wait' : 'pointer' }}>
               {saving ? 'Enregistrement...' : 'Ajouter ce son'}
             </button>
@@ -476,7 +514,7 @@ export const SettingsPage: React.FC = () => {
                       <input type="number" value={editTrackForm.bpm} onChange={e => setEditTrackForm({...editTrackForm, bpm: Number(e.target.value)})} style={{ width: 80, padding: 8, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4 }} placeholder="BPM" />
                     </div>
                     <input type="url" value={editTrackForm.purchase_url} onChange={e => setEditTrackForm({...editTrackForm, purchase_url: e.target.value})} style={{ width: '100%', padding: 8, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4 }} placeholder="Lien d'achat" />
-                    <textarea value={editTrackForm.embed_code} onChange={e => setEditTrackForm({...editTrackForm, embed_code: e.target.value})} rows={2} style={{ width: '100%', padding: 8, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4, fontFamily: 'monospace', fontSize: 11 }} placeholder="Code iframe Beatport" />
+                    <textarea value={editTrackForm.embed_code} onChange={e => setEditTrackForm({...editTrackForm, embed_code: e.target.value})} rows={2} style={{ width: '100%', padding: 8, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4, fontFamily: 'monospace', fontSize: 11 }} placeholder="Code iframe (Beatport, Audio.com...)" />
                     
                     <div style={{ padding: 12, background: '#121212', borderRadius: 8, border: '1px dashed #444', marginTop: 4 }}>
                       <p style={{ margin: '0 0 10px 0', fontSize: 12, color: '#aaa', fontWeight: 'bold' }}>Personnalisation visuelle du Player (Optionnel)</p>
@@ -500,7 +538,7 @@ export const SettingsPage: React.FC = () => {
                       <div style={{ width: 40, height: 40, background: track.cover_url ? `url(${track.cover_url}) center/cover` : '#222', borderRadius: 4 }} />
                       <div>
                         <div style={{ fontSize: 14, fontWeight: 'bold' }}>{track.title}</div>
-                        <div style={{ fontSize: 12, color: '#888' }}>{track.genre} • {track.bpm} BPM</div>
+                        <div style={{ fontSize: 12, color: '#888' }}>{track.genre || 'Inconnu'} • {track.bpm || 0} BPM</div>
                       </div>
                     </div>
                     <div style={{ display: 'flex', gap: 8 }}>

@@ -207,6 +207,18 @@ export const PremiumPage: React.FC = () => {
               return { ...t, peaks: parsedPeaks };
             });
             setTracks(formattedTracks);
+
+            // ✅ NOUVEAU : Calculer la durée pour les liens directs (sans durée en base)
+            formattedTracks.forEach(track => {
+              if (track.audio_url && (!track.duration || track.duration === 0)) {
+                const audio = new Audio(track.audio_url);
+                audio.addEventListener('loadedmetadata', () => {
+                  setTracks(prev => prev.map(t => 
+                    t.id === track.id ? { ...t, duration: audio.duration } : t
+                  ));
+                });
+              }
+            });
           }
 
           const today = new Date().toISOString().split('T')[0];
@@ -255,12 +267,10 @@ export const PremiumPage: React.FC = () => {
 
   const settings = profile.settings || {};
   
-  // ✅ CORRECTION : On donne la priorité aux colonnes de base (profile) AVANT le JSON (settings)
   const heroTitle = profile.hero_title || settings.hero_title || `L'expérience *sonore* ultime.`;
   const heroDesc = profile.hero_description || settings.hero_description || `Découvrez les productions Funky House, Nu-Disco et Tech House du duo ${profile.username}. Un set conçu pour faire vibrer les dancefloors et marquer les esprits.`;
   const bio = profile.bio || settings.bio || "Levon & Dinato est un duo électrisant qui fusionne leurs influences uniques pour créer un son reconnaissable et contagieux. Unis par une passion commune pour la Funky House, la Nu-Disco, la Tech House et l'Electro Dance.";
   
-  // ✅ CORRECTION : Le badge lit d'abord ton champ "Bannière d'accueil", puis le JSON, puis le texte par défaut.
   const heroTagline = profile.hero_tagline || settings.hero_tagline || "Nouveaux remixes disponibles";
 
   const showStats = settings.show_stats !== false;
@@ -465,13 +475,18 @@ export const PremiumPage: React.FC = () => {
                   const isPlayable = track.audio_url && track.audio_url.length > 0;
                   const isThisPlaying = currentTrack?.id === track.id && isPlaying;
                   const isCurrentTrack = currentTrack?.id === track.id;
+                  
                   const iframeSrc = getIframeSrc(track.embed_code);
-                  const isBeatport = !!iframeSrc;
+                  const isExternalEmbed = !!iframeSrc && (
+                    iframeSrc.includes('beatport.com') || 
+                    iframeSrc.includes('traxsource.com') || 
+                    iframeSrc.includes('audio.com') || 
+                    iframeSrc.includes('spotify.com')
+                  );
 
-                  if (isBeatport) {
-                    // ✅ MODIFICATION ICI : Détection Audio.com et hauteur adaptée
+                  // 1. CAS DES LIENS EXTERNES (Beatport, Audio.com, etc.)
+                  if (isExternalEmbed) {
                     const isAudioCom = iframeSrc?.includes('audio.com');
-                    
                     return (
                       <div key={track.id} style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: 16, overflow: 'hidden', padding: 24 }}>
                         <div style={{ display: 'flex', gap: 20, alignItems: 'center', marginBottom: 20 }}>
@@ -482,7 +497,7 @@ export const PremiumPage: React.FC = () => {
                             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
                               <h3 style={{ fontSize: 20, fontWeight: 900, color: '#fff', margin: 0 }}>{track.title}</h3>
                               <span style={{ fontSize: 10, fontWeight: 800, color: isAudioCom ? '#00d9ff' : '#01FF95', background: isAudioCom ? 'rgba(0, 217, 255, 0.1)' : 'rgba(1, 255, 149, 0.1)', padding: '2px 8px', borderRadius: 4, border: isAudioCom ? '1px solid rgba(0, 217, 255, 0.2)' : '1px solid rgba(1, 255, 149, 0.2)' }}>
-                                {isAudioCom ? 'AUDIO.COM' : 'BEATPORT'}
+                                {isAudioCom ? 'AUDIO.COM' : 'LIEN EXTERNE'}
                               </span>
                             </div>
                             <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)' }}>{track.artist} • {track.genre}</div>
@@ -495,6 +510,7 @@ export const PremiumPage: React.FC = () => {
                     );
                   }
 
+                  // 2. CAS DES FICHIERS AUDIO DIRECTS (Catbox, Supabase Storage, etc.)
                   const cardBgColor = track.player_bg_color || '#000000';
                   const cardBgImage = track.player_bg_image_url;
                   

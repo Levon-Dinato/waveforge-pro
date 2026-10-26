@@ -31,7 +31,7 @@ const CanvasWaveform: React.FC<{
   const isDraggingRef = useRef(false);
 
   const mockPeaks = useMemo(() => {
-    return Array.from({ length: 150 }, () => Math.random() * 70 + 30);
+    return Array.from({ length: 250 }, () => Math.random() * 70 + 30);
   }, [peaks]);
 
   useEffect(() => { if (!isDraggingRef.current) setDragProgress(null); }, [progress]);

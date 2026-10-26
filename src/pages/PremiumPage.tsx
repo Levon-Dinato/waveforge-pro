@@ -431,33 +431,19 @@ export const PremiumPage: React.FC = () => {
       <section style={{ position: 'relative', minHeight: isMobile ? '80vh' : '95vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', background: '#050505', paddingTop: isMobile ? 60 : 72 }}>
         
         <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
-          {/* ✅ Sur mobile, on désactive la vidéo auto-play pour économiser la batterie et la data */}
-          {!isMobile ? (
-            <video 
-              autoPlay muted loop playsInline poster={profile.avatar_url || "/logo.jpg"} 
-              style={{ 
-                width: '100%', 
-                height: '100%', 
-                objectFit: 'cover', 
-                opacity: 0.8, 
-                filter: 'grayscale(100%) contrast(1.2) brightness(0.6)' 
-              }}
-            >
-              <source src={profile.background_video_url || "/background.mp4"} type="video/mp4" />
-            </video>
-          ) : (
-            <img 
-              src={profile.avatar_url || "/logo.jpg"} 
-              alt="Background" 
-              style={{ 
-                width: '100%', 
-                height: '100%', 
-                objectFit: 'cover', 
-                opacity: 0.8, 
-                filter: 'grayscale(100%) contrast(1.2) brightness(0.6)' 
-              }}
-            />
-          )}
+          {/* ✅ La vidéo est maintenant de retour sur mobile ET sur ordinateur */}
+          <video 
+            autoPlay muted loop playsInline poster={profile.avatar_url || "/logo.jpg"} 
+            style={{ 
+              width: '100%', 
+              height: '100%', 
+              objectFit: 'cover', 
+              opacity: 0.8, 
+              filter: 'grayscale(100%) contrast(1.2) brightness(0.6)' 
+            }}
+          >
+            <source src={profile.background_video_url || "/background.mp4"} type="video/mp4" />
+          </video>
 
           <div style={{ position: 'absolute', inset: 0, background: themeColor, mixBlendMode: 'overlay', opacity: 0.4 }} />
           <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(to bottom, rgba(5,5,5,0.4) 0%, rgba(5,5,5,0) 40%, rgba(5,5,5,0.9) 80%, #050505 100%)` }} />

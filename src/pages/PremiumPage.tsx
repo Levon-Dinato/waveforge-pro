@@ -356,7 +356,6 @@ export const PremiumPage: React.FC = () => {
         
         <div style={{ position: 'relative', zIndex: 10, textAlign: 'center', maxWidth: 1000, padding: '0 24px' }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(10px)', padding: '8px 20px', borderRadius: 50, border: `1px solid ${themeColor}60`, marginBottom: 24 }}>
-            {/* ✅ Affiche bien "Official Page" */}
             <span style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: '#fff' }}>{heroTagline}</span>
           </div>
           
@@ -470,6 +469,9 @@ export const PremiumPage: React.FC = () => {
                   const isBeatport = !!iframeSrc;
 
                   if (isBeatport) {
+                    // ✅ MODIFICATION ICI : Détection Audio.com et hauteur adaptée
+                    const isAudioCom = iframeSrc?.includes('audio.com');
+                    
                     return (
                       <div key={track.id} style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: 16, overflow: 'hidden', padding: 24 }}>
                         <div style={{ display: 'flex', gap: 20, alignItems: 'center', marginBottom: 20 }}>
@@ -479,13 +481,15 @@ export const PremiumPage: React.FC = () => {
                           <div style={{ flex: 1 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
                               <h3 style={{ fontSize: 20, fontWeight: 900, color: '#fff', margin: 0 }}>{track.title}</h3>
-                              <span style={{ fontSize: 10, fontWeight: 800, color: '#01FF95', background: 'rgba(1, 255, 149, 0.1)', padding: '2px 8px', borderRadius: 4, border: '1px solid rgba(1, 255, 149, 0.2)' }}>BEATPORT</span>
+                              <span style={{ fontSize: 10, fontWeight: 800, color: isAudioCom ? '#00d9ff' : '#01FF95', background: isAudioCom ? 'rgba(0, 217, 255, 0.1)' : 'rgba(1, 255, 149, 0.1)', padding: '2px 8px', borderRadius: 4, border: isAudioCom ? '1px solid rgba(0, 217, 255, 0.2)' : '1px solid rgba(1, 255, 149, 0.2)' }}>
+                                {isAudioCom ? 'AUDIO.COM' : 'BEATPORT'}
+                              </span>
                             </div>
                             <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)' }}>{track.artist} • {track.genre}</div>
                           </div>
                         </div>
-                        <div style={{ borderRadius: 12, overflow: 'hidden', background: '#000', width: '100%' }}>
-                          <iframe src={iframeSrc!} width="100%" height="162" frameBorder="0" scrolling="no" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-presentation" style={{ display: 'block', width: '100%' }}></iframe>
+                        <div style={{ borderRadius: 12, overflow: 'hidden', background: isAudioCom ? 'transparent' : '#000', width: '100%' }}>
+                          <iframe src={iframeSrc!} width="100%" height={isAudioCom ? "235" : "162"} frameBorder="0" scrolling="no" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-presentation" style={{ display: 'block', width: '100%', borderRadius: '12px' }}></iframe>
                         </div>
                       </div>
                     );

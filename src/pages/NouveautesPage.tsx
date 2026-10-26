@@ -37,7 +37,7 @@ const forceDownload = async (url: string, filename: string) => {
 
 interface Track {
   id: string; title: string; artist: string; genre: string; bpm: number; song_key: string | null; camelot: string | null;
-  likes_count: number; downloads: number; audio_url: string; duration: number; peaks: number[]; cover_url: string | null; created_at: string; user_id: string | null; purchase_url: string | null;
+  likes_count: number; downloads: number; audio_url: string; duration: number; peaks: number[]; cover_url: string | null; created_at: string; user_id: string | null; purchase_url: string | null; embed_code?: string;
 }
 
 const INPUT_STYLE: React.CSSProperties = { padding: '10px 14px', background: '#0a0a0a', border: '1px solid #222', borderRadius: '8px', color: '#fff', fontFamily: 'Inter, sans-serif', fontSize: '13px', outline: 'none', width: '100%' };
@@ -63,7 +63,9 @@ export const NouveautesPage: React.FC = () => {
   // ✅ États pour la modale d'upload
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [uploadForm, setUploadForm] = useState({ title: '', artist: '', genre: '', bpm: '', song_key: '' });
+  const [uploadType, setUploadType] = useState<'file' | 'link'>('file'); // ✅ Nouveau : choix du type
+  
+  const [uploadForm, setUploadForm] = useState({ title: '', artist: '', genre: '', bpm: '', song_key: '', audio_url: '', embed_code: '', purchase_url: '' });
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
 
@@ -108,6 +110,7 @@ export const NouveautesPage: React.FC = () => {
 
   const handlePlayTrack = (e: React.MouseEvent, track: Track) => {
     e.stopPropagation();
+    if (!track.audio_url) return;
     play({ id: track.id, title: track.title, artist: track.artist, audio_url: track.audio_url, cover_url: track.cover_url, user_id: track.user_id || null, duration: track.duration, peaks: track.peaks, bpm: track.bpm, song_key: track.song_key, genre: track.genre });
   };
 
@@ -169,29 +172,46 @@ export const NouveautesPage: React.FC = () => {
     }
   };
 
-  // ✅ Envoi du son
+  // ✅ Envoi du son (Fichier ou Lien)
   const handleUploadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return alert("Connecte-toi pour uploader.");
-    if (!audioFile) return alert("Sélectionne un fichier audio.");
     if (!uploadForm.title || !uploadForm.artist) return alert("Titre et Artiste obligatoires.");
 
     setUploading(true);
     try {
-      const audioExt = audioFile.name.split('.').pop();
-      const audioName = `${user.id}/${Date.now()}-audio.${audioExt}`;
-      const { error: audioError } = await supabase.storage.from(AUDIO_BUCKET).upload(audioName, audioFile);
-      if (audioError) throw audioError;
-      const { data: audioUrlData } = supabase.storage.from(AUDIO_BUCKET).getPublicUrl(audioName);
-
+      let finalAudioUrl = uploadForm.audio_url;
       let coverUrl = null;
-      if (coverFile) {
-        const coverExt = coverFile.name.split('.').pop();
-        const coverName = `${user.id}/${Date.now()}-cover.${coverExt}`;
-        const { error: coverError } = await supabase.storage.from(AUDIO_BUCKET).upload(coverName, coverFile);
-        if (!coverError) {
-          const { data: coverUrlData } = supabase.storage.from(AUDIO_BUCKET).getPublicUrl(coverName);
-          coverUrl = coverUrlData.publicUrl;
+
+      // 1. Si c'est un upload de fichier
+      if (uploadType === 'file') {
+        if (!audioFile) throw new Error("Sélectionne un fichier audio.");
+        const audioExt = audioFile.name.split('.').pop();
+        const audioName = `${user.id}/${Date.now()}-audio.${audioExt}`;
+        const { error: audioError } = await supabase.storage.from(AUDIO_BUCKET).upload(audioName, audioFile);
+        if (audioError) throw audioError;
+        const { data: audioUrlData } = supabase.storage.from(AUDIO_BUCKET).getPublicUrl(audioName);
+        finalAudioUrl = audioUrlData.publicUrl;
+
+        if (coverFile) {
+          const coverExt = coverFile.name.split('.').pop();
+          const coverName = `${user.id}/${Date.now()}-cover.${coverExt}`;
+          const { error: coverError } = await supabase.storage.from(AUDIO_BUCKET).upload(coverName, coverFile);
+          if (!coverError) {
+            const { data: coverUrlData } = supabase.storage.from(AUDIO_BUCKET).getPublicUrl(coverName);
+            coverUrl = coverUrlData.publicUrl;
+          }
+        }
+      } else {
+        // 2. Si c'est un lien (Catbox ou Embed)
+        if (!uploadForm.audio_url && !uploadForm.embed_code) throw new Error("Renseigne un lien ou un code d'intégration.");
+        // Si c'est un lien direct MP3, on le met dans audio_url
+        if (uploadForm.audio_url && (uploadForm.audio_url.endsWith('.mp3') || uploadForm.audio_url.includes('catbox'))) {
+            finalAudioUrl = uploadForm.audio_url;
+        } else if (uploadForm.audio_url) {
+            // Sinon c'est un lien d'achat (Beatport, etc.)
+            uploadForm.purchase_url = uploadForm.audio_url;
+            finalAudioUrl = ''; 
         }
       }
 
@@ -202,8 +222,10 @@ export const NouveautesPage: React.FC = () => {
         genre: uploadForm.genre || 'Inconnu',
         bpm: Number(uploadForm.bpm) || 0,
         song_key: uploadForm.song_key || null,
-        audio_url: audioUrlData.publicUrl,
+        audio_url: finalAudioUrl,
         cover_url: coverUrl,
+        embed_code: uploadForm.embed_code || null,
+        purchase_url: uploadForm.purchase_url || null,
         peaks: [],
         duration: 0,
         likes_count: 0,
@@ -215,12 +237,12 @@ export const NouveautesPage: React.FC = () => {
       if (data) setTracks((prev) => [data, ...prev]);
       
       setShowUploadModal(false);
-      setUploadForm({ title: '', artist: '', genre: '', bpm: '', song_key: '' });
+      setUploadForm({ title: '', artist: '', genre: '', bpm: '', song_key: '', audio_url: '', embed_code: '', purchase_url: '' });
       setAudioFile(null);
       setCoverFile(null);
-      alert("Son uploadé avec succès ! 🎵");
+      alert("Son ajouté avec succès ! 🎵");
     } catch (err: any) {
-      alert("Erreur lors de l'upload : " + err.message);
+      alert("Erreur : " + err.message);
     } finally {
       setUploading(false);
     }
@@ -275,7 +297,6 @@ export const NouveautesPage: React.FC = () => {
               <p style={{ color: '#666', fontSize: 13, marginTop: 6 }}>Découvrez les derniers sons.</p>
             </div>
             {user && (
-              // ✅ Ouvre la modale au lieu de rediriger vers /settings
               <button onClick={() => setShowUploadModal(true)} style={{ padding: '10px 16px', background: '#fff', color: '#000', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 700, fontSize: 12 }}>
                 + Uploader
               </button>
@@ -424,32 +445,54 @@ export const NouveautesPage: React.FC = () => {
         )}
       </div>
 
-      {/* ✅ MODALE D'UPLOAD DIRECT */}
+      {/* ✅ MODALE D'UPLOAD DIRECT MODIFIÉE */}
       {showUploadModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
           <div style={{ background: '#121212', border: '1px solid #222', borderRadius: 16, padding: 32, width: '100%', maxWidth: 500, maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-              <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: '#fff' }}>Uploader un son</h2>
+              <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: '#fff' }}>Ajouter un son</h2>
               <button onClick={() => setShowUploadModal(false)} style={{ background: 'transparent', border: 'none', color: '#888', fontSize: 20, cursor: 'pointer' }}>✕</button>
             </div>
 
+            {/* ✅ Choix du type d'ajout */}
+            <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
+              <button onClick={() => setUploadType('file')} style={{ flex: 1, padding: 10, background: uploadType === 'file' ? '#00d9ff' : 'transparent', color: uploadType === 'file' ? '#000' : '#fff', border: '1px solid #333', borderRadius: 8, cursor: 'pointer', fontWeight: 700 }}>Fichier MP3</button>
+              <button onClick={() => setUploadType('link')} style={{ flex: 1, padding: 10, background: uploadType === 'link' ? '#00d9ff' : 'transparent', color: uploadType === 'link' ? '#000' : '#fff', border: '1px solid #333', borderRadius: 8, cursor: 'pointer', fontWeight: 700 }}>Lien / Embed</button>
+            </div>
+
             <form onSubmit={handleUploadSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <div>
-                <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>Fichier Audio (MP3, WAV) *</label>
-                <input type="file" accept="audio/*" onChange={handleAudioFileChange} required style={{ width: '100%', padding: 10, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
-                {audioFile && <p style={{ fontSize: 11, color: '#00d9ff', marginTop: 4 }}>Fichier sélectionné : {audioFile.name}</p>}
-              </div>
               
-              <div>
-                <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>Image de couverture (Optionnel)</label>
-                <input type="file" accept="image/*" onChange={(e) => setCoverFile(e.target.files?.[0] || null)} style={{ width: '100%', padding: 10, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
-                {coverFile && (
-                  <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <img src={URL.createObjectURL(coverFile)} alt="Cover preview" style={{ width: 50, height: 50, borderRadius: 6, objectFit: 'cover', border: '1px solid #333' }} />
-                    <span style={{ fontSize: 11, color: '#00d9ff' }}>Pochette chargée ✓</span>
+              {uploadType === 'file' ? (
+                <>
+                  <div>
+                    <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>Fichier Audio (MP3, WAV) *</label>
+                    <input type="file" accept="audio/*" onChange={handleAudioFileChange} required style={{ width: '100%', padding: 10, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+                    {audioFile && <p style={{ fontSize: 11, color: '#00d9ff', marginTop: 4 }}>Fichier sélectionné : {audioFile.name}</p>}
                   </div>
-                )}
-              </div>
+                  
+                  <div>
+                    <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>Image de couverture (Optionnel)</label>
+                    <input type="file" accept="image/*" onChange={(e) => setCoverFile(e.target.files?.[0] || null)} style={{ width: '100%', padding: 10, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+                    {coverFile && (
+                      <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <img src={URL.createObjectURL(coverFile)} alt="Cover preview" style={{ width: 50, height: 50, borderRadius: 6, objectFit: 'cover', border: '1px solid #333' }} />
+                        <span style={{ fontSize: 11, color: '#00d9ff' }}>Pochette chargée ✓</span>
+                      </div>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div>
+                    <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>Lien direct MP3 (ex: Catbox) ou Lien d'achat</label>
+                    <input type="url" value={uploadForm.audio_url} onChange={e => setUploadForm({...uploadForm, audio_url: e.target.value})} placeholder="https://..." style={{ width: '100%', padding: 10, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>Code d'intégration (Beatport, Audio.com, etc.)</label>
+                    <textarea value={uploadForm.embed_code} onChange={e => setUploadForm({...uploadForm, embed_code: e.target.value})} placeholder="<iframe src='...'></iframe>" rows={3} style={{ width: '100%', padding: 10, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff', fontFamily: 'monospace' }} />
+                  </div>
+                </>
+              )}
 
               <div style={{ display: 'flex', gap: 12 }}>
                 <div style={{ flex: 1 }}>
@@ -477,7 +520,7 @@ export const NouveautesPage: React.FC = () => {
               </div>
 
               <button type="submit" disabled={uploading} style={{ marginTop: 12, padding: 14, background: '#00d9ff', color: '#000', border: 'none', borderRadius: 8, fontWeight: 800, fontSize: 14, cursor: uploading ? 'wait' : 'pointer' }}>
-                {uploading ? 'Upload en cours...' : 'Publier le son'}
+                {uploading ? 'Traitement en cours...' : 'Ajouter le son'}
               </button>
             </form>
           </div>

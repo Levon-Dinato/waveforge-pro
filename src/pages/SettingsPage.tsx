@@ -32,7 +32,8 @@ export const SettingsPage: React.FC = () => {
 
   const [uploadingImage, setUploadingImage] = useState(false);
   const [uploadingGallery, setUploadingGallery] = useState(false);
-  const [uploadingPlayerBg, setUploadingPlayerBg] = useState(false); // ✅ Nouvel état pour l'upload du fond du player
+  const [uploadingPlayerBg, setUploadingPlayerBg] = useState(false);
+  const [uploadingVideo, setUploadingVideo] = useState(false); // ✅ Nouvel état pour la vidéo
   const [galleryImages, setGalleryImages] = useState<any[]>([]);
 
   const [form, setForm] = useState({
@@ -122,7 +123,29 @@ export const SettingsPage: React.FC = () => {
     } finally { setUploadingImage(false); }
   };
 
-  // ✅ Nouvelle fonction pour uploader l'image de fond du player
+  // ✅ Nouvelle fonction pour uploader la vidéo de fond
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    if (!file.type.includes('video')) {
+      alert("Veuillez sélectionner un fichier vidéo (MP4).");
+      return;
+    }
+    setUploadingVideo(true);
+    try {
+      const fileName = `${user.id}/background-video-${Date.now()}.${file.name.split('.').pop()}`;
+      const { error: uploadError } = await supabase.storage.from('media').upload(fileName, file);
+      if (uploadError) throw uploadError;
+      const { data } = supabase.storage.from('media').getPublicUrl(fileName);
+      setForm(prev => ({ ...prev, background_video_url: data.publicUrl }));
+      alert("Vidéo uploadée avec succès ! ✅");
+    } catch (error: any) {
+      alert("Erreur d'upload de la vidéo : " + error.message);
+    } finally {
+      setUploadingVideo(false);
+    }
+  };
+
   const handlePlayerBgUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
@@ -132,7 +155,6 @@ export const SettingsPage: React.FC = () => {
       const { error: uploadError } = await supabase.storage.from('media').upload(fileName, file);
       if (uploadError) throw uploadError;
       const { data } = supabase.storage.from('media').getPublicUrl(fileName);
-      // On met à jour le formulaire d'édition avec la nouvelle URL
       setEditTrackForm(prev => ({ ...prev, player_bg_image_url: data.publicUrl }));
     } catch (error: any) {
       alert("Erreur d'upload : " + error.message);
@@ -170,7 +192,7 @@ export const SettingsPage: React.FC = () => {
     setGalleryImages(galleryImages.filter(img => img.id !== id));
   };
 
-  // ✅ Lecture des tags ID3 avec fallback sur le nom du fichier
+  // ✅ Lecture des tags ID3 avec fallback intelligent sur le nom du fichier
   const handleAudioFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -179,17 +201,41 @@ export const SettingsPage: React.FC = () => {
     const fileNameWithoutExt = file.name.replace(/\.[^/.]+$/, "");
     let guessArtist = "";
     let guessTitle = fileNameWithoutExt;
-    
+    let guessGenre = "";
+    let guessBpm = "";
+
     if (fileNameWithoutExt.includes(' - ')) {
       const parts = fileNameWithoutExt.split(' - ');
       guessArtist = parts[0].trim();
       guessTitle = parts.slice(1).join(' - ').trim();
     }
 
+    const lowerName = fileNameWithoutExt.toLowerCase();
+    
+    const bpmMatch = lowerName.match(/(\d{2,3})\s?bpm/);
+    if (bpmMatch) {
+      guessBpm = bpmMatch[1];
+    } else {
+      const numMatch = lowerName.match(/(\d{2,3})/);
+      if (numMatch && parseInt(numMatch[1]) >= 60 && parseInt(numMatch[1]) <= 200) {
+        guessBpm = numMatch[1];
+      }
+    }
+
+    const genres = ['techno', 'house', 'tech house', 'deep house', 'afro house', 'dance', 'k-pop', 'pop', 'hip-hop', 'rap', 'trap', 'dubstep', 'drum and bass', 'dnb', 'trance', 'hardstyle', 'reggaeton', 'latin', 'funk', 'disco', 'electro', 'edm', 'remix'];
+    for (const g of genres) {
+      if (lowerName.includes(g)) {
+        guessGenre = g.charAt(0).toUpperCase() + g.slice(1);
+        break;
+      }
+    }
+
     setUploadForm(prev => ({
       ...prev,
       title: prev.title || guessTitle,
       artist: prev.artist || guessArtist,
+      genre: prev.genre || guessGenre,
+      bpm: prev.bpm || guessBpm,
     }));
 
     try {
@@ -550,7 +596,6 @@ export const SettingsPage: React.FC = () => {
                           <input type="color" value={editTrackForm.player_bg_color} onChange={e => setEditTrackForm({...editTrackForm, player_bg_color: e.target.value})} style={{ width: 30, height: 30, padding: 0, background: 'transparent', border: 'none', cursor: 'pointer' }} />
                         </div>
                         
-                        {/* ✅ NOUVEAU : Bouton d'upload d'image de fond */}
                         <div style={{ flex: 1, display: 'flex', gap: 8, minWidth: 200, alignItems: 'center' }}>
                           <input 
                             type="url" 
@@ -572,7 +617,6 @@ export const SettingsPage: React.FC = () => {
                         </div>
                       </div>
                       
-                      {/* Petit aperçu de l'image sélectionnée */}
                       {editTrackForm.player_bg_image_url && (
                         <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 10 }}>
                           <img src={editTrackForm.player_bg_image_url} alt="Aperçu" style={{ width: 60, height: 40, borderRadius: 4, objectFit: 'cover', border: '1px solid #333' }} />
@@ -652,9 +696,54 @@ export const SettingsPage: React.FC = () => {
               <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploadingImage} style={{ flex: 1, padding: 10, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
             </div>
           </div>
+          
+          {/* ✅ Vidéo de fond avec option d'upload */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 20 }}>
-            <label style={{ fontSize: 13, color: '#aaa' }}>URL de la vidéo de fond (MP4)</label>
-            <input type="url" value={form.background_video_url} onChange={(e) => setForm({ ...form, background_video_url: e.target.value })} style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+            <label style={{ fontSize: 13, color: '#aaa' }}>Vidéo de fond (MP4)</label>
+            
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              <input 
+                type="url" 
+                value={form.background_video_url} 
+                onChange={(e) => setForm({ ...form, background_video_url: e.target.value })} 
+                placeholder="URL de la vidéo (https://...)" 
+                style={{ flex: 1, minWidth: 200, padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} 
+              />
+              
+              <label style={{ 
+                background: uploadingVideo ? '#333' : form.theme_color, 
+                color: '#000', 
+                padding: '12px 20px', 
+                borderRadius: 8, 
+                cursor: uploadingVideo ? 'wait' : 'pointer', 
+                fontSize: 13, 
+                fontWeight: 800, 
+                whiteSpace: 'nowrap',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8
+              }}>
+                {uploadingVideo ? 'Upload...' : '📁 Choisir un fichier'}
+                <input 
+                  type="file" 
+                  accept="video/mp4,video/webm" 
+                  onChange={handleVideoUpload} 
+                  disabled={uploadingVideo} 
+                  style={{ display: 'none' }} 
+                />
+              </label>
+            </div>
+
+            {form.background_video_url && (
+              <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 12 }}>
+                <video 
+                  src={form.background_video_url} 
+                  muted 
+                  style={{ width: 80, height: 50, borderRadius: 4, objectFit: 'cover', border: '1px solid #333' }} 
+                />
+                <span style={{ fontSize: 11, color: form.theme_color }}>Vidéo de fond chargée ✓</span>
+              </div>
+            )}
           </div>
         </div>
 

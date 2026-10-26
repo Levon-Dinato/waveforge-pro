@@ -31,7 +31,7 @@ const CanvasWaveform: React.FC<{
   const isDraggingRef = useRef(false);
 
   const mockPeaks = useMemo(() => {
-    return Array.from({ length: 150 }, () => Math.random() * 70 + 30);
+    return Array.from({ length: 250 }, () => Math.random() * 70 + 30);
   }, [peaks]);
 
   useEffect(() => { if (!isDraggingRef.current) setDragProgress(null); }, [progress]);
@@ -431,7 +431,6 @@ export const PremiumPage: React.FC = () => {
       <section style={{ position: 'relative', minHeight: isMobile ? '80vh' : '95vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', background: '#050505', paddingTop: isMobile ? 60 : 72 }}>
         
         <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
-          {/* ✅ La vidéo est maintenant de retour sur mobile ET sur ordinateur */}
           <video 
             autoPlay muted loop playsInline poster={profile.avatar_url || "/logo.jpg"} 
             style={{ 
@@ -493,9 +492,9 @@ export const PremiumPage: React.FC = () => {
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '40px 16px' : '100px 24px' }}>
         
         {showDuo && (
-          <section id="duo" style={{ marginBottom: 120 }}>
+          <section id="duo" style={{ marginBottom: isMobile ? 40 : 120 }}>
             <div className="section-subtitle">Bio</div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 60, alignItems: 'start' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: isMobile ? 20 : 60, alignItems: 'start' }}>
               
               <div style={{ position: 'relative' }}>
                 <div style={{ 
@@ -517,14 +516,14 @@ export const PremiumPage: React.FC = () => {
 
               <div>
                 <blockquote style={{ margin: 0, padding: 0, border: 'none' }}>
-                  <p style={{ fontSize: isMobile ? '1.2rem' : 'clamp(1.5rem, 2.5vw, 2rem)', fontWeight: 600, lineHeight: 1.4, color: '#fff', marginBottom: 40 }}>
+                  <p style={{ fontSize: isMobile ? '1.2rem' : 'clamp(1.5rem, 2.5vw, 2rem)', fontWeight: 600, lineHeight: 1.4, color: '#fff', marginBottom: isMobile ? 20 : 40 }}>
                     "{bioQuote}"
                   </p>
                 </blockquote>
                 <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: isMobile ? 14 : 16, lineHeight: 1.8, fontWeight: 300, whiteSpace: 'pre-wrap' }}>
                   {bioRest}
                 </p>
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 40 }}>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: isMobile ? 20 : 40 }}>
                   {profile.music_style && profile.music_style.split(',').map((style: string, i: number) => (
                     <span key={i} style={{ borderBottom: `1px solid ${themeColor}`, padding: '4px 0', fontSize: 12, fontWeight: 700, color: '#fff', textTransform: 'uppercase', letterSpacing: '1px', marginRight: 16 }}>
                       {style.trim()}
@@ -537,13 +536,13 @@ export const PremiumPage: React.FC = () => {
         )}
 
         {soundcloudUrl && (
-          <section style={{ marginBottom: 120, paddingTop: 80, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+          <section style={{ marginBottom: isMobile ? 40 : 120, paddingTop: isMobile ? 40 : 80, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
             <div className="section-subtitle">Écouter</div>
             <h2 className="section-title" style={{ maxWidth: '80%' }}>
               Écoutez {profile.username} sur SoundCloud.
             </h2>
             
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 60, alignItems: 'center', marginTop: 40 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: isMobile ? 20 : 60, alignItems: 'center', marginTop: isMobile ? 20 : 40 }}>
               <div>
                 <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: isMobile ? 14 : 16, lineHeight: 1.8, fontWeight: 300, marginBottom: 30 }}>
                   Plongez dans l'univers sonore de {profile.username}. Retrouvez ses dernières productions, ses remixes et ses sets en direct sur sa page officielle SoundCloud.
@@ -593,11 +592,11 @@ export const PremiumPage: React.FC = () => {
         )}
 
         {showPrestations && (
-          <section id="prestations" style={{ marginBottom: 120, paddingTop: 80, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+          <section id="prestations" style={{ marginBottom: isMobile ? 40 : 120, paddingTop: isMobile ? 40 : 80, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
             <div className="section-subtitle">Parcours</div>
             <h2 className="section-title">Un parcours visible,<br/>des événements qui parlent.</h2>
             
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 60, marginTop: 60 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: isMobile ? 20 : 60, marginTop: isMobile ? 20 : 60 }}>
               
               <div>
                 <p style={{ fontSize: isMobile ? 16 : 18, color: '#fff', lineHeight: 1.6, marginBottom: 24, fontWeight: 300 }}>
@@ -607,7 +606,7 @@ export const PremiumPage: React.FC = () => {
                   Ils montrent une présence régulière sur le terrain, auprès de publics fidèles et de promoteurs qui lui font confiance pour porter l'énergie de leurs événements.
                 </p>
                 
-                <div style={{ background: 'rgba(255,255,255,0.02)', padding: 32, borderRadius: 16, border: '1px solid rgba(255,255,255,0.06)' }}>
+                <div style={{ background: 'rgba(255,255,255,0.02)', padding: isMobile ? 20 : 32, borderRadius: 16, border: '1px solid rgba(255,255,255,0.06)' }}>
                   <h3 style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: themeColor, marginBottom: 24 }}>
                     Pourquoi ça compte
                   </h3>
@@ -628,7 +627,7 @@ export const PremiumPage: React.FC = () => {
                 </div>
               </div>
               
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 16 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: isMobile ? 8 : 16 }}>
                 {gallery && gallery.length > 0 ? (
                   gallery.slice(0, 4).map((img) => (
                     <div 
@@ -656,8 +655,8 @@ export const PremiumPage: React.FC = () => {
         )}
 
         {gallery && gallery.length > 0 && (
-          <section id="gallery" style={{ marginBottom: 120, paddingTop: 80, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 40, flexDirection: isMobile ? 'column' : 'row', gap: 16 }}>
+          <section id="gallery" style={{ marginBottom: isMobile ? 40 : 120, paddingTop: isMobile ? 40 : 80, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: isMobile ? 20 : 40, flexDirection: isMobile ? 'column' : 'row', gap: 16 }}>
               <div>
                 <div className="section-subtitle">En images</div>
                 <h2 className="section-title" style={{ margin: 0 }}>Galerie</h2>
@@ -670,7 +669,7 @@ export const PremiumPage: React.FC = () => {
               </button>
             </div>
             
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 24 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: isMobile ? 12 : 24 }}>
               {gallery.map((img) => (
                 <div 
                   key={img.id} 
@@ -693,16 +692,16 @@ export const PremiumPage: React.FC = () => {
         )}
 
         {showReleases && (
-          <section id="releases" style={{ paddingTop: 80, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+          <section id="releases" style={{ paddingTop: isMobile ? 40 : 80, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
             <div className="section-subtitle">Écouter</div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 40 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: isMobile ? 20 : 40 }}>
               <h2 className="section-title" style={{ margin: 0 }}>{settings.releases_title || 'Dernières Sorties'}</h2>
               {isOwner && (
                 <Link to="/nouveautes" style={{ color: themeColor, fontSize: 13, fontWeight: 800, textDecoration: 'none', textTransform: 'uppercase', letterSpacing: '1px' }}>Gérer</Link>
               )}
             </div>
             
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 16 : 24 }}>
               {tracks.length > 0 ? tracks.map((track) => {
                 const isPlayable = track.audio_url && track.audio_url.length > 0;
                 const isThisPlaying = currentTrack?.id === track.id && isPlaying;
@@ -757,7 +756,7 @@ export const PremiumPage: React.FC = () => {
                       position: 'relative', overflow: 'hidden',
                     }}
                   >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20, zIndex: 1, flexDirection: isMobile ? 'column' : 'row', gap: 16 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: isMobile ? 12 : 20, zIndex: 1, flexDirection: isMobile ? 'column' : 'row', gap: 16 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                         <div style={{ width: 64, height: 64, borderRadius: 12, overflow: 'hidden', flexShrink: 0, background: '#111', border: '1px solid rgba(255,255,255,0.1)' }}>
                           {track.cover_url ? <img src={track.cover_url} alt={track.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : null}
@@ -829,9 +828,9 @@ export const PremiumPage: React.FC = () => {
 
       </div>
 
-      <footer style={{ borderTop: '1px solid rgba(255,255,255,0.06)', background: '#020202', padding: '60px 24px 30px 24px' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 40 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 40, flexDirection: isMobile ? 'column' : 'row' }}>
+      <footer style={{ borderTop: '1px solid rgba(255,255,255,0.06)', background: '#020202', padding: isMobile ? '40px 16px 20px 16px' : '60px 24px 30px 24px' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: isMobile ? 20 : 40 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: isMobile ? 20 : 40, flexDirection: isMobile ? 'column' : 'row' }}>
             <div style={{ flex: '1 1 300px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20 }}>
                 <img src={profile.avatar_url || "/logo.jpg"} alt="Logo" style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', border: `1px solid ${themeColor}40` }} />
@@ -842,7 +841,7 @@ export const PremiumPage: React.FC = () => {
               </p>
             </div>
 
-            <div style={{ display: 'flex', gap: 60, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: isMobile ? 30 : 60, flexWrap: 'wrap' }}>
               <div>
                 <h4 style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1.5px', color: 'rgba(255,255,255,0.4)', marginBottom: 20 }}>Navigation</h4>
                 <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>

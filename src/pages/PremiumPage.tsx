@@ -6,6 +6,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { usePlayer } from '../contexts/PlayerContext';
 import { GlobalPlayer } from '../components/GlobalPlayer';
+import { ArrowButton } from '../components/ArrowButton';
 import './LevonDinato.css';
 
 const SocialIcons = {
@@ -150,6 +151,8 @@ export const PremiumPage: React.FC = () => {
   const [events, setEvents] = useState<any[]>([]);
   const [gallery, setGallery] = useState<any[]>([]);
 
+  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
+
   const formatTime = (time: number) => {
     if (isNaN(time) || time === 0) return "0:00";
     const mins = Math.floor(time / 60);
@@ -208,7 +211,6 @@ export const PremiumPage: React.FC = () => {
             });
             setTracks(formattedTracks);
 
-            // ✅ Calcul de la durée pour les liens externes (Catbox, etc.)
             formattedTracks.forEach(track => {
               if (track.audio_url && (!track.duration || track.duration === 0)) {
                 const audio = new Audio(track.audio_url);
@@ -258,8 +260,8 @@ export const PremiumPage: React.FC = () => {
     return [...tracks].sort((a, b) => (b.likes_count || 0) - (a.likes_count || 0)).slice(0, 5);
   }, [tracks]);
 
-  if (loading) return <div style={{ background: '#050505', color: '#fff', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Chargement...</div>;
-  if (!profile) return <div style={{ background: '#050505', color: '#fff', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Artiste introuvable.</div>;
+  if (loading) return <div style={{ background: '#000', color: '#fff', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Chargement...</div>;
+  if (!profile) return <div style={{ background: '#000', color: '#fff', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Artiste introuvable.</div>;
 
   const gmailContactLink = `https://mail.google.com/mail/?view=cm&fs=1&to=djcontrolradiotv1@gmail.com&su=Booking%20${profile.username}&body=Salut,%20je%20souhaite%20vous%20contacter%20pour%20un%20booking.`;
   const themeColor = profile.theme_color || '#00d9ff';
@@ -297,28 +299,43 @@ export const PremiumPage: React.FC = () => {
     { key: 'soundcloud_url', logo: SocialIcons.soundcloud, color: '#FF5500' },
   ].filter(s => profile[s.key]);
 
+  const bioParts = bio.split('.');
+  const bioQuote = bioParts[0] ? `${bioParts[0]}.` : bio;
+  const bioRest = bioParts.slice(1).join('.').trim();
+
+  const soundcloudUrl = profile.soundcloud_url;
+
   return (
-    <div style={{ background: '#050505', minHeight: '100vh', color: '#fff', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif', '--accent': themeColor } as React.CSSProperties}>
+    <div style={{ background: '#050505', minHeight: '100vh', color: '#fff', fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', '--accent': themeColor } as React.CSSProperties}>
       
       <style>{`
-        .hover-row { transition: background 0.2s; }
-        .hover-row:hover { background: rgba(255,255,255,0.03); }
+        .hover-row { transition: background 0.2s, transform 0.2s; }
+        .hover-row:hover { background: rgba(255,255,255,0.04) !important; }
         .hover-row:hover .play-btn { opacity: 1; transform: scale(1); }
+        .hover-row:hover .track-title { color: ${themeColor} !important; }
         .play-btn { opacity: 0; transform: scale(0.9); transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .hover-img { transition: transform 0.3s; }
-        .hover-row:hover .hover-img { transform: scale(1.05); }
-        .nav-link { color: rgba(255,255,255,0.5); text-decoration: none; font-size: 14px; font-weight: 600; transition: color 0.2s; }
+        .hover-img { transition: transform 0.4s ease; }
+        .hover-row:hover .hover-img { transform: scale(1.08); }
+        .nav-link { color: rgba(255,255,255,0.5); text-decoration: none; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; transition: color 0.2s; }
         .nav-link:hover { color: #fff; }
-        .btn-primary { background: #fff; color: #000; padding: 12px 28px; border-radius: 8px; font-size: 14px; font-weight: 800; text-decoration: none; transition: transform 0.2s; display: inline-flex; align-items: center; gap: 8px; }
-        .btn-primary:hover { transform: scale(1.02); }
+        
+        .section-title { font-size: clamp(2rem, 4vw, 3rem); font-weight: 900; letter-spacing: -0.03em; line-height: 1.1; margin-bottom: 1.5rem; }
+        .section-subtitle { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; color: ${themeColor}; margin-bottom: 1rem; }
+        
+        .gallery-item { position: relative; overflow: hidden; border-radius: 8px; cursor: pointer; }
+        .gallery-item img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s; }
+        .gallery-item:hover img { transform: scale(1.05); }
+        .gallery-item:hover .gallery-btn { opacity: 1; transform: translateY(0); }
+        .gallery-btn { position: absolute; bottom: 16px; right: 16px; width: 44px; height: 44px; border-radius: 50%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); display: flex; alignItems: center; justifyContent: center; opacity: 0; transform: translateY(10px); transition: all 0.3s; color: #fff; }
 
         html { scroll-behavior: smooth; }
         section[id] { scroll-margin-top: 100px; }
         
         @media (max-width: 900px) {
           .layout-grid { flex-direction: column !important; }
-          .sidebar { width: 100% !important; border-left: none !important; padding-left: 0 !important; }
+          .sidebar { width: 100% !important; border-left: none !important; padding-left: 0 !important; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 40px !important; }
           .hero-title { font-size: 3.5rem !important; }
+          .nav-links { display: none !important; }
         }
       `}</style>
 
@@ -326,379 +343,492 @@ export const PremiumPage: React.FC = () => {
         <title>{profile.username} — Artiste</title>
       </Helmet>
 
+      {/* LIGHTBOX PLEIN ÉCRAN */}
+      {lightboxImage && (
+        <div 
+          onClick={() => setLightboxImage(null)}
+          style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.95)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 40, cursor: 'zoom-out' }}
+        >
+          <button style={{ position: 'absolute', top: 24, right: 24, background: 'transparent', border: 'none', color: '#fff', fontSize: 32, cursor: 'pointer' }}>✕</button>
+          <img src={lightboxImage} alt="Plein écran" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', borderRadius: 8 }} onClick={(e) => e.stopPropagation()} />
+        </div>
+      )}
+
       {/* NAVIGATION FIXE */}
-      <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, height: 72, background: 'rgba(5,5,5,0.8)', backdropFilter: 'blur(20px)', zIndex: 1000, borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+      <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, height: 72, background: 'rgba(5,5,5,0.7)', backdropFilter: 'blur(24px)', zIndex: 1000, borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
         <div style={{ maxWidth: 1400, margin: '0 auto', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
             <button onClick={() => navigate('/')} style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: 20, cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
             </button>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <img src={profile.avatar_url || "/logo.jpg"} alt="Avatar" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover' }} />
-              <span style={{ fontSize: 16, fontWeight: 800, letterSpacing: '-0.5px' }}>{profile.username}</span>
-              <span style={{ fontSize: 10, fontWeight: 800, background: themeColor, color: '#000', padding: '2px 6px', borderRadius: 4, letterSpacing: '0.5px' }}>PRO</span>
+              <img src={profile.avatar_url || "/logo.jpg"} alt="Avatar" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', border: `1px solid ${themeColor}50` }} />
+              <span style={{ fontSize: 15, fontWeight: 900, letterSpacing: '-0.5px' }}>{profile.username}</span>
+              <span style={{ fontSize: 9, fontWeight: 900, background: themeColor, color: '#000', padding: '2px 6px', borderRadius: 4, letterSpacing: '0.5px' }}>PRO</span>
             </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 24 }} className="nav-links">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 32 }} className="nav-links">
             <a href="#duo" className="nav-link">Bio</a>
-            <a href="#prestations" className="nav-link">Prestations</a>
-            <a href="#releases" className="nav-link">Releases</a>
+            <a href="#prestations" className="nav-link">Références</a>
+            <a href="#gallery" className="nav-link">Galerie</a>
+            <a href="#releases" className="nav-link">Musique</a>
           </div>
           <div>
-            <a href={gmailContactLink} target="_blank" rel="noopener noreferrer" className="btn-primary" style={{ padding: '8px 20px', fontSize: 12 }}>Booking</a>
+            <ArrowButton 
+              label="Booking" 
+              color={themeColor} 
+              href={gmailContactLink} 
+              variant="outline"
+              icon={<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>}
+            />
           </div>
         </div>
       </nav>
 
-      {/* HERO SECTION */}
+      {/* HERO SECTION (Vidéo visible et teintée) */}
       <section style={{ position: 'relative', minHeight: '95vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', background: '#050505', paddingTop: 72 }}>
         
         <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
           <video 
             autoPlay muted loop playsInline poster={profile.avatar_url || "/logo.jpg"} 
-            style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.8, filter: 'grayscale(85%) contrast(130%) brightness(0.6) blur(2px)', transform: 'scale(1.05)' }}
+            style={{ 
+              width: '100%', 
+              height: '100%', 
+              objectFit: 'cover', 
+              // ✅ Vidéo un peu sombre mais visible
+              opacity: 0.6, 
+              filter: 'brightness(0.5) contrast(1.2)' 
+            }}
           >
             <source src={profile.background_video_url || "/background.mp4"} type="video/mp4" />
           </video>
-          <div style={{ position: 'absolute', inset: 0, background: themeColor, mixBlendMode: 'overlay', opacity: 0.15 }} />
-          <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at center, transparent 0%, rgba(5,5,5,0.8) 100%)' }} />
+
+          {/* ✅ La couche de couleur assortie au thème (Overlay) */}
+          <div style={{ 
+            position: 'absolute', 
+            inset: 0, 
+            background: themeColor, 
+            mixBlendMode: 'overlay', 
+            opacity: 0.35 
+          }} />
+
+          {/* ✅ Dégradé pour la lisibilité du texte */}
+          <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(to bottom, rgba(5,5,5,0.3) 0%, rgba(5,5,5,0) 40%, rgba(5,5,5,0.8) 80%, #050505 100%)` }} />
         </div>
         
-        <div style={{ position: 'relative', zIndex: 10, textAlign: 'center', maxWidth: 1000, padding: '0 24px' }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(10px)', padding: '8px 20px', borderRadius: 50, border: `1px solid ${themeColor}60`, marginBottom: 24 }}>
-            <span style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: '#fff' }}>{heroTagline}</span>
+        <div style={{ position: 'relative', zIndex: 10, textAlign: 'center', maxWidth: 1000, padding: '0 24px', marginTop: '15vh' }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(10px)', padding: '6px 16px', borderRadius: 50, border: `1px solid rgba(255,255,255,0.1)`, marginBottom: 32 }}>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: themeColor, boxShadow: `0 0 10px ${themeColor}` }} />
+            <span style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: '#fff' }}>{heroTagline}</span>
           </div>
           
-          <h1 className="hero-title" style={{ fontSize: 'clamp(3.5rem, 8vw, 6rem)', fontWeight: 900, lineHeight: 1.1, letterSpacing: '-3px', marginBottom: 24, textShadow: '0 10px 40px rgba(0,0,0,0.8)' }}>
+          <h1 className="hero-title" style={{ fontSize: 'clamp(4rem, 10vw, 8rem)', fontWeight: 900, lineHeight: 0.9, letterSpacing: '-0.05em', marginBottom: 32, textShadow: '0 20px 60px rgba(0,0,0,0.9)' }}>
             {renderTitle(heroTitle)}
           </h1>
           
-          <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 'clamp(1rem, 2vw, 1.2rem)', lineHeight: 1.6, marginBottom: 40, maxWidth: 600, margin: '0 auto 40px auto', textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>
+          <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 'clamp(1.1rem, 2vw, 1.4rem)', fontWeight: 400, lineHeight: 1.6, marginBottom: 48, maxWidth: 700, margin: '0 auto 48px auto', textShadow: '0 4px 20px rgba(0,0,0,0.8)' }}>
             {heroDesc}
           </p>
           
           <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <a href="#releases" className="btn-primary" style={{ background: 'transparent', border: `1px solid ${themeColor}`, color: themeColor, padding: '16px 32px', fontSize: 14 }}>
-              ÉCOUTER LES TRACKS
-            </a>
-            <button onClick={() => navigator.clipboard.writeText(window.location.href).then(() => alert('Lien copié !'))} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '16px 32px', borderRadius: 8, fontSize: 14, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
-              PARTAGER
-            </button>
+            <ArrowButton 
+              label="Écouter les tracks" 
+              color={themeColor} 
+              href="#releases" 
+              icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>}
+            />
+            <ArrowButton 
+              label="Partager" 
+              color={themeColor} 
+              onClick={() => navigator.clipboard.writeText(window.location.href).then(() => alert('Lien copié !'))} 
+              variant="outline"
+              icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>}
+            />
           </div>
-
-          {showStats && (
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 60, marginTop: 60, paddingTop: 40, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 32, fontWeight: 900, color: '#fff' }}>{settings.stat1_value || '12+'}</div>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}>{settings.stat1_label || "Années d'expérience"}</div>
-              </div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 32, fontWeight: 900, color: '#fff' }}>{settings.stat2_value || '50+'}</div>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}>{settings.stat2_label || "Tracks & Remixes"}</div>
-              </div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 32, fontWeight: 900, color: '#fff' }}>{settings.stat3_value || '100%'}</div>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}>{settings.stat3_label || "Pistes en feu"}</div>
-              </div>
-            </div>
-          )}
         </div>
       </section>
 
-      {/* EVENT TICKER */}
-      <div style={{ background: '#0a0f18', borderTop: '1px solid #1e293b', borderBottom: '1px solid #1e293b', padding: '12px 0', overflow: 'hidden', position: 'relative', zIndex: 20 }}>
-        <div style={{ display: 'flex', gap: 24, width: 'max-content', animation: 'scroll 30s linear infinite' }}>
-          {events.length > 0 ? (
-            [...events, ...events, ...events].map((event, index) => (
-              <div key={index} style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', padding: '8px 16px', borderRadius: 50 }}>
-                <span style={{ fontSize: 11, fontWeight: 800, color: themeColor, background: `${themeColor}15`, padding: '4px 8px', borderRadius: 4 }}>{new Date(event.event_date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }).toUpperCase()}</span>
-                <span style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>{event.title}</span>
-                <span style={{ fontSize: 12, color: '#666' }}>{event.location || event.city}</span>
-              </div>
-            ))
-          ) : (
-             <div style={{ fontSize: 13, color: '#666', padding: '0 20px' }}>Aucune date annoncée pour le moment.</div>
-          )}
-        </div>
-      </div>
-
-      {/* MAIN CONTENT */}
-      <div className="layout-grid" style={{ maxWidth: 1400, margin: '0 auto', display: 'flex', gap: 80, padding: '80px 24px 100px 24px', alignItems: 'flex-start' }}>
+      {/* CONTENU PRINCIPAL (Style Press Kit) */}
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '100px 24px' }}>
         
-        <div style={{ flex: 1, minWidth: 0 }}>
-          
-          {showDuo && (
-            <section id="duo" style={{ marginBottom: 80 }}>
-              <h2 style={{ fontSize: 24, fontWeight: 800, marginBottom: 24, letterSpacing: '-0.5px' }}>{settings.duo_title || 'Bio'}</h2>
-              <div style={{ background: 'rgba(255,255,255,0.02)', padding: '40px', borderRadius: 16, border: '1px solid rgba(255,255,255,0.08)', position: 'relative', overflow: 'hidden' }}>
-                <div style={{ position: 'absolute', top: 0, left: 0, width: 4, height: '100%', background: themeColor }} />
-                <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 18, lineHeight: 1.9, margin: 0, whiteSpace: 'pre-wrap' }}>
-                  {bio}
+        {/* SECTION BIO */}
+        {showDuo && (
+          <section id="duo" style={{ marginBottom: 120 }}>
+            <div className="section-subtitle">Bio</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 60, alignItems: 'start' }}>
+              
+              <div style={{ position: 'relative' }}>
+                <div style={{ 
+                  width: '100%', 
+                  aspectRatio: '4/5', 
+                  borderRadius: 12, 
+                  overflow: 'hidden', 
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  boxShadow: '0 20px 40px rgba(0,0,0,0.5)'
+                }}>
+                  <img 
+                    src={profile.avatar_url || "/logo.jpg"} 
+                    alt={profile.username} 
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                  />
+                </div>
+                <div style={{ position: 'absolute', bottom: -10, left: 20, width: 60, height: 4, background: themeColor, borderRadius: 2 }} />
+              </div>
+
+              <div>
+                <blockquote style={{ margin: 0, padding: 0, border: 'none' }}>
+                  <p style={{ fontSize: 'clamp(1.5rem, 2.5vw, 2rem)', fontWeight: 600, lineHeight: 1.4, color: '#fff', marginBottom: 40 }}>
+                    "{bioQuote}"
+                  </p>
+                </blockquote>
+                <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 16, lineHeight: 1.8, fontWeight: 300, whiteSpace: 'pre-wrap' }}>
+                  {bioRest}
                 </p>
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 32 }}>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 40 }}>
                   {profile.music_style && profile.music_style.split(',').map((style: string, i: number) => (
-                    <span key={i} style={{ border: `1px solid ${themeColor}40`, background: `${themeColor}10`, padding: '8px 16px', borderRadius: 20, fontSize: 13, fontWeight: 700, color: themeColor }}>
+                    <span key={i} style={{ borderBottom: `1px solid ${themeColor}`, padding: '4px 0', fontSize: 12, fontWeight: 700, color: '#fff', textTransform: 'uppercase', letterSpacing: '1px', marginRight: 16 }}>
                       {style.trim()}
                     </span>
                   ))}
                 </div>
               </div>
-            </section>
-          )}
+            </div>
+          </section>
+        )}
 
-          {showPrestations && (
-            <section id="prestations" style={{ marginBottom: 80 }}>
-               <h2 style={{ fontSize: 24, fontWeight: 800, marginBottom: 24, letterSpacing: '-0.5px' }}>{settings.prestations_title || 'Prestations'}</h2>
-               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 20 }}>
-                 {prestations.map((item: any, i: number) => (
-                   <div key={i} style={{ padding: 32, border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, background: 'rgba(255,255,255,0.02)' }}>
-                     <h3 style={{ fontSize: 16, fontWeight: 800, margin: '0 0 8px 0', color: '#fff' }}>{item.title}</h3>
-                     <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', margin: 0, lineHeight: 1.6 }}>{item.desc}</p>
-                   </div>
-                 ))}
-               </div>
-            </section>
-          )}
+        {/* SECTION ÉCOUTER SUR SOUNDCLOUD */}
+        {soundcloudUrl && (
+          <section style={{ marginBottom: 120, paddingTop: 80, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+            <div className="section-subtitle">Écouter</div>
+            <h2 className="section-title" style={{ maxWidth: '80%' }}>
+              Écoutez {profile.username} sur SoundCloud.
+            </h2>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 60, alignItems: 'center', marginTop: 40 }}>
+              <div>
+                <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 16, lineHeight: 1.8, fontWeight: 300, marginBottom: 30 }}>
+                  Plongez dans l'univers sonore de {profile.username}. Retrouvez ses dernières productions, ses remixes et ses sets en direct sur sa page officielle SoundCloud.
+                </p>
+                <a 
+                  href={soundcloudUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  style={{ 
+                    display: 'inline-block',
+                    background: '#ff5500', 
+                    color: '#fff', 
+                    padding: '14px 28px', 
+                    borderRadius: 8, 
+                    fontWeight: 800, 
+                    fontSize: 13, 
+                    textDecoration: 'none',
+                    textTransform: 'uppercase',
+                    letterSpacing: '1px',
+                    transition: 'transform 0.2s, box-shadow 0.2s',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.boxShadow = '0 10px 20px rgba(255, 85, 0, 0.3)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}
+                >
+                  Écouter sur SoundCloud
+                </a>
+              </div>
 
-          {showReleases && (
-            <section id="releases">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 24 }}>
-                <h2 style={{ fontSize: 24, fontWeight: 800, margin: 0, letterSpacing: '-0.5px' }}>{settings.releases_title || 'Dernières Sorties'}</h2>
-                {isOwner && (
-                  <Link to="/nouveautes" style={{ color: themeColor, fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>Gérer</Link>
-                )}
+              <div style={{ borderRadius: 12, overflow: 'hidden', boxShadow: '0 20px 40px rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                <iframe 
+                  width="100%" 
+                  height="350" 
+                  scrolling="no" 
+                  frameBorder="no" 
+                  allow="autoplay" 
+                  src={`https://w.soundcloud.com/player/?url=${encodeURIComponent(soundcloudUrl)}&color=%2300d9ff&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true`}
+                ></iframe>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* SECTION RÉFÉRENCES / PRESTATIONS (Avec flyers) */}
+        {showPrestations && (
+          <section id="prestations" style={{ marginBottom: 120, paddingTop: 80, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+            <div className="section-subtitle">Parcours</div>
+            <h2 className="section-title">Un parcours visible,<br/>des événements qui parlent.</h2>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 60, marginTop: 60 }}>
+              
+              <div>
+                <p style={{ fontSize: 18, color: '#fff', lineHeight: 1.6, marginBottom: 24, fontWeight: 300 }}>
+                  Ces moments retracent les événements qui ont marqué le parcours de {profile.username} : clubs, festivals et rendez-vous culturels.
+                </p>
+                <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.5)', lineHeight: 1.8, marginBottom: 40 }}>
+                  Ils montrent une présence régulière sur le terrain, auprès de publics fidèles et de promoteurs qui lui font confiance pour porter l'énergie de leurs événements.
+                </p>
+                
+                <div style={{ background: 'rgba(255,255,255,0.02)', padding: 32, borderRadius: 16, border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <h3 style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: themeColor, marginBottom: 24 }}>
+                    Pourquoi ça compte
+                  </h3>
+                  <h4 style={{ fontSize: 22, fontWeight: 800, color: '#fff', marginBottom: 24, lineHeight: 1.3 }}>
+                    Pour les événements qui doivent marquer les esprits.
+                  </h4>
+                  <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
+                    {prestations.map((item: any, i: number) => (
+                      <li key={i} style={{ display: 'flex', gap: 12 }}>
+                        <span style={{ color: themeColor, marginTop: 2 }}>•</span>
+                        <div>
+                          <strong style={{ color: '#fff', display: 'block', marginBottom: 4 }}>{item.title}</strong>
+                          <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 14 }}>{item.desc}</span>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </div>
               
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                {tracks.length > 0 ? tracks.map((track, index) => {
-                  const isPlayable = track.audio_url && track.audio_url.length > 0;
-                  const isThisPlaying = currentTrack?.id === track.id && isPlaying;
-                  const isCurrentTrack = currentTrack?.id === track.id;
-                  
-                  const iframeSrc = getIframeSrc(track.embed_code);
-                  const isExternalEmbed = !!iframeSrc && (
-                    iframeSrc.includes('beatport.com') || 
-                    iframeSrc.includes('traxsource.com') || 
-                    iframeSrc.includes('audio.com') || 
-                    iframeSrc.includes('spotify.com')
-                  );
-
-                  // 1. CAS DES LIENS EXTERNES (Beatport, Audio.com, etc.)
-                  if (isExternalEmbed) {
-                    const isAudioCom = iframeSrc?.includes('audio.com');
-                    return (
-                      <div key={track.id} style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: 16, overflow: 'hidden', padding: 24 }}>
-                        <div style={{ display: 'flex', gap: 20, alignItems: 'center', marginBottom: 20 }}>
-                          <div style={{ width: 80, height: 80, borderRadius: 8, overflow: 'hidden', flexShrink: 0, background: '#111', border: '1px solid rgba(255,255,255,0.1)' }}>
-                            {track.cover_url ? <img src={track.cover_url} alt={track.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : null}
-                          </div>
-                          <div style={{ flex: 1 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
-                              <h3 style={{ fontSize: 20, fontWeight: 900, color: '#fff', margin: 0 }}>{track.title}</h3>
-                              <span style={{ fontSize: 10, fontWeight: 800, color: isAudioCom ? '#00d9ff' : '#01FF95', background: isAudioCom ? 'rgba(0, 217, 255, 0.1)' : 'rgba(1, 255, 149, 0.1)', padding: '2px 8px', borderRadius: 4, border: isAudioCom ? '1px solid rgba(0, 217, 255, 0.2)' : '1px solid rgba(1, 255, 149, 0.2)' }}>
-                                {isAudioCom ? 'AUDIO.COM' : 'LIEN EXTERNE'}
-                              </span>
-                            </div>
-                            <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)' }}>{track.artist} • {track.genre}</div>
-                          </div>
-                        </div>
-                        <div style={{ borderRadius: 12, overflow: 'hidden', background: isAudioCom ? 'transparent' : '#000', width: '100%' }}>
-                          <iframe src={iframeSrc!} width="100%" height={isAudioCom ? "235" : "162"} frameBorder="0" scrolling="no" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-presentation" style={{ display: 'block', width: '100%', borderRadius: '12px' }}></iframe>
-                        </div>
-                      </div>
-                    );
-                  }
-
-                  // 2. CAS DES FICHIERS AUDIO DIRECTS (Catbox, Supabase Storage, etc.)
-                  const cardBgColor = track.player_bg_color || '#000000';
-                  const cardBgImage = track.player_bg_image_url;
-                  
-                  const customCardStyle = {
-                    backgroundColor: cardBgImage ? '#000000' : (cardBgColor || '#0a0a0f'),
-                    backgroundImage: cardBgImage ? `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.8)), url("${cardBgImage}")` : 'none',
-                    backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat',
-                  };
-
-                  return (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 16 }}>
+                {gallery && gallery.length > 0 ? (
+                  gallery.slice(0, 4).map((img) => (
                     <div 
-                      key={track.id} 
-                      className="hover-row"
-                      onClick={() => isPlayable && handlePlayTrack(track)}
-                      style={{ 
-                        ...customCardStyle,
-                        display: 'flex', flexDirection: 'column', padding: '24px', borderRadius: 16, 
-                        cursor: isPlayable ? 'pointer' : 'default', border: '1px solid rgba(255,255,255,0.05)',
-                        position: 'relative', overflow: 'hidden',
-                      }}
+                      key={img.id} 
+                      className="gallery-item" 
+                      style={{ aspectRatio: '3/4' }}
+                      onClick={() => setLightboxImage(img.image_url)}
                     >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20, zIndex: 1 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                          <div style={{ width: 56, height: 56, borderRadius: 8, overflow: 'hidden', flexShrink: 0, background: '#111', border: '1px solid rgba(255,255,255,0.1)' }}>
-                            {track.cover_url ? <img src={track.cover_url} alt={track.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : null}
-                          </div>
-                          <div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
-                              <h3 style={{ fontSize: 18, fontWeight: 900, color: '#fff', margin: 0 }}>{track.title}</h3>
-                              <span style={{ fontSize: 10, fontWeight: 800, color: '#fff', background: 'rgba(255,255,255,0.1)', padding: '2px 8px', borderRadius: 4 }}>{track.genre}</span>
-                            </div>
-                            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)' }}>{track.artist}</div>
-                          </div>
-                        </div>
-                        
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                           {isPlayable && (
-                             <button onClick={(e) => handleDownload(e, track.audio_url, `${track.artist} - ${track.title}.mp3`)} style={{ background: 'transparent', border: `1px solid ${themeColor}`, borderRadius: 6, padding: '6px 16px', color: themeColor, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 700, transition: 'all 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.background = `${themeColor}20`} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                                Télécharger
-                             </button>
-                           )}
-                           <button style={{ width: 40, height: 40, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                             {isThisPlaying ? (
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
-                             ) : (
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: 2 }}><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-                             )}
-                           </button>
-                        </div>
-                      </div>
-
-                      <div style={{ background: 'rgba(0,0,0,0.4)', borderRadius: 12, padding: '12px 16px', zIndex: 1, border: '1px solid rgba(255,255,255,0.05)' }}>
-                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, alignItems: 'center' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={themeColor} strokeWidth="2.5"><path d="M12 2a3 3 0 0 0-3 3v14a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path><path d="M5 10a3 3 0 0 0-3 3v4a3 3 0 0 0 6 0v-4a3 3 0 0 0-3-3z"></path><path d="M19 7a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0v-7a3 3 0 0 0-3-3z"></path></svg>
-                              <span style={{ color: themeColor, fontWeight: 900, fontSize: '14px', fontFamily: 'system-ui, -apple-system, sans-serif', letterSpacing: '-0.5px' }}>Dropzone</span>
-                            </div>
-                            
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                              <div style={{ fontSize: 13, fontWeight: 800, fontFamily: 'monospace', display: 'flex', alignItems: 'baseline', gap: 4 }}>
-                                <span style={{ color: themeColor }}>{formatTime(isThisPlaying ? currentTime : 0)}</span>
-                                <span style={{ color: '#888', fontSize: 11 }}>/</span>
-                                <span style={{ color: '#ccc' }}>{formatTime(track.duration)}</span>
-                              </div>
-                              <div style={{ fontSize: 11, color: '#ccc', fontWeight: 600, display: 'flex', gap: 12 }}>
-                                <span>{track.bpm} BPM</span>
-                                <span>{track.song_key || '—'}</span>
-                              </div>
-                            </div>
-                         </div>
-                         
-                         <CanvasWaveform 
-                            peaks={track.peaks} 
-                            isPlaying={isThisPlaying} 
-                            themeColor={themeColor} 
-                            progress={isThisPlaying && duration > 0 ? currentTime / duration : 0} 
-                            isCurrent={isCurrentTrack} 
-                            onSeek={seek} 
-                         />
+                      <img src={img.image_url} alt="Affiche événement" />
+                      <div className="gallery-btn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
                       </div>
                     </div>
-                  );
-                }) : (
-                  <div style={{ padding: '40px 0', color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>Aucune sortie disponible.</div>
+                  ))
+                ) : (
+                  [...Array(4)].map((_, i) => (
+                    <div key={i} style={{ aspectRatio: '3/4', background: 'rgba(255,255,255,0.02)', borderRadius: 8, border: '1px dashed rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>
+                      Affiche {i + 1}
+                    </div>
+                  ))
                 )}
               </div>
-            </section>
-          )}
-        </div>
-
-        {/* RIGHT COLUMN */}
-        <aside className="sidebar" style={{ width: 320, flexShrink: 0, paddingLeft: 40, borderLeft: '1px solid rgba(255,255,255,0.08)' }}>
-          <div style={{ marginBottom: 40 }}>
-            <div style={{ width: '100%', aspectRatio: '1/1', borderRadius: 8, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', marginBottom: 20 }}>
-               <img src={profile.avatar_url || "/logo.jpg"} alt={profile.username} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-               <span style={{ fontSize: 12, fontWeight: 800, color: 'rgba(255,255,255,0.4)', letterSpacing: '1px', textTransform: 'uppercase' }}>Réseaux</span>
-               <div style={{ display: 'flex', gap: 12 }}>
-                 {socials.slice(0, 4).map(s => (
-                   <a key={s.key} href={profile[s.key]} target="_blank" rel="noreferrer" style={{ color: 'rgba(255,255,255,0.6)', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = s.color} onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.6)'}>
-                     {s.logo}
-                   </a>
-                 ))}
-               </div>
-            </div>
-          </div>
+          </section>
+        )}
 
-          {showSidebarTop && topTracks.length > 0 && (
-            <div style={{ marginBottom: 40 }}>
-              <h3 style={{ fontSize: 14, fontWeight: 800, margin: '0 0 16px 0', color: '#fff' }}>Top Tracks</h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                {topTracks.map((track, index) => (
-                  <div key={track.id} style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }} onClick={() => handlePlayTrack(track)}>
-                    <div style={{ fontSize: 14, fontWeight: 800, color: index === 0 ? themeColor : 'rgba(255,255,255,0.2)', width: 16 }}>{index + 1}</div>
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ fontSize: 14, fontWeight: 600, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.title}</div>
-                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.genre}</div>
-                    </div>
-                  </div>
-                ))}
+        {/* SECTION GALERIE (Style horizontal avec Lightbox) */}
+        {gallery && gallery.length > 0 && (
+          <section id="gallery" style={{ marginBottom: 120, paddingTop: 80, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 40 }}>
+              <div>
+                <div className="section-subtitle">En images</div>
+                <h2 className="section-title" style={{ margin: 0 }}>Galerie</h2>
               </div>
+              <button 
+                onClick={() => setLightboxImage(gallery[0]?.image_url || null)}
+                style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: 12, fontWeight: 800, letterSpacing: '1.5px', textTransform: 'uppercase', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}
+              >
+                Ouvrir la galerie <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M7 17L17 7M17 7H7M17 7V17"/></svg>
+              </button>
             </div>
-          )}
-
-          {showSidebarDates && (
-            <div>
-              <h3 style={{ fontSize: 14, fontWeight: 800, margin: '0 0 16px 0', color: '#fff' }}>Prochaines Dates</h3>
-              {events.length > 0 ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                  {events.map(e => (
-                     <div key={e.id} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                       <div style={{ fontSize: 11, color: themeColor, fontWeight: 800, letterSpacing: '0.5px' }}>{new Date(e.event_date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }).toUpperCase()}</div>
-                       <div style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>{e.title}</div>
-                       <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>{e.city}</div>
-                     </div>
-                  ))}
+            
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 24 }}>
+              {gallery.map((img) => (
+                <div 
+                  key={img.id} 
+                  className="gallery-item" 
+                  style={{ aspectRatio: '16/9' }}
+                  onClick={() => setLightboxImage(img.image_url)}
+                >
+                  <img 
+                    src={img.image_url} 
+                    alt="Galerie" 
+                    loading="lazy"
+                  />
+                  <div className="gallery-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+                  </div>
                 </div>
-              ) : (
-                <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', margin: 0 }}>Aucune date prévue.</p>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* SECTION MUSIQUE */}
+        {showReleases && (
+          <section id="releases" style={{ paddingTop: 80, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+            <div className="section-subtitle">Écouter</div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 40 }}>
+              <h2 className="section-title" style={{ margin: 0 }}>{settings.releases_title || 'Dernières Sorties'}</h2>
+              {isOwner && (
+                <Link to="/nouveautes" style={{ color: themeColor, fontSize: 13, fontWeight: 800, textDecoration: 'none', textTransform: 'uppercase', letterSpacing: '1px' }}>Gérer</Link>
               )}
             </div>
-          )}
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+              {tracks.length > 0 ? tracks.map((track) => {
+                const isPlayable = track.audio_url && track.audio_url.length > 0;
+                const isThisPlaying = currentTrack?.id === track.id && isPlaying;
+                const isCurrentTrack = currentTrack?.id === track.id;
+                
+                const iframeSrc = getIframeSrc(track.embed_code);
+                const isExternalEmbed = !!iframeSrc && (
+                  iframeSrc.includes('beatport.com') || 
+                  iframeSrc.includes('traxsource.com') || 
+                  iframeSrc.includes('audio.com') || 
+                  iframeSrc.includes('spotify.com')
+                );
 
-          <div style={{ marginTop: 60, padding: 24, background: 'rgba(255,255,255,0.02)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
-            <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.8)', fontWeight: 600, margin: '0 0 16px 0' }}>Disponible pour Booking</p>
-            <a href={gmailContactLink} target="_blank" rel="noreferrer" style={{ display: 'block', width: '100%', padding: '12px', background: '#fff', color: '#000', textDecoration: 'none', fontSize: 13, fontWeight: 800, borderRadius: 6, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Contacter</a>
-          </div>
-        </aside>
+                if (isExternalEmbed) {
+                  const isAudioCom = iframeSrc?.includes('audio.com');
+                  return (
+                    <div key={track.id} style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.06)', borderRadius: 16, overflow: 'hidden', padding: 24 }}>
+                      <div style={{ display: 'flex', gap: 20, alignItems: 'center', marginBottom: 16 }}>
+                        <div style={{ width: 60, height: 60, borderRadius: 8, overflow: 'hidden', flexShrink: 0, background: '#111' }}>
+                          {track.cover_url ? <img src={track.cover_url} alt={track.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : null}
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <h3 style={{ fontSize: 18, fontWeight: 800, color: '#fff', margin: 0 }}>{track.title}</h3>
+                          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>{track.artist} • {track.genre}</div>
+                        </div>
+                      </div>
+                      <div style={{ borderRadius: 12, overflow: 'hidden', background: 'transparent', width: '100%' }}>
+                        <iframe src={iframeSrc!} width="100%" height={isAudioCom ? "180" : "162"} frameBorder="0" scrolling="no" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-presentation" style={{ display: 'block', width: '100%' }}></iframe>
+                      </div>
+                    </div>
+                  );
+                }
+
+                // TON LECTEUR AVEC FOND PERSONNALISÉ
+                const cardBgColor = track.player_bg_color || '#000000';
+                const cardBgImage = track.player_bg_image_url;
+                
+                const customCardStyle = {
+                  backgroundColor: cardBgImage ? '#000000' : (cardBgColor || '#0a0a0f'),
+                  backgroundImage: cardBgImage ? `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.8)), url("${cardBgImage}")` : 'none',
+                  backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat',
+                };
+
+                return (
+                  <div 
+                    key={track.id} 
+                    className="hover-row"
+                    onClick={() => isPlayable && handlePlayTrack(track)}
+                    style={{ 
+                      ...customCardStyle,
+                      display: 'flex', flexDirection: 'column', padding: '24px', borderRadius: 20, 
+                      cursor: isPlayable ? 'pointer' : 'default', border: '1px solid rgba(255,255,255,0.06)',
+                      position: 'relative', overflow: 'hidden',
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20, zIndex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                        <div style={{ width: 64, height: 64, borderRadius: 12, overflow: 'hidden', flexShrink: 0, background: '#111', border: '1px solid rgba(255,255,255,0.1)' }}>
+                          {track.cover_url ? <img src={track.cover_url} alt={track.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : null}
+                        </div>
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
+                            <h3 style={{ fontSize: 20, fontWeight: 900, color: '#fff', margin: 0 }}>{track.title}</h3>
+                            <span style={{ fontSize: 10, fontWeight: 800, color: '#fff', background: 'rgba(255,255,255,0.1)', padding: '4px 10px', borderRadius: 6 }}>{track.genre}</span>
+                          </div>
+                          <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)' }}>{track.artist}</div>
+                        </div>
+                      </div>
+                      
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                         {isPlayable && (
+                           <button onClick={(e) => handleDownload(e, track.audio_url, `${track.artist} - ${track.title}.mp3`)} style={{ background: 'rgba(0,0,0,0.5)', border: `1px solid ${themeColor}`, borderRadius: 8, padding: '8px 20px', color: themeColor, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 700, transition: 'all 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.background = `${themeColor}20`} onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(0,0,0,0.5)'}>
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                              Télécharger
+                           </button>
+                         )}
+                         <button style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'} onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}>
+                           {isThisPlaying ? (
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+                           ) : (
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: 3 }}><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                           )}
+                         </button>
+                      </div>
+                    </div>
+
+                    <div style={{ background: 'rgba(0,0,0,0.5)', borderRadius: 12, padding: '12px 20px', zIndex: 1, border: '1px solid rgba(255,255,255,0.05)' }}>
+                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, alignItems: 'center' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={themeColor} strokeWidth="2.5"><path d="M12 2a3 3 0 0 0-3 3v14a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path><path d="M5 10a3 3 0 0 0-3 3v4a3 3 0 0 0 6 0v-4a3 3 0 0 0-3-3z"></path><path d="M19 7a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0v-7a3 3 0 0 0-3-3z"></path></svg>
+                            <span style={{ color: themeColor, fontWeight: 900, fontSize: '14px', fontFamily: 'system-ui, -apple-system, sans-serif', letterSpacing: '-0.5px' }}>Dropzone</span>
+                          </div>
+                          
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                            <div style={{ fontSize: 13, fontWeight: 800, fontFamily: 'monospace', display: 'flex', alignItems: 'baseline', gap: 4 }}>
+                              <span style={{ color: themeColor }}>{formatTime(isThisPlaying ? currentTime : 0)}</span>
+                              <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11 }}>/</span>
+                              <span style={{ color: 'rgba(255,255,255,0.6)' }}>{formatTime(track.duration)}</span>
+                            </div>
+                            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', fontWeight: 600, display: 'flex', gap: 12 }}>
+                              <span>{track.bpm} BPM</span>
+                              <span>{track.song_key || '—'}</span>
+                            </div>
+                          </div>
+                       </div>
+                       
+                       <CanvasWaveform 
+                          peaks={track.peaks} 
+                          isPlaying={isThisPlaying} 
+                          themeColor={themeColor} 
+                          progress={isThisPlaying && duration > 0 ? currentTime / duration : 0} 
+                          isCurrent={isCurrentTrack} 
+                          onSeek={seek} 
+                       />
+                    </div>
+                  </div>
+                );
+              }) : (
+                <div style={{ padding: '40px 0', color: 'rgba(255,255,255,0.3)', textAlign: 'center' }}>Aucune sortie disponible.</div>
+              )}
+            </div>
+          </section>
+        )}
+
       </div>
 
       {/* FOOTER */}
-      <footer style={{ borderTop: '1px solid rgba(255,255,255,0.08)', background: '#020202', padding: '60px 24px 30px 24px' }}>
-        <div style={{ maxWidth: 1400, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 40 }}>
+      <footer style={{ borderTop: '1px solid rgba(255,255,255,0.06)', background: '#020202', padding: '60px 24px 30px 24px' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 40 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 40 }}>
             <div style={{ flex: '1 1 300px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-                <img src={profile.avatar_url || "/logo.jpg"} alt="Logo" style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', border: `1px solid ${themeColor}60` }} />
-                <span style={{ fontSize: 18, fontWeight: 900, letterSpacing: '-0.5px' }}>{profile.username}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20 }}>
+                <img src={profile.avatar_url || "/logo.jpg"} alt="Logo" style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', border: `1px solid ${themeColor}40` }} />
+                <span style={{ fontSize: 20, fontWeight: 900, letterSpacing: '-0.5px' }}>{profile.username}</span>
               </div>
-              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13, lineHeight: 1.6, maxWidth: 300, margin: 0 }}>
+              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 14, lineHeight: 1.7, maxWidth: 300, margin: 0, fontWeight: 300 }}>
                 Plongez dans l'univers sonore unique de {profile.username}. Des productions exclusives pour faire vibrer vos dancefloors.
               </p>
             </div>
 
             <div style={{ display: 'flex', gap: 60, flexWrap: 'wrap' }}>
               <div>
-                <h4 style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', color: '#fff', marginBottom: 16 }}>Navigation</h4>
-                <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  <li><a href="#duo" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none', fontSize: 13, transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#fff'} onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.5)'}>Bio</a></li>
-                  <li><a href="#prestations" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none', fontSize: 13, transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#fff'} onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.5)'}>Prestations</a></li>
-                  <li><a href="#releases" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none', fontSize: 13, transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#fff'} onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.5)'}>Dernières Sorties</a></li>
+                <h4 style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1.5px', color: 'rgba(255,255,255,0.4)', marginBottom: 20 }}>Navigation</h4>
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <li><a href="#duo" style={{ color: '#fff', textDecoration: 'none', fontSize: 13, fontWeight: 500 }}>Bio</a></li>
+                  <li><a href="#prestations" style={{ color: '#fff', textDecoration: 'none', fontSize: 13, fontWeight: 500 }}>Références</a></li>
+                  <li><a href="#gallery" style={{ color: '#fff', textDecoration: 'none', fontSize: 13, fontWeight: 500 }}>Galerie</a></li>
+                  <li><a href="#releases" style={{ color: '#fff', textDecoration: 'none', fontSize: 13, fontWeight: 500 }}>Musique</a></li>
                 </ul>
               </div>
               <div>
-                <h4 style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', color: '#fff', marginBottom: 16 }}>Plateforme</h4>
-                <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  <li><Link to="/" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none', fontSize: 13, transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#fff'} onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.5)'}>Accueil</Link></li>
-                  <li><Link to="/nouveautes" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none', fontSize: 13, transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#fff'} onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.5)'}>Nouveautés</Link></li>
-                  <li><Link to="/artists" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none', fontSize: 13, transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#fff'} onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.5)'}>Artistes</Link></li>
+                <h4 style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1.5px', color: 'rgba(255,255,255,0.4)', marginBottom: 20 }}>Contact</h4>
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <li><a href={gmailContactLink} target="_blank" rel="noreferrer" style={{ color: '#fff', textDecoration: 'none', fontSize: 13, fontWeight: 500 }}>Booking Pro</a></li>
+                  <li><a href={`mailto:contact@${profile.username}.com`} style={{ color: '#fff', textDecoration: 'none', fontSize: 13, fontWeight: 500 }}>Email</a></li>
                 </ul>
               </div>
             </div>
 
             <div style={{ flex: '1 1 200px' }}>
-              <h4 style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', color: '#fff', marginBottom: 16 }}>Suivez l'artiste</h4>
-              <div style={{ display: 'flex', gap: 12 }}>
+              <h4 style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1.5px', color: 'rgba(255,255,255,0.4)', marginBottom: 20 }}>Suivez</h4>
+              <div style={{ display: 'flex', gap: 16 }}>
                 {socials.map(s => (
                   <a key={s.key} href={profile[s.key]} target="_blank" rel="noreferrer" style={{ color: 'rgba(255,255,255,0.5)', transition: 'all 0.2s' }} onMouseEnter={(e) => { e.currentTarget.style.color = s.color; e.currentTarget.style.transform = 'translateY(-2px)' }} onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.5)'; e.currentTarget.style.transform = 'translateY(0)' }}>
                     {s.logo}
@@ -708,12 +838,12 @@ export const PremiumPage: React.FC = () => {
             </div>
           </div>
 
-          <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
-            <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12, margin: 0 }}>
+          <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
+            <p style={{ color: 'rgba(255,255,255,0.2)', fontSize: 12, margin: 0 }}>
               © {new Date().getFullYear()} {profile.username}. Tous droits réservés.
             </p>
-            <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12, margin: 0 }}>
-              Propulsé par <span style={{ color: themeColor, fontWeight: 700 }}>Dropzone</span>
+            <p style={{ color: 'rgba(255,255,255,0.2)', fontSize: 12, margin: 0 }}>
+              Press Kit propulsé par <span style={{ color: themeColor, fontWeight: 700 }}>Dropzone</span>
             </p>
           </div>
         </div>

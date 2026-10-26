@@ -32,6 +32,7 @@ export const SettingsPage: React.FC = () => {
 
   const [uploadingImage, setUploadingImage] = useState(false);
   const [uploadingGallery, setUploadingGallery] = useState(false);
+  const [uploadingPlayerBg, setUploadingPlayerBg] = useState(false); // ✅ Nouvel état pour l'upload du fond du player
   const [galleryImages, setGalleryImages] = useState<any[]>([]);
 
   const [form, setForm] = useState({
@@ -121,6 +122,25 @@ export const SettingsPage: React.FC = () => {
     } finally { setUploadingImage(false); }
   };
 
+  // ✅ Nouvelle fonction pour uploader l'image de fond du player
+  const handlePlayerBgUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    setUploadingPlayerBg(true);
+    try {
+      const fileName = `${user.id}/player-bg-${Date.now()}.${file.name.split('.').pop()}`;
+      const { error: uploadError } = await supabase.storage.from('media').upload(fileName, file);
+      if (uploadError) throw uploadError;
+      const { data } = supabase.storage.from('media').getPublicUrl(fileName);
+      // On met à jour le formulaire d'édition avec la nouvelle URL
+      setEditTrackForm(prev => ({ ...prev, player_bg_image_url: data.publicUrl }));
+    } catch (error: any) {
+      alert("Erreur d'upload : " + error.message);
+    } finally {
+      setUploadingPlayerBg(false);
+    }
+  };
+
   const handleGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -156,7 +176,6 @@ export const SettingsPage: React.FC = () => {
     if (!file) return;
     setAudioFile(file);
 
-    // 1. On pré-remplit avec le nom du fichier (sans l'extension)
     const fileNameWithoutExt = file.name.replace(/\.[^/.]+$/, "");
     let guessArtist = "";
     let guessTitle = fileNameWithoutExt;
@@ -173,7 +192,6 @@ export const SettingsPage: React.FC = () => {
       artist: prev.artist || guessArtist,
     }));
 
-    // 2. On tente de lire les tags ID3 pour écraser ces valeurs si elles existent
     try {
       const metadata = await parseBlob(file);
       const { common } = metadata;
@@ -531,8 +549,36 @@ export const SettingsPage: React.FC = () => {
                           <label style={{ fontSize: 12, color: '#888' }}>Couleur :</label>
                           <input type="color" value={editTrackForm.player_bg_color} onChange={e => setEditTrackForm({...editTrackForm, player_bg_color: e.target.value})} style={{ width: 30, height: 30, padding: 0, background: 'transparent', border: 'none', cursor: 'pointer' }} />
                         </div>
-                        <input type="url" placeholder="URL d'une image de fond (https://...)" value={editTrackForm.player_bg_image_url} onChange={e => setEditTrackForm({...editTrackForm, player_bg_image_url: e.target.value})} style={{ flex: 1, minWidth: 200, padding: 8, background: '#0a0a0a', border: '1px solid #444', color: '#fff', borderRadius: 4, fontSize: 12 }} />
+                        
+                        {/* ✅ NOUVEAU : Bouton d'upload d'image de fond */}
+                        <div style={{ flex: 1, display: 'flex', gap: 8, minWidth: 200, alignItems: 'center' }}>
+                          <input 
+                            type="url" 
+                            placeholder="URL d'une image de fond (https://...)" 
+                            value={editTrackForm.player_bg_image_url} 
+                            onChange={e => setEditTrackForm({...editTrackForm, player_bg_image_url: e.target.value})} 
+                            style={{ flex: 1, padding: 8, background: '#0a0a0a', border: '1px solid #444', color: '#fff', borderRadius: 4, fontSize: 12 }} 
+                          />
+                          <label style={{ background: uploadingPlayerBg ? '#333' : '#00d9ff', color: '#000', padding: '8px 12px', borderRadius: 4, cursor: uploadingPlayerBg ? 'wait' : 'pointer', fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6 }}>
+                            {uploadingPlayerBg ? 'Upload...' : '📁 Choisir'}
+                            <input 
+                              type="file" 
+                              accept="image/*" 
+                              onChange={handlePlayerBgUpload} 
+                              disabled={uploadingPlayerBg} 
+                              style={{ display: 'none' }} 
+                            />
+                          </label>
+                        </div>
                       </div>
+                      
+                      {/* Petit aperçu de l'image sélectionnée */}
+                      {editTrackForm.player_bg_image_url && (
+                        <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <img src={editTrackForm.player_bg_image_url} alt="Aperçu" style={{ width: 60, height: 40, borderRadius: 4, objectFit: 'cover', border: '1px solid #333' }} />
+                          <span style={{ fontSize: 11, color: '#00d9ff' }}>Image de fond chargée ✓</span>
+                        </div>
+                      )}
                     </div>
 
                     <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>

@@ -134,7 +134,7 @@ const CanvasWaveform: React.FC<{
   return (
     <canvas 
       ref={canvasRef} onMouseDown={handleMouseDown} onClick={(e) => { if (isCurrent) e.stopPropagation(); }}
-      style={{ width: '100%', height: '30px', display: 'block', cursor: isCurrent ? 'pointer' : 'default', touchAction: 'none', opacity: isCurrent ? 1 : 0.4 }} 
+      style={{ width: '100%', height: '40px', display: 'block', cursor: isCurrent ? 'pointer' : 'default', touchAction: 'none', opacity: isCurrent ? 1 : 0.4 }} 
     />
   );
 };
@@ -385,7 +385,7 @@ export const PremiumPage: React.FC = () => {
         </div>
       </nav>
 
-      {/* HERO SECTION (Vidéo Noir et Blanc teintée) */}
+      {/* HERO SECTION */}
       <section style={{ position: 'relative', minHeight: '95vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', background: '#050505', paddingTop: 72 }}>
         
         <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
@@ -395,24 +395,14 @@ export const PremiumPage: React.FC = () => {
               width: '100%', 
               height: '100%', 
               objectFit: 'cover', 
-              // ✅ EFFET NOIR ET BLANC ATTÉNUÉ
-              filter: 'grayscale(100%) contrast(1.2) brightness(0.6)',
-              opacity: 0.8
+              opacity: 0.8, 
+              filter: 'grayscale(100%) contrast(1.2) brightness(0.6)' 
             }}
           >
             <source src={profile.background_video_url || "/background.mp4"} type="video/mp4" />
           </video>
 
-          {/* ✅ La couche de couleur par-dessus le noir et blanc */}
-          <div style={{ 
-            position: 'absolute', 
-            inset: 0, 
-            background: themeColor, 
-            mixBlendMode: 'overlay', 
-            opacity: 0.4 
-          }} />
-
-          {/* ✅ Dégradé pour la lisibilité du texte */}
+          <div style={{ position: 'absolute', inset: 0, background: themeColor, mixBlendMode: 'overlay', opacity: 0.4 }} />
           <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(to bottom, rgba(5,5,5,0.4) 0%, rgba(5,5,5,0) 40%, rgba(5,5,5,0.9) 80%, #050505 100%)` }} />
         </div>
         
@@ -655,7 +645,7 @@ export const PremiumPage: React.FC = () => {
           </section>
         )}
 
-        {/* SECTION MUSIQUE */}
+        {/* SECTION MUSIQUE (Avec Waveform restaurée !) */}
         {showReleases && (
           <section id="releases" style={{ paddingTop: 80, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
             <div className="section-subtitle">Écouter</div>
@@ -700,7 +690,7 @@ export const PremiumPage: React.FC = () => {
                   );
                 }
 
-                // TON LECTEUR AVEC FOND PERSONNALISÉ
+                // TON LECTEUR AVEC FOND PERSONNALISÉ ET WAVEFORM
                 const cardBgColor = track.player_bg_color || '#000000';
                 const cardBgImage = track.player_bg_image_url;
                 
@@ -773,6 +763,7 @@ export const PremiumPage: React.FC = () => {
                           </div>
                        </div>
                        
+                       {/* ✅ LA WAVEFORM EST DE RETOUR ! */}
                        <CanvasWaveform 
                           peaks={track.peaks} 
                           isPlaying={isThisPlaying} 

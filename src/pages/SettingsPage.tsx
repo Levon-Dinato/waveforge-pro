@@ -33,14 +33,15 @@ export const SettingsPage: React.FC = () => {
   const [uploadingImage, setUploadingImage] = useState(false);
   const [uploadingGallery, setUploadingGallery] = useState(false);
   const [uploadingPlayerBg, setUploadingPlayerBg] = useState(false);
-  const [uploadingVideo, setUploadingVideo] = useState(false); // ✅ Nouvel état pour la vidéo
+  const [uploadingVideo, setUploadingVideo] = useState(false);
   const [galleryImages, setGalleryImages] = useState<any[]>([]);
 
   const [form, setForm] = useState({
     username: '', bio: '', hero_tagline: 'Nouveaux remixes disponibles', hero_title: '', hero_description: '',
     theme_color: '#00d9ff', avatar_url: '', background_video_url: '',
     instagram_url: '', spotify_url: '', soundcloud_url: '', tiktok_url: '', youtube_url: '',
-    beatport_url: '', x_url: '', facebook_url: ''
+    beatport_url: '', x_url: '', facebook_url: '',
+    booking_email: '' // ✅ Nouveau champ
   });
 
   const [settings, setSettings] = useState({
@@ -76,7 +77,8 @@ export const SettingsPage: React.FC = () => {
           instagram_url: data.instagram_url || '', spotify_url: data.spotify_url || '',
           soundcloud_url: data.soundcloud_url || '', tiktok_url: data.tiktok_url || '',
           youtube_url: data.youtube_url || '', beatport_url: data.beatport_url || '',
-          x_url: data.x_url || '', facebook_url: data.facebook_url || ''
+          x_url: data.x_url || '', facebook_url: data.facebook_url || '',
+          booking_email: data.booking_email || ''
         });
 
         if (data.settings) {
@@ -123,7 +125,6 @@ export const SettingsPage: React.FC = () => {
     } finally { setUploadingImage(false); }
   };
 
-  // ✅ Nouvelle fonction pour uploader la vidéo de fond
   const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
@@ -192,7 +193,6 @@ export const SettingsPage: React.FC = () => {
     setGalleryImages(galleryImages.filter(img => img.id !== id));
   };
 
-  // ✅ Lecture des tags ID3 avec fallback intelligent sur le nom du fichier
   const handleAudioFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -332,6 +332,7 @@ export const SettingsPage: React.FC = () => {
       soundcloud_url: form.soundcloud_url, tiktok_url: form.tiktok_url,
       youtube_url: form.youtube_url, beatport_url: form.beatport_url,
       x_url: form.x_url, facebook_url: form.facebook_url,
+      booking_email: form.booking_email, // ✅ Nouveau champ
       settings: settings
     }).eq('id', user.id);
     
@@ -697,7 +698,6 @@ export const SettingsPage: React.FC = () => {
             </div>
           </div>
           
-          {/* ✅ Vidéo de fond avec option d'upload */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 20 }}>
             <label style={{ fontSize: 13, color: '#aaa' }}>Vidéo de fond (MP4)</label>
             
@@ -757,6 +757,20 @@ export const SettingsPage: React.FC = () => {
         <div style={{ background: '#121212', padding: 24, borderRadius: 12, border: '1px solid #222' }}>
           <h2 style={{ fontSize: 18, marginBottom: 20, color: '#fff' }}>Biographie</h2>
           <textarea value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} rows={6} style={{ width: '100%', padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+        </div>
+
+        {/* ✅ Nouvelle section Booking */}
+        <div style={{ background: '#121212', padding: 24, borderRadius: 12, border: '1px solid #222' }}>
+          <h2 style={{ fontSize: 18, marginBottom: 20, color: '#fff' }}>Booking</h2>
+          <label style={{ fontSize: 13, color: '#aaa', display: 'block', marginBottom: 8 }}>Adresse email pour le booking</label>
+          <input 
+            type="email" 
+            placeholder="contact@mon-label.com" 
+            value={form.booking_email} 
+            onChange={(e) => setForm({ ...form, booking_email: e.target.value })} 
+            style={{ width: '100%', padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} 
+          />
+          <p style={{ color: '#666', fontSize: 12, marginTop: 8 }}>Cette adresse sera utilisée pour le bouton "Booking" de ta page.</p>
         </div>
 
         <div style={{ background: '#121212', padding: 24, borderRadius: 12, border: '1px solid #222' }}>

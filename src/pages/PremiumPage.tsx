@@ -31,7 +31,7 @@ const CanvasWaveform: React.FC<{
   const isDraggingRef = useRef(false);
 
   const mockPeaks = useMemo(() => {
-    return Array.from({ length: 250 }, () => Math.random() * 70 + 30);
+    return Array.from({ length: 150 }, () => Math.random() * 70 + 30);
   }, [peaks]);
 
   useEffect(() => { if (!isDraggingRef.current) setDragProgress(null); }, [progress]);
@@ -65,12 +65,10 @@ const CanvasWaveform: React.FC<{
     const displayProgress = dragProgress !== null ? dragProgress : progress;
     const playedX = displayProgress * W;
 
-    // ✅ Moins de barres sur mobile pour économiser le CPU
     const barCount = isMobile ? 150 : 300;
     const step = Math.max(1, Math.floor(safePeaks.length / barCount));
     const displayPeaks = safePeaks.filter((_: any, i: number) => i % step === 0).slice(0, barCount);
 
-    // Partie non jouée
     ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
     for (let i = 0; i < displayPeaks.length; i++) {
       const x = (i / displayPeaks.length) * W;
@@ -79,7 +77,6 @@ const CanvasWaveform: React.FC<{
       if (x >= playedX) ctx.fillRect(x, centerY - barHeight, 1, barHeight * 2);
     }
 
-    // Partie jouée
     if (isPlaying || displayProgress > 0) {
       ctx.save();
       ctx.beginPath();
@@ -93,7 +90,6 @@ const CanvasWaveform: React.FC<{
 
       ctx.fillStyle = gradient;
       ctx.shadowColor = themeColor;
-      // ✅ Moins d'ombre sur mobile pour la fluidité
       ctx.shadowBlur = isMobile ? 2 : 6; 
 
       for (let i = 0; i < displayPeaks.length; i++) {
@@ -106,7 +102,6 @@ const CanvasWaveform: React.FC<{
       ctx.restore();
     }
 
-    // Tête de lecture
     if (isPlaying || displayProgress > 0) {
       ctx.strokeStyle = '#fff';
       ctx.lineWidth = 2;
@@ -167,7 +162,6 @@ const CanvasWaveform: React.FC<{
   );
 };
 
-// ✅ Hook pour détecter le mobile
 const useIsMobile = (breakpoint = 768) => {
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
@@ -304,7 +298,10 @@ export const PremiumPage: React.FC = () => {
   if (loading) return <div style={{ background: '#000', color: '#fff', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Chargement...</div>;
   if (!profile) return <div style={{ background: '#000', color: '#fff', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Artiste introuvable.</div>;
 
-  const gmailContactLink = `https://mail.google.com/mail/?view=cm&fs=1&to=djcontrolradiotv1@gmail.com&su=Booking%20${profile.username}&body=Salut,%20je%20souhaite%20vous%20contacter%20pour%20un%20booking.`;
+  // ✅ On utilise l'email de booking de l'artiste, ou un mailto par défaut
+  const artistEmail = profile.booking_email || 'djcontrolradiotv1@gmail.com';
+  const gmailContactLink = `https://mail.google.com/mail/?view=cm&fs=1&to=${artistEmail}&su=Booking%20${profile.username}&body=Salut,%20je%20souhaite%20vous%20contacter%20pour%20un%20booking.`;
+
   const themeColor = profile.theme_color || '#00d9ff';
   const isOwner = user && profile && user.id === profile.id;
 

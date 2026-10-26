@@ -31,7 +31,7 @@ const CanvasWaveform: React.FC<{
   const isDraggingRef = useRef(false);
 
   const mockPeaks = useMemo(() => {
-    return Array.from({ length: 250 }, () => Math.random() * 70 + 30);
+    return Array.from({ length: 150 }, () => Math.random() * 70 + 30);
   }, [peaks]);
 
   useEffect(() => { if (!isDraggingRef.current) setDragProgress(null); }, [progress]);
@@ -636,8 +636,8 @@ export const PremiumPage: React.FC = () => {
                 </div>
               </div>
               
-              {/* ✅ AFFICHES DU PARCOURS (indépendantes de la galerie globale) */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: isMobile ? 8 : 16 }}>
+              {/* ✅ AFFICHES DU PARCOURS AGRANDIES */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: isMobile ? 12 : 24 }}>
                 {parcoursImages && parcoursImages.length > 0 ? (
                   parcoursImages.slice(0, 4).map((url: string, i: number) => (
                     <div 

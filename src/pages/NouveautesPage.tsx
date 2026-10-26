@@ -1,7 +1,7 @@
 // src/pages/NouveautesPage.tsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { parseBlob } from 'music-metadata'; // ✅ Pour lire les tags
+import { parseBlob } from 'music-metadata';
 import { OnlineUsersWidget } from '../components/OnlineUsersWidget';
 import { ShareButton } from '../components/ShareButton';
 import { supabase, AUDIO_BUCKET } from '../lib/supabase';
@@ -56,20 +56,17 @@ export const NouveautesPage: React.FC = () => {
   const [sortBy, setSortBy] = useState<'recent' | 'likes' | 'bpm' | 'title'>('recent');
   const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
   
-  // ✅ États pour l'édition
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ title: '', artist: '', genre: '', bpm: 0, purchase_url: '' });
 
-  // ✅ États pour la modale d'upload
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [uploadType, setUploadType] = useState<'file' | 'link'>('file'); // ✅ Nouveau : choix du type
+  const [uploadType, setUploadType] = useState<'file' | 'link'>('file');
   
   const [uploadForm, setUploadForm] = useState({ title: '', artist: '', genre: '', bpm: '', song_key: '', audio_url: '', embed_code: '', purchase_url: '' });
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
 
-  // ✅ Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 20;
 
@@ -142,12 +139,30 @@ export const NouveautesPage: React.FC = () => {
     setEditingId(null);
   };
 
-  // ✅ Lecture des tags ID3 et de la pochette
+  // ✅ Lecture des tags ID3 avec fallback sur le nom du fichier
   const handleAudioFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setAudioFile(file);
 
+    // 1. On pré-remplit avec le nom du fichier (sans l'extension)
+    const fileNameWithoutExt = file.name.replace(/\.[^/.]+$/, "");
+    let guessArtist = "";
+    let guessTitle = fileNameWithoutExt;
+    
+    if (fileNameWithoutExt.includes(' - ')) {
+      const parts = fileNameWithoutExt.split(' - ');
+      guessArtist = parts[0].trim();
+      guessTitle = parts.slice(1).join(' - ').trim();
+    }
+
+    setUploadForm(prev => ({
+      ...prev,
+      title: prev.title || guessTitle,
+      artist: prev.artist || guessArtist,
+    }));
+
+    // 2. On tente de lire les tags ID3 pour écraser ces valeurs si elles existent
     try {
       const metadata = await parseBlob(file);
       const { common } = metadata;
@@ -172,7 +187,6 @@ export const NouveautesPage: React.FC = () => {
     }
   };
 
-  // ✅ Envoi du son (Fichier ou Lien)
   const handleUploadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return alert("Connecte-toi pour uploader.");
@@ -183,7 +197,6 @@ export const NouveautesPage: React.FC = () => {
       let finalAudioUrl = uploadForm.audio_url;
       let coverUrl = null;
 
-      // 1. Si c'est un upload de fichier
       if (uploadType === 'file') {
         if (!audioFile) throw new Error("Sélectionne un fichier audio.");
         const audioExt = audioFile.name.split('.').pop();
@@ -203,13 +216,10 @@ export const NouveautesPage: React.FC = () => {
           }
         }
       } else {
-        // 2. Si c'est un lien (Catbox ou Embed)
         if (!uploadForm.audio_url && !uploadForm.embed_code) throw new Error("Renseigne un lien ou un code d'intégration.");
-        // Si c'est un lien direct MP3, on le met dans audio_url
         if (uploadForm.audio_url && (uploadForm.audio_url.endsWith('.mp3') || uploadForm.audio_url.includes('catbox'))) {
             finalAudioUrl = uploadForm.audio_url;
         } else if (uploadForm.audio_url) {
-            // Sinon c'est un lien d'achat (Beatport, etc.)
             uploadForm.purchase_url = uploadForm.audio_url;
             finalAudioUrl = ''; 
         }
@@ -274,7 +284,6 @@ export const NouveautesPage: React.FC = () => {
     <div style={{ padding: isMobile ? '16px 12px' : '32px 24px', fontFamily: 'Inter, sans-serif', color: '#fff', paddingBottom: 100, background: '#0a0a0a', minHeight: '100vh', width: '100%', boxSizing: 'border-box', overflowX: 'hidden' }}>
       <div style={{ display: 'flex', gap: 32, alignItems: 'flex-start', width: '100%', maxWidth: 1600, margin: '0 auto' }}>
         
-        {/* SIDEBAR GAUCHE */}
         {!isMobile && (
           <aside style={{ width: 200, flexShrink: 0, position: 'sticky', top: 32 }}>
             <div style={{ padding: '0 0 16px 0' }}>
@@ -289,7 +298,6 @@ export const NouveautesPage: React.FC = () => {
           </aside>
         )}
 
-        {/* CONTENU PRINCIPAL */}
         <main style={{ flex: 1, minWidth: 0, width: '100%' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
             <div>
@@ -328,7 +336,6 @@ export const NouveautesPage: React.FC = () => {
               const isLiked = userLikes[track.id] || false;
               const isOwner = user?.id === track.user_id;
 
-              // ✅ FORMULAIRE D'ÉDITION
               if (editingId === track.id) {
                 return (
                   <div key={track.id} style={{ padding: '16px', borderBottom: '1px solid #222', display: 'flex', flexDirection: 'column', gap: 12, background: '#1a1a1a' }}>
@@ -406,7 +413,6 @@ export const NouveautesPage: React.FC = () => {
             })}
           </div>
 
-          {/* PAGINATION */}
           {!loading && totalPages > 1 && (
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 16, marginTop: 32 }}>
               <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={safeCurrentPage === 1} style={{ background: 'transparent', border: '1px solid #222', color: safeCurrentPage === 1 ? '#444' : '#fff', padding: '8px 16px', borderRadius: 8, cursor: safeCurrentPage === 1 ? 'not-allowed' : 'pointer', fontSize: 13 }}>
@@ -420,7 +426,6 @@ export const NouveautesPage: React.FC = () => {
           )}
         </main>
 
-        {/* SIDEBAR DROITE */}
         {!isMobile && (
           <aside style={{ width: 280, flexShrink: 0, position: 'sticky', top: 32, display: 'flex', flexDirection: 'column', gap: 24 }}>
             <div style={{ background: '#121212', border: '1px solid #222', borderRadius: 12, padding: 20 }}>
@@ -445,7 +450,6 @@ export const NouveautesPage: React.FC = () => {
         )}
       </div>
 
-      {/* ✅ MODALE D'UPLOAD DIRECT MODIFIÉE */}
       {showUploadModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
           <div style={{ background: '#121212', border: '1px solid #222', borderRadius: 16, padding: 32, width: '100%', maxWidth: 500, maxHeight: '90vh', overflowY: 'auto' }}>
@@ -454,7 +458,6 @@ export const NouveautesPage: React.FC = () => {
               <button onClick={() => setShowUploadModal(false)} style={{ background: 'transparent', border: 'none', color: '#888', fontSize: 20, cursor: 'pointer' }}>✕</button>
             </div>
 
-            {/* ✅ Choix du type d'ajout */}
             <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
               <button onClick={() => setUploadType('file')} style={{ flex: 1, padding: 10, background: uploadType === 'file' ? '#00d9ff' : 'transparent', color: uploadType === 'file' ? '#000' : '#fff', border: '1px solid #333', borderRadius: 8, cursor: 'pointer', fontWeight: 700 }}>Fichier MP3</button>
               <button onClick={() => setUploadType('link')} style={{ flex: 1, padding: 10, background: uploadType === 'link' ? '#00d9ff' : 'transparent', color: uploadType === 'link' ? '#000' : '#fff', border: '1px solid #333', borderRadius: 8, cursor: 'pointer', fontWeight: 700 }}>Lien / Embed</button>

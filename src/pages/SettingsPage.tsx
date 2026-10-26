@@ -16,21 +16,18 @@ export const SettingsPage: React.FC = () => {
   const [myTracks, setMyTracks] = useState<any[]>([]);
   const [editingTrackId, setEditingTrackId] = useState<string | null>(null);
   
-  // ✅ États pour la modale d'upload direct
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadForm, setUploadForm] = useState({ title: '', artist: '', genre: '', bpm: '', song_key: '' });
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
 
-  // États pour l'édition d'un son existant
   const [editTrackForm, setEditTrackForm] = useState({ 
     title: '', genre: '', bpm: 0, purchase_url: '', embed_code: '',
     player_bg_color: '#000000', player_bg_image_url: ''
   });
   
   const [showLinkForm, setShowLinkForm] = useState(false);
-  // ✅ On sépare le lien audio du lien d'achat pour plus de clarté
   const [linkForm, setLinkForm] = useState({ title: '', artist: '', genre: '', purchase_url: '', cover_url: '', embed_code: '', audio_url: '' });
 
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -44,7 +41,6 @@ export const SettingsPage: React.FC = () => {
     beatport_url: '', x_url: '', facebook_url: ''
   });
 
-  // ✅ État pour les réglages avancés (Modules + Prestations)
   const [settings, setSettings] = useState({
     duo_title: 'Bio',
     prestations_title: 'Prestations',
@@ -154,11 +150,30 @@ export const SettingsPage: React.FC = () => {
     setGalleryImages(galleryImages.filter(img => img.id !== id));
   };
 
+  // ✅ Lecture des tags ID3 avec fallback sur le nom du fichier
   const handleAudioFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setAudioFile(file);
 
+    // 1. On pré-remplit avec le nom du fichier (sans l'extension)
+    const fileNameWithoutExt = file.name.replace(/\.[^/.]+$/, "");
+    let guessArtist = "";
+    let guessTitle = fileNameWithoutExt;
+    
+    if (fileNameWithoutExt.includes(' - ')) {
+      const parts = fileNameWithoutExt.split(' - ');
+      guessArtist = parts[0].trim();
+      guessTitle = parts.slice(1).join(' - ').trim();
+    }
+
+    setUploadForm(prev => ({
+      ...prev,
+      title: prev.title || guessTitle,
+      artist: prev.artist || guessArtist,
+    }));
+
+    // 2. On tente de lire les tags ID3 pour écraser ces valeurs si elles existent
     try {
       const metadata = await parseBlob(file);
       const { common } = metadata;
@@ -267,7 +282,6 @@ export const SettingsPage: React.FC = () => {
       return;
     }
     
-    // ✅ Si on n'a ni audio_url ni embed_code, on ne peut pas valider
     if (!linkForm.audio_url && !linkForm.embed_code && !linkForm.purchase_url) {
       alert("Renseigne au moins un lien (MP3, Beatport) ou un code d'intégration.");
       return;
@@ -275,20 +289,17 @@ export const SettingsPage: React.FC = () => {
 
     setSaving(true);
     try {
-      // ✅ Logique : on essaie de deviner si le lien fourni est un MP3 direct
       let finalAudioUrl = '';
       let finalPurchaseUrl = linkForm.purchase_url;
 
-      // Si l'utilisateur a mis un lien dans "audio_url" (le nouveau champ)
       if (linkForm.audio_url) {
         if (linkForm.audio_url.endsWith('.mp3') || linkForm.audio_url.includes('catbox') || linkForm.audio_url.includes('.wav')) {
           finalAudioUrl = linkForm.audio_url;
         } else {
-          finalPurchaseUrl = linkForm.audio_url; // Si c'est un lien Beatport, on le bascule dans purchase_url
+          finalPurchaseUrl = linkForm.audio_url;
         }
       }
       
-      // Si l'utilisateur a mis un lien dans "purchase_url" (l'ancien champ), on vérifie si c'est un MP3
       if (!finalAudioUrl && finalPurchaseUrl) {
          if (finalPurchaseUrl.endsWith('.mp3') || finalPurchaseUrl.includes('catbox')) {
              finalAudioUrl = finalPurchaseUrl;
@@ -304,7 +315,7 @@ export const SettingsPage: React.FC = () => {
         purchase_url: finalPurchaseUrl || null,
         cover_url: linkForm.cover_url || null,
         embed_code: linkForm.embed_code || null,
-        audio_url: finalAudioUrl, // ✅ C'est ça qui débloquait ton lecteur
+        audio_url: finalAudioUrl,
         peaks: [],
         likes_count: 0,
         downloads: 0,
@@ -388,7 +399,6 @@ export const SettingsPage: React.FC = () => {
 
       {message && <div style={{ padding: 16, background: 'rgba(0,217,255,0.1)', border: '1px solid #00d9ff', borderRadius: 8, marginBottom: 24, color: '#00d9ff' }}>{message}</div>}
 
-      {/* ✅ MODULES ET PRESTATIONS */}
       <div style={{ background: '#121212', padding: 24, borderRadius: 12, border: '1px solid #222', marginBottom: 24 }}>
         <h2 style={{ fontSize: 18, color: '#fff', margin: '0 0 20px 0' }}>🎛️ Modules de la page Premium</h2>
         
@@ -462,7 +472,6 @@ export const SettingsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* SECTION MUSIQUE */}
       <div style={{ background: '#121212', padding: 24, borderRadius: 12, border: '1px solid #222', marginBottom: 24 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 10 }}>
           <h2 style={{ fontSize: 18, color: '#fff', margin: 0 }}>Ma Musique ({myTracks.length})</h2>
@@ -485,7 +494,6 @@ export const SettingsPage: React.FC = () => {
               <input type="text" placeholder="Genre (ex: Techno)" value={linkForm.genre} onChange={e => setLinkForm({...linkForm, genre: e.target.value})} style={{ flex: 1, padding: 10, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4 }} />
             </div>
             
-            {/* ✅ On sépare les deux types de liens */}
             <input type="url" placeholder="Lien direct MP3 (ex: Catbox, Dropbox) — Optionnel" value={linkForm.audio_url} onChange={e => setLinkForm({...linkForm, audio_url: e.target.value})} style={{ padding: 10, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4 }} />
             
             <input type="url" placeholder="Lien d'achat / Beatport (Optionnel)" value={linkForm.purchase_url} onChange={e => setLinkForm({...linkForm, purchase_url: e.target.value})} style={{ padding: 10, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4 }} />
@@ -553,7 +561,6 @@ export const SettingsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* SECTION GALERIE */}
       <div style={{ background: '#121212', padding: 24, borderRadius: 12, border: '1px solid #222', marginBottom: 24 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
           <h2 style={{ fontSize: 18, color: '#fff', margin: 0 }}>Ma Galerie Photos ({galleryImages.length})</h2>
@@ -576,7 +583,6 @@ export const SettingsPage: React.FC = () => {
         )}
       </div>
 
-      {/* FORMULAIRE DE PROFIL */}
       <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
         <div style={{ background: '#121212', padding: 24, borderRadius: 12, border: '1px solid #222' }}>
           <h2 style={{ fontSize: 18, marginBottom: 20, color: '#fff' }}>Identité & Thème</h2>
@@ -637,7 +643,6 @@ export const SettingsPage: React.FC = () => {
         </button>
       </form>
 
-      {/* ✅ MODALE D'UPLOAD */}
       {showUploadModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
           <div style={{ background: '#121212', border: '1px solid #222', borderRadius: 16, padding: 32, width: '100%', maxWidth: 500, maxHeight: '90vh', overflowY: 'auto' }}>

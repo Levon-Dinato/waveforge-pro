@@ -179,7 +179,6 @@ export const PremiumPage: React.FC = () => {
   const { play, currentTrack, isPlaying, togglePlay, stop, currentTime, duration, seek } = usePlayer();
   const isMobile = useIsMobile();
   
-  // ✅ NOUVEAU : statut premium
   const [isPremium, setIsPremium] = useState(false);
   useEffect(() => {
     const check = async () => {
@@ -205,7 +204,48 @@ export const PremiumPage: React.FC = () => {
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
   };
 
-  // ✅ BLOCAGE DU TÉLÉCHARGEMENT
+  const formatEventDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    const day = date.toLocaleDateString('fr-FR', { day: 'numeric' });
+    const month = date.toLocaleDateString('fr-FR', { month: 'short' });
+    const year = date.toLocaleDateString('fr-FR', { year: 'numeric' });
+    return { day, month, year, full: `${day} ${month} ${year}` };
+  };
+
+  const handleAddToCalendar = (event: any) => {
+    const date = new Date(event.event_date);
+    const endDate = new Date(date.getTime() + 2 * 60 * 60 * 1000);
+    
+    const formatDate = (d: Date) => {
+      return d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+    };
+
+    const icsContent = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//DropZone DJ//FR
+BEGIN:VEVENT
+UID:${event.id}@dropzone.dj
+DTSTAMP:${formatDate(new Date())}
+DTSTART:${formatDate(date)}
+DTEND:${formatDate(endDate)}
+SUMMARY:${event.title}
+LOCATION:${event.location || ''} ${event.city || ''}
+DESCRIPTION:${event.description || 'Événement DropZone DJ'}
+URL:${event.url || window.location.href}
+END:VEVENT
+END:VCALENDAR`;
+
+    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${event.title.replace(/\s+/g, '_')}.ics`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  };
+
   const handleDownload = async (e: React.MouseEvent, url: string, filename: string) => {
     e.stopPropagation();
     if (!user) {
@@ -279,7 +319,12 @@ export const PremiumPage: React.FC = () => {
           }
 
           const today = new Date().toISOString().split('T')[0];
-          const { data: eventsData } = await supabase.from('events').select('*').eq('created_by', profileData.id).gte('event_date', today).order('event_date', { ascending: true });
+          const { data: eventsData } = await supabase
+            .from('events')
+            .select('*')
+            .eq('created_by', profileData.id)
+            .gte('event_date', today)
+            .order('event_date', { ascending: true });
           if (eventsData) setEvents(eventsData);
 
           const { data: galleryData } = await supabase.from('profile_gallery').select('*').eq('user_id', profileData.id).order('created_at', { ascending: false });
@@ -290,7 +335,6 @@ export const PremiumPage: React.FC = () => {
     fetchData();
   }, [username]);
 
-  // ✅ BLOCAGE DE LA LECTURE
   const handlePlayTrack = (track: any) => {
     if (!user) {
       alert("🔒 Inscrivez-vous gratuitement pour écouter les morceaux en entier.");
@@ -422,7 +466,7 @@ export const PremiumPage: React.FC = () => {
         </div>
       )}
 
-      {/* ✅ NAVIGATION OPTIMISÉE POUR MOBILE */}
+      {/* NAVIGATION */}
       <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, height: isMobile ? 60 : 72, background: 'rgba(5,5,5,0.85)', backdropFilter: 'blur(24px)', zIndex: 1000, borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
         <div style={{ maxWidth: 1400, margin: '0 auto', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: isMobile ? '0 12px' : '0 24px', gap: isMobile ? 8 : 32 }}>
           
@@ -442,6 +486,7 @@ export const PremiumPage: React.FC = () => {
           {!isMobile && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
               <a href="#duo" className="nav-link">Bio</a>
+              <a href="#dates" className="nav-link">Dates</a>
               <a href="#prestations" className="nav-link">Références</a>
               <a href="#gallery" className="nav-link">Galerie</a>
               <a href="#releases" className="nav-link">Musique</a>
@@ -466,16 +511,14 @@ export const PremiumPage: React.FC = () => {
         </div>
       </nav>
 
+      {/* HERO */}
       <section style={{ position: 'relative', minHeight: isMobile ? '80vh' : '95vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', background: '#050505', paddingTop: isMobile ? 60 : 72 }}>
         
         <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
           <video 
             autoPlay muted loop playsInline poster={profile.avatar_url || "/logo.jpg"} 
             style={{ 
-              width: '100%', 
-              height: '100%', 
-              objectFit: 'cover', 
-              opacity: 0.8, 
+              width: '100%', height: '100%', objectFit: 'cover', opacity: 0.8, 
               filter: 'grayscale(100%) contrast(1.2) brightness(0.6)' 
             }}
           >
@@ -504,14 +547,11 @@ export const PremiumPage: React.FC = () => {
             {ArrowButton ? (
               <>
                 <ArrowButton 
-                  label="Écouter les tracks" 
-                  color={themeColor} 
-                  href="#releases" 
+                  label="Écouter les tracks" color={themeColor} href="#releases" 
                   icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>}
                 />
                 <ArrowButton 
-                  label="Partager" 
-                  color={themeColor} 
+                  label="Partager" color={themeColor} 
                   onClick={() => navigator.clipboard.writeText(window.location.href).then(() => alert('Lien copié !'))} 
                   variant="outline"
                   icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>}
@@ -529,28 +569,15 @@ export const PremiumPage: React.FC = () => {
 
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '40px 16px' : '100px 24px' }}>
         
+        {/* BIO */}
         {showDuo && (
           <section id="duo" style={{ marginBottom: isMobile ? 40 : 120 }}>
             <div className="section-subtitle">{settings.duo_title || 'Bio'}</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: isMobile ? 20 : 60, alignItems: 'start' }}>
               
-              {/* ✅ LISERÉ LUMIÈRE AJOUTÉ ICI (Carte Photo de Profil) */}
               <div className="premium-glow" style={{ position: 'relative', borderRadius: 12, padding: 2 }}>
-                <div style={{ 
-                  width: '100%', 
-                  aspectRatio: isMobile ? '1/1' : '4/5', 
-                  borderRadius: 10, 
-                  overflow: 'hidden', 
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  boxShadow: '0 20px 40px rgba(0,0,0,0.5)',
-                  position: 'relative',
-                  zIndex: 2
-                }}>
-                  <img 
-                    src={profile.avatar_url || "/logo.jpg"} 
-                    alt={profile.username} 
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-                  />
+                <div style={{ width: '100%', aspectRatio: isMobile ? '1/1' : '4/5', borderRadius: 10, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 20px 40px rgba(0,0,0,0.5)', position: 'relative', zIndex: 2 }}>
+                  <img src={profile.avatar_url || "/logo.jpg"} alt={profile.username} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 </div>
                 <div style={{ position: 'absolute', bottom: -10, left: 20, width: 60, height: 4, background: themeColor, borderRadius: 2, zIndex: 3 }} />
               </div>
@@ -576,69 +603,76 @@ export const PremiumPage: React.FC = () => {
           </section>
         )}
 
-        {soundcloudUrl && (
-          <section style={{ marginBottom: isMobile ? 40 : 120, paddingTop: isMobile ? 40 : 80, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-            <div className="section-subtitle">Écouter</div>
-            <h2 className="section-title" style={{ maxWidth: '80%' }}>
-              Écoutez {profile.username} sur SoundCloud.
-            </h2>
+        {/* ✅ NOUVELLE SECTION : PROCHAINES DATES */}
+        {events.length > 0 && (
+          <section id="dates" style={{ marginBottom: isMobile ? 40 : 120, paddingTop: isMobile ? 40 : 80, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+            <div className="section-subtitle">Agenda</div>
+            <h2 className="section-title">Prochaines dates</h2>
             
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: isMobile ? 20 : 60, alignItems: 'center', marginTop: isMobile ? 20 : 40 }}>
-              <div>
-                <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: isMobile ? 14 : 16, lineHeight: 1.8, fontWeight: 300, marginBottom: 30 }}>
-                  Plongez dans l'univers sonore de {profile.username}. Retrouvez ses dernières productions, ses remixes et ses sets en direct sur sa page officielle SoundCloud.
-                </p>
-                <a 
-                  href={soundcloudUrl} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  style={{ 
-                    display: 'inline-block',
-                    background: '#ff5500', 
-                    color: '#fff', 
-                    padding: '14px 28px', 
-                    borderRadius: 8, 
-                    fontWeight: 800, 
-                    fontSize: 13, 
-                    textDecoration: 'none',
-                    textTransform: 'uppercase',
-                    letterSpacing: '1px',
-                    transition: 'transform 0.2s, box-shadow 0.2s',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-2px)';
-                    e.currentTarget.style.boxShadow = '0 10px 20px rgba(255, 85, 0, 0.3)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = 'none';
-                  }}
-                >
-                  Écouter sur SoundCloud
-                </a>
-              </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 12 : 16, marginTop: isMobile ? 20 : 40 }}>
+              {events.map((event: any) => {
+                const dateInfo = formatEventDate(event.event_date);
+                return (
+                  <div
+                    key={event.id}
+                    style={{
+                      display: 'flex', flexDirection: isMobile ? 'column' : 'row',
+                      alignItems: isMobile ? 'flex-start' : 'center',
+                      gap: isMobile ? 16 : 24,
+                      background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
+                      borderRadius: 16, padding: isMobile ? 20 : 24, transition: 'all 0.3s',
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = `${themeColor}40`; e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'; e.currentTarget.style.background = 'rgba(255,255,255,0.02)'; }}
+                  >
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: `${themeColor}15`, border: `1px solid ${themeColor}40`, borderRadius: 12, padding: '12px 20px', minWidth: isMobile ? 'auto' : 80, flexShrink: 0 }}>
+                      <div style={{ fontSize: 24, fontWeight: 900, color: themeColor, lineHeight: 1 }}>{dateInfo.day}</div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: themeColor, textTransform: 'uppercase', letterSpacing: '1px', marginTop: 4 }}>{dateInfo.month}</div>
+                    </div>
 
-              <div style={{ borderRadius: 12, overflow: 'hidden', boxShadow: '0 20px 40px rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                <iframe 
-                  width="100%" 
-                  height={isMobile ? "250" : "350"} 
-                  scrolling="no" 
-                  frameBorder="no" 
-                  allow="autoplay" 
-                  src={`https://w.soundcloud.com/player/?url=${encodeURIComponent(soundcloudUrl)}&color=%2300d9ff&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true`}
-                ></iframe>
-              </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 6 }}>
+                        <h3 style={{ fontSize: isMobile ? 16 : 20, fontWeight: 800, color: '#fff', margin: 0 }}>{event.title}</h3>
+                        {event.city && (
+                          <span style={{ fontSize: 10, fontWeight: 700, color: themeColor, background: `${themeColor}15`, padding: '3px 10px', borderRadius: 20, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                            {event.city}
+                          </span>
+                        )}
+                      </div>
+                      {event.location && (
+                        <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                          {event.location}
+                        </div>
+                      )}
+                    </div>
+
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', width: isMobile ? '100%' : 'auto', flexShrink: 0 }}>
+                      {event.url && (
+                        <a href={event.url} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', background: themeColor, color: '#000', borderRadius: 8, fontSize: 12, fontWeight: 800, textDecoration: 'none', textTransform: 'uppercase', letterSpacing: '0.5px', transition: 'all 0.2s' }} onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.85'; }} onMouseLeave={(e) => { e.currentTarget.style.opacity = '1'; }}>
+                          Billets
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M7 17L17 7M17 7H7M17 7V17"/></svg>
+                        </a>
+                      )}
+                      <button onClick={() => handleAddToCalendar(event)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                        Calendrier
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </section>
         )}
 
+        {/* PARCOURS */}
         {showPrestations && (
           <section id="prestations" style={{ marginBottom: isMobile ? 40 : 120, paddingTop: isMobile ? 40 : 80, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
             <div className="section-subtitle">{settings.prestations_title || 'Parcours'}</div>
             <h2 className="section-title">Un parcours visible,<br/>des événements qui parlent.</h2>
             
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: isMobile ? 20 : 60, marginTop: isMobile ? 20 : 60 }}>
-              
               <div>
                 <p style={{ fontSize: isMobile ? 16 : 18, color: '#fff', lineHeight: 1.6, marginBottom: 24, fontWeight: 300 }}>
                   Ces moments retracent les événements qui ont marqué le parcours de {profile.username} : clubs, festivals et rendez-vous culturels.
@@ -647,11 +681,7 @@ export const PremiumPage: React.FC = () => {
                   Ils montrent une présence régulière sur le terrain, auprès de publics fidèles et de promoteurs qui lui font confiance pour porter l'énergie de leurs événements.
                 </p>
                 
-                {/* ✅ LISERÉ LUMIÈRE SUR LA CARTE PRESTATIONS */}
-                <div 
-                  className="premium-glow bg-transparent"
-                  style={{ background: 'rgba(255,255,255,0.02)', padding: isMobile ? 20 : 32, borderRadius: 16, border: '1px solid rgba(255,255,255,0.06)' }}
-                >
+                <div className="premium-glow bg-transparent" style={{ background: 'rgba(255,255,255,0.02)', padding: isMobile ? 20 : 32, borderRadius: 16, border: '1px solid rgba(255,255,255,0.06)' }}>
                   <h3 style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: themeColor, marginBottom: 24 }}>
                     Pourquoi ça compte
                   </h3>
@@ -672,16 +702,10 @@ export const PremiumPage: React.FC = () => {
                 </div>
               </div>
               
-              {/* ✅ AFFICHES DU PARCOURS AVEC LISERÉ LUMIÈRE */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: isMobile ? 12 : 24 }}>
                 {parcoursImages && parcoursImages.length > 0 ? (
                   parcoursImages.slice(0, 4).map((url: string, i: number) => (
-                    <div 
-                      key={i} 
-                      className="gallery-item premium-glow" /* ✅ LISERÉ LUMIÈRE */
-                      style={{ aspectRatio: '3/4', padding: 2 }}
-                      onClick={() => setLightboxImage(url)}
-                    >
+                    <div key={i} className="gallery-item premium-glow" style={{ aspectRatio: '3/4', padding: 2 }} onClick={() => setLightboxImage(url)}>
                       <img src={url} alt={`Affiche parcours ${i + 1}`} style={{ borderRadius: 6 }} />
                       <div className="gallery-btn">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
@@ -700,6 +724,7 @@ export const PremiumPage: React.FC = () => {
           </section>
         )}
 
+        {/* GALERIE */}
         {gallery && gallery.length > 0 && (
           <section id="gallery" style={{ marginBottom: isMobile ? 40 : 120, paddingTop: isMobile ? 40 : 80, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: isMobile ? 20 : 40, flexDirection: isMobile ? 'column' : 'row', gap: 16 }}>
@@ -707,28 +732,15 @@ export const PremiumPage: React.FC = () => {
                 <div className="section-subtitle">En images</div>
                 <h2 className="section-title" style={{ margin: 0 }}>Galerie</h2>
               </div>
-              <button 
-                onClick={() => setLightboxImage(gallery[0]?.image_url || null)}
-                style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: 12, fontWeight: 800, letterSpacing: '1.5px', textTransform: 'uppercase', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}
-              >
+              <button onClick={() => setLightboxImage(gallery[0]?.image_url || null)} style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: 12, fontWeight: 800, letterSpacing: '1.5px', textTransform: 'uppercase', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
                 Ouvrir la galerie <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M7 17L17 7M17 7H7M17 7V17"/></svg>
               </button>
             </div>
             
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: isMobile ? 12 : 24 }}>
               {gallery.map((img) => (
-                <div 
-                  key={img.id} 
-                  className="gallery-item premium-glow" /* ✅ LISERÉ LUMIÈRE GALERIE */
-                  style={{ aspectRatio: '16/9', padding: 2 }}
-                  onClick={() => setLightboxImage(img.image_url)}
-                >
-                  <img 
-                    src={img.image_url} 
-                    alt="Galerie" 
-                    loading="lazy"
-                    style={{ borderRadius: 6 }}
-                  />
+                <div key={img.id} className="gallery-item premium-glow" style={{ aspectRatio: '16/9', padding: 2 }} onClick={() => setLightboxImage(img.image_url)}>
+                  <img src={img.image_url} alt="Galerie" loading="lazy" style={{ borderRadius: 6 }} />
                   <div className="gallery-btn">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
                   </div>
@@ -738,6 +750,7 @@ export const PremiumPage: React.FC = () => {
           </section>
         )}
 
+        {/* RELEASES */}
         {showReleases && (
           <section id="releases" style={{ paddingTop: isMobile ? 40 : 80, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
             <div className="section-subtitle">Écouter</div>
@@ -756,10 +769,8 @@ export const PremiumPage: React.FC = () => {
                 
                 const iframeSrc = getIframeSrc(track.embed_code);
                 const isExternalEmbed = !!iframeSrc && (
-                  iframeSrc.includes('beatport.com') || 
-                  iframeSrc.includes('traxsource.com') || 
-                  iframeSrc.includes('audio.com') || 
-                  iframeSrc.includes('spotify.com')
+                  iframeSrc.includes('beatport.com') || iframeSrc.includes('traxsource.com') || 
+                  iframeSrc.includes('audio.com') || iframeSrc.includes('spotify.com')
                 );
 
                 if (isExternalEmbed) {
@@ -794,15 +805,12 @@ export const PremiumPage: React.FC = () => {
                 return (
                   <div 
                     key={track.id} 
-                    className={`hover-row premium-glow ${cardBgImage ? 'has-bg-image' : ''}`} /* ✅ LISERÉ LUMIÈRE LECTEUR */
+                    className={`hover-row premium-glow ${cardBgImage ? 'has-bg-image' : ''}`}
                     onClick={() => isPlayable && handlePlayTrack(track)}
                     style={{ 
-                      ...customCardStyle,
-                      display: 'flex', flexDirection: 'column', padding: isMobile ? '16px' : '24px', borderRadius: 20, 
+                      ...customCardStyle, display: 'flex', flexDirection: 'column', padding: isMobile ? '16px' : '24px', borderRadius: 20, 
                       cursor: isPlayable ? 'pointer' : 'default', border: '1px solid rgba(255,255,255,0.06)',
-                      position: 'relative', 
-                      // On passe l'image de fond au CSS pour que le masque l'utilise
-                      '--bg-image': cardBgImage ? `url("${cardBgImage}")` : 'none'
+                      position: 'relative', '--bg-image': cardBgImage ? `url("${cardBgImage}")` : 'none'
                     } as React.CSSProperties}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: isMobile ? 12 : 20, zIndex: 2, flexDirection: isMobile ? 'column' : 'row', gap: 16 }}>
@@ -823,7 +831,7 @@ export const PremiumPage: React.FC = () => {
                          {isPlayable && (
                            <button onClick={(e) => handleDownload(e, track.audio_url, `${track.artist} - ${track.title}.mp3`)} style={{ background: 'rgba(0,0,0,0.5)', border: `1px solid ${themeColor}`, borderRadius: 8, padding: isMobile ? '6px 12px' : '8px 20px', color: themeColor, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 700, transition: 'all 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.background = `${themeColor}20`} onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(0,0,0,0.5)'}>
                               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                              Télécharger
+                              {isPremium ? 'Télécharger' : '🔒 Premium'}
                            </button>
                          )}
                          <button style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'} onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}>
@@ -877,6 +885,7 @@ export const PremiumPage: React.FC = () => {
 
       </div>
 
+      {/* FOOTER */}
       <footer style={{ borderTop: '1px solid rgba(255,255,255,0.06)', background: '#020202', padding: isMobile ? '40px 16px 20px 16px' : '60px 24px 30px 24px' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: isMobile ? 20 : 40 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: isMobile ? 20 : 40, flexDirection: isMobile ? 'column' : 'row' }}>
@@ -895,6 +904,7 @@ export const PremiumPage: React.FC = () => {
                 <h4 style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1.5px', color: 'rgba(255,255,255,0.4)', marginBottom: 20 }}>Navigation</h4>
                 <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
                   <li><a href="#duo" style={{ color: '#fff', textDecoration: 'none', fontSize: 13, fontWeight: 500 }}>Bio</a></li>
+                  <li><a href="#dates" style={{ color: '#fff', textDecoration: 'none', fontSize: 13, fontWeight: 500 }}>Dates</a></li>
                   <li><a href="#prestations" style={{ color: '#fff', textDecoration: 'none', fontSize: 13, fontWeight: 500 }}>Références</a></li>
                   <li><a href="#gallery" style={{ color: '#fff', textDecoration: 'none', fontSize: 13, fontWeight: 500 }}>Galerie</a></li>
                   <li><a href="#releases" style={{ color: '#fff', textDecoration: 'none', fontSize: 13, fontWeight: 500 }}>Musique</a></li>

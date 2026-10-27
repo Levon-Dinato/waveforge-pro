@@ -51,8 +51,16 @@ export const SettingsPage: React.FC = () => {
 
   const [settings, setSettings] = useState({
     duo_title: 'Bio',
-    prestations_title: 'Prestations',
+    prestations_title: 'Parcours',
     releases_title: 'Dernières Sorties',
+    // ✅ NOUVEAUX CHAMPS POUR LE PARCOURS
+    parcours_title: 'Un parcours visible, des événements qui parlent.',
+    parcours_subtitle: "L'écosystème du DJ indépendant.",
+    parcours_description: "DropZone n'est pas juste une page web, c'est votre QG numérique. Un espace centralisé où votre musique, votre identité visuelle et vos outils de production se rencontrent. Conçu pour les artistes de la nuit, le site évolue constamment pour vous offrir la vitrine et les fonctionnalités que vous méritez, sans les contraintes des grosses plateformes.",
+    // ✅ CHAMPS POUR LA CARTE
+    parcours_card_tag: 'POURQUOI NOUS REJOINDRE',
+    parcours_card_title: 'La plateforme qui propulse votre son.',
+    
     show_stats: true,
     show_duo: true,
     show_prestations: true,
@@ -60,10 +68,10 @@ export const SettingsPage: React.FC = () => {
     show_sidebar_top: true,
     show_sidebar_dates: true,
     prestations: [
-      { title: 'Clubs & Festivals', desc: 'Sets dynamiques et énergie communicative.' },
-      { title: 'Événements Privés', desc: 'Ambiance sur mesure pour vos invités.' },
-      { title: 'Corporate', desc: 'Soirées d\'entreprise et lancements.' },
-      { title: 'Production', desc: 'Création de tracks originales et remixes.' },
+      { title: 'Studio & Outils intégrés', desc: 'Mastering, séparation de stems, générateur... Des outils pro directement dans votre navigateur, sans installation.' },
+      { title: 'Visibilité & Partage', desc: 'Un feed dynamique pour dénicher de nouveaux sons, et des pages artistes uniques pour montrer votre univers.' },
+      { title: 'Communauté & Connexion', desc: 'Échangez avec d\'autres producteurs, partagez vos coups de cœur et construisez votre réseau.' },
+      { title: 'Liberté Créative', desc: 'Un espace pensé pour vous. Uploadez vos tracks, personnalisez votre page, et gardez le contrôle total sur votre art.' },
     ]
   });
 
@@ -506,12 +514,37 @@ export const SettingsPage: React.FC = () => {
               <input type="text" value={settings.duo_title} onChange={(e) => setSettings({...settings, duo_title: e.target.value})} style={{ width: '100%', padding: 10, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
             </div>
             <div style={{ flex: 1, minWidth: 200 }}>
-              <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>Titre "Prestations"</label>
+              <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>Titre "Parcours"</label>
               <input type="text" value={settings.prestations_title} onChange={(e) => setSettings({...settings, prestations_title: e.target.value})} style={{ width: '100%', padding: 10, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
             </div>
             <div style={{ flex: 1, minWidth: 200 }}>
               <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>Titre "Releases"</label>
               <input type="text" value={settings.releases_title} onChange={(e) => setSettings({...settings, releases_title: e.target.value})} style={{ width: '100%', padding: 10, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+            </div>
+          </div>
+
+          {/* ✅ NOUVEAUX CHAMPS POUR LE PARCOURS */}
+          <div style={{ marginTop: 12, padding: 16, background: '#0a0a0a', borderRadius: 8, border: '1px solid #222', display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <h3 style={{ fontSize: 14, color: '#fff', margin: 0 }}>Contenu du Parcours</h3>
+            <div>
+              <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>Titre principal</label>
+              <input type="text" value={settings.parcours_title || ''} onChange={(e) => setSettings({...settings, parcours_title: e.target.value})} style={{ width: '100%', padding: 10, background: '#121212', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>Sous-titre (en gras)</label>
+              <input type="text" value={settings.parcours_subtitle || ''} onChange={(e) => setSettings({...settings, parcours_subtitle: e.target.value})} style={{ width: '100%', padding: 10, background: '#121212', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>Description</label>
+              <textarea value={settings.parcours_description || ''} onChange={(e) => setSettings({...settings, parcours_description: e.target.value})} rows={4} style={{ width: '100%', padding: 10, background: '#121212', border: '1px solid #333', borderRadius: 8, color: '#fff', resize: 'vertical' }} />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>Titre de la carte (Haut)</label>
+              <input type="text" value={settings.parcours_card_tag || ''} onChange={(e) => setSettings({...settings, parcours_card_tag: e.target.value})} style={{ width: '100%', padding: 10, background: '#121212', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>Titre de la carte (Gros)</label>
+              <input type="text" value={settings.parcours_card_title || ''} onChange={(e) => setSettings({...settings, parcours_card_title: e.target.value})} style={{ width: '100%', padding: 10, background: '#121212', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
             </div>
           </div>
 
@@ -540,7 +573,7 @@ export const SettingsPage: React.FC = () => {
           </div>
 
           <div style={{ marginTop: 24, paddingTop: 24, borderTop: '1px solid #333' }}>
-            <h3 style={{ fontSize: 16, color: '#fff', marginBottom: 16 }}>Contenu des Prestations</h3>
+            <h3 style={{ fontSize: 16, color: '#fff', marginBottom: 16 }}>Contenu des Prestations (Liste)</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               {settings.prestations.map((presta, index) => (
                 <div key={index} style={{ display: 'flex', gap: 12, flexWrap: 'wrap', background: '#0a0a0a', padding: 16, borderRadius: 8, border: '1px solid #222' }}>
@@ -731,7 +764,6 @@ export const SettingsPage: React.FC = () => {
         )}
       </div>
 
-      {/* ✅ SECTION AFFICHES DU PARCOURS */}
       <div style={{ background: '#121212', padding: 24, borderRadius: 12, border: '1px solid #222', marginBottom: 24 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
           <h2 style={{ fontSize: 18, color: '#fff', margin: 0 }}>Affiches du Parcours ({form.parcours_images.length})</h2>

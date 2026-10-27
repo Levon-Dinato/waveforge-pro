@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { supabase, AUDIO_BUCKET } from '../lib/supabase'; // ✅ AUDIO_BUCKET importé
+import { supabase, AUDIO_BUCKET } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { usePlayer } from '../contexts/PlayerContext';
 import * as GlobalPlayerModule from '../components/GlobalPlayer';
@@ -558,11 +558,18 @@ END:VCALENDAR`;
 
   const parcoursImages = profile.parcours_images || [];
 
+  // ✅ VARIABLES DYNAMIQUES POUR LE PARCOURS
+  const parcoursTitle = settings.parcours_title || 'Un parcours visible, des événements qui parlent.';
+  const parcoursSubtitle = settings.parcours_subtitle || "L'écosystème du DJ indépendant.";
+  const parcoursDesc = settings.parcours_description || "DropZone n'est pas juste une page web, c'est votre QG numérique. Un espace centralisé où votre musique, votre identité visuelle et vos outils de production se rencontrent. Conçu pour les artistes de la nuit, le site évolue constamment pour vous offrir la vitrine et les fonctionnalités que vous méritez, sans les contraintes des grosses plateformes.";
+  const parcoursCardTag = settings.parcours_card_tag || 'POURQUOI NOUS REJOINDRE';
+  const parcoursCardTitle = settings.parcours_card_title || 'La plateforme qui propulse votre son.';
+
   const prestations = settings.prestations && settings.prestations.length > 0 ? settings.prestations : [
-    { title: 'Clubs & Festivals', desc: 'Sets dynamiques et énergie communicative.' },
-    { title: 'Événements Privés', desc: 'Ambiance sur mesure pour vos invités.' },
-    { title: 'Corporate', desc: 'Soirées d\'entreprise et lancements.' },
-    { title: 'Production', desc: 'Création de tracks originales et remixes.' },
+    { title: 'Studio & Outils intégrés', desc: 'Mastering, séparation de stems, générateur... Des outils pro directement dans votre navigateur, sans installation.' },
+    { title: 'Visibilité & Partage', desc: 'Un feed dynamique pour dénicher de nouveaux sons, et des pages artistes uniques pour montrer votre univers.' },
+    { title: 'Communauté & Connexion', desc: 'Échangez avec d\'autres producteurs, partagez vos coups de cœur et construisez votre réseau.' },
+    { title: 'Liberté Créative', desc: 'Un espace pensé pour vous. Uploadez vos tracks, personnalisez votre page, et gardez le contrôle total sur votre art.' },
   ];
 
   const socials = [
@@ -907,18 +914,18 @@ END:VCALENDAR`;
         {showPrestations && (
           <section id="prestations" style={{ marginBottom: isMobile ? 40 : 120, paddingTop: isMobile ? 40 : 80, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
             <div className="section-subtitle">{settings.prestations_title || 'Parcours'}</div>
-            <h2 className="section-title">Un parcours visible,<br/>des événements qui parlent.</h2>
+            <h2 className="section-title">{parcoursTitle}</h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: isMobile ? 20 : 60, marginTop: isMobile ? 20 : 60 }}>
               <div>
-                <p style={{ fontSize: isMobile ? 16 : 18, color: '#fff', lineHeight: 1.6, marginBottom: 24, fontWeight: 300 }}>
-                  Ces moments retracent les événements qui ont marqué le parcours de {profile.username} : clubs, festivals et rendez-vous culturels.
+                <p style={{ fontSize: isMobile ? 16 : 18, color: '#fff', lineHeight: 1.6, marginBottom: 24, fontWeight: 300, whiteSpace: 'pre-wrap' }}>
+                  {parcoursSubtitle}
                 </p>
-                <p style={{ fontSize: isMobile ? 14 : 16, color: 'rgba(255,255,255,0.5)', lineHeight: 1.8, marginBottom: 40 }}>
-                  Ils montrent une présence régulière sur le terrain, auprès de publics fidèles et de promoteurs qui lui font confiance pour porter l'énergie de leurs événements.
+                <p style={{ fontSize: isMobile ? 14 : 16, color: 'rgba(255,255,255,0.5)', lineHeight: 1.8, marginBottom: 40, whiteSpace: 'pre-wrap' }}>
+                  {parcoursDesc}
                 </p>
                 <div className="premium-glow bg-transparent" style={{ background: 'rgba(255,255,255,0.02)', padding: isMobile ? 20 : 32, borderRadius: 16, border: '1px solid rgba(255,255,255,0.06)' }}>
-                  <h3 style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: themeColor, marginBottom: 24 }}>Pourquoi ça compte</h3>
-                  <h4 style={{ fontSize: isMobile ? 18 : 22, fontWeight: 800, color: '#fff', marginBottom: 24, lineHeight: 1.3 }}>Pour les événements qui doivent marquer les esprits.</h4>
+                  <h3 style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: themeColor, marginBottom: 24 }}>{parcoursCardTag}</h3>
+                  <h4 style={{ fontSize: isMobile ? 18 : 22, fontWeight: 800, color: '#fff', marginBottom: 24, lineHeight: 1.3 }}>{parcoursCardTitle}</h4>
                   <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
                     {prestations.map((item: any, i: number) => (
                       <li key={i} style={{ display: 'flex', gap: 12 }}>

@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
+import { supabase, AUDIO_BUCKET } from '../lib/supabase'; // ✅ AUDIO_BUCKET importé
 import { useAuth } from '../contexts/AuthContext';
 import { usePlayer } from '../contexts/PlayerContext';
 import * as GlobalPlayerModule from '../components/GlobalPlayer';
@@ -410,18 +410,18 @@ END:VCALENDAR`;
       // 1. Upload de l'audio
       const audioExt = audioFile.name.split('.').pop();
       const audioFileName = `${profile.id}/${Date.now()}_audio.${audioExt}`;
-      const { error: audioError } = await supabase.storage.from('tracks').upload(audioFileName, audioFile);
+      const { error: audioError } = await supabase.storage.from(AUDIO_BUCKET).upload(audioFileName, audioFile);
       if (audioError) throw audioError;
-      const { data: audioUrlData } = supabase.storage.from('tracks').getPublicUrl(audioFileName);
+      const { data: audioUrlData } = supabase.storage.from(AUDIO_BUCKET).getPublicUrl(audioFileName);
 
-      // 2. Upload de la pochette (optionnel)
+      // 2. Upload de la pochette (optionnel) - Utilise le même bucket
       let coverUrl = '';
       if (coverFile) {
         const coverExt = coverFile.name.split('.').pop();
         const coverFileName = `${profile.id}/${Date.now()}_cover.${coverExt}`;
-        const { error: coverError } = await supabase.storage.from('covers').upload(coverFileName, coverFile);
+        const { error: coverError } = await supabase.storage.from(AUDIO_BUCKET).upload(coverFileName, coverFile);
         if (coverError) throw coverError;
-        const { data: coverUrlData } = supabase.storage.from('covers').getPublicUrl(coverFileName);
+        const { data: coverUrlData } = supabase.storage.from(AUDIO_BUCKET).getPublicUrl(coverFileName);
         coverUrl = coverUrlData.publicUrl;
       }
 
@@ -430,20 +430,22 @@ END:VCALENDAR`;
         user_id: profile.id,
         title: uploadForm.title,
         artist: uploadForm.artist,
-        genre: uploadForm.genre,
-        bpm: uploadForm.bpm ? parseInt(uploadForm.bpm) : null,
-        song_key: uploadForm.song_key,
+        genre: uploadForm.genre || 'Inconnu',
+        bpm: uploadForm.bpm ? parseInt(uploadForm.bpm) : 0,
+        song_key: uploadForm.song_key || null,
         audio_url: audioUrlData.publicUrl,
         cover_url: coverUrl,
-        created_at: new Date().toISOString(),
+        peaks: [],
+        duration: 0,
+        likes_count: 0,
+        downloads: 0
       }).select().single();
 
       if (dbError) throw dbError;
 
       // 4. Mise à jour locale de la liste
       if (newTrack) {
-        let parsedPeaks = [];
-        setTracks([{ ...newTrack, peaks: parsedPeaks }, ...tracks]);
+        setTracks([{ ...newTrack, peaks: [] }, ...tracks]);
       }
 
       // 5. Reset et fermeture

@@ -36,13 +36,17 @@ export const SettingsPage: React.FC = () => {
   const [uploadingVideo, setUploadingVideo] = useState(false);
   const [galleryImages, setGalleryImages] = useState<any[]>([]);
 
+  // ✅ PAGINATION DES TITRES
+  const [currentPage, setCurrentPage] = useState(1);
+  const tracksPerPage = 10;
+
   const [form, setForm] = useState({
     username: '', bio: '', hero_tagline: 'Nouveaux remixes disponibles', hero_title: '', hero_description: '',
     theme_color: '#00d9ff', avatar_url: '', background_video_url: '',
     instagram_url: '', spotify_url: '', soundcloud_url: '', tiktok_url: '', youtube_url: '',
     beatport_url: '', x_url: '', facebook_url: '',
     booking_email: '',
-    parcours_images: [] as string[] // ✅ Nouveau champ pour les affiches du parcours
+    parcours_images: [] as string[]
   });
 
   const [settings, setSettings] = useState({
@@ -195,7 +199,6 @@ export const SettingsPage: React.FC = () => {
     setGalleryImages(galleryImages.filter(img => img.id !== id));
   };
 
-  // ✅ Upload des affiches du parcours
   const handleParcoursUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0 || !user) return;
@@ -355,7 +358,7 @@ export const SettingsPage: React.FC = () => {
       youtube_url: form.youtube_url, beatport_url: form.beatport_url,
       x_url: form.x_url, facebook_url: form.facebook_url,
       booking_email: form.booking_email,
-      parcours_images: form.parcours_images, // ✅ Ajout
+      parcours_images: form.parcours_images,
       settings: settings
     }).eq('id', user.id);
     
@@ -470,6 +473,12 @@ export const SettingsPage: React.FC = () => {
       </div>
     );
   }
+
+  // ✅ CALCUL DE LA PAGINATION
+  const indexOfLastTrack = currentPage * tracksPerPage;
+  const indexOfFirstTrack = indexOfLastTrack - tracksPerPage;
+  const currentTracks = myTracks.slice(indexOfFirstTrack, indexOfLastTrack);
+  const totalPages = Math.ceil(myTracks.length / tracksPerPage);
 
   return (
     <div style={{ maxWidth: 800, margin: '0 auto', padding: '40px 20px', color: '#fff', fontFamily: 'Inter, sans-serif' }}>
@@ -600,7 +609,7 @@ export const SettingsPage: React.FC = () => {
           {myTracks.length === 0 ? (
             <p style={{ color: '#666', fontSize: 14 }}>Aucun son pour le moment.</p>
           ) : (
-            myTracks.map(track => (
+            currentTracks.map(track => (
               <div key={track.id} style={{ display: 'flex', flexDirection: 'column', gap: 12, background: '#0a0a0a', padding: '12px 16px', borderRadius: 8, border: '1px solid #333' }}>
                 {editingTrackId === track.id ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -673,6 +682,53 @@ export const SettingsPage: React.FC = () => {
             ))
           )}
         </div>
+
+        {/* ✅ PAGINATION */}
+        {totalPages > 1 && (
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 16, marginTop: 24, paddingTop: 16, borderTop: '1px solid #333' }}>
+            <button
+              onClick={() => {
+                setCurrentPage((p) => Math.max(1, p - 1));
+              }}
+              disabled={currentPage === 1}
+              style={{
+                padding: '8px 16px',
+                background: currentPage === 1 ? '#0a0a0a' : '#1a1a1a',
+                border: '1px solid #333',
+                color: currentPage === 1 ? '#555' : '#fff',
+                borderRadius: 6,
+                fontSize: 12,
+                fontWeight: 700,
+                cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+              }}
+            >
+              ← Précédent
+            </button>
+
+            <span style={{ fontSize: 12, fontWeight: 700, color: '#888' }}>
+              Page {currentPage} / {totalPages}
+            </span>
+
+            <button
+              onClick={() => {
+                setCurrentPage((p) => Math.min(totalPages, p + 1));
+              }}
+              disabled={currentPage === totalPages}
+              style={{
+                padding: '8px 16px',
+                background: currentPage === totalPages ? '#0a0a0a' : '#1a1a1a',
+                border: currentPage === totalPages ? '1px solid #333' : `1px solid ${form.theme_color}`,
+                color: currentPage === totalPages ? '#555' : form.theme_color,
+                borderRadius: 6,
+                fontSize: 12,
+                fontWeight: 700,
+                cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+              }}
+            >
+              Suivant →
+            </button>
+          </div>
+        )}
       </div>
 
       {/* ✅ SECTION AFFICHES DU PARCOURS */}

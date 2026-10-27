@@ -64,7 +64,7 @@ function AnimatedRoutes() {
         <Route path="/levon-dinato" element={<LevonDinatoPage />} />
         <Route path="/premium/:username" element={<PremiumPage />} />
 
-        {/* ✅ LAYOUT PRINCIPAL (Accessible à tous) */}
+        {/* ✅ LAYOUT PRINCIPAL — SANS PrivateRoute (accessible à tous) */}
         <Route path="/" element={<MainLayout />}>
           
           {/* PAGES PUBLIQUES (Lecture et téléchargement bloqués pour non-inscrits) */}
@@ -80,7 +80,7 @@ function AnimatedRoutes() {
           <Route path="search" element={<PageTransition><SearchPage /></PageTransition>} />
           <Route path="track/:id" element={<PageTransition><TrackPage /></PageTransition>} />
 
-          {/* PAGES PREMIUM (Bloquées) */}
+          {/* ✅ PAGES PREMIUM (Bloquées par PremiumGuard) */}
           <Route path="tools" element={<PageTransition><PremiumGuard><ToolsPage /></PremiumGuard></PageTransition>} />
           <Route path="settings" element={<PageTransition><PremiumGuard><SettingsPage /></PremiumGuard></PageTransition>} />
           <Route path="ia-videos" element={<PageTransition><PremiumGuard><DropZoneVideosPage /></PremiumGuard></PageTransition>} />

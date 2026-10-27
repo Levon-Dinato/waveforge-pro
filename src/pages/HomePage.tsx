@@ -6,7 +6,7 @@ import { TrackGrid } from '../components/TrackGrid';
 import type { Track } from '../components/TrackGrid';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { usePlayer } from '../contexts/PlayerContext';
-import { useAuth } from '../contexts/AuthContext'; // ✅ Import ajouté
+import { useAuth } from '../contexts/AuthContext';
 import { EventsTicker } from '../components/EventsTicker';
 
 const Icons = {
@@ -24,7 +24,7 @@ export const HomePage = () => {
   const isMobile = useIsMobile(768);
   const navigate = useNavigate();
   const { play, isPlaying, isCurrentTrack } = usePlayer();
-  const { user } = useAuth(); // ✅ Récupération de l'utilisateur
+  const { user } = useAuth();
   
   const [tracks, setTracks] = useState<Track[]>([]);
   const [artists, setArtists] = useState<Artist[]>([]);
@@ -55,7 +55,7 @@ export const HomePage = () => {
 
   const isFeaturedPlaying = featured ? isCurrentTrack(featured.id) && isPlaying : false;
 
-  // ✅ BLOCAGE DE LA LECTURE POUR LE SON À LA UNE
+  // ✅ BLOCAGE LECTURE DU SON À LA UNE
   const playFeatured = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
@@ -68,7 +68,7 @@ export const HomePage = () => {
     play({ id: featured.id, title: featured.title, artist: featured.artist, audio_url: featured.audio_url, cover_url: featured.cover_url, user_id: featured.user_id || null, duration: featured.duration, peaks: featured.peaks, bpm: featured.bpm, song_key: featured.song_key, genre: featured.genre });
   };
 
-  // ✅ BLOCAGE DE LA LECTURE POUR LA GRILLE DE SONS
+  // ✅ BLOCAGE LECTURE DEPUIS LA GRILLE
   const handlePlayTrack = (track: Track) => {
     if (!user) {
       alert("🔒 Inscrivez-vous gratuitement pour écouter les morceaux en entier.");
@@ -183,7 +183,7 @@ export const HomePage = () => {
               </Link>
             </div>
             
-            {/* ✅ PASSAGE DU BLOCAGE À LA TRACKGRID */}
+            {/* ✅ Passage du blocage à TrackGrid */}
             <TrackGrid tracks={newReleases} onPlay={handlePlayTrack} />
           </div>
 

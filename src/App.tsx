@@ -41,6 +41,9 @@ const AdminPage = lazy(() => import('./pages/AdminPage').then((m) => ({ default:
 const LevonDinatoPage = lazy(() => import('./pages/LevonDinatoPage').then((m) => ({ default: m.LevonDinatoPage })));
 const PremiumPage = lazy(() => import('./pages/PremiumPage').then((m) => ({ default: m.PremiumPage })));
 
+// ✅ NOUVEL IMPORT : DropZone IA Videos
+const DropZoneVideosPage = lazy(() => import('./pages/DropZoneVideosPage').then((m) => ({ default: m.DropZoneVideosPage })));
+
 const PageLoader = () => (
   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', flexDirection: 'column', gap: 16 }}>
     <div style={{ width: 40, height: 40, border: '3px solid rgba(0, 217, 255, 0.2)', borderTop: '3px solid #00d9ff', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
@@ -93,6 +96,9 @@ function AnimatedRoutes() {
           <Route path="search" element={<PageTransition><SearchPage /></PageTransition>} />
           <Route path="track/:id" element={<PageTransition><TrackPage /></PageTransition>} />
           <Route path="admin" element={<PageTransition><AdminPage /></PageTransition>} />
+          
+          {/* ✅ NOUVELLE ROUTE : DropZone IA Videos */}
+          <Route path="ia-videos" element={<PageTransition><DropZoneVideosPage /></PageTransition>} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

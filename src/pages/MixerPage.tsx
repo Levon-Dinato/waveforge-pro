@@ -49,7 +49,7 @@ const initialDeckState: DeckState = {
 };
 
 // ============================================================
-// COMPOSANTS RÉUTILISABLES
+// COMPOSANTS RÉUTILISABLES (DESIGN PRO)
 // ============================================================
 const TimeDisplay = ({ getCurrentTime }: { getCurrentTime: () => number }) => {
   const timeRef = useRef<HTMLSpanElement>(null);
@@ -67,31 +67,30 @@ const TimeDisplay = ({ getCurrentTime }: { getCurrentTime: () => number }) => {
     update();
     return () => cancelAnimationFrame(animId);
   }, [getCurrentTime]);
-  return <span ref={timeRef} style={{ fontFamily: 'monospace', fontWeight: 700 }}>00:00</span>;
+  return <span ref={timeRef} style={{ fontFamily: 'monospace', fontWeight: 700, color: '#00d9ff' }}>00:00</span>;
 };
 
-// ✅ VU-mètre style Serato (Segments LED distincts)
 const StereoMeter = ({ isPlaying }: { isPlaying: boolean }) => {
-  const segments = 15; // Nombre de LEDs par canal
+  const segments = 15;
   const activeSegments = isPlaying ? 10 + Math.floor(Math.random() * 5) : 0;
 
   return (
-    <div style={{ display: 'flex', gap: 2, height: 110, background: '#050505', padding: 2, borderRadius: 2, border: '1px solid #222' }}>
+    <div style={{ display: 'flex', gap: 2, height: 120, background: '#050505', padding: 3, borderRadius: 2, border: '1px solid #222', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.8)' }}>
       {[0, 1].map(ch => (
-        <div key={ch} style={{ width: 6, display: 'flex', flexDirection: 'column-reverse', justifyContent: 'space-between' }}>
+        <div key={ch} style={{ width: 5, display: 'flex', flexDirection: 'column-reverse', justifyContent: 'space-between' }}>
           {Array.from({ length: segments }).map((_, i) => {
              const isLit = i < activeSegments;
-             let color = '#00ff9d'; // Vert
-             if (i > 11) color = '#ff2a2a'; // Rouge
-             else if (i > 8) color = '#ffcc00'; // Jaune
+             let color = '#00ff9d';
+             if (i > 11) color = '#ff2a2a';
+             else if (i > 8) color = '#ffcc00';
              
              return (
                <div key={i} style={{
-                 width: '100%', height: '5px',
+                 width: '100%', height: '4px',
                  background: color,
-                 opacity: isLit ? 1 : 0.15,
+                 opacity: isLit ? 1 : 0.2,
                  borderRadius: 1,
-                 boxShadow: isLit ? `0 0 4px ${color}` : 'none',
+                 boxShadow: isLit ? `0 0 6px ${color}` : 'none',
                  transition: 'opacity 0.05s'
                }} />
              )
@@ -102,7 +101,7 @@ const StereoMeter = ({ isPlaying }: { isPlaying: boolean }) => {
   );
 };
 
-// ✅ Potard sans point disgracieux
+// Potard 3D avec LED
 const Knob: React.FC<{ label?: string; value: number; onChange: (v: number) => void; color: string; min?: number; max?: number; size?: number }> = ({ label, value, onChange, color, min = -12, max = 12, size = 22 }) => {
   const [dragging, setDragging] = useState(false);
   const startY = useRef(0);
@@ -130,28 +129,33 @@ const Knob: React.FC<{ label?: string; value: number; onChange: (v: number) => v
   }, [dragging, onChange, min, max]);
 
   const rotation = -135 + (((value - min) / (max - min)) * 270);
+  const isActive = Math.abs(value) > 0.5;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-      {/* Plus de petit point, juste le label propre */}
-      <div style={{ fontSize: 9, fontWeight: 700, color: '#888', letterSpacing: 0.5 }}>{label}</div>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+      <div style={{ fontSize: 9, fontWeight: 800, color: isActive ? '#fff' : '#666', letterSpacing: 0.5, textShadow: isActive ? '0 0 5px #fff' : 'none' }}>{label}</div>
       <div style={{ position: 'relative', width: size, height: size, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: '#111', border: '1px solid #000', boxShadow: 'inset 0 2px 5px rgba(0,0,0,0.8)' }} />
         <div
           onMouseDown={(e) => { e.preventDefault(); setDragging(true); startY.current = (e as React.MouseEvent).clientY; startValue.current = value; }}
           onTouchStart={(e) => { setDragging(true); startY.current = e.touches[0].clientY; startValue.current = value; }}
-          style={{ width: size * 0.8, height: size * 0.8, borderRadius: '50%', background: 'linear-gradient(145deg, #333, #0a0a0a)', border: '1px solid #000', cursor: 'ns-resize', position: 'relative', zIndex: 2, transform: `rotate(${rotation}deg)`, touchAction: 'none', boxShadow: '0 1px 3px rgba(0,0,0,0.8)' }}
+          style={{ 
+            width: size * 0.85, height: size * 0.85, borderRadius: '50%', 
+            background: 'linear-gradient(145deg, #444, #111)', 
+            border: '1px solid #000', cursor: 'ns-resize', position: 'relative', zIndex: 2, 
+            transform: `rotate(${rotation}deg)`, touchAction: 'none', boxShadow: '0 2px 4px rgba(0,0,0,0.8)' 
+          }}
         >
-          {/* Trait lumineux */}
-          <div style={{ position: 'absolute', top: 2, left: '50%', transform: 'translateX(-50%)', width: 2, height: size * 0.3, background: color, borderRadius: 1, boxShadow: `0 0 3px ${color}` }} />
+          <div style={{ position: 'absolute', top: 2, left: '50%', transform: 'translateX(-50%)', width: 2, height: size * 0.3, background: isActive ? color : '#666', borderRadius: 1, boxShadow: isActive ? `0 0 6px ${color}` : 'none' }} />
         </div>
       </div>
     </div>
   );
 };
 
+// Jog Wheel réaliste
 const JogWheel = ({ 
-  size = 140, coverUrl, isPlaying, color, getCurrentTime, duration, 
+  size = 160, coverUrl, isPlaying, color, getCurrentTime, duration, 
   onScrub, onScrubEnd 
 }: { 
   size?: number, coverUrl: string | null, isPlaying: boolean, color: string, 
@@ -232,17 +236,17 @@ const JogWheel = ({
       onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}
       style={{
         width: size, height: size, borderRadius: '50%',
-        background: `radial-gradient(circle at 50% 50%, #050505 0%, #111 50%, #000 100%)`,
-        border: `2px solid ${isDragging ? color : (isHovered ? '#444' : '#222')}`,
-        boxShadow: isDragging ? `0 0 15px ${color}60, inset 0 0 20px rgba(0,0,0,0.9)` : 'inset 0 0 20px rgba(0,0,0,0.9)',
+        background: `radial-gradient(circle at 50% 50%, #0a0a0a 0%, #000 60%, #000 100%)`,
+        border: `4px solid ${isDragging ? color : (isHovered ? '#555' : '#222')}`,
+        boxShadow: isDragging ? `0 0 20px ${color}60, inset 0 0 30px rgba(0,0,0,0.9)` : 'inset 0 0 30px rgba(0,0,0,0.9), 0 4px 10px rgba(0,0,0,0.5)',
         position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center',
         cursor: isDragging ? 'grabbing' : 'grab', touchAction: 'none'
       }}
     >
-      <div ref={innerRef} style={{ width: '90%', height: '90%', borderRadius: '50%', background: '#0a0a0a', border: '1px solid #111', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
-        <div style={{ width: size * 0.5, height: size * 0.5, borderRadius: '50%', overflow: 'hidden', border: '2px solid #000', background: '#111' }}>
+      <div ref={innerRef} style={{ width: '92%', height: '92%', borderRadius: '50%', background: '#080808', border: '1px solid #111', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+        <div style={{ width: size * 0.55, height: size * 0.55, borderRadius: '50%', overflow: 'hidden', border: '3px solid #111', background: '#111', boxShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
           {coverUrl ? <img src={coverUrl} alt="cover" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#333', fontSize: size * 0.1, fontWeight: 900 }}>DZ</div>}
-          <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: size * 0.06, height: size * 0.06, borderRadius: '50%', background: '#000', boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.2)' }} />
+          <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: size * 0.08, height: size * 0.08, borderRadius: '50%', background: 'linear-gradient(135deg, #444, #111)', boxShadow: 'inset 0 1px 3px rgba(255,255,255,0.2)' }} />
         </div>
       </div>
     </div>
@@ -519,49 +523,61 @@ export const MixerPage: React.FC = () => {
     const waveColor = isA ? '#00d9ff' : '#ff2a2a'; 
     const activeColor = '#00ff9d'; 
 
-    if (isMobile) {
-      return <div style={{ display: 'flex', flexDirection: 'column', background: '#121212', padding: 10, gap: 10 }}>{/* Code mobile */}</div>;
-    }
+    if (isMobile) return null; // On ne gère pas le mobile ici pour l'instant
 
-    // Layout type Serato
     return (
-      <div style={{ display: 'flex', height: '100%', background: '#0a0a0a', flexDirection: isA ? 'row' : 'row-reverse' }}>
+      <div style={{ display: 'flex', height: '100%', background: 'linear-gradient(180deg, #181818 0%, #0a0a0a 100%)', flexDirection: isA ? 'row' : 'row-reverse', borderTop: '1px solid #333' }}>
         
         {/* 1. GAUCHE : Pitch, Cues, Loops */}
-        <div style={{ width: 90, display: 'flex', flexDirection: 'column', padding: '8px 4px', borderRight: isA ? '1px solid #111' : 'none', borderLeft: !isA ? '1px solid #111' : 'none', background: '#0d0d0d' }}>
+        <div style={{ width: 110, display: 'flex', flexDirection: 'column', padding: '10px 6px', borderRight: isA ? '1px solid #000' : 'none', borderLeft: !isA ? '1px solid #000' : 'none', background: '#141414' }}>
            
-           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 8 }}>
-              <div style={{ fontSize: 14, fontWeight: 900, color: activeColor, fontFamily: 'monospace' }}>{state.track?.bpm ? state.track.bpm.toFixed(1) : '---.-'}</div>
-              <div style={{ fontSize: 9, color: '#888', fontFamily: 'monospace' }}>{((state.playbackRate - 1) * 100).toFixed(1)}%</div>
-              <div style={{ display: 'flex', gap: 4, marginTop: 4 }}>
-                 <button onClick={() => adjustPitch(deck, 0.001)} style={{ width: 20, height: 16, background: '#1a1a1a', border: '1px solid #333', color: '#aaa', borderRadius: 2, fontSize: 10, cursor: 'pointer' }}>+</button>
-                 <button onClick={() => adjustPitch(deck, -0.001)} style={{ width: 20, height: 16, background: '#1a1a1a', border: '1px solid #333', color: '#aaa', borderRadius: 2, fontSize: 10, cursor: 'pointer' }}>-</button>
-              </div>
+           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 12, background: '#0a0a0a', padding: '4px 0', borderRadius: 4, border: '1px solid #222', boxShadow: 'inset 0 2px 5px #000' }}>
+              <div style={{ fontSize: 16, fontWeight: 900, color: activeColor, fontFamily: 'monospace', textShadow: `0 0 8px ${activeColor}60` }}>{state.track?.bpm ? state.track.bpm.toFixed(1) : '---.-'}</div>
+              <div style={{ fontSize: 10, color: '#666', fontFamily: 'monospace' }}>{((state.playbackRate - 1) * 100).toFixed(1)}%</div>
            </div>
 
-           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, marginBottom: 8 }}>
+           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 3, marginBottom: 12 }}>
               {[0, 1, 2, 3, 4, 5, 6, 7].map(i => (
-                <button key={i} onClick={(e) => handleHotCue(deck, i, e.shiftKey, false)} style={{ width: '100%', height: 24, background: state.cuePoints[i] !== null ? waveColor : '#1a1a1a', border: '1px solid #333', borderRadius: 2, color: state.cuePoints[i] !== null ? '#000' : '#555', fontWeight: 800, fontSize: 9, cursor: 'pointer' }}>{i + 1}</button>
+                <button key={i} onClick={(e) => handleHotCue(deck, i, e.shiftKey, false)} style={{ 
+                  width: '100%', height: 28, 
+                  background: state.cuePoints[i] !== null ? waveColor : '#1a1a1a', 
+                  border: '1px solid #000', borderRadius: 3, 
+                  color: state.cuePoints[i] !== null ? '#000' : '#444', 
+                  fontWeight: 900, fontSize: 10, cursor: 'pointer',
+                  boxShadow: state.cuePoints[i] !== null ? `0 0 10px ${waveColor}40, inset 0 1px 0 rgba(255,255,255,0.4)` : 'inset 0 1px 2px rgba(0,0,0,0.8)'
+                }}>{i + 1}</button>
               ))}
            </div>
 
-           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 2, marginBottom: 6 }}>
+           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 3, marginBottom: 8 }}>
               {[0.125, 0.25, 0.5, 1, 2, 4, 8, 16, 32].map(size => (
-                <button key={size} onClick={() => setLoopSize(deck, size)} style={{ padding: '2px 0', background: state.loopSize === size && state.isLooping ? activeColor : '#1a1a1a', color: state.loopSize === size && state.isLooping ? '#000' : '#888', border: '1px solid #333', fontSize: 8, fontWeight: 800, cursor: 'pointer', borderRadius: 2 }}>
+                <button key={size} onClick={() => setLoopSize(deck, size)} style={{ 
+                  padding: '3px 0', background: state.loopSize === size && state.isLooping ? activeColor : '#1a1a1a', 
+                  color: state.loopSize === size && state.isLooping ? '#000' : '#666', 
+                  border: '1px solid #000', fontSize: 9, fontWeight: 800, cursor: 'pointer', borderRadius: 2,
+                  boxShadow: state.loopSize === size && state.isLooping ? `0 0 8px ${activeColor}60` : 'inset 0 1px 2px rgba(0,0,0,0.8)'
+                }}>
                   {size < 1 ? `1/${Math.round(1/size)}` : size}
                 </button>
               ))}
            </div>
-           <button onClick={() => toggleLoop(deck)} style={{ width: '100%', padding: '4px 0', background: state.isLooping ? activeColor : '#1a1a1a', color: state.isLooping ? '#000' : '#888', border: '1px solid #333', fontSize: 9, fontWeight: 800, cursor: 'pointer', borderRadius: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 1l4 4-4 4"></path><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><path d="M7 23l-4-4 4-4"></path><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
+
+           <button onClick={() => toggleLoop(deck)} style={{ 
+             width: '100%', padding: '6px 0', background: state.isLooping ? activeColor : '#1a1a1a', 
+             color: state.isLooping ? '#000' : '#666', border: '1px solid #000', 
+             fontSize: 10, fontWeight: 900, cursor: 'pointer', borderRadius: 2, 
+             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+             boxShadow: state.isLooping ? `0 0 10px ${activeColor}60` : 'inset 0 1px 2px rgba(0,0,0,0.8)'
+           }}>
+             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 1l4 4-4 4"></path><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><path d="M7 23l-4-4 4-4"></path><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
              LOOP
            </button>
 
-           <div style={{ flex: 1, display: 'flex', justifyContent: 'center', marginTop: 8 }}>
-              <div style={{ width: 6, background: '#050505', borderRadius: 3, position: 'relative', border: '1px solid #000' }}>
+           <div style={{ flex: 1, display: 'flex', justifyContent: 'center', marginTop: 10 }}>
+              <div style={{ width: 8, background: '#050505', borderRadius: 4, position: 'relative', border: '1px solid #000', boxShadow: 'inset 0 2px 5px #000' }}>
                   <input type="range" min={1 - (state.pitchRange / 100)} max={1 + (state.pitchRange / 100)} step="0.001" value={state.playbackRate} onChange={(e) => { const val = parseFloat(e.target.value); if (isA) setDeckA(p => ({ ...p, playbackRate: val })); else setDeckB(p => ({ ...p, playbackRate: val })); }} style={{ WebkitAppearance: 'slider-vertical', width: '100%', height: '100%', opacity: 0, cursor: 'pointer', position: 'absolute', zIndex: 10 }} />
-                  <div style={{ position: 'absolute', bottom: `calc(${((state.playbackRate - (1 - state.pitchRange/100)) / (state.pitchRange * 2 / 100)) * 100}% - 5px)`, left: '50%', transform: 'translate(-50%, 0)', width: 20, height: 10, background: '#333', borderRadius: 2, border: '1px solid #555', pointerEvents: 'none' }}>
-                    <div style={{ width: '80%', height: 1, background: '#999', margin: '4px auto' }} />
+                  <div style={{ position: 'absolute', bottom: `calc(${((state.playbackRate - (1 - state.pitchRange/100)) / (state.pitchRange * 2 / 100)) * 100}% - 8px)`, left: '50%', transform: 'translate(-50%, 0)', width: 26, height: 14, background: 'linear-gradient(180deg, #555 0%, #222 100%)', borderRadius: 3, border: '1px solid #777', pointerEvents: 'none', boxShadow: '0 3px 5px rgba(0,0,0,0.6)' }}>
+                    <div style={{ width: '80%', height: 2, background: '#aaa', margin: '5px auto', borderRadius: 1 }} />
                   </div>
               </div>
            </div>
@@ -570,40 +586,54 @@ export const MixerPage: React.FC = () => {
 
         {/* 2. CENTRE : Jog Wheel + Play/Cue */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-           <JogWheel size={140} coverUrl={state.track?.cover_url || null} isPlaying={state.isPlaying} color={waveColor} getCurrentTime={isA ? getTimeA : getTimeB} duration={state.track?.duration || 1} onScrub={(time) => handleScratch(time, deck)} onScrubEnd={() => handleSeekEnd(deck)} />
-           <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-              <button onClick={() => handleCueButton(deck)} style={{ width: 50, height: 28, background: '#111', border: '1px solid #222', color: '#fff', borderRadius: 4, fontWeight: 800, fontSize: 10, cursor: 'pointer' }}>Cue</button>
-              <button onClick={() => state.isPlaying ? pauseDeck(deck) : playDeck(deck)} style={{ width: 60, height: 28, background: state.isPlaying ? activeColor : '#111', border: `1px solid ${state.isPlaying ? activeColor : '#222'}`, color: state.isPlaying ? '#000' : '#fff', borderRadius: 4, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{state.isPlaying ? '⏸' : '▶'}</button>
+           <JogWheel size={180} coverUrl={state.track?.cover_url || null} isPlaying={state.isPlaying} color={waveColor} getCurrentTime={isA ? getTimeA : getTimeB} duration={state.track?.duration || 1} onScrub={(time) => handleScratch(time, deck)} onScrubEnd={() => handleSeekEnd(deck)} />
+           
+           <div style={{ display: 'flex', gap: 12, marginTop: 15 }}>
+              <button onClick={() => handleCueButton(deck)} style={{ 
+                width: 60, height: 32, background: '#111', border: '1px solid #333', 
+                color: '#ccc', borderRadius: 4, fontWeight: 900, fontSize: 11, cursor: 'pointer',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1)'
+              }}>CUE</button>
+              
+              <button onClick={() => state.isPlaying ? pauseDeck(deck) : playDeck(deck)} style={{ 
+                width: 70, height: 32, 
+                background: state.isPlaying ? activeColor : '#111', 
+                border: `1px solid ${state.isPlaying ? activeColor : '#333'}`, 
+                color: state.isPlaying ? '#000' : '#ccc', 
+                borderRadius: 4, fontSize: 16, cursor: 'pointer', 
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: state.isPlaying ? `0 0 15px ${activeColor}80, inset 0 1px 0 rgba(255,255,255,0.4)` : '0 2px 4px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1)'
+              }}>{state.isPlaying ? '❚❚' : '▶'}</button>
            </div>
         </div>
 
         {/* 3. DROITE : EQ, Volume, VU-mètre (EXACTEMENT COMME SERATO) */}
-        <div style={{ width: 130, display: 'flex', padding: '8px 4px', borderLeft: isA ? '1px solid #111' : 'none', borderRight: !isA ? '1px solid #111' : 'none', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ width: 150, display: 'flex', padding: '10px 8px', borderLeft: isA ? '1px solid #000' : 'none', borderRight: !isA ? '1px solid #000' : 'none', alignItems: 'center', justifyContent: 'space-between', background: '#141414' }}>
            
            {/* EQ Knobs (Gain, High, Mid, Low, Filter) */}
-           <div style={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1 }}>
-             <Knob label="Gain" value={state.gain} onChange={v => isA ? setDeckA(p=>({...p,gain:v})) : setDeckB(p=>({...p,gain:v}))} color="#fff" size={20} />
-             <Knob label="High" value={state.eqHigh} onChange={v => isA ? setDeckA(p=>({...p,eqHigh:v})) : setDeckB(p=>({...p,eqHigh:v}))} color={waveColor} size={20} />
-             <Knob label="Mid" value={state.eqMid} onChange={v => isA ? setDeckA(p=>({...p,eqMid:v})) : setDeckB(p=>({...p,eqMid:v}))} color={waveColor} size={20} />
-             <Knob label="Low" value={state.eqLow} onChange={v => isA ? setDeckA(p=>({...p,eqLow:v})) : setDeckB(p=>({...p,eqLow:v}))} color={waveColor} size={20} />
-             <Knob label="Filter" value={state.filter} onChange={v => isA ? setDeckA(p=>({...p,filter:v})) : setDeckB(p=>({...p,filter:v}))} color="#fff" size={20} min={0} max={50} />
+           <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1 }}>
+             <Knob label="Gain" value={state.gain} onChange={v => isA ? setDeckA(p=>({...p,gain:v})) : setDeckB(p=>({...p,gain:v}))} color="#fff" size={22} />
+             <Knob label="High" value={state.eqHigh} onChange={v => isA ? setDeckA(p=>({...p,eqHigh:v})) : setDeckB(p=>({...p,eqHigh:v}))} color={waveColor} size={22} />
+             <Knob label="Mid" value={state.eqMid} onChange={v => isA ? setDeckA(p=>({...p,eqMid:v})) : setDeckB(p=>({...p,eqMid:v}))} color={waveColor} size={22} />
+             <Knob label="Low" value={state.eqLow} onChange={v => isA ? setDeckA(p=>({...p,eqLow:v})) : setDeckB(p=>({...p,eqLow:v}))} color={waveColor} size={22} />
+             <Knob label="Filter" value={state.filter} onChange={v => isA ? setDeckA(p=>({...p,filter:v})) : setDeckB(p=>({...p,filter:v}))} color="#fff" size={22} min={0} max={50} />
            </div>
 
            {/* Volume Fader (Curseur argenté type Serato) */}
-           <div style={{ width: 30, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', paddingBottom: 10, marginLeft: 10 }}>
-              <div style={{ width: 12, height: 110, background: '#000', borderRadius: 2, border: '1px solid #222', position: 'relative', display: 'flex', justifyContent: 'center', boxShadow: 'inset 0 0 5px rgba(0,0,0,0.8)' }}>
-                <div style={{ position: 'absolute', top: 6, bottom: 6, width: 2, background: '#111' }} />
+           <div style={{ width: 40, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', paddingBottom: 10, marginLeft: 10 }}>
+              <div style={{ width: 14, height: 130, background: '#000', borderRadius: 2, border: '1px solid #111', position: 'relative', display: 'flex', justifyContent: 'center', boxShadow: 'inset 0 0 8px rgba(0,0,0,1)' }}>
+                <div style={{ position: 'absolute', top: 8, bottom: 8, width: 2, background: '#222' }} />
                 <input type="range" min="0" max="1" step="0.01" value={state.volume} onChange={(e) => isA ? setDeckA(p=>({...p,volume:parseFloat(e.target.value)})) : setDeckB(p=>({...p,volume:parseFloat(e.target.value)}))} style={{ WebkitAppearance: 'slider-vertical', width: '100%', height: '100%', opacity: 0, cursor: 'pointer', position: 'absolute', zIndex: 10 }} />
                 
                 {/* Curseur Fader Argenté */}
-                <div style={{ position: 'absolute', bottom: `calc(${state.volume * 100}% - 15px)`, width: 24, height: 30, background: 'linear-gradient(180deg, #ccc 0%, #777 50%, #333 100%)', borderRadius: 3, border: '1px solid #444', pointerEvents: 'none', boxShadow: '0 4px 6px rgba(0,0,0,0.6)' }}>
-                  <div style={{ width: '100%', height: 2, background: '#000', marginTop: 14 }} />
+                <div style={{ position: 'absolute', bottom: `calc(${state.volume * 100}% - 18px)`, width: 28, height: 36, background: 'linear-gradient(180deg, #ddd 0%, #777 50%, #222 100%)', borderRadius: 3, border: '1px solid #000', pointerEvents: 'none', boxShadow: '0 6px 10px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.6)' }}>
+                  <div style={{ width: '100%', height: 2, background: '#000', marginTop: 17 }} />
                 </div>
               </div>
            </div>
 
            {/* VU-mètre */}
-           <div style={{ marginLeft: 10, display: 'flex', alignItems: 'flex-end' }}>
+           <div style={{ marginLeft: 12, display: 'flex', alignItems: 'flex-end' }}>
               <StereoMeter isPlaying={state.isPlaying} />
            </div>
 
@@ -613,63 +643,63 @@ export const MixerPage: React.FC = () => {
   };
 
   return (
-    <div style={{ background: '#000', height: isMobile ? 'auto' : '100vh', display: 'flex', flexDirection: 'column', color: '#fff', fontFamily: "'Open Sans', sans-serif", overflow: 'hidden' }}>
+    <div style={{ background: '#000', height: isMobile ? 'auto' : '100vh', display: 'flex', flexDirection: 'column', color: '#fff', fontFamily: "'Inter', sans-serif", overflow: 'hidden' }}>
       
       <style>{`
         .custom-scrollbar::-webkit-scrollbar { width: 14px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #1e1e1e; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #444; border-radius: 0px; border: 2px solid #1e1e1e; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #666; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #111; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #333; border-radius: 0px; border: 3px solid #111; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #555; }
       `}</style>
 
-      <div style={{ height: 32, background: '#0a0a0a', borderBottom: '1px solid #222', display: 'flex', alignItems: 'center', padding: '0 16px', flexShrink: 0 }}>
-         <button onClick={() => navigate('/')} style={{ background: 'transparent', border: 'none', color: '#888', cursor: 'pointer', fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ fontSize: 14 }}>←</span> Retour au site
+      <div style={{ height: 36, background: '#0a0a0a', borderBottom: '1px solid #222', display: 'flex', alignItems: 'center', padding: '0 16px', flexShrink: 0 }}>
+         <button onClick={() => navigate('/')} style={{ background: 'transparent', border: 'none', color: '#888', cursor: 'pointer', fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 16 }}>←</span> Retour au site
          </button>
       </div>
 
       {/* --- BARRE DU HAUT : INFOS PISTES --- */}
-      <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', height: 50, flexShrink: 0, background: '#050505', borderBottom: '1px solid #222' }}>
+      <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', height: 60, flexShrink: 0, background: '#0a0a0a', borderBottom: '2px solid #000' }}>
          {/* Deck A Info */}
-         <div style={{ flex: 1, display: 'flex', alignItems: 'center', padding: '0 10px', borderRight: '1px solid #111' }}>
-            <div style={{ width: 32, height: 32, background: deckA.track?.cover_url ? `url(${deckA.track.cover_url}) center/cover` : '#111', borderRadius: 2, marginRight: 10 }} />
+         <div style={{ flex: 1, display: 'flex', alignItems: 'center', padding: '0 16px', borderRight: '1px solid #222' }}>
+            <div style={{ width: 40, height: 40, background: deckA.track?.cover_url ? `url(${deckA.track.cover_url}) center/cover` : '#111', borderRadius: 4, marginRight: 12, boxShadow: '0 2px 5px rgba(0,0,0,0.5)', border: '1px solid #333' }} />
             <div style={{ flex: 1, minWidth: 0 }}>
-               <div style={{ fontSize: 12, fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{deckA.track?.title || 'Load Track...'}</div>
-               <div style={{ fontSize: 10, color: '#888', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{deckA.track?.artist || '---'} • {deckA.track?.genre || '---'}</div>
+               <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{deckA.track?.title || 'Load Track...'}</div>
+               <div style={{ fontSize: 11, color: '#888', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{deckA.track?.artist || '---'} • {deckA.track?.genre || '---'}</div>
             </div>
-            <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-               <div style={{ fontSize: 12, color: '#00ff9d', fontFamily: 'monospace', fontWeight: 700 }}>{deckA.track?.bpm ? deckA.track.bpm.toFixed(1) : '---'}</div>
-               <div style={{ fontSize: 12, color: '#00ff9d', fontFamily: 'monospace', fontWeight: 700 }}>{deckA.track?.song_key || '--'}</div>
-               <div style={{ fontSize: 12, color: '#fff', background: '#111', padding: '2px 6px', borderRadius: 2, fontFamily: 'monospace' }}><TimeDisplay getCurrentTime={getTimeA} /></div>
+            <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+               <div style={{ fontSize: 14, color: '#00d9ff', fontFamily: 'monospace', fontWeight: 800 }}>{deckA.track?.bpm ? deckA.track.bpm.toFixed(1) : '---'}</div>
+               <div style={{ fontSize: 14, color: '#00d9ff', fontFamily: 'monospace', fontWeight: 800 }}>{deckA.track?.song_key || '--'}</div>
+               <div style={{ fontSize: 14, color: '#fff', background: '#111', padding: '4px 10px', borderRadius: 4, fontFamily: 'monospace', border: '1px solid #333' }}><TimeDisplay getCurrentTime={getTimeA} /></div>
             </div>
          </div>
          {/* Deck B Info */}
-         <div style={{ flex: 1, display: 'flex', alignItems: 'center', padding: '0 10px', flexDirection: 'row-reverse' }}>
-            <div style={{ width: 32, height: 32, background: deckB.track?.cover_url ? `url(${deckB.track.cover_url}) center/cover` : '#111', borderRadius: 2, marginLeft: 10 }} />
+         <div style={{ flex: 1, display: 'flex', alignItems: 'center', padding: '0 16px', flexDirection: 'row-reverse' }}>
+            <div style={{ width: 40, height: 40, background: deckB.track?.cover_url ? `url(${deckB.track.cover_url}) center/cover` : '#111', borderRadius: 4, marginLeft: 12, boxShadow: '0 2px 5px rgba(0,0,0,0.5)', border: '1px solid #333' }} />
             <div style={{ flex: 1, minWidth: 0, textAlign: 'right' }}>
-               <div style={{ fontSize: 12, fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{deckB.track?.title || 'Load Track...'}</div>
-               <div style={{ fontSize: 10, color: '#888', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{deckB.track?.artist || '---'} • {deckB.track?.genre || '---'}</div>
+               <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{deckB.track?.title || 'Load Track...'}</div>
+               <div style={{ fontSize: 11, color: '#888', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{deckB.track?.artist || '---'} • {deckB.track?.genre || '---'}</div>
             </div>
-            <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexDirection: 'row-reverse' }}>
-               <div style={{ fontSize: 12, color: '#ff2a2a', fontFamily: 'monospace', fontWeight: 700 }}>{deckB.track?.bpm ? deckB.track.bpm.toFixed(1) : '---'}</div>
-               <div style={{ fontSize: 12, color: '#ff2a2a', fontFamily: 'monospace', fontWeight: 700 }}>{deckB.track?.song_key || '--'}</div>
-               <div style={{ fontSize: 12, color: '#fff', background: '#111', padding: '2px 6px', borderRadius: 2, fontFamily: 'monospace' }}><TimeDisplay getCurrentTime={getTimeB} /></div>
+            <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexDirection: 'row-reverse' }}>
+               <div style={{ fontSize: 14, color: '#ff2a2a', fontFamily: 'monospace', fontWeight: 800 }}>{deckB.track?.bpm ? deckB.track.bpm.toFixed(1) : '---'}</div>
+               <div style={{ fontSize: 14, color: '#ff2a2a', fontFamily: 'monospace', fontWeight: 800 }}>{deckB.track?.song_key || '--'}</div>
+               <div style={{ fontSize: 14, color: '#fff', background: '#111', padding: '4px 10px', borderRadius: 4, fontFamily: 'monospace', border: '1px solid #333' }}><TimeDisplay getCurrentTime={getTimeB} /></div>
             </div>
          </div>
       </div>
 
       {/* --- WAVEFORMS --- */}
-      <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', height: 80, flexShrink: 0, background: '#000', borderBottom: '1px solid #222' }}>
-         <div style={{ flex: 1, borderRight: '1px solid #111' }}>
-            <SeratoWaveform data={waveA} duration={deckA.track?.duration || 1} getCurrentTime={getTimeA} height={80} mode="zoom" onSeek={(newTime) => handleScratch(newTime, 'A')} onSeekEnd={() => handleSeekEnd('A')} cuePoints={deckA.cuePoints} cueColor="#00d9ff" />
+      <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', height: 90, flexShrink: 0, background: '#000', borderBottom: '1px solid #222' }}>
+         <div style={{ flex: 1, borderRight: '1px solid #111', position: 'relative' }}>
+            <SeratoWaveform data={waveA} duration={deckA.track?.duration || 1} getCurrentTime={getTimeA} height={90} mode="zoom" onSeek={(newTime) => handleScratch(newTime, 'A')} onSeekEnd={() => handleSeekEnd('A')} cuePoints={deckA.cuePoints} cueColor="#00d9ff" />
          </div>
          <div style={{ flex: 1 }}>
-            <SeratoWaveform data={waveB} duration={deckB.track?.duration || 1} getCurrentTime={getTimeB} height={80} mode="zoom" onSeek={(newTime) => handleScratch(newTime, 'B')} onSeekEnd={() => handleSeekEnd('B')} cuePoints={deckB.cuePoints} cueColor="#ff2a2a" />
+            <SeratoWaveform data={waveB} duration={deckB.track?.duration || 1} getCurrentTime={getTimeB} height={90} mode="zoom" onSeek={(newTime) => handleScratch(newTime, 'B')} onSeekEnd={() => handleSeekEnd('B')} cuePoints={deckB.cuePoints} cueColor="#ff2a2a" />
          </div>
       </div>
 
       {/* --- PLATINES --- */}
-      <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', height: isMobile ? 'auto' : 280, flexShrink: 0, borderBottom: '2px solid #111' }}>
+      <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', height: isMobile ? 'auto' : 400, flexShrink: 0, borderBottom: '2px solid #111' }}>
         
         {/* DECK A */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, borderRight: '1px solid #222' }}>
@@ -677,20 +707,31 @@ export const MixerPage: React.FC = () => {
         </div>
 
         {/* CENTRE (Sync + Crossfader) */}
-        <div style={{ width: isMobile ? '100%' : 80, background: '#0a0a0a', borderLeft: '1px solid #222', borderRight: '1px solid #222', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '10px 0', gap: 10, flexShrink: 0 }}>
-            <button onClick={() => handleSync('A')} style={{ width: 56, padding: '4px 0', background: deckA.isSynced ? '#00ff9d' : '#111', border: '1px solid #222', color: deckA.isSynced ? '#000' : '#888', borderRadius: 2, fontSize: 10, fontWeight: 800, cursor: 'pointer' }}>Sync A</button>
-            <button onClick={() => handleSync('B')} style={{ width: 56, padding: '4px 0', background: deckB.isSynced ? '#00ff9d' : '#111', border: '1px solid #222', color: deckB.isSynced ? '#000' : '#888', borderRadius: 2, fontSize: 10, fontWeight: 800, cursor: 'pointer' }}>Sync B</button>
+        <div style={{ width: isMobile ? '100%' : 100, background: '#0d0d0d', borderLeft: '1px solid #222', borderRight: '1px solid #222', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '15px 0', gap: 15, flexShrink: 0 }}>
+            <button onClick={() => handleSync('A')} style={{ 
+              width: 70, padding: '6px 0', background: deckA.isSynced ? '#00ff9d' : '#1a1a1a', 
+              border: '1px solid #000', color: deckA.isSynced ? '#000' : '#888', borderRadius: 3, 
+              fontSize: 11, fontWeight: 900, cursor: 'pointer',
+              boxShadow: deckA.isSynced ? `0 0 10px #00ff9d60` : 'inset 0 1px 2px rgba(0,0,0,0.8)'
+            }}>SYNC A</button>
             
-            <div style={{ flex: 1, display: 'flex', justifyContent: 'center', position: 'relative', minHeight: 50, width: '100%', marginTop: 10 }}>
-                <div style={{ width: 60, height: 6, background: '#0a0a0a', borderRadius: 3, border: '1px solid #333', position: 'absolute', top: '50%', transform: 'translateY(-50%)', boxShadow: 'inset 0 0 5px #000' }}>
-                  <input type="range" min="0" max="1" step="0.01" value={crossfader} onChange={e => setCrossfader(parseFloat(e.target.value))} style={{ width: '100%', opacity: 0, cursor: 'pointer', position: 'absolute', top: -10, left: 0, zIndex: 10, height: 30 }} />
+            <button onClick={() => handleSync('B')} style={{ 
+              width: 70, padding: '6px 0', background: deckB.isSynced ? '#00ff9d' : '#1a1a1a', 
+              border: '1px solid #000', color: deckB.isSynced ? '#000' : '#888', borderRadius: 3, 
+              fontSize: 11, fontWeight: 900, cursor: 'pointer',
+              boxShadow: deckB.isSynced ? `0 0 10px #00ff9d60` : 'inset 0 1px 2px rgba(0,0,0,0.8)'
+            }}>SYNC B</button>
+            
+            <div style={{ flex: 1, display: 'flex', justifyContent: 'center', position: 'relative', minHeight: 50, width: '100%', marginTop: 20 }}>
+                <div style={{ width: 80, height: 10, background: '#050505', borderRadius: 5, border: '1px solid #000', position: 'absolute', top: '50%', transform: 'translateY(-50%)', boxShadow: 'inset 0 2px 5px #000' }}>
+                  <input type="range" min="0" max="1" step="0.01" value={crossfader} onChange={e => setCrossfader(parseFloat(e.target.value))} style={{ width: '100%', opacity: 0, cursor: 'pointer', position: 'absolute', top: -12, left: 0, zIndex: 10, height: 34 }} />
                   
-                  <div style={{ position: 'absolute', left: `calc(${crossfader * 100}% - 10px)`, width: 20, height: 16, background: 'linear-gradient(180deg, #555, #222)', border: '1px solid #777', borderRadius: 3, pointerEvents: 'none', top: -6, boxShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
-                    <div style={{ width: '80%', height: 1, background: '#ddd', margin: '7px auto' }} />
+                  <div style={{ position: 'absolute', left: `calc(${crossfader * 100}% - 14px)`, width: 28, height: 24, background: 'linear-gradient(180deg, #666, #222)', border: '1px solid #888', borderRadius: 3, pointerEvents: 'none', top: -7, boxShadow: '0 4px 6px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.3)' }}>
+                    <div style={{ width: '80%', height: 2, background: '#ccc', margin: '10px auto' }} />
                   </div>
                 </div>
             </div>
-            <Knob value={masterVol} onChange={setMasterVol} color="#fff" size={26} min={0} max={1} />
+            <Knob value={masterVol} onChange={setMasterVol} color="#fff" size={32} min={0} max={1} />
         </div>
 
         {/* DECK B */}
@@ -701,37 +742,37 @@ export const MixerPage: React.FC = () => {
       </div>
 
       {/* BIBLIOTHÈQUE */}
-      <div style={{ flex: 1, display: 'flex', background: '#1e1e1e', overflow: 'hidden', minHeight: 0, flexDirection: isMobile ? 'column' : 'row' }}>
+      <div style={{ flex: 1, display: 'flex', background: '#0d0d0d', overflow: 'hidden', minHeight: 0, flexDirection: isMobile ? 'column' : 'row' }}>
         {!isMobile && (
-          <div style={{ width: 180, background: '#141414', borderRight: '1px solid #333', padding: '10px 0', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
-            <div style={{ padding: '8px 16px', fontSize: 11, color: '#fff', fontWeight: 700, background: '#2a2a2a', borderLeft: '2px solid #00d9ff', cursor: 'pointer' }}>Discover</div>
-            <div style={{ padding: '8px 16px', fontSize: 11, color: '#888', cursor: 'pointer', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = '#222'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>Genres</div>
-            <div style={{ padding: '8px 16px', fontSize: 11, color: '#888', cursor: 'pointer', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = '#222'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>My Beatport</div>
+          <div style={{ width: 200, background: '#111', borderRight: '1px solid #222', padding: '15px 0', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+            <div style={{ padding: '10px 20px', fontSize: 12, color: '#fff', fontWeight: 800, background: '#1a1a1a', borderLeft: '3px solid #00d9ff', cursor: 'pointer', marginBottom: 5 }}>Discover</div>
+            <div style={{ padding: '10px 20px', fontSize: 12, color: '#888', cursor: 'pointer', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = '#1a1a1a'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>Genres</div>
+            <div style={{ padding: '10px 20px', fontSize: 12, color: '#888', cursor: 'pointer', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = '#1a1a1a'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>My Beatport</div>
           </div>
         )}
 
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflowX: 'auto' }}>
-           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 16px', borderBottom: '1px solid #333', flexShrink: 0, background: '#242424' }}>
+           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 20px', borderBottom: '1px solid #222', flexShrink: 0, background: '#1a1a1a' }}>
               <div style={{ display: 'flex', gap: 10 }}>
-                 <button style={{ padding: '4px 12px', background: '#fff', color: '#000', border: 'none', borderRadius: 20, fontSize: 11, fontWeight: 800 }}>Electronic</button>
-                 <button style={{ padding: '4px 12px', background: '#333', color: '#aaa', border: 'none', borderRadius: 20, fontSize: 11, fontWeight: 800 }}>Open Format</button>
+                 <button style={{ padding: '5px 15px', background: '#fff', color: '#000', border: 'none', borderRadius: 20, fontSize: 11, fontWeight: 800 }}>Electronic</button>
+                 <button style={{ padding: '5px 15px', background: '#333', color: '#aaa', border: 'none', borderRadius: 20, fontSize: 11, fontWeight: 800 }}>Open Format</button>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <input type="text" placeholder="Start digging..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} style={{ background: '#111', border: '1px solid #444', padding: '4px 12px', borderRadius: 20, color: '#fff', fontSize: 11, outline: 'none', width: isMobile ? 150 : 250 }} />
+                <input type="text" placeholder="Start digging..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} style={{ background: '#050505', border: '1px solid #333', padding: '6px 14px', borderRadius: 20, color: '#fff', fontSize: 12, outline: 'none', width: isMobile ? 150 : 300 }} />
               </div>
            </div>
 
            <div className="custom-scrollbar" style={{ flex: 1, overflowY: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11, minWidth: isMobile ? 300 : 'auto' }}>
-                <thead style={{ position: 'sticky', top: 0, background: '#2a2a2a', borderBottom: '1px solid #444', textAlign: 'left', color: '#888', zIndex: 10 }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, minWidth: isMobile ? 300 : 'auto' }}>
+                <thead style={{ position: 'sticky', top: 0, background: '#222', borderBottom: '2px solid #111', textAlign: 'left', color: '#888', zIndex: 10 }}>
                   <tr>
-                    <th style={{ padding: '6px 10px', width: 30 }}></th>
-                    <th style={{ padding: '6px 10px', width: 30 }}>#</th>
-                    <th style={{ padding: '6px 10px' }}>Titre</th>
-                    {!isMobile && <th style={{ padding: '6px 10px' }}>Artiste</th>}
-                    {!isMobile && <th style={{ padding: '6px 10px', textAlign: 'right' }}>BPM</th>}
-                    {!isMobile && <th style={{ padding: '6px 10px', textAlign: 'right' }}>Key</th>}
-                    <th style={{ padding: '6px 10px', textAlign: 'right' }}>Actions</th>
+                    <th style={{ padding: '8px 12px', width: 30 }}></th>
+                    <th style={{ padding: '8px 12px', width: 40 }}>#</th>
+                    <th style={{ padding: '8px 12px' }}>Titre</th>
+                    {!isMobile && <th style={{ padding: '8px 12px' }}>Artiste</th>}
+                    {!isMobile && <th style={{ padding: '8px 12px', textAlign: 'right' }}>BPM</th>}
+                    {!isMobile && <th style={{ padding: '8px 12px', textAlign: 'right' }}>Key</th>}
+                    <th style={{ padding: '8px 12px', textAlign: 'right' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -739,29 +780,29 @@ export const MixerPage: React.FC = () => {
                     <tr 
                       key={track.id} 
                       style={{ 
-                        borderBottom: '1px solid #333', 
-                        background: i % 2 === 0 ? '#1e1e1e' : '#232323',
+                        borderBottom: '1px solid #1a1a1a', 
+                        background: i % 2 === 0 ? '#0d0d0d' : '#111',
                         transition: 'background 0.1s'
                       }} 
-                      onMouseEnter={e => e.currentTarget.style.background = '#333'} 
-                      onMouseLeave={e => e.currentTarget.style.background = i % 2 === 0 ? '#1e1e1e' : '#232323'}
+                      onMouseEnter={e => e.currentTarget.style.background = '#222'} 
+                      onMouseLeave={e => e.currentTarget.style.background = i % 2 === 0 ? '#0d0d0d' : '#111'}
                     >
-                      <td style={{ padding: '6px 10px', textAlign: 'center' }}>
-                        <button onClick={() => loadTrack(track, 'A')} style={{ background: 'transparent', border: 'none', color: '#00d9ff', cursor: 'pointer', fontSize: 12 }}>▶</button>
+                      <td style={{ padding: '8px 12px', textAlign: 'center' }}>
+                        <button onClick={() => loadTrack(track, 'A')} style={{ background: 'transparent', border: 'none', color: '#00d9ff', cursor: 'pointer', fontSize: 14 }}>▶</button>
                       </td>
-                      <td style={{ padding: '6px 10px', color: '#777', fontFamily: 'monospace' }}>{i + 1}</td>
-                      <td style={{ padding: '6px 10px', color: '#eee', fontWeight: 600 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <div style={{ width: 20, height: 20, background: track.cover_url ? `url(${track.cover_url}) center/cover` : '#333', borderRadius: 2 }} />
+                      <td style={{ padding: '8px 12px', color: '#555', fontFamily: 'monospace' }}>{i + 1}</td>
+                      <td style={{ padding: '8px 12px', color: '#eee', fontWeight: 600 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <div style={{ width: 24, height: 24, background: track.cover_url ? `url(${track.cover_url}) center/cover` : '#222', borderRadius: 3, border: '1px solid #333' }} />
                           {track.title}
                         </div>
                       </td>
-                      {!isMobile && <td style={{ padding: '6px 10px', color: '#aaa' }}>{track.artist}</td>}
-                      {!isMobile && <td style={{ padding: '6px 10px', textAlign: 'right', color: '#fff', fontFamily: 'monospace' }}>{track.bpm}</td>}
-                      {!isMobile && <td style={{ padding: '6px 10px', textAlign: 'right', color: '#00ff9d', fontFamily: 'monospace' }}>{track.song_key || '--'}</td>}
-                      <td style={{ padding: '6px 10px', textAlign: 'right', whiteSpace: 'nowrap' }}>
-                        <button onClick={() => loadTrack(track, 'A')} style={{ background: 'transparent', border: '1px solid #555', color: '#aaa', padding: '2px 6px', borderRadius: 2, marginRight: 4, fontSize: 9, cursor: 'pointer' }}>→ A</button>
-                        <button onClick={() => loadTrack(track, 'B')} style={{ background: 'transparent', border: '1px solid #555', color: '#aaa', padding: '2px 6px', borderRadius: 2, fontSize: 9, cursor: 'pointer' }}>→ B</button>
+                      {!isMobile && <td style={{ padding: '8px 12px', color: '#aaa' }}>{track.artist}</td>}
+                      {!isMobile && <td style={{ padding: '8px 12px', textAlign: 'right', color: '#fff', fontFamily: 'monospace' }}>{track.bpm}</td>}
+                      {!isMobile && <td style={{ padding: '8px 12px', textAlign: 'right', color: '#00ff9d', fontFamily: 'monospace' }}>{track.song_key || '--'}</td>}
+                      <td style={{ padding: '8px 12px', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                        <button onClick={() => loadTrack(track, 'A')} style={{ background: '#1a1a1a', border: '1px solid #333', color: '#ccc', padding: '3px 8px', borderRadius: 3, marginRight: 6, fontSize: 10, cursor: 'pointer', fontWeight: 700 }}>→ A</button>
+                        <button onClick={() => loadTrack(track, 'B')} style={{ background: '#1a1a1a', border: '1px solid #333', color: '#ccc', padding: '3px 8px', borderRadius: 3, fontSize: 10, cursor: 'pointer', fontWeight: 700 }}>→ B</button>
                       </td>
                     </tr>
                   ))}

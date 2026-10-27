@@ -25,12 +25,19 @@ const TOOLS = [
     color: '#7c5cff'
   },
   {
-    // ✅ NOUVEL OUTIL AJOUTÉ ICI
     path: '/mixer',
     title: 'Console Mixer Pro',
     desc: 'Mixe tes morceaux en direct avec nos deux platines virtuelles, EQ et crossfader.',
     icon: '🎚️',
     color: '#00ff9d'
+  },
+  {
+    // ✅ NOUVEL OUTIL : DropZone IA Videos
+    path: '/ia-videos',
+    title: 'DropZone IA Videos',
+    desc: 'Génère des clips musicaux avec l\'IA à partir de tes sons et de tes idées.',
+    icon: '🎬',
+    color: '#00d9ff'
   }
 ];
 

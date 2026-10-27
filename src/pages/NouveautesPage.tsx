@@ -105,10 +105,27 @@ export const NouveautesPage: React.FC = () => {
     } catch (err) {}
   };
 
+  // ✅ BLOCAGE LECTURE
   const handlePlayTrack = (e: React.MouseEvent, track: Track) => {
     e.stopPropagation();
+    if (!user) {
+      alert("🔒 Inscrivez-vous gratuitement pour écouter les morceaux en entier.");
+      navigate('/auth');
+      return;
+    }
     if (!track.audio_url) return;
     play({ id: track.id, title: track.title, artist: track.artist, audio_url: track.audio_url, cover_url: track.cover_url, user_id: track.user_id || null, duration: track.duration, peaks: track.peaks, bpm: track.bpm, song_key: track.song_key, genre: track.genre });
+  };
+
+  // ✅ BLOCAGE TÉLÉCHARGEMENT
+  const handleDownloadClick = (e: React.MouseEvent, track: Track) => {
+    e.stopPropagation();
+    if (!user) {
+      alert("🔒 Inscrivez-vous gratuitement pour télécharger les morceaux.");
+      navigate('/auth');
+      return;
+    }
+    forceDownload(track.audio_url, `${track.artist} - ${track.title}.mp3`);
   };
 
   const handleDelete = async (e: React.MouseEvent, id: string) => {
@@ -139,13 +156,11 @@ export const NouveautesPage: React.FC = () => {
     setEditingId(null);
   };
 
-  // ✅ Lecture des tags ID3 avec fallback sur le nom du fichier
   const handleAudioFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setAudioFile(file);
 
-    // 1. On pré-remplit avec le nom du fichier (sans l'extension)
     const fileNameWithoutExt = file.name.replace(/\.[^/.]+$/, "");
     let guessArtist = "";
     let guessTitle = fileNameWithoutExt;
@@ -162,7 +177,6 @@ export const NouveautesPage: React.FC = () => {
       artist: prev.artist || guessArtist,
     }));
 
-    // 2. On tente de lire les tags ID3 pour écraser ces valeurs si elles existent
     try {
       const metadata = await parseBlob(file);
       const { common } = metadata;
@@ -374,7 +388,7 @@ export const NouveautesPage: React.FC = () => {
                     </div>
                     <div style={{ display: 'flex', gap: 16, paddingLeft: 48 }}>
                        <button onClick={() => handleLike(track.id)} style={{ background: 'transparent', border: 'none', color: isLiked ? '#ff3366' : '#555', fontSize: 13 }}>{isLiked ? '❤️' : '🤍'} {track.likes_count}</button>
-                       <button onClick={(e) => forceDownload(track.audio_url, `${track.artist} - ${track.title}.mp3`)} style={{ background: 'transparent', border: 'none', color: '#888' }}>{Icons.download}</button>
+                       <button onClick={(e) => handleDownloadClick(e, track)} style={{ background: 'transparent', border: 'none', color: '#888' }}>{Icons.download}</button>
                        {isOwner && <button onClick={(e) => startEdit(e, track)} style={{ background: 'transparent', border: 'none', color: '#888' }}>{Icons.edit}</button>}
                        {isOwner && <button onClick={(e) => handleDelete(e, track.id)} style={{ background: 'transparent', border: 'none', color: '#ff5c5c' }}>{Icons.trash}</button>}
                     </div>
@@ -402,7 +416,7 @@ export const NouveautesPage: React.FC = () => {
                     </button>
                     <div style={{ display: 'flex', gap: 12 }}>
                       {track.purchase_url && <a href={track.purchase_url} target="_blank" rel="noopener noreferrer" style={{ color: '#00d9ff', display: 'flex', alignItems: 'center' }}>{Icons.buy}</a>}
-                      <button onClick={(e) => forceDownload(track.audio_url, `${track.artist} - ${track.title}.mp3`)} style={{ background: 'transparent', border: 'none', color: '#888', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>{Icons.download}</button>
+                      <button onClick={(e) => handleDownloadClick(e, track)} style={{ background: 'transparent', border: 'none', color: '#888', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>{Icons.download}</button>
                       <ShareButton url={`${window.location.origin}/share/${track.id}`} title={`${track.title} — ${track.artist}`} text={`Écoute sur DropZone DJ 🎵`} variant="icon" size="small" label="" position="bottom" />
                       {isOwner && <button onClick={(e) => startEdit(e, track)} style={{ background: 'transparent', border: 'none', color: '#888', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>{Icons.edit}</button>}
                       {isOwner && <button onClick={(e) => handleDelete(e, track.id)} style={{ background: 'transparent', border: 'none', color: '#ff5c5c', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>{Icons.trash}</button>}

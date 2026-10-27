@@ -179,6 +179,17 @@ export const PremiumPage: React.FC = () => {
   const { play, currentTrack, isPlaying, togglePlay, stop, currentTime, duration, seek } = usePlayer();
   const isMobile = useIsMobile();
   
+  // ✅ NOUVEAU : statut premium
+  const [isPremium, setIsPremium] = useState(false);
+  useEffect(() => {
+    const check = async () => {
+      if (!user) return;
+      const { data } = await supabase.from('profiles').select('is_premium').eq('id', user.id).single();
+      setIsPremium(data?.is_premium || false);
+    };
+    check();
+  }, [user]);
+
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<any>(null);
   const [tracks, setTracks] = useState<any[]>([]);
@@ -194,8 +205,18 @@ export const PremiumPage: React.FC = () => {
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
   };
 
+  // ✅ BLOCAGE DU TÉLÉCHARGEMENT
   const handleDownload = async (e: React.MouseEvent, url: string, filename: string) => {
     e.stopPropagation();
+    if (!user) {
+      alert("🔒 Inscrivez-vous gratuitement pour télécharger les morceaux.");
+      navigate('/auth');
+      return;
+    }
+    if (!isPremium) {
+      alert("🔒 Passez au Premium pour télécharger les morceaux.");
+      return;
+    }
     try {
       const response = await fetch(url);
       const blob = await response.blob();
@@ -269,7 +290,17 @@ export const PremiumPage: React.FC = () => {
     fetchData();
   }, [username]);
 
+  // ✅ BLOCAGE DE LA LECTURE
   const handlePlayTrack = (track: any) => {
+    if (!user) {
+      alert("🔒 Inscrivez-vous gratuitement pour écouter les morceaux en entier.");
+      navigate('/auth');
+      return;
+    }
+    if (!isPremium) {
+      alert("🔒 Passez au Premium pour écouter les morceaux en entier.");
+      return;
+    }
     if (track.audio_url && track.audio_url.length > 0) {
       play({
         id: track.id, title: track.title, artist: track.artist, audio_url: track.audio_url,

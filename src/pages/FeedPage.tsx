@@ -278,6 +278,17 @@ export const FeedPage: React.FC = () => {
     setFeedItems(prev => prev.filter(item => !(isPostItem(item) && item.data.id === postId)));
   };
 
+  // ✅ BLOCAGE DE LA LECTURE
+  const handlePlayClick = (e: React.MouseEvent, track: Track) => {
+    e.stopPropagation();
+    if (!user) {
+      alert("🔒 Inscrivez-vous gratuitement pour écouter les morceaux en entier.");
+      navigate('/auth');
+      return;
+    }
+    play(track);
+  };
+
   return (
     <div style={{ background: '#0a0a0a', minHeight: '100vh', color: '#fff', fontFamily: 'Inter, sans-serif', paddingBottom: 100 }}>
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '16px 12px' : '40px 24px', display: 'flex', gap: 40, alignItems: 'flex-start', flexDirection: isMobile ? 'column' : 'row' }}>
@@ -475,7 +486,7 @@ export const FeedPage: React.FC = () => {
                         </div>
                         <div style={{ position: 'relative', width: '100%', height: isMobile ? 200 : 340, background: item.data.cover_url ? `url(${item.data.cover_url}) center/cover` : '#0a0a0a', cursor: 'pointer', borderTop: '1px solid #222', borderBottom: '1px solid #222' }} onClick={() => navigate(`/track/${item.data.id}`)}>
                           <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <button onClick={(e) => { e.stopPropagation(); play(item.data); }} style={{ width: 64, height: 64, borderRadius: '50%', background: isThisPlaying ? '#00d9ff' : 'rgba(255,255,255,0.1)', border: isThisPlaying ? 'none' : '1px solid rgba(255,255,255,0.3)', color: isThisPlaying ? '#000' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }}>
+                            <button onClick={(e) => handlePlayClick(e, item.data)} style={{ width: 64, height: 64, borderRadius: '50%', background: isThisPlaying ? '#00d9ff' : 'rgba(255,255,255,0.1)', border: isThisPlaying ? 'none' : '1px solid rgba(255,255,255,0.3)', color: isThisPlaying ? '#000' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }}>
                               {isThisPlaying ? Icons.pause : Icons.play}
                             </button>
                           </div>

@@ -11,9 +11,9 @@ import { WindowsProvider } from './components/WindowsManager';
 import { MainLayout } from './layouts/MainLayout';
 import { PrivateRoute } from './components/PrivateRoute';
 import { PageTransition } from './components/PageTransition';
+import { PremiumGuard } from './components/PremiumGuard'; // ✅ Import
 import './styles.css';
 
-// ... Tes imports lazy (inchangés) ...
 const HomePage = lazy(() => import('./pages/HomePage').then((m) => ({ default: m.HomePage })));
 const StudioPage = lazy(() => import('./pages/StudioPage').then((m) => ({ default: m.StudioPage })));
 const StemsPage = lazy(() => import('./pages/StemsPage').then((m) => ({ default: m.StemsPage })));
@@ -40,8 +40,6 @@ const ToolsPage = lazy(() => import('./pages/ToolsPage').then((m) => ({ default:
 const AdminPage = lazy(() => import('./pages/AdminPage').then((m) => ({ default: m.AdminPage }))); 
 const LevonDinatoPage = lazy(() => import('./pages/LevonDinatoPage').then((m) => ({ default: m.LevonDinatoPage })));
 const PremiumPage = lazy(() => import('./pages/PremiumPage').then((m) => ({ default: m.PremiumPage })));
-
-// ✅ NOUVEL IMPORT : DropZone IA Videos
 const DropZoneVideosPage = lazy(() => import('./pages/DropZoneVideosPage').then((m) => ({ default: m.DropZoneVideosPage })));
 
 const PageLoader = () => (
@@ -52,29 +50,27 @@ const PageLoader = () => (
   </div>
 );
 
-// ✅ On extrait les routes pour utiliser useLocation
 function AnimatedRoutes() {
   const location = useLocation();
 
   return (
     <AnimatePresence mode="wait">
-      {/* LA CLÉ (key) EST LE SECRET : Elle force l'animation à chaque changement d'URL */}
       <Routes location={location} key={location.pathname}>
         
-        {/* PAGES PLEIN ÉCRAN (Pas de transition wrapper pour éviter de casser le CSS fixe) */}
+        {/* PAGES PUBLIQUES */}
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/mixer" element={<PrivateRoute><MixerPage /></PrivateRoute>} />
         <Route path="/levon-dinato" element={<LevonDinatoPage />} />
         <Route path="/premium/:username" element={<PremiumPage />} />
 
-        {/* DASHBOARD (Avec layout et transitions) */}
+        {/* DASHBOARD AVEC LAYOUT */}
         <Route path="/" element={
           <PrivateRoute>
             <MainLayout />
           </PrivateRoute>
         }>
-          {/* On enveloppe chaque page enfant avec PageTransition */}
+          {/* ✅ PAGES ACCESSIBLES À TOUS */}
           <Route index element={<PageTransition><HomePage /></PageTransition>} />
           <Route path="feed" element={<PageTransition><FeedPage /></PageTransition>} />
           <Route path="nouveautes" element={<PageTransition><NouveautesPage /></PageTransition>} />
@@ -82,23 +78,23 @@ function AnimatedRoutes() {
           <Route path="live" element={<PageTransition><LivePage /></PageTransition>} />
           <Route path="genres" element={<PageTransition><GenresPage /></PageTransition>} />
           <Route path="artists" element={<PageTransition><ArtistsPage /></PageTransition>} />
-          <Route path="tools" element={<PageTransition><ToolsPage /></PageTransition>} />
-          <Route path="studio" element={<PageTransition><StudioPage /></PageTransition>} />
-          <Route path="stems" element={<PageTransition><StemsPage /></PageTransition>} />
-          <Route path="mastering" element={<PageTransition><MasteringPage /></PageTransition>} />
-          <Route path="musicgen" element={<PageTransition><MusicGenPage /></PageTransition>} />
-          <Route path="generator" element={<PageTransition><GeneratorPage /></PageTransition>} />
-          <Route path="video" element={<PageTransition><VideoPage /></PageTransition>} />
-          <Route path="cdj" element={<PageTransition><CDJPage /></PageTransition>} />
           <Route path="help" element={<PageTransition><HelpPage /></PageTransition>} />
-          <Route path="settings" element={<PageTransition><SettingsPage /></PageTransition>} />
           <Route path="profil/:id" element={<PageTransition><ProfilePage /></PageTransition>} />
           <Route path="search" element={<PageTransition><SearchPage /></PageTransition>} />
           <Route path="track/:id" element={<PageTransition><TrackPage /></PageTransition>} />
           <Route path="admin" element={<PageTransition><AdminPage /></PageTransition>} />
-          
-          {/* ✅ NOUVELLE ROUTE : DropZone IA Videos */}
-          <Route path="ia-videos" element={<PageTransition><DropZoneVideosPage /></PageTransition>} />
+
+          {/* ✅ PAGES PREMIUM (BLOQUÉES) */}
+          <Route path="tools" element={<PageTransition><PremiumGuard><ToolsPage /></PremiumGuard></PageTransition>} />
+          <Route path="settings" element={<PageTransition><PremiumGuard><SettingsPage /></PremiumGuard></PageTransition>} />
+          <Route path="ia-videos" element={<PageTransition><PremiumGuard><DropZoneVideosPage /></PremiumGuard></PageTransition>} />
+          <Route path="studio" element={<PageTransition><PremiumGuard><StudioPage /></PremiumGuard></PageTransition>} />
+          <Route path="stems" element={<PageTransition><PremiumGuard><StemsPage /></PremiumGuard></PageTransition>} />
+          <Route path="mastering" element={<PageTransition><PremiumGuard><MasteringPage /></PremiumGuard></PageTransition>} />
+          <Route path="musicgen" element={<PageTransition><PremiumGuard><MusicGenPage /></PremiumGuard></PageTransition>} />
+          <Route path="generator" element={<PageTransition><PremiumGuard><GeneratorPage /></PremiumGuard></PageTransition>} />
+          <Route path="video" element={<PageTransition><PremiumGuard><VideoPage /></PremiumGuard></PageTransition>} />
+          <Route path="cdj" element={<PageTransition><PremiumGuard><CDJPage /></PremiumGuard></PageTransition>} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

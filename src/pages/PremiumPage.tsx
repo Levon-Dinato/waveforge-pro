@@ -7,6 +7,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { usePlayer } from '../contexts/PlayerContext';
 import * as GlobalPlayerModule from '../components/GlobalPlayer';
 import * as ArrowButtonModule from '../components/ArrowButton';
+import { PremiumStats } from '../components/PremiumStats';
 import './LevonDinato.css';
 
 const GlobalPlayer = (GlobalPlayerModule as any).GlobalPlayer || (GlobalPlayerModule as any).default || null;
@@ -22,7 +23,7 @@ const SocialIcons = {
   soundcloud: <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M23.998 14.766c-.06 1.63-1.418 2.93-3.078 2.93H11.29c-.286 0-.521-.23-.521-.511V8.16c0-.23.157-.427.382-.485.585-.153 1.284-.229 1.939-.229 3.187 0 5.93 2.145 6.662 5.218 1.991.033 3.613 1.562 3.613 3.445l.012 1.63zM9.82 7.246c-.102 0-.19.038-.26.104-.09.084-.146.206-.146.338v9.539c0 .261.2.477.459.503H1.662c-.911 0-1.656-.744-1.656-1.656v-5.41c0-.915.745-1.656 1.656-1.656h.134c.06-1.244.58-2.35 1.404-3.144.825-.795 1.94-1.29 3.198-1.29.685 0 1.338.152 1.92.426.16.077.25.238.25.414v1.99z"/></svg>,
 };
 
-const CanvasWaveform: React.FC<{ 
+const CanvasWaveform: React.FC<{
   peaks: number[]; isPlaying: boolean; themeColor: string; progress: number; isCurrent: boolean; onSeek: (ratio: number) => void; isMobile: boolean;
 }> = ({ peaks, isPlaying, themeColor, progress, isCurrent, onSeek, isMobile }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -89,7 +90,7 @@ const CanvasWaveform: React.FC<{
 
       ctx.fillStyle = gradient;
       ctx.shadowColor = themeColor;
-      ctx.shadowBlur = isMobile ? 2 : 6; 
+      ctx.shadowBlur = isMobile ? 2 : 6;
 
       for (let i = 0; i < displayPeaks.length; i++) {
         const x = (i / displayPeaks.length) * W;
@@ -154,9 +155,9 @@ const CanvasWaveform: React.FC<{
   };
 
   return (
-    <canvas 
+    <canvas
       ref={canvasRef} onMouseDown={handleMouseDown} onClick={(e) => { if (isCurrent) e.stopPropagation(); }}
-      style={{ width: '100%', height: isMobile ? '30px' : '40px', display: 'block', cursor: isCurrent ? 'pointer' : 'default', touchAction: 'none', opacity: isCurrent ? 1 : 0.6 }} 
+      style={{ width: '100%', height: isMobile ? '30px' : '40px', display: 'block', cursor: isCurrent ? 'pointer' : 'default', touchAction: 'none', opacity: isCurrent ? 1 : 0.6 }}
     />
   );
 };
@@ -178,7 +179,7 @@ export const PremiumPage: React.FC = () => {
   const { user } = useAuth();
   const { play, currentTrack, isPlaying, togglePlay, stop, currentTime, duration, seek } = usePlayer();
   const isMobile = useIsMobile();
-  
+
   const [isPremium, setIsPremium] = useState(false);
   useEffect(() => {
     const check = async () => {
@@ -197,7 +198,11 @@ export const PremiumPage: React.FC = () => {
 
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
 
-  // ✅ ÉTATS POUR LA MODALE DE BOOKING
+  // ✅ PAGINATION DES TITRES
+  const [currentPage, setCurrentPage] = useState(1);
+  const tracksPerPage = 10;
+
+  // ✅ ÉTATS BOOKING
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [bookingForm, setBookingForm] = useState({
     name: '',
@@ -207,6 +212,19 @@ export const PremiumPage: React.FC = () => {
   });
   const [sendingBooking, setSendingBooking] = useState(false);
   const [bookingSent, setBookingSent] = useState(false);
+
+  // ✅ ÉTATS UPLOAD
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [uploadForm, setUploadForm] = useState({
+    title: '',
+    artist: '',
+    genre: '',
+    bpm: '',
+    song_key: '',
+  });
+  const [audioFile, setAudioFile] = useState<File | null>(null);
+  const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   const formatTime = (time: number) => {
     if (isNaN(time) || time === 0) return "0:00";
@@ -226,7 +244,7 @@ export const PremiumPage: React.FC = () => {
   const handleAddToCalendar = (event: any) => {
     const date = new Date(event.event_date);
     const endDate = new Date(date.getTime() + 2 * 60 * 60 * 1000);
-    
+
     const formatDate = (d: Date) => {
       return d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
     };
@@ -257,60 +275,6 @@ END:VCALENDAR`;
     window.URL.revokeObjectURL(url);
   };
 
-  const handleSendBooking = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!bookingForm.name || !bookingForm.email || !bookingForm.message) {
-      alert("Remplis tous les champs obligatoires.");
-      return;
-    }
-    setSendingBooking(true);
-    try {
-      const { error } = await supabase.functions.invoke('send-booking-email', {
-        body: {
-          to: artistEmail,
-          from: bookingForm.email,
-          subject: `${bookingForm.type} - ${profile.username}`,
-          name: bookingForm.name,
-          type: bookingForm.type,
-          message: bookingForm.message,
-        },
-      });
-      if (error) throw error;
-      setBookingSent(true);
-      setBookingForm({ name: '', email: '', type: 'booking', message: '' });
-      setTimeout(() => {
-        setShowBookingModal(false);
-        setBookingSent(false);
-      }, 3000);
-    } catch (err: any) {
-      alert("Erreur lors de l'envoi : " + err.message);
-    } finally {
-      setSendingBooking(false);
-    }
-  };
-
-  const handleDownload = async (e: React.MouseEvent, url: string, filename: string) => {
-    e.stopPropagation();
-    if (!user) {
-      alert("🔒 Inscrivez-vous gratuitement pour télécharger les morceaux.");
-      navigate('/auth');
-      return;
-    }
-    if (!isPremium) {
-      alert("🔒 Passez au Premium pour télécharger les morceaux.");
-      return;
-    }
-    try {
-      const response = await fetch(url);
-      const blob = await response.blob();
-      const blobUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = blobUrl; link.download = filename;
-      document.body.appendChild(link); link.click();
-      document.body.removeChild(link); window.URL.revokeObjectURL(blobUrl);
-    } catch (error) { window.open(url, '_blank'); }
-  };
-
   const getIframeSrc = (embedCode: string) => {
     if (!embedCode) return null;
     let src = embedCode;
@@ -338,7 +302,7 @@ END:VCALENDAR`;
         if (profileData) {
           setProfile(profileData);
           const { data: tracksData } = await supabase.from('tracks').select('*').eq('user_id', profileData.id).order('created_at', { ascending: false });
-          
+
           if (tracksData) {
             const formattedTracks = tracksData.map(t => {
               let parsedPeaks = [];
@@ -353,7 +317,7 @@ END:VCALENDAR`;
               if (track.audio_url && (!track.duration || track.duration === 0)) {
                 const audio = new Audio(track.audio_url);
                 audio.addEventListener('loadedmetadata', () => {
-                  setTracks(prev => prev.map(t => 
+                  setTracks(prev => prev.map(t =>
                     t.id === track.id ? { ...t, duration: audio.duration } : t
                   ));
                 });
@@ -378,6 +342,123 @@ END:VCALENDAR`;
     fetchData();
   }, [username]);
 
+  // ✅ TRACKING DES VUES DE PAGE (une fois par session)
+  useEffect(() => {
+    if (!profile?.id) return;
+    const key = `pv_${profile.id}`;
+    if (sessionStorage.getItem(key)) return;
+    sessionStorage.setItem(key, '1');
+    supabase.from('page_views').insert({
+      profile_id: profile.id,
+      viewer_id: user?.id ?? null,
+    }).then(() => {});
+  }, [profile?.id, user?.id]);
+
+  // Reset pagination quand on change de profil
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [username]);
+
+  const artistEmailRef = useRef<string>('djcontrolradiotv1@gmail.com');
+
+  const handleSendBooking = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!bookingForm.name || !bookingForm.email || !bookingForm.message) {
+      alert("Remplis tous les champs obligatoires.");
+      return;
+    }
+    setSendingBooking(true);
+    try {
+      const { error } = await supabase.functions.invoke('send-booking-email', {
+        body: {
+          to: artistEmailRef.current,
+          from: bookingForm.email,
+          subject: `${bookingForm.type} - ${profile?.username ?? ''}`,
+          name: bookingForm.name,
+          type: bookingForm.type,
+          message: bookingForm.message,
+        },
+      });
+      if (error) throw error;
+      setBookingSent(true);
+      setBookingForm({ name: '', email: '', type: 'booking', message: '' });
+      setTimeout(() => {
+        setShowBookingModal(false);
+        setBookingSent(false);
+      }, 3000);
+    } catch (err: any) {
+      alert("Erreur lors de l'envoi : " + err.message);
+    } finally {
+      setSendingBooking(false);
+    }
+  };
+
+  // ✅ FONCTION D'UPLOAD DE MORCEAU
+  const handleUploadTrack = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!audioFile) {
+      alert("Veuillez sélectionner un fichier audio.");
+      return;
+    }
+    if (!uploadForm.title || !uploadForm.artist) {
+      alert("Le titre et l'artiste sont obligatoires.");
+      return;
+    }
+
+    setUploading(true);
+    try {
+      // 1. Upload de l'audio
+      const audioExt = audioFile.name.split('.').pop();
+      const audioFileName = `${profile.id}/${Date.now()}_audio.${audioExt}`;
+      const { error: audioError } = await supabase.storage.from('tracks').upload(audioFileName, audioFile);
+      if (audioError) throw audioError;
+      const { data: audioUrlData } = supabase.storage.from('tracks').getPublicUrl(audioFileName);
+
+      // 2. Upload de la pochette (optionnel)
+      let coverUrl = '';
+      if (coverFile) {
+        const coverExt = coverFile.name.split('.').pop();
+        const coverFileName = `${profile.id}/${Date.now()}_cover.${coverExt}`;
+        const { error: coverError } = await supabase.storage.from('covers').upload(coverFileName, coverFile);
+        if (coverError) throw coverError;
+        const { data: coverUrlData } = supabase.storage.from('covers').getPublicUrl(coverFileName);
+        coverUrl = coverUrlData.publicUrl;
+      }
+
+      // 3. Insertion dans la table tracks
+      const { data: newTrack, error: dbError } = await supabase.from('tracks').insert({
+        user_id: profile.id,
+        title: uploadForm.title,
+        artist: uploadForm.artist,
+        genre: uploadForm.genre,
+        bpm: uploadForm.bpm ? parseInt(uploadForm.bpm) : null,
+        song_key: uploadForm.song_key,
+        audio_url: audioUrlData.publicUrl,
+        cover_url: coverUrl,
+        created_at: new Date().toISOString(),
+      }).select().single();
+
+      if (dbError) throw dbError;
+
+      // 4. Mise à jour locale de la liste
+      if (newTrack) {
+        let parsedPeaks = [];
+        setTracks([{ ...newTrack, peaks: parsedPeaks }, ...tracks]);
+      }
+
+      // 5. Reset et fermeture
+      setUploadForm({ title: '', artist: '', genre: '', bpm: '', song_key: '' });
+      setAudioFile(null);
+      setCoverFile(null);
+      setShowUploadModal(false);
+      alert("Morceau uploadé avec succès !");
+    } catch (err: any) {
+      alert("Erreur lors de l'upload : " + err.message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handlePlayTrack = (track: any) => {
     if (!user) {
       alert("🔒 Inscrivez-vous gratuitement pour écouter les morceaux en entier.");
@@ -389,12 +470,48 @@ END:VCALENDAR`;
       return;
     }
     if (track.audio_url && track.audio_url.length > 0) {
+      if (profile?.id) {
+        supabase.from('track_plays').insert({
+          track_id: track.id,
+          profile_id: profile.id,
+          viewer_id: user?.id ?? null,
+        }).then(() => {});
+      }
       play({
         id: track.id, title: track.title, artist: track.artist, audio_url: track.audio_url,
         cover_url: track.cover_url, user_id: track.user_id, duration: track.duration,
         peaks: track.peaks, bpm: track.bpm, song_key: track.song_key, genre: track.genre,
       });
     }
+  };
+
+  const handleDownload = async (e: React.MouseEvent, url: string, filename: string, trackId: string) => {
+    e.stopPropagation();
+    if (!user) {
+      alert("🔒 Inscrivez-vous gratuitement pour télécharger les morceaux.");
+      navigate('/auth');
+      return;
+    }
+    if (!isPremium) {
+      alert("🔒 Passez au Premium pour télécharger les morceaux.");
+      return;
+    }
+    if (profile?.id && trackId) {
+      supabase.from('track_downloads').insert({
+        track_id: trackId,
+        profile_id: profile.id,
+        viewer_id: user?.id ?? null,
+      }).then(() => {});
+    }
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl; link.download = filename;
+      document.body.appendChild(link); link.click();
+      document.body.removeChild(link); window.URL.revokeObjectURL(blobUrl);
+    } catch (error) { window.open(url, '_blank'); }
   };
 
   const renderTitle = (title: string): React.ReactNode => {
@@ -416,17 +533,18 @@ END:VCALENDAR`;
   if (!profile) return <div style={{ background: '#000', color: '#fff', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Artiste introuvable.</div>;
 
   const artistEmail = profile.booking_email || 'djcontrolradiotv1@gmail.com';
+  artistEmailRef.current = artistEmail;
   const gmailContactLink = `https://mail.google.com/mail/?view=cm&fs=1&to=${artistEmail}&su=Booking%20${profile.username}&body=Salut,%20je%20souhaite%20vous%20contacter%20pour%20un%20booking.`;
 
   const themeColor = profile.theme_color || '#00d9ff';
   const isOwner = user && profile && user.id === profile.id;
 
   const settings = profile.settings || {};
-  
+
   const heroTitle = profile.hero_title || settings.hero_title || `L'expérience *sonore* ultime.`;
   const heroDesc = profile.hero_description || settings.hero_description || `Découvrez les productions Funky House, Nu-Disco et Tech House du duo ${profile.username}. Un set conçu pour faire vibrer les dancefloors et marquer les esprits.`;
   const bio = profile.bio || settings.bio || "Levon & Dinato est un duo électrisant qui fusionne leurs influences uniques pour créer un son reconnaissable et contagieux. Unis par une passion commune pour la Funky House, la Nu-Disco, la Tech House et l'Electro Dance.";
-  
+
   const heroTagline = profile.hero_tagline || settings.hero_tagline || "Nouveaux remixes disponibles";
 
   const showStats = settings.show_stats !== false;
@@ -461,9 +579,15 @@ END:VCALENDAR`;
 
   const soundcloudUrl = profile.soundcloud_url;
 
+  // ✅ CALCUL DE LA PAGINATION
+  const indexOfLastTrack = currentPage * tracksPerPage;
+  const indexOfFirstTrack = indexOfLastTrack - tracksPerPage;
+  const currentTracks = tracks.slice(indexOfFirstTrack, indexOfLastTrack);
+  const totalPages = Math.ceil(tracks.length / tracksPerPage);
+
   return (
     <div style={{ background: '#050505', minHeight: '100vh', color: '#fff', fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', '--accent': themeColor } as React.CSSProperties}>
-      
+
       <style>{`
         .hover-row { transition: background 0.2s, transform 0.2s; }
         .hover-row:hover { background: rgba(255,255,255,0.04) !important; }
@@ -474,10 +598,10 @@ END:VCALENDAR`;
         .hover-row:hover .hover-img { transform: scale(1.08); }
         .nav-link { color: rgba(255,255,255,0.5); text-decoration: none; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; transition: color 0.2s; }
         .nav-link:hover { color: #fff; }
-        
+
         .section-title { font-size: clamp(2rem, 4vw, 3rem); font-weight: 900; letter-spacing: -0.03em; line-height: 1.1; margin-bottom: 1.5rem; }
         .section-subtitle { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; color: ${themeColor}; margin-bottom: 1rem; }
-        
+
         .gallery-item { position: relative; overflow: hidden; border-radius: 8px; cursor: pointer; }
         .gallery-item img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s; }
         .gallery-item:hover img { transform: scale(1.05); }
@@ -486,7 +610,7 @@ END:VCALENDAR`;
 
         html { scroll-behavior: smooth; }
         section[id] { scroll-margin-top: 100px; }
-        
+
         @media (max-width: 900px) {
           .layout-grid { flex-direction: column !important; }
           .sidebar { width: 100% !important; border-left: none !important; padding-left: 0 !important; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 40px !important; }
@@ -500,7 +624,7 @@ END:VCALENDAR`;
       </Helmet>
 
       {lightboxImage && (
-        <div 
+        <div
           onClick={() => setLightboxImage(null)}
           style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.95)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 40, cursor: 'zoom-out' }}
         >
@@ -558,10 +682,60 @@ END:VCALENDAR`;
         </div>
       )}
 
+      {/* ✅ MODALE D'UPLOAD DE MORCEAU */}
+      {showUploadModal && (
+        <div
+          style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
+          onClick={() => setShowUploadModal(false)}
+        >
+          <div style={{ background: '#121212', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: 32, width: '100%', maxWidth: 500, maxHeight: '90vh', overflowY: 'auto' }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+              <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: '#fff' }}>Uploader un son</h2>
+              <button onClick={() => setShowUploadModal(false)} style={{ background: 'transparent', border: 'none', color: '#888', fontSize: 20, cursor: 'pointer' }}>✕</button>
+            </div>
+            <form onSubmit={handleUploadTrack} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div>
+                <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>Titre *</label>
+                <input type="text" value={uploadForm.title} onChange={(e) => setUploadForm({ ...uploadForm, title: e.target.value })} required style={{ width: '100%', padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff', outline: 'none' }} />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>Artiste *</label>
+                <input type="text" value={uploadForm.artist} onChange={(e) => setUploadForm({ ...uploadForm, artist: e.target.value })} required style={{ width: '100%', padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff', outline: 'none' }} />
+              </div>
+              <div style={{ display: 'flex', gap: 12 }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>Genre</label>
+                  <input type="text" value={uploadForm.genre} onChange={(e) => setUploadForm({ ...uploadForm, genre: e.target.value })} style={{ width: '100%', padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff', outline: 'none' }} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>BPM</label>
+                  <input type="number" value={uploadForm.bpm} onChange={(e) => setUploadForm({ ...uploadForm, bpm: e.target.value })} style={{ width: '100%', padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff', outline: 'none' }} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>Clé</label>
+                  <input type="text" value={uploadForm.song_key} onChange={(e) => setUploadForm({ ...uploadForm, song_key: e.target.value })} style={{ width: '100%', padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff', outline: 'none' }} />
+                </div>
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>Fichier Audio *</label>
+                <input type="file" accept="audio/*" onChange={(e) => setAudioFile(e.target.files?.[0] || null)} required style={{ width: '100%', padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff', outline: 'none' }} />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>Pochette (optionnel)</label>
+                <input type="file" accept="image/*" onChange={(e) => setCoverFile(e.target.files?.[0] || null)} style={{ width: '100%', padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff', outline: 'none' }} />
+              </div>
+              <button type="submit" disabled={uploading} style={{ padding: 14, background: themeColor, color: '#000', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 800, cursor: uploading ? 'wait' : 'pointer', textTransform: 'uppercase', letterSpacing: '1px', marginTop: 8 }}>
+                {uploading ? 'Upload en cours...' : 'Uploader'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* NAVIGATION */}
       <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, height: isMobile ? 60 : 72, background: 'rgba(5,5,5,0.85)', backdropFilter: 'blur(24px)', zIndex: 1000, borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
         <div style={{ maxWidth: 1400, margin: '0 auto', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: isMobile ? '0 12px' : '0 24px', gap: isMobile ? 8 : 32 }}>
-          
+
           <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 12, minWidth: 0 }}>
             <button onClick={() => navigate('/')} style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: 20, cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 0 }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
@@ -599,7 +773,7 @@ END:VCALENDAR`;
 
       {/* HERO */}
       <section style={{ position: 'relative', minHeight: isMobile ? '80vh' : '95vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', background: '#050505', paddingTop: isMobile ? 60 : 72 }}>
-        
+
         <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
           <video autoPlay muted loop playsInline poster={profile.avatar_url || "/logo.jpg"} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.8, filter: 'grayscale(100%) contrast(1.2) brightness(0.6)' }}>
             <source src={profile.background_video_url || "/background.mp4"} type="video/mp4" />
@@ -607,21 +781,21 @@ END:VCALENDAR`;
           <div style={{ position: 'absolute', inset: 0, background: themeColor, mixBlendMode: 'overlay', opacity: 0.4 }} />
           <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(to bottom, rgba(5,5,5,0.4) 0%, rgba(5,5,5,0) 40%, rgba(5,5,5,0.9) 80%, #050505 100%)` }} />
         </div>
-        
+
         <div style={{ position: 'relative', zIndex: 10, textAlign: 'center', maxWidth: 1000, padding: '0 24px', marginTop: isMobile ? '5vh' : '15vh' }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(10px)', padding: '6px 16px', borderRadius: 50, border: `1px solid rgba(255,255,255,0.1)`, marginBottom: 32 }}>
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: themeColor, boxShadow: `0 0 10px ${themeColor}` }} />
             <span style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: '#fff' }}>{heroTagline}</span>
           </div>
-          
+
           <h1 className="hero-title" style={{ fontSize: isMobile ? '2.5rem' : 'clamp(4rem, 10vw, 8rem)', fontWeight: 900, lineHeight: 0.9, letterSpacing: '-0.05em', marginBottom: 32, textShadow: '0 20px 60px rgba(0,0,0,0.9)' }}>
             {renderTitle(heroTitle)}
           </h1>
-          
+
           <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: isMobile ? '0.95rem' : 'clamp(1.1rem, 2vw, 1.4rem)', fontWeight: 400, lineHeight: 1.6, marginBottom: 48, maxWidth: 700, margin: '0 auto 48px auto', textShadow: '0 4px 20px rgba(0,0,0,0.8)' }}>
             {heroDesc}
           </p>
-          
+
           <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap', flexDirection: isMobile ? 'column' : 'row' }}>
             {ArrowButton ? (
               <>
@@ -639,7 +813,7 @@ END:VCALENDAR`;
       </section>
 
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '40px 16px' : '100px 24px' }}>
-        
+
         {/* BIO */}
         {showDuo && (
           <section id="duo" style={{ marginBottom: isMobile ? 40 : 120 }}>
@@ -677,7 +851,7 @@ END:VCALENDAR`;
           <section id="dates" style={{ marginBottom: isMobile ? 40 : 120, paddingTop: isMobile ? 40 : 80, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
             <div className="section-subtitle">Agenda</div>
             <h2 className="section-title">Prochaines dates</h2>
-            
+
             <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 12 : 16, marginTop: isMobile ? 20 : 40 }}>
               {events.map((event: any) => {
                 const dateInfo = formatEventDate(event.event_date);
@@ -801,14 +975,34 @@ END:VCALENDAR`;
         {showReleases && (
           <section id="releases" style={{ paddingTop: isMobile ? 40 : 80, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
             <div className="section-subtitle">Écouter</div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: isMobile ? 20 : 40 }}>
-              <h2 className="section-title" style={{ margin: 0 }}>{settings.releases_title || 'Dernières Sorties'}</h2>
-              {isOwner && (
-                <Link to="/nouveautes" style={{ color: themeColor, fontSize: 13, fontWeight: 800, textDecoration: 'none', textTransform: 'uppercase', letterSpacing: '1px' }}>Gérer</Link>
-              )}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: isMobile ? 20 : 40, flexWrap: 'wrap', gap: 16 }}>
+              <h2 className="section-title" style={{ margin: 0 }}>
+                {settings.releases_title || 'Dernières Sorties'}
+                <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)', marginLeft: 12, fontWeight: 600 }}>
+                  ({tracks.length})
+                </span>
+              </h2>
+              <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                {isOwner && (
+                  <button
+                    onClick={() => setShowUploadModal(true)}
+                    style={{ background: `${themeColor}20`, border: `1px solid ${themeColor}`, color: themeColor, borderRadius: 8, padding: '8px 16px', fontSize: 12, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, textTransform: 'uppercase', letterSpacing: '1px', transition: 'all 0.2s' }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = `${themeColor}30`}
+                    onMouseLeave={(e) => e.currentTarget.style.background = `${themeColor}20`}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    Ajouter un son
+                  </button>
+                )}
+                {isOwner && (
+                  <Link to="/nouveautes" style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, fontWeight: 800, textDecoration: 'none', textTransform: 'uppercase', letterSpacing: '1px', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#fff'} onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.6)'}>
+                    Gérer
+                  </Link>
+                )}
+              </div>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 16 : 24 }}>
-              {tracks.length > 0 ? tracks.map((track) => {
+              {currentTracks.length > 0 ? currentTracks.map((track) => {
                 const isPlayable = track.audio_url && track.audio_url.length > 0;
                 const isThisPlaying = currentTrack?.id === track.id && isPlaying;
                 const isCurrentTrack = currentTrack?.id === track.id;
@@ -837,7 +1031,7 @@ END:VCALENDAR`;
 
                 const cardBgColor = track.player_bg_color || '#000000';
                 const cardBgImage = track.player_bg_image_url;
-                
+
                 const customCardStyle = {
                   backgroundColor: cardBgImage ? '#000000' : (cardBgColor || '#0a0a0f'),
                   backgroundImage: cardBgImage ? `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.8)), url("${cardBgImage}")` : 'none',
@@ -845,12 +1039,12 @@ END:VCALENDAR`;
                 };
 
                 return (
-                  <div 
-                    key={track.id} 
+                  <div
+                    key={track.id}
                     className={`hover-row premium-glow ${cardBgImage ? 'has-bg-image' : ''}`}
                     onClick={() => isPlayable && handlePlayTrack(track)}
-                    style={{ 
-                      ...customCardStyle, display: 'flex', flexDirection: 'column', padding: isMobile ? '16px' : '24px', borderRadius: 20, 
+                    style={{
+                      ...customCardStyle, display: 'flex', flexDirection: 'column', padding: isMobile ? '16px' : '24px', borderRadius: 20,
                       cursor: isPlayable ? 'pointer' : 'default', border: '1px solid rgba(255,255,255,0.06)',
                       position: 'relative', '--bg-image': cardBgImage ? `url("${cardBgImage}")` : 'none'
                     } as React.CSSProperties}
@@ -868,53 +1062,53 @@ END:VCALENDAR`;
                           <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)' }}>{track.artist}</div>
                         </div>
                       </div>
-                      
+
                       <div style={{ display: 'flex', alignItems: 'center', gap: 16, width: isMobile ? '100%' : 'auto', justifyContent: isMobile ? 'space-between' : 'flex-end' }}>
-                         {isPlayable && (
-                           <button onClick={(e) => handleDownload(e, track.audio_url, `${track.artist} - ${track.title}.mp3`)} style={{ background: 'rgba(0,0,0,0.5)', border: `1px solid ${themeColor}`, borderRadius: 8, padding: isMobile ? '6px 12px' : '8px 20px', color: themeColor, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 700, transition: 'all 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.background = `${themeColor}20`} onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(0,0,0,0.5)'}>
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                              {isPremium ? 'Télécharger' : '🔒 Premium'}
-                           </button>
-                         )}
-                         <button style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'} onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}>
-                           {isThisPlaying ? (
-                              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
-                           ) : (
-                              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: 3 }}><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-                           )}
-                         </button>
+                        {isPlayable && (
+                          <button onClick={(e) => handleDownload(e, track.audio_url, `${track.artist} - ${track.title}.mp3`, track.id)} style={{ background: 'rgba(0,0,0,0.5)', border: `1px solid ${themeColor}`, borderRadius: 8, padding: isMobile ? '6px 12px' : '8px 20px', color: themeColor, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 700, transition: 'all 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.background = `${themeColor}20`} onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(0,0,0,0.5)'}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                            {isPremium ? 'Télécharger' : '🔒 Premium'}
+                          </button>
+                        )}
+                        <button style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'} onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}>
+                          {isThisPlaying ? (
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+                          ) : (
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: 3 }}><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                          )}
+                        </button>
                       </div>
                     </div>
 
                     <div style={{ background: 'rgba(0,0,0,0.5)', borderRadius: 12, padding: isMobile ? '8px 12px' : '12px 20px', zIndex: 2, border: '1px solid rgba(255,255,255,0.05)' }}>
-                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={themeColor} strokeWidth="2.5"><path d="M12 2a3 3 0 0 0-3 3v14a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path><path d="M5 10a3 3 0 0 0-3 3v4a3 3 0 0 0 6 0v-4a3 3 0 0 0-3-3z"></path><path d="M19 7a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0v-7a3 3 0 0 0-3-3z"></path></svg>
-                            <span style={{ color: themeColor, fontWeight: 900, fontSize: '14px', fontFamily: 'system-ui, -apple-system, sans-serif', letterSpacing: '-0.5px' }}>Dropzone</span>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={themeColor} strokeWidth="2.5"><path d="M12 2a3 3 0 0 0-3 3v14a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path><path d="M5 10a3 3 0 0 0-3 3v4a3 3 0 0 0 6 0v-4a3 3 0 0 0-3-3z"></path><path d="M19 7a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0v-7a3 3 0 0 0-3-3z"></path></svg>
+                          <span style={{ color: themeColor, fontWeight: 900, fontSize: '14px', fontFamily: 'system-ui, -apple-system, sans-serif', letterSpacing: '-0.5px' }}>Dropzone</span>
+                        </div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                          <div style={{ fontSize: 13, fontWeight: 800, fontFamily: 'monospace', display: 'flex', alignItems: 'baseline', gap: 4 }}>
+                            <span style={{ color: themeColor }}>{formatTime(isThisPlaying ? currentTime : 0)}</span>
+                            <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11 }}>/</span>
+                            <span style={{ color: 'rgba(255,255,255,0.6)' }}>{formatTime(track.duration)}</span>
                           </div>
-                          
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                            <div style={{ fontSize: 13, fontWeight: 800, fontFamily: 'monospace', display: 'flex', alignItems: 'baseline', gap: 4 }}>
-                              <span style={{ color: themeColor }}>{formatTime(isThisPlaying ? currentTime : 0)}</span>
-                              <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11 }}>/</span>
-                              <span style={{ color: 'rgba(255,255,255,0.6)' }}>{formatTime(track.duration)}</span>
-                            </div>
-                            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', fontWeight: 600, display: 'flex', gap: 12 }}>
-                              <span>{track.bpm} BPM</span>
-                              <span>{track.song_key || '—'}</span>
-                            </div>
+                          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', fontWeight: 600, display: 'flex', gap: 12 }}>
+                            <span>{track.bpm} BPM</span>
+                            <span>{track.song_key || '—'}</span>
                           </div>
-                       </div>
-                       
-                       <CanvasWaveform 
-                          peaks={track.peaks} 
-                          isPlaying={isThisPlaying} 
-                          themeColor={themeColor} 
-                          progress={isThisPlaying && duration > 0 ? currentTime / duration : 0} 
-                          isCurrent={isCurrentTrack} 
-                          onSeek={seek} 
-                          isMobile={isMobile}
-                       />
+                        </div>
+                      </div>
+
+                      <CanvasWaveform
+                        peaks={track.peaks}
+                        isPlaying={isThisPlaying}
+                        themeColor={themeColor}
+                        progress={isThisPlaying && duration > 0 ? currentTime / duration : 0}
+                        isCurrent={isCurrentTrack}
+                        onSeek={seek}
+                        isMobile={isMobile}
+                      />
                     </div>
                   </div>
                 );
@@ -922,8 +1116,66 @@ END:VCALENDAR`;
                 <div style={{ padding: '40px 0', color: 'rgba(255,255,255,0.3)', textAlign: 'center' }}>Aucune sortie disponible.</div>
               )}
             </div>
+
+            {/* ✅ PAGINATION */}
+            {totalPages > 1 && (
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 16, marginTop: 40 }}>
+                <button
+                  onClick={() => {
+                    setCurrentPage((p) => Math.max(1, p - 1));
+                    document.getElementById('releases')?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  disabled={currentPage === 1}
+                  style={{
+                    padding: '10px 20px',
+                    background: currentPage === 1 ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.1)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    color: currentPage === 1 ? 'rgba(255,255,255,0.3)' : '#fff',
+                    borderRadius: 8,
+                    fontSize: 13,
+                    fontWeight: 700,
+                    cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.2s',
+                  }}
+                  onMouseEnter={(e) => { if (currentPage !== 1) e.currentTarget.style.background = 'rgba(255,255,255,0.2)'; }}
+                  onMouseLeave={(e) => { if (currentPage !== 1) e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
+                >
+                  ← Précédent
+                </button>
+
+                <span style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.6)' }}>
+                  Page {currentPage} / {totalPages}
+                </span>
+
+                <button
+                  onClick={() => {
+                    setCurrentPage((p) => Math.min(totalPages, p + 1));
+                    document.getElementById('releases')?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  disabled={currentPage === totalPages}
+                  style={{
+                    padding: '10px 20px',
+                    background: currentPage === totalPages ? 'rgba(255,255,255,0.05)' : `${themeColor}20`,
+                    border: `1px solid ${currentPage === totalPages ? 'rgba(255,255,255,0.1)' : themeColor}`,
+                    color: currentPage === totalPages ? 'rgba(255,255,255,0.3)' : themeColor,
+                    borderRadius: 8,
+                    fontSize: 13,
+                    fontWeight: 700,
+                    cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.2s',
+                  }}
+                  onMouseEnter={(e) => { if (currentPage !== totalPages) e.currentTarget.style.background = `${themeColor}30`; }}
+                  onMouseLeave={(e) => { if (currentPage !== totalPages) e.currentTarget.style.background = `${themeColor}20`; }}
+                >
+                  Suivant →
+                </button>
+              </div>
+            )}
           </section>
         )}
+
+        {/* ✅ STATISTIQUES (visibles uniquement par le propriétaire) */}
+        {isOwner && <PremiumStats profileId={profile.id} themeColor={themeColor} />}
 
       </div>
 

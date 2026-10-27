@@ -6,6 +6,7 @@ import { TrackGrid } from '../components/TrackGrid';
 import type { Track } from '../components/TrackGrid';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { usePlayer } from '../contexts/PlayerContext';
+import { useAuth } from '../contexts/AuthContext'; // ✅ Import ajouté
 import { EventsTicker } from '../components/EventsTicker';
 
 const Icons = {
@@ -23,6 +24,7 @@ export const HomePage = () => {
   const isMobile = useIsMobile(768);
   const navigate = useNavigate();
   const { play, isPlaying, isCurrentTrack } = usePlayer();
+  const { user } = useAuth(); // ✅ Récupération de l'utilisateur
   
   const [tracks, setTracks] = useState<Track[]>([]);
   const [artists, setArtists] = useState<Artist[]>([]);
@@ -53,11 +55,27 @@ export const HomePage = () => {
 
   const isFeaturedPlaying = featured ? isCurrentTrack(featured.id) && isPlaying : false;
 
+  // ✅ BLOCAGE DE LA LECTURE POUR LE SON À LA UNE
   const playFeatured = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
+    if (!user) {
+      alert("🔒 Inscrivez-vous gratuitement pour écouter les morceaux en entier.");
+      navigate('/auth');
+      return;
+    }
     if (!featured) return;
     play({ id: featured.id, title: featured.title, artist: featured.artist, audio_url: featured.audio_url, cover_url: featured.cover_url, user_id: featured.user_id || null, duration: featured.duration, peaks: featured.peaks, bpm: featured.bpm, song_key: featured.song_key, genre: featured.genre });
+  };
+
+  // ✅ BLOCAGE DE LA LECTURE POUR LA GRILLE DE SONS
+  const handlePlayTrack = (track: Track) => {
+    if (!user) {
+      alert("🔒 Inscrivez-vous gratuitement pour écouter les morceaux en entier.");
+      navigate('/auth');
+      return;
+    }
+    play({ id: track.id, title: track.title, artist: track.artist, audio_url: track.audio_url, cover_url: track.cover_url, user_id: track.user_id || null, duration: track.duration, peaks: track.peaks, bpm: track.bpm, song_key: track.song_key, genre: track.genre });
   };
 
   return (
@@ -70,7 +88,6 @@ export const HomePage = () => {
         {/* 1. HERO SECTION */}
         <div style={{ position: 'relative', borderRadius: isMobile ? 16 : 24, overflow: 'hidden', border: '1px solid #222', width: '100%', height: isMobile ? 380 : 500, background: '#000', boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }}>
           
-          {/* ✅ IMAGE SUR MOBILE, VIDÉO SUR DESKTOP */}
           {!isMobile ? (
             <video autoPlay loop muted playsInline poster="/og-image.jpg" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.4 }}>
               <source src="/videos/hero-video.mp4" type="video/mp4" />
@@ -165,7 +182,9 @@ export const HomePage = () => {
                 Tout voir {Icons.arrowRight}
               </Link>
             </div>
-            <TrackGrid tracks={newReleases} />
+            
+            {/* ✅ PASSAGE DU BLOCAGE À LA TRACKGRID */}
+            <TrackGrid tracks={newReleases} onPlay={handlePlayTrack} />
           </div>
 
           {!isMobile && (

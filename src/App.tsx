@@ -11,9 +11,10 @@ import { WindowsProvider } from './components/WindowsManager';
 import { MainLayout } from './layouts/MainLayout';
 import { PrivateRoute } from './components/PrivateRoute';
 import { PageTransition } from './components/PageTransition';
-import { PremiumGuard } from './components/PremiumGuard'; // ✅ Import
+import { PremiumGuard } from './components/PremiumGuard';
 import './styles.css';
 
+// Lazy loading de toutes les pages
 const HomePage = lazy(() => import('./pages/HomePage').then((m) => ({ default: m.HomePage })));
 const StudioPage = lazy(() => import('./pages/StudioPage').then((m) => ({ default: m.StudioPage })));
 const StemsPage = lazy(() => import('./pages/StemsPage').then((m) => ({ default: m.StemsPage })));
@@ -57,20 +58,16 @@ function AnimatedRoutes() {
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
         
-        {/* PAGES PUBLIQUES */}
+        {/* ✅ PAGES PUBLIQUES (Accessibles sans connexion) */}
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
-        <Route path="/mixer" element={<PrivateRoute><MixerPage /></PrivateRoute>} />
         <Route path="/levon-dinato" element={<LevonDinatoPage />} />
         <Route path="/premium/:username" element={<PremiumPage />} />
 
-        {/* DASHBOARD AVEC LAYOUT */}
-        <Route path="/" element={
-          <PrivateRoute>
-            <MainLayout />
-          </PrivateRoute>
-        }>
-          {/* ✅ PAGES ACCESSIBLES À TOUS */}
+        {/* ✅ LAYOUT PRINCIPAL (Accessible à tous) */}
+        <Route path="/" element={<MainLayout />}>
+          
+          {/* PAGES PUBLIQUES (Lecture et téléchargement bloqués pour non-inscrits) */}
           <Route index element={<PageTransition><HomePage /></PageTransition>} />
           <Route path="feed" element={<PageTransition><FeedPage /></PageTransition>} />
           <Route path="nouveautes" element={<PageTransition><NouveautesPage /></PageTransition>} />
@@ -82,9 +79,8 @@ function AnimatedRoutes() {
           <Route path="profil/:id" element={<PageTransition><ProfilePage /></PageTransition>} />
           <Route path="search" element={<PageTransition><SearchPage /></PageTransition>} />
           <Route path="track/:id" element={<PageTransition><TrackPage /></PageTransition>} />
-          <Route path="admin" element={<PageTransition><AdminPage /></PageTransition>} />
 
-          {/* ✅ PAGES PREMIUM (BLOQUÉES) */}
+          {/* PAGES PREMIUM (Bloquées) */}
           <Route path="tools" element={<PageTransition><PremiumGuard><ToolsPage /></PremiumGuard></PageTransition>} />
           <Route path="settings" element={<PageTransition><PremiumGuard><SettingsPage /></PremiumGuard></PageTransition>} />
           <Route path="ia-videos" element={<PageTransition><PremiumGuard><DropZoneVideosPage /></PremiumGuard></PageTransition>} />
@@ -95,6 +91,10 @@ function AnimatedRoutes() {
           <Route path="generator" element={<PageTransition><PremiumGuard><GeneratorPage /></PremiumGuard></PageTransition>} />
           <Route path="video" element={<PageTransition><PremiumGuard><VideoPage /></PremiumGuard></PageTransition>} />
           <Route path="cdj" element={<PageTransition><PremiumGuard><CDJPage /></PremiumGuard></PageTransition>} />
+
+          {/* ✅ PAGES NÉCESSITANT UNE CONNEXION (pas Premium) */}
+          <Route path="admin" element={<PrivateRoute><PageTransition><AdminPage /></PageTransition></PrivateRoute>} />
+          <Route path="mixer" element={<PrivateRoute><MixerPage /></PrivateRoute>} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

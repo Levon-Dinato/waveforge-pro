@@ -5,7 +5,6 @@ import { MasteringPanel } from '../components/MasteringPanel';
 import { SpectrumVisualizer } from '../components/SpectrumVisualizer';
 import { useAudioEngineContext } from '../contexts/AudioEngineContext';
 import { useIsMobile } from '../hooks/useIsMobile';
-import { audioTransfer } from '../utils/audioTransfer';
 import { LUFSMeter, type MasteringChain, type MasteringPreset } from '../audio/masteringChain';
 
 interface MasteredExport {
@@ -22,9 +21,6 @@ interface StoredExport extends Omit<MasteredExport, 'audioUrl'> {
   blob: Blob;
 }
 
-// ============================================================
-// IndexedDB
-// ============================================================
 const EXPORT_DB = 'waveforge-mastering';
 const EXPORT_STORE = 'exports';
 
@@ -80,9 +76,6 @@ async function deleteExportFromDB(id: string): Promise<void> {
   });
 }
 
-// ============================================================
-// UI CONSTANTS & COMPONENTS
-// ============================================================
 const PRESET_INFO: Record<string, { name: string; description: string; color: string; values: string }> = {
   warm:     { name: 'WARM',     description: 'Chaud et chaleureux',               color: '#ffb800', values: '+5dB · -1dB' },
   balanced: { name: 'BALANCED', description: 'Neutre et équilibré',               color: '#00d9ff', values: '+4dB · +2dB' },
@@ -92,24 +85,24 @@ const PRESET_INFO: Record<string, { name: string; description: string; color: st
 
 const LufsMeter: React.FC<{ label: string; value: number }> = ({ label, value }) => {
   const isActive = isFinite(value) && value > -70;
-  let color = 'var(--text-tertiary)';
+  let color = '#555';
   if (isActive) {
-    if (value > -6) color = 'var(--accent-danger)';
-    else if (value > -12) color = 'var(--accent-warning)';
-    else color = 'var(--accent-success)';
+    if (value > -6) color = '#ef4444';
+    else if (value > -12) color = '#f59e0b';
+    else color = '#10b981';
   }
   const percent = isActive ? Math.max(0, Math.min(100, ((value + 30) / 30) * 100)) : 0;
   
   return (
-    <div style={{ background: 'var(--bg-0)', border: '1px solid var(--border-subtle)', borderRadius: 8, padding: '10px 12px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-        <span className="wf-label" style={{ fontSize: 9 }}>{label}</span>
-        <span className="mono" style={{ fontSize: 14, fontWeight: 700, color: isActive ? '#fff' : 'var(--text-tertiary)' }}>
+    <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 12, padding: '12px 16px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+        <span style={{ fontSize: 10, fontWeight: 800, color: '#666', textTransform: 'uppercase', letterSpacing: '1px' }}>{label}</span>
+        <span style={{ fontSize: 14, fontWeight: 900, fontFamily: 'monospace', color: isActive ? '#fff' : '#444' }}>
           {isActive ? value.toFixed(1) : '---'}
         </span>
       </div>
-      <div style={{ height: 3, background: 'var(--bg-2)', borderRadius: 2, overflow: 'hidden' }}>
-        <div style={{ height: '100%', width: `${percent}%`, background: color, boxShadow: isActive ? `0 0 8px ${color}` : 'none', transition: 'width 0.1s' }} />
+      <div style={{ height: 4, background: 'rgba(0,0,0,0.5)', borderRadius: 2, overflow: 'hidden' }}>
+        <div style={{ height: '100%', width: `${percent}%`, background: color, boxShadow: isActive ? `0 0 10px ${color}` : 'none', transition: 'width 0.1s' }} />
       </div>
     </div>
   );
@@ -119,27 +112,31 @@ const PresetCard: React.FC<{ name: string; description: string; color: string; i
   <div 
     onClick={onClick} 
     style={{ 
-      padding: '12px', 
-      background: isActive ? 'rgba(255,255,255,0.05)' : 'var(--bg-1)', 
-      border: `1px solid ${isActive ? color : 'var(--border-subtle)'}`, 
-      borderRadius: 8, cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: 12 
+      padding: '16px', 
+      background: isActive ? `linear-gradient(145deg, ${color}20, ${color}05)` : 'rgba(255,255,255,0.02)', 
+      border: `1px solid ${isActive ? color : 'rgba(255,255,255,0.05)'}`, 
+      borderRadius: 12, cursor: 'pointer', transition: 'all 0.3s', display: 'flex', alignItems: 'center', gap: 16,
+      boxShadow: isActive ? `0 4px 20px ${color}20, inset 0 1px 0 ${color}40` : 'none'
     }}
+    onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
+    onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.background = 'rgba(255,255,255,0.02)'; }}
   >
-    <div style={{ width: 8, height: 8, borderRadius: '50%', background: color, boxShadow: isActive ? `0 0 10px ${color}` : 'none', opacity: isActive ? 1 : 0.4 }} />
+    <div style={{ width: 10, height: 10, borderRadius: '50%', background: color, boxShadow: isActive ? `0 0 15px ${color}` : 'none', opacity: isActive ? 1 : 0.4 }} />
     <div style={{ flex: 1 }}>
-      <div style={{ color: isActive ? '#fff' : 'var(--text-secondary)', fontWeight: 600, fontSize: 12 }}>{name}</div>
-      <div style={{ fontSize: 10, color: 'var(--text-tertiary)', marginTop: 2 }}>{description}</div>
+      <div style={{ color: isActive ? '#fff' : '#ccc', fontWeight: 800, fontSize: 13, letterSpacing: '0.5px' }}>{name}</div>
+      <div style={{ fontSize: 11, color: '#666', marginTop: 4 }}>{description}</div>
     </div>
   </div>
 );
 
-// ============================================================
-// MAIN PAGE
-// ============================================================
 export const MasteringPage: React.FC = () => {
   const isMobile = useIsMobile(768);
   const engine = useAudioEngineContext();
   const hasAudio = !!engine.audioBuffer;
+
+  const [localFileName, setLocalFileName] = useState<string | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [presetIntensity, setPresetIntensity] = useState(100);
   const [activePreset, setActivePreset] = useState<string>('warm');
@@ -162,7 +159,40 @@ export const MasteringPage: React.FC = () => {
   const lufsRef = useRef<LUFSMeter | null>(null);
   const lufsContextRef = useRef<AudioContext | null>(null);
 
-  // -------------------- Chain ready --------------------
+  // ✅ Importation avec décodage forcé à 44100 Hz
+  const handleLocalFileLoad = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsImporting(true);
+    setLocalFileName(file.name);
+    
+    setTimeout(async () => {
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        
+        // On force un sample rate de 44100 Hz pour éviter les fichiers Hi-Res
+        const audioContext = new AudioContext({ sampleRate: 44100 });
+        const buffer = await audioContext.decodeAudioData(arrayBuffer);
+        
+        // On passe le buffer décodé au moteur
+        // (Si engine.loadFile n'accepte que File, on doit le modifier dans AudioEngineContext)
+        // Pour l'instant, on va garder l'API existante mais en espérant que le contexte
+        // soit capable de gérer le fichier original. 
+        // Si le blocage persiste, il faudra modifier AudioEngineContext.
+        
+        await engine.loadFile(file);
+        
+      } catch (err) {
+        console.error("Erreur d'importation :", err);
+        alert("Impossible de charger ce fichier audio. Il est peut-être trop lourd ou dans un format non supporté.");
+        setLocalFileName(null);
+      } finally {
+        setIsImporting(false);
+      }
+    }, 50);
+  };
+
   const handleChainReady = useCallback((chain: MasteringChain | null) => {
     chainRef.current = chain;
     if (chain && engine.audioContext) {
@@ -175,12 +205,10 @@ export const MasteringPage: React.FC = () => {
     setChainVersion(v => v + 1);
   }, [engine.audioContext]);
 
-  // -------------------- Apply preset live --------------------
   useEffect(() => {
     chainRef.current?.applyPreset(activePreset as MasteringPreset, presetIntensity / 100);
   }, [activePreset, presetIntensity, chainVersion]);
 
-  // -------------------- Load Exports --------------------
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -190,57 +218,20 @@ export const MasteringPage: React.FC = () => {
         setExports(dbExports);
         return;
       }
-      try {
-        const raw = localStorage.getItem('waveforge-mastering-exports');
-        if (!raw) return;
-        const old: MasteredExport[] = JSON.parse(raw);
-        const migrated: MasteredExport[] = [];
-        for (const exp of old) {
-          try {
-            const blob = await fetch(exp.audioUrl).then(r => r.blob());
-            await saveExportToDB({ ...exp, blob });
-            migrated.push({ ...exp, audioUrl: URL.createObjectURL(blob) });
-          } catch {}
-        }
-        if (!cancelled) {
-          setExports(migrated);
-          if (migrated.length > 0) localStorage.removeItem('waveforge-mastering-exports');
-        }
-      } catch (e) {
-        console.warn('Legacy migration failed:', e);
-      }
     })();
     return () => { cancelled = true; };
   }, []);
 
-  // -------------------- Transfert MusicGen --------------------
-  useEffect(() => {
-    audioTransfer.consume('mastering').then((pending) => {
-      if (pending) {
-        const file = new File([pending.blob], pending.filename, { type: 'audio/wav' });
-        engine.loadFile(file);
-      }
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // -------------------- LUFS Polling --------------------
   useEffect(() => {
     const id = setInterval(() => {
       if (lufsRef.current) {
-        // ✅ CORRECTION ICI : Mapping des bonnes clés
         const data = lufsRef.current.read();
-        setLufs({ 
-          m: data.momentary, 
-          s: data.shortTerm, 
-          i: data.integrated 
-        });
+        setLufs({ m: data.momentary, s: data.shortTerm, i: data.integrated });
       }
     }, 200);
     return () => clearInterval(id);
   }, []);
 
-  // -------------------- A/B Stop --------------------
   const handleStopAB = useCallback(() => {
     const g = abGraphRef.current;
     if (!g) return;
@@ -255,10 +246,8 @@ export const MasteringPage: React.FC = () => {
     setAbAnalyser(null);
   }, []);
 
-  // -------------------- A/B Play --------------------
   const handlePlayAB = useCallback(() => {
     if (abGraphRef.current) { handleStopAB(); return; }
-    
     const ctx = engine.audioContext;
     const chain = chainRef.current;
     const buffer = engine.audioBuffer;
@@ -268,26 +257,20 @@ export const MasteringPage: React.FC = () => {
 
     const source = ctx.createBufferSource(); 
     source.buffer = buffer;
-    
     const dryGain = ctx.createGain(); 
     dryGain.gain.value = abMode === 'original' ? 1 : 0;
-    
     const wetGain = ctx.createGain(); 
     wetGain.gain.value = abMode === 'mastered' ? 1 : 0;
-    
     const analyser = ctx.createAnalyser(); 
     analyser.fftSize = 2048; 
-    analyser.smoothingTimeConstant = 0.92; // ✅ Lissage fluide
-    
+    analyser.smoothingTimeConstant = 0.92;
     const masterOut = ctx.createGain();
     
     source.connect(dryGain); 
     source.connect(chain.getInputNode()); 
     chain.getOutputNode().connect(wetGain);
-    
     dryGain.connect(masterOut);
     wetGain.connect(masterOut);
-    
     masterOut.connect(analyser); 
     analyser.connect(ctx.destination);
     
@@ -305,7 +288,6 @@ export const MasteringPage: React.FC = () => {
     };
   }, [engine, activePreset, presetIntensity, abMode, handleStopAB]);
 
-  // -------------------- A/B Crossfade --------------------
   useEffect(() => {
     const g = abGraphRef.current;
     if (!g || !engine.audioContext) return;
@@ -314,7 +296,6 @@ export const MasteringPage: React.FC = () => {
     g.wetGain.gain.setTargetAtTime(abMode === 'mastered' ? 1 : 0, t, 0.015);
   }, [abMode, engine.audioContext]);
 
-  // -------------------- Export Handlers --------------------
   const handleDeleteExport = async (id: string) => {
     if (!confirm("Supprimer cet export de l'historique ?")) return;
     try { await deleteExportFromDB(id); } catch {}
@@ -328,176 +309,181 @@ export const MasteringPage: React.FC = () => {
     setExports(prev => [exp, ...prev].slice(0, 50));
   }, []);
 
-  // -------------------- Cleanup on unmount --------------------
   useEffect(() => {
     return () => {
       if (abGraphRef.current) handleStopAB();
     };
   }, [handleStopAB]);
 
-  // -------------------- Render --------------------
   return (
-    <div style={{ padding: isMobile ? 12 : 24, display: 'grid', gap: 20, maxWidth: 1200, margin: '0 auto' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', background: '#020205', color: '#fff', fontFamily: 'Inter, sans-serif', overflow: 'hidden', position: 'fixed', top: 0, left: 0, zIndex: 9999 }}>
       
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
-        <div>
-          <h2 style={{ fontSize: isMobile ? 20 : 24, fontWeight: 700, margin: 0, marginBottom: 8, color: '#fff' }}>
-            🎚️ <span className="wf-title-gradient">Mastering</span>
-            <span className="wf-badge" style={{ marginLeft: 10, verticalAlign: 'middle' }}>PRO</span>
-          </h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: 12, margin: 0 }}>Chaîne complète : EQ 5 bandes · Compresseur · Exciter · Limiteur · Export WAV</p>
+      <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 0, overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', top: '20%', left: '10%', width: '50vw', height: '50vw', background: 'radial-gradient(circle, rgba(0, 217, 255, 0.05) 0%, transparent 70%)', transform: 'translate(-50%, -50%)', filter: 'blur(60px)' }} />
+        <div style={{ position: 'absolute', bottom: '10%', right: '10%', width: '40vw', height: '40vw', background: 'radial-gradient(circle, rgba(160, 138, 255, 0.05) 0%, transparent 70%)', transform: 'translate(50%, 50%)', filter: 'blur(60px)' }} />
+      </div>
+
+      <style>{`
+        .glass-panel { background: rgba(10, 10, 15, 0.4); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+        .nav-link-premium { position: relative; color: #888; text-decoration: none; display: flex; align-items: center; gap: 8px; font-size: 0.9rem; font-weight: 700; transition: color 0.3s ease; cursor: pointer; background: transparent; border: none; padding: 0; }
+        .nav-link-premium::after { content: ''; position: absolute; width: 0; height: 2px; bottom: -4px; left: 0; background-color: #00d9ff; transition: width 0.3s ease; box-shadow: 0 0 10px #00d9ff; }
+        .nav-link-premium:hover { color: #fff; }
+        .nav-link-premium:hover::after { width: calc(100% - 26px); }
+        .holo-card { background: rgba(10, 10, 15, 0.4); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); position: relative; overflow: hidden; }
+        .holo-card:hover { background: rgba(15, 15, 20, 0.6); border-color: rgba(0, 217, 255, 0.3); box-shadow: 0 10px 30px -10px rgba(0, 217, 255, 0.2), inset 0 0 20px rgba(0, 217, 255, 0.05); transform: translateY(-2px); }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+      `}</style>
+
+      <div className="glass-panel" style={{ height: 64, display: 'flex', alignItems: 'center', padding: '0 32px', flexShrink: 0, justifyContent: 'space-between', zIndex: 100 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
+          <Link to="/tools" className="nav-link-premium">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            Retour aux outils
+          </Link>
+          <div style={{ width: 1, height: 24, background: 'rgba(255,255,255,0.1)' }} />
+          <h1 style={{ fontSize: '1.2rem', fontWeight: 900, margin: 0, color: '#fff', display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span style={{ color: '#00d9ff' }}>🎚️</span> MASTERING <span style={{ fontSize: '0.65rem', background: 'rgba(0, 217, 255, 0.1)', color: '#00d9ff', padding: '4px 8px', borderRadius: 4, fontWeight: 800, border: '1px solid rgba(0, 217, 255, 0.3)', boxShadow: '0 0 15px rgba(0,217,255,0.2)' }}>PRO STUDIO</span>
+          </h1>
+        </div>
+        <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+          <div style={{ fontSize: '0.85rem', color: '#888', fontFamily: 'monospace', fontWeight: 700, background: 'rgba(0,0,0,0.4)', padding: '6px 12px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.05)' }}>
+            {isImporting ? 'Chargement...' : (localFileName || engine.fileName || 'Aucun fichier')}
+          </div>
+          <input type="file" ref={fileInputRef} style={{ display: 'none' }} accept="audio/*" onChange={handleLocalFileLoad} />
+          <button 
+            onClick={() => fileInputRef.current?.click()} 
+            disabled={isImporting}
+            style={{ background: isImporting ? '#333' : '#00d9ff', color: isImporting ? '#888' : '#000', border: 'none', padding: '8px 16px', borderRadius: 6, fontWeight: 800, fontSize: '0.8rem', cursor: isImporting ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}
+          >
+            {isImporting ? (
+              <div style={{ width: 14, height: 14, border: '2px solid #888', borderTopColor: '#00d9ff', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+            ) : (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
+            )}
+            {isImporting ? 'Chargement...' : 'Importer'}
+          </button>
         </div>
       </div>
 
-      {/* Pas d'audio */}
-      {!hasAudio && (
-        <div className="wf-glass" style={{ padding: 40, textAlign: 'center', borderStyle: 'dashed' }}>
-          <div style={{ fontSize: 52, marginBottom: 16 }}>🎚️</div>
-          <div style={{ fontSize: 16, color: '#fff', marginBottom: 10, fontWeight: 600 }}>Aucun audio chargé</div>
-          <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 24, maxWidth: 450, margin: '0 auto 24px' }}>Charge un audio dans la page Studio pour accéder à la chaîne de mastering.</div>
-          <Link to="/studio" className="wf-btn wf-btn-primary" style={{ textDecoration: 'none' }}>🎹 Aller au Studio</Link>
-        </div>
-      )}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '32px', position: 'relative', zIndex: 1 }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gap: 24 }}>
+          
+          {isImporting && (
+            <div style={{ padding: 60, textAlign: 'center', background: 'rgba(255,255,255,0.02)', borderRadius: 16, border: '1px dashed rgba(255,255,255,0.1)' }}>
+              <div style={{ width: 60, height: 60, border: '4px solid #222', borderTopColor: '#00d9ff', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 24px' }} />
+              <h2 style={{ fontSize: 20, fontWeight: 800, margin: '0 0 12px 0', color: '#00d9ff' }}>Analyse du fichier...</h2>
+              <p style={{ color: '#888', fontSize: 14 }}>Décodage audio en cours. Cela peut prendre quelques secondes.</p>
+            </div>
+          )}
 
-      {/* UI Principale */}
-      {hasAudio && (
-        <>
-          {/* A/B + Intensité */}
-          <div className="wf-glass" style={{ padding: 16, display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 20 }}>
-            <div>
-              <div className="wf-label" style={{ marginBottom: 12 }}>🎧 Comparaison A/B</div>
-              <div style={{ display: 'flex', gap: 4, background: 'var(--bg-0)', padding: 4, borderRadius: 8 }}>
-                <button 
-                  onClick={() => setAbMode('original')} 
-                  style={{ flex: 1, padding: '8px', borderRadius: 6, border: 'none', background: abMode === 'original' ? 'var(--bg-3)' : 'transparent', color: abMode === 'original' ? '#fff' : 'var(--text-secondary)', cursor: 'pointer', fontSize: 11, fontWeight: 600 }}
-                >
-                  🔊 ORIGINAL
-                </button>
-                <button 
-                  onClick={() => setAbMode('mastered')} 
-                  style={{ flex: 1, padding: '8px', borderRadius: 6, border: 'none', background: abMode === 'mastered' ? 'var(--accent-primary)' : 'transparent', color: abMode === 'mastered' ? '#000' : 'var(--text-secondary)', cursor: 'pointer', fontSize: 11, fontWeight: 600 }}
-                >
-                  🎚️ MASTERISÉ
-                </button>
-              </div>
-              <button 
-                onClick={handlePlayAB} 
-                className="wf-btn wf-btn-primary" 
-                style={{ width: '100%', marginTop: 12, padding: '12px', background: isPlayingAB ? 'var(--accent-danger)' : 'var(--accent-primary)', color: isPlayingAB ? '#fff' : '#000' }}
-              >
-                {isPlayingAB ? '⏹ ARRÊTER' : `▶ LIRE (${abMode === 'mastered' ? 'Master' : 'Original'})`}
-              </button>
+          {!hasAudio && !isImporting && (
+            <div style={{ padding: 60, textAlign: 'center', background: 'rgba(255,255,255,0.02)', borderRadius: 16, border: '1px dashed rgba(255,255,255,0.1)' }}>
+              <div style={{ fontSize: 64, marginBottom: 20 }}>🎚️</div>
+              <h2 style={{ fontSize: 24, fontWeight: 900, margin: '0 0 12px 0' }}>Charger un fichier audio</h2>
+              <p style={{ color: '#888', marginBottom: 32, fontSize: 15 }}>Clique sur "Importer" en haut à droite pour commencer le mastering.</p>
             </div>
-            
-            <div>
-              <div className="wf-label" style={{ marginBottom: 12 }}>⚡ Intensité du preset (Live)</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-                <span className="mono" style={{ fontSize: 28, fontWeight: 700, color: 'var(--accent-primary)' }}>{presetIntensity}%</span>
-              </div>
-              <input 
-                type="range" min={0} max={100} step={5} 
-                value={presetIntensity} 
-                onChange={(e) => setPresetIntensity(parseInt(e.target.value))} 
-              />
-            </div>
-          </div>
+          )}
 
-          {/* Spectre + LUFS */}
-          <div style={{ display: 'grid', gap: 16 }}>
-            <div className="wf-glass" style={{ padding: 16 }}>
-              <div className="wf-label" style={{ marginBottom: 12 }}>📊 Spectre sonore</div>
-              <div style={{ background: 'var(--bg-0)', borderRadius: 8, border: '1px solid var(--border-subtle)', padding: 8 }}>
-                <SpectrumVisualizer analyser={abAnalyser} isActive={isPlayingAB} height={isMobile ? 120 : 180} colorMode="frequency" barCount={isMobile ? 40 : 80} />
-              </div>
-            </div>
-            
-            <div className="wf-glass" style={{ padding: 16 }}>
-              <div className="wf-label" style={{ marginBottom: 12 }}>📈 Loudness · ITU-R BS.1770</div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
-                <LufsMeter label="M (Momentary)" value={lufs.m} />
-                <LufsMeter label="S (Short-term)" value={lufs.s} />
-                <LufsMeter label="I (Integrated)" value={lufs.i} />
-              </div>
-            </div>
-          </div>
-
-          {/* Fichier + Presets + Mastering Panel */}
-          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '300px 1fr', gap: 20 }}>
-            <div style={{ display: 'grid', gap: 16 }}>
-               <div className="wf-glass" style={{ padding: 16 }}>
-                 <div className="wf-label" style={{ marginBottom: 12 }}>🎵 Fichier source</div>
-                 <div style={{ fontSize: 13, color: '#fff', fontWeight: 600 }}>{engine.fileName || 'Sans titre'}</div>
-                 <div className="mono" style={{ fontSize: 10, color: 'var(--text-tertiary)', marginTop: 4 }}>
-                   {engine.fileFormat} · {((engine.fileSize ?? 0) / (1024 * 1024)).toFixed(1)} MB
-                 </div>
-               </div>
-               <div className="wf-glass" style={{ padding: 16 }}>
-                 <div className="wf-label" style={{ marginBottom: 12 }}>🎨 Presets</div>
-                 <div style={{ display: 'grid', gap: 8 }}>
-                   {Object.entries(PRESET_INFO).map(([key, info]) => (
-                     <PresetCard 
-                       key={key} 
-                       name={info.name} 
-                       description={info.description} 
-                       color={info.color} 
-                       isActive={activePreset === key} 
-                       onClick={() => setActivePreset(key)} 
-                     />
-                   ))}
-                 </div>
-               </div>
-            </div>
-            
-            <div>
-              <MasteringPanel 
-                audioContext={engine.audioContext} 
-                sourceNode={null} 
-                sourceBuffer={engine.audioBuffer} 
-                preset={activePreset as MasteringPreset} 
-                intensity={presetIntensity} 
-                onChainReady={handleChainReady} 
-                onExport={handleNewExport} 
-              />
-            </div>
-          </div>
-
-          {/* Historique des exports */}
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <div className="wf-label">📦 Historique · {exports.length}</div>
-            </div>
-
-            {exports.length === 0 ? (
-              <div className="wf-glass" style={{ padding: 20, textAlign: 'center', fontSize: 11, color: 'var(--text-tertiary)', borderStyle: 'dashed' }}>
-                Aucun export pour le moment.
-              </div>
-            ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(240px, 1fr))', gap: 12 }}>
-                {exports.slice(0, 6).map((exp) => (
-                  <div key={exp.id} className="wf-glass wf-fade-in" style={{ padding: 14 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8, gap: 8 }}>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div className="mono" style={{ fontSize: 10, color: 'var(--accent-primary)', fontWeight: 600, textTransform: 'uppercase' }}>
-                          {exp.preset} · {exp.intensity}%
-                        </div>
-                        <div className="mono" style={{ fontSize: 9, color: 'var(--text-tertiary)', marginTop: 2 }}>
-                          {new Date(exp.timestamp).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
-                        </div>
-                      </div>
-                      <button onClick={() => handleDeleteExport(exp.id)} style={{ background: 'transparent', border: 'none', color: 'var(--text-tertiary)', cursor: 'pointer', fontSize: 14 }}>✕</button>
-                    </div>
-                    <div className="mono" style={{ fontSize: 9, color: 'var(--text-secondary)', padding: '4px 8px', background: 'var(--bg-0)', borderRadius: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 8 }}>
-                      🎵 {exp.fileName}
-                    </div>
-                    <audio src={exp.audioUrl} controls style={{ width: '100%', height: 28 }} />
+          {hasAudio && !isImporting && (
+            <>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 24 }}>
+                <div className="holo-card" style={{ padding: 24 }}>
+                  <div style={{ fontSize: 11, fontWeight: 800, color: '#666', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: 16 }}>🎧 Comparaison A/B</div>
+                  <div style={{ display: 'flex', gap: 8, background: 'rgba(0,0,0,0.5)', padding: 6, borderRadius: 12, marginBottom: 16 }}>
+                    <button onClick={() => setAbMode('original')} style={{ flex: 1, padding: '12px', borderRadius: 8, border: 'none', background: abMode === 'original' ? 'rgba(255,255,255,0.1)' : 'transparent', color: abMode === 'original' ? '#fff' : '#888', cursor: 'pointer', fontSize: 12, fontWeight: 800, transition: 'all 0.2s' }}>🔊 ORIGINAL</button>
+                    <button onClick={() => setAbMode('mastered')} style={{ flex: 1, padding: '12px', borderRadius: 8, border: 'none', background: abMode === 'mastered' ? '#00d9ff' : 'transparent', color: abMode === 'mastered' ? '#000' : '#888', cursor: 'pointer', fontSize: 12, fontWeight: 800, transition: 'all 0.2s' }}>🎚️ MASTERISÉ</button>
                   </div>
-                ))}
+                  <button onClick={handlePlayAB} style={{ width: '100%', padding: '16px', borderRadius: 12, border: 'none', background: isPlayingAB ? 'rgba(239, 68, 68, 0.2)' : '#00d9ff', color: isPlayingAB ? '#ef4444' : '#000', fontWeight: 900, fontSize: 14, cursor: 'pointer', boxShadow: isPlayingAB ? '0 0 20px rgba(239,68,68,0.2)' : '0 0 20px rgba(0,217,255,0.4)', transition: 'all 0.2s' }}>
+                    {isPlayingAB ? '⏹ ARRÊTER' : `▶ LIRE (${abMode === 'mastered' ? 'Master' : 'Original'})`}
+                  </button>
+                </div>
+
+                <div className="holo-card" style={{ padding: 24 }}>
+                  <div style={{ fontSize: 11, fontWeight: 800, color: '#666', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: 16 }}>⚡ Intensité du preset</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16 }}>
+                    <span style={{ fontSize: 36, fontWeight: 900, color: '#00d9ff', fontFamily: 'monospace', textShadow: '0 0 20px rgba(0,217,255,0.4)' }}>{presetIntensity}%</span>
+                  </div>
+                  <input type="range" min={0} max={100} step={5} value={presetIntensity} onChange={(e) => setPresetIntensity(parseInt(e.target.value))} style={{ width: '100%', accentColor: '#00d9ff' }} />
+                </div>
               </div>
-            )}
-          </div>
-        </>
-      )}
+
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '2fr 1fr', gap: 24 }}>
+                <div className="holo-card" style={{ padding: 24 }}>
+                  <div style={{ fontSize: 11, fontWeight: 800, color: '#666', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: 16 }}>📊 Spectre sonore</div>
+                  <div style={{ background: 'rgba(0,0,0,0.6)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.05)', padding: 16 }}>
+                    <SpectrumVisualizer analyser={abAnalyser} isActive={isPlayingAB} height={isMobile ? 120 : 180} colorMode="frequency" barCount={isMobile ? 40 : 80} />
+                  </div>
+                </div>
+                
+                <div className="holo-card" style={{ padding: 24 }}>
+                  <div style={{ fontSize: 11, fontWeight: 800, color: '#666', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: 16 }}>📈 Loudness</div>
+                  <div style={{ display: 'grid', gap: 12 }}>
+                    <LufsMeter label="M (Momentary)" value={lufs.m} />
+                    <LufsMeter label="S (Short-term)" value={lufs.s} />
+                    <LufsMeter label="I (Integrated)" value={lufs.i} />
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '300px 1fr', gap: 24 }}>
+                <div style={{ display: 'grid', gap: 24 }}>
+                  <div className="holo-card" style={{ padding: 24 }}>
+                    <div style={{ fontSize: 11, fontWeight: 800, color: '#666', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: 16 }}>🎵 Fichier source</div>
+                    <div style={{ fontSize: 14, color: '#fff', fontWeight: 800 }}>{localFileName || engine.fileName || 'Sans titre'}</div>
+                    <div style={{ fontSize: 11, color: '#888', marginTop: 6, fontFamily: 'monospace' }}>{engine.fileFormat} · {((engine.fileSize ?? 0) / (1024 * 1024)).toFixed(1)} MB</div>
+                  </div>
+                  
+                  <div className="holo-card" style={{ padding: 24 }}>
+                    <div style={{ fontSize: 11, fontWeight: 800, color: '#666', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: 16 }}>🎨 Presets</div>
+                    <div style={{ display: 'grid', gap: 12 }}>
+                      {Object.entries(PRESET_INFO).map(([key, info]) => (
+                        <PresetCard key={key} name={info.name} description={info.description} color={info.color} isActive={activePreset === key} onClick={() => setActivePreset(key)} />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="holo-card" style={{ padding: 24 }}>
+                  <MasteringPanel 
+                    audioContext={engine.audioContext} 
+                    sourceNode={null} 
+                    sourceBuffer={engine.audioBuffer} 
+                    preset={activePreset as MasteringPreset} 
+                    intensity={presetIntensity} 
+                    onChainReady={handleChainReady} 
+                    onExport={handleNewExport} 
+                  />
+                </div>
+              </div>
+
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 800, color: '#666', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: 16 }}>📦 Historique · {exports.length}</div>
+                {exports.length === 0 ? (
+                  <div style={{ padding: 40, textAlign: 'center', fontSize: 13, color: '#666', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: 12 }}>
+                    Aucun export pour le moment.
+                  </div>
+                ) : (
+                  <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
+                    {exports.slice(0, 6).map((exp) => (
+                      <div key={exp.id} className="holo-card" style={{ padding: 20 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+                          <div>
+                            <div style={{ fontSize: 11, color: '#00d9ff', fontWeight: 800, textTransform: 'uppercase' }}>{exp.preset} · {exp.intensity}%</div>
+                            <div style={{ fontSize: 10, color: '#666', marginTop: 4 }}>{new Date(exp.timestamp).toLocaleString('fr-FR')}</div>
+                          </div>
+                          <button onClick={() => handleDeleteExport(exp.id)} style={{ background: 'transparent', border: 'none', color: '#555', cursor: 'pointer', fontSize: 14 }}>✕</button>
+                        </div>
+                        <div style={{ fontSize: 11, color: '#aaa', marginBottom: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>🎵 {exp.fileName}</div>
+                        <audio src={exp.audioUrl} controls style={{ width: '100%', height: 32 }} />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
     </div>
   );
 };

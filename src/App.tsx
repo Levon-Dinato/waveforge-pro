@@ -12,11 +12,8 @@ import { MainLayout } from './layouts/MainLayout';
 import { PrivateRoute } from './components/PrivateRoute';
 import { PageTransition } from './components/PageTransition';
 import { PremiumGuard } from './components/PremiumGuard';
-// ✅ IMPORT DU COMPOSANT DESKTOP ONLY
-import { DesktopOnly } from './components/DesktopOnly'; 
 import './styles.css';
 
-// Lazy loading de toutes les pages
 const HomePage = lazy(() => import('./pages/HomePage').then((m) => ({ default: m.HomePage })));
 const StudioPage = lazy(() => import('./pages/StudioPage').then((m) => ({ default: m.StudioPage })));
 const StemsPage = lazy(() => import('./pages/StemsPage').then((m) => ({ default: m.StemsPage })));
@@ -60,16 +57,15 @@ function AnimatedRoutes() {
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
         
-        {/* ✅ PAGES PUBLIQUES (Accessibles sans connexion) */}
+        {/* ✅ PAGES PUBLIQUES */}
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/levon-dinato" element={<LevonDinatoPage />} />
         <Route path="/premium/:username" element={<PremiumPage />} />
 
-        {/* ✅ LAYOUT PRINCIPAL — SANS PrivateRoute (accessible à tous) */}
+        {/* ✅ LAYOUT PRINCIPAL (Gère lui-même le plein écran pour /mastering et /cdj) */}
         <Route path="/" element={<MainLayout />}>
           
-          {/* PAGES PUBLIQUES */}
           <Route index element={<PageTransition><HomePage /></PageTransition>} />
           <Route path="feed" element={<PageTransition><FeedPage /></PageTransition>} />
           <Route path="nouveautes" element={<PageTransition><NouveautesPage /></PageTransition>} />
@@ -82,32 +78,20 @@ function AnimatedRoutes() {
           <Route path="search" element={<PageTransition><SearchPage /></PageTransition>} />
           <Route path="track/:id" element={<PageTransition><TrackPage /></PageTransition>} />
 
-          {/* ✅ PAGES PREMIUM (Bloquées par PremiumGuard) */}
           <Route path="tools" element={<PageTransition><PremiumGuard><ToolsPage /></PremiumGuard></PageTransition>} />
           <Route path="settings" element={<PageTransition><PremiumGuard><SettingsPage /></PremiumGuard></PageTransition>} />
           <Route path="ia-videos" element={<PageTransition><PremiumGuard><DropZoneVideosPage /></PremiumGuard></PageTransition>} />
           <Route path="studio" element={<PageTransition><PremiumGuard><StudioPage /></PremiumGuard></PageTransition>} />
           <Route path="stems" element={<PageTransition><PremiumGuard><StemsPage /></PremiumGuard></PageTransition>} />
-          <Route path="mastering" element={<PageTransition><PremiumGuard><MasteringPage /></PremiumGuard></PageTransition>} />
           <Route path="musicgen" element={<PageTransition><PremiumGuard><MusicGenPage /></PremiumGuard></PageTransition>} />
           <Route path="generator" element={<PageTransition><PremiumGuard><GeneratorPage /></PremiumGuard></PageTransition>} />
           <Route path="video" element={<PageTransition><PremiumGuard><VideoPage /></PremiumGuard></PageTransition>} />
-          
-          {/* ✅ OUTIL CDJ (Desktop Only + Premium) */}
-          <Route 
-            path="cdj" 
-            element={
-              <DesktopOnly>
-                <PremiumGuard>
-                  <CDJPage />
-                </PremiumGuard>
-              </DesktopOnly>
-            } 
-          />
 
-          {/* ✅ PAGES NÉCESSITANT UNE CONNEXION (pas Premium) */}
+          {/* ✅ ROUTES PLEIN ÉCRAN (Le MainLayout les reconnaîtra et enlèvera la sidebar) */}
+          <Route path="cdj" element={<PageTransition><PremiumGuard><CDJPage /></PremiumGuard></PageTransition>} />
+          <Route path="mastering" element={<PageTransition><PremiumGuard><MasteringPage /></PremiumGuard></PageTransition>} />
+
           <Route path="admin" element={<PrivateRoute><PageTransition><AdminPage /></PageTransition></PrivateRoute>} />
-          <Route path="mixer" element={<PrivateRoute><MixerPage /></PrivateRoute>} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

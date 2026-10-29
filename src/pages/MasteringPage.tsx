@@ -42,6 +42,7 @@ export const MasteringPage: React.FC = () => {
   const [abAnalyser, setAbAnalyser] = useState<AnalyserNode | null>(null);
   const [lufs, setLufs] = useState({ m: -Infinity, s: -Infinity, i: -Infinity });
   
+  const [gainVal, setGainVal] = useState(50);
   const [widthVal, setWidthVal] = useState(50);
   const [dynVal, setDynVal] = useState(50);
   const [eq, setEq] = useState({ bass: 50, lowMid: 50, mid: 50, highMid: 50, high: 50 });
@@ -98,32 +99,37 @@ export const MasteringPage: React.FC = () => {
     }
   }, [engine.audioContext]);
 
-  // ✅ Application du preset en temps réel
   useEffect(() => {
     if (chainRef.current) {
-      chainRef.current.applyPreset(activePreset as MasteringPreset, presetIntensity / 100);
+      const curvedIntensity = Math.pow(presetIntensity / 100, 2.5);
+      chainRef.current.applyPreset(activePreset as MasteringPreset, curvedIntensity);
     }
   }, [activePreset, presetIntensity]);
 
-  // ✅ Application de l'EQ en temps réel
   useEffect(() => {
     if (!chainRef.current) return;
-    chainRef.current.setEQGain(0, ((eq.bass - 50) / 50) * 4);
-    chainRef.current.setEQGain(1, ((eq.lowMid - 50) / 50) * 4);
-    chainRef.current.setEQGain(2, ((eq.mid - 50) / 50) * 4);
-    chainRef.current.setEQGain(3, ((eq.highMid - 50) / 50) * 4);
-    chainRef.current.setEQGain(4, ((eq.high - 50) / 50) * 4);
+    const gainDb = (gainVal - 50) / 4.16; 
+    chainRef.current.setInputGain(gainDb);
+  }, [gainVal]);
+
+  useEffect(() => {
+    if (!chainRef.current) return;
+    chainRef.current.setEQGain(0, ((eq.bass - 50) / 50) * 6);
+    chainRef.current.setEQGain(1, ((eq.lowMid - 50) / 50) * 6);
+    chainRef.current.setEQGain(2, ((eq.mid - 50) / 50) * 6);
+    chainRef.current.setEQGain(3, ((eq.highMid - 50) / 50) * 6);
+    chainRef.current.setEQGain(4, ((eq.high - 50) / 50) * 6);
   }, [eq]);
 
   useEffect(() => {
     if (!chainRef.current) return;
-    const widthFactor = 0.5 + (widthVal / 100) * 0.6;
+    const widthFactor = 0.5 + (widthVal / 100) * 0.7; 
     chainRef.current.setWidth(widthFactor);
   }, [widthVal]);
 
   useEffect(() => {
     if (!chainRef.current) return;
-    const ratio = 1 + ((dynVal - 50) / 50) * 2;
+    const ratio = 1 + ((dynVal - 50) / 50) * 2; 
     chainRef.current.setCompressor(-12, Math.max(1, ratio), 0.02, 0.25);
   }, [dynVal]);
 
@@ -173,22 +179,24 @@ export const MasteringPage: React.FC = () => {
     let ctx = engine.audioContext;
     const buffer = engine.audioBuffer;
     
-    // ✅ On s'assure que la chaîne existe
     if (!chainRef.current && ctx) {
       chainRef.current = new MasteringChain(ctx);
     }
 
     const chain = chainRef.current;
     
-    if (!ctx || !chain || !buffer) return;
+    if (!ctx || !chain || !buffer) {
+      console.warn("⛔ Contexte audio, chaîne ou buffer manquant.");
+      return;
+    }
 
     try {
       if (ctx.state !== 'running') {
         await ctx.resume();
       }
 
-      // On applique le preset actuel avant de lancer
-      chain.applyPreset(activePreset as MasteringPreset, presetIntensity / 100);
+      const curvedIntensity = Math.pow(presetIntensity / 100, 2.5);
+      chain.applyPreset(activePreset as MasteringPreset, curvedIntensity);
       
       const source = ctx.createBufferSource(); 
       source.buffer = buffer;
@@ -198,9 +206,8 @@ export const MasteringPage: React.FC = () => {
       const analyser = ctx.createAnalyser(); analyser.fftSize = 2048; analyser.smoothingTimeConstant = 0.92;
       const masterOut = ctx.createGain();
       
-      // ✅ CONNEXIONS : Le son passe par la chaîne si Masterisé
-      source.connect(dryGain); // Chemin direct (Original)
-      source.connect(chain.getInputNode()); // Chemin traité (Masterisé)
+      source.connect(dryGain); 
+      source.connect(chain.getInputNode()); 
       chain.getOutputNode().connect(wetGain);
       
       dryGain.connect(masterOut); 
@@ -305,7 +312,7 @@ export const MasteringPage: React.FC = () => {
 
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         
-        <div style={{ width: 260, background: '#08080a', borderRight: '1px solid rgba(255,255,255,0.05)', padding: 20, display: 'flex', flexDirection: 'column', gap: 20, overflowY: 'auto', flexShrink: 0 }}>
+        <div style={{ width: 320, background: '#08080a', borderRight: '1px solid rgba(255,255,255,0.05)', padding: 20, display: 'flex', flexDirection: 'column', gap: 20, overflowY: 'auto', flexShrink: 0 }}>
           
           <div style={{ background: 'rgba(255,255,255,0.02)', padding: 12, borderRadius: 8, border: '1px solid rgba(255,255,255,0.05)' }}>
             <div style={{ fontSize: 9, color: '#555', fontWeight: 800, letterSpacing: '1px', marginBottom: 4 }}>FICHIER SOURCE</div>
@@ -400,7 +407,7 @@ export const MasteringPage: React.FC = () => {
                 <div key={band.key}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: '#888', marginBottom: 8 }}>
                     <span style={{ fontWeight: 800, color: '#fff' }}>{band.label}</span>
-                    <span>{eq[band.key as keyof typeof eq] > 50 ? '+' : ''}{((eq[band.key as keyof typeof eq] - 50) / 50 * 4).toFixed(1)} dB</span>
+                    <span>{eq[band.key as keyof typeof eq] > 50 ? '+' : ''}{((eq[band.key as keyof typeof eq] - 50) / 50 * 6).toFixed(1)} dB</span>
                   </div>
                   <input type="range" min="0" max="100" step="1" value={eq[band.key as keyof typeof eq]} onChange={(e) => setEq({ ...eq, [band.key]: Number(e.target.value) })} className="eq-slider" />
                   <div style={{ fontSize: 9, color: '#444', marginTop: 4 }}>{band.freq}</div>
@@ -411,9 +418,13 @@ export const MasteringPage: React.FC = () => {
 
         </div>
 
-        <div style={{ width: 240, background: '#08080a', borderLeft: '1px solid rgba(255,255,255,0.05)', padding: 20, display: 'flex', flexDirection: 'column', gap: 20, overflowY: 'auto', flexShrink: 0 }}>
+        <div style={{ width: 260, background: '#08080a', borderLeft: '1px solid rgba(255,255,255,0.05)', padding: 20, display: 'flex', flexDirection: 'column', gap: 20, overflowY: 'auto', flexShrink: 0 }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
+            
+            <Knob value={gainVal} onChange={setGainVal} label="GAIN" color="#ff5cf0" size={70} />
+
             <Knob value={presetIntensity} onChange={setPresetIntensity} label="INTENSITÉ" color="#ffb800" size={100} />
+            
             <div style={{ display: 'flex', gap: 12 }}>
               <Knob value={widthVal} onChange={setWidthVal} label="WIDTH" color="#00d9ff" size={60} />
               <Knob value={dynVal} onChange={setDynVal} label="DYNAMIQUE" color="#a08aff" size={60} />
@@ -430,23 +441,28 @@ export const MasteringPage: React.FC = () => {
   );
 };
 
+// ✅ FONCTIONS DE CONVERSION WAV AJOUTÉES ICI POUR CORRIGER L'ERREUR
 function audioBufferToWav(buffer: AudioBuffer): Blob {
   const numChannels = buffer.numberOfChannels;
   const sampleRate = buffer.sampleRate;
-  const format = 1;
+  const format = 1; // PCM
   const bitDepth = 16;
+  
   let result;
   if (numChannels === 2) {
     result = interleave(buffer.getChannelData(0), buffer.getChannelData(1));
   } else {
     result = buffer.getChannelData(0);
   }
+
   return encodeWAV(result, format, sampleRate, numChannels, bitDepth);
 }
+
 function interleave(inputL: Float32Array, inputR: Float32Array): Float32Array {
   const length = inputL.length + inputR.length;
   const result = new Float32Array(length);
-  let index = 0, inputIndex = 0;
+  let index = 0;
+  let inputIndex = 0;
   while (index < length) {
     result[index++] = inputL[inputIndex];
     result[index++] = inputR[inputIndex];
@@ -454,11 +470,13 @@ function interleave(inputL: Float32Array, inputR: Float32Array): Float32Array {
   }
   return result;
 }
+
 function encodeWAV(samples: Float32Array, format: number, sampleRate: number, numChannels: number, bitDepth: number): Blob {
   const bytesPerSample = bitDepth / 8;
   const blockAlign = numChannels * bytesPerSample;
   const buffer = new ArrayBuffer(44 + samples.length * bytesPerSample);
   const view = new DataView(buffer);
+
   writeString(view, 0, 'RIFF');
   view.setUint32(4, 36 + samples.length * bytesPerSample, true);
   writeString(view, 8, 'WAVE');
@@ -472,15 +490,18 @@ function encodeWAV(samples: Float32Array, format: number, sampleRate: number, nu
   view.setUint16(34, bitDepth, true);
   writeString(view, 36, 'data');
   view.setUint32(40, samples.length * bytesPerSample, true);
+
   floatTo16BitPCM(view, 44, samples);
   return new Blob([view], { type: 'audio/wav' });
 }
+
 function floatTo16BitPCM(output: DataView, offset: number, input: Float32Array) {
   for (let i = 0; i < input.length; i++, offset += 2) {
     const s = Math.max(-1, Math.min(1, input[i]));
     output.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
   }
 }
+
 function writeString(view: DataView, offset: number, string: string) {
   for (let i = 0; i < string.length; i++) {
     view.setUint8(offset + i, string.charCodeAt(i));

@@ -12,6 +12,8 @@ import { MainLayout } from './layouts/MainLayout';
 import { PrivateRoute } from './components/PrivateRoute';
 import { PageTransition } from './components/PageTransition';
 import { PremiumGuard } from './components/PremiumGuard';
+// ✅ IMPORT DU COMPOSANT DESKTOP ONLY
+import { DesktopOnly } from './components/DesktopOnly'; 
 import './styles.css';
 
 // Lazy loading de toutes les pages
@@ -22,7 +24,7 @@ const MasteringPage = lazy(() => import('./pages/MasteringPage').then((m) => ({ 
 const MusicGenPage = lazy(() => import('./pages/MusicGenPage').then((m) => ({ default: m.MusicGenPage })));
 const GeneratorPage = lazy(() => import('./pages/GeneratorPage').then((m) => ({ default: m.GeneratorPage })));
 const VideoPage = lazy(() => import('./pages/VideoPage').then((m) => ({ default: m.VideoPage })));
-const CDJPage = lazy(() => import('./pages/CDJPage').then((m) => ({ default: m.CDJPage })));
+const CDJPage = lazy(() => import('./pages/Edge Function').then((m) => ({ default: m.CDJPage })));
 const HelpPage = lazy(() => import('./pages/HelpPage').then((m) => ({ default: m.HelpPage })));
 const SettingsPage = lazy(() => import('./pages/SettingsPage').then((m) => ({ default: m.SettingsPage })));
 const NouveautesPage = lazy(() => import('./pages/NouveautesPage').then((m) => ({ default: m.NouveautesPage })));
@@ -67,7 +69,7 @@ function AnimatedRoutes() {
         {/* ✅ LAYOUT PRINCIPAL — SANS PrivateRoute (accessible à tous) */}
         <Route path="/" element={<MainLayout />}>
           
-          {/* PAGES PUBLIQUES (Lecture et téléchargement bloqués pour non-inscrits) */}
+          {/* PAGES PUBLIQUES */}
           <Route index element={<PageTransition><HomePage /></PageTransition>} />
           <Route path="feed" element={<PageTransition><FeedPage /></PageTransition>} />
           <Route path="nouveautes" element={<PageTransition><NouveautesPage /></PageTransition>} />
@@ -90,7 +92,18 @@ function AnimatedRoutes() {
           <Route path="musicgen" element={<PageTransition><PremiumGuard><MusicGenPage /></PremiumGuard></PageTransition>} />
           <Route path="generator" element={<PageTransition><PremiumGuard><GeneratorPage /></PremiumGuard></PageTransition>} />
           <Route path="video" element={<PageTransition><PremiumGuard><VideoPage /></PremiumGuard></PageTransition>} />
-          <Route path="cdj" element={<PageTransition><PremiumGuard><CDJPage /></PremiumGuard></PageTransition>} />
+          
+          {/* ✅ OUTIL CDJ (Desktop Only + Premium) */}
+          <Route 
+            path="cdj" 
+            element={
+              <DesktopOnly>
+                <PremiumGuard>
+                  <CDJPage />
+                </PremiumGuard>
+              </DesktopOnly>
+            } 
+          />
 
           {/* ✅ PAGES NÉCESSITANT UNE CONNEXION (pas Premium) */}
           <Route path="admin" element={<PrivateRoute><PageTransition><AdminPage /></PageTransition></PrivateRoute>} />

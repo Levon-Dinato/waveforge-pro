@@ -1,4 +1,4 @@
-// src/pages/CDJPage.tsx
+// src/pages/Edge Function.tsx
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
@@ -80,7 +80,6 @@ export const CDJPage: React.FC = () => {
     fetchLibrary();
   }, [user]);
 
-  // ✅ ALGORITHME DE DÉTECTION BASÉ SUR LE BPM
   const detectSmartCuePoints = (peaks: number[], duration: number, bpm: number) => {
     const cuePoints = [];
     const colors = ['#00d9ff', '#a08aff', '#f59e0b', '#ef4444', '#10b981', '#f43f5e', '#8b5cf6', '#eab308'];
@@ -212,7 +211,6 @@ export const CDJPage: React.FC = () => {
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
   };
 
-  // ✅ FONCTION EXPORT (FICHE EXPLICATIVE)
   const exportCuePoints = () => {
     if (!activeTrack || !activeTrack.cuePoints) return;
     
@@ -337,7 +335,7 @@ export const CDJPage: React.FC = () => {
         <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
           <button onClick={exportCuePoints} style={{ background: 'rgba(0, 217, 255, 0.1)', border: '1px solid #00d9ff', color: '#00d9ff', padding: '8px 16px', borderRadius: 8, fontWeight: 800, fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, transition: 'all 0.2s' }} onMouseEnter={(e) => { e.currentTarget.style.background = '#00d9ff'; e.currentTarget.style.color = '#000'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(0, 217, 255, 0.1)'; e.currentTarget.style.color = '#00d9ff'; }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-            Exporter les Cue Points
+            Fiche Cue Points
           </button>
           <div style={{ position: 'relative' }}>
             <svg style={{ position: 'absolute', left: 12, top: 10, color: '#666' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>

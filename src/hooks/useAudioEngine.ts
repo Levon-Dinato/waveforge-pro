@@ -1,7 +1,6 @@
+// src/hooks/useAudioEngine.ts
 import { useRef, useState, useCallback, useMemo } from 'react';
 import * as Tone from 'tone';
-import { analyzePolyphonic } from '../audio/basicPitchEngine';
-import { detectBPMPro } from '../audio/bpmDetectorPro';
 import { splitTracks } from '../audio/noteSplitter';
 import { quantizeNotes } from '../audio/quantizer';
 import type { DetectedNote, AnalysisResult, EngineSettings } from '../types';
@@ -34,11 +33,11 @@ export function useAudioEngine() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [settings, setSettings] = useState<EngineSettings>(DEFAULT_SETTINGS);
-  const [sourceFile, setSourceFile] = useState<File | null>(null);
+  const [sourceFile] = useState<File | null>(null);
 
-  const [fileName, setFileName] = useState<string>('');
-  const [fileSize, setFileSize] = useState<number>(0);
-  const [fileFormat, setFileFormat] = useState<string>('');
+  const [fileName] = useState<string>('');
+  const [fileSize] = useState<number>(0);
+  const [fileFormat] = useState<string>('');
 
   const audioContext = useMemo(
     () => (Tone.getContext().rawContext as AudioContext) || null,
@@ -77,14 +76,6 @@ export function useAudioEngine() {
       setResult(null);
       setRawNotes([]);
 
-      setSourceFile(file);
-      setFileName(file.name);
-      setFileSize(file.size);
-      const ext = file.name.split('.').pop()?.toUpperCase() ?? '';
-      setFileFormat(ext);
-
-      const startTime = performance.now();
-
       try {
         const buf = await file.arrayBuffer();
         const ctx = Tone.getContext().rawContext as AudioContext;
@@ -93,31 +84,13 @@ export function useAudioEngine() {
 
         console.log(`📥 Audio chargé : ${audioBuffer.duration.toFixed(2)}s @ ${audioBuffer.sampleRate} Hz`);
 
-        // 🥁 BPM
-        const bpmResult = await detectBPMPro(audioBuffer);
-        const bpm = bpmResult.bpm;
-        console.log(`🥁 BPM détecté : ${bpm} BPM (confiance ${(bpmResult.confidence * 100).toFixed(0)}%)`);
+        // ✅ DÉSACTIVÉ : On n'analyse plus localement (c'est Render qui gère)
+        // On simule un BPM pour que l'interface ne plante pas
+        const bpm = 128;
 
-        // ✅ Analyse avec progression
-        console.log(`🎼 Analyse en cours sur ${audioBuffer.duration.toFixed(1)}s...`);
-        
-        const notes = await analyzePolyphonic(
-          audioBuffer, 
-          settings.sensitivity,
-          (progress) => {
-            // Affiche la progression dans la console tous les 20%
-            if (Math.round(progress * 100) % 20 === 0) {
-              console.log(`⏳ Progression : ${Math.round(progress * 100)}%`);
-            }
-          }
-        );
-
-        const elapsed = ((performance.now() - startTime) / 1000).toFixed(2);
-        console.log(`⚡ Analyse terminée en ${elapsed}s (${notes.length} notes)`);
-
-        setRawNotes(notes);
+        setRawNotes([]); // Pas de notes MIDI locales
         setResult({
-          notes,
+          notes: [],
           duration: audioBuffer.duration,
           sampleRate: audioBuffer.sampleRate,
           bpm,
@@ -129,7 +102,7 @@ export function useAudioEngine() {
         setIsAnalyzing(false);
       }
     },
-    [settings.sensitivity]
+    []
   );
 
   const loadNotesFromBuffer = useCallback((notes: DetectedNote[]) => {

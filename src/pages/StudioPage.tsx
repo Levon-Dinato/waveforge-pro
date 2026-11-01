@@ -111,17 +111,18 @@ export const StudioPage: React.FC = () => {
 
   // ✅ 5. EXPORT MIDI
   const handleExportMidi = () => {
-    if (!detectedNotes || detectedNotes.length === 0) {
-      alert("Aucune note à exporter.");
-      return;
-    }
-    try {
-      const blob = exportMidi(detectedNotes, 120);
-      download(blob, `${activeTrack?.title || 'export'}_midi.mid`);
-    } catch (error) {
-      console.error("Erreur MIDI:", error);
-    }
-  };
+  if (!detectedNotes || detectedNotes.length === 0) {
+    alert("Aucune note à exporter.");
+    return;
+  }
+  try {
+    // ✅ Utilise ton exportateur Pro qui gère les pistes (Melody, Bass, Drums)
+    const blob = exportMidi(detectedNotes, 120); // 120 BPM par défaut
+    download(blob, `${activeTrack?.title || 'export'}_midi.mid`);
+  } catch (error) {
+    console.error("Erreur MIDI:", error);
+  }
+};
 
   // ✅ 6. CALCUL DES NOTES
   const trackCounts = useMemo(() => {

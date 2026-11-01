@@ -6,7 +6,6 @@ import audioDecode from 'audio-decode';
 
 const app = express();
 
-// ✅ CORS blindé pour accepter les requêtes de Vercel
 app.use(cors({
   origin: '*',
   methods: ['GET', 'POST', 'OPTIONS'],
@@ -16,20 +15,38 @@ app.options('*', cors());
 
 const upload = multer({ storage: multer.memoryStorage() });
 
+// ✅ Rééchantillonnage (44100 -> 22050 Hz pour l'IA)
+function resampleAudioBuffer(audioBuffer, targetSampleRate = 22050) {
+  if (audioBuffer.sampleRate === targetSampleRate) return audioBuffer;
+  const ratio = audioBuffer.sampleRate / targetSampleRate;
+  const newLength = Math.floor(audioBuffer.length / ratio);
+  const channelData = audioBuffer.getChannelData(0);
+  const resampledData = new Float32Array(newLength);
+
+  for (let i = 0; i < newLength; i++) {
+    resampledData[i] = channelData[Math.floor(i * ratio)];
+  }
+
+  return {
+    sampleRate: targetSampleRate,
+    length: newLength,
+    duration: newLength / targetSampleRate,
+    numberOfChannels: 1,
+    getChannelData: () => resampledData,
+  };
+}
+
 app.post('/analyze-audio', upload.single('audio'), async (req, res) => {
   try {
-    console.log("Requête reçue ! Taille du fichier :", req.file?.size);
-    
     if (!req.file) return res.status(400).json({ error: 'Aucun fichier fourni.' });
 
     const basicPitch = new BasicPitch('https://cdn.jsdelivr.net/npm/@spotify/basic-pitch/model/model.json');
     
-    // ✅ Conversion du Buffer en Uint8Array pour audio-decode
     const uint8Array = new Uint8Array(req.file.buffer);
-    const audioBuffer = await audioDecode(uint8Array);
+    const decodedBuffer = await audioDecode(uint8Array);
+    const audioBuffer = resampleAudioBuffer(decodedBuffer, 22050);
     
-    console.log("Audio décodé, durée :", audioBuffer.duration);
-    console.log("Lancement de l'analyse Basic Pitch (cela peut prendre du temps)...");
+    console.log("Analyse de l'audio (durée :", audioBuffer.duration, "s)...");
 
     const frames = [];
     const onsets = [];
@@ -38,24 +55,28 @@ app.post('/analyze-audio', upload.single('audio'), async (req, res) => {
     await basicPitch.evaluateModel(
       audioBuffer,
       (f, o, c) => { frames.push(...f); onsets.push(...o); contours.push(...c); },
-      (percent) => {
-         // Optionnel : console.log(`Progression : ${Math.round(percent * 100)}%`);
-      }
+      (percent) => {}
     );
-
-    console.log("Analyse terminée, formatage des notes...");
 
     const notes = outputToNotesPoly(frames, onsets, 0.5, 0.5, true);
     
-    const formattedNotes = notes.map(n => ({
-      midi: Math.round(n.pitchMidi),
-      start: n.startTimeSeconds,
-      duration: n.durationSeconds,
-      velocity: Math.round(n.amplitude * 127),
-      confidence: n.confidence || 0.8,
-      track: n.pitchMidi < 48 ? 'bass' : (n.pitchMidi > 60 ? 'lead' : 'harmony')
-    }));
+    // ✅ FORMATAGE "PRO" DES NOTES POUR TON FRONT-END
+    const formattedNotes = notes.map(n => {
+      let track = 'lead';
+      if (n.pitchMidi < 48) track = 'bass';       // Notes graves = Basse
+      else if (n.pitchMidi < 60) track = 'harmony'; // Notes médiums = Accords/Harmonie
+      
+      return {
+        midi: Math.round(n.pitchMidi),
+        start: n.startTimeSeconds,
+        duration: Math.max(0.05, n.durationSeconds), // Durée min pour éviter les notes invisibles
+        velocity: Math.max(1, Math.round(n.amplitude * 127)), // Vélocité 1-127
+        confidence: n.confidence || 0.8,
+        track: track
+      };
+    });
 
+    console.log("Analyse terminée :", formattedNotes.length, "notes détectées.");
     res.json({ notes: formattedNotes, duration: audioBuffer.duration });
 
   } catch (error) {

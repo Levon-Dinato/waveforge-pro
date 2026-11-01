@@ -3,10 +3,14 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase, AUDIO_BUCKET } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext'; // ✅ IMPORT DU THEME
 import { PayPalButton } from '../components/PayPalButton';
 
 export const SettingsPage: React.FC = () => {
   const { user } = useAuth();
+  const { theme } = useTheme(); // ✅ RÉCUPÉRATION DU THÈME
+  const isDark = theme === 'dark';
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
@@ -69,6 +73,21 @@ export const SettingsPage: React.FC = () => {
       { title: 'Liberté Créative', desc: 'Un espace pensé pour vous. Uploadez vos tracks, personnalisez votre page, et gardez le contrôle total sur votre art.' },
     ]
   });
+
+  // ✅ PALETTE DE COULEURS DYNAMIQUES
+  const colors = {
+    bg: isDark ? '#0a0a0a' : '#f5f5f7',
+    panelBg: isDark ? '#121212' : '#ffffff',
+    inputBg: isDark ? '#0a0a0a' : '#f3f4f6',
+    border: isDark ? '#222222' : '#e5e7eb',
+    borderLight: isDark ? '#333333' : '#d1d5db',
+    textMain: isDark ? '#ffffff' : '#1a1a1a',
+    textMuted: isDark ? '#888888' : '#666666',
+    textLight: isDark ? '#aaaaaa' : '#444444',
+    primaryBg: isDark ? '#ffffff' : '#1a1a1a',
+    primaryText: isDark ? '#000000' : '#ffffff',
+    inputBgCustom: isDark ? '#0a0a0a' : '#f3f4f6',
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -146,7 +165,7 @@ export const SettingsPage: React.FC = () => {
       const fileName = `${user.id}/background-video-${Date.now()}.${file.name.split('.').pop()}`;
       const { error: uploadError } = await supabase.storage.from('media').upload(fileName, file);
       if (uploadError) throw uploadError;
-      const { data } = await supabase.storage.from('media').getPublicUrl(fileName);
+      const { data } = supabase.storage.from('media').getPublicUrl(fileName);
       setForm(prev => ({ ...prev, background_video_url: data.publicUrl }));
       alert("Vidéo uploadée avec succès ! ✅");
     } catch (error: any) {
@@ -164,7 +183,7 @@ export const SettingsPage: React.FC = () => {
       const fileName = `${user.id}/player-bg-${Date.now()}.${file.name.split('.').pop()}`;
       const { error: uploadError } = await supabase.storage.from('media').upload(fileName, file);
       if (uploadError) throw uploadError;
-      const { data } = await supabase.storage.from('media').getPublicUrl(fileName);
+      const { data } = supabase.storage.from('media').getPublicUrl(fileName);
       setEditTrackForm(prev => ({ ...prev, player_bg_image_url: data.publicUrl }));
     } catch (error: any) {
       alert("Erreur d'upload : " + error.message);
@@ -433,18 +452,18 @@ export const SettingsPage: React.FC = () => {
     }
   };
 
-  if (loading) return <div style={{ padding: 40, color: '#fff', textAlign: 'center' }}>Chargement...</div>;
+  if (loading) return <div style={{ padding: 40, color: colors.textMain, textAlign: 'center', background: colors.bg, minHeight: '100vh' }}>Chargement...</div>;
 
   if (!isPremium) {
     return (
-      <div style={{ maxWidth: 800, margin: '0 auto', padding: '60px 20px', color: '#fff', fontFamily: 'Inter, sans-serif', display: 'flex', justifyContent: 'center' }}>
-        <div style={{ background: 'linear-gradient(145deg, rgba(13, 22, 33, 0.95), rgba(6, 13, 20, 0.95))', border: '1px solid rgba(0, 217, 255, 0.3)', borderRadius: 24, padding: '50px 40px', textAlign: 'center', maxWidth: 600, boxShadow: '0 20px 50px rgba(0,0,0,0.5), 0 0 40px rgba(0,217,255,0.1)' }}>
+      <div style={{ maxWidth: 800, margin: '0 auto', padding: '60px 20px', color: colors.textMain, fontFamily: 'Inter, sans-serif', display: 'flex', justifyContent: 'center', background: colors.bg, minHeight: '100vh' }}>
+        <div style={{ background: isDark ? 'linear-gradient(145deg, rgba(13, 22, 33, 0.95), rgba(6, 13, 20, 0.95))' : 'linear-gradient(145deg, #ffffff, #f0f0f0)', border: '1px solid rgba(0, 217, 255, 0.3)', borderRadius: 24, padding: '50px 40px', textAlign: 'center', maxWidth: 600, boxShadow: isDark ? '0 20px 50px rgba(0,0,0,0.5), 0 0 40px rgba(0,217,255,0.1)' : '0 10px 30px rgba(0,0,0,0.05)' }}>
           <div style={{ fontSize: 50, marginBottom: 20 }}>✨</div>
           <h1 style={{ fontSize: 32, fontWeight: 900, marginBottom: 16 }}>Passez à la vitesse supérieure</h1>
-          <p style={{ color: '#8c9f98', fontSize: 16, lineHeight: 1.6, marginBottom: 30 }}>La personnalisation de votre page et la gestion de votre musique sont réservées aux membres <strong>Premium</strong>.</p>
+          <p style={{ color: colors.textMuted, fontSize: 16, lineHeight: 1.6, marginBottom: 30 }}>La personnalisation de votre page et la gestion de votre musique sont réservées aux membres <strong>Premium</strong>.</p>
           <div style={{ background: 'rgba(0, 217, 255, 0.1)', border: '1px solid rgba(0, 217, 255, 0.3)', borderRadius: 12, padding: '16px', marginBottom: 24 }}>
             <div style={{ fontSize: 26, fontWeight: 900, color: '#00d9ff', marginBottom: 4 }}>30 € / an</div>
-            <div style={{ fontSize: 14, color: '#fff', fontWeight: 600 }}>Abonnement annuel DropZone Premium</div>
+            <div style={{ fontSize: 14, color: colors.textMain, fontWeight: 600 }}>Abonnement annuel DropZone Premium</div>
           </div>
           <div style={{ background: '#fff', borderRadius: 8, padding: '10px', display: 'inline-block', minWidth: '250px' }}>
             <PayPalButton />
@@ -460,7 +479,7 @@ export const SettingsPage: React.FC = () => {
   const totalPages = Math.ceil(myTracks.length / tracksPerPage);
 
   return (
-    <div style={{ maxWidth: 800, margin: '0 auto', padding: '40px 20px', color: '#fff', fontFamily: 'Inter, sans-serif' }}>
+    <div style={{ maxWidth: 800, margin: '0 auto', padding: '40px 20px', color: colors.textMain, fontFamily: 'Inter, sans-serif', background: colors.bg, minHeight: '100vh', transition: 'background 0.3s ease' }}>
       
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16, marginBottom: 10 }}>
         <h1 style={{ fontSize: 32, fontWeight: 800, margin: 0 }}>
@@ -471,55 +490,55 @@ export const SettingsPage: React.FC = () => {
         )}
       </div>
       
-      <p style={{ color: '#888', marginBottom: 30 }}>Gère ton identité, ta musique, tes photos et les modules de ta page.</p>
+      <p style={{ color: colors.textMuted, marginBottom: 30 }}>Gère ton identité, ta musique, tes photos et les modules de ta page.</p>
 
       {message && <div style={{ padding: 16, background: 'rgba(0,217,255,0.1)', border: '1px solid #00d9ff', borderRadius: 8, marginBottom: 24, color: '#00d9ff' }}>{message}</div>}
 
-            <div style={{ background: '#121212', padding: 24, borderRadius: 12, border: '1px solid #222', marginBottom: 24 }}>
-        <h2 style={{ fontSize: 18, color: '#fff', margin: '0 0 20px 0' }}>🎛️ Modules de la page Premium</h2>
+      <div style={{ background: colors.panelBg, padding: 24, borderRadius: 12, border: `1px solid ${colors.border}`, marginBottom: 24 }}>
+        <h2 style={{ fontSize: 18, color: colors.textMain, margin: '0 0 20px 0' }}>🎛️ Modules de la page Premium</h2>
         
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
             <div style={{ flex: 1, minWidth: 200 }}>
-              <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>Titre "Bio"</label>
-              <input type="text" value={settings.duo_title} onChange={(e) => setSettings({...settings, duo_title: e.target.value})} style={{ width: '100%', padding: 10, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+              <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6 }}>Titre "Bio"</label>
+              <input type="text" value={settings.duo_title} onChange={(e) => setSettings({...settings, duo_title: e.target.value})} style={{ width: '100%', padding: 10, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, color: colors.textMain }} />
             </div>
             <div style={{ flex: 1, minWidth: 200 }}>
-              <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>Titre "Parcours"</label>
-              <input type="text" value={settings.prestations_title} onChange={(e) => setSettings({...settings, prestations_title: e.target.value})} style={{ width: '100%', padding: 10, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+              <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6 }}>Titre "Parcours"</label>
+              <input type="text" value={settings.prestations_title} onChange={(e) => setSettings({...settings, prestations_title: e.target.value})} style={{ width: '100%', padding: 10, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, color: colors.textMain }} />
             </div>
             <div style={{ flex: 1, minWidth: 200 }}>
-              <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>Titre "Releases"</label>
-              <input type="text" value={settings.releases_title} onChange={(e) => setSettings({...settings, releases_title: e.target.value})} style={{ width: '100%', padding: 10, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+              <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6 }}>Titre "Releases"</label>
+              <input type="text" value={settings.releases_title} onChange={(e) => setSettings({...settings, releases_title: e.target.value})} style={{ width: '100%', padding: 10, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, color: colors.textMain }} />
             </div>
           </div>
 
-          <div style={{ marginTop: 12, padding: 16, background: '#0a0a0a', borderRadius: 8, border: '1px solid #222', display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <h3 style={{ fontSize: 14, color: '#fff', margin: 0 }}>Contenu du Parcours</h3>
+          <div style={{ marginTop: 12, padding: 16, background: colors.inputBg, borderRadius: 8, border: `1px solid ${colors.border}`, display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <h3 style={{ fontSize: 14, color: colors.textMain, margin: 0 }}>Contenu du Parcours</h3>
             <div>
-              <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>Titre principal</label>
-              <input type="text" value={settings.parcours_title || ''} onChange={(e) => setSettings({...settings, parcours_title: e.target.value})} style={{ width: '100%', padding: 10, background: '#121212', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+              <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6 }}>Titre principal</label>
+              <input type="text" value={settings.parcours_title || ''} onChange={(e) => setSettings({...settings, parcours_title: e.target.value})} style={{ width: '100%', padding: 10, background: colors.panelBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, color: colors.textMain }} />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>Sous-titre (en gras)</label>
-              <input type="text" value={settings.parcours_subtitle || ''} onChange={(e) => setSettings({...settings, parcours_subtitle: e.target.value})} style={{ width: '100%', padding: 10, background: '#121212', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+              <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6 }}>Sous-titre (en gras)</label>
+              <input type="text" value={settings.parcours_subtitle || ''} onChange={(e) => setSettings({...settings, parcours_subtitle: e.target.value})} style={{ width: '100%', padding: 10, background: colors.panelBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, color: colors.textMain }} />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>Description</label>
-              <textarea value={settings.parcours_description || ''} onChange={(e) => setSettings({...settings, parcours_description: e.target.value})} rows={4} style={{ width: '100%', padding: 10, background: '#121212', border: '1px solid #333', borderRadius: 8, color: '#fff', resize: 'vertical' }} />
+              <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6 }}>Description</label>
+              <textarea value={settings.parcours_description || ''} onChange={(e) => setSettings({...settings, parcours_description: e.target.value})} rows={4} style={{ width: '100%', padding: 10, background: colors.panelBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, color: colors.textMain, resize: 'vertical' }} />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>Titre de la carte (Haut)</label>
-              <input type="text" value={settings.parcours_card_tag || ''} onChange={(e) => setSettings({...settings, parcours_card_tag: e.target.value})} style={{ width: '100%', padding: 10, background: '#121212', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+              <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6 }}>Titre de la carte (Haut)</label>
+              <input type="text" value={settings.parcours_card_tag || ''} onChange={(e) => setSettings({...settings, parcours_card_tag: e.target.value})} style={{ width: '100%', padding: 10, background: colors.panelBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, color: colors.textMain }} />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>Titre de la carte (Gros)</label>
-              <input type="text" value={settings.parcours_card_title || ''} onChange={(e) => setSettings({...settings, parcours_card_title: e.target.value})} style={{ width: '100%', padding: 10, background: '#121212', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+              <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6 }}>Titre de la carte (Gros)</label>
+              <input type="text" value={settings.parcours_card_title || ''} onChange={(e) => setSettings({...settings, parcours_card_title: e.target.value})} style={{ width: '100%', padding: 10, background: colors.panelBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, color: colors.textMain }} />
             </div>
           </div>
 
           <div style={{ marginTop: 12 }}>
-            <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Afficher / Masquer les sections :</label>
+            <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Afficher / Masquer les sections :</label>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
               {[
                 { key: 'show_stats', label: 'Statistiques (Hero)' },
@@ -529,7 +548,7 @@ export const SettingsPage: React.FC = () => {
                 { key: 'show_sidebar_top', label: 'Sidebar : Top Tracks' },
                 { key: 'show_sidebar_dates', label: 'Sidebar : Prochaines Dates' },
               ].map((item) => (
-                <label key={item.key} style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', fontSize: 14, background: '#0a0a0a', padding: 12, borderRadius: 8, border: '1px solid #222' }}>
+                <label key={item.key} style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', fontSize: 14, background: colors.inputBg, padding: 12, borderRadius: 8, border: `1px solid ${colors.border}` }}>
                   <input 
                     type="checkbox" 
                     checked={(settings as any)[item.key]} 
@@ -542,13 +561,13 @@ export const SettingsPage: React.FC = () => {
             </div>
           </div>
 
-          <div style={{ marginTop: 24, paddingTop: 24, borderTop: '1px solid #333' }}>
-            <h3 style={{ fontSize: 16, color: '#fff', marginBottom: 16 }}>Contenu des Prestations (Liste)</h3>
+          <div style={{ marginTop: 24, paddingTop: 24, borderTop: `1px solid ${colors.border}` }}>
+            <h3 style={{ fontSize: 16, color: colors.textMain, marginBottom: 16 }}>Contenu des Prestations (Liste)</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               {settings.prestations.map((presta, index) => (
-                <div key={index} style={{ display: 'flex', gap: 12, flexWrap: 'wrap', background: '#0a0a0a', padding: 16, borderRadius: 8, border: '1px solid #222' }}>
+                <div key={index} style={{ display: 'flex', gap: 12, flexWrap: 'wrap', background: colors.inputBg, padding: 16, borderRadius: 8, border: `1px solid ${colors.border}` }}>
                   <div style={{ flex: 1, minWidth: 200 }}>
-                    <label style={{ display: 'block', fontSize: 11, color: '#666', marginBottom: 4 }}>Titre de la carte {index + 1}</label>
+                    <label style={{ display: 'block', fontSize: 11, color: colors.textMuted, marginBottom: 4 }}>Titre de la carte {index + 1}</label>
                     <input 
                       type="text" 
                       value={presta.title} 
@@ -557,20 +576,20 @@ export const SettingsPage: React.FC = () => {
                         newPrestations[index].title = e.target.value;
                         setSettings({...settings, prestations: newPrestations});
                       }} 
-                      style={{ width: '100%', padding: 8, background: '#121212', border: '1px solid #333', borderRadius: 6, color: '#fff' }} 
+                      style={{ width: '100%', padding: 8, background: colors.panelBg, border: `1px solid ${colors.borderLight}`, borderRadius: 6, color: colors.textMain }} 
                     />
                   </div>
                   <div style={{ flex: 2, minWidth: 200 }}>
-                    <label style={{ display: 'block', fontSize: 11, color: '#666', marginBottom: 4 }}>Description</label>
+                    <label style={{ display: 'block', fontSize: 11, color: colors.textMuted, marginBottom: 4 }}>Description</label>
                     <input 
-                                           type="text" 
+                      type="text" 
                       value={presta.desc} 
                       onChange={(e) => {
                         const newPrestations = [...settings.prestations];
                         newPrestations[index].desc = e.target.value;
                         setSettings({...settings, prestations: newPrestations});
                       }} 
-                      style={{ width: '100%', padding: 8, background: '#121212', border: '1px solid #333', borderRadius: 6, color: '#fff' }} 
+                      style={{ width: '100%', padding: 8, background: colors.panelBg, border: `1px solid ${colors.borderLight}`, borderRadius: 6, color: colors.textMain }} 
                     />
                   </div>
                 </div>
@@ -580,35 +599,35 @@ export const SettingsPage: React.FC = () => {
         </div>
       </div>
 
-      <div style={{ background: '#121212', padding: 24, borderRadius: 12, border: '1px solid #222', marginBottom: 24 }}>
+      <div style={{ background: colors.panelBg, padding: 24, borderRadius: 12, border: `1px solid ${colors.border}`, marginBottom: 24 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 10 }}>
-          <h2 style={{ fontSize: 18, color: '#fff', margin: 0 }}>Ma Musique ({myTracks.length})</h2>
+          <h2 style={{ fontSize: 18, color: colors.textMain, margin: 0 }}>Ma Musique ({myTracks.length})</h2>
           <div style={{ display: 'flex', gap: 10 }}>
             <button onClick={() => setShowLinkForm(!showLinkForm)} style={{ background: 'transparent', color: '#00d9ff', border: '1px solid #00d9ff', padding: '8px 16px', borderRadius: 6, fontWeight: 800, cursor: 'pointer' }}>
               {showLinkForm ? 'Annuler' : '+ Ajouter via un lien'}
             </button>
-            <button onClick={() => setShowUploadModal(true)} style={{ background: '#fff', color: '#000', padding: '8px 16px', borderRadius: 6, fontWeight: 800, border: 'none', cursor: 'pointer' }}>
+            <button onClick={() => setShowUploadModal(true)} style={{ background: colors.primaryBg, color: colors.primaryText, padding: '8px 16px', borderRadius: 6, fontWeight: 800, border: 'none', cursor: 'pointer' }}>
               + Uploader un MP3
             </button>
           </div>
         </div>
 
         {showLinkForm && (
-          <div style={{ background: '#0a0a0a', padding: 20, borderRadius: 8, border: '1px solid #333', marginBottom: 20, display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <h3 style={{ margin: 0, fontSize: 14, color: '#fff' }}>Ajouter une sortie (Lien audio ou Embed)</h3>
+          <div style={{ background: colors.inputBg, padding: 20, borderRadius: 8, border: `1px solid ${colors.borderLight}`, marginBottom: 20, display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <h3 style={{ margin: 0, fontSize: 14, color: colors.textMain }}>Ajouter une sortie (Lien audio ou Embed)</h3>
             <div style={{ display: 'flex', gap: 12 }}>
-              <input type="text" placeholder="Titre du son *" value={linkForm.title} onChange={e => setLinkForm({...linkForm, title: e.target.value})} style={{ flex: 2, padding: 10, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4 }} />
-              <input type="text" placeholder="Artiste" value={linkForm.artist} onChange={e => setLinkForm({...linkForm, artist: e.target.value})} style={{ flex: 1, padding: 10, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4 }} />
-              <input type="text" placeholder="Genre (ex: Techno)" value={linkForm.genre} onChange={e => setLinkForm({...linkForm, genre: e.target.value})} style={{ flex: 1, padding: 10, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4 }} />
+              <input type="text" placeholder="Titre du son *" value={linkForm.title} onChange={e => setLinkForm({...linkForm, title: e.target.value})} style={{ flex: 2, padding: 10, background: colors.panelBg, border: `1px solid ${colors.borderLight}`, color: colors.textMain, borderRadius: 4 }} />
+              <input type="text" placeholder="Artiste" value={linkForm.artist} onChange={e => setLinkForm({...linkForm, artist: e.target.value})} style={{ flex: 1, padding: 10, background: colors.panelBg, border: `1px solid ${colors.borderLight}`, color: colors.textMain, borderRadius: 4 }} />
+              <input type="text" placeholder="Genre (ex: Techno)" value={linkForm.genre} onChange={e => setLinkForm({...linkForm, genre: e.target.value})} style={{ flex: 1, padding: 10, background: colors.panelBg, border: `1px solid ${colors.borderLight}`, color: colors.textMain, borderRadius: 4 }} />
             </div>
             
-            <input type="url" placeholder="Lien direct MP3 (ex: Catbox, Dropbox) — Optionnel" value={linkForm.audio_url} onChange={e => setLinkForm({...linkForm, audio_url: e.target.value})} style={{ padding: 10, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4 }} />
+            <input type="url" placeholder="Lien direct MP3 (ex: Catbox, Dropbox) — Optionnel" value={linkForm.audio_url} onChange={e => setLinkForm({...linkForm, audio_url: e.target.value})} style={{ padding: 10, background: colors.panelBg, border: `1px solid ${colors.borderLight}`, color: colors.textMain, borderRadius: 4 }} />
             
-            <input type="url" placeholder="Lien d'achat / Beatport (Optionnel)" value={linkForm.purchase_url} onChange={e => setLinkForm({...linkForm, purchase_url: e.target.value})} style={{ padding: 10, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4 }} />
+            <input type="url" placeholder="Lien d'achat / Beatport (Optionnel)" value={linkForm.purchase_url} onChange={e => setLinkForm({...linkForm, purchase_url: e.target.value})} style={{ padding: 10, background: colors.panelBg, border: `1px solid ${colors.borderLight}`, color: colors.textMain, borderRadius: 4 }} />
             
-            <input type="url" placeholder="Lien de l'image de la cover (optionnel)" value={linkForm.cover_url} onChange={e => setLinkForm({...linkForm, cover_url: e.target.value})} style={{ padding: 10, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4 }} />
+            <input type="url" placeholder="Lien de l'image de la cover (optionnel)" value={linkForm.cover_url} onChange={e => setLinkForm({...linkForm, cover_url: e.target.value})} style={{ padding: 10, background: colors.panelBg, border: `1px solid ${colors.borderLight}`, color: colors.textMain, borderRadius: 4 }} />
             
-            <textarea placeholder="Code d'intégration (Beatport, Audio.com, Traxsource...)" value={linkForm.embed_code} onChange={e => setLinkForm({...linkForm, embed_code: e.target.value})} rows={3} style={{ padding: 10, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4, fontFamily: 'monospace', fontSize: 11 }} />
+            <textarea placeholder="Code d'intégration (Beatport, Audio.com, Traxsource...)" value={linkForm.embed_code} onChange={e => setLinkForm({...linkForm, embed_code: e.target.value})} rows={3} style={{ padding: 10, background: colors.panelBg, border: `1px solid ${colors.borderLight}`, color: colors.textMain, borderRadius: 4, fontFamily: 'monospace', fontSize: 11 }} />
             
             <button onClick={handleSaveLink} disabled={saving} style={{ padding: '10px', background: '#00d9ff', color: '#000', border: 'none', borderRadius: 4, fontWeight: 'bold', cursor: saving ? 'wait' : 'pointer' }}>
               {saving ? 'Enregistrement...' : 'Ajouter ce son'}
@@ -618,25 +637,25 @@ export const SettingsPage: React.FC = () => {
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {myTracks.length === 0 ? (
-            <p style={{ color: '#666', fontSize: 14 }}>Aucun son pour le moment.</p>
+            <p style={{ color: colors.textMuted, fontSize: 14 }}>Aucun son pour le moment.</p>
           ) : (
             currentTracks.map(track => (
-              <div key={track.id} style={{ display: 'flex', flexDirection: 'column', gap: 12, background: '#0a0a0a', padding: '12px 16px', borderRadius: 8, border: '1px solid #333' }}>
+              <div key={track.id} style={{ display: 'flex', flexDirection: 'column', gap: 12, background: colors.inputBg, padding: '12px 16px', borderRadius: 8, border: `1px solid ${colors.border}` }}>
                 {editingTrackId === track.id ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                     <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                      <input type="text" value={editTrackForm.title} onChange={e => setEditTrackForm({...editTrackForm, title: e.target.value})} style={{ flex: 1, padding: 8, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4, minWidth: 150 }} placeholder="Titre" />
-                      <input type="text" value={editTrackForm.genre} onChange={e => setEditTrackForm({...editTrackForm, genre: e.target.value})} style={{ width: 120, padding: 8, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4 }} placeholder="Genre" />
-                      <input type="number" value={editTrackForm.bpm} onChange={e => setEditTrackForm({...editTrackForm, bpm: Number(e.target.value)})} style={{ width: 80, padding: 8, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4 }} placeholder="BPM" />
+                      <input type="text" value={editTrackForm.title} onChange={e => setEditTrackForm({...editTrackForm, title: e.target.value})} style={{ flex: 1, padding: 8, background: colors.panelBg, border: `1px solid ${colors.borderLight}`, color: colors.textMain, borderRadius: 4, minWidth: 150 }} placeholder="Titre" />
+                      <input type="text" value={editTrackForm.genre} onChange={e => setEditTrackForm({...editTrackForm, genre: e.target.value})} style={{ width: 120, padding: 8, background: colors.panelBg, border: `1px solid ${colors.borderLight}`, color: colors.textMain, borderRadius: 4 }} placeholder="Genre" />
+                      <input type="number" value={editTrackForm.bpm} onChange={e => setEditTrackForm({...editTrackForm, bpm: Number(e.target.value)})} style={{ width: 80, padding: 8, background: colors.panelBg, border: `1px solid ${colors.borderLight}`, color: colors.textMain, borderRadius: 4 }} placeholder="BPM" />
                     </div>
-                    <input type="url" value={editTrackForm.purchase_url} onChange={e => setEditTrackForm({...editTrackForm, purchase_url: e.target.value})} style={{ width: '100%', padding: 8, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4 }} placeholder="Lien d'achat" />
-                    <textarea value={editTrackForm.embed_code} onChange={e => setEditTrackForm({...editTrackForm, embed_code: e.target.value})} rows={2} style={{ width: '100%', padding: 8, background: '#121212', border: '1px solid #444', color: '#fff', borderRadius: 4, fontFamily: 'monospace', fontSize: 11 }} placeholder="Code iframe (Beatport, Audio.com...)" />
+                    <input type="url" value={editTrackForm.purchase_url} onChange={e => setEditTrackForm({...editTrackForm, purchase_url: e.target.value})} style={{ width: '100%', padding: 8, background: colors.panelBg, border: `1px solid ${colors.borderLight}`, color: colors.textMain, borderRadius: 4 }} placeholder="Lien d'achat" />
+                    <textarea value={editTrackForm.embed_code} onChange={e => setEditTrackForm({...editTrackForm, embed_code: e.target.value})} rows={2} style={{ width: '100%', padding: 8, background: colors.panelBg, border: `1px solid ${colors.borderLight}`, color: colors.textMain, borderRadius: 4, fontFamily: 'monospace', fontSize: 11 }} placeholder="Code iframe (Beatport, Audio.com...)" />
                     
-                    <div style={{ padding: 12, background: '#121212', borderRadius: 8, border: '1px dashed #444', marginTop: 4 }}>
-                      <p style={{ margin: '0 0 10px 0', fontSize: 12, color: '#aaa', fontWeight: 'bold' }}>Personnalisation visuelle du Player (Optionnel)</p>
+                    <div style={{ padding: 12, background: colors.panelBg, borderRadius: 8, border: `1px dashed ${colors.borderLight}`, marginTop: 4 }}>
+                      <p style={{ margin: '0 0 10px 0', fontSize: 12, color: colors.textLight, fontWeight: 'bold' }}>Personnalisation visuelle du Player (Optionnel)</p>
                       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <label style={{ fontSize: 12, color: '#888' }}>Couleur :</label>
+                          <label style={{ fontSize: 12, color: colors.textMuted }}>Couleur :</label>
                           <input type="color" value={editTrackForm.player_bg_color} onChange={e => setEditTrackForm({...editTrackForm, player_bg_color: e.target.value})} style={{ width: 30, height: 30, padding: 0, background: 'transparent', border: 'none', cursor: 'pointer' }} />
                         </div>
                         
@@ -646,9 +665,9 @@ export const SettingsPage: React.FC = () => {
                             placeholder="URL d'une image de fond (https://...)" 
                             value={editTrackForm.player_bg_image_url} 
                             onChange={e => setEditTrackForm({...editTrackForm, player_bg_image_url: e.target.value})} 
-                            style={{ flex: 1, padding: 8, background: '#0a0a0a', border: '1px solid #444', color: '#fff', borderRadius: 4, fontSize: 12 }} 
+                            style={{ flex: 1, padding: 8, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, color: colors.textMain, borderRadius: 4, fontSize: 12 }} 
                           />
-                          <label style={{ background: uploadingPlayerBg ? '#333' : '#00d9ff', color: '#000', padding: '8px 12px', borderRadius: 4, cursor: uploadingPlayerBg ? 'wait' : 'pointer', fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <label style={{ background: uploadingPlayerBg ? colors.borderLight : '#00d9ff', color: '#000', padding: '8px 12px', borderRadius: 4, cursor: uploadingPlayerBg ? 'wait' : 'pointer', fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6 }}>
                             {uploadingPlayerBg ? 'Upload...' : '📁 Choisir'}
                             <input 
                               type="file" 
@@ -663,7 +682,7 @@ export const SettingsPage: React.FC = () => {
                       
                       {editTrackForm.player_bg_image_url && (
                         <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 10 }}>
-                          <img src={editTrackForm.player_bg_image_url} alt="Aperçu" style={{ width: 60, height: 40, borderRadius: 4, objectFit: 'cover', border: '1px solid #333' }} />
+                          <img src={editTrackForm.player_bg_image_url} alt="Aperçu" style={{ width: 60, height: 40, borderRadius: 4, objectFit: 'cover', border: `1px solid ${colors.border}` }} />
                           <span style={{ fontSize: 11, color: '#00d9ff' }}>Image de fond chargée ✓</span>
                         </div>
                       )}
@@ -671,16 +690,16 @@ export const SettingsPage: React.FC = () => {
 
                     <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
                       <button onClick={() => handleSaveTrackEdit(track.id)} style={{ background: form.theme_color, color: '#000', border: 'none', padding: '8px 12px', borderRadius: 4, cursor: 'pointer', fontWeight: 'bold' }}>Enregistrer</button>
-                      <button onClick={() => setEditingTrackId(null)} style={{ background: 'transparent', color: '#888', border: '1px solid #444', padding: '8px 12px', borderRadius: 4, cursor: 'pointer' }}>Annuler</button>
+                      <button onClick={() => setEditingTrackId(null)} style={{ background: 'transparent', color: colors.textMuted, border: `1px solid ${colors.border}`, padding: '8px 12px', borderRadius: 4, cursor: 'pointer' }}>Annuler</button>
                     </div>
                   </div>
                 ) : (
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <div style={{ width: 40, height: 40, background: track.cover_url ? `url(${track.cover_url}) center/cover` : '#222', borderRadius: 4 }} />
+                      <div style={{ width: 40, height: 40, background: track.cover_url ? `url(${track.cover_url}) center/cover` : colors.border, borderRadius: 4 }} />
                       <div>
-                        <div style={{ fontSize: 14, fontWeight: 'bold' }}>{track.title}</div>
-                        <div style={{ fontSize: 12, color: '#888' }}>{track.genre || 'Inconnu'} • {track.bpm || 0} BPM</div>
+                        <div style={{ fontSize: 14, fontWeight: 'bold', color: colors.textMain }}>{track.title}</div>
+                        <div style={{ fontSize: 12, color: colors.textMuted }}>{track.genre || 'Inconnu'} • {track.bpm || 0} BPM</div>
                       </div>
                     </div>
                     <div style={{ display: 'flex', gap: 8 }}>
@@ -695,15 +714,15 @@ export const SettingsPage: React.FC = () => {
         </div>
 
         {totalPages > 1 && (
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 16, marginTop: 24, paddingTop: 16, borderTop: '1px solid #333' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 16, marginTop: 24, paddingTop: 16, borderTop: `1px solid ${colors.border}` }}>
             <button
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
               style={{
                 padding: '8px 16px',
-                background: currentPage === 1 ? '#0a0a0a' : '#1a1a1a',
-                border: '1px solid #333',
-                color: currentPage === 1 ? '#555' : '#fff',
+                background: currentPage === 1 ? colors.inputBg : colors.panelBg,
+                border: `1px solid ${colors.border}`,
+                color: currentPage === 1 ? colors.textMuted : colors.textMain,
                 borderRadius: 6,
                 fontSize: 12,
                 fontWeight: 700,
@@ -713,7 +732,7 @@ export const SettingsPage: React.FC = () => {
               ← Précédent
             </button>
 
-            <span style={{ fontSize: 12, fontWeight: 700, color: '#888' }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: colors.textMuted }}>
               Page {currentPage} / {totalPages}
             </span>
 
@@ -722,9 +741,9 @@ export const SettingsPage: React.FC = () => {
               disabled={currentPage === totalPages}
               style={{
                 padding: '8px 16px',
-                background: currentPage === totalPages ? '#0a0a0a' : '#1a1a1a',
-                border: currentPage === totalPages ? '1px solid #333' : `1px solid ${form.theme_color}`,
-                color: currentPage === totalPages ? '#555' : form.theme_color,
+                background: currentPage === totalPages ? colors.inputBg : colors.panelBg,
+                border: currentPage === totalPages ? `1px solid ${colors.border}` : `1px solid ${form.theme_color}`,
+                color: currentPage === totalPages ? colors.textMuted : form.theme_color,
                 borderRadius: 6,
                 fontSize: 12,
                 fontWeight: 700,
@@ -737,20 +756,20 @@ export const SettingsPage: React.FC = () => {
         )}
       </div>
 
-      <div style={{ background: '#121212', padding: 24, borderRadius: 12, border: '1px solid #222', marginBottom: 24 }}>
+      <div style={{ background: colors.panelBg, padding: 24, borderRadius: 12, border: `1px solid ${colors.border}`, marginBottom: 24 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <h2 style={{ fontSize: 18, color: '#fff', margin: 0 }}>Affiches du Parcours ({form.parcours_images.length})</h2>
-          <label style={{ background: '#fff', color: '#000', padding: '8px 16px', borderRadius: 6, fontWeight: 800, cursor: uploadingGallery ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <h2 style={{ fontSize: 18, color: colors.textMain, margin: 0 }}>Affiches du Parcours ({form.parcours_images.length})</h2>
+          <label style={{ background: colors.primaryBg, color: colors.primaryText, padding: '8px 16px', borderRadius: 6, fontWeight: 800, cursor: uploadingGallery ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
             {uploadingGallery ? 'Upload...' : '+ Ajouter des affiches'}
             <input type="file" accept="image/*" multiple onChange={handleParcoursUpload} disabled={uploadingGallery} style={{ display: 'none' }} />
           </label>
         </div>
         {form.parcours_images.length === 0 ? (
-          <p style={{ color: '#666', fontSize: 14 }}>Aucune affiche pour le moment.</p>
+          <p style={{ color: colors.textMuted, fontSize: 14 }}>Aucune affiche pour le moment.</p>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 12 }}>
             {form.parcours_images.map((url, idx) => (
-              <div key={idx} style={{ position: 'relative', aspectRatio: '3/4', borderRadius: 8, overflow: 'hidden', border: '1px solid #333' }}>
+              <div key={idx} style={{ position: 'relative', aspectRatio: '3/4', borderRadius: 8, overflow: 'hidden', border: `1px solid ${colors.borderLight}` }}>
                 <img src={url} alt={`Affiche ${idx + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 <button onClick={() => setForm(prev => ({ ...prev, parcours_images: prev.parcours_images.filter((_, i) => i !== idx) }))} style={{ position: 'absolute', top: 4, right: 4, background: 'rgba(255,0,0,0.8)', color: '#fff', border: 'none', borderRadius: '50%', width: 24, height: 24, cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>X</button>
               </div>
@@ -759,20 +778,20 @@ export const SettingsPage: React.FC = () => {
         )}
       </div>
 
-      <div style={{ background: '#121212', padding: 24, borderRadius: 12, border: '1px solid #222', marginBottom: 24 }}>
+      <div style={{ background: colors.panelBg, padding: 24, borderRadius: 12, border: `1px solid ${colors.border}`, marginBottom: 24 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <h2 style={{ fontSize: 18, color: '#fff', margin: 0 }}>Ma Galerie Photos ({galleryImages.length})</h2>
-          <label style={{ background: '#fff', color: '#000', padding: '8px 16px', borderRadius: 6, fontWeight: 800, cursor: uploadingGallery ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <h2 style={{ fontSize: 18, color: colors.textMain, margin: 0 }}>Ma Galerie Photos ({galleryImages.length})</h2>
+          <label style={{ background: colors.primaryBg, color: colors.primaryText, padding: '8px 16px', borderRadius: 6, fontWeight: 800, cursor: uploadingGallery ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
             {uploadingGallery ? 'Upload...' : '+ Ajouter des photos'}
             <input type="file" accept="image/*" multiple onChange={handleGalleryUpload} disabled={uploadingGallery} style={{ display: 'none' }} />
           </label>
         </div>
         {galleryImages.length === 0 ? (
-          <p style={{ color: '#666', fontSize: 14 }}>Aucune photo pour le moment.</p>
+          <p style={{ color: colors.textMuted, fontSize: 14 }}>Aucune photo pour le moment.</p>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 12 }}>
             {galleryImages.map((img) => (
-              <div key={img.id} style={{ position: 'relative', aspectRatio: '1', borderRadius: 8, overflow: 'hidden', border: '1px solid #333' }}>
+              <div key={img.id} style={{ position: 'relative', aspectRatio: '1', borderRadius: 8, overflow: 'hidden', border: `1px solid ${colors.borderLight}` }}>
                 <img src={img.image_url} alt="Gallery" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 <button onClick={() => handleDeleteGalleryImage(img.id, img.image_url)} style={{ position: 'absolute', top: 4, right: 4, background: 'rgba(255,0,0,0.8)', color: '#fff', border: 'none', borderRadius: '50%', width: 24, height: 24, cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>X</button>
               </div>
@@ -782,31 +801,31 @@ export const SettingsPage: React.FC = () => {
       </div>
 
       <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-        <div style={{ background: '#121212', padding: 24, borderRadius: 12, border: '1px solid #222' }}>
-          <h2 style={{ fontSize: 18, marginBottom: 20, color: '#fff' }}>Identité & Thème</h2>
+        <div style={{ background: colors.panelBg, padding: 24, borderRadius: 12, border: `1px solid ${colors.border}` }}>
+          <h2 style={{ fontSize: 18, marginBottom: 20, color: colors.textMain }}>Identité & Thème</h2>
           <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
             <div style={{ flex: '1 1 300px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <label style={{ fontSize: 13, color: '#aaa' }}>Pseudo (URL)</label>
-              <input type="text" value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+              <label style={{ fontSize: 13, color: colors.textLight }}>Pseudo (URL)</label>
+              <input type="text" value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} style={{ padding: 12, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, color: colors.textMain }} />
             </div>
             <div style={{ flex: '1 1 200px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <label style={{ fontSize: 13, color: '#aaa' }}>Couleur du site</label>
+              <label style={{ fontSize: 13, color: colors.textLight }}>Couleur du site</label>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <input type="color" value={form.theme_color} onChange={(e) => setForm({ ...form, theme_color: e.target.value })} style={{ width: 50, height: 40, padding: 0, background: 'transparent', border: 'none', cursor: 'pointer' }} />
-                <input type="text" value={form.theme_color} onChange={(e) => setForm({ ...form, theme_color: e.target.value })} style={{ flex: 1, padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+                <input type="text" value={form.theme_color} onChange={(e) => setForm({ ...form, theme_color: e.target.value })} style={{ flex: 1, padding: 12, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, color: colors.textMain }} />
               </div>
             </div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 20 }}>
-            <label style={{ fontSize: 13, color: '#aaa' }}>Image de profil (Avatar)</label>
+            <label style={{ fontSize: 13, color: colors.textLight }}>Image de profil (Avatar)</label>
             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-              {form.avatar_url && <img src={form.avatar_url} alt="Avatar" style={{ width: 50, height: 50, borderRadius: '50%', objectFit: 'cover', border: '2px solid #333' }} />}
-              <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploadingImage} style={{ flex: 1, padding: 10, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+              {form.avatar_url && <img src={form.avatar_url} alt="Avatar" style={{ width: 50, height: 50, borderRadius: '50%', objectFit: 'cover', border: `2px solid ${colors.borderLight}` }} />}
+              <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploadingImage} style={{ flex: 1, padding: 10, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, color: colors.textMain }} />
             </div>
           </div>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 20 }}>
-            <label style={{ fontSize: 13, color: '#aaa' }}>Vidéo de fond (MP4)</label>
+            <label style={{ fontSize: 13, color: colors.textLight }}>Vidéo de fond (MP4)</label>
             
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
               <input 
@@ -814,11 +833,11 @@ export const SettingsPage: React.FC = () => {
                 value={form.background_video_url} 
                 onChange={(e) => setForm({ ...form, background_video_url: e.target.value })} 
                 placeholder="URL de la vidéo (https://...)" 
-                style={{ flex: 1, minWidth: 200, padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} 
+                style={{ flex: 1, minWidth: 200, padding: 12, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, color: colors.textMain }} 
               />
               
               <label style={{ 
-                background: uploadingVideo ? '#333' : form.theme_color, 
+                background: uploadingVideo ? colors.borderLight : form.theme_color, 
                 color: '#000', 
                 padding: '12px 20px', 
                 borderRadius: 8, 
@@ -846,7 +865,7 @@ export const SettingsPage: React.FC = () => {
                 <video 
                   src={form.background_video_url} 
                   muted 
-                  style={{ width: 80, height: 50, borderRadius: 4, objectFit: 'cover', border: '1px solid #333' }} 
+                  style={{ width: 80, height: 50, borderRadius: 4, objectFit: 'cover', border: `1px solid ${colors.borderLight}` }} 
                 />
                 <span style={{ fontSize: 11, color: form.theme_color }}>Vidéo de fond chargée ✓</span>
               </div>
@@ -854,42 +873,42 @@ export const SettingsPage: React.FC = () => {
           </div>
         </div>
 
-        <div style={{ background: '#121212', padding: 24, borderRadius: 12, border: '1px solid #222' }}>
-          <h2 style={{ fontSize: 18, marginBottom: 20, color: '#fff' }}>Bannière d'accueil</h2>
-          <input type="text" value={form.hero_tagline} onChange={(e) => setForm({ ...form, hero_tagline: e.target.value })} placeholder="Badge" style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff', width: '100%', marginBottom: 20 }} />
-          <input type="text" value={form.hero_title} onChange={(e) => setForm({ ...form, hero_title: e.target.value })} placeholder="Titre" style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff', width: '100%', marginBottom: 20 }} />
-          <textarea value={form.hero_description} onChange={(e) => setForm({ ...form, hero_description: e.target.value })} rows={3} placeholder="Description" style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff', width: '100%' }} />
+        <div style={{ background: colors.panelBg, padding: 24, borderRadius: 12, border: `1px solid ${colors.border}` }}>
+          <h2 style={{ fontSize: 18, marginBottom: 20, color: colors.textMain }}>Bannière d'accueil</h2>
+          <input type="text" value={form.hero_tagline} onChange={(e) => setForm({ ...form, hero_tagline: e.target.value })} placeholder="Badge" style={{ padding: 12, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, color: colors.textMain, width: '100%', marginBottom: 20 }} />
+          <input type="text" value={form.hero_title} onChange={(e) => setForm({ ...form, hero_title: e.target.value })} placeholder="Titre" style={{ padding: 12, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, color: colors.textMain, width: '100%', marginBottom: 20 }} />
+          <textarea value={form.hero_description} onChange={(e) => setForm({ ...form, hero_description: e.target.value })} rows={3} placeholder="Description" style={{ padding: 12, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, color: colors.textMain, width: '100%' }} />
         </div>
 
-        <div style={{ background: '#121212', padding: 24, borderRadius: 12, border: '1px solid #222' }}>
-          <h2 style={{ fontSize: 18, marginBottom: 20, color: '#fff' }}>Biographie</h2>
-          <textarea value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} rows={6} style={{ width: '100%', padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+        <div style={{ background: colors.panelBg, padding: 24, borderRadius: 12, border: `1px solid ${colors.border}` }}>
+          <h2 style={{ fontSize: 18, marginBottom: 20, color: colors.textMain }}>Biographie</h2>
+          <textarea value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} rows={6} style={{ width: '100%', padding: 12, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, color: colors.textMain }} />
         </div>
 
-        <div style={{ background: '#121212', padding: 24, borderRadius: 12, border: '1px solid #222' }}>
-          <h2 style={{ fontSize: 18, marginBottom: 20, color: '#fff' }}>Booking</h2>
-          <label style={{ fontSize: 13, color: '#aaa', display: 'block', marginBottom: 8 }}>Adresse email pour le booking</label>
+        <div style={{ background: colors.panelBg, padding: 24, borderRadius: 12, border: `1px solid ${colors.border}` }}>
+          <h2 style={{ fontSize: 18, marginBottom: 20, color: colors.textMain }}>Booking</h2>
+          <label style={{ fontSize: 13, color: colors.textLight, display: 'block', marginBottom: 8 }}>Adresse email pour le booking</label>
           <input 
             type="email" 
             placeholder="contact@mon-label.com" 
             value={form.booking_email} 
             onChange={(e) => setForm({ ...form, booking_email: e.target.value })} 
-            style={{ width: '100%', padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} 
+            style={{ width: '100%', padding: 12, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, color: colors.textMain }} 
           />
-          <p style={{ color: '#666', fontSize: 12, marginTop: 8 }}>Cette adresse sera utilisée pour le bouton "Booking" de ta page.</p>
+          <p style={{ color: colors.textMuted, fontSize: 12, marginTop: 8 }}>Cette adresse sera utilisée pour le bouton "Booking" de ta page.</p>
         </div>
 
-        <div style={{ background: '#121212', padding: 24, borderRadius: 12, border: '1px solid #222' }}>
-          <h2 style={{ fontSize: 18, marginBottom: 20, color: '#fff' }}>Réseaux Sociaux</h2>
+        <div style={{ background: colors.panelBg, padding: 24, borderRadius: 12, border: `1px solid ${colors.border}` }}>
+          <h2 style={{ fontSize: 18, marginBottom: 20, color: colors.textMain }}>Réseaux Sociaux</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <input type="url" placeholder="Instagram" value={form.instagram_url} onChange={(e) => setForm({ ...form, instagram_url: e.target.value })} style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
-            <input type="url" placeholder="Spotify" value={form.spotify_url} onChange={(e) => setForm({ ...form, spotify_url: e.target.value })} style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
-            <input type="url" placeholder="SoundCloud" value={form.soundcloud_url} onChange={(e) => setForm({ ...form, soundcloud_url: e.target.value })} style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
-            <input type="url" placeholder="TikTok" value={form.tiktok_url} onChange={(e) => setForm({ ...form, tiktok_url: e.target.value })} style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
-            <input type="url" placeholder="YouTube" value={form.youtube_url} onChange={(e) => setForm({ ...form, youtube_url: e.target.value })} style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
-            <input type="url" placeholder="Beatport" value={form.beatport_url} onChange={(e) => setForm({ ...form, beatport_url: e.target.value })} style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
-            <input type="url" placeholder="X (Twitter)" value={form.x_url} onChange={(e) => setForm({ ...form, x_url: e.target.value })} style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
-            <input type="url" placeholder="Facebook" value={form.facebook_url} onChange={(e) => setForm({ ...form, facebook_url: e.target.value })} style={{ padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+            <input type="url" placeholder="Instagram" value={form.instagram_url} onChange={(e) => setForm({ ...form, instagram_url: e.target.value })} style={{ padding: 12, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, color: colors.textMain }} />
+            <input type="url" placeholder="Spotify" value={form.spotify_url} onChange={(e) => setForm({ ...form, spotify_url: e.target.value })} style={{ padding: 12, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, color: colors.textMain }} />
+            <input type="url" placeholder="SoundCloud" value={form.soundcloud_url} onChange={(e) => setForm({ ...form, soundcloud_url: e.target.value })} style={{ padding: 12, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, color: colors.textMain }} />
+            <input type="url" placeholder="TikTok" value={form.tiktok_url} onChange={(e) => setForm({ ...form, tiktok_url: e.target.value })} style={{ padding: 12, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, color: colors.textMain }} />
+            <input type="url" placeholder="YouTube" value={form.youtube_url} onChange={(e) => setForm({ ...form, youtube_url: e.target.value })} style={{ padding: 12, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, color: colors.textMain }} />
+            <input type="url" placeholder="Beatport" value={form.beatport_url} onChange={(e) => setForm({ ...form, beatport_url: e.target.value })} style={{ padding: 12, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, color: colors.textMain }} />
+            <input type="url" placeholder="X (Twitter)" value={form.x_url} onChange={(e) => setForm({ ...form, x_url: e.target.value })} style={{ padding: 12, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, color: colors.textMain }} />
+            <input type="url" placeholder="Facebook" value={form.facebook_url} onChange={(e) => setForm({ ...form, facebook_url: e.target.value })} style={{ padding: 12, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, color: colors.textMain }} />
           </div>
         </div>
 
@@ -900,53 +919,53 @@ export const SettingsPage: React.FC = () => {
 
       {showUploadModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          <div style={{ background: '#121212', border: '1px solid #222', borderRadius: 16, padding: 32, width: '100%', maxWidth: 500, maxHeight: '90vh', overflowY: 'auto' }}>
+          <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 32, width: '100%', maxWidth: 500, maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-              <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: '#fff' }}>Uploader un son</h2>
-              <button onClick={() => setShowUploadModal(false)} style={{ background: 'transparent', border: 'none', color: '#888', fontSize: 20, cursor: 'pointer' }}>✕</button>
+              <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: colors.textMain }}>Uploader un son</h2>
+              <button onClick={() => setShowUploadModal(false)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, fontSize: 20, cursor: 'pointer' }}>✕</button>
             </div>
 
             <form onSubmit={handleUploadSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div>
-                <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>Fichier Audio (MP3, WAV) *</label>
-                <input type="file" accept="audio/*" onChange={handleAudioFileChange} required style={{ width: '100%', padding: 10, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+                <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6 }}>Fichier Audio (MP3, WAV) *</label>
+                <input type="file" accept="audio/*" onChange={handleAudioFileChange} required style={{ width: '100%', padding: 10, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, color: colors.textMain }} />
                 {audioFile && <p style={{ fontSize: 11, color: '#00d9ff', marginTop: 4 }}>Fichier sélectionné : {audioFile.name}</p>}
               </div>
               
               <div>
-                <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>Image de couverture (Optionnel)</label>
-                <input type="file" accept="image/*" onChange={(e) => setCoverFile(e.target.files?.[0] || null)} style={{ width: '100%', padding: 10, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+                <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6 }}>Image de couverture (Optionnel)</label>
+                <input type="file" accept="image/*" onChange={(e) => setCoverFile(e.target.files?.[0] || null)} style={{ width: '100%', padding: 10, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, color: colors.textMain }} />
                 {coverFile && (
                   <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <img src={URL.createObjectURL(coverFile)} alt="Cover preview" style={{ width: 50, height: 50, borderRadius: 6, objectFit: 'cover', border: '1px solid #333' }} />
+                    <img src={URL.createObjectURL(coverFile)} alt="Cover preview" style={{ width: 50, height: 50, borderRadius: 6, objectFit: 'cover', border: `1px solid ${colors.borderLight}` }} />
                     <span style={{ fontSize: 11, color: '#00d9ff' }}>Pochette chargée ✓</span>
                   </div>
                 )}
               </div>
 
-                            <div style={{ display: 'flex', gap: 12 }}>
+              <div style={{ display: 'flex', gap: 12 }}>
                 <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>Titre *</label>
-                  <input type="text" value={uploadForm.title} onChange={e => setUploadForm({...uploadForm, title: e.target.value})} required style={{ width: '100%', padding: 10, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+                  <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6 }}>Titre *</label>
+                  <input type="text" value={uploadForm.title} onChange={e => setUploadForm({...uploadForm, title: e.target.value})} required style={{ width: '100%', padding: 10, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, color: colors.textMain }} />
                 </div>
                 <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>Artiste *</label>
-                  <input type="text" value={uploadForm.artist} onChange={e => setUploadForm({...uploadForm, artist: e.target.value})} required style={{ width: '100%', padding: 10, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+                  <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6 }}>Artiste *</label>
+                  <input type="text" value={uploadForm.artist} onChange={e => setUploadForm({...uploadForm, artist: e.target.value})} required style={{ width: '100%', padding: 10, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, color: colors.textMain }} />
                 </div>
               </div>
               
               <div style={{ display: 'flex', gap: 12 }}>
                 <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>Genre</label>
-                  <input type="text" value={uploadForm.genre} onChange={e => setUploadForm({...uploadForm, genre: e.target.value})} placeholder="Ex: Techno" style={{ width: '100%', padding: 10, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+                  <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6 }}>Genre</label>
+                  <input type="text" value={uploadForm.genre} onChange={e => setUploadForm({...uploadForm, genre: e.target.value})} placeholder="Ex: Techno" style={{ width: '100%', padding: 10, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, color: colors.textMain }} />
                 </div>
                 <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>BPM</label>
-                  <input type="number" value={uploadForm.bpm} onChange={e => setUploadForm({...uploadForm, bpm: e.target.value})} placeholder="128" style={{ width: '100%', padding: 10, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+                  <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6 }}>BPM</label>
+                  <input type="number" value={uploadForm.bpm} onChange={e => setUploadForm({...uploadForm, bpm: e.target.value})} placeholder="128" style={{ width: '100%', padding: 10, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, color: colors.textMain }} />
                 </div>
                 <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>Clé</label>
-                  <input type="text" value={uploadForm.song_key} onChange={e => setUploadForm({...uploadForm, song_key: e.target.value})} placeholder="Am" style={{ width: '100%', padding: 10, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+                  <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6 }}>Clé</label>
+                  <input type="text" value={uploadForm.song_key} onChange={e => setUploadForm({...uploadForm, song_key: e.target.value})} placeholder="Am" style={{ width: '100%', padding: 10, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, color: colors.textMain }} />
                 </div>
               </div>
 

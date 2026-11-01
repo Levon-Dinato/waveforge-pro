@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useIsMobile } from '../hooks/useIsMobile';
+import { useTheme } from '../contexts/ThemeContext'; // ✅ IMPORT DU THEME
 
 interface Artist {
   id: string;
@@ -17,9 +18,29 @@ interface Artist {
 export const ArtistsPage: React.FC = () => {
   const isMobile = useIsMobile(768);
   
+  // ✅ RÉCUPÉRATION DU THÈME
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
   const [artists, setArtists] = useState<Artist[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+
+  // ✅ PALETTE DE COULEURS DYNAMIQUES
+  const colors = {
+    bg: isDark ? '#121212' : '#f5f5f7',
+    textMain: isDark ? '#ffffff' : '#1a1a1a',
+    textMuted: isDark ? '#999999' : '#666666',
+    inputBg: isDark ? '#1a1a1a' : '#ffffff',
+    inputBorder: isDark ? '#2a2a2a' : '#e5e7eb',
+    cardBg: isDark ? '#181818' : '#ffffff',
+    premiumCardBg: isDark ? 'rgba(0, 217, 255, 0.03)' : 'rgba(0, 217, 255, 0.05)',
+    cardBorder: isDark ? '#2a2a2a' : '#e5e7eb',
+    cardHoverBg: isDark ? '#1e1e1e' : '#f9fafb',
+    cardHoverBorder: isDark ? '#3a3a3a' : '#d1d5db',
+    avatarBg: isDark ? '#121212' : '#f3f4f6',
+    avatarText: isDark ? '#666666' : '#999999',
+  };
 
   useEffect(() => {
     const fetchArtists = async () => {
@@ -66,10 +87,12 @@ export const ArtistsPage: React.FC = () => {
   );
 
   return (
-    <div style={{ background: '#121212', minHeight: '100vh', color: '#fff', fontFamily: 'Inter, sans-serif', paddingBottom: 100 }}>
+    <div style={{ background: colors.bg, minHeight: '100vh', color: colors.textMain, fontFamily: 'Inter, sans-serif', paddingBottom: 100, transition: 'background 0.3s ease, color 0.3s ease' }}>
       
+      {/* ✅ VARIABLES CSS POUR LE HOVER (Permet de gérer le hover proprement même en mode clair) */}
       <style>{`
-        .artist-card:hover { border-color: #3a3a3a !important; background: #1e1e1e !important; }
+        .artist-card { transition: all 0.2s ease; }
+        .artist-card:hover { border-color: var(--hover-border) !important; background: var(--hover-bg) !important; }
         .artist-card:hover .artist-avatar { transform: scale(1.05); }
         .artist-card:hover .artist-name { color: #00d9ff !important; }
         
@@ -89,10 +112,10 @@ export const ArtistsPage: React.FC = () => {
 
       {/* HEADER */}
       <div style={{ padding: isMobile ? '20px 15px' : '40px 24px', maxWidth: 1400, margin: '0 auto' }}>
-        <h1 style={{ fontSize: isMobile ? 24 : 32, fontWeight: 700, margin: 0 }}>
+        <h1 style={{ fontSize: isMobile ? 24 : 32, fontWeight: 700, margin: 0, color: colors.textMain }}>
           Découvrir les <span style={{ color: '#00d9ff' }}>Artistes</span>
         </h1>
-        <p style={{ color: '#999', marginTop: 8, fontSize: '0.9rem' }}>
+        <p style={{ color: colors.textMuted, marginTop: 8, fontSize: '0.9rem' }}>
           Les DJs et producteurs qui font vibrer DropZone.
         </p>
         
@@ -103,11 +126,11 @@ export const ArtistsPage: React.FC = () => {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             style={{ 
-              width: '100%', padding: '10px 14px', background: '#1a1a1a', border: '1px solid #2a2a2a', 
-              borderRadius: 6, color: '#fff', fontSize: '13px', outline: 'none', transition: 'border-color 0.2s'
+              width: '100%', padding: '10px 14px', background: colors.inputBg, border: `1px solid ${colors.inputBorder}`, 
+              borderRadius: 6, color: colors.textMain, fontSize: '13px', outline: 'none', transition: 'border-color 0.2s'
             }} 
             onFocus={(e) => e.target.style.borderColor = '#00d9ff'}
-            onBlur={(e) => e.target.style.borderColor = '#2a2a2a'}
+            onBlur={(e) => e.target.style.borderColor = colors.inputBorder}
           />
         </div>
       </div>
@@ -115,9 +138,9 @@ export const ArtistsPage: React.FC = () => {
       {/* LISTE DES ARTISTES */}
       <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 24px' }}>
         {loading ? (
-          <div style={{ textAlign: 'center', padding: 40, color: '#888' }}>Chargement des artistes...</div>
+          <div style={{ textAlign: 'center', padding: 40, color: colors.textMuted }}>Chargement des artistes...</div>
         ) : filteredArtists.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: 40, color: '#888' }}>Aucun artiste trouvé.</div>
+          <div style={{ textAlign: 'center', padding: 40, color: colors.textMuted }}>Aucun artiste trouvé.</div>
         ) : (
           <div style={{ 
             display: 'grid', 
@@ -148,25 +171,28 @@ export const ArtistsPage: React.FC = () => {
                   <div 
                     className="artist-card"
                     style={{
-                      background: isPremium ? 'rgba(0, 217, 255, 0.03)' : '#181818',
-                      border: isPremium ? '1px solid rgba(0, 217, 255, 0.4)' : '1px solid #2a2a2a',
+                      background: isPremium ? colors.premiumCardBg : colors.cardBg,
+                      border: isPremium ? '1px solid rgba(0, 217, 255, 0.4)' : `1px solid ${colors.cardBorder}`,
                       borderRadius: 12, padding: '24px 16px', display: 'flex', flexDirection: 'column',
-                      alignItems: 'center', textAlign: 'center', gap: 16, transition: 'all 0.2s ease',
+                      alignItems: 'center', textAlign: 'center', gap: 16, 
                       cursor: 'pointer', height: '100%',
+                      // ✅ Injection des couleurs de hover via les variables CSS
+                      ['--hover-bg' as any]: colors.cardHoverBg,
+                      ['--hover-border' as any]: colors.cardHoverBorder,
                     }}
                   >
                     {/* Avatar */}
                     <div className="artist-avatar" style={{ 
                       width: isMobile ? 80 : 100, height: isMobile ? 80 : 100, borderRadius: '50%', flexShrink: 0,
-                      background: '#121212', overflow: 'hidden',
-                      border: isPremium ? '2px solid #00d9ff' : '2px solid #2a2a2a',
-                      boxShadow: isPremium ? '0 0 20px rgba(0, 217, 255, 0.2)' : '0 4px 12px rgba(0,0,0,0.5)',
+                      background: colors.avatarBg, overflow: 'hidden',
+                      border: isPremium ? '2px solid #00d9ff' : `2px solid ${colors.cardBorder}`,
+                      boxShadow: isPremium ? '0 0 20px rgba(0, 217, 255, 0.2)' : '0 4px 12px rgba(0,0,0,0.1)',
                       transition: 'transform 0.2s ease',
                     }}>
                       {artist.avatar_url ? (
                         <img src={artist.avatar_url} alt={artist.username} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       ) : (
-                        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, color: '#666', fontWeight: 800 }}>
+                        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, color: colors.avatarText, fontWeight: 800 }}>
                           {artist.username.charAt(0).toUpperCase()}
                         </div>
                       )}
@@ -174,12 +200,12 @@ export const ArtistsPage: React.FC = () => {
 
                     {/* Infos */}
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                      <h3 className="artist-name" style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap' }}>
+                      <h3 className="artist-name" style={{ margin: 0, fontSize: 15, fontWeight: 700, color: colors.textMain, display: 'flex', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap' }}>
                         {artist.username}
                         {/* ✅ BADGE PREMIUM */}
                         {isPremium && <span className="premium-badge-artist">PREMIUM</span>}
                       </h3>
-                      <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>
+                      <div style={{ color: colors.textMuted, fontSize: 12, marginTop: 4 }}>
                         {artist.city ? `${artist.city}${artist.country ? `, ${artist.country}` : ''}` : 'France'}
                       </div>
                     </div>

@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { usePlayer } from '../contexts/PlayerContext';
+import { useTheme } from '../contexts/ThemeContext'; // ✅ IMPORT DU THEME
 import { OnlineUsersWidget } from '../components/OnlineUsersWidget';
 
 const Icons = {
@@ -72,6 +73,10 @@ export const FeedPage: React.FC = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile(768);
   const { play, currentTrack, isPlaying } = usePlayer();
+  
+  // ✅ RÉCUPÉRATION DU THÈME
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
 
   const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -96,6 +101,23 @@ export const FeedPage: React.FC = () => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [loadingComments, setLoadingComments] = useState(false);
+
+  // ✅ PALETTE DE COULEURS DYNAMIQUES
+  const colors = {
+    bg: isDark ? '#0a0a0a' : '#f5f5f7',
+    textMain: isDark ? '#ffffff' : '#1a1a1a',
+    textMuted: isDark ? '#666666' : '#888888',
+    textLight: isDark ? '#dddddd' : '#333333',
+    border: isDark ? '#222222' : '#e5e7eb',
+    panelBg: isDark ? '#121212' : '#ffffff',
+    inputBg: isDark ? '#0a0a0a' : '#f3f4f6',
+    avatarBg: isDark ? '#1a1a1a' : '#e5e7eb',
+    btnPublishBg: isDark ? '#ffffff' : '#1a1a1a',
+    btnPublishText: isDark ? '#000000' : '#ffffff',
+    btnPublishDisabledBg: isDark ? '#1a1a1a' : '#e5e7eb',
+    btnPublishDisabledText: isDark ? '#555555' : '#999999',
+    commentBg: isDark ? '#0a0a0a' : '#f3f4f6',
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -278,7 +300,7 @@ export const FeedPage: React.FC = () => {
     setFeedItems(prev => prev.filter(item => !(isPostItem(item) && item.data.id === postId)));
   };
 
-  // ✅ BLOCAGE DE LA LECTURE
+  // ✅ BLOCAGE DE LA LECTURE (Intact)
   const handlePlayClick = (e: React.MouseEvent, track: Track) => {
     e.stopPropagation();
     if (!user) {
@@ -290,19 +312,19 @@ export const FeedPage: React.FC = () => {
   };
 
   return (
-    <div style={{ background: '#0a0a0a', minHeight: '100vh', color: '#fff', fontFamily: 'Inter, sans-serif', paddingBottom: 100 }}>
+    <div style={{ background: colors.bg, minHeight: '100vh', color: colors.textMain, fontFamily: 'Inter, sans-serif', paddingBottom: 100, transition: 'background 0.3s ease, color 0.3s ease' }}>
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '16px 12px' : '40px 24px', display: 'flex', gap: 40, alignItems: 'flex-start', flexDirection: isMobile ? 'column' : 'row' }}>
         
         <div style={{ flex: 1, maxWidth: isMobile ? '100%' : 680, minWidth: 0, width: '100%' }}>
           <div style={{ marginBottom: 24 }}>
             <h1 style={{ fontSize: isMobile ? 26 : 36, fontWeight: 800, margin: 0, letterSpacing: '-1px' }}>Fil d'<span style={{ color: '#00d9ff' }}>actualité</span></h1>
-            <p style={{ color: '#666', fontSize: 14, marginTop: 8 }}>Toutes les dernières pépites et les prochains événements.</p>
+            <p style={{ color: colors.textMuted, fontSize: 14, marginTop: 8 }}>Toutes les dernières pépites et les prochains événements.</p>
           </div>
 
           {user && (
-            <div style={{ background: '#121212', border: '1px solid #222', borderRadius: 16, padding: isMobile ? 16 : 20, marginBottom: 24 }}>
+            <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: isMobile ? 16 : 20, marginBottom: 24 }}>
               <div style={{ display: 'flex', gap: 12 }}>
-                <div className="avatar-circle" style={{ width: 40, height: 40, flexShrink: 0, borderRadius: '50%', background: '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#00d9ff', border: '1px solid #333' }}>
+                <div className="avatar-circle" style={{ width: 40, height: 40, flexShrink: 0, borderRadius: '50%', background: colors.avatarBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#00d9ff', border: `1px solid ${colors.border}` }}>
                   {(username || user.email)?.charAt(0).toUpperCase() || 'U'}
                 </div>
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 12, minWidth: 0 }}>
@@ -311,7 +333,7 @@ export const FeedPage: React.FC = () => {
                     value={postContent}
                     onChange={(e) => setPostContent(e.target.value)}
                     rows={2}
-                    style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: 15, outline: 'none', resize: 'vertical', fontFamily: 'inherit', width: '100%', overflowWrap: 'anywhere', whiteSpace: 'pre-wrap' }} 
+                    style={{ background: 'transparent', border: 'none', color: colors.textMain, fontSize: 15, outline: 'none', resize: 'vertical', fontFamily: 'inherit', width: '100%', overflowWrap: 'anywhere', whiteSpace: 'pre-wrap' }} 
                   />
                   
                   {postType !== 'texte' && (
@@ -320,22 +342,22 @@ export const FeedPage: React.FC = () => {
                       placeholder={postType === 'image' ? "Lien direct de l'image (https://...)" : "Lien YouTube, Twitch, Facebook..."}
                       value={postUrl}
                       onChange={(e) => setPostUrl(e.target.value)}
-                      style={{ padding: '10px', background: '#0a0a0a', border: '1px solid #222', borderRadius: 8, color: '#fff', fontSize: 13, outline: 'none', width: '100%', overflowWrap: 'anywhere' }} 
+                      style={{ padding: '10px', background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain, fontSize: 13, outline: 'none', width: '100%', overflowWrap: 'anywhere' }} 
                     />
                   )}
 
                   {postType === 'lien' && loadingPreview && <div style={{ fontSize: 12, color: '#00d9ff' }}>Chargement de l'aperçu...</div>}
                   {postType === 'lien' && linkPreview && (
-                    <div style={{ border: '1px solid #333', borderRadius: 8, overflow: 'hidden', background: '#0a0a0a', display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ border: `1px solid ${colors.border}`, borderRadius: 8, overflow: 'hidden', background: colors.inputBg, display: 'flex', flexDirection: 'column' }}>
                       {linkPreview.image && <img src={linkPreview.image} alt="Preview" style={{ width: '100%', maxHeight: 200, objectFit: 'cover' }} />}
                       <div style={{ padding: 12 }}>
-                        <div style={{ fontSize: 14, fontWeight: 'bold', color: '#fff', wordBreak: 'break-word' }}>{linkPreview.title}</div>
-                        <div style={{ fontSize: 12, color: '#888', marginTop: 4, wordBreak: 'break-word' }}>{linkPreview.desc}</div>
+                        <div style={{ fontSize: 14, fontWeight: 'bold', color: colors.textMain, wordBreak: 'break-word' }}>{linkPreview.title}</div>
+                        <div style={{ fontSize: 12, color: colors.textMuted, marginTop: 4, wordBreak: 'break-word' }}>{linkPreview.desc}</div>
                       </div>
                     </div>
                   )}
 
-                  <div style={{ height: 1, background: '#222' }} />
+                  <div style={{ height: 1, background: colors.border }} />
                   
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
                     <div style={{ display: 'flex', gap: 12 }}>
@@ -343,7 +365,7 @@ export const FeedPage: React.FC = () => {
                         <button
                           key={type}
                           onClick={() => { setPostType(type); setPostUrl(''); setLinkPreview(null); }}
-                          style={{ background: 'transparent', border: 'none', color: postType === type ? '#00d9ff' : '#666', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', cursor: 'pointer', padding: 0 }}
+                          style={{ background: 'transparent', border: 'none', color: postType === type ? '#00d9ff' : colors.textMuted, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', cursor: 'pointer', padding: 0 }}
                         >
                           {type}
                         </button>
@@ -352,7 +374,7 @@ export const FeedPage: React.FC = () => {
                     <button 
                       onClick={handlePublish}
                       disabled={!postContent.trim() && !postUrl.trim()}
-                      style={{ background: (postContent.trim() || postUrl.trim()) ? '#fff' : '#1a1a1a', color: (postContent.trim() || postUrl.trim()) ? '#000' : '#555', border: 'none', padding: '8px 16px', borderRadius: 20, fontWeight: 700, fontSize: 12, cursor: (postContent.trim() || postUrl.trim()) ? 'pointer' : 'not-allowed' }}
+                      style={{ background: (postContent.trim() || postUrl.trim()) ? colors.btnPublishBg : colors.btnPublishDisabledBg, color: (postContent.trim() || postUrl.trim()) ? colors.btnPublishText : colors.btnPublishDisabledText, border: 'none', padding: '8px 16px', borderRadius: 20, fontWeight: 700, fontSize: 12, cursor: (postContent.trim() || postUrl.trim()) ? 'pointer' : 'not-allowed' }}
                     >
                       Publier
                     </button>
@@ -363,10 +385,10 @@ export const FeedPage: React.FC = () => {
           )}
 
           {loading ? (
-            <div style={{ textAlign: 'center', color: '#666', padding: 40 }}>Chargement...</div>
+            <div style={{ textAlign: 'center', color: colors.textMuted, padding: 40 }}>Chargement...</div>
           ) : feedItems.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '60px 20px', background: '#121212', border: '1px dashed #222', borderRadius: 16 }}>
-              <div style={{ color: '#444', marginBottom: 16 }}>{Icons.music}</div>
+            <div style={{ textAlign: 'center', padding: '60px 20px', background: colors.panelBg, border: `1px dashed ${colors.border}`, borderRadius: 16 }}>
+              <div style={{ color: colors.border, marginBottom: 16 }}>{Icons.music}</div>
               <h3 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 8px 0' }}>Le feed est vide</h3>
             </div>
           ) : (
@@ -380,77 +402,77 @@ export const FeedPage: React.FC = () => {
                   const hasOgData = !!item.data.ogImage;
 
                   return (
-                    <div key={`post-${item.data.id}-${index}`} style={{ background: '#121212', border: '1px solid #222', borderRadius: 16, overflow: 'hidden' }}>
+                    <div key={`post-${item.data.id}-${index}`} style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, overflow: 'hidden' }}>
                       
                       <div style={{ padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                         <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                          <div className="avatar-circle" onClick={() => navigate(`/profil/${item.data.profile_id}`)} style={{ width: 40, height: 40, flexShrink: 0, borderRadius: '50%', background: '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#00d9ff', cursor: 'pointer' }}>
+                          <div className="avatar-circle" onClick={() => navigate(`/profil/${item.data.profile_id}`)} style={{ width: 40, height: 40, flexShrink: 0, borderRadius: '50%', background: colors.avatarBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#00d9ff', cursor: 'pointer' }}>
                             {item.data.author.charAt(0).toUpperCase()}
                           </div>
                           <div>
-                            <div style={{ fontSize: 14, fontWeight: 600, color: '#fff', cursor: 'pointer' }} onClick={() => navigate(`/profil/${item.data.profile_id}`)}>{item.data.author}</div>
-                            <div style={{ fontSize: 12, color: '#666', marginTop: 2 }}>{formatDate(item.date)}</div>
+                            <div style={{ fontSize: 14, fontWeight: 600, color: colors.textMain, cursor: 'pointer' }} onClick={() => navigate(`/profil/${item.data.profile_id}`)}>{item.data.author}</div>
+                            <div style={{ fontSize: 12, color: colors.textMuted, marginTop: 2 }}>{formatDate(item.date)}</div>
                           </div>
                         </div>
                         
                         {!isEditing && (isAdmin || user?.id === item.data.profile_id) && (
                           <div style={{ display: 'flex', gap: 8 }}>
                             <button onClick={() => startEditing(item.data)} style={{ background: 'transparent', border: 'none', color: '#00d9ff', cursor: 'pointer', fontSize: 11, fontWeight: 600 }}>Modifier</button>
-                            <button onClick={() => handleDeletePost(item.data.id)} style={{ background: 'transparent', border: 'none', color: '#444', cursor: 'pointer', fontSize: 11, fontWeight: 600 }}>Supprimer</button>
+                            <button onClick={() => handleDeletePost(item.data.id)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', fontSize: 11, fontWeight: 600 }}>Supprimer</button>
                           </div>
                         )}
                       </div>
                       
                       {isEditing ? (
                         <div style={{ padding: '0 16px 16px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                          <textarea value={editContent} onChange={(e) => setEditContent(e.target.value)} rows={4} style={{ width: '100%', background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff', padding: 12, fontSize: 14, fontFamily: 'inherit' }} />
-                          {item.data.postType !== 'text' && <input type="text" value={editUrl} onChange={(e) => setEditUrl(e.target.value)} placeholder="Lien du média" style={{ width: '100%', background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff', padding: 12, fontSize: 13 }} />}
+                          <textarea value={editContent} onChange={(e) => setEditContent(e.target.value)} rows={4} style={{ width: '100%', background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain, padding: 12, fontSize: 14, fontFamily: 'inherit' }} />
+                          {item.data.postType !== 'text' && <input type="text" value={editUrl} onChange={(e) => setEditUrl(e.target.value)} placeholder="Lien du média" style={{ width: '100%', background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain, padding: 12, fontSize: 13 }} />}
                           <div style={{ display: 'flex', gap: 8 }}>
                             <button onClick={() => handleSaveEdit(item.data.id)} style={{ padding: '8px 12px', background: '#00d9ff', color: '#000', border: 'none', borderRadius: 6, fontWeight: 700, cursor: 'pointer', fontSize: 12 }}>Enregistrer</button>
-                            <button onClick={() => setEditingPostId(null)} style={{ padding: '8px 12px', background: 'transparent', color: '#888', border: '1px solid #333', borderRadius: 6, fontWeight: 600, cursor: 'pointer', fontSize: 12 }}>Annuler</button>
+                            <button onClick={() => setEditingPostId(null)} style={{ padding: '8px 12px', background: 'transparent', color: colors.textMuted, border: `1px solid ${colors.border}`, borderRadius: 6, fontWeight: 600, cursor: 'pointer', fontSize: 12 }}>Annuler</button>
                           </div>
                         </div>
                       ) : (
-                        <div style={{ padding: '0 16px 16px 16px', fontSize: 14, color: '#ddd', whiteSpace: 'pre-wrap', lineHeight: 1.5, wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
+                        <div style={{ padding: '0 16px 16px 16px', fontSize: 14, color: colors.textLight, whiteSpace: 'pre-wrap', lineHeight: 1.5, wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
                           {linkify(item.data.text)}
                         </div>
                       )}
 
                       {!isEditing && hasOgData && (
-                        <a href={cleanUrl} target="_blank" rel="noreferrer" style={{ display: 'flex', flexDirection: 'column', background: '#0a0a0a', borderTop: '1px solid #222', borderBottom: '1px solid #222', textDecoration: 'none', color: '#fff' }}>
+                        <a href={cleanUrl} target="_blank" rel="noreferrer" style={{ display: 'flex', flexDirection: 'column', background: colors.inputBg, borderTop: `1px solid ${colors.border}`, borderBottom: `1px solid ${colors.border}`, textDecoration: 'none', color: colors.textMain }}>
                           {item.data.ogImage && <img src={item.data.ogImage} alt={item.data.ogTitle} style={{ width: '100%', maxHeight: 300, objectFit: 'cover' }} />}
                           <div style={{ padding: '12px 16px' }}>
                             {item.data.ogTitle && <div style={{ fontSize: 15, fontWeight: 'bold', marginBottom: 4 }}>{item.data.ogTitle}</div>}
-                            {item.data.ogDescription && <div style={{ fontSize: 12, color: '#888', lineHeight: 1.4 }}>{item.data.ogDescription}</div>}
+                            {item.data.ogDescription && <div style={{ fontSize: 12, color: colors.textMuted, lineHeight: 1.4 }}>{item.data.ogDescription}</div>}
                             <div style={{ fontSize: 10, color: '#00d9ff', marginTop: 8, textTransform: 'uppercase' }}>{new URL(cleanUrl).hostname}</div>
                           </div>
                         </a>
                       )}
 
                       {!isEditing && !hasOgData && item.data.postType === 'image' && cleanUrl && (
-                        <div style={{ width: '100%', maxHeight: 400, background: '#000', display: 'flex', justifyContent: 'center', borderTop: '1px solid #222', borderBottom: '1px solid #222' }}>
+                        <div style={{ width: '100%', maxHeight: 400, background: '#000', display: 'flex', justifyContent: 'center', borderTop: `1px solid ${colors.border}`, borderBottom: `1px solid ${colors.border}` }}>
                           <img src={cleanUrl} alt="Post" style={{ width: '100%', height: 'auto', objectFit: 'contain' }} />
                         </div>
                       )}
 
                       {!isEditing && !hasOgData && item.data.postType === 'text' && cleanUrl && (
-                        <a href={cleanUrl} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 16px', background: '#0a0a0a', color: '#00d9ff', textDecoration: 'none', fontSize: 12, borderTop: '1px solid #222', borderBottom: '1px solid #222', wordBreak: 'break-all' }}>
+                        <a href={cleanUrl} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 16px', background: colors.inputBg, color: '#00d9ff', textDecoration: 'none', fontSize: 12, borderTop: `1px solid ${colors.border}`, borderBottom: `1px solid ${colors.border}`, wordBreak: 'break-all' }}>
                           {Icons.link} {cleanUrl}
                         </a>
                       )}
 
                       {!isEditing && item.data.postType === 'video' && isYoutube && cleanUrl && (
-                        <div style={{ position: 'relative', width: '100%', paddingBottom: '56.25%', background: '#000', borderTop: '1px solid #222', borderBottom: '1px solid #222' }}>
+                        <div style={{ position: 'relative', width: '100%', paddingBottom: '56.25%', background: '#000', borderTop: `1px solid ${colors.border}`, borderBottom: `1px solid ${colors.border}` }}>
                           <iframe src={cleanUrl} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none' }} allowFullScreen title="YouTube" scrolling="no" />
                         </div>
                       )}
 
                       <div style={{ padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div style={{ display: 'flex', gap: 20 }}>
-                          <button onClick={(e) => handleLikePost(e, item.data.id)} style={{ background: 'transparent', border: 'none', color: isLiked ? '#ff3366' : '#666', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 600 }}>
+                          <button onClick={(e) => handleLikePost(e, item.data.id)} style={{ background: 'transparent', border: 'none', color: isLiked ? '#ff3366' : colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 600 }}>
                             {isLiked ? Icons.heartFilled : Icons.heart} {item.data.likes_count || 0}
                           </button>
-                          <button onClick={() => openComments('post', item.data.id)} style={{ background: 'transparent', border: 'none', color: '#666', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 600 }}>
+                          <button onClick={() => openComments('post', item.data.id)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 600 }}>
                             {Icons.message} Commenter
                           </button>
                         </div>
@@ -464,27 +486,27 @@ export const FeedPage: React.FC = () => {
                 const isLiked = isTrackItem(item) && userLikes[item.data.id];
                 
                 return (
-                  <div key={`${item.type}-${item.data.id}-${index}`} style={{ background: '#121212', border: '1px solid #222', borderRadius: 16, overflow: 'hidden' }}>
+                  <div key={`${item.type}-${item.data.id}-${index}`} style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, overflow: 'hidden' }}>
                     <div style={{ padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                        <div className="avatar-circle" style={{ width: 40, height: 40, flexShrink: 0, borderRadius: '50%', background: '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center', color: item.type === 'track' ? '#00d9ff' : '#ff3366', fontWeight: 'bold' }}>
+                        <div className="avatar-circle" style={{ width: 40, height: 40, flexShrink: 0, borderRadius: '50%', background: colors.avatarBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: item.type === 'track' ? '#00d9ff' : '#ff3366', fontWeight: 'bold' }}>
                           {authorName.charAt(0).toUpperCase()}
                         </div>
                         <div>
-                          <div style={{ fontSize: 14, fontWeight: 600, color: '#fff' }}>
-                            {authorName} <span style={{ color: '#666', fontWeight: 400 }}>{item.type === 'track' ? 'a partagé un son' : 'a créé un événement'}</span>
+                          <div style={{ fontSize: 14, fontWeight: 600, color: colors.textMain }}>
+                            {authorName} <span style={{ color: colors.textMuted, fontWeight: 400 }}>{item.type === 'track' ? 'a partagé un son' : 'a créé un événement'}</span>
                           </div>
-                          <div style={{ fontSize: 12, color: '#666', marginTop: 2 }}>{formatDate(item.date)}</div>
+                          <div style={{ fontSize: 12, color: colors.textMuted, marginTop: 2 }}>{formatDate(item.date)}</div>
                         </div>
                       </div>
                     </div>
 
                     {isTrackItem(item) && (
                       <>
-                        <div style={{ padding: '0 16px 12px 16px', fontSize: 14, color: '#ddd' }}>
-                          Découvrez le nouveau son : <strong style={{ color: '#fff' }}>{item.data.title}</strong>
+                        <div style={{ padding: '0 16px 12px 16px', fontSize: 14, color: colors.textLight }}>
+                          Découvrez le nouveau son : <strong style={{ color: colors.textMain }}>{item.data.title}</strong>
                         </div>
-                        <div style={{ position: 'relative', width: '100%', height: isMobile ? 200 : 340, background: item.data.cover_url ? `url(${item.data.cover_url}) center/cover` : '#0a0a0a', cursor: 'pointer', borderTop: '1px solid #222', borderBottom: '1px solid #222' }} onClick={() => navigate(`/track/${item.data.id}`)}>
+                        <div style={{ position: 'relative', width: '100%', height: isMobile ? 200 : 340, background: item.data.cover_url ? `url(${item.data.cover_url}) center/cover` : colors.inputBg, cursor: 'pointer', borderTop: `1px solid ${colors.border}`, borderBottom: `1px solid ${colors.border}` }} onClick={() => navigate(`/track/${item.data.id}`)}>
                           <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <button onClick={(e) => handlePlayClick(e, item.data)} style={{ width: 64, height: 64, borderRadius: '50%', background: isThisPlaying ? '#00d9ff' : 'rgba(255,255,255,0.1)', border: isThisPlaying ? 'none' : '1px solid rgba(255,255,255,0.3)', color: isThisPlaying ? '#000' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }}>
                               {isThisPlaying ? Icons.pause : Icons.play}
@@ -496,32 +518,32 @@ export const FeedPage: React.FC = () => {
 
                     {isEventItem(item) && (
                       <>
-                        <div style={{ padding: '0 16px 12px 16px', fontSize: 14, color: '#ddd' }}>Nouvel événement : <strong style={{ color: '#fff' }}>{item.data.title}</strong></div>
+                        <div style={{ padding: '0 16px 12px 16px', fontSize: 14, color: colors.textLight }}>Nouvel événement : <strong style={{ color: colors.textMain }}>{item.data.title}</strong></div>
                         {item.data.image_url ? (
-                          <div style={{ width: '100%', aspectRatio: '16 / 9', background: `url(${item.data.image_url}) center/cover`, borderTop: '1px solid #222', borderBottom: '1px solid #222' }} />
+                          <div style={{ width: '100%', aspectRatio: '16 / 9', background: `url(${item.data.image_url}) center/cover`, borderTop: `1px solid ${colors.border}`, borderBottom: `1px solid ${colors.border}` }} />
                         ) : (
-                          <div style={{ width: '100%', height: 160, background: '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#333', borderTop: '1px solid #222', borderBottom: '1px solid #222' }}>{Icons.calendar}</div>
+                          <div style={{ width: '100%', height: 160, background: colors.inputBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.border, borderTop: `1px solid ${colors.border}`, borderBottom: `1px solid ${colors.border}` }}>{Icons.calendar}</div>
                         )}
                         <div style={{ padding: '16px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#00d9ff', fontWeight: 700, marginBottom: 6 }}>{Icons.calendar} {new Date(item.data.event_date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#888' }}>{Icons.mapPin} {item.data.location} {item.data.city ? `, ${item.data.city}` : ''}</div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: colors.textMuted }}>{Icons.mapPin} {item.data.location} {item.data.city ? `, ${item.data.city}` : ''}</div>
                         </div>
                       </>
                     )}
 
-                    <div style={{ padding: '12px 16px', borderTop: '1px solid #222', display: 'flex', gap: 20 }}>
+                    <div style={{ padding: '12px 16px', borderTop: `1px solid ${colors.border}`, display: 'flex', gap: 20 }}>
                       {isTrackItem(item) ? (
-                        <button onClick={(e) => handleLikeTrack(e, item.data.id)} style={{ background: 'transparent', border: 'none', color: isLiked ? '#ff3366' : '#666', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 600 }}>
+                        <button onClick={(e) => handleLikeTrack(e, item.data.id)} style={{ background: 'transparent', border: 'none', color: isLiked ? '#ff3366' : colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 600 }}>
                           {isLiked ? Icons.heartFilled : Icons.heart} {item.data.likes_count || 0}
                         </button>
                       ) : (
-                        <button style={{ background: 'transparent', border: 'none', color: '#666', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 600 }}>{Icons.heart} J'aime</button>
+                        <button style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 600 }}>{Icons.heart} J'aime</button>
                       )}
-                      <button onClick={() => openComments(isTrackItem(item) ? 'track' : 'post', item.data.id)} style={{ background: 'transparent', border: 'none', color: '#666', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 600 }}>
+                      <button onClick={() => openComments(isTrackItem(item) ? 'track' : 'post', item.data.id)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 600 }}>
                         {Icons.message} Commenter
                       </button>
                       {isTrackItem(item) && (
-                        <button onClick={() => navigate(`/track/${item.data.id}`)} style={{ marginLeft: 'auto', background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>Écouter ↗</button>
+                        <button onClick={() => navigate(`/track/${item.data.id}`)} style={{ marginLeft: 'auto', background: 'transparent', border: 'none', color: colors.textMain, cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>Écouter ↗</button>
                       )}
                     </div>
                   </div>
@@ -533,34 +555,34 @@ export const FeedPage: React.FC = () => {
 
         {!isMobile && (
           <aside style={{ width: 320, flexShrink: 0, position: 'sticky', top: 32, alignSelf: 'flex-start', display: 'flex', flexDirection: 'column', gap: 24 }}>
-            <div style={{ background: '#121212', border: '1px solid #222', borderRadius: 16, padding: 20 }}>
-              <h3 style={{ fontSize: 13, fontWeight: 800, letterSpacing: '1px', margin: '0 0 20px 0', color: '#fff', textTransform: 'uppercase' }}>Top 5 du moment</h3>
+            <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 20 }}>
+              <h3 style={{ fontSize: 13, fontWeight: 800, letterSpacing: '1px', margin: '0 0 20px 0', color: colors.textMain, textTransform: 'uppercase' }}>Top 5 du moment</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 {topTracks.map((track, index) => (
                   <div key={track.id} style={{ display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer' }} onClick={() => navigate(`/track/${track.id}`)}>
-                    <div style={{ fontSize: 18, color: index === 0 ? '#00d9ff' : '#333', fontWeight: 900, fontStyle: 'italic', width: 24 }}>0{index + 1}</div>
-                    <div style={{ width: 44, height: 44, borderRadius: 6, background: track.cover_url ? `url(${track.cover_url}) center/cover` : '#222', flexShrink: 0 }} />
+                    <div style={{ fontSize: 18, color: index === 0 ? '#00d9ff' : colors.textMuted, fontWeight: 900, fontStyle: 'italic', width: 24 }}>0{index + 1}</div>
+                    <div style={{ width: 44, height: 44, borderRadius: 6, background: track.cover_url ? `url(${track.cover_url}) center/cover` : colors.inputBg, flexShrink: 0 }} />
                     <div style={{ minWidth: 0, flex: 1 }}>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.title}</div>
-                      <div style={{ fontSize: 11, color: '#666', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: 2 }}>{track.artist}</div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: colors.textMain, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.title}</div>
+                      <div style={{ fontSize: 11, color: colors.textMuted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: 2 }}>{track.artist}</div>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
-            <div style={{ background: '#121212', border: '1px solid #222', borderRadius: 16, padding: 20 }}>
-              <h3 style={{ fontSize: 13, fontWeight: 800, letterSpacing: '1px', margin: '0 0 20px 0', color: '#fff', textTransform: 'uppercase' }}>Événements à venir</h3>
+            <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 20 }}>
+              <h3 style={{ fontSize: 13, fontWeight: 800, letterSpacing: '1px', margin: '0 0 20px 0', color: colors.textMain, textTransform: 'uppercase' }}>Événements à venir</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 {upcomingEvents.map((event) => (
                   <a key={event.id} href={event.url || '#'} target="_blank" rel="noopener noreferrer" style={{ display: 'block', textDecoration: 'none' }}>
                     <div style={{ fontSize: 11, color: '#00d9ff', fontWeight: 800, marginBottom: 4, letterSpacing: '0.5px' }}>{new Date(event.event_date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }).toUpperCase()}</div>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{event.title}</div>
-                    <div style={{ fontSize: 12, color: '#666', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: 2 }}>{event.city || event.location}</div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: colors.textMain, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{event.title}</div>
+                    <div style={{ fontSize: 12, color: colors.textMuted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: 2 }}>{event.city || event.location}</div>
                   </a>
                 ))}
               </div>
             </div>
-            <div style={{ background: '#121212', border: '1px solid #222', borderRadius: 16, padding: 20 }}>
+            <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 20 }}>
               <OnlineUsersWidget />
             </div>
           </aside>
@@ -569,29 +591,29 @@ export const FeedPage: React.FC = () => {
 
       {commentsModalOpen && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          <div style={{ background: '#121212', border: '1px solid #222', borderRadius: 16, padding: 20, width: '100%', maxWidth: 500, maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 20, width: '100%', maxWidth: 500, maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <h2 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800 }}>Commentaires</h2>
-              <button onClick={() => setCommentsModalOpen(false)} style={{ background: 'transparent', border: 'none', color: '#888', fontSize: 20, cursor: 'pointer' }}>✕</button>
+              <button onClick={() => setCommentsModalOpen(false)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, fontSize: 20, cursor: 'pointer' }}>✕</button>
             </div>
             
             <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 16 }}>
-              {loadingComments ? <div style={{ color: '#666', textAlign: 'center', padding: 20 }}>Chargement...</div> : comments.length === 0 ? <div style={{ color: '#666', textAlign: 'center', padding: 20, fontStyle: 'italic' }}>Aucun commentaire.</div> : comments.map(c => (
+              {loadingComments ? <div style={{ color: colors.textMuted, textAlign: 'center', padding: 20 }}>Chargement...</div> : comments.length === 0 ? <div style={{ color: colors.textMuted, textAlign: 'center', padding: 20, fontStyle: 'italic' }}>Aucun commentaire.</div> : comments.map(c => (
                   <div key={c.id} style={{ display: 'flex', gap: 10 }}>
-                    <div className="avatar-circle" style={{ width: 28, height: 28, flexShrink: 0, borderRadius: '50%', background: '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#00d9ff' }}>
+                    <div className="avatar-circle" style={{ width: 28, height: 28, flexShrink: 0, borderRadius: '50%', background: colors.avatarBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#00d9ff' }}>
                       {c.profiles?.username?.charAt(0).toUpperCase() || '?'}
                     </div>
                     <div>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: '#fff' }}>{c.profiles?.username || 'Anonyme'} <span style={{ color: '#666', fontWeight: 400, fontSize: 10, marginLeft: 6 }}>{formatDate(new Date(c.created_at))}</span></div>
-                      <div style={{ fontSize: 13, color: '#ddd', marginTop: 2 }}>{c.content}</div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: colors.textMain }}>{c.profiles?.username || 'Anonyme'} <span style={{ color: colors.textMuted, fontWeight: 400, fontSize: 10, marginLeft: 6 }}>{formatDate(new Date(c.created_at))}</span></div>
+                      <div style={{ fontSize: 13, color: colors.textLight, marginTop: 2 }}>{c.content}</div>
                     </div>
                   </div>
               ))}
             </div>
 
             <div style={{ display: 'flex', gap: 8 }}>
-              <input type="text" value={newComment} onChange={(e) => setNewComment(e.target.value)} placeholder="Ajouter un commentaire..." onKeyDown={(e) => e.key === 'Enter' && submitComment()} style={{ flex: 1, padding: 10, background: '#0a0a0a', border: '1px solid #222', borderRadius: 8, color: '#fff', outline: 'none', fontSize: 13 }} />
-              <button onClick={submitComment} disabled={!newComment.trim() || !user} style={{ padding: '10px 16px', background: '#fff', color: '#000', border: 'none', borderRadius: 8, fontWeight: 700, cursor: 'pointer', fontSize: 13 }}>Envoyer</button>
+              <input type="text" value={newComment} onChange={(e) => setNewComment(e.target.value)} placeholder="Ajouter un commentaire..." onKeyDown={(e) => e.key === 'Enter' && submitComment()} style={{ flex: 1, padding: 10, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain, outline: 'none', fontSize: 13 }} />
+              <button onClick={submitComment} disabled={!newComment.trim() || !user} style={{ padding: '10px 16px', background: colors.btnPublishBg, color: colors.btnPublishText, border: 'none', borderRadius: 8, fontWeight: 700, cursor: 'pointer', fontSize: 13 }}>Envoyer</button>
             </div>
           </div>
         </div>

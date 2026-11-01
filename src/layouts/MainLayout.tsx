@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { usePlayer } from '../contexts/PlayerContext';
 import { GlobalPlayer } from '../components/GlobalPlayer';
 import { useIsMobile } from '../hooks/useIsMobile';
+import { useTheme } from '../contexts/ThemeContext';
 
 const Icons = {
   home: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>,
@@ -19,7 +20,8 @@ const Icons = {
   settings: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" /></svg>,
   admin: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>,
   menu: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>,
-  video: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect><line x1="7" y1="2" x2="7" y2="22"></line><line x1="17" y1="2" x2="17" y2="22"></line><line x1="2" y1="12" x2="22" y2="12"></line><line x1="2" y1="7" x2="7" y2="7"></line><line x1="2" y1="17" x2="7" y2="17"></line><line x1="17" y1="17" x2="22" y2="17"></line><line x1="17" y1="7" x2="22" y2="7"></line></svg>,
+  sun: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>,
+  moon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>,
 };
 
 const NAV_ITEMS = [
@@ -49,12 +51,24 @@ export const MainLayout: React.FC = () => {
   const isMobile = useIsMobile(768);
   const location = useLocation();
   const navigate = useNavigate();
+  
+  const { theme, toggleTheme } = useTheme();
+  const isDark = theme === 'dark';
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // ✅ Détection des pages plein écran (sans sidebar)
-  // ✅ Détection des pages plein écran (sans sidebar)
-const isFullScreen = location.pathname === '/mastering' || location.pathname === '/cdj' || location.pathname === '/studio' || location.pathname === '/nouveautes';
+  // ✅ PALETTE DE COULEURS DYNAMIQUES
+  const colors = {
+    bg: isDark ? '#0a0a0a' : '#ffffff',
+    textMain: isDark ? '#ffffff' : '#1a1a1a',
+    textMuted: isDark ? '#888888' : '#666666',
+    border: isDark ? '#222222' : '#e5e7eb',
+    hoverBg: isDark ? '#121212' : '#f3f4f6',
+    activeBg: isDark ? 'rgba(0, 217, 255, 0.05)' : 'rgba(0, 217, 255, 0.1)',
+    mainBg: isDark ? '#0a0a0a' : '#f5f5f7',
+  };
+
+  const isFullScreen = location.pathname === '/mastering' || location.pathname === '/cdj' || location.pathname === '/studio' || location.pathname === '/nouveautes';
 
   useEffect(() => { setMobileMenuOpen(false); }, [location.pathname]);
   useEffect(() => { if (user?.id) refreshProfile(); }, [user?.id, refreshProfile]);
@@ -62,29 +76,60 @@ const isFullScreen = location.pathname === '/mastering' || location.pathname ===
   const displayName = profile?.username || user?.email?.split('@')[0] || 'Artiste';
   const avatarUrl = profile?.avatar_url;
 
-  // ✅ SI PLEIN ÉCRAN : On retourne juste le contenu + le player
+  // ✅ BOUTON FLOTTANT (visible partout)
+  const ThemeToggleButton = () => (
+    <button
+      onClick={toggleTheme}
+      style={{
+        position: 'fixed',
+        top: 20,
+        right: 20,
+        zIndex: 9999,
+        width: 44, height: 44,
+        borderRadius: '50%',
+        background: colors.panelBg,
+        border: `1px solid ${colors.border}`,
+        color: colors.textMain,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        cursor: 'pointer',
+        boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+        transition: 'all 0.2s',
+      }}
+      title={isDark ? 'Passer en mode clair' : 'Passer en mode sombre'}
+    >
+      {isDark ? Icons.sun : Icons.moon}
+    </button>
+  );
+
+  // ✅ SI PLEIN ÉCRAN
   if (isFullScreen) {
     return (
-      <div style={{ minHeight: '100vh', background: '#020205', color: '#fff' }}>
+      <div style={{ minHeight: '100vh', background: colors.bg, color: colors.textMain, transition: 'background 0.3s ease' }}>
+        <ThemeToggleButton /> {/* ✅ Ajout du bouton flottant */}
         <Outlet />
         {currentTrack && <GlobalPlayer currentTrack={currentTrack} isPlaying={isPlaying} onTogglePlay={togglePlay} onStop={stop} />}
       </div>
     );
   }
 
-  // ... le reste (mobile + desktop) reste inchangé
+  // ✅ VERSION MOBILE
   if (isMobile) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: '#0a0a0a', color: '#fff', overflowX: 'hidden', width: '100%', maxWidth: '100vw' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: colors.bg, color: colors.textMain, overflowX: 'hidden', width: '100%', maxWidth: '100vw', transition: 'background 0.3s ease' }}>
         
-        <header style={{ position: 'sticky', top: 0, zIndex: 50, background: '#0a0a0a', borderBottom: '1px solid #222', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <header style={{ position: 'sticky', top: 0, zIndex: 50, background: colors.bg, borderBottom: `1px solid ${colors.border}`, padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
             <img src="/icons/icon-192.png" alt="DropZone DJ" style={{ width: 32, height: 32, objectFit: 'contain', borderRadius: 8 }} />
-            <span style={{ fontWeight: 800, fontSize: '1rem', color: '#fff', letterSpacing: '-0.5px' }}>DROPZONE <span style={{ color: '#00d9ff' }}>DJ</span></span>
+            <span style={{ fontWeight: 800, fontSize: '1rem', color: colors.textMain, letterSpacing: '-0.5px' }}>DROPZONE <span style={{ color: '#00d9ff' }}>DJ</span></span>
           </Link>
-          <Link to={`/profil/${user?.id}`} className="avatar-circle" style={{ width: 34, height: 34, overflow: 'hidden', background: '#1a1a1a', border: '1px solid #333', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#00d9ff', fontWeight: 700, fontSize: 13, textDecoration: 'none' }}>
-            {avatarUrl ? <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : displayName.charAt(0).toUpperCase()}
-          </Link>
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+            <button onClick={toggleTheme} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', padding: 4 }}>
+              {isDark ? Icons.sun : Icons.moon}
+            </button>
+            <Link to={`/profil/${user?.id}`} className="avatar-circle" style={{ width: 34, height: 34, overflow: 'hidden', background: colors.hoverBg, border: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#00d9ff', fontWeight: 700, fontSize: 13, textDecoration: 'none' }}>
+              {avatarUrl ? <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : displayName.charAt(0).toUpperCase()}
+            </Link>
+          </div>
         </header>
 
         <main style={{ flex: 1, padding: '16px 12px', paddingBottom: currentTrack ? 140 : 80, overflowX: 'hidden', width: '100%', maxWidth: '100vw' }}>
@@ -93,40 +138,9 @@ const isFullScreen = location.pathname === '/mastering' || location.pathname ===
 
         {currentTrack && <GlobalPlayer currentTrack={currentTrack} isPlaying={isPlaying} onTogglePlay={togglePlay} onStop={stop} />}
 
-        {mobileMenuOpen && (
-          <>
-            <div onClick={() => setMobileMenuOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 90 }} />
-            <aside style={{ position: 'fixed', top: 0, left: 0, bottom: 0, width: 280, background: '#0a0a0a', borderRight: '1px solid #222', zIndex: 100, display: 'flex', flexDirection: 'column', padding: '24px 16px', overflowY: 'auto', animation: 'slideIn 0.2s ease-out' }}>
-              <style>{`@keyframes slideIn { from { transform: translateX(-100%); } to { transform: translateX(0); } }`}</style>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-                <span style={{ fontSize: 16, fontWeight: 800, color: '#fff' }}>Menu complet</span>
-                <button onClick={() => setMobileMenuOpen(false)} style={{ background: 'transparent', border: 'none', color: '#888', fontSize: 24, cursor: 'pointer' }}>✕</button>
-              </div>
-
-              <nav style={{ display: 'flex', flexDirection: 'column' }}>
-                {NAV_ITEMS.map(item => {
-                  const isActive = item.exact ? location.pathname === item.path : location.pathname.startsWith(item.path);
-                  return (
-                    <NavLink key={item.path} to={item.path} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: '1px solid #1a1a1a', textDecoration: 'none', color: isActive ? '#00d9ff' : '#888', fontWeight: isActive ? 700 : 500, fontSize: 14, borderLeft: isActive ? '2px solid #00d9ff' : '2px solid transparent' }}>
-                      <span style={{ display: 'flex' }}>{item.icon}</span>
-                      {item.label}
-                    </NavLink>
-                  );
-                })}
-                {isAdmin && (
-                  <NavLink to="/admin" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: '1px solid #1a1a1a', textDecoration: 'none', color: '#ff4444', fontWeight: 700, fontSize: 14, marginTop: 8, border: '1px solid rgba(255, 68, 68, 0.2)', borderRadius: 8 }}>
-                    <span style={{ display: 'flex' }}>{Icons.admin}</span>
-                    Panel Admin
-                  </NavLink>
-                )}
-              </nav>
-            </aside>
-          </>
-        )}
-
         <nav style={{ 
           position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50,
-          background: '#0a0a0a', borderTop: '1px solid #222',
+          background: colors.bg, borderTop: `1px solid ${colors.border}`,
           display: 'flex', justifyContent: 'space-around', alignItems: 'center',
           padding: '8px 4px',
           paddingBottom: 'calc(8px + env(safe-area-inset-bottom))',
@@ -135,7 +149,7 @@ const isFullScreen = location.pathname === '/mastering' || location.pathname ===
             const isMenu = item.path === '#menu';
             const isActive = !isMenu && (item.exact ? location.pathname === item.path : location.pathname.startsWith(item.path));
             return (
-              <button key={item.path} onClick={() => isMenu ? setMobileMenuOpen(true) : navigate(item.path)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 12, background: 'transparent', border: 'none', color: isActive ? '#00d9ff' : '#666', cursor: 'pointer', minWidth: 60 }}>
+              <button key={item.path} onClick={() => isMenu ? setMobileMenuOpen(true) : navigate(item.path)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 12, background: 'transparent', border: 'none', color: isActive ? '#00d9ff' : colors.textMuted, cursor: 'pointer', minWidth: 60 }}>
                 <div style={{ transform: isActive ? 'scale(1.1)' : 'scale(1)', transition: 'transform 0.1s' }}>{item.icon}</div>
                 <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.2px' }}>{item.label}</span>
               </button>
@@ -146,28 +160,39 @@ const isFullScreen = location.pathname === '/mastering' || location.pathname ===
     );
   }
 
-  // DESKTOP (avec sidebar)
+  // ✅ VERSION DESKTOP
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#0a0a0a', color: '#fff' }}>
-      <aside style={{ width: 240, background: '#0a0a0a', borderRight: '1px solid #222', display: 'flex', flexDirection: 'column', position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 50 }}>
-        <div style={{ padding: '24px 20px', borderBottom: '1px solid #222', display: 'flex', alignItems: 'center', gap: 12 }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: colors.mainBg, color: colors.textMain, transition: 'background 0.3s ease' }}>
+      
+      {/* ✅ BOUTON FLOTTANT EN HAUT À DROITE */}
+      <ThemeToggleButton />
+
+      <aside style={{ width: 240, background: colors.bg, borderRight: `1px solid ${colors.border}`, display: 'flex', flexDirection: 'column', position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 50, transition: 'background 0.3s ease, border-color 0.3s ease' }}>
+        <div style={{ padding: '24px 20px', borderBottom: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', gap: 12 }}>
           <img src="/icons/icon-192.png" alt="DropZone DJ" style={{ width: 36, height: 36, objectFit: 'contain', borderRadius: 8 }} />
-          <span style={{ fontWeight: 800, fontSize: '1.1rem', letterSpacing: '-0.5px' }}>DropZone DJ</span>
+          <span style={{ fontWeight: 800, fontSize: '1.1rem', letterSpacing: '-0.5px', color: colors.textMain }}>DropZone DJ</span>
         </div>
 
         <nav style={{ flex: 1, padding: '16px 12px', display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
           {NAV_ITEMS.map(item => {
             const isActive = item.exact ? location.pathname === item.path : location.pathname.startsWith(item.path);
             return (
-              <NavLink key={item.path} to={item.path} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: '1px solid #1a1a1a', textDecoration: 'none', color: isActive ? '#00d9ff' : '#888', background: isActive ? 'rgba(0, 217, 255, 0.05)' : 'transparent', fontWeight: isActive ? 700 : 500, fontSize: '0.9rem', borderLeft: isActive ? '2px solid #00d9ff' : '2px solid transparent', transition: 'all 0.2s' }}
-                onMouseEnter={(e) => { if (!isActive) { e.currentTarget.style.background = '#121212'; e.currentTarget.style.color = '#fff'; } }}
-                onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#888'; } }}
+              <NavLink key={item.path} to={item.path} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: `1px solid ${colors.border}`, textDecoration: 'none', color: isActive ? '#00d9ff' : colors.textMuted, background: isActive ? colors.activeBg : 'transparent', fontWeight: isActive ? 700 : 500, fontSize: '0.9rem', borderLeft: isActive ? '2px solid #00d9ff' : '2px solid transparent', transition: 'all 0.2s' }}
+                onMouseEnter={(e) => { if (!isActive) { e.currentTarget.style.background = colors.hoverBg; e.currentTarget.style.color = colors.textMain; } }}
+                onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = colors.textMuted; } }}
               >
                 <span style={{ display: 'flex' }}>{item.icon}</span>
                 {item.label}
               </NavLink>
             );
           })}
+          
+          {/* BOUTON DE THEME DANS LE MENU */}
+          <button onClick={toggleTheme} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', marginTop: 16, border: `1px solid ${colors.border}`, borderRadius: 8, background: 'transparent', color: colors.textMuted, cursor: 'pointer', fontWeight: 600, fontSize: '0.9rem', transition: 'all 0.2s' }}>
+             {isDark ? Icons.sun : Icons.moon}
+             {isDark ? 'Mode Clair' : 'Mode Sombre'}
+          </button>
+
           {isAdmin && (
             <NavLink to="/admin" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', textDecoration: 'none', color: '#ff4444', background: 'rgba(255, 68, 68, 0.05)', fontWeight: 700, fontSize: '0.9rem', marginTop: 16, border: '1px solid rgba(255, 68, 68, 0.2)', borderRadius: 8 }}>
               <span style={{ display: 'flex' }}>{Icons.admin}</span>
@@ -176,13 +201,13 @@ const isFullScreen = location.pathname === '/mastering' || location.pathname ===
           )}
         </nav>
 
-        <Link to={`/profil/${user?.id}`} style={{ padding: '16px 20px', borderTop: '1px solid #222', display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none', color: '#fff' }} onMouseEnter={(e) => e.currentTarget.style.background = '#111'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
-          <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#1a1f2e', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#00d9ff', fontWeight: 700, fontSize: 13, border: '1px solid #333' }}>
+        <Link to={`/profil/${user?.id}`} style={{ padding: '16px 20px', borderTop: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none', color: colors.textMain }} onMouseEnter={(e) => e.currentTarget.style.background = colors.hoverBg} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
+          <div style={{ width: 36, height: 36, borderRadius: '50%', background: colors.hoverBg, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#00d9ff', fontWeight: 700, fontSize: 13, border: `1px solid ${colors.border}` }}>
             {avatarUrl ? <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : displayName.charAt(0).toUpperCase()}
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
              <div style={{ fontSize: '0.9rem', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{displayName}</div>
-             <div style={{ fontSize: '0.75rem', color: '#666' }}>Voir mon profil</div>
+             <div style={{ fontSize: '0.75rem', color: colors.textMuted }}>Voir mon profil</div>
           </div>
         </Link>
       </aside>

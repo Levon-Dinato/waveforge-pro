@@ -1,6 +1,7 @@
 // src/pages/ToolsPage.tsx
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useTheme } from '../contexts/ThemeContext'; // ✅ IMPORT DU THEME
 
 const TOOLS = [
   {
@@ -31,19 +32,33 @@ const TOOLS = [
     icon: '🎚️',
     color: '#00ff9d'
   },
-   
 ];
 
 export const ToolsPage: React.FC = () => {
+  // ✅ RÉCUPÉRATION DU THÈME
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
+  // ✅ PALETTE DE COULEURS DYNAMIQUES
+  const colors = {
+    bg: isDark ? '#0a0a0a' : '#f5f5f7',
+    panelBg: isDark ? '#1c1c1c' : '#ffffff',
+    iconBg: isDark ? '#121212' : '#f3f4f6',
+    border: isDark ? '#2a2a2a' : '#e5e7eb',
+    textMain: isDark ? '#ffffff' : '#1a1a1a',
+    textMuted: isDark ? '#999999' : '#666666',
+    textLight: isDark ? '#666666' : '#888888',
+  };
+
   return (
-    <div style={{ maxWidth: 1000, margin: '0 auto', padding: '60px 20px', color: '#fff', fontFamily: 'Inter, sans-serif' }}>
+    <div style={{ maxWidth: 1000, margin: '0 auto', padding: '60px 20px', color: colors.textMain, fontFamily: 'Inter, sans-serif', background: colors.bg, minHeight: '100vh', transition: 'background 0.3s ease, color 0.3s ease' }}>
       
       {/* En-tête minimaliste */}
-      <div style={{ marginBottom: 48, textAlign: 'left', borderBottom: '1px solid #2a2a2a', paddingBottom: 24 }}>
-        <h1 style={{ fontSize: '2rem', fontWeight: 800, margin: '0 0 8px 0', letterSpacing: '-0.5px' }}>
+      <div style={{ marginBottom: 48, textAlign: 'left', borderBottom: `1px solid ${colors.border}`, paddingBottom: 24 }}>
+        <h1 style={{ fontSize: '2rem', fontWeight: 800, margin: '0 0 8px 0', letterSpacing: '-0.5px', color: colors.textMain }}>
           OUTILS <span style={{ color: '#00d9ff' }}>DJ</span>
         </h1>
-        <p style={{ color: '#999', fontSize: '0.9rem', margin: 0 }}>
+        <p style={{ color: colors.textMuted, fontSize: '0.9rem', margin: 0 }}>
           Ta suite de production. Crée, mixe et masterise.
         </p>
       </div>
@@ -61,49 +76,52 @@ export const ToolsPage: React.FC = () => {
             style={{ textDecoration: 'none' }}
           >
             <div style={{ 
-              background: '#1c1c1c', 
-              border: '1px solid #2a2a2a', 
+              background: colors.panelBg,
+              border: `1px solid ${colors.border}`,
               borderRadius: 8, 
               padding: 20,
               height: '100%',
               display: 'flex',
               flexDirection: 'column',
               transition: 'all 0.2s ease',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              boxShadow: isDark ? 'none' : '0 4px 15px rgba(0,0,0,0.03)'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.transform = 'translateY(-4px)';
               e.currentTarget.style.borderColor = tool.color;
+              e.currentTarget.style.boxShadow = isDark ? `0 4px 20px ${tool.color}20` : `0 10px 25px ${tool.color}30`;
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.borderColor = '#2a2a2a';
+              e.currentTarget.style.borderColor = colors.border;
+              e.currentTarget.style.boxShadow = isDark ? 'none' : '0 4px 15px rgba(0,0,0,0.03)';
             }}
             >
               <div style={{ 
-                width: 40, 
-                height: 40, 
-                borderRadius: 8, 
-                background: '#121212', 
-                border: `1px solid #2a2a2a`, 
+                width: 48, 
+                height: 48, 
+                borderRadius: 10, 
+                background: colors.iconBg,
+                border: `1px solid ${colors.border}`,
                 display: 'flex', 
                 alignItems: 'center', 
                 justifyContent: 'center', 
-                fontSize: 20,
+                fontSize: 24,
                 marginBottom: 16,
               }}>
                 {tool.icon}
               </div>
-              <h2 style={{ fontSize: '1rem', fontWeight: 700, margin: '0 0 8px 0', color: '#fff' }}>
+              <h2 style={{ fontSize: '1.1rem', fontWeight: 700, margin: '0 0 8px 0', color: colors.textMain }}>
                 {tool.title}
               </h2>
-              <p style={{ color: '#999', fontSize: '0.8rem', lineHeight: 1.5, margin: 0, flex: 1 }}>
+              <p style={{ color: colors.textMuted, fontSize: '0.85rem', lineHeight: 1.5, margin: 0, flex: 1 }}>
                 {tool.desc}
               </p>
               <div style={{ 
                 marginTop: 20, 
-                color: '#666', 
-                fontSize: '0.75rem', 
+                color: colors.textLight,
+                fontSize: '0.8rem', 
                 fontWeight: 600, 
                 display: 'flex', 
                 alignItems: 'center', 

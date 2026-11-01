@@ -22,7 +22,7 @@ app.post('/analyze-audio', upload.single('audio'), async (req, res) => {
     
     if (!req.file) return res.status(400).json({ error: 'Aucun fichier fourni.' });
 
-    const basicPitch = new BasicPitch('https://storage.googleapis.com/magentadata/js/checkpoints/piano_transcription/basic_pitch/model.json');
+    const basicPitch = new BasicPitch('https://cdn.jsdelivr.net/npm/@spotify/basic-pitch/model/model.json');
     
     // ✅ Conversion du Buffer en Uint8Array pour audio-decode
     const uint8Array = new Uint8Array(req.file.buffer);

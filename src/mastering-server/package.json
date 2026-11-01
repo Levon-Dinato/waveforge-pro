@@ -1,0 +1,16 @@
+{
+  "name": "waveforge-server",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@spotify/basic-pitch": "^1.0.1",
+    "audio-decode": "^3.1.0",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "multer": "^1.4.5-lts.1"
+  }
+}

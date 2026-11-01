@@ -149,7 +149,7 @@ export const StudioPage: React.FC = () => {
         </button>
         <span style={{ color: '#333' }}>|</span>
         <h1 style={{ fontSize: '1rem', fontWeight: 900, margin: 0, color: '#fff', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ color: '#00d9ff' }}>🎧</span> STUDIO REMIX
+          <span style={{ color: '#00d9ff' }}>🎧</span> Analyzer MIDI
         </h1>
       </div>
 

@@ -4,6 +4,8 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import { ToastProvider } from './components/ui/Toast';
 import { Analytics } from '@vercel/analytics/react';
+// ✅ IMPORT DU THEME PROVIDER
+import { ThemeProvider } from './contexts/ThemeContext'; 
 import './i18n';
 import './styles/designSystem.css';
 import './styles/transitions.css';
@@ -14,8 +16,6 @@ import { Buffer } from 'buffer';
 // ---------------------------------------------------------
 
 // ✅ DÉBLOQUEUR AUDIO GLOBAL
-// Les navigateurs bloquent l'audio tant qu'il n'y a pas d'interaction.
-// Ce script débloque le contexte au premier clic/toucher/touche.
 const setupAudioUnlock = () => {
   if (typeof window === 'undefined') return;
 
@@ -35,7 +35,6 @@ const setupAudioUnlock = () => {
       console.warn('Audio unlock error', e);
     }
     
-    // On retire les écouteurs une fois que c'est fait
     document.removeEventListener('click', unlock);
     document.removeEventListener('touchstart', unlock);
     document.removeEventListener('keydown', unlock);
@@ -50,9 +49,12 @@ setupAudioUnlock();
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <ToastProvider>
-      <App />
-      <Analytics />
-    </ToastProvider>
+    {/* ✅ ON ENVELOPPE TOUT DANS LE THEME PROVIDER */}
+    <ThemeProvider>
+      <ToastProvider>
+        <App />
+        <Analytics />
+      </ToastProvider>
+    </ThemeProvider>
   </React.StrictMode>
 );

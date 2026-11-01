@@ -54,7 +54,7 @@ export const MainLayout: React.FC = () => {
 
   // ✅ Détection des pages plein écran (sans sidebar)
   // ✅ Détection des pages plein écran (sans sidebar)
-const isFullScreen = location.pathname === '/mastering' || location.pathname === '/cdj' || location.pathname === '/studio';
+const isFullScreen = location.pathname === '/mastering' || location.pathname === '/cdj' || location.pathname === '/studio' || location.pathname === '/nouveautes';
 
   useEffect(() => { setMobileMenuOpen(false); }, [location.pathname]);
   useEffect(() => { if (user?.id) refreshProfile(); }, [user?.id, refreshProfile]);

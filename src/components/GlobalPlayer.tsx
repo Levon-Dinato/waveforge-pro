@@ -49,6 +49,7 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
   };
 
+  // ✅ TON CANVAS EST INTACT
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || !currentTrack) return;
@@ -81,7 +82,6 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
       safePeaks = mockPeaks;
     }
 
-    // ✅ Réduction du nombre de barres sur mobile pour soulager le processeur
     const barCount = isMobile ? 150 : 300;
     const step = Math.ceil(safePeaks.length / barCount);
     const displayPeaks = safePeaks.filter((_: any, i: number) => i % step === 0).slice(0, barCount);
@@ -92,7 +92,7 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
     const playedX = playedRatio * W;
 
     // Partie non jouée
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
     for (let i = 0; i < displayPeaks.length; i++) {
       const x = (i / displayPeaks.length) * W;
       const val = displayPeaks[i] > 1 ? displayPeaks[i] / 100 : displayPeaks[i];
@@ -113,7 +113,7 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
 
     ctx.fillStyle = gradient;
     ctx.shadowColor = '#00d9ff';
-    ctx.shadowBlur = isMobile ? 2 : 6; // ✅ Moins d'ombre sur mobile
+    ctx.shadowBlur = isMobile ? 2 : 6;
 
     for (let i = 0; i < displayPeaks.length; i++) {
       const x = (i / displayPeaks.length) * W;
@@ -153,72 +153,102 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
       position: 'fixed', 
       bottom: isMobile ? 70 : 0, 
       left: 0, right: 0, zIndex: 1000,
-      background: '#0a0a0a', // ✅ Plus de flou (backdropFilter), juste du noir opaque
-      borderTop: '1px solid #222',
+      background: '#09090b', // ✅ Un noir très profond
+      borderTop: '1px solid #27272a',
+      boxShadow: '0 -10px 40px rgba(0,0,0,0.8)' // ✅ Effet de profondeur
     }}>
+      {/* Barre de progression fine tout en haut du player */}
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: '#27272a' }}>
+        <div style={{ width: `${(currentTime / (duration || 1)) * 100}%`, height: '100%', background: '#00d9ff', boxShadow: '0 0 10px #00d9ff' }} />
+      </div>
+
       <div style={{
-        maxWidth: 1200, margin: '0 auto', 
-        height: isMobile ? '60px' : '80px', 
+        maxWidth: 1400, margin: '0 auto', 
+        height: isMobile ? '72px' : '96px', // ✅ Hauteur augmentée pour aérer
         display: 'flex', alignItems: 'center', 
-        gap: isMobile ? '12px' : '24px', 
-        padding: isMobile ? '0 12px' : '0 24px'
+        gap: isMobile ? '12px' : '32px', 
+        padding: isMobile ? '0 16px' : '0 32px'
       }}>
         
-        <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 12, width: isMobile ? 'auto' : '260px', flexShrink: 0 }}>
+        {/* Cover + Titre + Artiste */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 12 : 16, width: isMobile ? 'auto' : '320px', flexShrink: 0 }}>
           <div style={{ 
-            width: isMobile ? 36 : 44, height: isMobile ? 36 : 44, borderRadius: 8, 
-            background: currentTrack.cover_url ? `url(${currentTrack.cover_url}) center/cover` : '#1a1a1a',
-            boxShadow: '0 4px 10px rgba(0,0,0,0.3)'
+            width: isMobile ? 40 : 56, height: isMobile ? 40 : 56, borderRadius: 8, 
+            background: currentTrack.cover_url ? `url(${currentTrack.cover_url}) center/cover` : '#18181b',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+            flexShrink: 0,
+            border: '1px solid #27272a'
           }} />
-          <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', maxWidth: isMobile ? '80px' : 'none' }}>
-            <div style={{ fontSize: isMobile ? 11 : 13, fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{currentTrack.title}</div>
-            <div style={{ fontSize: isMobile ? 9 : 11, color: '#888', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: 2 }}>{currentTrack.artist}</div>
+          <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', maxWidth: isMobile ? '120px' : 'none' }}>
+            <div style={{ fontSize: isMobile ? 13 : 15, fontWeight: 800, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {currentTrack.title}
+            </div>
+            <div style={{ fontSize: isMobile ? 11 : 13, color: '#a1a1aa', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: 4 }}>
+              {currentTrack.artist}
+            </div>
           </div>
         </div>
 
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 16 }}>
+        {/* Contrôles + Waveform */}
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: isMobile ? 12 : 24 }}>
+          
+          {/* Bouton Play plus gros et plus beau */}
           <button onClick={onTogglePlay} style={{ 
-            width: isMobile ? 30 : 36, height: isMobile ? 30 : 36, borderRadius: '50%', background: '#fff', color: '#000', 
-            border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', 
-            cursor: 'pointer', flexShrink: 0
-          }}>
+            width: isMobile ? 36 : 48, height: isMobile ? 36 : 48, borderRadius: '50%', 
+            background: '#fff', color: '#000', border: 'none', 
+            display: 'flex', alignItems: 'center', justifyContent: 'center', 
+            cursor: 'pointer', flexShrink: 0,
+            transition: 'transform 0.1s',
+            boxShadow: '0 0 20px rgba(255,255,255,0.1)'
+          }}
+          onMouseDown={e => e.currentTarget.style.transform = 'scale(0.92)'}
+          onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
+          onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+          >
             {isPlaying ? (
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+              <svg width={isMobile ? 16 : 20} height={isMobile ? 16 : 20} viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
             ) : (
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: 2 }}><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+              <svg width={isMobile ? 16 : 20} height={isMobile ? 16 : 20} viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: 3 }}><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
             )}
           </button>
 
           {!isMobile && (
-            <span style={{ fontSize: 11, fontFamily: 'monospace', color: '#888', width: 35, textAlign: 'right' }}>
+            <span style={{ fontSize: 12, fontFamily: 'monospace', color: '#a1a1aa', width: 40, textAlign: 'right', fontWeight: 600 }}>
               {formatTime(currentTime)}
             </span>
           )}
           
-          <div style={{ flex: 1, height: isMobile ? 35 : 50, position: 'relative', display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+          {/* La waveform avec un peu plus d'espace */}
+          <div style={{ flex: 1, height: isMobile ? 40 : 60, position: 'relative', display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
             <canvas ref={canvasRef} onClick={handleSeek} style={{ width: '100%', height: '100%' }} />
           </div>
           
           {!isMobile && (
-            <span style={{ fontSize: 11, fontFamily: 'monospace', color: '#888', width: 35 }}>
+            <span style={{ fontSize: 12, fontFamily: 'monospace', color: '#a1a1aa', width: 40, fontWeight: 600 }}>
               {formatTime(duration)}
             </span>
           )}
         </div>
 
-        <div style={{ display: 'flex', gap: isMobile ? 8 : 16, alignItems: 'center', justifyContent: 'flex-end', width: isMobile ? 'auto' : '80px' }}>
+        {/* Actions (Download / Close) */}
+        <div style={{ display: 'flex', gap: isMobile ? 8 : 20, alignItems: 'center', justifyContent: 'flex-end', width: isMobile ? 'auto' : '100px' }}>
           {!isMobile && (
             <button 
               onClick={() => forceDownload(currentTrack.audio_url, `${currentTrack.artist} - ${currentTrack.title}.mp3`)}
               title="Télécharger ce son"
-              style={{ background: 'transparent', border: 'none', color: '#666', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+              style={{ background: 'transparent', border: 'none', color: '#a1a1aa', cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'color 0.2s' }}
+              onMouseEnter={e => e.currentTarget.style.color = '#fff'}
+              onMouseLeave={e => e.currentTarget.style.color = '#a1a1aa'}
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
             </button>
           )}
 
-          <button onClick={onStop} style={{ background: 'transparent', border: 'none', color: '#666', cursor: 'pointer', display: 'flex', alignItems: 'center' }} title="Fermer le lecteur">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          <button onClick={onStop} style={{ background: 'transparent', border: 'none', color: '#a1a1aa', cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'color 0.2s' }} title="Fermer le lecteur"
+            onMouseEnter={e => e.currentTarget.style.color = '#ff5c5c'}
+            onMouseLeave={e => e.currentTarget.style.color = '#a1a1aa'}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
           </button>
         </div>
 

@@ -8,6 +8,11 @@ import './i18n';
 import './styles/designSystem.css';
 import './styles/transitions.css';
 
+// ✅ FIX POUR MUSIC-METADATA-BROWSER (Erreur Buffer is not defined)
+import { Buffer } from 'buffer';
+(window as any).Buffer = Buffer;
+// ---------------------------------------------------------
+
 // ✅ DÉBLOQUEUR AUDIO GLOBAL
 // Les navigateurs bloquent l'audio tant qu'il n'y a pas d'interaction.
 // Ce script débloque le contexte au premier clic/toucher/touche.
@@ -51,20 +56,3 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     </ToastProvider>
   </React.StrictMode>
 );
-
-// ❌ SERVICE WORKER DÉSACTIVÉ DÉFINITIVEMENT
-// Le Service Worker causait des redirections vers /auth et des pages blanches.
-// On le supprime pour le moment. On le réactivera plus tard avec une meilleure stratégie.
-//
-// if ('serviceWorker' in navigator && import.meta.env.PROD) {
-//   window.addEventListener('load', () => {
-//     navigator.serviceWorker
-//       .register('/sw.js')
-//       .then((registration) => {
-//         console.log('✅ Service Worker enregistré:', registration.scope);
-//       })
-//       .catch((error) => {
-//         console.error('❌ Erreur SW:', error);
-//       });
-//   });
-// }

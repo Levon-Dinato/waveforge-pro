@@ -16,6 +16,8 @@ const Icons = {
   trash: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>,
   download: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>,
   buy: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>,
+  search: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>,
+  music: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>,
 };
 
 const forceDownload = async (url: string, filename: string) => {
@@ -40,7 +42,7 @@ interface Track {
   likes_count: number; downloads: number; audio_url: string; duration: number; peaks: number[]; cover_url: string | null; created_at: string; user_id: string | null; purchase_url: string | null; embed_code?: string;
 }
 
-const INPUT_STYLE: React.CSSProperties = { padding: '10px 14px', background: '#0a0a0a', border: '1px solid #222', borderRadius: '8px', color: '#fff', fontFamily: 'Inter, sans-serif', fontSize: '13px', outline: 'none', width: '100%' };
+const INPUT_STYLE: React.CSSProperties = { padding: '10px 14px 10px 40px', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '10px', color: '#fff', fontFamily: 'Inter, sans-serif', fontSize: '13px', outline: 'none', width: '100%', transition: 'all 0.2s', backdropFilter: 'blur(10px)' };
 const isNew = (createdAt: string): boolean => (Date.now() - new Date(createdAt).getTime()) < 24 * 60 * 60 * 1000;
 
 export const NouveautesPage: React.FC = () => {
@@ -293,71 +295,91 @@ export const NouveautesPage: React.FC = () => {
   const paginatedTracks = visibleTracks.slice((safeCurrentPage - 1) * ITEMS_PER_PAGE, safeCurrentPage * ITEMS_PER_PAGE);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: '#0a0a0a', fontFamily: 'Inter, sans-serif', color: '#fff' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: '#05050a', fontFamily: 'Inter, sans-serif', color: '#fff', position: 'relative' }}>
       
-      {/* ✅ NOUVELLE TOP BAR POUR LE PLEIN ÉCRAN */}
-      <div style={{ padding: '16px 24px', borderBottom: '1px solid #222', display: 'flex', alignItems: 'center', gap: 16 }}>
-        <button onClick={() => navigate('/')} style={{ background: 'transparent', border: 'none', color: '#888', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600 }}>
+      {/* EFFETS DE FOND NÉON */}
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, pointerEvents: 'none', zIndex: 0, overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', top: '-20%', left: '-10%', width: '50vw', height: '50vw', background: 'radial-gradient(circle, rgba(0, 217, 255, 0.15) 0%, transparent 60%)', filter: 'blur(80px)' }} />
+        <div style={{ position: 'absolute', bottom: '-20%', right: '-10%', width: '50vw', height: '50vw', background: 'radial-gradient(circle, rgba(124, 92, 255, 0.15) 0%, transparent 60%)', filter: 'blur(80px)' }} />
+      </div>
+
+      {/* TOP BAR */}
+      <div style={{ position: 'relative', zIndex: 10, padding: '16px 24px', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', alignItems: 'center', gap: 16, background: 'rgba(5, 5, 10, 0.7)', backdropFilter: 'blur(20px)', position: 'sticky', top: 0 }}>
+        <button onClick={() => navigate('/')} style={{ background: 'transparent', border: 'none', color: '#888', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600, transition: 'color 0.2s' }} onMouseEnter={e => e.currentTarget.style.color = '#fff'} onMouseLeave={e => e.currentTarget.style.color = '#888'}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
           Retour au site
         </button>
-        <span style={{ color: '#333' }}>|</span>
-        <h1 style={{ fontSize: '1.2rem', fontWeight: 900, margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ color: '#00d9ff' }}>🔥</span> Nouveautés
+        <span style={{ color: 'rgba(255,255,255,0.1)' }}>|</span>
+        <h1 style={{ fontSize: '1.2rem', fontWeight: 900, margin: 0, display: 'flex', alignItems: 'center', gap: 8, letterSpacing: '-0.5px' }}>
+          <span style={{ color: '#00d9ff', filter: 'drop-shadow(0 0 10px rgba(0,217,255,0.8))' }}>🔥</span> Nouveautés
         </h1>
       </div>
 
-      <div style={{ padding: isMobile ? '16px 12px' : '32px 24px', paddingBottom: 100, width: '100%', boxSizing: 'border-box', overflowX: 'hidden', flex: 1 }}>
+      <div style={{ padding: isMobile ? '16px 12px' : '32px 24px', paddingBottom: 100, width: '100%', boxSizing: 'border-box', flex: 1, position: 'relative', zIndex: 10, minHeight: 'calc(100vh - 150px)', scrollbarGutter: 'stable' }}>
         
-        {/* ✅ CONTENEUR ÉLARGI */}
         <div style={{ display: 'flex', gap: 32, alignItems: 'flex-start', width: '100%', maxWidth: 1600, margin: '0 auto' }}>
           
+          {/* SIDEBAR GAUCHE (GENRES) */}
           {!isMobile && (
-            <aside style={{ width: 200, flexShrink: 0, position: 'sticky', top: 32 }}>
-              <div style={{ padding: '0 0 16px 0' }}>
-                <h3 style={{ fontSize: 11, fontWeight: 800, letterSpacing: '1px', padding: '0 12px 16px', margin: 0, color: '#666', textTransform: 'uppercase', borderBottom: '1px solid #222' }}>Genres</h3>
-                <div onClick={() => setSelectedGenre(null)} style={{ padding: '10px 12px', fontSize: 13, cursor: 'pointer', marginTop: 8, color: selectedGenre === null ? '#00d9ff' : '#888', fontWeight: selectedGenre === null ? 600 : 400, borderLeft: selectedGenre === null ? '2px solid #00d9ff' : '2px solid transparent', borderBottom: '1px solid #1a1a1a' }}>Tous les sons</div>
-                <div style={{ maxHeight: 'calc(100vh - 300px)', overflowY: 'auto' }}>
+            <aside style={{ width: 240, flexShrink: 0, position: 'sticky', top: 100 }}>
+              <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.05)', borderRadius: 16, padding: '20px 16px', backdropFilter: 'blur(20px)' }}>
+                <h3 style={{ fontSize: 11, fontWeight: 800, letterSpacing: '1.5px', padding: '0 8px 16px', margin: 0, color: '#666', textTransform: 'uppercase', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>Genres</h3>
+                <div onClick={() => setSelectedGenre(null)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', fontSize: 13, cursor: 'pointer', marginTop: 12, color: selectedGenre === null ? '#fff' : '#888', fontWeight: selectedGenre === null ? 700 : 500, background: selectedGenre === null ? 'linear-gradient(90deg, rgba(0, 217, 255, 0.15) 0%, transparent 100%)' : 'transparent', borderLeft: selectedGenre === null ? '3px solid #00d9ff' : '3px solid transparent', borderRadius: '0 8px 8px 0', transition: 'all 0.2s', boxShadow: selectedGenre === null ? 'inset 0 0 20px rgba(0,217,255,0.1)' : 'none' }}>
+                  <span style={{ color: selectedGenre === null ? '#00d9ff' : '#555' }}>{Icons.music}</span> Tous les sons
+                </div>
+                <div style={{ maxHeight: 'calc(100vh - 300px)', overflowY: 'auto', marginTop: 8 }}>
                   {Array.from(new Set(tracks.map(t => (t.genre || 'Inconnu').trim()))).sort().map((genre) => (
-                    <div key={genre} onClick={() => setSelectedGenre(genre)} style={{ padding: '10px 12px', fontSize: 13, cursor: 'pointer', color: selectedGenre === genre ? '#00d9ff' : '#888', fontWeight: selectedGenre === genre ? 600 : 400, borderLeft: selectedGenre === genre ? '2px solid #00d9ff' : '2px solid transparent', borderBottom: '1px solid #1a1a1a' }}>{genre}</div>
+                    <div key={genre} onClick={() => setSelectedGenre(genre)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', fontSize: 13, cursor: 'pointer', color: selectedGenre === genre ? '#fff' : '#888', fontWeight: selectedGenre === genre ? 700 : 500, background: selectedGenre === genre ? 'linear-gradient(90deg, rgba(0, 217, 255, 0.15) 0%, transparent 100%)' : 'transparent', borderLeft: selectedGenre === genre ? '3px solid #00d9ff' : '3px solid transparent', borderRadius: '0 8px 8px 0', transition: 'all 0.2s' }}>
+                      <span style={{ color: selectedGenre === genre ? '#00d9ff' : '#555' }}>{Icons.music}</span> {genre}
+                    </div>
                   ))}
                 </div>
               </div>
             </aside>
           )}
 
+          {/* CONTENU PRINCIPAL */}
           <main style={{ flex: 1, minWidth: 0, width: '100%' }}>
+            
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
               <div>
-                <p style={{ color: '#666', fontSize: 13, margin: 0 }}>Découvrez les derniers sons partagés par la communauté.</p>
+                <h2 style={{ fontSize: '2rem', fontWeight: 900, margin: 0, letterSpacing: '-1px', textShadow: '0 0 20px rgba(255,255,255,0.1)' }}>Nouveautés</h2>
+                <p style={{ color: '#888', fontSize: 14, margin: '6px 0 0 0', fontWeight: 500 }}>Découvrez les derniers sons partagés par la communauté.</p>
               </div>
               {user && (
-                <button onClick={() => setShowUploadModal(true)} style={{ padding: '10px 16px', background: '#fff', color: '#000', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 700, fontSize: 12 }}>
+                <button onClick={() => setShowUploadModal(true)} style={{ padding: '12px 24px', background: 'linear-gradient(135deg, #00d9ff, #7c5cff)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 10, cursor: 'pointer', fontWeight: 800, fontSize: 13, boxShadow: '0 0 20px rgba(0, 217, 255, 0.4)', transition: 'transform 0.2s, box-shadow 0.2s' }} onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.05)'; e.currentTarget.style.boxShadow = '0 0 30px rgba(0, 217, 255, 0.6)'; }} onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 0 20px rgba(0, 217, 255, 0.4)'; }}>
                   + Uploader
                 </button>
               )}
             </div>
 
             <div style={{ display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
-              <input type="text" placeholder="Rechercher..." value={search} onChange={(e) => setSearch(e.target.value)} style={{ ...INPUT_STYLE, flex: '1 1 200px' }} />
-              <select value={sortBy} onChange={(e) => setSortBy(e.target.value as any)} style={{ ...INPUT_STYLE, flex: '0 1 150px', cursor: 'pointer' }}>
-                <option value="recent">Plus récents</option>
-                <option value="likes">Plus aimés</option>
-                <option value="bpm">BPM</option>
-                <option value="title">Titre (A-Z)</option>
+              <div style={{ position: 'relative', flex: '1 1 200px' }}>
+                <div style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#666', pointerEvents: 'none' }}>
+                  {Icons.search}
+                </div>
+                <input type="text" placeholder="Rechercher un son, un artiste..." value={search} onChange={(e) => setSearch(e.target.value)} style={{ ...INPUT_STYLE, boxShadow: 'inset 0 0 10px rgba(0,0,0,0.5)' }} onFocus={(e) => { e.currentTarget.style.borderColor = '#00d9ff'; e.currentTarget.style.boxShadow = '0 0 15px rgba(0,217,255,0.2)'; }} onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'; e.currentTarget.style.boxShadow = 'inset 0 0 10px rgba(0,0,0,0.5)'; }} />
+              </div>
+              
+              {/* ✅ MODIFICATION ICI POUR LE FOND DES OPTIONS */}
+              <select value={sortBy} onChange={(e) => setSortBy(e.target.value as any)} style={{ padding: '10px 14px', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '10px', color: '#fff', fontFamily: 'Inter, sans-serif', fontSize: '13px', outline: 'none', cursor: 'pointer', flex: '0 1 180px', backdropFilter: 'blur(10px)' }}>
+                <option value="recent" style={{ background: '#111', color: '#fff' }}>Plus récents</option>
+                <option value="likes" style={{ background: '#111', color: '#fff' }}>Plus aimés</option>
+                <option value="bpm" style={{ background: '#111', color: '#fff' }}>BPM (Décroissant)</option>
+                <option value="title" style={{ background: '#111', color: '#fff' }}>Titre (A-Z)</option>
               </select>
             </div>
 
-            <div style={{ background: '#121212', border: '1px solid #222', borderRadius: 12, width: '100%' }}>
+            <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.05)', borderRadius: 16, width: '100%', overflow: 'hidden', backdropFilter: 'blur(20px)', boxShadow: '0 20px 40px rgba(0,0,0,0.4)' }}>
               
               {!isMobile && (
-                <div style={{ display: 'grid', gridTemplateColumns: '40px 40px minmax(200px, 1fr) 120px 120px 160px', gap: 16, padding: '12px 16px', borderBottom: '1px solid #222', fontSize: 11, color: '#666', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '40px 40px minmax(200px, 1fr) 120px 140px 160px', gap: 16, padding: '16px', borderBottom: '1px solid rgba(255,255,255,0.05)', fontSize: 11, color: '#666', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', background: 'rgba(0,0,0,0.2)' }}>
                   <div></div><div></div><div>Titre / Artistes</div><div>Genre</div><div>BPM / Clé</div><div style={{ textAlign: 'right' }}>Actions</div>
                 </div>
               )}
 
               {loading ? (
-                <div style={{ textAlign: 'center', color: '#666', padding: 40 }}>Chargement...</div>
+                <div style={{ textAlign: 'center', color: '#666', padding: 60, fontWeight: 600 }}>Chargement des sons...</div>
               ) : paginatedTracks.map((track) => {
                 const isThisPlaying = currentTrack?.id === track.id && isPlaying;
                 const isLiked = userLikes[track.id] || false;
@@ -365,17 +387,16 @@ export const NouveautesPage: React.FC = () => {
 
                 if (editingId === track.id) {
                   return (
-                    <div key={track.id} style={{ padding: '16px', borderBottom: '1px solid #222', display: 'flex', flexDirection: 'column', gap: 12, background: '#1a1a1a' }}>
+                    <div key={track.id} style={{ padding: '20px 16px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: 12, background: 'rgba(0,0,0,0.3)' }}>
                       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                        <input type="text" value={editForm.title} onChange={e => setEditForm({...editForm, title: e.target.value})} style={{ flex: 1, padding: 8, background: '#0a0a0a', border: '1px solid #444', color: '#fff', borderRadius: 4, minWidth: 150 }} placeholder="Titre" />
-                        <input type="text" value={editForm.artist} onChange={e => setEditForm({...editForm, artist: e.target.value})} style={{ flex: 1, padding: 8, background: '#0a0a0a', border: '1px solid #444', color: '#fff', borderRadius: 4, minWidth: 150 }} placeholder="Artiste" />
-                        <input type="text" value={editForm.genre} onChange={e => setEditForm({...editForm, genre: e.target.value})} style={{ width: 120, padding: 8, background: '#0a0a0a', border: '1px solid #444', color: '#fff', borderRadius: 4 }} placeholder="Genre" />
-                        <input type="number" value={editForm.bpm} onChange={e => setEditForm({...editForm, bpm: Number(e.target.value)})} style={{ width: 80, padding: 8, background: '#0a0a0a', border: '1px solid #444', color: '#fff', borderRadius: 4 }} placeholder="BPM" />
-                        <input type="url" value={editForm.purchase_url} onChange={e => setEditForm({...editForm, purchase_url: e.target.value})} style={{ flex: 1, padding: 8, background: '#0a0a0a', border: '1px solid #444', color: '#fff', borderRadius: 4, minWidth: 150 }} placeholder="Lien d'achat" />
+                        <input type="text" value={editForm.title} onChange={e => setEditForm({...editForm, title: e.target.value})} style={{ flex: 1, padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', borderRadius: 6, minWidth: 150 }} placeholder="Titre" />
+                        <input type="text" value={editForm.artist} onChange={e => setEditForm({...editForm, artist: e.target.value})} style={{ flex: 1, padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', borderRadius: 6, minWidth: 150 }} placeholder="Artiste" />
+                        <input type="text" value={editForm.genre} onChange={e => setEditForm({...editForm, genre: e.target.value})} style={{ width: 140, padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', borderRadius: 6 }} placeholder="Genre" />
+                        <input type="number" value={editForm.bpm} onChange={e => setEditForm({...editForm, bpm: Number(e.target.value)})} style={{ width: 90, padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', borderRadius: 6 }} placeholder="BPM" />
                       </div>
                       <div style={{ display: 'flex', gap: 10 }}>
-                        <button onClick={saveEdit} style={{ background: '#00d9ff', color: '#000', border: 'none', padding: '8px 16px', borderRadius: 4, cursor: 'pointer', fontWeight: 'bold' }}>Enregistrer</button>
-                        <button onClick={() => setEditingId(null)} style={{ background: 'transparent', color: '#888', border: '1px solid #444', padding: '8px 16px', borderRadius: 4, cursor: 'pointer' }}>Annuler</button>
+                        <button onClick={saveEdit} style={{ background: '#00d9ff', color: '#000', border: 'none', padding: '8px 20px', borderRadius: 6, cursor: 'pointer', fontWeight: 800 }}>Enregistrer</button>
+                        <button onClick={() => setEditingId(null)} style={{ background: 'transparent', color: '#888', border: '1px solid rgba(255,255,255,0.1)', padding: '8px 20px', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>Annuler</button>
                       </div>
                     </div>
                   );
@@ -383,24 +404,26 @@ export const NouveautesPage: React.FC = () => {
 
                 if (isMobile) {
                   return (
-                    <div key={track.id} style={{ padding: '16px', borderBottom: '1px solid #222', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    <div key={track.id} style={{ padding: '16px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: 12 }}>
                       <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                        <button onClick={(e) => handlePlayTrack(e, track)} style={{ width: 36, height: 36, flexShrink: 0, borderRadius: '50%', background: isThisPlaying ? '#00d9ff' : 'transparent', border: isThisPlaying ? 'none' : '1px solid #444', color: isThisPlaying ? '#000' : '#888', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                        <button onClick={(e) => handlePlayTrack(e, track)} style={{ width: 40, height: 40, flexShrink: 0, borderRadius: '50%', background: isThisPlaying ? '#00d9ff' : 'rgba(255,255,255,0.05)', border: 'none', color: isThisPlaying ? '#000' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
                           {isThisPlaying ? Icons.pause : Icons.play}
                         </button>
-                        <div style={{ width: 44, height: 44, flexShrink: 0, borderRadius: 6, background: track.cover_url ? `url(${track.cover_url}) center/cover` : '#1a1a1a', border: '1px solid #222', position: 'relative' }}>
-                          {isNew(track.created_at) && <span style={{ position: 'absolute', top: -4, right: -4, fontSize: 8, padding: '1px 4px', background: '#fff', color: '#000', borderRadius: 3, fontWeight: 900, zIndex: 2 }}>NEW</span>}
+                        <div style={{ width: 48, height: 48, flexShrink: 0, borderRadius: 8, background: track.cover_url ? `url(${track.cover_url}) center/cover` : '#222', position: 'relative' }}>
+                          {isNew(track.created_at) && <span style={{ position: 'absolute', top: -4, right: -4, fontSize: 8, padding: '2px 5px', background: '#00d9ff', color: '#000', borderRadius: 4, fontWeight: 900, zIndex: 2, boxShadow: '0 0 10px rgba(0,217,255,0.5)' }}>NEW</span>}
                         </div>
                         <div style={{ minWidth: 0, flex: 1 }}>
                           <div style={{ fontSize: 14, fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: 2 }}>{track.title}</div>
                           <div style={{ fontSize: 12, color: '#888', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.artist}</div>
                         </div>
                       </div>
-                      <div style={{ display: 'flex', gap: 8, fontSize: 11, color: '#888', paddingLeft: 48 }}>
-                        <span>{track.genre || '—'}</span> • <span>{track.bpm} BPM</span> {track.song_key && <span>• {track.song_key}</span>}
+                      <div style={{ display: 'flex', gap: 8, fontSize: 11, color: '#888', paddingLeft: 52 }}>
+                        <span style={{ background: 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: 4 }}>{track.genre || 'Inconnu'}</span> 
+                        <span style={{ background: 'rgba(0,217,255,0.1)', color: '#00d9ff', padding: '2px 8px', borderRadius: 4, fontWeight: 700 }}>{track.bpm} BPM</span>
+                        {track.song_key && <span style={{ background: 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: 4 }}>{track.song_key}</span>}
                       </div>
-                      <div style={{ display: 'flex', gap: 16, paddingLeft: 48 }}>
-                         <button onClick={() => handleLike(track.id)} style={{ background: 'transparent', border: 'none', color: isLiked ? '#ff3366' : '#555', fontSize: 13 }}>{isLiked ? '❤️' : '🤍'} {track.likes_count}</button>
+                      <div style={{ display: 'flex', gap: 20, paddingLeft: 52 }}>
+                         <button onClick={() => handleLike(track.id)} style={{ background: 'transparent', border: 'none', color: isLiked ? '#ff3366' : '#555', fontSize: 14 }}>{isLiked ? '❤️' : '🤍'} {track.likes_count}</button>
                          <button onClick={(e) => handleDownloadClick(e, track)} style={{ background: 'transparent', border: 'none', color: '#888' }}>{Icons.download}</button>
                          {isOwner && <button onClick={(e) => startEdit(e, track)} style={{ background: 'transparent', border: 'none', color: '#888' }}>{Icons.edit}</button>}
                          {isOwner && <button onClick={(e) => handleDelete(e, track.id)} style={{ background: 'transparent', border: 'none', color: '#ff5c5c' }}>{Icons.trash}</button>}
@@ -410,29 +433,44 @@ export const NouveautesPage: React.FC = () => {
                 }
 
                 return (
-                  <div key={track.id} style={{ display: 'grid', gridTemplateColumns: '40px 40px minmax(200px, 1fr) 120px 120px 160px', gap: 16, padding: '12px 16px', alignItems: 'center', borderBottom: '1px solid #222', cursor: 'pointer' }}>
-                    <button onClick={(e) => handlePlayTrack(e, track)} style={{ width: 36, height: 36, borderRadius: '50%', background: isThisPlaying ? '#00d9ff' : 'transparent', border: isThisPlaying ? 'none' : '1px solid #444', color: isThisPlaying ? '#000' : '#888', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                  <div key={track.id} className="track-row" style={{ display: 'grid', gridTemplateColumns: '40px 40px minmax(200px, 1fr) 120px 140px 160px', gap: 16, padding: '14px 16px', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.03)', cursor: 'pointer', transition: 'background 0.2s ease' }}>
+                    <button onClick={(e) => handlePlayTrack(e, track)} style={{ width: 36, height: 36, borderRadius: '50%', background: isThisPlaying ? '#00d9ff' : 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: isThisPlaying ? '#000' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s', boxShadow: isThisPlaying ? '0 0 15px rgba(0,217,255,0.5)' : 'none' }}>
                       {isThisPlaying ? Icons.pause : Icons.play}
                     </button>
-                    <div onClick={() => navigate(`/track/${track.id}`)} style={{ width: 44, height: 44, borderRadius: 6, background: track.cover_url ? `url(${track.cover_url}) center/cover` : '#1a1a1a', border: '1px solid #222', flexShrink: 0, position: 'relative' }}>
-                      {isNew(track.created_at) && <span style={{ position: 'absolute', top: -4, right: -4, fontSize: 8, padding: '1px 4px', background: '#fff', color: '#000', borderRadius: 3, fontWeight: 900, zIndex: 2 }}>NEW</span>}
+                    <div onClick={() => navigate(`/track/${track.id}`)} style={{ width: 44, height: 44, borderRadius: 8, background: track.cover_url ? `url(${track.cover_url}) center/cover` : '#222', flexShrink: 0, position: 'relative', boxShadow: '0 4px 10px rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                      {isNew(track.created_at) && <span style={{ position: 'absolute', top: -6, right: -6, fontSize: 8, padding: '3px 6px', background: '#00d9ff', color: '#000', borderRadius: 4, fontWeight: 900, zIndex: 2, boxShadow: '0 0 10px rgba(0,217,255,0.8)' }}>NEW</span>}
                     </div>
                     <div onClick={() => navigate(`/track/${track.id}`)} style={{ minWidth: 0 }}>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: isThisPlaying ? '#00d9ff' : '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: 2 }}>{track.title}</div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: isThisPlaying ? '#00d9ff' : '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: 3, textShadow: isThisPlaying ? '0 0 10px rgba(0,217,255,0.5)' : 'none' }}>{track.title}</div>
                       <div style={{ fontSize: 12, color: '#888', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.artist}</div>
                     </div>
-                    <div style={{ fontSize: 13, color: '#aaa', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.genre || '—'}</div>
-                    <div style={{ fontSize: 13, color: '#aaa', whiteSpace: 'nowrap', fontFamily: 'monospace' }}>{track.bpm ? `${track.bpm}` : '—'} · {track.song_key || '—'}</div>
-                    <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', alignItems: 'center' }}>
-                      <button onClick={() => handleLike(track.id)} style={{ background: 'transparent', border: 'none', color: isLiked ? '#ff3366' : '#555', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', gap: 4 }}>
-                        {isLiked ? '❤️' : '🤍'} <span style={{ color: '#666' }}>{track.likes_count}</span>
+                    
+                    <div style={{ fontSize: 12 }}>
+                      <span style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', padding: '4px 10px', borderRadius: 4, color: '#aaa', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'inline-block', maxWidth: '100%' }}>
+                        {track.genre || '—'}
+                      </span>
+                    </div>
+                    
+                    <div style={{ fontSize: 12, display: 'flex', gap: 6, alignItems: 'center' }}>
+                      <span style={{ background: 'rgba(0, 217, 255, 0.1)', border: '1px solid rgba(0,217,255,0.2)', color: '#00d9ff', padding: '4px 8px', borderRadius: 4, fontWeight: 700, fontFamily: 'monospace', boxShadow: '0 0 10px rgba(0,217,255,0.1)' }}>
+                        {track.bpm ? `${track.bpm}` : '—'}
+                      </span>
+                      <span style={{ color: 'rgba(255,255,255,0.1)' }}>·</span>
+                      <span style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', color: '#ccc', padding: '4px 8px', borderRadius: 4, fontFamily: 'monospace' }}>
+                        {track.song_key || '—'}
+                      </span>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', alignItems: 'center' }}>
+                      <button onClick={() => handleLike(track.id)} style={{ background: 'transparent', border: 'none', color: isLiked ? '#ff3366' : '#555', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', gap: 4, transition: 'transform 0.1s' }} onMouseDown={e => e.currentTarget.style.transform = 'scale(0.9)'} onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}>
+                        {isLiked ? '❤️' : '🤍'} <span style={{ color: '#666', fontWeight: 600 }}>{track.likes_count}</span>
                       </button>
-                      <div style={{ display: 'flex', gap: 12 }}>
-                        {track.purchase_url && <a href={track.purchase_url} target="_blank" rel="noopener noreferrer" style={{ color: '#00d9ff', display: 'flex', alignItems: 'center' }}>{Icons.buy}</a>}
-                        <button onClick={(e) => handleDownloadClick(e, track)} style={{ background: 'transparent', border: 'none', color: '#888', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>{Icons.download}</button>
+                      <div style={{ display: 'flex', gap: 10 }}>
+                        {track.purchase_url && <a href={track.purchase_url} target="_blank" rel="noopener noreferrer" style={{ color: '#00d9ff', display: 'flex', alignItems: 'center', transition: 'opacity 0.2s', filter: 'drop-shadow(0 0 5px rgba(0,217,255,0.5))' }} onMouseEnter={e => e.currentTarget.style.opacity = '0.7'} onMouseLeave={e => e.currentTarget.style.opacity = '1'}>{Icons.buy}</a>}
+                        <button onClick={(e) => handleDownloadClick(e, track)} style={{ background: 'transparent', border: 'none', color: '#888', cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'color 0.2s' }} onMouseEnter={e => e.currentTarget.style.color = '#fff'} onMouseLeave={e => e.currentTarget.style.color = '#888'}>{Icons.download}</button>
                         <ShareButton url={`${window.location.origin}/share/${track.id}`} title={`${track.title} — ${track.artist}`} text={`Écoute sur DropZone DJ 🎵`} variant="icon" size="small" label="" position="bottom" />
-                        {isOwner && <button onClick={(e) => startEdit(e, track)} style={{ background: 'transparent', border: 'none', color: '#888', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>{Icons.edit}</button>}
-                        {isOwner && <button onClick={(e) => handleDelete(e, track.id)} style={{ background: 'transparent', border: 'none', color: '#ff5c5c', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>{Icons.trash}</button>}
+                        {isOwner && <button onClick={(e) => startEdit(e, track)} style={{ background: 'transparent', border: 'none', color: '#888', cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'color 0.2s' }} onMouseEnter={e => e.currentTarget.style.color = '#00d9ff'} onMouseLeave={e => e.currentTarget.style.color = '#888'}>{Icons.edit}</button>}
+                        {isOwner && <button onClick={(e) => handleDelete(e, track.id)} style={{ background: 'transparent', border: 'none', color: '#ff5c5c', cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'opacity 0.2s' }} onMouseEnter={e => e.currentTarget.style.opacity = '0.7'} onMouseLeave={e => e.currentTarget.style.opacity = '1'}>{Icons.trash}</button>}
                       </div>
                     </div>
                   </div>
@@ -441,27 +479,29 @@ export const NouveautesPage: React.FC = () => {
             </div>
 
             {!loading && totalPages > 1 && (
-              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 16, marginTop: 32 }}>
-                <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={safeCurrentPage === 1} style={{ background: 'transparent', border: '1px solid #222', color: safeCurrentPage === 1 ? '#444' : '#fff', padding: '8px 16px', borderRadius: 8, cursor: safeCurrentPage === 1 ? 'not-allowed' : 'pointer', fontSize: 13 }}>
-                  ←
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 20, marginTop: 40 }}>
+                <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={safeCurrentPage === 1} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: safeCurrentPage === 1 ? '#444' : '#fff', padding: '10px 20px', borderRadius: 8, cursor: safeCurrentPage === 1 ? 'not-allowed' : 'pointer', fontSize: 13, fontWeight: 600, transition: 'all 0.2s' }} onMouseEnter={e => { if(safeCurrentPage !== 1) e.currentTarget.style.borderColor = '#00d9ff'; }} onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'}>
+                  ← Précédent
                 </button>
                 <span style={{ fontSize: 13, color: '#888', fontWeight: 600 }}>Page {safeCurrentPage} sur {totalPages}</span>
-                <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={safeCurrentPage === totalPages} style={{ background: 'transparent', border: '1px solid #222', color: safeCurrentPage === totalPages ? '#444' : '#fff', padding: '8px 16px', borderRadius: 8, cursor: safeCurrentPage === totalPages ? 'not-allowed' : 'pointer', fontSize: 13 }}>
-                  →
+                <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={safeCurrentPage === totalPages} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: safeCurrentPage === totalPages ? '#444' : '#fff', padding: '10px 20px', borderRadius: 8, cursor: safeCurrentPage === totalPages ? 'not-allowed' : 'pointer', fontSize: 13, fontWeight: 600, transition: 'all 0.2s' }} onMouseEnter={e => { if(safeCurrentPage !== totalPages) e.currentTarget.style.borderColor = '#00d9ff'; }} onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'}>
+                  Suivant →
                 </button>
               </div>
             )}
           </main>
 
           {!isMobile && (
-            <aside style={{ width: 280, flexShrink: 0, position: 'sticky', top: 32, display: 'flex', flexDirection: 'column', gap: 24 }}>
-              <div style={{ background: '#121212', border: '1px solid #222', borderRadius: 12, padding: 20 }}>
-                <h3 style={{ fontSize: 11, fontWeight: 800, letterSpacing: '1px', margin: '0 0 16px 0', color: '#fff', textTransform: 'uppercase' }}>Top 10</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <aside style={{ width: 280, flexShrink: 0, position: 'sticky', top: 100, display: 'flex', flexDirection: 'column', gap: 24 }}>
+              <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.05)', borderRadius: 16, padding: 20, backdropFilter: 'blur(20px)', boxShadow: '0 20px 40px rgba(0,0,0,0.4)' }}>
+                <h3 style={{ fontSize: 12, fontWeight: 800, letterSpacing: '1px', margin: '0 0 16px 0', color: '#fff', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ color: '#00d9ff', filter: 'drop-shadow(0 0 8px rgba(0,217,255,0.8))' }}>🔥</span> Top 10
+                </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                   {tracks.slice(0, 10).map((track, index) => (
-                    <div key={track.id} style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }} onClick={() => navigate(`/track/${track.id}`)}>
-                      <div style={{ width: 20, textAlign: 'center', fontSize: 13, color: index < 3 ? '#00d9ff' : '#555', fontWeight: 900, fontStyle: 'italic' }}>{index + 1}</div>
-                      <div style={{ width: 36, height: 36, borderRadius: 4, background: track.cover_url ? `url(${track.cover_url}) center/cover` : '#1a1a1a', flexShrink: 0, border: '1px solid #222' }} />
+                    <div key={track.id} style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', transition: 'transform 0.2s' }} onClick={() => navigate(`/track/${track.id}`)} onMouseEnter={e => e.currentTarget.style.transform = 'translateX(4px)'} onMouseLeave={e => e.currentTarget.style.transform = 'translateX(0)'}>
+                      <div style={{ width: 20, textAlign: 'center', fontSize: 14, color: index === 0 ? '#00d9ff' : index === 1 ? '#c0c0c0' : index === 2 ? '#cd7f32' : '#555', fontWeight: 900, fontStyle: 'italic', textShadow: index === 0 ? '0 0 10px rgba(0,217,255,0.5)' : 'none' }}>{index + 1}</div>
+                      <div style={{ width: 36, height: 36, borderRadius: 6, background: track.cover_url ? `url(${track.cover_url}) center/cover` : '#1f1f22', flexShrink: 0, border: '1px solid rgba(255,255,255,0.1)' }} />
                       <div style={{ minWidth: 0, flex: 1 }}>
                         <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.title}</div>
                         <div style={{ fontSize: 11, color: '#888', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.artist}</div>
@@ -470,7 +510,7 @@ export const NouveautesPage: React.FC = () => {
                   ))}
                 </div>
               </div>
-              <div style={{ background: '#121212', border: '1px solid #222', borderRadius: 12, padding: 20 }}>
+              <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.05)', borderRadius: 16, padding: 20, backdropFilter: 'blur(20px)', boxShadow: '0 20px 40px rgba(0,0,0,0.4)' }}>
                 <OnlineUsersWidget />
               </div>
             </aside>
@@ -479,16 +519,16 @@ export const NouveautesPage: React.FC = () => {
       </div>
 
       {showUploadModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          <div style={{ background: '#121212', border: '1px solid #222', borderRadius: 16, padding: 32, width: '100%', maxWidth: 500, maxHeight: '90vh', overflowY: 'auto' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div style={{ background: 'rgba(15, 15, 20, 0.95)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 20, padding: 32, width: '100%', maxWidth: 500, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 0 50px rgba(0, 217, 255, 0.1)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-              <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: '#fff' }}>Ajouter un son</h2>
-              <button onClick={() => setShowUploadModal(false)} style={{ background: 'transparent', border: 'none', color: '#888', fontSize: 20, cursor: 'pointer' }}>✕</button>
+              <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: '#fff', letterSpacing: '-0.5px' }}>Ajouter un son</h2>
+              <button onClick={() => setShowUploadModal(false)} style={{ background: 'transparent', border: 'none', color: '#888', fontSize: 24, cursor: 'pointer' }}>✕</button>
             </div>
 
             <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
-              <button onClick={() => setUploadType('file')} style={{ flex: 1, padding: 10, background: uploadType === 'file' ? '#00d9ff' : 'transparent', color: uploadType === 'file' ? '#000' : '#fff', border: '1px solid #333', borderRadius: 8, cursor: 'pointer', fontWeight: 700 }}>Fichier MP3</button>
-              <button onClick={() => setUploadType('link')} style={{ flex: 1, padding: 10, background: uploadType === 'link' ? '#00d9ff' : 'transparent', color: uploadType === 'link' ? '#000' : '#fff', border: '1px solid #333', borderRadius: 8, cursor: 'pointer', fontWeight: 700 }}>Lien / Embed</button>
+              <button onClick={() => setUploadType('file')} style={{ flex: 1, padding: 12, background: uploadType === 'file' ? 'linear-gradient(135deg, #00d9ff, #0099ff)' : 'transparent', color: uploadType === 'file' ? '#000' : '#fff', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, cursor: 'pointer', fontWeight: 800, transition: 'all 0.2s' }}>Fichier MP3</button>
+              <button onClick={() => setUploadType('link')} style={{ flex: 1, padding: 12, background: uploadType === 'link' ? 'linear-gradient(135deg, #00d9ff, #0099ff)' : 'transparent', color: uploadType === 'link' ? '#000' : '#fff', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, cursor: 'pointer', fontWeight: 800, transition: 'all 0.2s' }}>Lien / Embed</button>
             </div>
 
             <form onSubmit={handleUploadSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -496,18 +536,18 @@ export const NouveautesPage: React.FC = () => {
               {uploadType === 'file' ? (
                 <>
                   <div>
-                    <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>Fichier Audio (MP3, WAV) *</label>
-                    <input type="file" accept="audio/*" onChange={handleAudioFileChange} required style={{ width: '100%', padding: 10, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
-                    {audioFile && <p style={{ fontSize: 11, color: '#00d9ff', marginTop: 4 }}>Fichier sélectionné : {audioFile.name}</p>}
+                    <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6, fontWeight: 600 }}>Fichier Audio (MP3, WAV) *</label>
+                    <input type="file" accept="audio/*" onChange={handleAudioFileChange} required style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#fff' }} />
+                    {audioFile && <p style={{ fontSize: 11, color: '#00d9ff', marginTop: 4, fontWeight: 600 }}>Fichier sélectionné : {audioFile.name}</p>}
                   </div>
                   
                   <div>
-                    <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>Image de couverture (Optionnel)</label>
-                    <input type="file" accept="image/*" onChange={(e) => setCoverFile(e.target.files?.[0] || null)} style={{ width: '100%', padding: 10, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+                    <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6, fontWeight: 600 }}>Image de couverture (Optionnel)</label>
+                    <input type="file" accept="image/*" onChange={(e) => setCoverFile(e.target.files?.[0] || null)} style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#fff' }} />
                     {coverFile && (
                       <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 10 }}>
                         <img src={URL.createObjectURL(coverFile)} alt="Cover preview" style={{ width: 50, height: 50, borderRadius: 6, objectFit: 'cover', border: '1px solid #333' }} />
-                        <span style={{ fontSize: 11, color: '#00d9ff' }}>Pochette chargée ✓</span>
+                        <span style={{ fontSize: 11, color: '#00d9ff', fontWeight: 600 }}>Pochette chargée ✓</span>
                       </div>
                     )}
                   </div>
@@ -515,42 +555,42 @@ export const NouveautesPage: React.FC = () => {
               ) : (
                 <>
                   <div>
-                    <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>Lien direct MP3 (ex: Catbox) ou Lien d'achat</label>
-                    <input type="url" value={uploadForm.audio_url} onChange={e => setUploadForm({...uploadForm, audio_url: e.target.value})} placeholder="https://..." style={{ width: '100%', padding: 10, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+                    <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6, fontWeight: 600 }}>Lien direct MP3 (ex: Catbox) ou Lien d'achat</label>
+                    <input type="url" value={uploadForm.audio_url} onChange={e => setUploadForm({...uploadForm, audio_url: e.target.value})} placeholder="https://..." style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#fff' }} />
                   </div>
                   <div>
-                    <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>Code d'intégration (Beatport, Audio.com, etc.)</label>
-                    <textarea value={uploadForm.embed_code} onChange={e => setUploadForm({...uploadForm, embed_code: e.target.value})} placeholder="<iframe src='...'></iframe>" rows={3} style={{ width: '100%', padding: 10, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff', fontFamily: 'monospace' }} />
+                    <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6, fontWeight: 600 }}>Code d'intégration (Beatport, Audio.com, etc.)</label>
+                    <textarea value={uploadForm.embed_code} onChange={e => setUploadForm({...uploadForm, embed_code: e.target.value})} placeholder="<iframe src='...'></iframe>" rows={3} style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#fff', fontFamily: 'monospace' }} />
                   </div>
                 </>
               )}
 
               <div style={{ display: 'flex', gap: 12 }}>
                 <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>Titre *</label>
-                  <input type="text" value={uploadForm.title} onChange={e => setUploadForm({...uploadForm, title: e.target.value})} required style={{ width: '100%', padding: 10, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+                  <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6, fontWeight: 600 }}>Titre *</label>
+                  <input type="text" value={uploadForm.title} onChange={e => setUploadForm({...uploadForm, title: e.target.value})} required style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#fff' }} />
                 </div>
                 <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>Artiste *</label>
-                  <input type="text" value={uploadForm.artist} onChange={e => setUploadForm({...uploadForm, artist: e.target.value})} required style={{ width: '100%', padding: 10, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+                  <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6, fontWeight: 600 }}>Artiste *</label>
+                  <input type="text" value={uploadForm.artist} onChange={e => setUploadForm({...uploadForm, artist: e.target.value})} required style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#fff' }} />
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 12 }}>
                 <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>Genre</label>
-                  <input type="text" value={uploadForm.genre} onChange={e => setUploadForm({...uploadForm, genre: e.target.value})} placeholder="Ex: Techno" style={{ width: '100%', padding: 10, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+                  <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6, fontWeight: 600 }}>Genre</label>
+                  <input type="text" value={uploadForm.genre} onChange={e => setUploadForm({...uploadForm, genre: e.target.value})} placeholder="Ex: Techno" style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#fff' }} />
                 </div>
                 <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>BPM</label>
-                  <input type="number" value={uploadForm.bpm} onChange={e => setUploadForm({...uploadForm, bpm: e.target.value})} placeholder="128" style={{ width: '100%', padding: 10, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+                  <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6, fontWeight: 600 }}>BPM</label>
+                  <input type="number" value={uploadForm.bpm} onChange={e => setUploadForm({...uploadForm, bpm: e.target.value})} placeholder="128" style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#fff' }} />
                 </div>
                 <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>Clé</label>
-                  <input type="text" value={uploadForm.song_key} onChange={e => setUploadForm({...uploadForm, song_key: e.target.value})} placeholder="Am" style={{ width: '100%', padding: 10, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+                  <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6, fontWeight: 600 }}>Clé</label>
+                  <input type="text" value={uploadForm.song_key} onChange={e => setUploadForm({...uploadForm, song_key: e.target.value})} placeholder="Am" style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#fff' }} />
                 </div>
               </div>
 
-              <button type="submit" disabled={uploading} style={{ marginTop: 12, padding: 14, background: '#00d9ff', color: '#000', border: 'none', borderRadius: 8, fontWeight: 800, fontSize: 14, cursor: uploading ? 'wait' : 'pointer' }}>
+              <button type="submit" disabled={uploading} style={{ marginTop: 12, padding: 16, background: 'linear-gradient(135deg, #00d9ff, #7c5cff)', color: '#fff', border: 'none', borderRadius: 10, fontWeight: 800, fontSize: 14, cursor: uploading ? 'wait' : 'pointer', transition: 'opacity 0.2s', boxShadow: '0 0 20px rgba(0, 217, 255, 0.3)' }} onMouseEnter={e => e.currentTarget.style.opacity = '0.9'} onMouseLeave={e => e.currentTarget.style.opacity = '1'}>
                 {uploading ? 'Traitement en cours...' : 'Ajouter le son'}
               </button>
             </form>

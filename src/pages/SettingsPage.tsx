@@ -35,7 +35,6 @@ export const SettingsPage: React.FC = () => {
   const [uploadingVideo, setUploadingVideo] = useState(false);
   const [galleryImages, setGalleryImages] = useState<any[]>([]);
 
-  // ✅ PAGINATION DES TITRES
   const [currentPage, setCurrentPage] = useState(1);
   const tracksPerPage = 10;
 
@@ -52,14 +51,11 @@ export const SettingsPage: React.FC = () => {
     duo_title: 'Bio',
     prestations_title: 'Parcours',
     releases_title: 'Dernières Sorties',
-    // ✅ NOUVEAUX CHAMPS POUR LE PARCOURS
     parcours_title: 'Un parcours visible, des événements qui parlent.',
     parcours_subtitle: "L'écosystème du DJ indépendant.",
     parcours_description: "DropZone n'est pas juste une page web, c'est votre QG numérique. Un espace centralisé où votre musique, votre identité visuelle et vos outils de production se rencontrent. Conçu pour les artistes de la nuit, le site évolue constamment pour vous offrir la vitrine et les fonctionnalités que vous méritez, sans les contraintes des grosses plateformes.",
-    // ✅ CHAMPS POUR LA CARTE
     parcours_card_tag: 'POURQUOI NOUS REJOINDRE',
     parcours_card_title: 'La plateforme qui propulse votre son.',
-    
     show_stats: true,
     show_duo: true,
     show_prestations: true,
@@ -150,7 +146,7 @@ export const SettingsPage: React.FC = () => {
       const fileName = `${user.id}/background-video-${Date.now()}.${file.name.split('.').pop()}`;
       const { error: uploadError } = await supabase.storage.from('media').upload(fileName, file);
       if (uploadError) throw uploadError;
-      const { data } = supabase.storage.from('media').getPublicUrl(fileName);
+      const { data } = await supabase.storage.from('media').getPublicUrl(fileName);
       setForm(prev => ({ ...prev, background_video_url: data.publicUrl }));
       alert("Vidéo uploadée avec succès ! ✅");
     } catch (error: any) {
@@ -168,7 +164,7 @@ export const SettingsPage: React.FC = () => {
       const fileName = `${user.id}/player-bg-${Date.now()}.${file.name.split('.').pop()}`;
       const { error: uploadError } = await supabase.storage.from('media').upload(fileName, file);
       if (uploadError) throw uploadError;
-      const { data } = supabase.storage.from('media').getPublicUrl(fileName);
+      const { data } = await supabase.storage.from('media').getPublicUrl(fileName);
       setEditTrackForm(prev => ({ ...prev, player_bg_image_url: data.publicUrl }));
     } catch (error: any) {
       alert("Erreur d'upload : " + error.message);
@@ -269,29 +265,6 @@ export const SettingsPage: React.FC = () => {
       genre: prev.genre || guessGenre,
       bpm: prev.bpm || guessBpm,
     }));
-
-    try {
-      const metadata = await parseBlob(file);
-      const { common } = metadata;
-
-      setUploadForm(prev => ({
-        ...prev,
-        title: common.title || prev.title,
-        artist: common.artist || prev.artist,
-        genre: common.genre?.[0] || prev.genre,
-        bpm: common.bpm ? String(common.bpm) : prev.bpm,
-        song_key: common.key || prev.song_key
-      }));
-
-      if (common.picture && common.picture.length > 0) {
-        const pic = common.picture[0];
-        const blob = new Blob([new Uint8Array(pic.data)], { type: pic.format });
-        const coverFileFromTag = new File([blob], `cover-${Date.now()}.jpg`, { type: pic.format });
-        setCoverFile(coverFileFromTag); 
-      }
-    } catch (err) {
-      console.warn("Impossible de lire les tags ID3", err);
-    }
   };
 
   const handleUploadSubmit = async (e: React.FormEvent) => {
@@ -481,7 +454,6 @@ export const SettingsPage: React.FC = () => {
     );
   }
 
-  // ✅ CALCUL DE LA PAGINATION
   const indexOfLastTrack = currentPage * tracksPerPage;
   const indexOfFirstTrack = indexOfLastTrack - tracksPerPage;
   const currentTracks = myTracks.slice(indexOfFirstTrack, indexOfLastTrack);
@@ -503,7 +475,7 @@ export const SettingsPage: React.FC = () => {
 
       {message && <div style={{ padding: 16, background: 'rgba(0,217,255,0.1)', border: '1px solid #00d9ff', borderRadius: 8, marginBottom: 24, color: '#00d9ff' }}>{message}</div>}
 
-      <div style={{ background: '#121212', padding: 24, borderRadius: 12, border: '1px solid #222', marginBottom: 24 }}>
+            <div style={{ background: '#121212', padding: 24, borderRadius: 12, border: '1px solid #222', marginBottom: 24 }}>
         <h2 style={{ fontSize: 18, color: '#fff', margin: '0 0 20px 0' }}>🎛️ Modules de la page Premium</h2>
         
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -522,7 +494,6 @@ export const SettingsPage: React.FC = () => {
             </div>
           </div>
 
-          {/* ✅ NOUVEAUX CHAMPS POUR LE PARCOURS */}
           <div style={{ marginTop: 12, padding: 16, background: '#0a0a0a', borderRadius: 8, border: '1px solid #222', display: 'flex', flexDirection: 'column', gap: 12 }}>
             <h3 style={{ fontSize: 14, color: '#fff', margin: 0 }}>Contenu du Parcours</h3>
             <div>
@@ -578,20 +549,28 @@ export const SettingsPage: React.FC = () => {
                 <div key={index} style={{ display: 'flex', gap: 12, flexWrap: 'wrap', background: '#0a0a0a', padding: 16, borderRadius: 8, border: '1px solid #222' }}>
                   <div style={{ flex: 1, minWidth: 200 }}>
                     <label style={{ display: 'block', fontSize: 11, color: '#666', marginBottom: 4 }}>Titre de la carte {index + 1}</label>
-                    <input type="text" value={presta.title} onChange={(e) => {
+                    <input 
+                      type="text" 
+                      value={presta.title} 
+                      onChange={(e) => {
                         const newPrestations = [...settings.prestations];
                         newPrestations[index].title = e.target.value;
                         setSettings({...settings, prestations: newPrestations});
-                      }} style={{ width: '100%', padding: 8, background: '#121212', border: '1px solid #333', borderRadius: 6, color: '#fff' }} 
+                      }} 
+                      style={{ width: '100%', padding: 8, background: '#121212', border: '1px solid #333', borderRadius: 6, color: '#fff' }} 
                     />
                   </div>
                   <div style={{ flex: 2, minWidth: 200 }}>
                     <label style={{ display: 'block', fontSize: 11, color: '#666', marginBottom: 4 }}>Description</label>
-                    <input type="text" value={presta.desc} onChange={(e) => {
+                    <input 
+                                           type="text" 
+                      value={presta.desc} 
+                      onChange={(e) => {
                         const newPrestations = [...settings.prestations];
                         newPrestations[index].desc = e.target.value;
                         setSettings({...settings, prestations: newPrestations});
-                      }} style={{ width: '100%', padding: 8, background: '#121212', border: '1px solid #333', borderRadius: 6, color: '#fff' }} 
+                      }} 
+                      style={{ width: '100%', padding: 8, background: '#121212', border: '1px solid #333', borderRadius: 6, color: '#fff' }} 
                     />
                   </div>
                 </div>
@@ -715,13 +694,10 @@ export const SettingsPage: React.FC = () => {
           )}
         </div>
 
-        {/* ✅ PAGINATION */}
         {totalPages > 1 && (
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 16, marginTop: 24, paddingTop: 16, borderTop: '1px solid #333' }}>
             <button
-              onClick={() => {
-                setCurrentPage((p) => Math.max(1, p - 1));
-              }}
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
               style={{
                 padding: '8px 16px',
@@ -742,9 +718,7 @@ export const SettingsPage: React.FC = () => {
             </span>
 
             <button
-              onClick={() => {
-                setCurrentPage((p) => Math.min(totalPages, p + 1));
-              }}
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
               style={{
                 padding: '8px 16px',
@@ -950,7 +924,7 @@ export const SettingsPage: React.FC = () => {
                 )}
               </div>
 
-              <div style={{ display: 'flex', gap: 12 }}>
+                            <div style={{ display: 'flex', gap: 12 }}>
                 <div style={{ flex: 1 }}>
                   <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>Titre *</label>
                   <input type="text" value={uploadForm.title} onChange={e => setUploadForm({...uploadForm, title: e.target.value})} required style={{ width: '100%', padding: 10, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
@@ -960,6 +934,7 @@ export const SettingsPage: React.FC = () => {
                   <input type="text" value={uploadForm.artist} onChange={e => setUploadForm({...uploadForm, artist: e.target.value})} required style={{ width: '100%', padding: 10, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
                 </div>
               </div>
+              
               <div style={{ display: 'flex', gap: 12 }}>
                 <div style={{ flex: 1 }}>
                   <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>Genre</label>

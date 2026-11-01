@@ -1,64 +1,50 @@
-﻿const express = require('express');
-const multer = require('multer');
-const ffmpeg = require('fluent-ffmpeg');
-const cors = require('cors');
-const fs = require('fs');
-const path = require('path');
+﻿import express from 'express';
+import cors from 'cors';
+import multer from 'multer';
+import { BasicPitch, outputToNotesPoly } from '@spotify/basic-pitch';
+import audioDecode from 'audio-decode';
 
 const app = express();
 app.use(cors());
-app.use(express.json());
 
-const upload = multer({ dest: 'uploads/' });
+const upload = multer({ storage: multer.memoryStorage() });
 
-app.get('/', (req, res) => {
-  res.send('Serveur de mastering DropZone DJ opérationnel.');
-});
-
-app.post('/master', upload.single('audio'), async (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ error: 'Aucun fichier audio fourni.' });
-  }
-
-  const inputPath = req.file.path;
-  const outputPath = path.join('uploads', 'mastered-' + Date.now() + '.wav');
-
+// ✅ LA ROUTE DOIT ÊTRE ICI
+app.post('/analyze-audio', upload.single('audio'), async (req, res) => {
   try {
-    console.log('Traitement de : ' + req.file.originalname);
+    console.log("Requête reçue !");
+    if (!req.file) return res.status(400).json({ error: 'Aucun fichier fourni.' });
+
+    const basicPitch = new BasicPitch('https://storage.googleapis.com/magentadata/js/checkpoints/piano_transcription/basic_pitch/model.json');
+    const audioBuffer = await audioDecode(req.file.buffer);
     
-    await new Promise((resolve, reject) => {
-      ffmpeg(inputPath)
-        .audioFrequency(44100)
-        .audioChannels(2)
-        .audioFilters([
-          'volume=1.2',
-          'alimiter=limit=0.95',
-        ])
-        .on('progress', (progress) => {
-          console.log('Progression : ' + progress.percent + '%');
-        })
-        .on('end', resolve)
-        .on('error', reject)
-        .save(outputPath);
-    });
+    const frames = [];
+    const onsets = [];
+    const contours = [];
 
-    console.log('Mastering terminé. Envoi du fichier...');
+    await basicPitch.evaluateModel(
+      audioBuffer,
+      (f, o, c) => { frames.push(...f); onsets.push(...o); contours.push(...c); },
+      (percent) => {}
+    );
 
-    res.download(outputPath, 'mastered-' + req.file.originalname.replace(/\.[^/.]+$/, "") + '.wav', (err) => {
-      if (fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
-      if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath);
-      if (err) console.error('Erreur lors de l\'envoi :', err);
-    });
+    const notes = outputToNotesPoly(frames, onsets, 0.5, 0.5, true);
+    
+    const formattedNotes = notes.map(n => ({
+      midi: Math.round(n.pitchMidi),
+      start: n.startTimeSeconds,
+      duration: n.durationSeconds,
+      velocity: Math.round(n.amplitude * 127),
+      confidence: n.confidence || 0.8,
+      track: n.pitchMidi < 48 ? 'bass' : (n.pitchMidi > 60 ? 'lead' : 'harmony')
+    }));
 
+    res.json({ notes: formattedNotes, duration: audioBuffer.duration });
   } catch (error) {
-    console.error('Erreur FFmpeg :', error);
-    if (fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
-    if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath);
-    res.status(500).json({ error: 'Erreur lors du mastering audio.' });
+    console.error("Erreur :", error);
+    res.status(500).json({ error: error.message });
   }
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log('Serveur démarré sur le port ' + PORT);
-});
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, () => console.log(`Serveur prêt sur le port ${PORT}`));

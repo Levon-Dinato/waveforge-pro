@@ -15,24 +15,36 @@ app.options('*', cors());
 
 const upload = multer({ storage: multer.memoryStorage() });
 
-// ✅ Rééchantillonnage (44100 -> 22050 Hz pour l'IA)
+// ✅ RÉÉCHANTILLONNAGE ROBUSTE (Gère Node.js et le navigateur)
 function resampleAudioBuffer(audioBuffer, targetSampleRate = 22050) {
   if (audioBuffer.sampleRate === targetSampleRate) return audioBuffer;
+
   const ratio = audioBuffer.sampleRate / targetSampleRate;
   const newLength = Math.floor(audioBuffer.length / ratio);
-  const channelData = audioBuffer.getChannelData(0);
-  const resampledData = new Float32Array(newLength);
+  
+  // On vérifie comment récupérer les données selon l'objet renvoyé
+  let channelData;
+  if (typeof audioBuffer.getChannelData === 'function') {
+    channelData = audioBuffer.getChannelData(0);
+  } else if (audioBuffer.channelData && audioBuffer.channelData[0]) {
+    channelData = audioBuffer.channelData[0];
+  } else {
+    throw new Error("Format audio non reconnu par le serveur.");
+  }
 
+  const resampledData = new Float32Array(newLength);
   for (let i = 0; i < newLength; i++) {
     resampledData[i] = channelData[Math.floor(i * ratio)];
   }
 
+  // On retourne un objet qui imite parfaitement un AudioBuffer
   return {
     sampleRate: targetSampleRate,
     length: newLength,
     duration: newLength / targetSampleRate,
     numberOfChannels: 1,
     getChannelData: () => resampledData,
+    channelData: [resampledData]
   };
 }
 
@@ -44,9 +56,11 @@ app.post('/analyze-audio', upload.single('audio'), async (req, res) => {
     
     const uint8Array = new Uint8Array(req.file.buffer);
     const decodedBuffer = await audioDecode(uint8Array);
+    
+    // ✅ On applique le rééchantillonnage
     const audioBuffer = resampleAudioBuffer(decodedBuffer, 22050);
     
-    console.log("Analyse de l'audio (durée :", audioBuffer.duration, "s)...");
+    console.log("Audio décodé et prêt. Durée :", audioBuffer.duration, "s. Lancement de l'analyse...");
 
     const frames = [];
     const onsets = [];
@@ -60,23 +74,23 @@ app.post('/analyze-audio', upload.single('audio'), async (req, res) => {
 
     const notes = outputToNotesPoly(frames, onsets, 0.5, 0.5, true);
     
-    // ✅ FORMATAGE "PRO" DES NOTES POUR TON FRONT-END
+    // ✅ Formatage Pro des notes (Bass, Harmony, Lead)
     const formattedNotes = notes.map(n => {
       let track = 'lead';
-      if (n.pitchMidi < 48) track = 'bass';       // Notes graves = Basse
-      else if (n.pitchMidi < 60) track = 'harmony'; // Notes médiums = Accords/Harmonie
+      if (n.pitchMidi < 48) track = 'bass';
+      else if (n.pitchMidi < 60) track = 'harmony';
       
       return {
         midi: Math.round(n.pitchMidi),
         start: n.startTimeSeconds,
-        duration: Math.max(0.05, n.durationSeconds), // Durée min pour éviter les notes invisibles
-        velocity: Math.max(1, Math.round(n.amplitude * 127)), // Vélocité 1-127
+        duration: Math.max(0.05, n.durationSeconds),
+        velocity: Math.max(1, Math.round(n.amplitude * 127)),
         confidence: n.confidence || 0.8,
         track: track
       };
     });
 
-    console.log("Analyse terminée :", formattedNotes.length, "notes détectées.");
+    console.log("Analyse terminée :", formattedNotes.length, "notes.");
     res.json({ notes: formattedNotes, duration: audioBuffer.duration });
 
   } catch (error) {

@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom';
 import { supabase, AUDIO_BUCKET } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { PayPalButton } from '../components/PayPalButton';
-import { parseBlob } from 'music-metadata';
 
 export const SettingsPage: React.FC = () => {
   const { user } = useAuth();

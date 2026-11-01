@@ -15,7 +15,7 @@ interface LibraryTrack {
 }
 
 // ✅ L'URL de TON serveur Render (à remplacer par la tienne)
-const RENDER_SERVER_URL = 'https://mastering-server.onrender.com'; 
+const RENDER_SERVER_URL = 'https://waveforge-api-8n67.onrender.com'; 
 
 export const StudioPage: React.FC = () => {
   const navigate = useNavigate();

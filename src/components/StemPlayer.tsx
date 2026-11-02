@@ -1,6 +1,8 @@
+// src/components/StemPlayer.tsx (ou le chemin exact de ton fichier)
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { Knob } from './Knob';
 import { Waveform } from './Waveform';
+import { useTheme } from '../contexts/ThemeContext'; // ✅ IMPORT DU THEME
 
 interface Stem {
   id: string;
@@ -17,6 +19,9 @@ interface Props {
 }
 
 export function StemPlayer({ stems, audioBuffer, onClose }: Props) {
+  const { theme } = useTheme(); // ✅ RÉCUPÉRATION DU THÈME
+  const isDark = theme === 'dark';
+
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -29,6 +34,18 @@ export function StemPlayer({ stems, audioBuffer, onClose }: Props) {
 
   const audioRefs = useRef<Record<string, HTMLAudioElement | null>>({});
   const rafRef = useRef<number | null>(null);
+
+  // ✅ PALETTE DE COULEURS DYNAMIQUES
+  const colors = {
+    waveformBg: isDark ? '#0a0a0f' : '#f3f4f6',
+    trackBg: isDark ? '#0a0a0f' : '#f9fafb',
+    trackBorder: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+    textMuted: isDark ? '#888888' : '#666666',
+    textMain: isDark ? '#ffffff' : '#1a1a1a',
+    btnBg: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+    btnBorder: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+    borderLight: isDark ? 'var(--border)' : '#e5e7eb',
+  };
 
   // Init
   useEffect(() => {
@@ -139,7 +156,7 @@ export function StemPlayer({ stems, audioBuffer, onClose }: Props) {
         <span>🎧 PLAYER</span>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           <div className={`led ${isPlaying ? 'active' : ''}`} />
-          <span className="mono" style={{ fontSize: 10, color: '#888' }}>
+          <span className="mono" style={{ fontSize: 10, color: colors.textMuted }}>
             {formatTime(currentTime)} / {formatTime(duration)}
           </span>
           {onClose && (
@@ -148,7 +165,7 @@ export function StemPlayer({ stems, audioBuffer, onClose }: Props) {
               style={{
                 background: 'transparent',
                 border: 'none',
-                color: '#888',
+                color: colors.textMuted,
                 cursor: 'pointer',
                 fontSize: 14,
                 padding: 0,
@@ -161,7 +178,7 @@ export function StemPlayer({ stems, audioBuffer, onClose }: Props) {
       </div>
 
       {/* WAVEFORM */}
-      <div style={{ padding: '8px 0', background: '#0a0a0f' }}>
+      <div style={{ padding: '8px 0', background: colors.waveformBg }}>
         <Waveform
           audioBuffer={audioBuffer || null}
           currentTime={currentTime}
@@ -181,7 +198,7 @@ export function StemPlayer({ stems, audioBuffer, onClose }: Props) {
             alignItems: 'center',
             gap: 20,
             paddingBottom: 16,
-            borderBottom: '1px solid var(--border)',
+            borderBottom: `1px solid ${colors.borderLight}`,
             marginBottom: 16,
           }}
         >
@@ -263,10 +280,10 @@ export function StemPlayer({ stems, audioBuffer, onClose }: Props) {
                   alignItems: 'center',
                   gap: 12,
                   padding: 10,
-                  background: '#0a0a0f',
+                  background: colors.trackBg, // ✅ DYNAMIQUE
                   borderRadius: 6,
                   border: `1px solid ${
-                    isSoloed ? stem.color : 'var(--border)'
+                    isSoloed ? stem.color : colors.trackBorder // ✅ DYNAMIQUE
                   }`,
                   opacity: isDimmed ? 0.4 : 1,
                   transition: 'all 0.15s',
@@ -300,9 +317,9 @@ export function StemPlayer({ stems, audioBuffer, onClose }: Props) {
                     width: 28,
                     height: 28,
                     fontSize: 11,
-                    background: isMuted ? '#ff3366' : 'var(--bg-2)',
-                    borderColor: isMuted ? '#ff3366' : 'var(--border)',
-                    color: isMuted ? '#fff' : '#888',
+                    background: isMuted ? '#ff3366' : colors.btnBg, // ✅ DYNAMIQUE
+                    borderColor: isMuted ? '#ff3366' : colors.btnBorder, // ✅ DYNAMIQUE
+                    color: isMuted ? '#fff' : colors.textMuted, // ✅ DYNAMIQUE
                   }}
                   title="Mute"
                 >
@@ -319,9 +336,9 @@ export function StemPlayer({ stems, audioBuffer, onClose }: Props) {
                     width: 28,
                     height: 28,
                     fontSize: 11,
-                    background: isSoloed ? '#ffb800' : 'var(--bg-2)',
-                    borderColor: isSoloed ? '#ffb800' : 'var(--border)',
-                    color: isSoloed ? '#000' : '#888',
+                    background: isSoloed ? '#ffb800' : colors.btnBg, // ✅ DYNAMIQUE
+                    borderColor: isSoloed ? '#ffb800' : colors.btnBorder, // ✅ DYNAMIQUE
+                    color: isSoloed ? '#000' : colors.textMuted, // ✅ DYNAMIQUE
                   }}
                   title="Solo"
                 >
@@ -351,7 +368,7 @@ export function StemPlayer({ stems, audioBuffer, onClose }: Props) {
                   style={{
                     minWidth: 40,
                     fontSize: 11,
-                    color: '#888',
+                    color: colors.textMuted, // ✅ DYNAMIQUE
                     textAlign: 'right',
                   }}
                 >

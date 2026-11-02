@@ -1,5 +1,6 @@
 // src/components/AudioPlayer.tsx
 import React, { useRef, useState, useEffect, useCallback } from 'react';
+import { useTheme } from '../contexts/ThemeContext'; // ✅ IMPORT DU THEME
 
 interface AudioPlayerProps {
   src: string;
@@ -18,6 +19,9 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
   onDownload,
   compact = false,
 }) => {
+  const { theme } = useTheme(); // ✅ RÉCUPÉRATION DU THÈME
+  const isDark = theme === 'dark';
+
   const audioRef = useRef<HTMLAudioElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
@@ -29,6 +33,17 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(1);
+
+  // ✅ PALETTE DE COULEURS DYNAMIQUES
+  const colors = {
+    bg: isDark ? 'linear-gradient(135deg, #0a0a0f, #0d0d14)' : '#ffffff',
+    border: isDark ? `${color}30` : `${color}50`,
+    textMain: isDark ? '#ffffff' : '#1a1a1a',
+    textMuted: isDark ? '#666666' : '#888888',
+    textDark: isDark ? '#888888' : '#666666',
+    waveBg: isDark ? 'rgba(0,0,0,0.35)' : 'rgba(0,0,0,0.05)',
+    progressBg: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)',
+  };
 
   const fmt = (t: number) => {
     if (!isFinite(t)) return '0:00';
@@ -151,16 +166,16 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
         const y = centerY + d * spacing;
         const lit = Math.abs(d) <= active;
 
-        // Couleur
+        // ✅ COULEURS DYNAMIQUES POUR LE CANVAS
         if (lit && isPast) {
           ctx.fillStyle = color;
           ctx.shadowBlur = 5;
           ctx.shadowColor = color;
         } else if (lit) {
-          ctx.fillStyle = 'rgba(120,120,135,0.5)';
+          ctx.fillStyle = isDark ? 'rgba(120,120,135,0.5)' : 'rgba(150,150,160,0.6)'; 
           ctx.shadowBlur = 0;
         } else {
-          ctx.fillStyle = 'rgba(74,74,85,0.15)';
+          ctx.fillStyle = isDark ? 'rgba(74,74,85,0.15)' : 'rgba(200,200,210,0.3)';
           ctx.shadowBlur = 0;
         }
 
@@ -171,7 +186,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
     ctx.shadowBlur = 0;
 
     if (isPlaying) rafRef.current = requestAnimationFrame(draw);
-  }, [color, isPlaying, currentTime, duration, compact]);
+  }, [color, isPlaying, currentTime, duration, compact, isDark]); // ✅ AJOUT DE isDark DANS LES DÉPENDANCES
 
   // Boucle d'animation
   useEffect(() => {
@@ -205,19 +220,20 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
   return (
     <div
       style={{
-        background: 'linear-gradient(135deg, #0a0a0f, #0d0d14)',
-        border: `1px solid ${color}30`,
+        background: colors.bg, // ✅ DYNAMIQUE
+        border: `1px solid ${colors.border}`, // ✅ DYNAMIQUE
         borderRadius: 12,
         padding: compact ? 10 : 16,
         fontFamily: "'Inter', sans-serif",
+        boxShadow: isDark ? 'none' : '0 4px 20px rgba(0,0,0,0.05)', // ✅ AJOUT D'OMBRE
       }}
     >
       <audio ref={audioRef} src={src} preload="metadata" crossOrigin="anonymous" />
 
       {(title || subtitle) && (
         <div style={{ marginBottom: 10 }}>
-          {title && <div style={{ fontSize: 12, color: '#fff', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</div>}
-          {subtitle && <div style={{ fontSize: 9, color: '#666', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{subtitle}</div>}
+          {title && <div style={{ fontSize: 12, color: colors.textMain, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</div>}
+          {subtitle && <div style={{ fontSize: 9, color: colors.textMuted, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{subtitle}</div>}
         </div>
       )}
 
@@ -230,7 +246,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
           cursor: 'pointer',
           borderRadius: 8,
           overflow: 'hidden',
-          background: 'rgba(0,0,0,0.35)',
+          background: colors.waveBg, // ✅ DYNAMIQUE
         }}
       >
         <canvas ref={canvasRef} style={{ display: 'block', width: '100%', height: '100%' }} />
@@ -238,12 +254,12 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
 
       {/* Progression */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-        <span className="mono" style={{ fontSize: 10, color: '#888', minWidth: 32, textAlign: 'right' }}>{fmt(currentTime)}</span>
-        <div onClick={seek} style={{ flex: 1, height: 3, background: 'rgba(255,255,255,0.06)', borderRadius: 2, cursor: 'pointer', position: 'relative' }}>
+        <span className="mono" style={{ fontSize: 10, color: colors.textDark, minWidth: 32, textAlign: 'right' }}>{fmt(currentTime)}</span>
+        <div onClick={seek} style={{ flex: 1, height: 3, background: colors.progressBg, borderRadius: 2, cursor: 'pointer', position: 'relative' }}>
           <div style={{ position: 'absolute', left: 0, top: 0, height: '100%', width: `${progress}%`, background: color, borderRadius: 2 }} />
           <div style={{ position: 'absolute', left: `${progress}%`, top: '50%', transform: 'translate(-50%, -50%)', width: 10, height: 10, borderRadius: '50%', background: color, boxShadow: `0 0 10px ${color}` }} />
         </div>
-        <span className="mono" style={{ fontSize: 10, color: '#888', minWidth: 32 }}>{fmt(duration)}</span>
+        <span className="mono" style={{ fontSize: 10, color: colors.textDark, minWidth: 32 }}>{fmt(duration)}</span>
       </div>
 
       {/* Contrôles */}
@@ -256,7 +272,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
             borderRadius: '50%',
             border: 'none',
             background: color,
-            color: '#000',
+            color: '#000', // Le texte sur le bouton coloré reste noir pour le contraste
             fontSize: compact ? 14 : 16,
             cursor: 'pointer',
             boxShadow: `0 0 20px ${color}60`,
@@ -267,9 +283,9 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
         </button>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1 }}>
-          <span style={{ fontSize: 12, opacity: 0.6 }}>🔊</span>
+          <span style={{ fontSize: 12, color: colors.textMuted }}>🔊</span>
           <input type="range" min={0} max={1} step={0.01} value={volume} onChange={changeVol} style={{ flex: 1, accentColor: color, height: 4 }} />
-          <span className="mono" style={{ fontSize: 9, color: '#666', minWidth: 26, textAlign: 'right' }}>{Math.round(volume * 100)}%</span>
+          <span className="mono" style={{ fontSize: 9, color: colors.textMuted, minWidth: 26, textAlign: 'right' }}>{Math.round(volume * 100)}%</span>
         </div>
 
         {onDownload && (

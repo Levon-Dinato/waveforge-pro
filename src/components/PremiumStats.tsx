@@ -1,5 +1,7 @@
+// src/components/PremiumStats.tsx
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { useTheme } from '../contexts/ThemeContext'; // ✅ IMPORT DU THEME
 import {
   ResponsiveContainer,
   LineChart,
@@ -41,11 +43,26 @@ const formatLabel = (iso: string): string => {
 };
 
 export const PremiumStats: React.FC<PremiumStatsProps> = ({ profileId, themeColor }) => {
+  const { theme } = useTheme(); // ✅ RÉCUPÉRATION DU THÈME
+  const isDark = theme === 'dark';
+
   const [views, setViews] = useState<number | null>(null);
   const [plays, setPlays] = useState<number | null>(null);
   const [downloads, setDownloads] = useState<number | null>(null);
   const [chartData, setChartData] = useState<DayPoint[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // ✅ PALETTE DE COULEURS DYNAMIQUES
+  const colors = {
+    textMain: isDark ? '#ffffff' : '#1a1a1a',
+    textMuted: isDark ? 'rgba(255,255,255,0.5)' : '#666666',
+    textDark: isDark ? 'rgba(255,255,255,0.3)' : '#999999',
+    cardBg: isDark ? 'rgba(255,255,255,0.02)' : '#ffffff',
+    cardBorder: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)',
+    sectionBorder: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+    gridLine: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+    tooltipBg: isDark ? '#0a0a0a' : '#ffffff',
+  };
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -96,11 +113,12 @@ export const PremiumStats: React.FC<PremiumStatsProps> = ({ profileId, themeColo
   }, [profileId]);
 
   const cardStyle: React.CSSProperties = {
-    background: 'rgba(255,255,255,0.02)',
-    border: '1px solid rgba(255,255,255,0.06)',
+    background: colors.cardBg, // ✅ DYNAMIQUE
+    border: `1px solid ${colors.cardBorder}`, // ✅ DYNAMIQUE
     borderRadius: 16,
     padding: 24,
     textAlign: 'center',
+    boxShadow: isDark ? 'none' : '0 4px 20px rgba(0,0,0,0.03)', // ✅ AJOUT D'OMBRE EN MODE CLAIR
   };
 
   const labelStyle: React.CSSProperties = {
@@ -108,7 +126,7 @@ export const PremiumStats: React.FC<PremiumStatsProps> = ({ profileId, themeColo
     fontWeight: 800,
     textTransform: 'uppercase',
     letterSpacing: 2,
-    color: 'rgba(255,255,255,0.5)',
+    color: colors.textMuted, // ✅ DYNAMIQUE
     marginBottom: 12,
   };
 
@@ -126,13 +144,13 @@ export const PremiumStats: React.FC<PremiumStatsProps> = ({ profileId, themeColo
       style={{
         marginBottom: 120,
         paddingTop: 80,
-        borderTop: '1px solid rgba(255,255,255,0.1)',
+        borderTop: `1px solid ${colors.sectionBorder}`, // ✅ DYNAMIQUE
       }}
     >
       <div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 2, color: themeColor, marginBottom: 16 }}>
         Privé — visible uniquement par vous
       </div>
-      <h2 style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', fontWeight: 900, letterSpacing: '-0.03em', marginBottom: 32 }}>
+      <h2 style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', fontWeight: 900, letterSpacing: '-0.03em', marginBottom: 32, color: colors.textMain }}>
         Statistiques
       </h2>
 
@@ -151,32 +169,38 @@ export const PremiumStats: React.FC<PremiumStatsProps> = ({ profileId, themeColo
         </div>
       </div>
 
-      <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: 24 }}>
-        <h3 style={{ fontSize: 13, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(255,255,255,0.5)', margin: '0 0 24px' }}>
+      <div style={{ background: colors.cardBg, border: `1px solid ${colors.cardBorder}`, borderRadius: 16, padding: 24 }}>
+        <h3 style={{ fontSize: 13, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 2, color: colors.textMuted, margin: '0 0 24px' }}>
           Évolution sur 30 jours
         </h3>
         <div style={{ width: '100%', height: 300 }}>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+              <CartesianGrid strokeDasharray="3 3" stroke={colors.gridLine} /> {/* ✅ DYNAMIQUE */}
               <XAxis
                 dataKey="label"
-                stroke="rgba(255,255,255,0.3)"
-                tick={{ fontSize: 11 }}
+                stroke={colors.textDark} // ✅ DYNAMIQUE
+                tick={{ fontSize: 11, fill: colors.textMuted }} // ✅ DYNAMIQUE
                 interval={4}
               />
-              <YAxis stroke="rgba(255,255,255,0.3)" tick={{ fontSize: 11 }} allowDecimals={false} />
+              <YAxis 
+                stroke={colors.textDark} // ✅ DYNAMIQUE
+                tick={{ fontSize: 11, fill: colors.textMuted }} // ✅ DYNAMIQUE
+                allowDecimals={false} 
+              />
               <Tooltip
                 contentStyle={{
-                  background: '#0a0a0a',
+                  background: colors.tooltipBg, // ✅ DYNAMIQUE
                   border: `1px solid ${themeColor}40`,
                   borderRadius: 8,
-                  color: '#fff',
+                  color: colors.textMain, // ✅ DYNAMIQUE
                   fontSize: 12,
+                  boxShadow: isDark ? 'none' : '0 4px 12px rgba(0,0,0,0.1)'
                 }}
                 labelStyle={{ color: themeColor, fontWeight: 700 }}
+                itemStyle={{ color: colors.textMain }} // ✅ DYNAMIQUE (force la couleur du texte dans le tooltip)
               />
-              <Legend wrapperStyle={{ fontSize: 12, color: 'rgba(255,255,255,0.6)' }} />
+              <Legend wrapperStyle={{ fontSize: 12, color: colors.textMuted }} /> {/* ✅ DYNAMIQUE */}
               <Line type="monotone" dataKey="views" name="Vues" stroke={themeColor} strokeWidth={2} dot={false} />
               <Line type="monotone" dataKey="plays" name="Plays" stroke="#a855f7" strokeWidth={2} dot={false} />
               <Line type="monotone" dataKey="downloads" name="Téléchargements" stroke="#f59e0b" strokeWidth={2} dot={false} />

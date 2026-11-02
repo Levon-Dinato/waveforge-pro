@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase, AUDIO_BUCKET } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useAudioEngineContext } from '../contexts/AudioEngineContext';
+import { useTheme } from '../contexts/ThemeContext'; // ✅ IMPORT DU THEME
 import { PianoRoll } from '../components/PianoRoll';
 import type { DetectedNote } from '../types';
 import { Waveform } from '../components/Waveform';
@@ -14,7 +15,7 @@ interface LibraryTrack {
   genre: string; audio_url: string;
 }
 
-// ✅ L'URL de TON serveur Render (à remplacer par la tienne)
+// ✅ L'URL de TON serveur Render
 const RENDER_SERVER_URL = 'https://waveforge-api-8n67.onrender.com'; 
 
 export const StudioPage: React.FC = () => {
@@ -23,6 +24,10 @@ export const StudioPage: React.FC = () => {
   const engine = useAudioEngineContext();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // ✅ RÉCUPÉRATION DU THÈME
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
   const [library, setLibrary] = useState<LibraryTrack[]>([]);
   const [activeTrack, setActiveTrack] = useState<LibraryTrack | null>(null);
   const [loading, setLoading] = useState(true);
@@ -30,6 +35,21 @@ export const StudioPage: React.FC = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [transcriptionResult, setTranscriptionResult] = useState<any>(null);
   const [detectedNotes, setDetectedNotes] = useState<DetectedNote[]>([]);
+
+  // ✅ PALETTE DE COULEURS DYNAMIQUES
+  const colors = {
+    bg: isDark ? '#020205' : '#f5f5f7',
+    panelBg: isDark ? '#0a0a0a' : '#ffffff',
+    cardBg: isDark ? '#121212' : '#f9fafb',
+    border: isDark ? '#222222' : '#e5e7eb',
+    borderLight: isDark ? '#333333' : '#d1d5db',
+    textMain: isDark ? '#ffffff' : '#1a1a1a',
+    textMuted: isDark ? '#888888' : '#666666',
+    textDark: isDark ? '#555555' : '#999999',
+    trackCoverBg: isDark ? '#222222' : '#e5e7eb',
+    activeTrackBg: isDark ? '#1a1a1a' : '#f3f4f6',
+    btnSecondaryBg: isDark ? 'transparent' : '#ffffff',
+  };
 
   // ✅ 1. CHARGEMENT DE LA BIBLIOTHÈQUE
   useEffect(() => {
@@ -59,7 +79,6 @@ export const StudioPage: React.FC = () => {
       const formData = new FormData();
       formData.append('audio', audioBlob, fileName);
 
-      // On envoie le fichier à TON SERVEUR RENDER
       const response = await fetch(`${RENDER_SERVER_URL}/analyze-audio`, {
         method: 'POST',
         body: formData,
@@ -111,18 +130,17 @@ export const StudioPage: React.FC = () => {
 
   // ✅ 5. EXPORT MIDI
   const handleExportMidi = () => {
-  if (!detectedNotes || detectedNotes.length === 0) {
-    alert("Aucune note à exporter.");
-    return;
-  }
-  try {
-    // ✅ Utilise ton exportateur Pro qui gère les pistes (Melody, Bass, Drums)
-    const blob = exportMidi(detectedNotes, 120); // 120 BPM par défaut
-    download(blob, `${activeTrack?.title || 'export'}_midi.mid`);
-  } catch (error) {
-    console.error("Erreur MIDI:", error);
-  }
-};
+    if (!detectedNotes || detectedNotes.length === 0) {
+      alert("Aucune note à exporter.");
+      return;
+    }
+    try {
+      const blob = exportMidi(detectedNotes, 120);
+      download(blob, `${activeTrack?.title || 'export'}_midi.mid`);
+    } catch (error) {
+      console.error("Erreur MIDI:", error);
+    }
+  };
 
   // ✅ 6. CALCUL DES NOTES
   const trackCounts = useMemo(() => {
@@ -137,19 +155,19 @@ export const StudioPage: React.FC = () => {
 
   const hasAudio = !!transcriptionResult;
 
-  if (loading) return <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', background: '#020205', color: '#00d9ff', fontFamily: 'Inter, sans-serif' }}>Chargement de la bibliothèque...</div>;
+  if (loading) return <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', background: colors.bg, color: '#00d9ff', fontFamily: 'Inter, sans-serif' }}>Chargement de la bibliothèque...</div>;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', background: '#020205', color: '#fff', fontFamily: 'Inter, sans-serif', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', background: colors.bg, color: colors.textMain, fontFamily: 'Inter, sans-serif', overflow: 'hidden', transition: 'background 0.3s ease, color 0.3s ease' }}>
       
       {/* TOP BAR */}
-      <div style={{ padding: '12px 24px', borderBottom: '1px solid #222', display: 'flex', alignItems: 'center', gap: 16 }}>
-        <button onClick={() => navigate('/')} style={{ background: 'transparent', border: 'none', color: '#888', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
+      <div style={{ padding: '12px 24px', borderBottom: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', gap: 16, background: colors.panelBg, transition: 'background 0.3s ease' }}>
+        <button onClick={() => navigate('/')} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
           Retour au site
         </button>
-        <span style={{ color: '#333' }}>|</span>
-        <h1 style={{ fontSize: '1rem', fontWeight: 900, margin: 0, color: '#fff', display: 'flex', alignItems: 'center', gap: 8 }}>
+        <span style={{ color: colors.borderLight }}>|</span>
+        <h1 style={{ fontSize: '1rem', fontWeight: 900, margin: 0, color: colors.textMain, display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{ color: '#00d9ff' }}>🎧</span> Analyzer MIDI
         </h1>
       </div>
@@ -157,27 +175,27 @@ export const StudioPage: React.FC = () => {
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         
         {/* SIDEBAR BIBLIOTHÈQUE */}
-        <div style={{ width: 280, background: '#0a0a0a', borderRight: '1px solid #222', display: 'flex', flexDirection: 'column' }}>
-          <div style={{ padding: 16, borderBottom: '1px solid #222' }}>
-             <h2 style={{ fontSize: 12, fontWeight: 800, color: '#555', textTransform: 'uppercase', letterSpacing: 1, margin: 0 }}>Ma Bibliothèque</h2>
+        <div style={{ width: 280, background: colors.panelBg, borderRight: `1px solid ${colors.border}`, display: 'flex', flexDirection: 'column', transition: 'background 0.3s ease' }}>
+          <div style={{ padding: 16, borderBottom: `1px solid ${colors.border}` }}>
+             <h2 style={{ fontSize: 12, fontWeight: 800, color: colors.textDark, textTransform: 'uppercase', letterSpacing: 1, margin: 0 }}>Ma Bibliothèque</h2>
           </div>
           
           <div style={{ flex: 1, overflowY: 'auto', padding: 8 }}>
             {library.map(track => (
-              <div key={track.id} onClick={() => handleSelectTrack(track)} style={{ display: 'flex', gap: 10, alignItems: 'center', padding: 10, borderRadius: 6, cursor: 'pointer', background: activeTrack?.id === track.id ? '#1a1a1a' : 'transparent', marginBottom: 4 }}>
-                <div style={{ width: 36, height: 36, background: track.coverUrl ? `url(${track.coverUrl}) center/cover` : '#222', borderRadius: 4 }} />
+              <div key={track.id} onClick={() => handleSelectTrack(track)} style={{ display: 'flex', gap: 10, alignItems: 'center', padding: 10, borderRadius: 6, cursor: 'pointer', background: activeTrack?.id === track.id ? colors.activeTrackBg : 'transparent', marginBottom: 4 }}>
+                <div style={{ width: 36, height: 36, background: track.coverUrl ? `url(${track.coverUrl}) center/cover` : colors.trackCoverBg, borderRadius: 4 }} />
                 <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: activeTrack?.id === track.id ? '#00d9ff' : '#fff' }}>{track.title}</div>
-                  <div style={{ fontSize: 11, color: '#888' }}>{track.artist}</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: activeTrack?.id === track.id ? '#00d9ff' : colors.textMain }}>{track.title}</div>
+                  <div style={{ fontSize: 11, color: colors.textMuted }}>{track.artist}</div>
                 </div>
               </div>
             ))}
           </div>
 
           {/* BOUTON IMPORT */}
-          <div style={{ padding: 16, borderTop: '1px solid #222' }}>
+          <div style={{ padding: 16, borderTop: `1px solid ${colors.border}` }}>
             <input type="file" accept="audio/*" ref={fileInputRef} onChange={handleFileChange} style={{ display: 'none' }} />
-            <button onClick={() => fileInputRef.current?.click()} disabled={isAnalyzing} style={{ width: '100%', padding: '12px', background: isAnalyzing ? '#333' : '#00d9ff', color: isAnalyzing ? '#888' : '#000', border: 'none', borderRadius: 6, fontWeight: 900, cursor: isAnalyzing ? 'wait' : 'pointer', fontSize: 13 }}>
+            <button onClick={() => fileInputRef.current?.click()} disabled={isAnalyzing} style={{ width: '100%', padding: '12px', background: isAnalyzing ? colors.border : '#00d9ff', color: isAnalyzing ? colors.textMuted : '#000', border: 'none', borderRadius: 6, fontWeight: 900, cursor: isAnalyzing ? 'wait' : 'pointer', fontSize: 13 }}>
               {isAnalyzing ? 'Analyse Serveur...' : '+ Importer un son'}
             </button>
           </div>
@@ -187,29 +205,29 @@ export const StudioPage: React.FC = () => {
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           
           {!hasAudio && !isAnalyzing ? (
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#666' }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: colors.textMuted }}>
               <div style={{ fontSize: 48, marginBottom: 16 }}>🎹</div>
-              <h2 style={{ fontSize: '1.2rem', color: '#fff', marginBottom: 8 }}>Charger un morceau</h2>
+              <h2 style={{ fontSize: '1.2rem', color: colors.textMain, marginBottom: 8 }}>Charger un morceau</h2>
               <p style={{ fontSize: 14, marginBottom: 24 }}>Le fichier sera analysé par notre serveur Cloud (Basic Pitch).</p>
               <button onClick={() => fileInputRef.current?.click()} style={{ padding: '12px 24px', background: 'rgba(0,217,255,0.1)', border: '1px solid #00d9ff', color: '#00d9ff', borderRadius: 8, fontWeight: 800, cursor: 'pointer' }}>Importer un fichier</button>
             </div>
           ) : isAnalyzing ? (
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#00d9ff' }}>
               <div style={{ fontSize: 32, marginBottom: 16, animation: 'spin 2s linear infinite' }}>⚙️</div>
-              <h2 style={{ fontSize: '1.2rem', color: '#fff', marginBottom: 8 }}>Analyse sur le serveur...</h2>
-              <p style={{ fontSize: 14, color: '#888' }}>Le serveur Render extrait les notes. Cela peut prendre 10-20 secondes.</p>
+              <h2 style={{ fontSize: '1.2rem', color: colors.textMain, marginBottom: 8 }}>Analyse sur le serveur...</h2>
+              <p style={{ fontSize: 14, color: colors.textMuted }}>Le serveur Render extrait les notes. Cela peut prendre 10-20 secondes.</p>
               <style>{`@keyframes spin { 100% { transform: rotate(360deg); } }`}</style>
             </div>
           ) : (
             <>
               {/* INFO FICHIER + WAVEFORM */}
-              <div style={{ padding: '16px 24px', borderBottom: '1px solid #222', display: 'flex', alignItems: 'center', gap: 16 }}>
+              <div style={{ padding: '16px 24px', borderBottom: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', gap: 16 }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <h2 style={{ fontSize: 16, fontWeight: 800, margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{activeTrack?.title || 'Fichier importé'}</h2>
-                  <div style={{ fontSize: 12, color: '#888', marginTop: 4 }}>{detectedNotes.length} notes détectées · {transcriptionResult?.duration?.toFixed(1)}s</div>
+                  <h2 style={{ fontSize: 16, fontWeight: 800, margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: colors.textMain }}>{activeTrack?.title || 'Fichier importé'}</h2>
+                  <div style={{ fontSize: 12, color: colors.textMuted, marginTop: 4 }}>{detectedNotes.length} notes détectées · {transcriptionResult?.duration?.toFixed(1)}s</div>
                 </div>
                 {transcriptionResult?.midiBlob && (
-                  <div style={{ flex: 2, height: 64, background: '#0a0a0a', borderRadius: 8, border: '1px solid #222', overflow: 'hidden' }}>
+                  <div style={{ flex: 2, height: 64, background: colors.panelBg, borderRadius: 8, border: `1px solid ${colors.border}`, overflow: 'hidden' }}>
                     <Waveform 
                       audioBuffer={null} 
                       currentTime={0}
@@ -224,9 +242,9 @@ export const StudioPage: React.FC = () => {
               </div>
 
               {/* TOOLBAR */}
-              <div style={{ padding: '12px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #222' }}>
+              <div style={{ padding: '12px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid ${colors.border}` }}>
                 <div style={{ display: 'flex', gap: 8 }}>
-                  <button onClick={() => engine.playMidi && engine.playMidi()} style={{ padding: '8px 16px', background: 'transparent', border: '1px solid #333', color: '#fff', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}>▶ MIDI</button>
+                  <button onClick={() => engine.playMidi && engine.playMidi()} style={{ padding: '8px 16px', background: colors.btnSecondaryBg, border: `1px solid ${colors.borderLight}`, color: colors.textMain, borderRadius: 4, cursor: 'pointer', fontSize: 12 }}>▶ MIDI</button>
                   <button onClick={() => engine.stopAll && engine.stopAll()} style={{ padding: '8px 16px', background: 'transparent', border: '1px solid #ff5c5c', color: '#ff5c5c', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}>■ STOP</button>
                 </div>
                 <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
@@ -237,27 +255,27 @@ export const StudioPage: React.FC = () => {
 
               {/* PISTES */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, padding: '16px 24px' }}>
-                <div style={{ background: '#121212', padding: 12, borderRadius: 8, borderLeft: '3px solid #7c5cff' }}>
+                <div style={{ background: colors.cardBg, padding: 12, borderRadius: 8, borderLeft: '3px solid #7c5cff', border: `1px solid ${colors.border}` }}>
                   <div style={{ fontSize: 10, color: '#7c5cff', fontWeight: 800 }}>MELODY</div>
-                  <div style={{ fontSize: 14, fontWeight: 600 }}>{trackCounts.lead} <span style={{fontSize: 10, color:'#666'}}>notes</span></div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: colors.textMain }}>{trackCounts.lead} <span style={{fontSize: 10, color: colors.textMuted}}>notes</span></div>
                 </div>
-                <div style={{ background: '#121212', padding: 12, borderRadius: 8, borderLeft: '3px solid #00ff88' }}>
+                <div style={{ background: colors.cardBg, padding: 12, borderRadius: 8, borderLeft: '3px solid #00ff88', border: `1px solid ${colors.border}` }}>
                   <div style={{ fontSize: 10, color: '#00ff88', fontWeight: 800 }}>BASS</div>
-                  <div style={{ fontSize: 14, fontWeight: 600 }}>{trackCounts.bass} <span style={{fontSize: 10, color:'#666'}}>notes</span></div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: colors.textMain }}>{trackCounts.bass} <span style={{fontSize: 10, color: colors.textMuted}}>notes</span></div>
                 </div>
-                <div style={{ background: '#121212', padding: 12, borderRadius: 8, borderLeft: '3px solid #ff5cf0' }}>
+                <div style={{ background: colors.cardBg, padding: 12, borderRadius: 8, borderLeft: '3px solid #ff5cf0', border: `1px solid ${colors.border}` }}>
                   <div style={{ fontSize: 10, color: '#ff5cf0', fontWeight: 800 }}>CHORDS</div>
-                  <div style={{ fontSize: 14, fontWeight: 600 }}>{trackCounts.harmony} <span style={{fontSize: 10, color:'#666'}}>notes</span></div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: colors.textMain }}>{trackCounts.harmony} <span style={{fontSize: 10, color: colors.textMuted}}>notes</span></div>
                 </div>
-                <div style={{ background: '#121212', padding: 12, borderRadius: 8, borderLeft: '3px solid #ffd43b' }}>
+                <div style={{ background: colors.cardBg, padding: 12, borderRadius: 8, borderLeft: '3px solid #ffd43b', border: `1px solid ${colors.border}` }}>
                   <div style={{ fontSize: 10, color: '#ffd43b', fontWeight: 800 }}>DRUMS</div>
-                  <div style={{ fontSize: 14, fontWeight: 600 }}>{trackCounts.drums} <span style={{fontSize: 10, color:'#666'}}>notes</span></div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: colors.textMain }}>{trackCounts.drums} <span style={{fontSize: 10, color: colors.textMuted}}>notes</span></div>
                 </div>
               </div>
 
               {/* PIANO ROLL */}
               <div style={{ flex: 1, padding: '0 24px 24px 24px', overflow: 'hidden' }}>
-                <div style={{ width: '100%', height: '100%', background: '#121212', borderRadius: 8, border: '1px solid #222', overflow: 'hidden' }}>
+                <div style={{ width: '100%', height: '100%', background: colors.cardBg, borderRadius: 8, border: `1px solid ${colors.border}`, overflow: 'hidden' }}>
                   <PianoRoll 
                     {...({
                       notes: detectedNotes,

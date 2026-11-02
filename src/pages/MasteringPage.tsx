@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { MasteringPanel } from '../components/MasteringPanel';
 import { useAudioEngineContext } from '../contexts/AudioEngineContext';
+import { useTheme } from '../contexts/ThemeContext'; // ✅ IMPORT DU THEME
 import { LUFSMeter, MasteringChain, type MasteringPreset } from '../audio/masteringChain';
 
 import { Knob } from '../components/ui/Knob';
@@ -31,6 +32,10 @@ export const MasteringPage: React.FC = () => {
   const engine = useAudioEngineContext();
   const hasAudio = !!engine.audioBuffer;
 
+  // ✅ RÉCUPÉRATION DU THÈME
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
   const [localFileName, setLocalFileName] = useState<string | null>(null);
   const [isImporting, setIsImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -58,6 +63,22 @@ export const MasteringPage: React.FC = () => {
   const chainRef = useRef<MasteringChain | null>(null);
   const lufsRef = useRef<LUFSMeter | null>(null);
   const lufsContextRef = useRef<AudioContext | null>(null);
+
+  // ✅ PALETTE DE COULEURS DYNAMIQUES
+  const colors = {
+    bg: isDark ? '#050505' : '#f5f5f7',
+    panelBg: isDark ? '#08080a' : '#ffffff',
+    cardBg: isDark ? '#0a0a0c' : '#f9fafb',
+    border: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.08)',
+    borderLight: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.15)',
+    textMain: isDark ? '#ffffff' : '#1a1a1a',
+    textMuted: isDark ? '#888888' : '#666666',
+    textDark: isDark ? '#555555' : '#999999',
+    sliderBg: isDark ? '#151515' : '#e5e7eb',
+    waveBg: isDark ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.05)',
+    presetCardBg: isDark ? '#0a0a0c' : '#f9fafb',
+    presetCardHover: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)',
+  };
 
   useEffect(() => {
     if (engine.audioBuffer) {
@@ -274,7 +295,23 @@ export const MasteringPage: React.FC = () => {
   }, [engine.audioBuffer, localFileName]);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', background: '#050505', color: '#fff', fontFamily: 'Inter, sans-serif', overflow: 'hidden' }}>
+    <div style={{ 
+      display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', 
+      background: colors.bg, color: colors.textMain, fontFamily: 'Inter, sans-serif', 
+      overflow: 'hidden',
+      transition: 'background 0.3s ease, color 0.3s ease',
+      // ✅ INJECTION DES VARIABLES CSS POUR LE <style>
+      ['--bg-main' as any]: colors.bg,
+      ['--bg-panel' as any]: colors.panelBg,
+      ['--bg-card' as any]: colors.cardBg,
+      ['--border' as any]: colors.border,
+      ['--border-light' as any]: colors.borderLight,
+      ['--text-main' as any]: colors.textMain,
+      ['--text-muted' as any]: colors.textMuted,
+      ['--slider-bg' as any]: colors.sliderBg,
+      ['--preset-card-bg' as any]: colors.presetCardBg,
+      ['--preset-card-hover' as any]: colors.presetCardHover,
+    }}>
       
       <style>{`
         .btn-modern { position: relative; overflow: hidden; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); text-transform: uppercase; letter-spacing: 1px; }
@@ -283,24 +320,24 @@ export const MasteringPage: React.FC = () => {
         .btn-import { background: linear-gradient(135deg, #00d9ff, #0077ff); box-shadow: 0 4px 15px rgba(0,217,255,0.3); }
         .btn-import:hover { box-shadow: 0 6px 20px rgba(0,217,255,0.5); transform: translateY(-1px); }
         
-        .preset-card-grid { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 12px 6px; background: #0a0a0c; border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; cursor: pointer; transition: all 0.2s; text-align: center; }
-        .preset-card-grid:hover { background: rgba(255,255,255,0.02); border-color: rgba(255,255,255,0.1); }
-        .preset-card-grid.active { border-color: currentColor; box-shadow: 0 0 15px -2px currentColor; background: rgba(255,255,255,0.02); }
+        .preset-card-grid { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 12px 6px; background: var(--preset-card-bg); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.2s; text-align: center; }
+        .preset-card-grid:hover { background: var(--preset-card-hover); border-color: var(--border-light); }
+        .preset-card-grid.active { border-color: currentColor; box-shadow: 0 0 15px -2px currentColor; background: var(--preset-card-hover); }
         
-        .eq-slider { -webkit-appearance: none; width: 100%; height: 4px; background: #222; border-radius: 2px; outline: none; }
-        .eq-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 12px; height: 12px; border-radius: 50%; background: #fff; cursor: pointer; box-shadow: 0 0 10px rgba(255,255,255,0.5); transition: transform 0.1s; }
+        .eq-slider { -webkit-appearance: none; width: 100%; height: 4px; background: var(--slider-bg); border-radius: 2px; outline: none; }
+        .eq-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 12px; height: 12px; border-radius: 50%; background: var(--text-main); cursor: pointer; box-shadow: 0 0 10px rgba(0,0,0,0.2); transition: transform 0.1s; }
         .eq-slider::-webkit-slider-thumb:hover { transform: scale(1.2); }
-        .eq-slider::-moz-range-thumb { width: 12px; height: 12px; border-radius: 50%; background: #fff; cursor: pointer; box-shadow: 0 0 10px rgba(255,255,255,0.5); border: none; }
+        .eq-slider::-moz-range-thumb { width: 12px; height: 12px; border-radius: 50%; background: var(--text-main); cursor: pointer; box-shadow: 0 0 10px rgba(0,0,0,0.2); border: none; }
       `}</style>
 
-      <div style={{ height: 64, borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', padding: '0 24px', justifyContent: 'space-between', background: '#0a0a0c', flexShrink: 0 }}>
+      <div style={{ height: 64, borderBottom: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', padding: '0 24px', justifyContent: 'space-between', background: colors.panelBg, flexShrink: 0, transition: 'background 0.3s ease' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
-          <Link to="/tools" style={{ color: '#888', textDecoration: 'none', fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Link to="/tools" style={{ color: colors.textMuted, textDecoration: 'none', fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
             OUTILS
           </Link>
-          <div style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.1)' }} />
-          <h1 style={{ fontSize: 16, fontWeight: 900, margin: 0, letterSpacing: '1px' }}>DROPZONE <span style={{ color: '#00d9ff' }}>MASTERING</span></h1>
+          <div style={{ width: 1, height: 20, background: colors.borderLight }} />
+          <h1 style={{ fontSize: 16, fontWeight: 900, margin: 0, letterSpacing: '1px', color: colors.textMain }}>DROPZONE <span style={{ color: '#00d9ff' }}>MASTERING</span></h1>
         </div>
         <div>
           <input type="file" ref={fileInputRef} style={{ display: 'none' }} accept="audio/*" onChange={handleLocalFileLoad} />
@@ -312,48 +349,48 @@ export const MasteringPage: React.FC = () => {
 
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         
-        <div style={{ width: 320, background: '#08080a', borderRight: '1px solid rgba(255,255,255,0.05)', padding: 20, display: 'flex', flexDirection: 'column', gap: 20, overflowY: 'auto', flexShrink: 0 }}>
+        <div style={{ width: 320, background: colors.panelBg, borderRight: `1px solid ${colors.border}`, padding: 20, display: 'flex', flexDirection: 'column', gap: 20, overflowY: 'auto', flexShrink: 0, transition: 'background 0.3s ease' }}>
           
-          <div style={{ background: 'rgba(255,255,255,0.02)', padding: 12, borderRadius: 8, border: '1px solid rgba(255,255,255,0.05)' }}>
-            <div style={{ fontSize: 9, color: '#555', fontWeight: 800, letterSpacing: '1px', marginBottom: 4 }}>FICHIER SOURCE</div>
-            <div style={{ fontSize: 11, color: '#fff', fontWeight: 600, wordBreak: 'break-all' }}>{localFileName || engine.fileName || 'Aucun fichier'}</div>
+          <div style={{ background: colors.cardBg, padding: 12, borderRadius: 8, border: `1px solid ${colors.border}` }}>
+            <div style={{ fontSize: 9, color: colors.textDark, fontWeight: 800, letterSpacing: '1px', marginBottom: 4 }}>FICHIER SOURCE</div>
+            <div style={{ fontSize: 11, color: colors.textMain, fontWeight: 600, wordBreak: 'break-all' }}>{localFileName || engine.fileName || 'Aucun fichier'}</div>
           </div>
 
-          <div style={{ fontSize: 11, color: '#888', fontWeight: 800, letterSpacing: '1px' }}>CHOISIR UN STYLE</div>
+          <div style={{ fontSize: 11, color: colors.textMuted, fontWeight: 800, letterSpacing: '1px' }}>CHOISIR UN STYLE</div>
           
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
             {PRESETS.map((p) => (
               <div key={p.id} onClick={() => setActivePreset(p.id)} className={`preset-card-grid ${activePreset === p.id ? 'active' : ''}`} style={{ color: p.color }}>
                 <div style={{ filter: 'drop-shadow(0 0 8px currentColor)' }}>{p.icon}</div>
-                <div style={{ fontSize: 10, fontWeight: 700, color: activePreset === p.id ? '#fff' : '#666' }}>{p.name}</div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: activePreset === p.id ? colors.textMain : colors.textMuted }}>{p.name}</div>
               </div>
             ))}
           </div>
         </div>
 
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: 20, background: '#050505', gap: 20, overflowY: 'auto' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: 20, background: colors.bg, gap: 20, overflowY: 'auto', transition: 'background 0.3s ease' }}>
           
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-              <div style={{ fontSize: 14, fontWeight: 800, color: hasAudio ? '#fff' : '#555' }}>Prévisualisation</div>
+              <div style={{ fontSize: 14, fontWeight: 800, color: hasAudio ? colors.textMain : colors.textDark }}>Prévisualisation</div>
               {hasAudio && (
-                <div style={{ fontSize: 11, color: '#00d9ff', fontFamily: 'monospace', background: 'rgba(0,0,0,0.5)', padding: '4px 8px', borderRadius: 4 }}>
+                <div style={{ fontSize: 11, color: '#00d9ff', fontFamily: 'monospace', background: colors.waveBg, padding: '4px 8px', borderRadius: 4 }}>
                   {formatTime(currentTime)} / {formatTime(duration)}
                 </div>
               )}
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
-              <ToggleSwitch isActive={abMode === 'original'} onClick={() => setAbMode('original')} label="ORIGINAL" color="#888" />
+              <ToggleSwitch isActive={abMode === 'original'} onClick={() => setAbMode('original')} label="ORIGINAL" color={colors.textMuted} />
               <ToggleSwitch isActive={abMode === 'mastered'} onClick={() => setAbMode('mastered')} label="MASTERISÉ" color="#a08aff" />
             </div>
           </div>
 
-          <div style={{ minHeight: 250, background: '#0a0a0c', borderRadius: 12, border: '1px solid rgba(255,255,255,0.05)', position: 'relative', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
-            <div style={{ position: 'absolute', top: 12, left: 16, fontSize: 9, color: '#555', fontWeight: 800, letterSpacing: '1.5px' }}>TONAL BALANCE</div>
+          <div style={{ minHeight: 250, background: colors.cardBg, borderRadius: 12, border: `1px solid ${colors.border}`, position: 'relative', display: 'flex', flexDirection: 'column', flexShrink: 0, transition: 'background 0.3s ease' }}>
+            <div style={{ position: 'absolute', top: 12, left: 16, fontSize: 9, color: colors.textDark, fontWeight: 800, letterSpacing: '1.5px' }}>TONAL BALANCE</div>
             <div style={{ flex: 1, padding: '30px 20px 0 20px', minHeight: 100 }}>
               <CurveVisualizer analyser={abAnalyser} isActive={isPlayingAB} height={140} color="#00d9ff" />
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 40px 10px 40px', fontSize: 9, color: '#444', fontWeight: 800 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 40px 10px 40px', fontSize: 9, color: colors.textDark, fontWeight: 800 }}>
               <span>LOW</span><span>LOW-MID</span><span>HIGH-MID</span><span>HIGH</span>
             </div>
             
@@ -377,24 +414,24 @@ export const MasteringPage: React.FC = () => {
                 )}
               </button>
               
-              <div onClick={handleSeek} style={{ flex: 1, height: 10, background: '#151515', borderRadius: 5, position: 'relative', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+              <div onClick={handleSeek} style={{ flex: 1, height: 10, background: colors.sliderBg, borderRadius: 5, position: 'relative', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
                 <div style={{ height: '100%', width: `${(currentTime / (duration || 1)) * 100}%`, background: 'linear-gradient(90deg, #0088aa, #a08aff)', borderRadius: 5, boxShadow: '0 0 15px rgba(160,138,255,0.4)', position: 'relative' }}>
                   {hasAudio && (
-                    <div style={{ position: 'absolute', right: -5, top: -3, width: 16, height: 16, borderRadius: '50%', background: '#fff', boxShadow: '0 0 10px #a08aff' }} />
+                    <div style={{ position: 'absolute', right: -5, top: -3, width: 16, height: 16, borderRadius: '50%', background: colors.textMain, boxShadow: '0 0 10px #a08aff' }} />
                   )}
                 </div>
               </div>
 
-              <div style={{ fontSize: 11, color: '#666', fontFamily: 'monospace', fontWeight: 700, width: 45, textAlign: 'right' }}>
+              <div style={{ fontSize: 11, color: colors.textMuted, fontFamily: 'monospace', fontWeight: 700, width: 45, textAlign: 'right' }}>
                 {formatTime(duration)}
               </div>
             </div>
           </div>
 
-          <div style={{ background: '#0a0a0c', borderRadius: 12, border: '1px solid rgba(255,255,255,0.05)', padding: '20px 24px', flexShrink: 0 }}>
+          <div style={{ background: colors.cardBg, borderRadius: 12, border: `1px solid ${colors.border}`, padding: '20px 24px', flexShrink: 0, transition: 'background 0.3s ease' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <div style={{ fontSize: 10, color: '#555', fontWeight: 800, letterSpacing: '1.5px' }}>ÉGALISEUR 5 BANDES</div>
-              <button onClick={() => setEq({ bass: 50, lowMid: 50, mid: 50, highMid: 50, high: 50 })} style={{ background: 'transparent', border: 'none', color: '#888', fontSize: 10, cursor: 'pointer', textDecoration: 'underline' }}>Réinitialiser</button>
+              <div style={{ fontSize: 10, color: colors.textDark, fontWeight: 800, letterSpacing: '1.5px' }}>ÉGALISEUR 5 BANDES</div>
+              <button onClick={() => setEq({ bass: 50, lowMid: 50, mid: 50, highMid: 50, high: 50 })} style={{ background: 'transparent', border: 'none', color: colors.textMuted, fontSize: 10, cursor: 'pointer', textDecoration: 'underline' }}>Réinitialiser</button>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 20 }}>
               {[
@@ -405,12 +442,12 @@ export const MasteringPage: React.FC = () => {
                 { key: 'high', label: 'Aigus', freq: '12kHz' }
               ].map((band) => (
                 <div key={band.key}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: '#888', marginBottom: 8 }}>
-                    <span style={{ fontWeight: 800, color: '#fff' }}>{band.label}</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: colors.textMuted, marginBottom: 8 }}>
+                    <span style={{ fontWeight: 800, color: colors.textMain }}>{band.label}</span>
                     <span>{eq[band.key as keyof typeof eq] > 50 ? '+' : ''}{((eq[band.key as keyof typeof eq] - 50) / 50 * 6).toFixed(1)} dB</span>
                   </div>
                   <input type="range" min="0" max="100" step="1" value={eq[band.key as keyof typeof eq]} onChange={(e) => setEq({ ...eq, [band.key]: Number(e.target.value) })} className="eq-slider" />
-                  <div style={{ fontSize: 9, color: '#444', marginTop: 4 }}>{band.freq}</div>
+                  <div style={{ fontSize: 9, color: colors.textDark, marginTop: 4 }}>{band.freq}</div>
                 </div>
               ))}
             </div>
@@ -418,7 +455,7 @@ export const MasteringPage: React.FC = () => {
 
         </div>
 
-        <div style={{ width: 260, background: '#08080a', borderLeft: '1px solid rgba(255,255,255,0.05)', padding: 20, display: 'flex', flexDirection: 'column', gap: 20, overflowY: 'auto', flexShrink: 0 }}>
+        <div style={{ width: 260, background: colors.panelBg, borderLeft: `1px solid ${colors.border}`, padding: 20, display: 'flex', flexDirection: 'column', gap: 20, overflowY: 'auto', flexShrink: 0, transition: 'background 0.3s ease' }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
             
             <Knob value={gainVal} onChange={setGainVal} label="GAIN" color="#ff5cf0" size={70} />
@@ -441,7 +478,7 @@ export const MasteringPage: React.FC = () => {
   );
 };
 
-// ✅ FONCTIONS DE CONVERSION WAV AJOUTÉES ICI POUR CORRIGER L'ERREUR
+// ✅ FONCTIONS DE CONVERSION WAV
 function audioBufferToWav(buffer: AudioBuffer): Blob {
   const numChannels = buffer.numberOfChannels;
   const sampleRate = buffer.sampleRate;

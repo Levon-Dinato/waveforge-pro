@@ -249,7 +249,6 @@ export const PremiumPage: React.FC = () => {
     return { day, month, year, full: `${day} ${month} ${year}` };
   };
 
-  // ✅ AJOUT : Fonction de partage natif
   const handleShare = async () => {
     const shareData = {
       title: `${profile.username} — Artiste DropZone`,
@@ -455,7 +454,6 @@ END:VCALENDAR`;
     });
   };
 
-  // ✅ AJOUT : Skeleton de chargement
   if (loading) {
     return (
       <div style={{ background: colors.bg, minHeight: '100vh', padding: 40, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24, paddingTop: 100 }}>
@@ -512,7 +510,6 @@ END:VCALENDAR`;
   return (
     <div style={{ background: colors.bg, minHeight: '100vh', color: colors.textMain, fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', '--accent': themeColor, transition: 'background 0.3s ease, color 0.3s ease' } as React.CSSProperties}>
       
-      {/* ✅ AJOUT DES BALISES META POUR LE PARTAGE (OPEN GRAPH) */}
       <Helmet>
         <title>{profile.username} — Artiste DropZone</title>
         <meta property="og:title" content={`${profile.username} — Artiste DropZone`} />
@@ -671,7 +668,6 @@ END:VCALENDAR`;
           </div>
         </div>
 
-        {/* ✅ AJOUT : Navigation Mobile défilable */}
         {isMobile && (
           <div className="mobile-nav-links" style={{ display: 'flex', gap: 16, overflowX: 'auto', padding: '8px 16px', borderTop: `1px solid ${colors.border}`, width: '100%', background: colors.navBg }}>
             <a href="#duo" className="nav-link" style={{ whiteSpace: 'nowrap' }}>Bio</a>
@@ -757,7 +753,6 @@ END:VCALENDAR`;
                   ))}
                 </div>
 
-                {/* ✅ AJOUT : Réseaux sociaux dans la section Bio */}
                 {socials.length > 0 && (
                   <div style={{ display: 'flex', gap: 12, marginTop: 30 }}>
                     {socials.map(s => (
@@ -928,18 +923,20 @@ END:VCALENDAR`;
                 const btnBorderColor = hasCustomBg ? 'rgba(255,255,255,0.3)' : colors.border;
                 const btnTextColor = hasCustomBg ? '#ffffff' : colors.textMain;
 
+                // ✅ CORRECTION : Application correcte du fond
                 const bgStyle = track.player_bg_image_url
                   ? {
-                      backgroundImage: `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url(${track.player_bg_image_url})`,
+                      backgroundImage: `linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('${track.player_bg_image_url}')`,
                       backgroundSize: 'cover',
-                      backgroundPosition: 'center'
+                      backgroundPosition: 'center',
+                      backgroundColor: 'transparent'
                     }
                   : { background: track.player_bg_color || colors.cardBg };
 
                 if (isExternalEmbed) {
                   const isAudioCom = iframeSrc?.includes('audio.com');
                   return (
-                    <div key={track.id} className="premium-glow bg-transparent" style={{ ...bgStyle, border: `1px solid ${colors.cardBorder}`, borderRadius: 16, overflow: 'hidden', padding: 24 }}>
+                    <div key={track.id} style={{ ...bgStyle, border: `1px solid ${colors.cardBorder}`, borderRadius: 16, overflow: 'hidden', padding: 24, boxShadow: isDark ? 'none' : '0 4px 20px rgba(0,0,0,0.05)' }}>
                       <div style={{ display: 'flex', gap: 20, alignItems: 'center', marginBottom: 16 }}>
                         <div style={{ width: 60, height: 60, borderRadius: 8, overflow: 'hidden', flexShrink: 0, background: colors.inputBg }}>
                           {track.cover_url ? <img src={track.cover_url} alt={track.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : null}
@@ -957,7 +954,7 @@ END:VCALENDAR`;
                 }
 
                 return (
-                  <div key={track.id} className="premium-glow bg-transparent" style={{ ...bgStyle, border: `1px solid ${colors.cardBorder}`, borderRadius: 16, overflow: 'hidden', padding: 24 }}>
+                  <div key={track.id} style={{ ...bgStyle, border: `1px solid ${colors.cardBorder}`, borderRadius: 16, overflow: 'hidden', padding: 24, boxShadow: isDark ? 'none' : '0 4px 20px rgba(0,0,0,0.05)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 16 }}>
                       <div style={{ width: 60, height: 60, borderRadius: 8, overflow: 'hidden', flexShrink: 0, background: colors.inputBg, position: 'relative' }}>
                         {track.cover_url ? <img src={track.cover_url} alt={track.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : null}

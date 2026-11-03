@@ -98,7 +98,6 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
   };
 
-  // ✅ TON CANVAS ORIGINAL - NON MODIFIÉ
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || !currentTrack) return;
@@ -194,27 +193,16 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
 
   if (!currentTrack) return null;
 
-  // ✅ APPLICATION DU FOND PERSONNALISÉ
-  const bgStyle = currentTrack.player_bg_image_url 
-    ? { 
-        backgroundImage: `linear-gradient(rgba(0,0,0,0.65), rgba(0,0,0,0.65)), url(${currentTrack.player_bg_image_url})`, 
-        backgroundSize: 'cover', 
-        backgroundPosition: 'center',
-        backgroundColor: 'transparent'
-      } 
-    : { background: currentTrack.player_bg_color || colors.bg };
-
   return (
     <div style={{
       position: 'fixed', 
       bottom: isMobile ? 70 : 0, 
       left: 0, right: 0, zIndex: 1000,
-      ...bgStyle, // ✅ Intégration de l'image
+      background: colors.bg,
       borderTop: `1px solid ${colors.border}`,
       boxShadow: colors.shadow,
       transition: 'background 0.3s ease, border-color 0.3s ease'
     }}>
-      {/* Barre de progression fine tout en haut du player */}
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'rgba(255,255,255,0.1)' }}>
         <div style={{ width: `${(currentTime / (duration || 1)) * 100}%`, height: '100%', background: '#00d9ff', boxShadow: '0 0 10px #00d9ff' }} />
       </div>
@@ -233,13 +221,13 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
             background: currentTrack.cover_url ? `url(${currentTrack.cover_url}) center/cover` : colors.coverPlaceholder,
             boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
             flexShrink: 0,
-            border: `1px solid rgba(255,255,255,0.1)`
+            border: `1px solid ${colors.border}`
           }} />
           <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', maxWidth: isMobile ? '120px' : 'none' }}>
-            <div style={{ fontSize: isMobile ? 13 : 15, fontWeight: 800, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>
+            <div style={{ fontSize: isMobile ? 13 : 15, fontWeight: 800, color: colors.textMain, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {currentTrack.title}
             </div>
-            <div style={{ fontSize: isMobile ? 11 : 13, color: '#ccc', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: 4 }}>
+            <div style={{ fontSize: isMobile ? 11 : 13, color: colors.textMuted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: 4 }}>
               {currentTrack.artist}
             </div>
           </div>
@@ -249,11 +237,11 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
           
           <button onClick={onTogglePlay} style={{ 
             width: isMobile ? 36 : 48, height: isMobile ? 36 : 48, borderRadius: '50%', 
-            background: '#fff', color: '#000', border: 'none', 
+            background: colors.playBtnBg, color: colors.playBtnText, border: 'none', 
             display: 'flex', alignItems: 'center', justifyContent: 'center', 
             cursor: 'pointer', flexShrink: 0,
-            transition: 'transform 0.1s',
-            boxShadow: '0 4px 15px rgba(0,0,0,0.3)'
+            transition: 'transform 0.1s, background 0.3s, color 0.3s',
+            boxShadow: isDark ? '0 0 20px rgba(255,255,255,0.1)' : '0 4px 10px rgba(0,0,0,0.1)'
           }}
           onMouseDown={e => e.currentTarget.style.transform = 'scale(0.92)'}
           onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
@@ -267,7 +255,7 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
           </button>
 
           {!isMobile && (
-            <span style={{ fontSize: 12, fontFamily: 'monospace', color: '#aaa', width: 40, textAlign: 'right', fontWeight: 600 }}>
+            <span style={{ fontSize: 12, fontFamily: 'monospace', color: colors.textMuted, width: 40, textAlign: 'right', fontWeight: 600 }}>
               {formatTime(currentTime)}
             </span>
           )}
@@ -277,7 +265,7 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
           </div>
           
           {!isMobile && (
-            <span style={{ fontSize: 12, fontFamily: 'monospace', color: '#aaa', width: 40, fontWeight: 600 }}>
+            <span style={{ fontSize: 12, fontFamily: 'monospace', color: colors.textMuted, width: 40, fontWeight: 600 }}>
               {formatTime(duration)}
             </span>
           )}
@@ -287,9 +275,9 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
           
           <button 
             onClick={handleLike}
-            style={{ background: 'transparent', border: 'none', color: isLiked ? '#ff3366' : '#aaa', cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'all 0.2s' }}
-            onMouseEnter={e => { if (!isLiked) e.currentTarget.style.color = '#fff'; }}
-            onMouseLeave={e => { if (!isLiked) e.currentTarget.style.color = '#aaa'; }}
+            style={{ background: 'transparent', border: 'none', color: isLiked ? '#ff3366' : colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'all 0.2s' }}
+            onMouseEnter={e => { if (!isLiked) e.currentTarget.style.color = colors.textMain; }}
+            onMouseLeave={e => { if (!isLiked) e.currentTarget.style.color = colors.textMuted; }}
           >
             {isLiked ? Icons.heartFilled : Icons.heart}
           </button>
@@ -297,29 +285,29 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
           <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
             <button 
               onClick={() => setShowPlaylistMenu(!showPlaylistMenu)}
-              style={{ background: 'transparent', border: 'none', color: showPlaylistMenu ? '#00d9ff' : '#aaa', cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'all 0.2s' }}
-              onMouseEnter={e => { if (!showPlaylistMenu) e.currentTarget.style.color = '#fff'; }}
-              onMouseLeave={e => { if (!showPlaylistMenu) e.currentTarget.style.color = '#aaa'; }}
+              style={{ background: 'transparent', border: 'none', color: showPlaylistMenu ? '#00d9ff' : colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'all 0.2s' }}
+              onMouseEnter={e => { if (!showPlaylistMenu) e.currentTarget.style.color = colors.textMain; }}
+              onMouseLeave={e => { if (!showPlaylistMenu) e.currentTarget.style.color = colors.textMuted; }}
             >
               {Icons.playlist}
             </button>
 
             {showPlaylistMenu && (
-              <div style={{ position: 'absolute', bottom: '100%', right: 0, marginBottom: 16, background: '#18181b', border: `1px solid #27272a`, borderRadius: 8, padding: 8, width: 220, boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
-                <div style={{ fontSize: 11, fontWeight: 800, color: '#aaa', textTransform: 'uppercase', marginBottom: 8, padding: '0 8px' }}>Ajouter à une playlist</div>
-                <button onClick={() => { alert("Ajouté à la playlist !"); setShowPlaylistMenu(false); }} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px', background: 'transparent', border: 'none', color: '#fff', fontSize: 13, cursor: 'pointer', borderRadius: 4 }} onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>Ma Playlist Principale</button>
+              <div style={{ position: 'absolute', bottom: '100%', right: 0, marginBottom: 16, background: colors.dropdownBg, border: `1px solid ${colors.border}`, borderRadius: 8, padding: 8, width: 220, boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: colors.textMuted, textTransform: 'uppercase', marginBottom: 8, padding: '0 8px' }}>Ajouter à une playlist</div>
+                <button onClick={() => { alert("Ajouté à la playlist !"); setShowPlaylistMenu(false); }} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px', background: 'transparent', border: 'none', color: colors.textMain, fontSize: 13, cursor: 'pointer', borderRadius: 4 }} onMouseEnter={(e) => e.currentTarget.style.background = colors.dropdownHover} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>Ma Playlist Principale</button>
                 <button onClick={() => { alert("Nouvelle playlist créée !"); setShowPlaylistMenu(false); }} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px', background: 'transparent', border: 'none', color: '#00d9ff', fontSize: 13, cursor: 'pointer', borderRadius: 4, fontWeight: 700 }} onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(0,217,255,0.1)'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>+ Créer une playlist</button>
               </div>
             )}
           </div>
 
           {!isMobile && (
-            <button onClick={() => forceDownload(currentTrack.audio_url, `${currentTrack.artist} - ${currentTrack.title}.mp3`)} style={{ background: 'transparent', border: 'none', color: '#aaa', cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'color 0.2s' }} onMouseEnter={e => e.currentTarget.style.color = '#fff'} onMouseLeave={e => e.currentTarget.style.color = '#aaa'}>
+            <button onClick={() => forceDownload(currentTrack.audio_url, `${currentTrack.artist} - ${currentTrack.title}.mp3`)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'color 0.2s' }} onMouseEnter={e => e.currentTarget.style.color = colors.textMain} onMouseLeave={e => e.currentTarget.style.color = colors.textMuted}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
             </button>
           )}
 
-          <button onClick={onStop} style={{ background: 'transparent', border: 'none', color: '#aaa', cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'color 0.2s', marginLeft: isMobile ? 4 : 8 }} onMouseEnter={e => e.currentTarget.style.color = '#ff5c5c'} onMouseLeave={e => e.currentTarget.style.color = '#aaa'}>
+          <button onClick={onStop} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'color 0.2s', marginLeft: isMobile ? 4 : 8 }} onMouseEnter={e => e.currentTarget.style.color = '#ff5c5c'} onMouseLeave={e => e.currentTarget.style.color = colors.textMuted}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
           </button>
         </div>

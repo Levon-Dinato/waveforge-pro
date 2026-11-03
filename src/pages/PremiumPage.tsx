@@ -935,7 +935,6 @@ END:VCALENDAR`;
                 if (isExternalEmbed) {
                   const isAudioCom = iframeSrc?.includes('audio.com');
                   return (
-                    // ✅ RETOUR DE LA LUEUR (premium-glow) ET DE L'IMAGE DE FOND
                     <div key={track.id} className="premium-glow" style={{ background: 'transparent', padding: 2, borderRadius: 18 }}>
                       <div style={{ ...bgStyle, border: `1px solid ${colors.cardBorder}`, borderRadius: 16, overflow: 'hidden', padding: 24 }}>
                         <div style={{ display: 'flex', gap: 20, alignItems: 'center', marginBottom: 16 }}>
@@ -956,7 +955,6 @@ END:VCALENDAR`;
                 }
 
                 return (
-                  // ✅ RETOUR DE LA LUEUR (premium-glow) ET DE L'IMAGE DE FOND
                   <div key={track.id} className="premium-glow" style={{ background: 'transparent', padding: 2, borderRadius: 18 }}>
                     <div style={{ ...bgStyle, border: `1px solid ${colors.cardBorder}`, borderRadius: 16, overflow: 'hidden', padding: 24 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 16 }}>
@@ -1036,7 +1034,8 @@ END:VCALENDAR`;
         )}
       </div>
 
-      {showStats && (
+      {/* ✅ AJOUT DE LA CONDITION isOwner ICI : Les stats ne s'affichent que pour le propriétaire */}
+      {showStats && isOwner && (
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '20px 16px 60px' : '40px 24px 100px' }}>
           <PremiumStats profile={profile} tracks={tracks} />
         </div>

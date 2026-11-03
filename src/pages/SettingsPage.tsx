@@ -1,6 +1,7 @@
 // src/pages/SettingsPage.tsx
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { createPortal } from 'react-dom'; // ✅ IMPORT DU PORTAIL
 import { supabase, AUDIO_BUCKET } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -21,9 +22,15 @@ export const SettingsPage: React.FC = () => {
   
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [uploadForm, setUploadForm] = useState({ title: '', artist: '', genre: '', bpm: '', song_key: '' });
+  
+  const [uploadForm, setUploadForm] = useState({ 
+    title: '', artist: '', genre: '', bpm: '', song_key: '',
+    purchase_url: '', embed_code: '', player_bg_color: '#000000', player_bg_image_url: ''
+  });
+  
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [uploadingPlayerBg, setUploadingPlayerBg] = useState(false);
 
   const [editTrackForm, setEditTrackForm] = useState({ 
     title: '', genre: '', bpm: 0, purchase_url: '', embed_code: '',
@@ -35,7 +42,6 @@ export const SettingsPage: React.FC = () => {
 
   const [uploadingImage, setUploadingImage] = useState(false);
   const [uploadingGallery, setUploadingGallery] = useState(false);
-  const [uploadingPlayerBg, setUploadingPlayerBg] = useState(false);
   const [uploadingVideo, setUploadingVideo] = useState(false);
   const [galleryImages, setGalleryImages] = useState<any[]>([]);
 
@@ -60,12 +66,7 @@ export const SettingsPage: React.FC = () => {
     parcours_description: "DropZone n'est pas juste une page web, c'est votre QG numérique. Un espace centralisé où votre musique, votre identité visuelle et vos outils de production se rencontrent. Conçu pour les artistes de la nuit, le site évolue constamment pour vous offrir la vitrine et les fonctionnalités que vous méritez, sans les contraintes des grosses plateformes.",
     parcours_card_tag: 'POURQUOI NOUS REJOINDRE',
     parcours_card_title: 'La plateforme qui propulse votre son.',
-    show_stats: true,
-    show_duo: true,
-    show_prestations: true,
-    show_releases: true,
-    show_sidebar_top: true,
-    show_sidebar_dates: true,
+    show_stats: true, show_duo: true, show_prestations: true, show_releases: true, show_sidebar_top: true, show_sidebar_dates: true,
     prestations: [
       { title: 'Studio & Outils intégrés', desc: 'Mastering, séparation de stems, générateur... Des outils pro directement dans votre navigateur, sans installation.' },
       { title: 'Visibilité & Partage', desc: 'Un feed dynamique pour dénicher de nouveaux sons, et des pages artistes uniques pour montrer votre univers.' },
@@ -85,7 +86,6 @@ export const SettingsPage: React.FC = () => {
     textLight: isDark ? '#aaaaaa' : '#444444',
     primaryBg: isDark ? '#ffffff' : '#1a1a1a',
     primaryText: isDark ? '#000000' : '#ffffff',
-    inputBgCustom: isDark ? '#0a0a0a' : '#f3f4f6',
   };
 
   useEffect(() => {
@@ -174,7 +174,7 @@ export const SettingsPage: React.FC = () => {
     }
   };
 
-  const handlePlayerBgUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePlayerBgUpload = async (e: React.ChangeEvent<HTMLInputElement>, target: 'edit' | 'upload') => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
     setUploadingPlayerBg(true);
@@ -182,8 +182,13 @@ export const SettingsPage: React.FC = () => {
       const fileName = `${user.id}/player-bg-${Date.now()}.${file.name.split('.').pop()}`;
       const { error: uploadError } = await supabase.storage.from('media').upload(fileName, file);
       if (uploadError) throw uploadError;
-      const { data } = supabase.storage.from('media').getPublicUrl(fileName);
-      setEditTrackForm(prev => ({ ...prev, player_bg_image_url: data.publicUrl }));
+      const { data } = await supabase.storage.from('media').getPublicUrl(fileName);
+      
+      if (target === 'edit') {
+        setEditTrackForm(prev => ({ ...prev, player_bg_image_url: data.publicUrl }));
+      } else {
+        setUploadForm(prev => ({ ...prev, player_bg_image_url: data.publicUrl }));
+      }
     } catch (error: any) {
       alert("Erreur d'upload : " + error.message);
     } finally {
@@ -319,17 +324,21 @@ export const SettingsPage: React.FC = () => {
         song_key: uploadForm.song_key || null,
         audio_url: audioUrlData.publicUrl,
         cover_url: coverUrl,
-        peaks: [],
-        duration: 0,
-        likes_count: 0,
-        downloads: 0
+        purchase_url: uploadForm.purchase_url || null,
+        embed_code: uploadForm.embed_code || null,
+        player_bg_color: uploadForm.player_bg_color,
+        player_bg_image_url: uploadForm.player_bg_image_url || null,
+        peaks: [], duration: 0, likes_count: 0, downloads: 0
       }).select().single();
 
       if (dbError) throw dbError;
       if (data) setMyTracks([data, ...myTracks]);
       
       setShowUploadModal(false);
-      setUploadForm({ title: '', artist: '', genre: '', bpm: '', song_key: '' });
+      setUploadForm({ 
+        title: '', artist: '', genre: '', bpm: '', song_key: '',
+        purchase_url: '', embed_code: '', player_bg_color: '#000000', player_bg_image_url: ''
+      });
       setAudioFile(null);
       setCoverFile(null);
       alert("Son uploadé avec succès ! 🎵");
@@ -405,9 +414,7 @@ export const SettingsPage: React.FC = () => {
         cover_url: linkForm.cover_url || null,
         embed_code: linkForm.embed_code || null,
         audio_url: finalAudioUrl,
-        peaks: [],
-        likes_count: 0,
-        downloads: 0,
+        peaks: [], likes_count: 0, downloads: 0,
       }).select().single();
 
       if (error) throw error;
@@ -619,15 +626,10 @@ export const SettingsPage: React.FC = () => {
               <input type="text" placeholder="Artiste" value={linkForm.artist} onChange={e => setLinkForm({...linkForm, artist: e.target.value})} style={{ flex: 1, padding: 10, background: colors.panelBg, border: `1px solid ${colors.borderLight}`, color: colors.textMain, borderRadius: 4 }} />
               <input type="text" placeholder="Genre (ex: Techno)" value={linkForm.genre} onChange={e => setLinkForm({...linkForm, genre: e.target.value})} style={{ flex: 1, padding: 10, background: colors.panelBg, border: `1px solid ${colors.borderLight}`, color: colors.textMain, borderRadius: 4 }} />
             </div>
-            
             <input type="url" placeholder="Lien direct MP3 (ex: Catbox, Dropbox) — Optionnel" value={linkForm.audio_url} onChange={e => setLinkForm({...linkForm, audio_url: e.target.value})} style={{ padding: 10, background: colors.panelBg, border: `1px solid ${colors.borderLight}`, color: colors.textMain, borderRadius: 4 }} />
-            
             <input type="url" placeholder="Lien d'achat / Beatport (Optionnel)" value={linkForm.purchase_url} onChange={e => setLinkForm({...linkForm, purchase_url: e.target.value})} style={{ padding: 10, background: colors.panelBg, border: `1px solid ${colors.borderLight}`, color: colors.textMain, borderRadius: 4 }} />
-            
             <input type="url" placeholder="Lien de l'image de la cover (optionnel)" value={linkForm.cover_url} onChange={e => setLinkForm({...linkForm, cover_url: e.target.value})} style={{ padding: 10, background: colors.panelBg, border: `1px solid ${colors.borderLight}`, color: colors.textMain, borderRadius: 4 }} />
-            
             <textarea placeholder="Code d'intégration (Beatport, Audio.com, Traxsource...)" value={linkForm.embed_code} onChange={e => setLinkForm({...linkForm, embed_code: e.target.value})} rows={3} style={{ padding: 10, background: colors.panelBg, border: `1px solid ${colors.borderLight}`, color: colors.textMain, borderRadius: 4, fontFamily: 'monospace', fontSize: 11 }} />
-            
             <button onClick={handleSaveLink} disabled={saving} style={{ padding: '10px', background: '#00d9ff', color: '#000', border: 'none', borderRadius: 4, fontWeight: 'bold', cursor: saving ? 'wait' : 'pointer' }}>
               {saving ? 'Enregistrement...' : 'Ajouter ce son'}
             </button>
@@ -659,22 +661,10 @@ export const SettingsPage: React.FC = () => {
                         </div>
                         
                         <div style={{ flex: 1, display: 'flex', gap: 8, minWidth: 200, alignItems: 'center' }}>
-                          <input 
-                            type="url" 
-                            placeholder="URL d'une image de fond (https://...)" 
-                            value={editTrackForm.player_bg_image_url} 
-                            onChange={e => setEditTrackForm({...editTrackForm, player_bg_image_url: e.target.value})} 
-                            style={{ flex: 1, padding: 8, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, color: colors.textMain, borderRadius: 4, fontSize: 12 }} 
-                          />
+                          <input type="url" placeholder="URL d'une image de fond (https://...)" value={editTrackForm.player_bg_image_url} onChange={e => setEditTrackForm({...editTrackForm, player_bg_image_url: e.target.value})} style={{ flex: 1, padding: 8, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, color: colors.textMain, borderRadius: 4, fontSize: 12 }} />
                           <label style={{ background: uploadingPlayerBg ? colors.borderLight : '#00d9ff', color: '#000', padding: '8px 12px', borderRadius: 4, cursor: uploadingPlayerBg ? 'wait' : 'pointer', fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6 }}>
                             {uploadingPlayerBg ? 'Upload...' : '📁 Choisir'}
-                            <input 
-                              type="file" 
-                              accept="image/*" 
-                              onChange={handlePlayerBgUpload} 
-                              disabled={uploadingPlayerBg} 
-                              style={{ display: 'none' }} 
-                            />
+                            <input type="file" accept="image/*" onChange={(e) => handlePlayerBgUpload(e, 'edit')} disabled={uploadingPlayerBg} style={{ display: 'none' }} />
                           </label>
                         </div>
                       </div>
@@ -699,7 +689,6 @@ export const SettingsPage: React.FC = () => {
                       <div>
                         <div style={{ fontSize: 14, fontWeight: 'bold', color: colors.textMain, display: 'flex', alignItems: 'center', gap: 8 }}>
                           {track.title}
-                          {/* ✅ BADGE FOND PERSO ICI */}
                           {track.player_bg_image_url && (
                             <span style={{ fontSize: 9, background: 'rgba(0,217,255,0.2)', color: '#00d9ff', padding: '2px 6px', borderRadius: 4 }}>FOND PERSO</span>
                           )}
@@ -720,43 +709,9 @@ export const SettingsPage: React.FC = () => {
 
         {totalPages > 1 && (
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 16, marginTop: 24, paddingTop: 16, borderTop: `1px solid ${colors.border}` }}>
-            <button
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-              style={{
-                padding: '8px 16px',
-                background: currentPage === 1 ? colors.inputBg : colors.panelBg,
-                border: `1px solid ${colors.border}`,
-                color: currentPage === 1 ? colors.textMuted : colors.textMain,
-                borderRadius: 6,
-                fontSize: 12,
-                fontWeight: 700,
-                cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
-              }}
-            >
-              ← Précédent
-            </button>
-
-            <span style={{ fontSize: 12, fontWeight: 700, color: colors.textMuted }}>
-              Page {currentPage} / {totalPages}
-            </span>
-
-            <button
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-              style={{
-                padding: '8px 16px',
-                background: currentPage === totalPages ? colors.inputBg : colors.panelBg,
-                border: currentPage === totalPages ? `1px solid ${colors.border}` : `1px solid ${form.theme_color}`,
-                color: currentPage === totalPages ? colors.textMuted : form.theme_color,
-                borderRadius: 6,
-                fontSize: 12,
-                fontWeight: 700,
-                cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
-              }}
-            >
-              Suivant →
-            </button>
+            <button onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1} style={{ padding: '8px 16px', background: currentPage === 1 ? colors.inputBg : colors.panelBg, border: `1px solid ${colors.border}`, color: currentPage === 1 ? colors.textMuted : colors.textMain, borderRadius: 6, fontSize: 12, fontWeight: 700, cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}>← Précédent</button>
+            <span style={{ fontSize: 12, fontWeight: 700, color: colors.textMuted }}>Page {currentPage} / {totalPages}</span>
+            <button onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} style={{ padding: '8px 16px', background: currentPage === totalPages ? colors.inputBg : colors.panelBg, border: currentPage === totalPages ? `1px solid ${colors.border}` : `1px solid ${form.theme_color}`, color: currentPage === totalPages ? colors.textMuted : form.theme_color, borderRadius: 6, fontSize: 12, fontWeight: 700, cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' }}>Suivant →</button>
           </div>
         )}
       </div>
@@ -831,40 +786,13 @@ export const SettingsPage: React.FC = () => {
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 20 }}>
             <label style={{ fontSize: 13, color: colors.textLight }}>Vidéo de fond (MP4)</label>
-            
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-              <input 
-                type="url" 
-                value={form.background_video_url} 
-                onChange={(e) => setForm({ ...form, background_video_url: e.target.value })} 
-                placeholder="URL de la vidéo (https://...)" 
-                style={{ flex: 1, minWidth: 200, padding: 12, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, color: colors.textMain }} 
-              />
-              
-              <label style={{ 
-                background: uploadingVideo ? colors.borderLight : form.theme_color, 
-                color: '#000', 
-                padding: '12px 20px', 
-                borderRadius: 8, 
-                cursor: uploadingVideo ? 'wait' : 'pointer', 
-                fontSize: 13, 
-                fontWeight: 800, 
-                whiteSpace: 'nowrap',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8
-              }}>
+              <input type="url" value={form.background_video_url} onChange={(e) => setForm({ ...form, background_video_url: e.target.value })} placeholder="URL de la vidéo (https://...)" style={{ flex: 1, minWidth: 200, padding: 12, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, color: colors.textMain }} />
+              <label style={{ background: uploadingVideo ? colors.borderLight : form.theme_color, color: '#000', padding: '12px 20px', borderRadius: 8, cursor: uploadingVideo ? 'wait' : 'pointer', fontSize: 13, fontWeight: 800, whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 8 }}>
                 {uploadingVideo ? 'Upload...' : '📁 Choisir un fichier'}
-                <input 
-                  type="file" 
-                  accept="video/mp4,video/webm" 
-                  onChange={handleVideoUpload} 
-                  disabled={uploadingVideo} 
-                  style={{ display: 'none' }} 
-                />
+                <input type="file" accept="video/mp4,video/webm" onChange={handleVideoUpload} disabled={uploadingVideo} style={{ display: 'none' }} />
               </label>
             </div>
-
             {form.background_video_url && (
               <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 12 }}>
                 <video src={form.background_video_url} muted style={{ width: 80, height: 50, borderRadius: 4, objectFit: 'cover', border: `1px solid ${colors.borderLight}` }} />
@@ -889,13 +817,7 @@ export const SettingsPage: React.FC = () => {
         <div style={{ background: colors.panelBg, padding: 24, borderRadius: 12, border: `1px solid ${colors.border}` }}>
           <h2 style={{ fontSize: 18, marginBottom: 20, color: colors.textMain }}>Booking</h2>
           <label style={{ fontSize: 13, color: colors.textLight, display: 'block', marginBottom: 8 }}>Adresse email pour le booking</label>
-          <input 
-            type="email" 
-            placeholder="contact@mon-label.com" 
-            value={form.booking_email} 
-            onChange={(e) => setForm({ ...form, booking_email: e.target.value })} 
-            style={{ width: '100%', padding: 12, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, color: colors.textMain }} 
-          />
+          <input type="email" placeholder="contact@mon-label.com" value={form.booking_email} onChange={(e) => setForm({ ...form, booking_email: e.target.value })} style={{ width: '100%', padding: 12, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, color: colors.textMain }} />
           <p style={{ color: colors.textMuted, fontSize: 12, marginTop: 8 }}>Cette adresse sera utilisée pour le bouton "Booking" de ta page.</p>
         </div>
 
@@ -918,24 +840,33 @@ export const SettingsPage: React.FC = () => {
         </button>
       </form>
 
-      {showUploadModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 3000, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: 20 }}>
-          <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 32, width: '100%', maxWidth: 500, maxHeight: '90vh', overflowY: 'auto' }}>
+      {/* ✅ CORRECTION DE LA MODALE AVEC LE REACT PORTAL */}
+      {showUploadModal && createPortal(
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 32, width: '100%', maxWidth: 500, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
               <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: colors.textMain }}>Uploader un son</h2>
               <button onClick={() => setShowUploadModal(false)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, fontSize: 20, cursor: 'pointer' }}>✕</button>
             </div>
 
             <form onSubmit={handleUploadSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              
               <div>
                 <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6 }}>Fichier Audio (MP3, WAV) *</label>
-                <input type="file" accept="audio/*" onChange={handleAudioFileChange} required style={{ width: '100%', padding: 10, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, color: colors.textMain }} />
-                {audioFile && <p style={{ fontSize: 11, color: '#00d9ff', marginTop: 4 }}>Fichier sélectionné : {audioFile.name}</p>}
+                <label style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 12, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, cursor: 'pointer', transition: 'all 0.2s' }}>
+                  <span style={{ background: form.theme_color, color: '#000', padding: '6px 12px', borderRadius: 6, fontSize: 12, fontWeight: 800 }}>📁 Choisir</span>
+                  <span style={{ fontSize: 13, color: colors.textMain, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{audioFile ? audioFile.name : 'Aucun fichier choisi'}</span>
+                  <input type="file" accept="audio/*" onChange={handleAudioFileChange} required style={{ display: 'none' }} />
+                </label>
               </div>
               
               <div>
                 <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6 }}>Image de couverture (Optionnel)</label>
-                <input type="file" accept="image/*" onChange={(e) => setCoverFile(e.target.files?.[0] || null)} style={{ width: '100%', padding: 10, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, color: colors.textMain }} />
+                <label style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 12, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, cursor: 'pointer', transition: 'all 0.2s' }}>
+                  <span style={{ background: form.theme_color, color: '#000', padding: '6px 12px', borderRadius: 6, fontSize: 12, fontWeight: 800 }}>📁 Choisir</span>
+                  <span style={{ fontSize: 13, color: colors.textMain, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{coverFile ? coverFile.name : 'Aucun fichier choisi'}</span>
+                  <input type="file" accept="image/*" onChange={(e) => setCoverFile(e.target.files?.[0] || null)} style={{ display: 'none' }} />
+                </label>
                 {coverFile && (
                   <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 10 }}>
                     <img src={URL.createObjectURL(coverFile)} alt="Cover preview" style={{ width: 50, height: 50, borderRadius: 6, objectFit: 'cover', border: `1px solid ${colors.borderLight}` }} />
@@ -970,12 +901,47 @@ export const SettingsPage: React.FC = () => {
                 </div>
               </div>
 
-              <button type="submit" disabled={uploading} style={{ marginTop: 12, padding: 14, background: '#00d9ff', color: '#000', border: 'none', borderRadius: 8, fontWeight: 800, fontSize: 14, cursor: uploading ? 'wait' : 'pointer' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6 }}>Lien d'achat (Beatport, etc.)</label>
+                  <input type="url" value={uploadForm.purchase_url} onChange={e => setUploadForm({...uploadForm, purchase_url: e.target.value})} placeholder="https://..." style={{ width: '100%', padding: 10, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, color: colors.textMain }} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6 }}>Code d'intégration (iframe)</label>
+                  <textarea value={uploadForm.embed_code} onChange={e => setUploadForm({...uploadForm, embed_code: e.target.value})} placeholder="<iframe src='...'></iframe>" rows={2} style={{ width: '100%', padding: 10, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, color: colors.textMain, fontFamily: 'monospace', fontSize: 11 }} />
+                </div>
+              </div>
+
+              <div style={{ padding: 12, background: colors.inputBg, borderRadius: 8, border: `1px dashed ${colors.borderLight}`, marginTop: 4 }}>
+                <p style={{ margin: '0 0 10px 0', fontSize: 12, color: colors.textLight, fontWeight: 'bold' }}>Personnalisation visuelle du Player (Optionnel)</p>
+                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <label style={{ fontSize: 12, color: colors.textMuted }}>Couleur :</label>
+                    <input type="color" value={uploadForm.player_bg_color} onChange={e => setUploadForm({...uploadForm, player_bg_color: e.target.value})} style={{ width: 30, height: 30, padding: 0, background: 'transparent', border: 'none', cursor: 'pointer' }} />
+                  </div>
+                  <div style={{ flex: 1, display: 'flex', gap: 8, minWidth: 200, alignItems: 'center' }}>
+                    <input type="url" placeholder="URL d'une image de fond (https://...)" value={uploadForm.player_bg_image_url} onChange={e => setUploadForm({...uploadForm, player_bg_image_url: e.target.value})} style={{ flex: 1, padding: 8, background: colors.panelBg, border: `1px solid ${colors.borderLight}`, color: colors.textMain, borderRadius: 4, fontSize: 12 }} />
+                    <label style={{ background: uploadingPlayerBg ? colors.borderLight : '#00d9ff', color: '#000', padding: '8px 12px', borderRadius: 4, cursor: uploadingPlayerBg ? 'wait' : 'pointer', fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6 }}>
+                      {uploadingPlayerBg ? 'Upload...' : '📁 Choisir'}
+                      <input type="file" accept="image/*" onChange={(e) => handlePlayerBgUpload(e, 'upload')} disabled={uploadingPlayerBg} style={{ display: 'none' }} />
+                    </label>
+                  </div>
+                </div>
+                {uploadForm.player_bg_image_url && (
+                  <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <img src={uploadForm.player_bg_image_url} alt="Aperçu" style={{ width: 60, height: 40, borderRadius: 4, objectFit: 'cover', border: `1px solid ${colors.border}` }} />
+                    <span style={{ fontSize: 11, color: '#00d9ff' }}>Image de fond chargée ✓</span>
+                  </div>
+                )}
+              </div>
+
+              <button type="submit" disabled={uploading} style={{ marginTop: 12, padding: 14, background: form.theme_color, color: '#000', border: 'none', borderRadius: 8, fontWeight: 800, fontSize: 14, cursor: uploading ? 'wait' : 'pointer' }}>
                 {uploading ? 'Upload en cours...' : 'Publier le son'}
               </button>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

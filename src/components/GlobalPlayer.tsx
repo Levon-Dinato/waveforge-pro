@@ -98,6 +98,7 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
   };
 
+  // ✅ TON CANVAS ORIGINAL - NON MODIFIÉ
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || !currentTrack) return;
@@ -198,7 +199,8 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
     ? { 
         backgroundImage: `linear-gradient(rgba(0,0,0,0.65), rgba(0,0,0,0.65)), url(${currentTrack.player_bg_image_url})`, 
         backgroundSize: 'cover', 
-        backgroundPosition: 'center' 
+        backgroundPosition: 'center',
+        backgroundColor: 'transparent'
       } 
     : { background: currentTrack.player_bg_color || colors.bg };
 

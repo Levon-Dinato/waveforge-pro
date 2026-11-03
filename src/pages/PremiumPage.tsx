@@ -27,6 +27,7 @@ const SocialIcons = {
 const Icons = {
   sun: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>,
   moon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>,
+  share: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>,
 };
 
 const CanvasWaveform: React.FC<{ 
@@ -230,6 +231,7 @@ export const PremiumPage: React.FC = () => {
     navBg: isDark ? 'rgba(5,5,5,0.85)' : 'rgba(245,245,247,0.85)',
     cardBg: isDark ? 'rgba(255,255,255,0.02)' : '#ffffff',
     cardBorder: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)',
+    skeleton: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
   };
 
   const formatTime = (time: number) => {
@@ -245,6 +247,26 @@ export const PremiumPage: React.FC = () => {
     const month = date.toLocaleDateString('fr-FR', { month: 'short' });
     const year = date.toLocaleDateString('fr-FR', { year: 'numeric' });
     return { day, month, year, full: `${day} ${month} ${year}` };
+  };
+
+  // ✅ AJOUT : Fonction de partage natif
+  const handleShare = async () => {
+    const shareData = {
+      title: `${profile.username} — Artiste DropZone`,
+      text: `Découvre l'univers de ${profile.username} sur DropZone.dj`,
+      url: window.location.href,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        alert('Lien copié dans le presse-papiers ! 🔗');
+      }
+    } catch (err) {
+      console.log('Erreur de partage', err);
+    }
   };
 
   const handleAddToCalendar = (event: any) => {
@@ -433,7 +455,18 @@ END:VCALENDAR`;
     });
   };
 
-  if (loading) return <div style={{ background: colors.bg, color: colors.textMain, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Chargement...</div>;
+  // ✅ AJOUT : Skeleton de chargement
+  if (loading) {
+    return (
+      <div style={{ background: colors.bg, minHeight: '100vh', padding: 40, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24, paddingTop: 100 }}>
+        <div style={{ width: '60%', maxWidth: 600, height: 80, background: colors.skeleton, borderRadius: 16, animation: 'pulse 1.5s infinite' }} />
+        <div style={{ width: '40%', maxWidth: 400, height: 24, background: colors.skeleton, borderRadius: 8, animation: 'pulse 1.5s infinite' }} />
+        <div style={{ width: '100%', maxWidth: 800, height: 300, background: colors.skeleton, borderRadius: 24, marginTop: 40, animation: 'pulse 1.5s infinite' }} />
+        <style>{`@keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }`}</style>
+      </div>
+    );
+  }
+  
   if (!profile) return <div style={{ background: colors.bg, color: colors.textMain, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Artiste introuvable.</div>;
 
   const artistEmail = profile.booking_email || 'djcontrolradiotv1@gmail.com';
@@ -479,6 +512,16 @@ END:VCALENDAR`;
   return (
     <div style={{ background: colors.bg, minHeight: '100vh', color: colors.textMain, fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', '--accent': themeColor, transition: 'background 0.3s ease, color 0.3s ease' } as React.CSSProperties}>
       
+      {/* ✅ AJOUT DES BALISES META POUR LE PARTAGE (OPEN GRAPH) */}
+      <Helmet>
+        <title>{profile.username} — Artiste DropZone</title>
+        <meta property="og:title" content={`${profile.username} — Artiste DropZone`} />
+        <meta property="og:description" content={heroDesc} />
+        <meta property="og:image" content={profile.avatar_url || '/og-image.jpg'} />
+        <meta property="og:type" content="profile" />
+        <meta name="twitter:card" content="summary_large_image" />
+      </Helmet>
+
       <style>{`
         .hover-row { transition: background 0.2s, transform 0.2s; }
         .hover-row:hover { background: ${isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.02)'} !important; }
@@ -499,6 +542,9 @@ END:VCALENDAR`;
         .gallery-item:hover .gallery-btn { opacity: 1; transform: translateY(0); }
         .gallery-btn { position: absolute; bottom: 16px; right: 16px; width: 44px; height: 44px; border-radius: 50%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); display: flex; alignItems: center; justifyContent: center; opacity: 0; transform: translateY(10px); transition: all 0.3s; color: #fff; z-index: 3; }
 
+        .mobile-nav-links::-webkit-scrollbar { display: none; }
+        .mobile-nav-links { -ms-overflow-style: none; scrollbar-width: none; }
+
         html { scroll-behavior: smooth; }
         section[id] { scroll-margin-top: 100px; }
         
@@ -506,13 +552,9 @@ END:VCALENDAR`;
           .layout-grid { flex-direction: column !important; }
           .sidebar { width: 100% !important; border-left: none !important; padding-left: 0 !important; border-top: 1px solid ${colors.border}; padding-top: 40px !important; }
           .hero-title { font-size: 3.5rem !important; }
-          .nav-links { display: none !important; }
+          .desktop-nav-links { display: none !important; }
         }
       `}</style>
-
-      <Helmet>
-        <title>{profile.username} — Artiste</title>
-      </Helmet>
 
       {lightboxImage && (
         <div 
@@ -524,7 +566,6 @@ END:VCALENDAR`;
         </div>
       )}
 
-      {/* MODALE DE BOOKING */}
       {showBookingModal && (
         <div
           style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
@@ -573,15 +614,19 @@ END:VCALENDAR`;
         </div>
       )}
 
-      {/* NAVIGATION */}
-      <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, height: isMobile ? 60 : 72, background: colors.navBg, backdropFilter: 'blur(24px)', zIndex: 1000, borderBottom: `1px solid ${colors.cardBorder}`, transition: 'background 0.3s ease' }}>
-        <div style={{ maxWidth: 1400, margin: '0 auto', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: isMobile ? '0 12px' : '0 24px', gap: isMobile ? 8 : 32 }}>
+      <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, height: isMobile ? 60 : 72, background: colors.navBg, backdropFilter: 'blur(24px)', zIndex: 1000, borderBottom: `1px solid ${colors.cardBorder}`, transition: 'background 0.3s ease', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ maxWidth: 1400, margin: '0 auto', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: isMobile ? '0 12px' : '0 24px', gap: isMobile ? 8 : 32 }}>
           
           <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 12, minWidth: 0 }}>
             <button onClick={() => navigate('/')} style={{ background: 'transparent', border: 'none', color: colors.textMain, fontSize: 20, cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 0 }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
             </button>
-            <img src={profile.avatar_url || "/logo.jpg"} alt="Avatar" style={{ width: isMobile ? 28 : 32, height: isMobile ? 28 : 32, borderRadius: '50%', objectFit: 'cover', border: `1px solid ${themeColor}50`, flexShrink: 0 }} />
+            <img 
+              src={profile.avatar_url || "/logo.jpg"} 
+              alt="Avatar" 
+              onError={(e) => { (e.target as HTMLImageElement).src = '/logo.jpg'; }}
+              style={{ width: isMobile ? 28 : 32, height: isMobile ? 28 : 32, borderRadius: '50%', objectFit: 'cover', border: `1px solid ${themeColor}50`, flexShrink: 0 }} 
+            />
             <span style={{ fontSize: isMobile ? 12 : 15, fontWeight: 900, letterSpacing: '-0.5px', color: colors.textMain, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: isMobile ? 100 : 'auto' }}>
               {profile.username}
             </span>
@@ -591,7 +636,7 @@ END:VCALENDAR`;
           </div>
 
           {!isMobile && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
+            <div className="desktop-nav-links" style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
               <a href="#duo" className="nav-link">Bio</a>
               <a href="#dates" className="nav-link">Dates</a>
               <a href="#prestations" className="nav-link">Références</a>
@@ -625,10 +670,20 @@ END:VCALENDAR`;
             </button>
           </div>
         </div>
+
+        {/* ✅ AJOUT : Navigation Mobile défilable */}
+        {isMobile && (
+          <div className="mobile-nav-links" style={{ display: 'flex', gap: 16, overflowX: 'auto', padding: '8px 16px', borderTop: `1px solid ${colors.border}`, width: '100%', background: colors.navBg }}>
+            <a href="#duo" className="nav-link" style={{ whiteSpace: 'nowrap' }}>Bio</a>
+            <a href="#dates" className="nav-link" style={{ whiteSpace: 'nowrap' }}>Dates</a>
+            <a href="#prestations" className="nav-link" style={{ whiteSpace: 'nowrap' }}>Références</a>
+            <a href="#gallery" className="nav-link" style={{ whiteSpace: 'nowrap' }}>Galerie</a>
+            <a href="#releases" className="nav-link" style={{ whiteSpace: 'nowrap' }}>Musique</a>
+          </div>
+        )}
       </nav>
 
-      {/* HERO */}
-      <section style={{ position: 'relative', minHeight: isMobile ? '80vh' : '95vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', background: colors.bg, paddingTop: isMobile ? 60 : 72 }}>
+      <section style={{ position: 'relative', minHeight: isMobile ? '80vh' : '95vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', background: colors.bg, paddingTop: isMobile ? 100 : 72 }}>
         
         <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
           <video autoPlay muted loop playsInline poster={profile.avatar_url || "/logo.jpg"} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: isDark ? 0.8 : 0.4, filter: isDark ? 'grayscale(100%) contrast(1.2) brightness(0.6)' : 'grayscale(100%) contrast(1.2) brightness(1)' }}>
@@ -656,12 +711,12 @@ END:VCALENDAR`;
             {ArrowButton ? (
               <>
                 <ArrowButton label="Écouter les tracks" color={themeColor} href="#releases" icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>} />
-                <ArrowButton label="Partager" color={themeColor} onClick={() => navigator.clipboard.writeText(window.location.href).then(() => alert('Lien copié !'))} variant="outline" icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>} />
+                <ArrowButton label="Partager" color={themeColor} onClick={handleShare} variant="outline" icon={Icons.share} />
               </>
             ) : (
               <>
                 <a href="#releases" style={{ background: 'transparent', border: `1px solid ${themeColor}`, color: themeColor, padding: '16px 32px', fontSize: 14, borderRadius: 8, fontWeight: 800, textDecoration: 'none' }}>ÉCOUTER LES TRACKS</a>
-                <button onClick={() => navigator.clipboard.writeText(window.location.href).then(() => alert('Lien copié !'))} style={{ background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)', border: `1px solid ${colors.border}`, color: colors.textMain, padding: '16px 32px', borderRadius: 8, fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>PARTAGER</button>
+                <button onClick={handleShare} style={{ background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)', border: `1px solid ${colors.border}`, color: colors.textMain, padding: '16px 32px', borderRadius: 8, fontSize: 14, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>{Icons.share} PARTAGER</button>
               </>
             )}
           </div>
@@ -670,14 +725,18 @@ END:VCALENDAR`;
 
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '40px 16px' : '100px 24px' }}>
         
-        {/* BIO */}
         {showDuo && (
           <section id="duo" style={{ marginBottom: isMobile ? 40 : 120 }}>
             <div className="section-subtitle">{settings.duo_title || 'Bio'}</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: isMobile ? 20 : 60, alignItems: 'start' }}>
               <div className="premium-glow" style={{ position: 'relative', borderRadius: 12, padding: 2 }}>
                 <div style={{ width: '100%', aspectRatio: isMobile ? '1/1' : '4/5', borderRadius: 10, overflow: 'hidden', border: `1px solid ${colors.border}`, boxShadow: isDark ? '0 20px 40px rgba(0,0,0,0.5)' : '0 20px 40px rgba(0,0,0,0.1)', position: 'relative', zIndex: 2 }}>
-                  <img src={profile.avatar_url || "/logo.jpg"} alt={profile.username} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <img 
+                    src={profile.avatar_url || "/logo.jpg"} 
+                    alt={profile.username} 
+                    onError={(e) => { (e.target as HTMLImageElement).src = '/logo.jpg'; }}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                  />
                 </div>
                 <div style={{ position: 'absolute', bottom: -10, left: 20, width: 60, height: 4, background: themeColor, borderRadius: 2, zIndex: 3 }} />
               </div>
@@ -697,12 +756,31 @@ END:VCALENDAR`;
                     </span>
                   ))}
                 </div>
+
+                {/* ✅ AJOUT : Réseaux sociaux dans la section Bio */}
+                {socials.length > 0 && (
+                  <div style={{ display: 'flex', gap: 12, marginTop: 30 }}>
+                    {socials.map(s => (
+                      <a 
+                        key={s.key} 
+                        href={profile[s.key]} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        title={s.label}
+                        style={{ width: 40, height: 40, borderRadius: '50%', background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.textMuted, transition: 'all 0.2s', border: `1px solid ${colors.border}` }} 
+                        onMouseEnter={e => { e.currentTarget.style.color = themeColor; e.currentTarget.style.borderColor = themeColor; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                        onMouseLeave={e => { e.currentTarget.style.color = colors.textMuted; e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.transform = 'translateY(0)'; }}
+                      >
+                        {s.logo}
+                      </a>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </section>
         )}
 
-        {/* DATES */}
         {events.length > 0 && (
           <section id="dates" style={{ marginBottom: isMobile ? 40 : 120, paddingTop: isMobile ? 40 : 80, borderTop: `1px solid ${colors.border}` }}>
             <div className="section-subtitle">Agenda</div>
@@ -757,7 +835,6 @@ END:VCALENDAR`;
           </section>
         )}
 
-        {/* PARCOURS */}
         {showPrestations && (
           <section id="prestations" style={{ marginBottom: isMobile ? 40 : 120, paddingTop: isMobile ? 40 : 80, borderTop: `1px solid ${colors.border}` }}>
             <div className="section-subtitle">{settings.prestations_title || 'Parcours'}</div>
@@ -806,7 +883,6 @@ END:VCALENDAR`;
           </section>
         )}
 
-        {/* GALERIE */}
         {gallery && gallery.length > 0 && (
           <section id="gallery" style={{ marginBottom: isMobile ? 40 : 120, paddingTop: isMobile ? 40 : 80, borderTop: `1px solid ${colors.border}` }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: isMobile ? 20 : 40, flexDirection: isMobile ? 'column' : 'row', gap: 16 }}>
@@ -829,7 +905,6 @@ END:VCALENDAR`;
           </section>
         )}
 
-        {/* RELEASES */}
         {showReleases && (
           <section id="releases" style={{ paddingTop: isMobile ? 40 : 80, borderTop: `1px solid ${colors.border}` }}>
             <div className="section-subtitle">Écouter</div>
@@ -959,14 +1034,12 @@ END:VCALENDAR`;
         )}
       </div>
 
-      {/* ✅ RÉINTÉGRATION DU COMPOSANT PREMIUM STATS TOUT EN BAS */}
       {showStats && (
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '20px 16px 60px' : '40px 24px 100px' }}>
           <PremiumStats profile={profile} tracks={tracks} />
         </div>
       )}
 
-      {/* FOOTER */}
       <footer style={{ borderTop: `1px solid ${colors.border}`, padding: '40px 24px', marginTop: 'auto', textAlign: 'center', background: colors.panelBg }}>
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10, marginBottom: 16 }}>
           <span style={{ fontSize: 20, fontWeight: 900, color: colors.textMain, letterSpacing: '-0.5px' }}>

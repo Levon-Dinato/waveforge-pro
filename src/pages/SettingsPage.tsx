@@ -1,7 +1,8 @@
 // src/pages/SettingsPage.tsx
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { createPortal } from 'react-dom'; // ✅ IMPORT DU PORTAIL
+import { createPortal } from 'react-dom';
+import { parseBlob } from 'music-metadata-browser';
 import { supabase, AUDIO_BUCKET } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -78,12 +79,12 @@ export const SettingsPage: React.FC = () => {
   const colors = {
     bg: isDark ? '#0a0a0a' : '#f5f5f7',
     panelBg: isDark ? '#121212' : '#ffffff',
-    inputBg: isDark ? '#0a0a0a' : '#f3f4f6',
-    border: isDark ? '#222222' : '#e5e7eb',
-    borderLight: isDark ? '#333333' : '#d1d5db',
+    inputBg: isDark ? '#1f1f1f' : '#f3f4f6', 
+    border: isDark ? '#333333' : '#e5e7eb', 
+    borderLight: isDark ? '#444444' : '#d1d5db',
     textMain: isDark ? '#ffffff' : '#1a1a1a',
-    textMuted: isDark ? '#888888' : '#666666',
-    textLight: isDark ? '#aaaaaa' : '#444444',
+    textMuted: isDark ? '#a1a1aa' : '#666666',
+    textLight: isDark ? '#d4d4d8' : '#444444',
     primaryBg: isDark ? '#ffffff' : '#1a1a1a',
     primaryText: isDark ? '#000000' : '#ffffff',
   };
@@ -182,7 +183,7 @@ export const SettingsPage: React.FC = () => {
       const fileName = `${user.id}/player-bg-${Date.now()}.${file.name.split('.').pop()}`;
       const { error: uploadError } = await supabase.storage.from('media').upload(fileName, file);
       if (uploadError) throw uploadError;
-      const { data } = await supabase.storage.from('media').getPublicUrl(fileName);
+      const { data } = supabase.storage.from('media').getPublicUrl(fileName);
       
       if (target === 'edit') {
         setEditTrackForm(prev => ({ ...prev, player_bg_image_url: data.publicUrl }));
@@ -244,11 +245,13 @@ export const SettingsPage: React.FC = () => {
     } finally { setUploadingGallery(false); }
   };
 
+  // ✅ LECTURE RENFORCÉE DES TAGS ID3
   const handleAudioFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setAudioFile(file);
 
+    // 1. Fallback basé sur le nom du fichier
     const fileNameWithoutExt = file.name.replace(/\.[^/.]+$/, "");
     let guessArtist = "";
     let guessTitle = fileNameWithoutExt;
@@ -262,7 +265,6 @@ export const SettingsPage: React.FC = () => {
     }
 
     const lowerName = fileNameWithoutExt.toLowerCase();
-    
     const bpmMatch = lowerName.match(/(\d{2,3})\s?bpm/);
     if (bpmMatch) {
       guessBpm = bpmMatch[1];
@@ -288,6 +290,38 @@ export const SettingsPage: React.FC = () => {
       genre: prev.genre || guessGenre,
       bpm: prev.bpm || guessBpm,
     }));
+
+    // 2. Lecture des tags réels (ID3)
+    try {
+      const metadata = await parseBlob(file, { skipCovers: false });
+      const { common } = metadata;
+
+      setUploadForm(prev => ({
+        ...prev,
+        title: common.title || prev.title,
+        artist: common.artist || prev.artist,
+        genre: common.genre?.[0] || prev.genre,
+        bpm: common.bpm ? String(Math.round(common.bpm)) : prev.bpm,
+        song_key: common.key || prev.song_key
+      }));
+
+      // ✅ Gestion renforcée de la pochette
+      if (common.picture && common.picture.length > 0) {
+        const pic = common.picture[0];
+        const dataArray = pic.data instanceof Uint8Array ? pic.data : new Uint8Array(pic.data as any);
+        
+        // On devine l'extension
+        let ext = 'jpg';
+        if (pic.format.includes('png')) ext = 'png';
+        else if (pic.format.includes('webp')) ext = 'webp';
+
+        const blob = new Blob([dataArray], { type: pic.format });
+        const coverFileFromTag = new File([blob], `cover-${Date.now()}.${ext}`, { type: pic.format });
+        setCoverFile(coverFileFromTag);
+      }
+    } catch (err) {
+      console.warn("Impossible de lire les tags ID3", err);
+    }
   };
 
   const handleUploadSubmit = async (e: React.FormEvent) => {
@@ -306,7 +340,7 @@ export const SettingsPage: React.FC = () => {
 
       let coverUrl = null;
       if (coverFile) {
-        const coverExt = coverFile.name.split('.').pop();
+        const coverExt = coverFile.name.split('.').pop() || 'jpg';
         const coverName = `${user.id}/${Date.now()}-cover.${coverExt}`;
         const { error: coverError } = await supabase.storage.from(AUDIO_BUCKET).upload(coverName, coverFile);
         if (!coverError) {
@@ -840,7 +874,7 @@ export const SettingsPage: React.FC = () => {
         </button>
       </form>
 
-      {/* ✅ CORRECTION DE LA MODALE AVEC LE REACT PORTAL */}
+      {/* ✅ MODALE D'UPLOAD AVEC REACT PORTAL */}
       {showUploadModal && createPortal(
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
           <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 32, width: '100%', maxWidth: 500, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}>

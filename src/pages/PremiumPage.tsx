@@ -5,6 +5,8 @@ import { useNavigate, useParams, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { usePlayer } from '../contexts/PlayerContext';
+import { useTheme } from '../contexts/ThemeContext';
+import { PremiumStats } from '../components/PremiumStats';
 import * as GlobalPlayerModule from '../components/GlobalPlayer';
 import * as ArrowButtonModule from '../components/ArrowButton';
 import './LevonDinato.css';
@@ -20,6 +22,11 @@ const SocialIcons = {
   facebook: <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>,
   instagram: <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>,
   soundcloud: <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M23.998 14.766c-.06 1.63-1.418 2.93-3.078 2.93H11.29c-.286 0-.521-.23-.521-.511V8.16c0-.23.157-.427.382-.485.585-.153 1.284-.229 1.939-.229 3.187 0 5.93 2.145 6.662 5.218 1.991.033 3.613 1.562 3.613 3.445l.012 1.63zM9.82 7.246c-.102 0-.19.038-.26.104-.09.084-.146.206-.146.338v9.539c0 .261.2.477.459.503H1.662c-.911 0-1.656-.744-1.656-1.656v-5.41c0-.915.745-1.656 1.656-1.656h.134c.06-1.244.58-2.35 1.404-3.144.825-.795 1.94-1.29 3.198-1.29.685 0 1.338.152 1.92.426.16.077.25.238.25.414v1.99z"/></svg>,
+};
+
+const Icons = {
+  sun: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>,
+  moon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>,
 };
 
 const CanvasWaveform: React.FC<{ 
@@ -179,6 +186,11 @@ export const PremiumPage: React.FC = () => {
   const { play, currentTrack, isPlaying, togglePlay, stop, currentTime, duration, seek } = usePlayer();
   const isMobile = useIsMobile();
   
+  const { theme, toggleTheme } = useTheme();
+  const isDark = theme === 'dark';
+
+  const [visibleTracksCount, setVisibleTracksCount] = useState(4);
+
   const [isPremium, setIsPremium] = useState(false);
   useEffect(() => {
     const check = async () => {
@@ -197,7 +209,6 @@ export const PremiumPage: React.FC = () => {
 
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
 
-  // ✅ ÉTATS POUR LA MODALE DE BOOKING
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [bookingForm, setBookingForm] = useState({
     name: '',
@@ -207,6 +218,19 @@ export const PremiumPage: React.FC = () => {
   });
   const [sendingBooking, setSendingBooking] = useState(false);
   const [bookingSent, setBookingSent] = useState(false);
+
+  const colors = {
+    bg: isDark ? '#050505' : '#f5f5f7',
+    textMain: isDark ? '#ffffff' : '#1a1a1a',
+    textMuted: isDark ? 'rgba(255,255,255,0.5)' : '#666666',
+    textSoft: isDark ? 'rgba(255,255,255,0.8)' : '#444444',
+    border: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+    panelBg: isDark ? '#121212' : '#ffffff',
+    inputBg: isDark ? '#0a0a0a' : '#f3f4f6',
+    navBg: isDark ? 'rgba(5,5,5,0.85)' : 'rgba(245,245,247,0.85)',
+    cardBg: isDark ? 'rgba(255,255,255,0.02)' : '#ffffff',
+    cardBorder: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)',
+  };
 
   const formatTime = (time: number) => {
     if (isNaN(time) || time === 0) return "0:00";
@@ -393,7 +417,7 @@ END:VCALENDAR`;
         id: track.id, title: track.title, artist: track.artist, audio_url: track.audio_url,
         cover_url: track.cover_url, user_id: track.user_id, duration: track.duration,
         peaks: track.peaks, bpm: track.bpm, song_key: track.song_key, genre: track.genre,
-        player_bg_image_url: track.player_bg_image_url, player_bg_color: track.player_bg_color // ✅ Ajout des fonds
+        player_bg_image_url: track.player_bg_image_url, player_bg_color: track.player_bg_color
       });
     }
   };
@@ -409,15 +433,10 @@ END:VCALENDAR`;
     });
   };
 
-  const topTracks = useMemo(() => {
-    return [...tracks].sort((a, b) => (b.likes_count || 0) - (a.likes_count || 0)).slice(0, 5);
-  }, [tracks]);
-
-  if (loading) return <div style={{ background: '#000', color: '#fff', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Chargement...</div>;
-  if (!profile) return <div style={{ background: '#000', color: '#fff', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Artiste introuvable.</div>;
+  if (loading) return <div style={{ background: colors.bg, color: colors.textMain, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Chargement...</div>;
+  if (!profile) return <div style={{ background: colors.bg, color: colors.textMain, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Artiste introuvable.</div>;
 
   const artistEmail = profile.booking_email || 'djcontrolradiotv1@gmail.com';
-
   const themeColor = profile.theme_color || '#00d9ff';
   const isOwner = user && profile && user.id === profile.id;
 
@@ -433,8 +452,6 @@ END:VCALENDAR`;
   const showDuo = settings.show_duo !== false;
   const showPrestations = settings.show_prestations !== false;
   const showReleases = settings.show_releases !== false;
-  const showSidebarTop = settings.show_sidebar_top !== false;
-  const showSidebarDates = settings.show_sidebar_dates !== false;
 
   const parcoursImages = profile.parcours_images || [];
 
@@ -446,13 +463,13 @@ END:VCALENDAR`;
   ];
 
   const socials = [
-    { key: 'tiktok_url', logo: SocialIcons.tiktok, color: '#ffffff' },
-    { key: 'spotify_url', logo: SocialIcons.spotify, color: '#1DB954' },
-    { key: 'x_url', logo: SocialIcons.x, color: '#ffffff' },
-    { key: 'youtube_url', logo: SocialIcons.youtube, color: '#FF0000' },
-    { key: 'facebook_url', logo: SocialIcons.facebook, color: '#1877F2' },
-    { key: 'instagram_url', logo: SocialIcons.instagram, color: '#E1306C' },
-    { key: 'soundcloud_url', logo: SocialIcons.soundcloud, color: '#FF5500' },
+    { key: 'tiktok_url', logo: SocialIcons.tiktok, label: 'TikTok' },
+    { key: 'spotify_url', logo: SocialIcons.spotify, label: 'Spotify' },
+    { key: 'x_url', logo: SocialIcons.x, label: 'X' },
+    { key: 'youtube_url', logo: SocialIcons.youtube, label: 'YouTube' },
+    { key: 'facebook_url', logo: SocialIcons.facebook, label: 'Facebook' },
+    { key: 'instagram_url', logo: SocialIcons.instagram, label: 'Instagram' },
+    { key: 'soundcloud_url', logo: SocialIcons.soundcloud, label: 'SoundCloud' },
   ].filter(s => profile[s.key]);
 
   const bioParts = bio.split('.');
@@ -460,20 +477,20 @@ END:VCALENDAR`;
   const bioRest = bioParts.slice(1).join('.').trim();
 
   return (
-    <div style={{ background: '#050505', minHeight: '100vh', color: '#fff', fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', '--accent': themeColor } as React.CSSProperties}>
+    <div style={{ background: colors.bg, minHeight: '100vh', color: colors.textMain, fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', '--accent': themeColor, transition: 'background 0.3s ease, color 0.3s ease' } as React.CSSProperties}>
       
       <style>{`
         .hover-row { transition: background 0.2s, transform 0.2s; }
-        .hover-row:hover { background: rgba(255,255,255,0.04) !important; }
+        .hover-row:hover { background: ${isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.02)'} !important; }
         .hover-row:hover .play-btn { opacity: 1; transform: scale(1); }
         .hover-row:hover .track-title { color: ${themeColor} !important; }
         .play-btn { opacity: 0; transform: scale(0.9); transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         .hover-img { transition: transform 0.4s ease; }
         .hover-row:hover .hover-img { transform: scale(1.08); }
-        .nav-link { color: rgba(255,255,255,0.5); text-decoration: none; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; transition: color 0.2s; }
-        .nav-link:hover { color: #fff; }
+        .nav-link { color: ${colors.textMuted}; text-decoration: none; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; transition: color 0.2s; }
+        .nav-link:hover { color: ${colors.textMain}; }
         
-        .section-title { font-size: clamp(2rem, 4vw, 3rem); font-weight: 900; letter-spacing: -0.03em; line-height: 1.1; margin-bottom: 1.5rem; }
+        .section-title { font-size: clamp(2rem, 4vw, 3rem); font-weight: 900; letter-spacing: -0.03em; line-height: 1.1; margin-bottom: 1.5rem; color: ${colors.textMain}; }
         .section-subtitle { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; color: ${themeColor}; margin-bottom: 1rem; }
         
         .gallery-item { position: relative; overflow: hidden; border-radius: 8px; cursor: pointer; }
@@ -487,7 +504,7 @@ END:VCALENDAR`;
         
         @media (max-width: 900px) {
           .layout-grid { flex-direction: column !important; }
-          .sidebar { width: 100% !important; border-left: none !important; padding-left: 0 !important; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 40px !important; }
+          .sidebar { width: 100% !important; border-left: none !important; padding-left: 0 !important; border-top: 1px solid ${colors.border}; padding-top: 40px !important; }
           .hero-title { font-size: 3.5rem !important; }
           .nav-links { display: none !important; }
         }
@@ -507,36 +524,36 @@ END:VCALENDAR`;
         </div>
       )}
 
-      {/* ✅ MODALE DE BOOKING */}
+      {/* MODALE DE BOOKING */}
       {showBookingModal && (
         <div
           style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
           onClick={() => setShowBookingModal(false)}
         >
-          <div style={{ background: '#121212', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: 32, width: '100%', maxWidth: 500, maxHeight: '90vh', overflowY: 'auto' }} onClick={(e) => e.stopPropagation()}>
+          <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 32, width: '100%', maxWidth: 500, maxHeight: '90vh', overflowY: 'auto' }} onClick={(e) => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-              <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: '#fff' }}>Contact / Booking</h2>
-              <button onClick={() => setShowBookingModal(false)} style={{ background: 'transparent', border: 'none', color: '#888', fontSize: 20, cursor: 'pointer' }}>✕</button>
+              <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: colors.textMain }}>Contact / Booking</h2>
+              <button onClick={() => setShowBookingModal(false)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, fontSize: 20, cursor: 'pointer' }}>✕</button>
             </div>
             {bookingSent ? (
               <div style={{ textAlign: 'center', padding: '40px 0' }}>
                 <div style={{ fontSize: 48, marginBottom: 16 }}>✅</div>
-                <div style={{ fontSize: 16, color: '#fff', fontWeight: 700, marginBottom: 8 }}>Message envoyé !</div>
-                <div style={{ fontSize: 13, color: '#888' }}>{profile.username} te répondra dès que possible.</div>
+                <div style={{ fontSize: 16, color: colors.textMain, fontWeight: 700, marginBottom: 8 }}>Message envoyé !</div>
+                <div style={{ fontSize: 13, color: colors.textMuted }}>{profile.username} te répondra dès que possible.</div>
               </div>
             ) : (
               <form onSubmit={handleSendBooking} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>Nom *</label>
-                  <input type="text" value={bookingForm.name} onChange={(e) => setBookingForm({ ...bookingForm, name: e.target.value })} required style={{ width: '100%', padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff', outline: 'none' }} />
+                  <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6 }}>Nom *</label>
+                  <input type="text" value={bookingForm.name} onChange={(e) => setBookingForm({ ...bookingForm, name: e.target.value })} required style={{ width: '100%', padding: 12, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain, outline: 'none' }} />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>Email *</label>
-                  <input type="email" value={bookingForm.email} onChange={(e) => setBookingForm({ ...bookingForm, email: e.target.value })} required style={{ width: '100%', padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff', outline: 'none' }} />
+                  <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6 }}>Email *</label>
+                  <input type="email" value={bookingForm.email} onChange={(e) => setBookingForm({ ...bookingForm, email: e.target.value })} required style={{ width: '100%', padding: 12, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain, outline: 'none' }} />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>Type de demande</label>
-                  <select value={bookingForm.type} onChange={(e) => setBookingForm({ ...bookingForm, type: e.target.value })} style={{ width: '100%', padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff', outline: 'none' }}>
+                  <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6 }}>Type de demande</label>
+                  <select value={bookingForm.type} onChange={(e) => setBookingForm({ ...bookingForm, type: e.target.value })} style={{ width: '100%', padding: 12, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain, outline: 'none' }}>
                     <option value="booking">Booking (soirée, festival)</option>
                     <option value="remix">Remix / Collaboration</option>
                     <option value="presse">Presse / Interview</option>
@@ -544,8 +561,8 @@ END:VCALENDAR`;
                   </select>
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6 }}>Message *</label>
-                  <textarea value={bookingForm.message} onChange={(e) => setBookingForm({ ...bookingForm, message: e.target.value })} required rows={4} style={{ width: '100%', padding: 12, background: '#0a0a0a', border: '1px solid #333', borderRadius: 8, color: '#fff', outline: 'none', resize: 'vertical' }} />
+                  <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6 }}>Message *</label>
+                  <textarea value={bookingForm.message} onChange={(e) => setBookingForm({ ...bookingForm, message: e.target.value })} required rows={4} style={{ width: '100%', padding: 12, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain, outline: 'none', resize: 'vertical' }} />
                 </div>
                 <button type="submit" disabled={sendingBooking} style={{ padding: 14, background: themeColor, color: '#000', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 800, cursor: sendingBooking ? 'wait' : 'pointer', textTransform: 'uppercase', letterSpacing: '1px' }}>
                   {sendingBooking ? 'Envoi...' : 'Envoyer'}
@@ -557,15 +574,15 @@ END:VCALENDAR`;
       )}
 
       {/* NAVIGATION */}
-      <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, height: isMobile ? 60 : 72, background: 'rgba(5,5,5,0.85)', backdropFilter: 'blur(24px)', zIndex: 1000, borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+      <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, height: isMobile ? 60 : 72, background: colors.navBg, backdropFilter: 'blur(24px)', zIndex: 1000, borderBottom: `1px solid ${colors.cardBorder}`, transition: 'background 0.3s ease' }}>
         <div style={{ maxWidth: 1400, margin: '0 auto', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: isMobile ? '0 12px' : '0 24px', gap: isMobile ? 8 : 32 }}>
           
           <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 12, minWidth: 0 }}>
-            <button onClick={() => navigate('/')} style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: 20, cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 0 }}>
+            <button onClick={() => navigate('/')} style={{ background: 'transparent', border: 'none', color: colors.textMain, fontSize: 20, cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 0 }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
             </button>
             <img src={profile.avatar_url || "/logo.jpg"} alt="Avatar" style={{ width: isMobile ? 28 : 32, height: isMobile ? 28 : 32, borderRadius: '50%', objectFit: 'cover', border: `1px solid ${themeColor}50`, flexShrink: 0 }} />
-            <span style={{ fontSize: isMobile ? 12 : 15, fontWeight: 900, letterSpacing: '-0.5px', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: isMobile ? 100 : 'auto' }}>
+            <span style={{ fontSize: isMobile ? 12 : 15, fontWeight: 900, letterSpacing: '-0.5px', color: colors.textMain, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: isMobile ? 100 : 'auto' }}>
               {profile.username}
             </span>
             <span style={{ fontSize: isMobile ? 8 : 9, fontWeight: 900, background: themeColor, color: '#000', padding: isMobile ? '1px 4px' : '2px 6px', borderRadius: 4, letterSpacing: '0.5px', flexShrink: 0 }}>
@@ -583,7 +600,22 @@ END:VCALENDAR`;
             </div>
           )}
 
-          <div style={{ flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+            <button
+              onClick={toggleTheme}
+              title="Changer de thème"
+              style={{
+                width: 36, height: 36, borderRadius: '50%',
+                background: isDark ? '#ffffff' : '#1a1a1a',
+                color: isDark ? '#000000' : '#ffffff',
+                border: `1px solid ${isDark ? '#e5e7eb' : '#333333'}`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer', transition: 'all 0.2s'
+              }}
+            >
+              {isDark ? Icons.sun : Icons.moon}
+            </button>
+
             <button
               onClick={() => setShowBookingModal(true)}
               style={{ padding: isMobile ? '6px 12px' : '8px 20px', fontSize: 12, background: 'transparent', border: `1px solid ${themeColor}`, color: themeColor, borderRadius: 6, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}
@@ -596,27 +628,27 @@ END:VCALENDAR`;
       </nav>
 
       {/* HERO */}
-      <section style={{ position: 'relative', minHeight: isMobile ? '80vh' : '95vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', background: '#050505', paddingTop: isMobile ? 60 : 72 }}>
+      <section style={{ position: 'relative', minHeight: isMobile ? '80vh' : '95vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', background: colors.bg, paddingTop: isMobile ? 60 : 72 }}>
         
         <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
-          <video autoPlay muted loop playsInline poster={profile.avatar_url || "/logo.jpg"} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.8, filter: 'grayscale(100%) contrast(1.2) brightness(0.6)' }}>
+          <video autoPlay muted loop playsInline poster={profile.avatar_url || "/logo.jpg"} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: isDark ? 0.8 : 0.4, filter: isDark ? 'grayscale(100%) contrast(1.2) brightness(0.6)' : 'grayscale(100%) contrast(1.2) brightness(1)' }}>
             <source src={profile.background_video_url || "/background.mp4"} type="video/mp4" />
           </video>
           <div style={{ position: 'absolute', inset: 0, background: themeColor, mixBlendMode: 'overlay', opacity: 0.4 }} />
-          <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(to bottom, rgba(5,5,5,0.4) 0%, rgba(5,5,5,0) 40%, rgba(5,5,5,0.9) 80%, #050505 100%)` }} />
+          <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(to bottom, ${isDark ? 'rgba(5,5,5,0.4) 0%, rgba(5,5,5,0) 40%, rgba(5,5,5,0.9) 80%, #050505 100%' : 'rgba(245,245,247,0.3) 0%, rgba(245,245,247,0) 40%, rgba(245,245,247,0.9) 80%, #f5f5f7 100%'})` }} />
         </div>
         
         <div style={{ position: 'relative', zIndex: 10, textAlign: 'center', maxWidth: 1000, padding: '0 24px', marginTop: isMobile ? '5vh' : '15vh' }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(10px)', padding: '6px 16px', borderRadius: 50, border: `1px solid rgba(255,255,255,0.1)`, marginBottom: 32 }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: isDark ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.8)', backdropFilter: 'blur(10px)', padding: '6px 16px', borderRadius: 50, border: `1px solid ${colors.border}`, marginBottom: 32 }}>
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: themeColor, boxShadow: `0 0 10px ${themeColor}` }} />
-            <span style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: '#fff' }}>{heroTagline}</span>
+            <span style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: colors.textMain }}>{heroTagline}</span>
           </div>
           
-          <h1 className="hero-title" style={{ fontSize: isMobile ? '2.5rem' : 'clamp(4rem, 10vw, 8rem)', fontWeight: 900, lineHeight: 0.9, letterSpacing: '-0.05em', marginBottom: 32, textShadow: '0 20px 60px rgba(0,0,0,0.9)' }}>
+          <h1 className="hero-title" style={{ fontSize: isMobile ? '2.5rem' : 'clamp(4rem, 10vw, 8rem)', fontWeight: 900, lineHeight: 0.9, letterSpacing: '-0.05em', marginBottom: 32, textShadow: isDark ? '0 20px 60px rgba(0,0,0,0.9)' : 'none', color: colors.textMain }}>
             {renderTitle(heroTitle)}
           </h1>
           
-          <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: isMobile ? '0.95rem' : 'clamp(1.1rem, 2vw, 1.4rem)', fontWeight: 400, lineHeight: 1.6, marginBottom: 48, maxWidth: 700, margin: '0 auto 48px auto', textShadow: '0 4px 20px rgba(0,0,0,0.8)' }}>
+          <p style={{ color: colors.textSoft, fontSize: isMobile ? '0.95rem' : 'clamp(1.1rem, 2vw, 1.4rem)', fontWeight: 400, lineHeight: 1.6, marginBottom: 48, maxWidth: 700, margin: '0 auto 48px auto', textShadow: isDark ? '0 4px 20px rgba(0,0,0,0.8)' : 'none' }}>
             {heroDesc}
           </p>
           
@@ -629,7 +661,7 @@ END:VCALENDAR`;
             ) : (
               <>
                 <a href="#releases" style={{ background: 'transparent', border: `1px solid ${themeColor}`, color: themeColor, padding: '16px 32px', fontSize: 14, borderRadius: 8, fontWeight: 800, textDecoration: 'none' }}>ÉCOUTER LES TRACKS</a>
-                <button onClick={() => navigator.clipboard.writeText(window.location.href).then(() => alert('Lien copié !'))} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '16px 32px', borderRadius: 8, fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>PARTAGER</button>
+                <button onClick={() => navigator.clipboard.writeText(window.location.href).then(() => alert('Lien copié !'))} style={{ background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)', border: `1px solid ${colors.border}`, color: colors.textMain, padding: '16px 32px', borderRadius: 8, fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>PARTAGER</button>
               </>
             )}
           </div>
@@ -644,23 +676,23 @@ END:VCALENDAR`;
             <div className="section-subtitle">{settings.duo_title || 'Bio'}</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: isMobile ? 20 : 60, alignItems: 'start' }}>
               <div className="premium-glow" style={{ position: 'relative', borderRadius: 12, padding: 2 }}>
-                <div style={{ width: '100%', aspectRatio: isMobile ? '1/1' : '4/5', borderRadius: 10, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 20px 40px rgba(0,0,0,0.5)', position: 'relative', zIndex: 2 }}>
+                <div style={{ width: '100%', aspectRatio: isMobile ? '1/1' : '4/5', borderRadius: 10, overflow: 'hidden', border: `1px solid ${colors.border}`, boxShadow: isDark ? '0 20px 40px rgba(0,0,0,0.5)' : '0 20px 40px rgba(0,0,0,0.1)', position: 'relative', zIndex: 2 }}>
                   <img src={profile.avatar_url || "/logo.jpg"} alt={profile.username} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 </div>
                 <div style={{ position: 'absolute', bottom: -10, left: 20, width: 60, height: 4, background: themeColor, borderRadius: 2, zIndex: 3 }} />
               </div>
               <div>
                 <blockquote style={{ margin: 0, padding: 0, border: 'none' }}>
-                  <p style={{ fontSize: isMobile ? '1.2rem' : 'clamp(1.5rem, 2.5vw, 2rem)', fontWeight: 600, lineHeight: 1.4, color: '#fff', marginBottom: isMobile ? 20 : 40 }}>
+                  <p style={{ fontSize: isMobile ? '1.2rem' : 'clamp(1.5rem, 2.5vw, 2rem)', fontWeight: 600, lineHeight: 1.4, color: colors.textMain, marginBottom: isMobile ? 20 : 40 }}>
                     "{bioQuote}"
                   </p>
                 </blockquote>
-                <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: isMobile ? 14 : 16, lineHeight: 1.8, fontWeight: 300, whiteSpace: 'pre-wrap' }}>
+                <p style={{ color: colors.textMuted, fontSize: isMobile ? 14 : 16, lineHeight: 1.8, fontWeight: 300, whiteSpace: 'pre-wrap' }}>
                   {bioRest}
                 </p>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: isMobile ? 20 : 40 }}>
                   {profile.music_style && profile.music_style.split(',').map((style: string, i: number) => (
-                    <span key={i} style={{ borderBottom: `1px solid ${themeColor}`, padding: '4px 0', fontSize: 12, fontWeight: 700, color: '#fff', textTransform: 'uppercase', letterSpacing: '1px', marginRight: 16 }}>
+                    <span key={i} style={{ borderBottom: `1px solid ${themeColor}`, padding: '4px 0', fontSize: 12, fontWeight: 700, color: colors.textMain, textTransform: 'uppercase', letterSpacing: '1px', marginRight: 16 }}>
                       {style.trim()}
                     </span>
                   ))}
@@ -672,7 +704,7 @@ END:VCALENDAR`;
 
         {/* DATES */}
         {events.length > 0 && (
-          <section id="dates" style={{ marginBottom: isMobile ? 40 : 120, paddingTop: isMobile ? 40 : 80, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+          <section id="dates" style={{ marginBottom: isMobile ? 40 : 120, paddingTop: isMobile ? 40 : 80, borderTop: `1px solid ${colors.border}` }}>
             <div className="section-subtitle">Agenda</div>
             <h2 className="section-title">Prochaines dates</h2>
             
@@ -682,9 +714,9 @@ END:VCALENDAR`;
                 return (
                   <div
                     key={event.id}
-                    style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'flex-start' : 'center', gap: isMobile ? 16 : 24, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: isMobile ? 20 : 24, transition: 'all 0.3s' }}
-                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = `${themeColor}40`; e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'; e.currentTarget.style.background = 'rgba(255,255,255,0.02)'; }}
+                    style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'flex-start' : 'center', gap: isMobile ? 16 : 24, background: colors.cardBg, border: `1px solid ${colors.cardBorder}`, borderRadius: 16, padding: isMobile ? 20 : 24, transition: 'all 0.3s' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = `${themeColor}40`; e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.02)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = colors.cardBorder; e.currentTarget.style.background = colors.cardBg; }}
                   >
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: `${themeColor}15`, border: `1px solid ${themeColor}40`, borderRadius: 12, padding: '12px 20px', minWidth: isMobile ? 'auto' : 80, flexShrink: 0 }}>
                       <div style={{ fontSize: 24, fontWeight: 900, color: themeColor, lineHeight: 1 }}>{dateInfo.day}</div>
@@ -692,7 +724,7 @@ END:VCALENDAR`;
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 6 }}>
-                        <h3 style={{ fontSize: isMobile ? 16 : 20, fontWeight: 800, color: '#fff', margin: 0 }}>{event.title}</h3>
+                        <h3 style={{ fontSize: isMobile ? 16 : 20, fontWeight: 800, color: colors.textMain, margin: 0 }}>{event.title}</h3>
                         {event.city && (
                           <span style={{ fontSize: 10, fontWeight: 700, color: themeColor, background: `${themeColor}15`, padding: '3px 10px', borderRadius: 20, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                             {event.city}
@@ -700,7 +732,7 @@ END:VCALENDAR`;
                         )}
                       </div>
                       {event.location && (
-                        <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <div style={{ fontSize: 13, color: colors.textMuted, display: 'flex', alignItems: 'center', gap: 6 }}>
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
                           {event.location}
                         </div>
@@ -713,7 +745,7 @@ END:VCALENDAR`;
                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M7 17L17 7M17 7H7M17 7V17"/></svg>
                         </a>
                       )}
-                      <button onClick={() => handleAddToCalendar(event)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}>
+                      <button onClick={() => handleAddToCalendar(event)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)', border: `1px solid ${colors.border}`, color: colors.textMain, borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' }} onMouseEnter={(e) => { e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'; }}>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
                         Calendrier
                       </button>
@@ -727,33 +759,35 @@ END:VCALENDAR`;
 
         {/* PARCOURS */}
         {showPrestations && (
-          <section id="prestations" style={{ marginBottom: isMobile ? 40 : 120, paddingTop: isMobile ? 40 : 80, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+          <section id="prestations" style={{ marginBottom: isMobile ? 40 : 120, paddingTop: isMobile ? 40 : 80, borderTop: `1px solid ${colors.border}` }}>
             <div className="section-subtitle">{settings.prestations_title || 'Parcours'}</div>
             <h2 className="section-title">Un parcours visible,<br/>des événements qui parlent.</h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: isMobile ? 20 : 60, marginTop: isMobile ? 20 : 60 }}>
               <div>
-                <p style={{ fontSize: isMobile ? 16 : 18, color: '#fff', lineHeight: 1.6, marginBottom: 24, fontWeight: 300 }}>
+                <p style={{ fontSize: isMobile ? 16 : 18, color: colors.textMain, lineHeight: 1.6, marginBottom: 24, fontWeight: 300 }}>
                   Ces moments retracent les événements qui ont marqué le parcours de {profile.username} : clubs, festivals et rendez-vous culturels.
                 </p>
-                <p style={{ fontSize: isMobile ? 14 : 16, color: 'rgba(255,255,255,0.5)', lineHeight: 1.8, marginBottom: 40 }}>
+                <p style={{ fontSize: isMobile ? 14 : 16, color: colors.textMuted, lineHeight: 1.8, marginBottom: 40 }}>
                   Ils montrent une présence régulière sur le terrain, auprès de publics fidèles et de promoteurs qui lui font confiance pour porter l'énergie de leurs événements.
                 </p>
-                <div className="premium-glow bg-transparent" style={{ background: 'rgba(255,255,255,0.02)', padding: isMobile ? 20 : 32, borderRadius: 16, border: '1px solid rgba(255,255,255,0.06)' }}>
+                
+                <div style={{ background: colors.panelBg, padding: isMobile ? 20 : 32, borderRadius: 16, border: `1px solid ${colors.border}`, boxShadow: isDark ? 'none' : '0 4px 20px rgba(0,0,0,0.05)' }}>
                   <h3 style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: themeColor, marginBottom: 24 }}>Pourquoi ça compte</h3>
-                  <h4 style={{ fontSize: isMobile ? 18 : 22, fontWeight: 800, color: '#fff', marginBottom: 24, lineHeight: 1.3 }}>Pour les événements qui doivent marquer les esprits.</h4>
+                  <h4 style={{ fontSize: isMobile ? 18 : 22, fontWeight: 800, color: colors.textMain, marginBottom: 24, lineHeight: 1.3 }}>Pour les événements qui doivent marquer les esprits.</h4>
                   <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
                     {prestations.map((item: any, i: number) => (
                       <li key={i} style={{ display: 'flex', gap: 12 }}>
                         <span style={{ color: themeColor, marginTop: 2 }}>•</span>
                         <div>
-                          <strong style={{ color: '#fff', display: 'block', marginBottom: 4 }}>{item.title}</strong>
-                          <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 14 }}>{item.desc}</span>
+                          <strong style={{ color: colors.textMain, display: 'block', marginBottom: 4 }}>{item.title}</strong>
+                          <span style={{ color: colors.textMuted, fontSize: 14 }}>{item.desc}</span>
                         </div>
                       </li>
                     ))}
                   </ul>
                 </div>
               </div>
+              
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: isMobile ? 12 : 24 }}>
                 {parcoursImages && parcoursImages.length > 0 ? (
                   parcoursImages.slice(0, 4).map((url: string, i: number) => (
@@ -764,7 +798,7 @@ END:VCALENDAR`;
                   ))
                 ) : (
                   [...Array(4)].map((_, i) => (
-                    <div key={i} style={{ aspectRatio: '3/4', background: 'rgba(255,255,255,0.02)', borderRadius: 8, border: '1px dashed rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>Affiche {i + 1}</div>
+                    <div key={i} style={{ aspectRatio: '3/4', background: colors.cardBg, borderRadius: 8, border: `1px dashed ${colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, color: colors.textMuted }}>Affiche {i + 1}</div>
                   ))
                 )}
               </div>
@@ -774,13 +808,13 @@ END:VCALENDAR`;
 
         {/* GALERIE */}
         {gallery && gallery.length > 0 && (
-          <section id="gallery" style={{ marginBottom: isMobile ? 40 : 120, paddingTop: isMobile ? 40 : 80, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+          <section id="gallery" style={{ marginBottom: isMobile ? 40 : 120, paddingTop: isMobile ? 40 : 80, borderTop: `1px solid ${colors.border}` }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: isMobile ? 20 : 40, flexDirection: isMobile ? 'column' : 'row', gap: 16 }}>
               <div>
                 <div className="section-subtitle">En images</div>
                 <h2 className="section-title" style={{ margin: 0 }}>Galerie</h2>
               </div>
-              <button onClick={() => setLightboxImage(gallery[0]?.image_url || null)} style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: 12, fontWeight: 800, letterSpacing: '1.5px', textTransform: 'uppercase', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <button onClick={() => setLightboxImage(gallery[0]?.image_url || null)} style={{ background: 'transparent', border: 'none', color: colors.textMain, fontSize: 12, fontWeight: 800, letterSpacing: '1.5px', textTransform: 'uppercase', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
                 Ouvrir la galerie <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M7 17L17 7M17 7H7M17 7V17"/></svg>
               </button>
             </div>
@@ -797,7 +831,7 @@ END:VCALENDAR`;
 
         {/* RELEASES */}
         {showReleases && (
-          <section id="releases" style={{ paddingTop: isMobile ? 40 : 80, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+          <section id="releases" style={{ paddingTop: isMobile ? 40 : 80, borderTop: `1px solid ${colors.border}` }}>
             <div className="section-subtitle">Écouter</div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: isMobile ? 20 : 40 }}>
               <h2 className="section-title" style={{ margin: 0 }}>{settings.releases_title || 'Dernières Sorties'}</h2>
@@ -806,33 +840,38 @@ END:VCALENDAR`;
               )}
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 16 : 24 }}>
-              {tracks.length > 0 ? tracks.map((track) => {
+              {tracks.length > 0 ? tracks.slice(0, visibleTracksCount).map((track) => {
                 const isPlayable = track.audio_url && track.audio_url.length > 0;
                 const isThisPlaying = currentTrack?.id === track.id && isPlaying;
                 const isCurrentTrack = currentTrack?.id === track.id;
                 const iframeSrc = getIframeSrc(track.embed_code);
                 const isExternalEmbed = !!iframeSrc && (iframeSrc.includes('beatport.com') || iframeSrc.includes('traxsource.com') || iframeSrc.includes('audio.com') || iframeSrc.includes('spotify.com'));
 
-                // ✅ APPLICATION DES COULEURS/IMAGES DE FOND DU PLAYER
+                const hasCustomBg = !!track.player_bg_image_url || !!track.player_bg_color;
+                const titleColor = hasCustomBg ? '#ffffff' : colors.textMain;
+                const mutedColor = hasCustomBg ? 'rgba(255,255,255,0.7)' : colors.textMuted;
+                const btnBorderColor = hasCustomBg ? 'rgba(255,255,255,0.3)' : colors.border;
+                const btnTextColor = hasCustomBg ? '#ffffff' : colors.textMain;
+
                 const bgStyle = track.player_bg_image_url
                   ? {
                       backgroundImage: `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url(${track.player_bg_image_url})`,
                       backgroundSize: 'cover',
                       backgroundPosition: 'center'
                     }
-                  : { background: track.player_bg_color || 'rgba(255, 255, 255, 0.02)' };
+                  : { background: track.player_bg_color || colors.cardBg };
 
                 if (isExternalEmbed) {
                   const isAudioCom = iframeSrc?.includes('audio.com');
                   return (
-                    <div key={track.id} className="premium-glow bg-transparent" style={{ ...bgStyle, border: '1px solid rgba(255, 255, 255, 0.06)', borderRadius: 16, overflow: 'hidden', padding: 24 }}>
+                    <div key={track.id} className="premium-glow bg-transparent" style={{ ...bgStyle, border: `1px solid ${colors.cardBorder}`, borderRadius: 16, overflow: 'hidden', padding: 24 }}>
                       <div style={{ display: 'flex', gap: 20, alignItems: 'center', marginBottom: 16 }}>
-                        <div style={{ width: 60, height: 60, borderRadius: 8, overflow: 'hidden', flexShrink: 0, background: '#111' }}>
+                        <div style={{ width: 60, height: 60, borderRadius: 8, overflow: 'hidden', flexShrink: 0, background: colors.inputBg }}>
                           {track.cover_url ? <img src={track.cover_url} alt={track.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : null}
                         </div>
                         <div style={{ flex: 1 }}>
-                          <h3 style={{ fontSize: 18, fontWeight: 800, color: '#fff', margin: 0 }}>{track.title}</h3>
-                          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>{track.artist} • {track.genre}</div>
+                          <h3 style={{ fontSize: 18, fontWeight: 800, color: titleColor, margin: 0 }}>{track.title}</h3>
+                          <div style={{ fontSize: 13, color: mutedColor, marginTop: 2 }}>{track.artist} • {track.genre}</div>
                         </div>
                       </div>
                       <div style={{ borderRadius: 12, overflow: 'hidden', background: 'transparent', width: '100%' }}>
@@ -843,22 +882,22 @@ END:VCALENDAR`;
                 }
 
                 return (
-                  <div key={track.id} className="premium-glow bg-transparent" style={{ ...bgStyle, border: '1px solid rgba(255, 255, 255, 0.06)', borderRadius: 16, overflow: 'hidden', padding: 24 }}>
+                  <div key={track.id} className="premium-glow bg-transparent" style={{ ...bgStyle, border: `1px solid ${colors.cardBorder}`, borderRadius: 16, overflow: 'hidden', padding: 24 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 16 }}>
-                      <div style={{ width: 60, height: 60, borderRadius: 8, overflow: 'hidden', flexShrink: 0, background: '#111', position: 'relative' }}>
+                      <div style={{ width: 60, height: 60, borderRadius: 8, overflow: 'hidden', flexShrink: 0, background: colors.inputBg, position: 'relative' }}>
                         {track.cover_url ? <img src={track.cover_url} alt={track.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : null}
                       </div>
                       <div style={{ flex: 1 }}>
-                        <h3 style={{ fontSize: 18, fontWeight: 800, color: '#fff', margin: 0 }}>{track.title}</h3>
-                        <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>{track.artist} • {track.genre}</div>
+                        <h3 style={{ fontSize: 18, fontWeight: 800, color: titleColor, margin: 0 }}>{track.title}</h3>
+                        <div style={{ fontSize: 13, color: mutedColor, marginTop: 2 }}>{track.artist} • {track.genre}</div>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                        <button onClick={(e) => handleDownload(e, track.audio_url, `${track.artist} - ${track.title}.mp3`)} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '10px 16px', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <button onClick={(e) => handleDownload(e, track.audio_url, `${track.artist} - ${track.title}.mp3`)} style={{ background: 'transparent', border: `1px solid ${btnBorderColor}`, color: btnTextColor, padding: '10px 16px', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
                           Télécharger
                         </button>
                         <button
                           onClick={() => handlePlayTrack(track)}
-                          style={{ width: 48, height: 48, borderRadius: '50%', background: isThisPlaying ? themeColor : 'rgba(255,255,255,0.1)', border: 'none', color: isThisPlaying ? '#000' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }}
+                          style={{ width: 48, height: 48, borderRadius: '50%', background: isThisPlaying ? themeColor : (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'), border: 'none', color: isThisPlaying ? '#000' : btnTextColor, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }}
                         >
                           {isThisPlaying ? (
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
@@ -869,12 +908,11 @@ END:VCALENDAR`;
                       </div>
                     </div>
                     
-                    {/* WAVEFORM */}
                     {isPlayable && (
                       <div style={{ padding: '0 8px', marginTop: 12 }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                           <span style={{ fontSize: 11, color: themeColor, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>Dropzone</span>
-                          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', fontFamily: 'monospace', fontWeight: 600 }}>
+                          <span style={{ fontSize: 11, color: mutedColor, fontFamily: 'monospace', fontWeight: 600 }}>
                             {isCurrentTrack ? `${formatTime(currentTime)} / ${formatTime(duration)}` : `0:00 / ${formatTime(track.duration)}`}
                           </span>
                         </div>
@@ -899,14 +937,69 @@ END:VCALENDAR`;
                   </div>
                 );
               }) : (
-                <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.3)', padding: 40, border: '1px dashed rgba(255,255,255,0.1)', borderRadius: 16 }}>
+                <div style={{ textAlign: 'center', color: colors.textMuted, padding: 40, border: `1px dashed ${colors.border}`, borderRadius: 16 }}>
                   Aucun son pour le moment.
+                </div>
+              )}
+
+              {tracks.length > visibleTracksCount && (
+                <div style={{ textAlign: 'center', marginTop: 20 }}>
+                  <button 
+                    onClick={() => setVisibleTracksCount(prev => prev + 4)}
+                    style={{ background: 'transparent', border: `1px solid ${themeColor}`, color: themeColor, padding: '12px 32px', borderRadius: 8, fontSize: 13, fontWeight: 800, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '1px', transition: 'all 0.2s' }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = `${themeColor}15`}
+                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                  >
+                    Voir plus de sons
+                  </button>
                 </div>
               )}
             </div>
           </section>
         )}
       </div>
+
+      {/* ✅ RÉINTÉGRATION DU COMPOSANT PREMIUM STATS TOUT EN BAS */}
+      {showStats && (
+        <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '20px 16px 60px' : '40px 24px 100px' }}>
+          <PremiumStats profile={profile} tracks={tracks} />
+        </div>
+      )}
+
+      {/* FOOTER */}
+      <footer style={{ borderTop: `1px solid ${colors.border}`, padding: '40px 24px', marginTop: 'auto', textAlign: 'center', background: colors.panelBg }}>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+          <span style={{ fontSize: 20, fontWeight: 900, color: colors.textMain, letterSpacing: '-0.5px' }}>
+            DropZone<span style={{ color: themeColor }}>.dj</span>
+          </span>
+        </div>
+        <p style={{ fontSize: 13, color: colors.textMuted, marginBottom: 24 }}>
+          Page officielle de <strong>{profile.username}</strong> propulsée par DropZone.dj
+        </p>
+        
+        {socials.length > 0 && (
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginBottom: 32 }}>
+            {socials.map(s => (
+              <a 
+                key={s.key} 
+                href={profile[s.key]} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                title={s.label}
+                style={{ width: 40, height: 40, borderRadius: '50%', background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.textMuted, transition: 'all 0.2s', border: `1px solid ${colors.border}` }} 
+                onMouseEnter={e => { e.currentTarget.style.color = themeColor; e.currentTarget.style.borderColor = themeColor; }}
+                onMouseLeave={e => { e.currentTarget.style.color = colors.textMuted; e.currentTarget.style.borderColor = colors.border; }}
+              >
+                {s.logo}
+              </a>
+            ))}
+          </div>
+        )}
+        
+        <div style={{ fontSize: 11, color: colors.textMuted }}>
+          © {new Date().getFullYear()} DropZone.dj — Tous droits réservés
+        </div>
+      </footer>
 
       {currentTrack && GlobalPlayer && (
         <GlobalPlayer

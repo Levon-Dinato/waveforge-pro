@@ -220,6 +220,10 @@ export const PremiumPage: React.FC = () => {
   const [sendingBooking, setSendingBooking] = useState(false);
   const [bookingSent, setBookingSent] = useState(false);
 
+  // ✅ CORRECTION : isOwner et themeColor doivent être définis tout en haut
+  const isOwner = user && profile && user.id === profile.id;
+  const themeColor = profile?.theme_color || '#00d9ff';
+
   const colors = {
     bg: isDark ? '#050505' : '#f5f5f7',
     textMain: isDark ? '#ffffff' : '#1a1a1a',
@@ -251,8 +255,8 @@ export const PremiumPage: React.FC = () => {
 
   const handleShare = async () => {
     const shareData = {
-      title: `${profile.username} — Artiste DropZone`,
-      text: `Découvre l'univers de ${profile.username} sur DropZone.dj`,
+      title: `${profile?.username} — Artiste DropZone`,
+      text: `Découvre l'univers de ${profile?.username} sur DropZone.dj`,
       url: window.location.href,
     };
 
@@ -304,12 +308,14 @@ END:VCALENDAR`;
 
   const handleSendBooking = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!profile) return;
     if (!bookingForm.name || !bookingForm.email || !bookingForm.message) {
       alert("Remplis tous les champs obligatoires.");
       return;
     }
     setSendingBooking(true);
     try {
+      const artistEmail = profile.booking_email || 'djcontrolradiotv1@gmail.com';
       const { error } = await supabase.functions.invoke('send-booking-email', {
         body: {
           to: artistEmail,
@@ -334,7 +340,8 @@ END:VCALENDAR`;
     }
   };
 
-  const handleDownload = async (e: React.MouseEvent, url: string, filename: string) => {
+  // ✅ MISE À JOUR POUR TRACKER LES TÉLÉCHARGEMENTS
+  const handleDownload = async (e: React.MouseEvent, url: string, filename: string, trackId: string, currentDownloads: number) => {
     e.stopPropagation();
     if (!user) {
       alert("🔒 Inscrivez-vous gratuitement pour télécharger les morceaux.");
@@ -353,6 +360,12 @@ END:VCALENDAR`;
       link.href = blobUrl; link.download = filename;
       document.body.appendChild(link); link.click();
       document.body.removeChild(link); window.URL.revokeObjectURL(blobUrl);
+
+      // ✅ INCRÉMENTER LE COMPTEUR
+      if (!isOwner) {
+        await supabase.from('tracks').update({ downloads: (currentDownloads || 0) + 1 }).eq('id', trackId);
+        setTracks(prev => prev.map(t => t.id === trackId ? { ...t, downloads: (t.downloads || 0) + 1 } : t));
+      }
     } catch (error) { window.open(url, '_blank'); }
   };
 
@@ -423,7 +436,23 @@ END:VCALENDAR`;
     fetchData();
   }, [username]);
 
-  const handlePlayTrack = (track: any) => {
+  // ✅ TRACKER LES VUES DE PAGE (Uniquement pour les visiteurs)
+  useEffect(() => {
+    if (!profile || isOwner) return; // On ne compte pas tes propres visites
+    
+    const incrementView = async () => {
+      try {
+        await supabase.from('profiles').update({ views: (profile.views || 0) + 1 }).eq('id', profile.id);
+      } catch (error) {
+        console.error("Erreur lors du tracking de la vue", error);
+      }
+    };
+    
+    incrementView();
+  }, [profile?.id, isOwner]);
+
+  // ✅ MISE À JOUR POUR TRACKER LES PLAYS
+  const handlePlayTrack = async (track: any) => {
     if (!user) {
       alert("🔒 Inscrivez-vous gratuitement pour écouter les morceaux en entier.");
       navigate('/auth');
@@ -434,12 +463,21 @@ END:VCALENDAR`;
       return;
     }
     if (track.audio_url && track.audio_url.length > 0) {
+      const isNewTrack = currentTrack?.id !== track.id;
+
       play({
         id: track.id, title: track.title, artist: track.artist, audio_url: track.audio_url,
         cover_url: track.cover_url, user_id: track.user_id, duration: track.duration,
         peaks: track.peaks, bpm: track.bpm, song_key: track.song_key, genre: track.genre,
         player_bg_image_url: track.player_bg_image_url, player_bg_color: track.player_bg_color
       });
+
+      if (isNewTrack && !isOwner) {
+        try {
+          await supabase.from('tracks').update({ plays: (track.plays || 0) + 1 }).eq('id', track.id);
+          setTracks(prev => prev.map(t => t.id === track.id ? { ...t, plays: (t.plays || 0) + 1 } : t));
+        } catch (err) { console.error("Erreur tracking play", err); }
+      }
     }
   };
 
@@ -466,10 +504,6 @@ END:VCALENDAR`;
   }
   
   if (!profile) return <div style={{ background: colors.bg, color: colors.textMain, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Artiste introuvable.</div>;
-
-  const artistEmail = profile.booking_email || 'djcontrolradiotv1@gmail.com';
-  const themeColor = profile.theme_color || '#00d9ff';
-  const isOwner = user && profile && user.id === profile.id;
 
   const settings = profile.settings || {};
   
@@ -966,7 +1000,7 @@ END:VCALENDAR`;
                           <div style={{ fontSize: 13, color: mutedColor, marginTop: 2 }}>{track.artist} • {track.genre}</div>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                          <button onClick={(e) => handleDownload(e, track.audio_url, `${track.artist} - ${track.title}.mp3`)} style={{ background: 'transparent', border: `1px solid ${btnBorderColor}`, color: btnTextColor, padding: '10px 16px', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <button onClick={(e) => handleDownload(e, track.audio_url, `${track.artist} - ${track.title}.mp3`, track.id, track.downloads)} style={{ background: 'transparent', border: `1px solid ${btnBorderColor}`, color: btnTextColor, padding: '10px 16px', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
                             Télécharger
                           </button>
                           <button
@@ -1034,7 +1068,6 @@ END:VCALENDAR`;
         )}
       </div>
 
-      {/* ✅ AJOUT DE LA CONDITION isOwner ICI : Les stats ne s'affichent que pour le propriétaire */}
       {showStats && isOwner && (
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '20px 16px 60px' : '40px 24px 100px' }}>
           <PremiumStats profile={profile} tracks={tracks} />

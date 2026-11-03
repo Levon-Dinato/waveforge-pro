@@ -7,6 +7,7 @@ import { supabase, AUDIO_BUCKET } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { PayPalButton } from '../components/PayPalButton';
+import { ArtistToolkit } from '../components/ArtistToolkit'; // ✅ IMPORT AJOUTÉ
 
 export const SettingsPage: React.FC = () => {
   const { user } = useAuth();
@@ -245,13 +246,11 @@ export const SettingsPage: React.FC = () => {
     } finally { setUploadingGallery(false); }
   };
 
-  // ✅ LECTURE RENFORCÉE DES TAGS ID3
   const handleAudioFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setAudioFile(file);
 
-    // 1. Fallback basé sur le nom du fichier
     const fileNameWithoutExt = file.name.replace(/\.[^/.]+$/, "");
     let guessArtist = "";
     let guessTitle = fileNameWithoutExt;
@@ -291,7 +290,6 @@ export const SettingsPage: React.FC = () => {
       bpm: prev.bpm || guessBpm,
     }));
 
-    // 2. Lecture des tags réels (ID3)
     try {
       const metadata = await parseBlob(file, { skipCovers: false });
       const { common } = metadata;
@@ -305,12 +303,10 @@ export const SettingsPage: React.FC = () => {
         song_key: common.key || prev.song_key
       }));
 
-      // ✅ Gestion renforcée de la pochette
       if (common.picture && common.picture.length > 0) {
         const pic = common.picture[0];
         const dataArray = pic.data instanceof Uint8Array ? pic.data : new Uint8Array(pic.data as any);
         
-        // On devine l'extension
         let ext = 'jpg';
         if (pic.format.includes('png')) ext = 'png';
         else if (pic.format.includes('webp')) ext = 'webp';
@@ -531,6 +527,11 @@ export const SettingsPage: React.FC = () => {
       </div>
       
       <p style={{ color: colors.textMuted, marginBottom: 30 }}>Gère ton identité, ta musique, tes photos et les modules de ta page.</p>
+
+      {/* ✅ AJOUT DU TOOLKIT ICI */}
+      <div style={{ marginBottom: 40, marginLeft: -20, marginRight: -20 }}>
+        <ArtistToolkit />
+      </div>
 
       {message && <div style={{ padding: 16, background: 'rgba(0,217,255,0.1)', border: '1px solid #00d9ff', borderRadius: 8, marginBottom: 24, color: '#00d9ff' }}>{message}</div>}
 

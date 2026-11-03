@@ -9,6 +9,7 @@ import { usePlayer } from '../contexts/PlayerContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { EventsTicker } from '../components/EventsTicker';
+import { ArtistToolkit } from '../components/ArtistToolkit'; // ✅ IMPORT AJOUTÉ
 
 const Icons = {
   play: <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>,
@@ -80,7 +81,6 @@ export const HomePage = () => {
   const newReleases = tracks.slice(1, 13);
   const isFeaturedPlaying = featured ? isCurrentTrack(featured.id) && isPlaying : false;
 
-  // Genres uniques depuis les tracks
   const genres = Array.from(new Set(tracks.map(t => t.genre).filter(Boolean))).slice(0, 8);
 
   const playFeatured = (e: React.MouseEvent) => {
@@ -128,17 +128,9 @@ export const HomePage = () => {
             <img src="/og-image.jpg" alt="Hero" loading="lazy" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: isDark ? 0.4 : 0.2 }} />
           )}
 
-          {/* Overlay gradient */}
           <div style={{ position: 'absolute', inset: 0, background: isMobile ? `linear-gradient(to top, ${colors.bg} 15%, transparent 100%)` : `linear-gradient(90deg, ${colors.bg} 35%, transparent 100%)` }} />
 
-          {/* Grille décorative */}
-          <div style={{
-            position: 'absolute', inset: 0, opacity: 0.15,
-            backgroundImage: `linear-gradient(${colors.accent} 1px, transparent 1px), linear-gradient(90deg, ${colors.accent} 1px, transparent 1px)`,
-            backgroundSize: '40px 40px',
-            maskImage: 'radial-gradient(ellipse at 80% 50%, black 30%, transparent 70%)',
-            WebkitMaskImage: 'radial-gradient(ellipse at 80% 50%, black 30%, transparent 70%)',
-          }} />
+          <div style={{ position: 'absolute', inset: 0, opacity: 0.15, backgroundImage: `linear-gradient(${colors.accent} 1px, transparent 1px), linear-gradient(90deg, ${colors.accent} 1px, transparent 1px)`, backgroundSize: '40px 40px', maskImage: 'radial-gradient(ellipse at 80% 50%, black 30%, transparent 70%)', WebkitMaskImage: 'radial-gradient(ellipse at 80% 50%, black 30%, transparent 70%)' }} />
 
           <div style={{ position: 'relative', padding: isMobile ? '20px' : '64px', zIndex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%', maxWidth: 620 }}>
 
@@ -164,7 +156,6 @@ export const HomePage = () => {
               </Link>
             </div>
 
-            {/* Social proof */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
               <div style={{ display: 'flex' }}>
                 {artists.slice(0, 4).map((a, i) => (
@@ -260,7 +251,7 @@ export const HomePage = () => {
                 <div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: colors.accent, marginBottom: 6 }}>Communauté</div>
                 <h2 style={{ fontSize: isMobile ? 20 : 28, fontWeight: 900, color: colors.textMain, margin: 0, letterSpacing: '-0.5px' }}>Artistes à découvrir</h2>
               </div>
-              <Link to="/artistes" style={{ fontSize: 12, color: colors.textMuted, textDecoration: 'none', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+              <Link to="/artists" style={{ fontSize: 12, color: colors.textMuted, textDecoration: 'none', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
                 Tout voir {Icons.arrowRight}
               </Link>
             </div>
@@ -347,20 +338,24 @@ export const HomePage = () => {
           </div>
         </section>
 
+        {/* ✅ 9. SECTION SERVICES ARTISTES (NOUVEAU) */}
+        <ArtistToolkit />
+
       </div>
 
       {/* 9. FOOTER */}
       <footer style={{ background: colors.footerBg, borderTop: `1px solid ${colors.border}`, marginTop: 'auto' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', width: '100%', padding: isMobile ? '40px 16px 24px' : '60px 24px 32px' }}>
 
-          {/* Grille principale footer */}
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : '2fr 1fr 1fr 1fr', gap: isMobile ? 32 : 48, marginBottom: 40 }}>
 
             {/* Colonne 1 : Logo + description */}
             <div style={{ gridColumn: isMobile ? '1 / -1' : 'auto' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-                <div style={{ width: 32, height: 32, borderRadius: 8, background: colors.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', fontWeight: 900, fontSize: 16 }}>W</div>
-                <div style={{ fontSize: 18, fontWeight: 900, color: colors.textMain, letterSpacing: '-0.5px' }}>DropZone.dj</div>
+                <div style={{ width: 32, height: 32, borderRadius: 8, background: colors.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', fontWeight: 900, fontSize: 13 }}>DZ</div>
+                <div style={{ fontSize: 18, fontWeight: 900, color: colors.textMain, letterSpacing: '-0.5px' }}>
+                  DropZone<span style={{ color: colors.accent }}>.dj</span>
+                </div>
               </div>
               <p style={{ fontSize: 13, color: colors.textMuted, lineHeight: 1.6, margin: 0, maxWidth: 320 }}>
                 La plateforme des DJs indépendants. Partage tes sons, connecte-toi avec la communauté et fais vibrer la nuit.
@@ -373,7 +368,7 @@ export const HomePage = () => {
               <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {[
                   { to: '/nouveautes', label: 'Nouveautés' },
-                  { to: '/artistes', label: 'Artistes' },
+                  { to: '/artists', label: 'Artistes' },
                   { to: '/premium', label: 'Premium' },
                   { to: '/events', label: 'Événements' },
                 ].map((l) => (
@@ -419,14 +414,12 @@ export const HomePage = () => {
             </div>
           </div>
 
-          {/* Bas de footer */}
           <div style={{ borderTop: `1px solid ${colors.border}`, paddingTop: 24, display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: 'center', gap: 16 }}>
 
             <div style={{ fontSize: 12, color: colors.textMuted, order: isMobile ? 2 : 1 }}>
-              © {new Date().getFullYear()} WaveForge — Tous droits réservés
+              © {new Date().getFullYear()} DropZone.dj — Tous droits réservés
             </div>
 
-            {/* Réseaux sociaux */}
             <div style={{ display: 'flex', gap: 10, order: isMobile ? 1 : 2 }}>
               {[
                 { name: 'Instagram', url: '#', icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg> },

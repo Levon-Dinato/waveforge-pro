@@ -3,12 +3,12 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase, AUDIO_BUCKET } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import { useTheme } from '../contexts/ThemeContext'; // ✅ IMPORT DU THEME
+import { useTheme } from '../contexts/ThemeContext';
 import { PayPalButton } from '../components/PayPalButton';
 
 export const SettingsPage: React.FC = () => {
   const { user } = useAuth();
-  const { theme } = useTheme(); // ✅ RÉCUPÉRATION DU THÈME
+  const { theme } = useTheme();
   const isDark = theme === 'dark';
 
   const [loading, setLoading] = useState(true);
@@ -74,7 +74,6 @@ export const SettingsPage: React.FC = () => {
     ]
   });
 
-  // ✅ PALETTE DE COULEURS DYNAMIQUES
   const colors = {
     bg: isDark ? '#0a0a0a' : '#f5f5f7',
     panelBg: isDark ? '#121212' : '#ffffff',
@@ -698,7 +697,13 @@ export const SettingsPage: React.FC = () => {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                       <div style={{ width: 40, height: 40, background: track.cover_url ? `url(${track.cover_url}) center/cover` : colors.border, borderRadius: 4 }} />
                       <div>
-                        <div style={{ fontSize: 14, fontWeight: 'bold', color: colors.textMain }}>{track.title}</div>
+                        <div style={{ fontSize: 14, fontWeight: 'bold', color: colors.textMain, display: 'flex', alignItems: 'center', gap: 8 }}>
+                          {track.title}
+                          {/* ✅ BADGE FOND PERSO ICI */}
+                          {track.player_bg_image_url && (
+                            <span style={{ fontSize: 9, background: 'rgba(0,217,255,0.2)', color: '#00d9ff', padding: '2px 6px', borderRadius: 4 }}>FOND PERSO</span>
+                          )}
+                        </div>
                         <div style={{ fontSize: 12, color: colors.textMuted }}>{track.genre || 'Inconnu'} • {track.bpm || 0} BPM</div>
                       </div>
                     </div>
@@ -862,11 +867,7 @@ export const SettingsPage: React.FC = () => {
 
             {form.background_video_url && (
               <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 12 }}>
-                <video 
-                  src={form.background_video_url} 
-                  muted 
-                  style={{ width: 80, height: 50, borderRadius: 4, objectFit: 'cover', border: `1px solid ${colors.borderLight}` }} 
-                />
+                <video src={form.background_video_url} muted style={{ width: 80, height: 50, borderRadius: 4, objectFit: 'cover', border: `1px solid ${colors.borderLight}` }} />
                 <span style={{ fontSize: 11, color: form.theme_color }}>Vidéo de fond chargée ✓</span>
               </div>
             )}
@@ -918,7 +919,7 @@ export const SettingsPage: React.FC = () => {
       </form>
 
       {showUploadModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 3000, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: 20 }}>
           <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 32, width: '100%', maxWidth: 500, maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
               <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: colors.textMain }}>Uploader un son</h2>

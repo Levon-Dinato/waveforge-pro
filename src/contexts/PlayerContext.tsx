@@ -13,6 +13,9 @@ export interface PlayerTrack {
   bpm?: number | null;
   song_key?: string | null;
   genre?: string | null;
+  // ✅ Ajout des propriétés manquantes
+  player_bg_image_url?: string | null;
+  player_bg_color?: string | null;
 }
 
 interface PlayerContextValue {

@@ -66,6 +66,7 @@ export const MainLayout: React.FC = () => {
     hoverBg: isDark ? '#121212' : '#f3f4f6',
     activeBg: isDark ? 'rgba(0, 217, 255, 0.05)' : 'rgba(0, 217, 255, 0.1)',
     mainBg: isDark ? '#0a0a0a' : '#f5f5f7',
+    panelBg: isDark ? '#121212' : '#ffffff', // ✅ Ajout de panelBg qui manquait
   };
 
   const isFullScreen = location.pathname === '/mastering' || location.pathname === '/cdj' || location.pathname === '/studio' || location.pathname === '/nouveautes';
@@ -76,7 +77,7 @@ export const MainLayout: React.FC = () => {
   const displayName = profile?.username || user?.email?.split('@')[0] || 'Artiste';
   const avatarUrl = profile?.avatar_url;
 
-  // ✅ BOUTON FLOTTANT (visible partout)
+  // ✅ BOUTON FLOTTANT CORRIGÉ
   const ThemeToggleButton = () => (
     <button
       onClick={toggleTheme}
@@ -87,12 +88,13 @@ export const MainLayout: React.FC = () => {
         zIndex: 9999,
         width: 44, height: 44,
         borderRadius: '50%',
-        background: colors.panelBg,
-        border: `1px solid ${colors.border}`,
-        color: colors.textMain,
+        // Contraste forcé pour toujours voir l'icône
+        background: isDark ? '#ffffff' : '#1a1a1a', 
+        border: `1px solid ${isDark ? '#e5e7eb' : '#333333'}`,
+        color: isDark ? '#000000' : '#ffffff', 
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         cursor: 'pointer',
-        boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+        boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
         transition: 'all 0.2s',
       }}
       title={isDark ? 'Passer en mode clair' : 'Passer en mode sombre'}
@@ -101,11 +103,13 @@ export const MainLayout: React.FC = () => {
     </button>
   );
 
-  // ✅ SI PLEIN ÉCRAN
+    // ✅ SI PLEIN ÉCRAN
   if (isFullScreen) {
     return (
       <div style={{ minHeight: '100vh', background: colors.bg, color: colors.textMain, transition: 'background 0.3s ease' }}>
-        <ThemeToggleButton /> {/* ✅ Ajout du bouton flottant */}
+        {/* ✅ On cache le bouton flottant sur /nouveautes car la page a déjà son propre bouton */}
+        {location.pathname !== '/nouveautes' && <ThemeToggleButton />}
+        
         <Outlet />
         {currentTrack && <GlobalPlayer currentTrack={currentTrack} isPlaying={isPlaying} onTogglePlay={togglePlay} onStop={stop} />}
       </div>
@@ -123,7 +127,8 @@ export const MainLayout: React.FC = () => {
             <span style={{ fontWeight: 800, fontSize: '1rem', color: colors.textMain, letterSpacing: '-0.5px' }}>DROPZONE <span style={{ color: '#00d9ff' }}>DJ</span></span>
           </Link>
           <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-            <button onClick={toggleTheme} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', padding: 4 }}>
+            {/* Bouton mobile avec icône bien visible */}
+            <button onClick={toggleTheme} style={{ background: 'transparent', border: 'none', color: colors.textMain, cursor: 'pointer', padding: 4 }}>
               {isDark ? Icons.sun : Icons.moon}
             </button>
             <Link to={`/profil/${user?.id}`} className="avatar-circle" style={{ width: 34, height: 34, overflow: 'hidden', background: colors.hoverBg, border: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#00d9ff', fontWeight: 700, fontSize: 13, textDecoration: 'none' }}>
@@ -188,7 +193,7 @@ export const MainLayout: React.FC = () => {
           })}
           
           {/* BOUTON DE THEME DANS LE MENU */}
-          <button onClick={toggleTheme} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', marginTop: 16, border: `1px solid ${colors.border}`, borderRadius: 8, background: 'transparent', color: colors.textMuted, cursor: 'pointer', fontWeight: 600, fontSize: '0.9rem', transition: 'all 0.2s' }}>
+          <button onClick={toggleTheme} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', marginTop: 16, border: `1px solid ${colors.border}`, borderRadius: 8, background: 'transparent', color: colors.textMain, cursor: 'pointer', fontWeight: 600, fontSize: '0.9rem', transition: 'all 0.2s' }}>
              {isDark ? Icons.sun : Icons.moon}
              {isDark ? 'Mode Clair' : 'Mode Sombre'}
           </button>

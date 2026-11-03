@@ -335,8 +335,23 @@ export const NouveautesPage: React.FC = () => {
           </h1>
         </div>
 
-        {/* BOUTON TOGGLE THEME */}
-        <button onClick={toggleTheme} style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, color: colors.textMain, padding: 8, borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}>
+        {/* ✅ BOUTON TOGGLE THEME CORRIGÉ */}
+        <button 
+          onClick={toggleTheme} 
+          style={{ 
+            background: isDark ? '#ffffff' : '#1a1a1a', 
+            border: `1px solid ${isDark ? '#e5e7eb' : '#333333'}`, 
+            color: isDark ? '#000000' : '#ffffff', 
+            padding: 8, 
+            borderRadius: '50%', 
+            cursor: 'pointer', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            transition: 'all 0.2s',
+            boxShadow: '0 2px 10px rgba(0,0,0,0.2)'
+          }}
+        >
           {isDark ? Icons.sun : Icons.moon}
         </button>
       </div>
@@ -373,8 +388,8 @@ export const NouveautesPage: React.FC = () => {
                 <p style={{ color: colors.textMuted, fontSize: 14, margin: '6px 0 0 0', fontWeight: 500 }}>Découvrez les derniers sons partagés par la communauté.</p>
               </div>
               {user && (
-                <button onClick={() => setShowUploadModal(true)} style={{ padding: '12px 24px', background: 'linear-gradient(135deg, #00d9ff, #7c5cff)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 10, cursor: 'pointer', fontWeight: 800, fontSize: 13, boxShadow: '0 0 20px rgba(0, 217, 255, 0.4)', transition: 'transform 0.2s, box-shadow 0.2s' }}>
-                  + Uploader
+                <button onClick={() => setShowUploadModal(true)} style={{ padding: isMobile ? '10px 16px' : '12px 24px', background: 'linear-gradient(135deg, #00d9ff, #7c5cff)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 10, cursor: 'pointer', fontWeight: 800, fontSize: 13, boxShadow: '0 0 20px rgba(0, 217, 255, 0.4)', transition: 'transform 0.2s, box-shadow 0.2s', whiteSpace: 'nowrap' }}>
+                  {isMobile ? '+ Son' : '+ Uploader'}
                 </button>
               )}
             </div>
@@ -526,7 +541,8 @@ export const NouveautesPage: React.FC = () => {
                   <span style={{ color: '#00d9ff' }}>🔥</span> Top 10
                 </h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                  {tracks.slice(0, 10).map((track, index) => (
+                  {/* ✅ CORRECTION : Tri par likes_count avant de prendre les 10 premiers */}
+                  {[...tracks].sort((a, b) => b.likes_count - a.likes_count).slice(0, 10).map((track, index) => (
                     <div key={track.id} style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }} onClick={() => navigate(`/track/${track.id}`)}>
                       <div style={{ width: 20, textAlign: 'center', fontSize: 14, color: index === 0 ? '#00d9ff' : index === 1 ? '#c0c0c0' : index === 2 ? '#cd7f32' : colors.textMuted, fontWeight: 900, fontStyle: 'italic' }}>{index + 1}</div>
                       <div style={{ width: 36, height: 36, borderRadius: 6, background: track.cover_url ? `url(${track.cover_url}) center/cover` : '#222', flexShrink: 0, border: `1px solid ${colors.border}` }} />
@@ -619,7 +635,7 @@ export const NouveautesPage: React.FC = () => {
                 </div>
               </div>
 
-              <button type="submit" disabled={uploading} style={{ marginTop: 12, padding: 16, background: 'linear-gradient(135deg, #00d9ff, #7c5cff)', color: '#fff', border: 'none', borderRadius: 10, fontWeight: 800, fontSize: 14, cursor: uploading ? 'wait' : 'pointer', transition: 'opacity 0.2s', boxShadow: '0 0 20px rgba(0, 217, 255, 0.3)' }}>
+              <button type="submit" disabled={uploading} style={{ marginTop: 12, padding: 16, background: '#00d9ff', color: '#000', border: 'none', borderRadius: 10, fontWeight: 800, fontSize: 14, cursor: uploading ? 'wait' : 'pointer', transition: 'opacity 0.2s', boxShadow: '0 0 20px rgba(0, 217, 255, 0.3)' }}>
                 {uploading ? 'Traitement en cours...' : 'Ajouter le son'}
               </button>
             </form>

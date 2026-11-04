@@ -194,31 +194,27 @@ export const TrackPage: React.FC = () => {
     fetchData();
   }, [id, user]);
 
-  // ✅ COMPTABILISATION DES ÉCOUTES AVEC ANTI-SPAM
+  // ✅ COMPTABILISATION DES ÉCOUTES (VERSION TEST SANS ANTI-SPAM)
   const incrementPlayCount = async () => {
-    if (!track || !user) return;
+    if (!track) return;
     
-    // On ne compte pas les écoutes du propriétaire
-    if (user.id === track.user_id) return; 
-
-    // Anti-spam : on vérifie si l'utilisateur a déjà écouté ce son dans les 30 dernières minutes
-    const listenKey = `listened_${track.id}_${user.id}`;
-    const lastListen = localStorage.getItem(listenKey);
-    const now = Date.now();
-    
-    if (lastListen && now - parseInt(lastListen) < 30 * 60 * 1000) {
-      return; // Déjà écouté récemment, on ne recompte pas
-    }
-
-    // On incrémente
     try {
-      await supabase.from('tracks').update({ plays: (track.plays || 0) + 1 }).eq('id', track.id);
-      setTrack((prev: any) => ({ ...prev, plays: (prev.plays || 0) + 1 }));
+      console.log("Tentative d'incrémentation pour le son :", track.id);
+      const newPlays = (track.plays || 0) + 1;
       
-      // On enregistre le moment de l'écoute dans le localStorage
-      localStorage.setItem(listenKey, now.toString());
+      const { error } = await supabase
+        .from('tracks')
+        .update({ plays: newPlays })
+        .eq('id', track.id);
+        
+      if (error) {
+        console.error("❌ ERREUR SUPABASE (Vérifie tes policies RLS) :", error);
+      } else {
+        console.log("✅ SUCCÈS ! Le compteur est passé à", newPlays);
+        setTrack((prev: any) => ({ ...prev, plays: newPlays }));
+      }
     } catch (err) {
-      console.error("Erreur d'incrémentation:", err);
+      console.error("❌ ERREUR GLOBALE :", err);
     }
   };
 
@@ -235,7 +231,7 @@ export const TrackPage: React.FC = () => {
         player_bg_image_url: track.player_bg_image_url, player_bg_color: track.player_bg_color
       });
       
-      // ✅ On appelle la fonction de comptage
+      // ✅ On déclenche le compteur
       incrementPlayCount();
     }
   };

@@ -1,139 +1,200 @@
 // src/components/TrackGrid.tsx
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
-import { useAuth } from '../contexts/AuthContext';
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { useTheme } from '../contexts/ThemeContext';
 import { usePlayer } from '../contexts/PlayerContext';
 
 export interface Track {
   id: string;
   title: string;
   artist: string;
+  cover_url: string | null;
+  audio_url: string;
   genre: string;
   bpm: number;
-  song_key: string | null;
-  camelot?: string | null;
-  audio_url: string;
-  cover_url: string | null;
-  user_id: string | null;
-  duration: number;
-  peaks: number[];
+  plays: number;
   likes_count: number;
-  downloads: number;
-  created_at: string;
-  embed_code?: string;
-  purchase_url?: string | null;
+  comments_count: number; // ✅ NOUVEAU
+  duration: number;
+  profiles?: { username: string } | null;
+  user_id: string;
 }
 
 interface TrackGridProps {
   tracks: Track[];
-  onTrackDeleted?: (id: string) => void;
-  onTrackUpdated?: (track: Track) => void;
-  onPlay?: (track: Track) => void; // ✅ Ajout de onPlay
+  onPlay: (track: Track) => void;
 }
 
 const Icons = {
-  play: <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>,
-  pause: <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>,
+  play: <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>,
+  pause: <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>,
+  playSmall: <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>,
   heart: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>,
-  heartFilled: <svg width="14" height="14" viewBox="0 0 24 24" fill="#ff3366" stroke="#ff3366" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>,
-  edit: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>,
-  trash: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>,
+  comment: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>,
+  headphone: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"></path><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path></svg>
 };
 
-export const TrackGrid: React.FC<TrackGridProps> = ({ tracks, onTrackDeleted, onTrackUpdated, onPlay }) => {
-  const navigate = useNavigate();
-  const { user, isAdmin, profile } = useAuth();
-  const { play, isPlaying, isCurrentTrack } = usePlayer();
-  
-  const [hoveredId, setHoveredId] = useState<string | null>(null);
-  const [userLikes, setUserLikes] = useState<Record<string, boolean>>({});
+export const TrackGrid: React.FC<TrackGridProps> = ({ tracks, onPlay }) => {
+  const { theme } = useTheme();
+  const { currentTrack, isPlaying } = usePlayer();
+  const isDark = theme === 'dark';
 
-  // ✅ BLOCAGE DE LA LECTURE
-  const handlePlayClick = (e: React.MouseEvent, track: Track) => {
-    e.stopPropagation();
-    if (onPlay) {
-      onPlay(track); // Utilise la fonction du parent (avec blocage)
-    } else {
-      // Sinon, comportement par défaut
-      play({
-        id: track.id, title: track.title, artist: track.artist, audio_url: track.audio_url,
-        cover_url: track.cover_url, user_id: track.user_id, duration: track.duration,
-        peaks: track.peaks, bpm: track.bpm, song_key: track.song_key, genre: track.genre,
-      });
-    }
+  const colors = {
+    bg: isDark ? '#0a0a0a' : '#f5f5f7',
+    cardBg: isDark ? 'rgba(255,255,255,0.03)' : '#ffffff',
+    cardBorder: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
+    textMain: isDark ? '#ffffff' : '#1a1a1a',
+    textMuted: isDark ? '#a1a1aa' : '#666666',
+    accent: '#00d9ff',
+    tagBg: isDark ? 'rgba(255,255,255,0.05)' : '#f3f4f6',
   };
 
+  const formatNumber = (num: number) => {
+    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+    if (num >= 1000) return (num / 1000).toFixed(1) + 'k';
+    return num?.toString() || '0';
+  };
+
+  if (!tracks || tracks.length === 0) {
+    return (
+      <div style={{ padding: 40, textAlign: 'center', color: colors.textMuted, border: `1px dashed ${colors.cardBorder}`, borderRadius: 16 }}>
+        Aucun son disponible pour le moment.
+      </div>
+    );
+  }
+
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 16 }}>
+    <div style={{ 
+      display: 'grid', 
+      gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', 
+      gap: 20 
+    }}>
       {tracks.map((track) => {
-        const isThisPlaying = isCurrentTrack(track.id) && isPlaying;
-        const isLiked = userLikes[track.id] || false;
+        const isCurrent = currentTrack?.id === track.id && isPlaying;
 
         return (
-          <div
-            key={track.id}
-            onClick={() => navigate(`/track/${track.id}`)}
-            onMouseEnter={() => setHoveredId(track.id)}
-            onMouseLeave={() => setHoveredId(null)}
-            style={{
-              background: '#121212', border: '1px solid #222', borderRadius: 12, overflow: 'hidden',
-              cursor: 'pointer', transition: 'transform 0.2s', position: 'relative'
-            }}
+          <Link 
+            key={track.id} 
+            to={`/track/${track.id}`}
+            style={{ textDecoration: 'none' }}
           >
-            {/* Image de couverture */}
-            <div style={{ position: 'relative', aspectRatio: '1', background: track.cover_url ? `url(${track.cover_url}) center/cover` : '#1a1a1a' }}>
+            <div 
+              style={{ 
+                background: colors.cardBg, 
+                border: `1px solid ${colors.cardBorder}`, 
+                borderRadius: 16, 
+                padding: 16,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 12,
+                transition: 'all 0.3s ease',
+                position: 'relative',
+                overflow: 'hidden'
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.transform = 'translateY(-4px)';
+                e.currentTarget.style.borderColor = colors.accent;
+                e.currentTarget.style.boxShadow = `0 10px 30px ${colors.accent}15`;
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.borderColor = colors.cardBorder;
+                e.currentTarget.style.boxShadow = 'none';
+              }}
+            >
               
-              {/* Overlay au survol */}
-              <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', opacity: hoveredId === track.id ? 1 : 0, transition: 'opacity 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                
-                {/* ✅ BOUTON PLAY AVEC BLOCAGE */}
-                <button
-                  onClick={(e) => handlePlayClick(e, track)}
-                  style={{
-                    width: 48, height: 48, borderRadius: '50%',
-                    background: isThisPlaying ? '#00d9ff' : 'rgba(255,255,255,0.2)',
-                    border: 'none', color: isThisPlaying ? '#000' : '#fff',
+              {/* IMAGE DE COUVERTURE */}
+              <div style={{ 
+                width: '100%', 
+                aspectRatio: '1', 
+                borderRadius: 12, 
+                background: track.cover_url ? `url(${track.cover_url}) center/cover` : colors.tagBg, 
+                position: 'relative',
+                overflow: 'hidden'
+              }}>
+                {/* BOUTON PLAY AU SURVOL */}
+                <div 
+                  onClick={(e) => { e.preventDefault(); onPlay(track); }}
+                  style={{ 
+                    position: 'absolute', inset: 0, 
+                    background: 'rgba(0,0,0,0.4)', 
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    cursor: 'pointer', backdropFilter: 'blur(4px)',
-                    transform: hoveredId === track.id ? 'scale(1)' : 'scale(0.8)',
-                    transition: 'all 0.2s'
+                    opacity: 0, transition: 'opacity 0.2s',
+                    backdropFilter: 'blur(2px)'
                   }}
+                  onMouseEnter={e => e.currentTarget.style.opacity = '1'}
+                  onMouseLeave={e => e.currentTarget.style.opacity = isCurrent ? '1' : '0'}
                 >
-                  {isThisPlaying ? Icons.pause : Icons.play}
-                </button>
-              </div>
-            </div>
-
-            {/* Infos */}
-            <div style={{ padding: 12 }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: 2 }}>
-                {track.title}
-              </div>
-              <div style={{ fontSize: 12, color: '#888', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {track.artist}
-              </div>
-              
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
-                <div style={{ fontSize: 11, color: '#666', fontFamily: 'monospace' }}>
-                  {track.bpm} BPM · {track.song_key || '—'}
+                  <div style={{ 
+                    width: 48, height: 48, borderRadius: '50%', 
+                    background: isCurrent ? colors.accent : '#ffffff', 
+                    color: '#000', 
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    boxShadow: isCurrent ? `0 0 20px ${colors.accent}` : '0 4px 15px rgba(0,0,0,0.2)'
+                  }}>
+                    {isCurrent ? Icons.pause : Icons.play}
+                  </div>
                 </div>
+
+                {/* BADGE SI LE SON EST EN COURS DE LECTURE */}
+                {isCurrent && (
+                  <div style={{ 
+                    position: 'absolute', top: 8, left: 8, 
+                    background: colors.accent, color: '#000', 
+                    padding: '2px 8px', borderRadius: 20, 
+                    fontSize: 10, fontWeight: 900, textTransform: 'uppercase',
+                    display: 'flex', alignItems: 'center', gap: 4
+                  }}>
+                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#000', animation: 'pulse 1s infinite' }} />
+                    En cours
+                  </div>
+                )}
+              </div>
+
+              {/* INFOS DU SON */}
+              <div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: colors.textMain, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: 4 }}>
+                  {track.title}
+                </div>
+                <div style={{ fontSize: 13, color: colors.textMuted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {track.profiles?.username || track.artist}
+                </div>
+              </div>
+
+              {/* STATISTIQUES (Écoutes, Likes, Commentaires) */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 'auto', paddingTop: 8, borderTop: `1px solid ${colors.cardBorder}` }}>
                 
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (!user) { alert("🔒 Inscrivez-vous pour liker"); navigate('/auth'); return; }
-                    // Logique de like...
-                  }}
-                  style={{ background: 'transparent', border: 'none', color: isLiked ? '#ff3366' : '#555', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
-                >
-                  {isLiked ? Icons.heartFilled : Icons.heart} <span style={{ fontSize: 11, color: '#666' }}>{track.likes_count || 0}</span>
-                </button>
+                {/* Écoutes */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: colors.textMuted, fontWeight: 600 }}>
+                  {Icons.headphone}
+                  {formatNumber(track.plays)}
+                </div>
+
+                {/* Likes */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: colors.textMuted, fontWeight: 600 }}>
+                  {Icons.heart}
+                  {formatNumber(track.likes_count)}
+                </div>
+
+                {/* ✅ COMMENTAIRES */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: colors.textMuted, fontWeight: 600, marginLeft: 'auto' }}>
+                  {Icons.comment}
+                  {formatNumber(track.comments_count || 0)}
+                </div>
+
               </div>
             </div>
-          </div>
+          </Link>
         );
       })}
+
+      <style>{`
+        @keyframes pulse {
+          0% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.5; transform: scale(0.8); }
+          100% { opacity: 1; transform: scale(1); }
+        }
+      `}</style>
     </div>
   );
 };

@@ -14,7 +14,7 @@ const Icons = {
 };
 
 export const ArtistPromoSection: React.FC = () => {
-  const { user, profile } = useAuth();
+  const { profile } = useAuth();
   const { theme } = useTheme();
   const navigate = useNavigate();
   const isDark = theme === 'dark';
@@ -29,13 +29,14 @@ export const ArtistPromoSection: React.FC = () => {
     accent: '#00d9ff'
   };
 
+  // ✅ J'AI AJOUTÉ UN LIEN (mailto) SUR LA CARTE SUPPORT PRO
   const features = [
     { icon: Icons.link, title: 'Smart Link', desc: 'Regroupez toutes vos plateformes dans un lien unique.' },
     { icon: Icons.promo, title: 'Cartes Promo', desc: 'Générez de belles images pour Instagram.' },
     { icon: Icons.pitch, title: 'Pitch Playlist', desc: 'Soumettez vos sons à la playlist officielle.' },
     { icon: Icons.page, title: 'Page Premium', desc: 'Personnalisez votre page avec votre univers.' },
     { icon: Icons.stats, title: 'Statistiques', desc: 'Suivez vos écoutes, téléchargements et revenus.' },
-    { icon: Icons.support, title: 'Support Pro', desc: 'Une équipe dédiée pour vous accompagner.' }
+    { icon: Icons.support, title: 'Support Pro', desc: 'Une équipe dédiée pour vous accompagner.', link: 'mailto:contact@dropzone-dj.com' } 
   ];
 
   return (
@@ -54,16 +55,33 @@ export const ArtistPromoSection: React.FC = () => {
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16, marginBottom: 32 }}>
           {features.map((f, i) => (
-            <div key={i} style={{ 
-              background: colors.panelBg, 
-              border: `1px solid ${colors.border}`, 
-              borderRadius: 12, 
-              padding: 20,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              textAlign: 'center',
-            }}>
+            <div key={i} 
+              onClick={() => f.link && (window.location.href = f.link)}
+              style={{ 
+                background: colors.panelBg, 
+                border: `1px solid ${colors.border}`, 
+                borderRadius: 12, 
+                padding: 20,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                textAlign: 'center',
+                cursor: f.link ? 'pointer' : 'default', // ✅ Curseur main si lien
+                transition: 'all 0.2s'
+              }}
+              onMouseEnter={e => {
+                if (f.link) {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.borderColor = colors.accent;
+                }
+              }}
+              onMouseLeave={e => {
+                if (f.link) {
+                  e.currentTarget.style.transform = 'none';
+                  e.currentTarget.style.borderColor = colors.border;
+                }
+              }}
+            >
               <div style={{ width: 40, height: 40, borderRadius: 10, background: `${colors.accent}15`, color: colors.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
                 {f.icon}
               </div>

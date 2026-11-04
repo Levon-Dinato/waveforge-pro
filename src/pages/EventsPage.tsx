@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useIsMobile } from '../hooks/useIsMobile';
+import { useTheme } from '../contexts/ThemeContext'; // ✅ IMPORT AJOUTÉ
 
 interface Event {
   id: string;
@@ -21,6 +22,10 @@ export const EventsPage: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const isMobile = useIsMobile(768);
+  
+  // ✅ RÉCUPÉRATION DU THÈME
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
 
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,6 +43,21 @@ export const EventsPage: React.FC = () => {
   // ✅ État pour l'import Luma
   const [importUrl, setImportUrl] = useState('');
   const [importing, setImporting] = useState(false);
+
+  // ✅ PALETTE DE COULEURS DYNAMIQUES
+  const colors = {
+    bg: isDark ? '#121212' : '#f5f5f7',
+    panelBg: isDark ? '#1c1c1c' : '#ffffff',
+    inputBg: isDark ? '#121212' : '#f3f4f6',
+    border: isDark ? '#2a2a2a' : '#e5e7eb',
+    textMain: isDark ? '#ffffff' : '#1a1a1a',
+    textMuted: isDark ? '#999999' : '#666666',
+    textLight: isDark ? '#cccccc' : '#444444',
+    accent: '#00d9ff',
+    accentText: '#000000', // Le texte sur le bouton accent
+    danger: '#ff5c5c',
+    cardGradient: isDark ? 'linear-gradient(135deg, #1c1c1c, #2a2a2a)' : 'linear-gradient(135deg, #ffffff, #f3f4f6)',
+  };
 
   useEffect(() => {
     loadEvents();
@@ -168,7 +188,14 @@ export const EventsPage: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: isMobile ? 16 : 24, background: '#121212', minHeight: '100vh', fontFamily: 'Inter, sans-serif', color: '#fff' }}>
+    <div style={{ 
+      padding: isMobile ? 16 : 24, 
+      background: colors.bg, 
+      minHeight: '100vh', 
+      fontFamily: 'Inter, sans-serif', 
+      color: colors.textMain,
+      transition: 'background 0.3s ease, color 0.3s ease' // ✅ Transition fluide
+    }}>
       
       {/* HEADER */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
@@ -176,7 +203,7 @@ export const EventsPage: React.FC = () => {
           <h1 style={{ fontSize: isMobile ? 24 : 32, fontWeight: 700, margin: 0 }}>
             Bons plans & Soirées
           </h1>
-          <p style={{ color: '#999', fontSize: 13, marginTop: 6 }}>
+          <p style={{ color: colors.textMuted, fontSize: 13, marginTop: 6 }}>
             Découvre les prochains événements et partage tes dates.
           </p>
         </div>
@@ -189,10 +216,10 @@ export const EventsPage: React.FC = () => {
           }}
           style={{
             padding: '10px 20px',
-            background: '#00d9ff',
-            color: '#000',
+            background: colors.accent,
+            color: colors.accentText,
             border: 'none',
-            borderRadius: 4,
+            borderRadius: 6,
             fontWeight: 700,
             fontSize: 13,
             cursor: 'pointer',
@@ -204,13 +231,32 @@ export const EventsPage: React.FC = () => {
 
       {/* FORMULAIRE */}
       {showForm && (
-        <form onSubmit={handleSubmit} style={{ background: '#1c1c1c', border: '1px solid #2a2a2a', borderRadius: 8, padding: 20, marginBottom: 24, display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <form onSubmit={handleSubmit} style={{ 
+          background: colors.panelBg, 
+          border: `1px solid ${colors.border}`, 
+          borderRadius: 12, 
+          padding: 20, 
+          marginBottom: 24, 
+          display: 'flex', 
+          flexDirection: 'column', 
+          gap: 12 
+        }}>
           <h3 style={{ margin: 0, fontSize: 15 }}>{editingId ? 'Modifier l\'événement' : 'Nouvel événement'}</h3>
 
           {/* ✅ CHAMP D'IMPORT LUMA (seulement en création) */}
           {!editingId && (
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: 12, background: '#121212', border: '1px dashed #2a2a2a', borderRadius: 4, marginBottom: 8, flexWrap: 'wrap' }}>
-              <div style={{ fontSize: 12, color: '#999', flex: '1 1 200px' }}>
+            <div style={{ 
+              display: 'flex', 
+              gap: 8, 
+              alignItems: 'center', 
+              padding: 12, 
+              background: colors.inputBg, 
+              border: `1px dashed ${colors.border}`, 
+              borderRadius: 8, 
+              marginBottom: 8, 
+              flexWrap: 'wrap' 
+            }}>
+              <div style={{ fontSize: 12, color: colors.textMuted, flex: '1 1 200px' }}>
                 ⚡ Gagne du temps : importe les infos depuis un lien Luma.
               </div>
               <input
@@ -218,7 +264,7 @@ export const EventsPage: React.FC = () => {
                 placeholder="https://lu.ma/..."
                 value={importUrl}
                 onChange={(e) => setImportUrl(e.target.value)}
-                style={{ flex: '1 1 200px', padding: 8, background: '#1c1c1c', border: '1px solid #2a2a2a', borderRadius: 4, color: '#fff', fontSize: 12, minWidth: 150 }}
+                style={{ flex: '1 1 200px', padding: 8, background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 4, color: colors.textMain, fontSize: 12, minWidth: 150 }}
               />
               <button
                 type="button"
@@ -226,8 +272,8 @@ export const EventsPage: React.FC = () => {
                 disabled={importing || !importUrl}
                 style={{
                   padding: '8px 12px',
-                  background: importing ? '#666' : '#00d9ff',
-                  color: '#000',
+                  background: importing ? colors.border : colors.accent,
+                  color: colors.accentText,
                   border: 'none',
                   borderRadius: 4,
                   fontWeight: 700,
@@ -241,16 +287,28 @@ export const EventsPage: React.FC = () => {
             </div>
           )}
 
-          <input type="text" placeholder="Titre de l'événement *" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} style={{ padding: 10, background: '#121212', border: '1px solid #2a2a2a', borderRadius: 4, color: '#fff', fontSize: 13 }} required />
-          <textarea placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={3} style={{ padding: 10, background: '#121212', border: '1px solid #2a2a2a', borderRadius: 4, color: '#fff', fontSize: 13, resize: 'vertical' }} />
-          <input type="datetime-local" value={form.event_date} onChange={(e) => setForm({ ...form, event_date: e.target.value })} style={{ padding: 10, background: '#121212', border: '1px solid #2a2a2a', borderRadius: 4, color: '#fff', fontSize: 13 }} required />
+          <input type="text" placeholder="Titre de l'événement *" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} style={{ padding: 10, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 6, color: colors.textMain, fontSize: 13 }} required />
+          <textarea placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={3} style={{ padding: 10, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 6, color: colors.textMain, fontSize: 13, resize: 'vertical' }} />
+          <input type="datetime-local" value={form.event_date} onChange={(e) => setForm({ ...form, event_date: e.target.value })} style={{ padding: 10, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 6, color: colors.textMain, fontSize: 13 }} required />
+          
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-            <input type="text" placeholder="Lieu (ex: Rex Club)" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} style={{ flex: 1, padding: 10, background: '#121212', border: '1px solid #2a2a2a', borderRadius: 4, color: '#fff', fontSize: 13, minWidth: 150 }} />
-            <input type="text" placeholder="Ville (ex: Paris)" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} style={{ flex: 1, padding: 10, background: '#121212', border: '1px solid #2a2a2a', borderRadius: 4, color: '#fff', fontSize: 13, minWidth: 150 }} />
+            <input type="text" placeholder="Lieu (ex: Rex Club)" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} style={{ flex: 1, padding: 10, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 6, color: colors.textMain, fontSize: 13, minWidth: 150 }} />
+            <input type="text" placeholder="Ville (ex: Paris)" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} style={{ flex: 1, padding: 10, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 6, color: colors.textMain, fontSize: 13, minWidth: 150 }} />
           </div>
-          <input type="url" placeholder="Lien vers l'événement (billetterie, FB, etc.)" value={form.url} onChange={(e) => setForm({ ...form, url: e.target.value })} style={{ padding: 10, background: '#121212', border: '1px solid #2a2a2a', borderRadius: 4, color: '#fff', fontSize: 13 }} />
-          <input type="url" placeholder="URL de l'image (optionnel)" value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} style={{ padding: 10, background: '#121212', border: '1px solid #2a2a2a', borderRadius: 4, color: '#fff', fontSize: 13 }} />
-          <button type="submit" disabled={posting} style={{ padding: '10px 20px', background: '#00d9ff', color: '#000', border: 'none', borderRadius: 4, fontWeight: 700, cursor: posting ? 'wait' : 'pointer', alignSelf: 'flex-end' }}>
+          
+          <input type="url" placeholder="Lien vers l'événement (billetterie, FB, etc.)" value={form.url} onChange={(e) => setForm({ ...form, url: e.target.value })} style={{ padding: 10, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 6, color: colors.textMain, fontSize: 13 }} />
+          <input type="url" placeholder="URL de l'image (optionnel)" value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} style={{ padding: 10, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 6, color: colors.textMain, fontSize: 13 }} />
+          
+          <button type="submit" disabled={posting} style={{ 
+            padding: '10px 20px', 
+            background: colors.accent, 
+            color: colors.accentText, 
+            border: 'none', 
+            borderRadius: 6, 
+            fontWeight: 700, 
+            cursor: posting ? 'wait' : 'pointer', 
+            alignSelf: 'flex-end' 
+          }}>
             {posting ? 'Publication...' : editingId ? 'Sauvegarder' : 'Publier l\'événement'}
           </button>
         </form>
@@ -258,9 +316,9 @@ export const EventsPage: React.FC = () => {
 
       {/* LISTE DES ÉVÉNEMENTS */}
       {loading ? (
-        <div style={{ textAlign: 'center', color: '#999', padding: 40 }}>Chargement...</div>
+        <div style={{ textAlign: 'center', color: colors.textMuted, padding: 40 }}>Chargement...</div>
       ) : events.length === 0 ? (
-        <div style={{ textAlign: 'center', color: '#999', padding: 40 }}>Aucun événement pour le moment. Sois le premier à en ajouter un !</div>
+        <div style={{ textAlign: 'center', color: colors.textMuted, padding: 40 }}>Aucun événement pour le moment. Sois le premier à en ajouter un !</div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 20 }}>
           {events.map((event) => {
@@ -268,7 +326,15 @@ export const EventsPage: React.FC = () => {
             const isOwner = user?.id === event.created_by;
             
             return (
-              <div key={event.id} style={{ background: '#1c1c1c', border: '1px solid #2a2a2a', borderRadius: 8, overflow: 'hidden', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+              <div key={event.id} style={{ 
+                background: colors.panelBg, 
+                border: `1px solid ${colors.border}`, 
+                borderRadius: 12, 
+                overflow: 'hidden', 
+                display: 'flex', 
+                flexDirection: 'column', 
+                position: 'relative' 
+              }}>
                 
                 {/* ✅ BOUTONS MODIFIER / SUPPRIMER (uniquement pour le créateur) */}
                 {isOwner && (
@@ -276,14 +342,14 @@ export const EventsPage: React.FC = () => {
                     <button
                       onClick={() => startEdit(event)}
                       title="Modifier"
-                      style={{ background: 'rgba(0,0,0,0.7)', border: '1px solid #2a2a2a', color: '#fff', cursor: 'pointer', padding: 6, borderRadius: 4, fontSize: 12 }}
+                      style={{ background: isDark ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.9)', border: `1px solid ${colors.border}`, color: colors.textMain, cursor: 'pointer', padding: 6, borderRadius: 4, fontSize: 12 }}
                     >
                       ✏️
                     </button>
                     <button
                       onClick={() => handleDelete(event.id)}
                       title="Supprimer"
-                      style={{ background: 'rgba(0,0,0,0.7)', border: '1px solid #2a2a2a', color: '#ff5c5c', cursor: 'pointer', padding: 6, borderRadius: 4, fontSize: 12 }}
+                      style={{ background: isDark ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.9)', border: `1px solid ${colors.border}`, color: colors.danger, cursor: 'pointer', padding: 6, borderRadius: 4, fontSize: 12 }}
                     >
                       🗑️
                     </button>
@@ -294,24 +360,24 @@ export const EventsPage: React.FC = () => {
                 {event.image_url ? (
                   <div style={{ width: '100%', height: 160, background: `url(${event.image_url}) center/cover` }} />
                 ) : (
-                  <div style={{ width: '100%', height: 160, background: 'linear-gradient(135deg, #1c1c1c, #2a2a2a)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40 }}>🎉</div>
+                  <div style={{ width: '100%', height: 160, background: colors.cardGradient, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40 }}>🎉</div>
                 )}
                 
                 {/* Contenu */}
                 <div style={{ padding: 16, flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <div style={{ fontSize: 11, color: '#00d9ff', fontWeight: 700, textTransform: 'uppercase' }}>
+                  <div style={{ fontSize: 11, color: colors.accent, fontWeight: 700, textTransform: 'uppercase' }}>
                     {eventDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
                   </div>
                   <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, lineHeight: 1.3 }}>{event.title}</h3>
                   {event.location && (
-                    <div style={{ fontSize: 12, color: '#999' }}>📍 {event.location}{event.city ? `, ${event.city}` : ''}</div>
+                    <div style={{ fontSize: 12, color: colors.textMuted }}>📍 {event.location}{event.city ? `, ${event.city}` : ''}</div>
                   )}
                   {event.description && (
-                    <p style={{ fontSize: 12, color: '#ccc', lineHeight: 1.5, margin: 0, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{event.description}</p>
+                    <p style={{ fontSize: 12, color: colors.textLight, lineHeight: 1.5, margin: 0, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{event.description}</p>
                   )}
                   
                   {event.url && (
-                    <a href={event.url} target="_blank" rel="noopener noreferrer" style={{ marginTop: 'auto', padding: '8px 12px', background: '#121212', border: '1px solid #2a2a2a', borderRadius: 4, color: '#00d9ff', textDecoration: 'none', fontSize: 12, fontWeight: 600, textAlign: 'center' }}>
+                    <a href={event.url} target="_blank" rel="noopener noreferrer" style={{ marginTop: 'auto', padding: '8px 12px', background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 6, color: colors.accent, textDecoration: 'none', fontSize: 12, fontWeight: 600, textAlign: 'center' }}>
                       Plus d'infos →
                     </a>
                   )}

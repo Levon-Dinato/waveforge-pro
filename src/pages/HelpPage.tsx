@@ -1,6 +1,6 @@
 // src/pages/HelpPage.tsx
 import React, { useState } from 'react';
-import { useTheme } from '../contexts/ThemeContext'; // ✅ IMPORT DU THEME
+import { useTheme } from '../contexts/ThemeContext';
 
 interface SectionInfo {
   id: string;
@@ -12,13 +12,12 @@ const SECTIONS: SectionInfo[] = [
   { id: 'uploader', title: 'Uploader un son' },
   { id: 'ecouter', title: 'Écouter et liker' },
   { id: 'partager', title: 'Partager un son' },
-  { id: 'live', title: 'Le Live DJ' },
   { id: 'profil', title: 'Ton profil artiste' },
-  { id: 'regles', title: 'Les règles de la communauté' },
+  { id: 'premium', title: 'Les outils Premium' }, // ✅ NOUVEAU
+  { id: 'regles', title: 'Les règles d\'or' },
   { id: 'aide', title: 'Besoin d\'aide ?' },
 ];
 
-// ✅ Type pour les couleurs (partagé entre le parent et les enfants)
 interface ThemeColors {
   bg: string;
   panelBg: string;
@@ -31,6 +30,7 @@ interface ThemeColors {
   activeBg: string;
   activeBorder: string;
   activeText: string;
+  accent: string;
 }
 
 export const HelpPage: React.FC = () => {
@@ -38,418 +38,315 @@ export const HelpPage: React.FC = () => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  // ✅ PALETTE DE COULEURS DYNAMIQUES
   const colors: ThemeColors = {
-    bg: isDark ? '#121212' : '#f5f5f7',
-    panelBg: isDark ? '#181818' : '#ffffff',
-    calloutBg: isDark ? '#121212' : '#f9fafb',
-    border: isDark ? '#2a2a2a' : '#e5e7eb',
-    borderHover: isDark ? '#444444' : '#d1d5db',
+    bg: isDark ? '#050505' : '#f5f5f7',
+    panelBg: isDark ? '#121212' : '#ffffff',
+    calloutBg: isDark ? '#0a0a0a' : '#f9fafb',
+    border: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+    borderHover: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
     textMain: isDark ? '#ffffff' : '#1a1a1a',
-    textMuted: isDark ? '#888888' : '#666666',
-    textLight: isDark ? '#cccccc' : '#333333',
-    activeBg: isDark ? '#2a2a2a' : '#e5e7eb',
-    activeBorder: isDark ? '#444444' : '#d1d5db',
-    activeText: isDark ? '#ffffff' : '#000000',
+    textMuted: isDark ? '#a1a1aa' : '#666666',
+    textLight: isDark ? '#d4d4d8' : '#444444',
+    activeBg: isDark ? 'rgba(0, 217, 255, 0.1)' : 'rgba(0, 217, 255, 0.05)',
+    activeBorder: isDark ? 'rgba(0, 217, 255, 0.4)' : 'rgba(0, 217, 255, 0.5)',
+    activeText: '#00d9ff',
+    accent: '#00d9ff',
   };
 
   const scrollTo = (id: string) => {
     setActiveSection(id);
     const element = document.getElementById(id);
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const y = element.getBoundingClientRect().top + window.scrollY - 100;
+      window.scrollTo({ top: y, behavior: 'smooth' });
     }
   };
 
   return (
     <div style={{ 
-      padding: '24px', 
-      display: 'grid', 
-      gap: 32, 
+      padding: '40px 20px', 
+      display: 'flex',
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 40, 
       background: colors.bg,
       minHeight: '100vh', 
       fontFamily: 'Inter, sans-serif', 
       color: colors.textMain,
-      maxWidth: 1000,
+      maxWidth: 1200,
       margin: '0 auto',
       transition: 'background 0.3s ease, color 0.3s ease'
     }}>
       
-      {/* === HEADER === */}
+      {/* === SIDEBAR SOMMAIRE (Sticky sur Desktop) === */}
       <div style={{ 
-        background: colors.panelBg,
-        border: `1px solid ${colors.border}`,
-        borderRadius: 8, 
-        padding: 32 
+        flex: '0 0 280px', 
+        position: 'sticky', 
+        top: 40, 
+        height: 'fit-content',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 8
       }}>
-        <div style={{ marginBottom: 16 }}>
-          <h1 style={{ fontSize: 28, fontWeight: 700, margin: '0 0 8px 0', color: colors.textMain }}>
+        <div style={{ fontSize: 12, color: colors.textMuted, marginBottom: 8, letterSpacing: '1px', textTransform: 'uppercase', fontWeight: 700 }}>
+          Sommaire du guide
+        </div>
+        {SECTIONS.map((section, i) => {
+          const isActive = activeSection === section.id;
+          return (
+            <button
+              key={section.id}
+              onClick={() => scrollTo(section.id)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+                padding: '14px 16px',
+                background: isActive ? colors.activeBg : 'transparent',
+                border: `1px solid ${isActive ? colors.activeBorder : 'transparent'}`,
+                borderRadius: 8,
+                color: isActive ? colors.activeText : colors.textMuted,
+                cursor: 'pointer',
+                fontSize: 14,
+                textAlign: 'left',
+                transition: 'all 0.2s ease',
+                fontWeight: isActive ? 700 : 500,
+              }}
+              onMouseEnter={(e) => {
+                if (!isActive) e.currentTarget.style.background = colors.calloutBg;
+              }}
+              onMouseLeave={(e) => {
+                if (!isActive) e.currentTarget.style.background = 'transparent';
+              }}
+            >
+              <span style={{ fontSize: 12, opacity: 0.5, fontWeight: 800 }}>0{i + 1}</span>
+              <span style={{ flex: 1 }}>{section.title}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* === CONTENU PRINCIPAL === */}
+      <div style={{ flex: 1, minWidth: 300, display: 'flex', flexDirection: 'column', gap: 32 }}>
+        
+        {/* HEADER */}
+        <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 40 }}>
+          <h1 style={{ fontSize: 32, fontWeight: 900, margin: '0 0 12px 0', color: colors.textMain, letterSpacing: '-0.03em' }}>
             Guide de la communauté
           </h1>
-          <p style={{ color: colors.textMuted, fontSize: 14, margin: 0 }}>
-            Tout ce qu'il faut savoir pour partager, écouter et faire grandir DropZone DJ.
+          <p style={{ color: colors.textMuted, fontSize: 16, margin: 0, lineHeight: 1.6 }}>
+            Tout ce qu'il faut savoir pour partager, écouter et propulser ta carrière sur DropZone DJ.
           </p>
         </div>
 
-        <div style={{ 
-          padding: 16, 
-          background: colors.calloutBg,
-          border: `1px solid ${colors.border}`,
-          borderRadius: 6, 
-          fontSize: 13, 
-          color: colors.textLight,
-          lineHeight: 1.6 
-        }}>
-          💡 <strong style={{ color: colors.textMain }}>Le message clé :</strong> DropZone DJ est la plateforme où les DJs partagent leurs sons, découvrent les nouveautés, et font vibrer la communauté. 100% gratuit.
-        </div>
-      </div>
-
-      {/* === SOMMAIRE === */}
-      <div>
-        <div style={{ fontSize: 11, color: colors.textMuted, marginBottom: 12, letterSpacing: '1px', textTransform: 'uppercase', fontWeight: 600 }}>
-          Sommaire
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 8 }}>
-          {SECTIONS.map((section, i) => {
-            const isActive = activeSection === section.id;
-            return (
-              <button
-                key={section.id}
-                onClick={() => scrollTo(section.id)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 12,
-                  padding: '12px 16px',
-                  background: isActive ? colors.activeBg : colors.panelBg,
-                  border: `1px solid ${isActive ? colors.activeBorder : colors.border}`,
-                  borderRadius: 6,
-                  color: isActive ? colors.activeText : colors.textMuted,
-                  cursor: 'pointer',
-                  fontSize: 13,
-                  textAlign: 'left',
-                  transition: 'all 0.15s ease',
-                  fontWeight: isActive ? 600 : 500,
-                }}
-                onMouseEnter={(e) => {
-                  if (!isActive) {
-                    e.currentTarget.style.background = colors.activeBg;
-                    e.currentTarget.style.color = colors.textMain;
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isActive) {
-                    e.currentTarget.style.background = colors.panelBg;
-                    e.currentTarget.style.color = colors.textMuted;
-                  }
-                }}
-              >
-                <span style={{ fontSize: 12, color: isActive ? colors.activeText : colors.textMuted, fontWeight: 700 }}>0{i + 1}</span>
-                <span style={{ flex: 1 }}>{section.title}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* === SECTIONS DE CONTENU === */}
-      <div style={{ display: 'grid', gap: 24 }}>
-        
-        {/* SECTION 1 : INTRO */}
+        {/* SECTIONS */}
         <Section id="intro" title="C'est quoi DropZone DJ ?" colors={colors}>
           <p>
-            <strong>DropZone DJ</strong> est une plateforme de partage musical dédiée aux DJs et producteurs.
+            <strong>DropZone DJ</strong> est la plateforme tout-en-un dédiée aux DJs et producteurs indépendants.
           </p>
           <ul>
-            <li>🎵 Partage tes <strong>morceaux</strong> (originaux, remixes, edits, promos)</li>
+            <li>🎵 Partage tes <strong>morceaux</strong> (originaux, remixes, exclusivités)</li>
             <li>🎧 <strong>Écoute</strong> les nouveautés de la communauté</li>
-            <li>❤️ <strong>Like</strong> et commente les sons que tu aimes</li>
-            <li>📤 <strong>Partage</strong> tes coups de cœur sur les réseaux sociaux</li>
-            <li>🔴 Rejoins le <strong>Live DJ</strong> pour écouter les émissions en direct</li>
-            <li>💬 <strong>Échange</strong> avec les autres DJs via le chat</li>
+            <li>📤 <strong>Partage</strong> tes sons avec un lien unique (Smart Link)</li>
+            <li>📊 Suis tes <strong>statistiques</strong> (écoutes, téléchargements, revenus)</li>
+            <li>🔴 Rejoins le <strong>Live DJ</strong> pour écouter ou mixer en direct</li>
           </ul>
-          <Callout title="100% gratuit" colors={colors}>
-            DropZone DJ est <strong>entièrement gratuit</strong> pour tous les DJs. Pas d'abonnement, pas de frais cachés.
+          <Callout title="Gratuit & Premium" colors={colors}>
+            La création de compte et l'écoute sont <strong>100% gratuites</strong>. Pour accéder aux outils de carrière (Statistiques, Personnalisation de page, Upload illimité), il faut passer en <strong>DropZone Premium</strong>.
           </Callout>
         </Section>
 
-        {/* SECTION 2 : UPLOADER */}
         <Section id="uploader" title="Comment uploader un son ?" colors={colors}>
-          <p>Pour partager ta musique, rien de plus simple :</p>
+          <p>Pour ajouter un son à ton catalogue, rends-toi dans ton Espace Artiste.</p>
           
-          <Step number={1} title="Va sur la page Nouveautés" items={[
-            'Clique sur "Nouveautés" dans le menu de gauche.',
-            'En haut de la page, tu verras une zone "Partager un nouveau son".',
+          <Step number={1} title="Va dans ton Espace Artiste" items={[
+            'Clique sur "Réglages" dans le menu de gauche.',
+            'Tu arriveras sur ton tableau de bord personnel.',
           ]} colors={colors} />
           
-          <Step number={2} title="Clique sur + UPLOADER" items={[
-            'Sélectionne ton fichier audio (MP3, WAV, etc.).',
-            'Le système analyse automatiquement ton morceau : BPM, tonalité, durée.',
+          <Step number={2} title="Clique sur + Uploader un MP3" items={[
+            'Sélectionne ton fichier (MP3, WAV).',
+            'Le système lit automatiquement les tags ID3 (Titre, Artiste, BPM, Cover).',
           ]} colors={colors} />
           
-          <Step number={3} title="Vérifie les infos" items={[
-            'Le titre et l\'artiste sont détectés automatiquement (via les tags ID3).',
-            'Le BPM et la tonalité sont calculés par l\'IA.',
-            'Tu peux modifier ces infos après l\'upload via le bouton ✏️.',
+          <Step number={3} title="Configure ton son" items={[
+            'Vérifie les informations extraites.',
+            'Ajoute un lien Beatport si le son est en vente.',
+            'Choisis si tu autorises le téléchargement gratuit.',
           ]} colors={colors} />
           
-          <Step number={4} title="Ton son est en ligne !" items={[
-            'Ton morceau apparaît dans la page Nouveautés.',
-            'Il est visible par toute la communauté.',
-            'Tu peux le partager sur les réseaux sociaux avec le bouton 🔗.',
+          <Step number={4} title="Publie !" items={[
+            'Ton son apparaît immédiatement sur ta page artiste et dans les Nouveautés.',
           ]} colors={colors} />
-
-          <Callout title="Formats acceptés" colors={colors}>
-            MP3, WAV, FLAC, OGG, M4A. Le MP3 est recommandé pour un chargement rapide.
-          </Callout>
         </Section>
 
-        {/* SECTION 3 : ECOUTER */}
         <Section id="ecouter" title="Comment écouter et liker ?" colors={colors}>
-          <p>Pour écouter un morceau, plusieurs options :</p>
+          <p>Pour profiter de la musique sur DropZone :</p>
 
           <FeatureGrid>
             <Feature icon="▶" title="Bouton Play" description="Clique sur le bouton Play au centre de la pochette." colors={colors} />
-            <Feature icon="🎵" title="Carte entière" description="Clique sur la carte pour ouvrir la page du morceau." colors={colors} />
-            <Feature icon="❤️" title="Liker" description="Clique sur le cœur pour liker (il faut être connecté)." colors={colors} />
-            <Feature icon="🔊" title="Lecteur global" description="La barre en bas affiche le morceau en cours de lecture." colors={colors} />
+            <Feature icon="🎵" title="Lecteur Global" description="La barre en bas gère la lecture sur tout le site." colors={colors} />
+            <Feature icon="❤️" title="Liker" description="Clique sur le cœur pour soutenir l'artiste." colors={colors} />
+            <Feature icon="📥" title="Télécharger" description="Télécharge les sons si l'artiste l'a autorisé." colors={colors} />
           </FeatureGrid>
 
-          <Callout title="Le lecteur global" colors={colors}>
-            En bas de l'écran, tu as un lecteur qui te permet de :
-            <ul style={{ margin: '8px 0 0 0', paddingLeft: 20 }}>
-              <li>Voir la <strong>waveform</strong> du morceau</li>
-              <li><strong>Pause/Play</strong> à tout moment</li>
-              <li><strong>Avancer/reculer</strong> en cliquant sur la waveform</li>
-              <li>Voir la <strong>pochette</strong>, le titre et l'artiste</li>
-              <li><strong>Télécharger</strong> le morceau (si connecté)</li>
-            </ul>
+          <Callout title="Le saviez-vous ?" colors={colors}>
+            Chaque écoute et chaque téléchargement alimentent les statistiques de l'artiste dans son tableau de bord.
           </Callout>
         </Section>
 
-        {/* SECTION 4 : PARTAGER */}
-        <Section id="partager" title="Comment partager un son ?" colors={colors}>
-          <p>Pour partager un morceau avec tes amis ou sur les réseaux sociaux :</p>
-          
-          <Step number={1} title="Clique sur le bouton Partager" items={[
-            'Sur la page du morceau, clique sur le bouton "Partager".',
-            'Sur la page d\'accueil ou Nouveautés, clique sur l\'icône 🔗 qui apparaît au survol de la carte.',
-          ]} colors={colors} />
-          
-          <Step number={2} title="Choisis ta plateforme" items={[
-            'Facebook, Twitter/X, WhatsApp, Telegram, LinkedIn, Reddit...',
-            'Ou clique sur "Copier le lien" pour partager manuellement.',
-          ]} colors={colors} />
-
-          <Callout title="Aperçu automatique" colors={colors}>
-            Quand tu partages un lien, les réseaux sociaux affichent automatiquement :
-            <ul style={{ margin: '8px 0 0 0', paddingLeft: 20 }}>
-              <li>La <strong>pochette</strong> du morceau</li>
-              <li>Le <strong>titre</strong> et l'<strong>artiste</strong></li>
-              <li>La <strong>description</strong> avec le lien vers DropZone DJ</li>
-            </ul>
-          </Callout>
-        </Section>
-
-        {/* SECTION 5 : LIVE */}
-        <Section id="live" title="Le Live DJ" colors={colors}>
-          <p>DropZone DJ propose aussi un <strong>Live DJ</strong> où tu peux :</p>
+        <Section id="partager" title="Partager un son" colors={colors}>
+          <p>Le partage est au cœur de DropZone.</p>
           <ul>
-            <li>🎙️ Écouter les émissions en direct</li>
-            <li>💬 Discuter avec les autres auditeurs dans le chat</li>
-            <li>🎧 Voir le live en streaming vidéo</li>
-            <li>🔴 Rejoindre l'antenne pour mixer en direct</li>
+            <li>Utilise le bouton <strong>Partager</strong> sur la page d'un son.</li>
+            <li>Sur ta page Premium, utilise ton <strong>Smart Link</strong> (dans tes outils) pour regrouper Spotify, Apple Music et DropZone dans un seul lien.</li>
+            <li>Copie simplement l'URL de ton profil : <code>dropzone.dj/premium/ton-pseudo</code>.</li>
           </ul>
-
-          <Step number={1} title="Va sur la page Live DJ" items={[
-            'Clique sur "Live DJ" dans le menu de gauche.',
-          ]} colors={colors} />
-          
-          <Step number={2} title="Regarde le live" items={[
-            'Le lecteur Tviply s\'affiche au centre de la page.',
-            'Le chat est à droite pour discuter avec la communauté.',
-          ]} colors={colors} />
-          
-          <Step number={3} title="Partage le live" items={[
-            'Clique sur "Partager" en haut à droite.',
-            'Les réseaux sociaux afficheront l\'affiche "ON AIR" personnalisée.',
-          ]} colors={colors} />
         </Section>
 
-        {/* SECTION 6 : PROFIL */}
         <Section id="profil" title="Ton profil artiste" colors={colors}>
-          <p>Sur ton profil, tu peux :</p>
+          <p>Ton espace <strong>Réglages</strong> te permet de personnaliser ton identité :</p>
           <ul>
-            <li>🖼️ Changer ta <strong>bannière</strong> et ton <strong>avatar</strong></li>
-            <li>✏️ Modifier ton <strong>nom d'artiste</strong>, ta <strong>ville</strong>, ton <strong>pays</strong> et ta <strong>bio</strong></li>
-            <li>🎵 Voir tous tes <strong>morceaux</strong> uploadés</li>
-            <li>📁 Créer des <strong>playlists</strong> avec tes sons préférés</li>
-            <li>💬 Poster des <strong>messages</strong> sur ton mur</li>
-            <li>👥 Voir tes <strong>followers</strong> et tes <strong>stats</strong> (plays, tracks)</li>
+            <li>🖼️ Changer ton <strong>Avatar</strong> et ta vidéo de fond.</li>
+            <li>🎨 Choisir ta <strong>couleur de thème</strong> principale.</li>
+            <li>📝 Remplir ta <strong>Bio</strong>, tes liens réseaux sociaux et ton email de booking.</li>
+            <li>📸 Ajouter des photos à ta <strong>Galerie</strong> et des affiches d'événements.</li>
           </ul>
+        </Section>
 
-          <Callout title="Accède à ton profil" colors={colors}>
-            Clique sur ton nom en bas de la barre latérale gauche, ou dans le menu mobile.
+        {/* ✅ NOUVELLE SECTION PREMIUM */}
+        <Section id="premium" title="Les outils Premium" colors={colors}>
+          <p>En passant Premium, tu débloques une suite complète pour gérer ta carrière :</p>
+          <FeatureGrid>
+            <Feature icon="📊" title="Statistiques" description="Suis tes écoutes, tes téléchargements et estime tes revenus en temps réel." colors={colors} />
+            <Feature icon="🔗" title="Smart Link" description="Un lien unique qui redirige vers toutes tes plateformes d'écoute." colors={colors} />
+            <Feature icon="🖼️" title="Cartes Promo" description="Génère des visuels pour Instagram avec la pochette de ton son." colors={colors} />
+            <Feature icon="📤" title="Pitch Playlist" description="Propose tes sons pour la playlist officielle DropZone." colors={colors} />
+          </FeatureGrid>
+          <Callout title="Comment y accéder ?" colors={colors}>
+            Ces outils se trouvent dans ton Espace Artiste (Réglages) ou depuis le menu "Découvrir".
           </Callout>
         </Section>
 
-        {/* SECTION 7 : REGLES */}
-        <Section id="regles" title="Les règles de la communauté" colors={colors}>
-          <Mistake problem="Uploader du contenu protégé par le copyright" solution="Ne partage que tes propres productions, remixes, edits et promos autorisés. Pas de contenu piraté." colors={colors} />
-          <Mistake problem="Spammer ou faire de la pub abusive" solution="Pas de spam dans les commentaires ou les messages. La communauté doit rester accueillante." colors={colors} />
-          <Mistake problem="Manquer de respect aux autres DJs" solution="Sois respectueux dans tes commentaires et tes messages. Pas d'insultes, pas de harcèlement." colors={colors} />
-          <Mistake problem="Partager sa clé RTMP publiquement" solution="Ne partage JAMAIS ta clé de flux RTMP. Elle permet à n'importe qui de diffuser sur DropZone DJ Live." colors={colors} />
+        <Section id="regles" title="Les règles d'or de la communauté" colors={colors}>
+          <Mistake problem="Uploader du contenu protégé (Copyright)" solution="Ne partage que tes propres productions ou des remixes/edits autorisés. Pas de contenu piraté." colors={colors} />
+          <Mistake problem="Manquer de respect" solution="La communauté est bienveillante. Pas d'insultes, pas de harcèlement dans les commentaires ou le chat." colors={colors} />
+          <Mistake problem="Spammer" solution="Ne fais pas de publicité abusive pour tes sons dans les commentaires des autres." colors={colors} />
         </Section>
 
-        {/* SECTION 8 : AIDE */}
         <Section id="aide" title="Besoin d'aide ?" colors={colors}>
           <div style={{ display: 'grid', gap: 20 }}>
             <div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: colors.textMain, marginBottom: 8 }}>💬 Communauté Discord</div>
-              <ul style={{ margin: 0, paddingLeft: 20, fontSize: 13, color: colors.textMuted, lineHeight: 1.6 }}>
-                <li>Rejoins le Discord officiel de DropZone DJ pour discuter avec les autres DJs.</li>
-                <li>Pose tes questions, partage tes sons, donne ton avis.</li>
-              </ul>
-            </div>
-
-            <div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: colors.textMain, marginBottom: 8 }}>📧 Contact</div>
-              <ul style={{ margin: 0, paddingLeft: 20, fontSize: 13, color: colors.textMuted, lineHeight: 1.6 }}>
-                <li>Un bug ? Une suggestion ? Contacte-nous à <strong>contact@dropzone-dj.com</strong></li>
-              </ul>
-            </div>
-
-            <div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: colors.textMain, marginBottom: 8 }}>📚 Ressources</div>
-              <ul style={{ margin: 0, paddingLeft: 20, fontSize: 13, color: colors.textMuted, lineHeight: 1.6 }}>
-                <li>Guide pour bien débuter sur DropZone DJ (cette page).</li>
-                <li>Tutoriels vidéo sur la chaîne YouTube officielle.</li>
-              </ul>
+              <div style={{ fontSize: 15, fontWeight: 700, color: colors.textMain, marginBottom: 8 }}>📧 Contact Support</div>
+              <p style={{ margin: 0, fontSize: 14, color: colors.textMuted }}>
+                Un bug technique ? Une question sur Premium ?<br/>
+                Écris-nous à <strong>contact@dropzone-dj.com</strong>
+              </p>
             </div>
           </div>
         </Section>
+
       </div>
 
-      {/* === FOOTER INFO === */}
-      <div style={{ 
-        padding: 32, 
-        background: colors.panelBg,
-        border: `1px solid ${colors.border}`,
-        borderRadius: 8, 
-        textAlign: 'center' 
-      }}>
-        <div style={{ fontSize: 32, marginBottom: 12 }}>🎵</div>
-        <div style={{ fontSize: 16, fontWeight: 700, color: colors.textMain, marginBottom: 8 }}>Le message à retenir</div>
-        <div style={{ fontSize: 13, color: colors.textMuted, marginBottom: 16, lineHeight: 1.6 }}>
-          DropZone DJ : la plateforme gratuite où les DJs partagent leurs sons et font vibrer la communauté.
-        </div>
-        <div style={{ 
-          fontSize: 11, 
-          color: colors.textMuted,
-          padding: '8px 16px', 
-          background: colors.calloutBg,
-          borderRadius: 6, 
-          display: 'inline-block', 
-          fontFamily: 'monospace',
-          border: `1px solid ${colors.border}`
-        }}>
-          Upload → Écoute → Like → Partage → Live
-        </div>
-      </div>
-
-      {/* ✅ CSS INJECTÉ AVEC VARIABLES POUR LE THEME */}
+      {/* ✅ RESPONSIVE STYLES POUR MOBILE */}
       <style>{`
-        .help-section ul { margin: 8px 0; padding-left: 24px; color: var(--text-muted); }
-        .help-section li { margin: 6px 0; }
-        .help-section p { margin: 8px 0; color: var(--text-muted); }
-        .help-section strong { color: var(--text-main); }
+        @media (max-width: 768px) {
+          .help-container { flex-direction: column; }
+          .help-sidebar { position: static !important; flex: none !important; flex-direction: row !important; overflow-x: auto; padding-bottom: 12px; }
+          .help-sidebar button { white-space: nowrap; }
+        }
       `}</style>
     </div>
   );
 };
 
 /* ============================================================
-   SOUS-COMPOSANTS (avec couleurs dynamiques en props)
+   SOUS-COMPOSANTS
    ============================================================ */
 
 const Section: React.FC<{ id: string; title: string; children: React.ReactNode; colors: ThemeColors }> = ({ id, title, children, colors }) => (
   <div 
     id={id} 
-    className="help-section"
     style={{ 
       background: colors.panelBg,
       border: `1px solid ${colors.border}`,
-      borderRadius: 8, 
-      padding: 32,
-      scrollMarginTop: 24,
-      // ✅ On passe les couleurs au CSS injecté via des variables
-      ['--text-main' as any]: colors.textMain,
-      ['--text-muted' as any]: colors.textMuted,
+      borderRadius: 16, 
+      padding: '32px',
+      scrollMarginTop: 100,
+      boxShadow: '0 4px 20px rgba(0,0,0,0.02)'
     }}
   >
-    <h2 style={{ margin: '0 0 24px 0', fontSize: 20, fontWeight: 700, color: colors.textMain }}>
+    <h2 style={{ margin: '0 0 24px 0', fontSize: 22, fontWeight: 800, color: colors.textMain, letterSpacing: '-0.02em' }}>
       {title}
     </h2>
-    <div style={{ fontSize: 14, lineHeight: 1.7 }}>
+    <div style={{ fontSize: 15, lineHeight: 1.7, color: colors.textMuted }}>
       {children}
+      <style>{`
+        #${id} ul { padding-left: 20px; margin: 12px 0; }
+        #${id} li { margin: 8px 0; }
+        #${id} strong { color: ${colors.textMain}; }
+        #${id} p { margin: 12px 0; }
+      `}</style>
     </div>
   </div>
 );
 
 const Callout: React.FC<{ title: string; children: React.ReactNode; colors: ThemeColors }> = ({ title, children, colors }) => (
-  <div style={{ margin: '20px 0', padding: 20, background: colors.calloutBg, border: `1px solid ${colors.border}`, borderRadius: 6 }}>
-    <div style={{ fontSize: 13, fontWeight: 600, color: '#00d9ff', marginBottom: 8 }}>{title}</div>
-    <div style={{ fontSize: 13, color: colors.textMuted, lineHeight: 1.6 }}>{children}</div>
+  <div style={{ margin: '24px 0', padding: 20, background: colors.calloutBg, border: `1px solid ${colors.border}`, borderLeft: `4px solid ${colors.accent}`, borderRadius: '0 8px 8px 0' }}>
+    <div style={{ fontSize: 14, fontWeight: 800, color: colors.textMain, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+      <span style={{ color: colors.accent }}>💡</span> {title}
+    </div>
+    <div style={{ fontSize: 14, color: colors.textMuted, lineHeight: 1.6 }}>{children}</div>
   </div>
 );
 
 const FeatureGrid: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12, margin: '20px 0' }}>
+  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 16, margin: '24px 0' }}>
     {children}
   </div>
 );
 
 const Feature: React.FC<{ icon: string; title: string; description: string; colors: ThemeColors }> = ({ icon, title, description, colors }) => (
-  <div style={{ padding: 16, background: colors.calloutBg, border: `1px solid ${colors.border}`, borderRadius: 6 }}>
-    <div style={{ fontSize: 24, marginBottom: 12 }}>{icon}</div>
-    <div style={{ fontSize: 13, fontWeight: 600, color: colors.textMain, marginBottom: 4 }}>{title}</div>
-    <div style={{ fontSize: 12, color: colors.textMuted, lineHeight: 1.5 }}>{description}</div>
+  <div style={{ padding: 20, background: colors.calloutBg, border: `1px solid ${colors.border}`, borderRadius: 12 }}>
+    <div style={{ fontSize: 28, marginBottom: 12 }}>{icon}</div>
+    <div style={{ fontSize: 15, fontWeight: 800, color: colors.textMain, marginBottom: 6 }}>{title}</div>
+    <div style={{ fontSize: 13, color: colors.textMuted, lineHeight: 1.5 }}>{description}</div>
   </div>
 );
 
 const Step: React.FC<{ number: number; title: string; items: string[]; colors: ThemeColors }> = ({ number, title, items, colors }) => (
-  <div style={{ marginBottom: 24, paddingLeft: 24, position: 'relative' }}>
-    <div style={{ position: 'absolute', left: 8, top: 24, bottom: -24, width: 1, background: colors.border }} />
+  <div style={{ marginBottom: 24, paddingLeft: 32, position: 'relative' }}>
+    <div style={{ position: 'absolute', left: 11, top: 28, bottom: -24, width: 2, background: colors.border }} />
     
     <div style={{ 
       position: 'absolute', left: 0, top: 0, 
-      width: 18, height: 18, borderRadius: '50%', 
+      width: 24, height: 24, borderRadius: '50%', 
       background: colors.activeBg,
-      border: `1px solid ${colors.activeBorder}`,
-      color: colors.textMain,
-      fontSize: 10, fontWeight: 600, 
+      border: `1px solid ${colors.accent}`,
+      color: colors.accent,
+      fontSize: 12, fontWeight: 800, 
       display: 'flex', alignItems: 'center', justifyContent: 'center' 
     }}>
       {number}
     </div>
     
-    <div style={{ fontSize: 14, fontWeight: 600, color: colors.textMain, marginBottom: 8, paddingTop: 1 }}>{title}</div>
+    <div style={{ fontSize: 16, fontWeight: 800, color: colors.textMain, marginBottom: 8, paddingTop: 2 }}>{title}</div>
     
-    <ul style={{ margin: 0, paddingLeft: 20, fontSize: 13, color: colors.textMuted, lineHeight: 1.6 }}>
+    <ul style={{ margin: 0, paddingLeft: 20, fontSize: 14, color: colors.textMuted, lineHeight: 1.6 }}>
       {items.map((item, i) => (<li key={i}>{item}</li>))}
     </ul>
   </div>
 );
 
 const Mistake: React.FC<{ problem: string; solution: string; colors: ThemeColors }> = ({ problem, solution, colors }) => (
-  <div style={{ marginBottom: 16, padding: 20, background: colors.calloutBg, border: `1px solid ${colors.border}`, borderRadius: 6 }}>
-    <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
-      <span style={{ color: '#ff3366', fontWeight: 700, fontSize: 14 }}>✕</span>
-      <span style={{ fontSize: 13, color: colors.textMain, fontWeight: 600 }}>{problem}</span>
+  <div style={{ marginBottom: 16, padding: 20, background: colors.calloutBg, border: `1px solid ${colors.border}`, borderRadius: 12 }}>
+    <div style={{ display: 'flex', gap: 12, marginBottom: 12, alignItems: 'flex-start' }}>
+      <span style={{ color: '#ff3366', fontWeight: 900, fontSize: 16, marginTop: 1 }}>✕</span>
+      <span style={{ fontSize: 15, color: colors.textMain, fontWeight: 700 }}>{problem}</span>
     </div>
-    <div style={{ display: 'flex', gap: 12 }}>
-      <span style={{ color: '#00ff88', fontWeight: 700, fontSize: 14 }}>✓</span>
-      <span style={{ fontSize: 13, color: colors.textMuted, lineHeight: 1.6 }}>{solution}</span>
+    <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+      <span style={{ color: '#10b981', fontWeight: 900, fontSize: 16, marginTop: 1 }}>✓</span>
+      <span style={{ fontSize: 14, color: colors.textMuted, lineHeight: 1.6 }}>{solution}</span>
     </div>
   </div>
 );

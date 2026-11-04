@@ -10,6 +10,7 @@ import { usePlayer } from '../contexts/PlayerContext';
 import { useTheme } from '../contexts/ThemeContext';
 import * as GlobalPlayerModule from '../components/GlobalPlayer';
 import * as ArrowButtonModule from '../components/ArrowButton';
+import { ArtistPromoSection } from '../components/ArtistPromoSection'; // ✅ IMPORT AJOUTÉ
 import './LevonDinato.css';
 
 const GlobalPlayer = (GlobalPlayerModule as any).GlobalPlayer || (GlobalPlayerModule as any).default || null;
@@ -1042,6 +1043,13 @@ export const PremiumPage: React.FC = () => {
           </section>
         )}
       </div>
+
+      {/* ✅ SECTION BOÎTE À OUTILS (Visible uniquement par le propriétaire) */}
+      {isOwner && (
+        <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '0 16px 40px' : '0 24px 80px' }}>
+          <ArtistPromoSection />
+        </div>
+      )}
 
       <footer style={{ borderTop: `1px solid ${colors.border}`, padding: '40px 24px', marginTop: 'auto', textAlign: 'center', background: colors.panelBg }}>
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10, marginBottom: 16 }}>

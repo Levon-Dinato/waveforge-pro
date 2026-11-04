@@ -1,11 +1,135 @@
 // src/pages/TrackPage.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { usePlayer } from '../contexts/PlayerContext';
 
+// --- ICÔNES SVG ---
+const Icons = {
+  play: <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>,
+  pause: <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>,
+  heart: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>,
+  heartFilled: <svg width="20" height="20" viewBox="0 0 24 24" fill="#ff3366" stroke="#ff3366" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>,
+  comment: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>,
+  share: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>,
+  download: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>,
+  send: <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="2 21 23 12 2 3 2 10 17 12 2 14 2 21"></polygon></svg>,
+  arrowLeft: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+};
+
+// --- WAVEFORM CANVAS ---
+const CanvasWaveform: React.FC<{ 
+  peaks: number[]; isPlaying: boolean; themeColor: string; progress: number; isCurrent: boolean; onSeek: (ratio: number) => void; isMobile: boolean;
+}> = ({ peaks, isPlaying, themeColor, progress, isCurrent, onSeek, isMobile }) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [dragProgress, setDragProgress] = useState<number | null>(null);
+  const isDraggingRef = useRef(false);
+
+  const mockPeaks = useMemo(() => Array.from({ length: 150 }, () => Math.random() * 70 + 30), [peaks]);
+
+  useEffect(() => { if (!isDraggingRef.current) setDragProgress(null); }, [progress]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const DPR = window.devicePixelRatio || 1;
+    const W = canvas.clientWidth;
+    const H = canvas.clientHeight;
+    canvas.width = W * DPR; canvas.height = H * DPR;
+    ctx.scale(DPR, DPR);
+    ctx.clearRect(0, 0, W, H);
+
+    let safePeaks = Array.isArray(peaks) && peaks.length > 0 ? peaks : mockPeaks;
+    const centerY = H / 2;
+    const maxAmplitude = H * 0.45;
+    const displayProgress = dragProgress !== null ? dragProgress : progress;
+    const playedX = displayProgress * W;
+
+    const barCount = isMobile ? 100 : 250;
+    const step = Math.max(1, Math.floor(safePeaks.length / barCount));
+    const displayPeaks = safePeaks.filter((_: any, i: number) => i % step === 0).slice(0, barCount);
+
+    // Barres non jouées
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+    for (let i = 0; i < displayPeaks.length; i++) {
+      const x = (i / displayPeaks.length) * W;
+      const val = displayPeaks[i] > 1 ? displayPeaks[i] / 100 : displayPeaks[i];
+      const barHeight = Math.max(val * maxAmplitude, 2);
+      if (x >= playedX) ctx.fillRect(x, centerY - barHeight, 2, barHeight * 2);
+    }
+
+    // Barres jouées
+    if (isPlaying || displayProgress > 0) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(0, 0, playedX, H);
+      ctx.clip();
+
+      const gradient = ctx.createLinearGradient(0, 0, 0, H);
+      gradient.addColorStop(0, `${themeColor}40`);
+      gradient.addColorStop(0.5, themeColor);
+      gradient.addColorStop(1, `${themeColor}40`);
+
+      ctx.fillStyle = gradient;
+      ctx.shadowColor = themeColor;
+      ctx.shadowBlur = isMobile ? 2 : 8; 
+
+      for (let i = 0; i < displayPeaks.length; i++) {
+        const x = (i / displayPeaks.length) * W;
+        const val = displayPeaks[i] > 1 ? displayPeaks[i] / 100 : displayPeaks[i];
+        const barHeight = Math.max(val * maxAmplitude, 2);
+        ctx.fillRect(x, centerY - barHeight, 2, barHeight * 2);
+      }
+      ctx.shadowBlur = 0;
+      ctx.restore();
+    }
+  }, [peaks, mockPeaks, isPlaying, themeColor, progress, dragProgress, isMobile]);
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!isCurrent) return;
+    e.preventDefault();
+    isDraggingRef.current = true;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const getRatio = (clientX: number) => {
+      const rect = canvas.getBoundingClientRect();
+      return Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    };
+
+    setDragProgress(getRatio(e.clientX));
+    onSeek(getRatio(e.clientX));
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      setDragProgress(getRatio(moveEvent.clientX));
+      onSeek(getRatio(moveEvent.clientX));
+    };
+
+    const handleMouseUp = (upEvent: MouseEvent) => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+      onSeek(getRatio(upEvent.clientX));
+      isDraggingRef.current = false;
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+  };
+
+  return (
+    <canvas 
+      ref={canvasRef} onMouseDown={handleMouseDown} onClick={(e) => { if (isCurrent) e.stopPropagation(); }}
+      style={{ width: '100%', height: isMobile ? '60px' : '80px', display: 'block', cursor: isCurrent ? 'pointer' : 'default', touchAction: 'none', opacity: isCurrent ? 1 : 0.6 }} 
+    />
+  );
+};
+
+// --- PAGE PRINCIPALE ---
 interface Comment {
   id: string;
   content: string;
@@ -18,20 +142,23 @@ export const TrackPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const { theme } = useTheme();
-  const { play, currentTrack, isPlaying, togglePlay } = usePlayer();
+  const { play, currentTrack, isPlaying, togglePlay, currentTime, duration, seek } = usePlayer();
   const navigate = useNavigate();
   const isDark = theme === 'dark';
 
   const [track, setTrack] = useState<any>(null);
+  const [artist, setArtist] = useState<any>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [loading, setLoading] = useState(true);
   const [posting, setPosting] = useState(false);
+  const [isLiked, setIsLiked] = useState(false);
+  const [likeLoading, setLikeLoading] = useState(false);
 
   const colors = {
     bg: isDark ? '#050505' : '#f5f5f7',
-    panelBg: isDark ? '#121212' : '#ffffff',
-    border: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+    panelBg: isDark ? 'rgba(18, 18, 18, 0.6)' : 'rgba(255, 255, 255, 0.6)',
+    border: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
     textMain: isDark ? '#ffffff' : '#1a1a1a',
     textMuted: isDark ? 'rgba(255,255,255,0.5)' : '#666666',
     inputBg: isDark ? '#0a0a0a' : '#f3f4f6',
@@ -41,29 +168,37 @@ export const TrackPage: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      
-      // Charger le son
-      const { data: trackData } = await supabase
-        .from('tracks')
-        .select('*, profiles(username, avatar_url)')
-        .eq('id', id)
-        .single();
-      
-      if (trackData) setTrack(trackData);
+      if (!id) return;
 
-      // Charger les commentaires
-      const { data: commentsData } = await supabase
-        .from('comments')
-        .select('*, profiles(username, avatar_url)')
-        .eq('track_id', id)
-        .order('created_at', { ascending: false });
-      
-      if (commentsData) setComments(commentsData);
+      // Fetch Track
+      const { data: trackData, error: trackError } = await supabase.from('tracks').select('*').eq('id', id).single();
+      if (trackError || !trackData) { setTrack(null); setLoading(false); return; }
+      setTrack(trackData);
+
+      // Fetch Artist
+      if (trackData.user_id) {
+        const { data: profileData } = await supabase.from('profiles').select('*').eq('id', trackData.user_id).single();
+        setArtist(profileData);
+      }
+
+      // Fetch Comments
+      const { data: commentsData } = await supabase.from('comments').select('*').eq('track_id', id).order('created_at', { ascending: false });
+      if (commentsData) {
+        const userIds = [...new Set(commentsData.map(c => c.user_id))];
+        const { data: profilesData } = await supabase.from('profiles').select('id, username, avatar_url').in('id', userIds);
+        setComments(commentsData.map(c => ({ ...c, profiles: profilesData?.find(p => p.id === c.user_id) || null })));
+      }
+
+      // Check Like status
+      if (user) {
+        const { data: likeData } = await supabase.from('likes').select('id').eq('user_id', user.id).eq('track_id', id).maybeSingle();
+        setIsLiked(!!likeData);
+      }
 
       setLoading(false);
     };
-    if (id) fetchData();
-  }, [id]);
+    fetchData();
+  }, [id, user]);
 
   const handlePlay = () => {
     if (!user) { navigate('/auth'); return; }
@@ -71,12 +206,29 @@ export const TrackPage: React.FC = () => {
       togglePlay();
     } else {
       play({
-        id: track.id, title: track.title, artist: track.artist, audio_url: track.audio_url,
+        id: track.id, title: track.title, artist: track.artist || artist?.username, audio_url: track.audio_url,
         cover_url: track.cover_url, user_id: track.user_id, duration: track.duration,
         peaks: track.peaks, bpm: track.bpm, song_key: track.song_key, genre: track.genre,
         player_bg_image_url: track.player_bg_image_url, player_bg_color: track.player_bg_color
       });
     }
+  };
+
+  const handleLike = async () => {
+    if (!user) { navigate('/auth'); return; }
+    if (likeLoading) return;
+    setLikeLoading(true);
+    try {
+      if (isLiked) {
+        await supabase.from('likes').delete().eq('user_id', user.id).eq('track_id', track.id);
+        setIsLiked(false);
+        setTrack((prev: any) => ({ ...prev, likes_count: Math.max(0, (prev.likes_count || 1) - 1) }));
+      } else {
+        await supabase.from('likes').insert({ user_id: user.id, track_id: track.id });
+        setIsLiked(true);
+        setTrack((prev: any) => ({ ...prev, likes_count: (prev.likes_count || 0) + 1 }));
+      }
+    } catch (err) { console.error(err); } finally { setLikeLoading(false); }
   };
 
   const handlePostComment = async (e: React.FormEvent) => {
@@ -86,15 +238,12 @@ export const TrackPage: React.FC = () => {
 
     setPosting(true);
     try {
-      const { data, error } = await supabase
-        .from('comments')
-        .insert({ track_id: track.id, user_id: user.id, content: newComment.trim() })
-        .select('*, profiles(username, avatar_url)')
-        .single();
-
+      const { data, error } = await supabase.from('comments').insert({ track_id: track.id, user_id: user.id, content: newComment.trim() }).select('*').single();
       if (error) throw error;
       
-      setComments([data, ...comments]);
+      const { data: myProfile } = await supabase.from('profiles').select('username, avatar_url').eq('id', user.id).single();
+      setComments([{ ...data, profiles: myProfile }, ...comments]);
+      setTrack((prev: any) => ({ ...prev, comments_count: (prev.comments_count || 0) + 1 }));
       setNewComment('');
     } catch (err: any) {
       alert("Erreur : " + err.message);
@@ -107,107 +256,252 @@ export const TrackPage: React.FC = () => {
     if (!window.confirm("Supprimer ce commentaire ?")) return;
     await supabase.from('comments').delete().eq('id', commentId);
     setComments(comments.filter(c => c.id !== commentId));
+    setTrack((prev: any) => ({ ...prev, comments_count: Math.max(0, (prev.comments_count || 1) - 1) }));
   };
 
-  if (loading) return <div style={{ background: colors.bg, minHeight: '100vh', padding: 40, color: colors.textMain, textAlign: 'center' }}>Chargement...</div>;
-  if (!track) return <div style={{ background: colors.bg, minHeight: '100vh', padding: 40, color: colors.textMain, textAlign: 'center' }}>Son introuvable.</div>;
+  const handleShare = () => {
+    navigator.clipboard.writeText(window.location.href);
+    alert("Lien copié dans le presse-papiers !");
+  };
 
-  const themeColor = track.profiles?.theme_color || '#00d9ff';
-  const isCurrent = currentTrack?.id === track.id && isPlaying;
+  const handleDownload = async () => {
+    if (!track.is_downloadable) return;
+    if (!user) { navigate('/auth'); return; }
+    try {
+      const response = await fetch(track.audio_url);
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl; link.download = `${track.artist} - ${track.title}.mp3`;
+      document.body.appendChild(link); link.click(); document.body.removeChild(link); window.URL.revokeObjectURL(blobUrl);
+      
+      // Incrémenter le compteur de DL
+      await supabase.from('tracks').update({ downloads: (track.downloads || 0) + 1 }).eq('id', track.id);
+      setTrack((prev: any) => ({ ...prev, downloads: (prev.downloads || 0) + 1 }));
+    } catch (error) { window.open(track.audio_url, '_blank'); }
+  };
+
+  const formatTime = (time: number) => {
+    if (isNaN(time) || time === 0) return "0:00";
+    const mins = Math.floor(time / 60);
+    const secs = Math.floor(time % 60);
+    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  };
+
+  const formatDate = (dateStr: string) => {
+    const d = new Date(dateStr);
+    const now = new Date();
+    const diff = now.getTime() - d.getTime();
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    if (hours < 1) return "À l'instant";
+    if (hours < 24) return `Il y a ${hours}h`;
+    return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+  };
+
+  if (loading) return <div style={{ background: colors.bg, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.textMain }}>Chargement...</div>;
+
+  if (!track) {
+    return (
+      <div style={{ background: colors.bg, minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: colors.textMain, padding: 20 }}>
+        <div style={{ fontSize: 60, marginBottom: 20 }}>🔍</div>
+        <h1 style={{ fontSize: 24, fontWeight: 800, marginBottom: 12 }}>Son introuvable</h1>
+        <p style={{ color: colors.textMuted, marginBottom: 32, textAlign: 'center' }}>Ce son a peut-être été supprimé.</p>
+        <Link to="/" style={{ padding: '12px 24px', background: colors.accent, color: '#000', borderRadius: 8, fontWeight: 800, textDecoration: 'none' }}>Retour à l'accueil</Link>
+      </div>
+    );
+  }
+
+  const themeColor = artist?.theme_color || '#00d9ff';
+  const isCurrent = currentTrack?.id === track.id;
+  const isThisPlaying = isCurrent && isPlaying;
 
   return (
-    <div style={{ background: colors.bg, minHeight: '100vh', color: colors.textMain, fontFamily: 'Inter, sans-serif', paddingBottom: 100 }}>
-      <div style={{ maxWidth: 800, margin: '0 auto', padding: '40px 20px' }}>
+    <div style={{ background: colors.bg, minHeight: '100vh', color: colors.textMain, fontFamily: 'Inter, sans-serif', position: 'relative', overflowX: 'hidden' }}>
+      
+      {/* ✅ ARRIÈRE-PLAN IMMERSIF (IMAGE FLOUTÉE) */}
+      {track.cover_url && (
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '60vh', backgroundImage: `url(${track.cover_url})`, backgroundSize: 'cover', backgroundPosition: 'center', filter: 'blur(80px)', opacity: isDark ? 0.3 : 0.15, zIndex: 0 }} />
+      )}
+
+      <div style={{ position: 'relative', zIndex: 1, maxWidth: 1200, margin: '0 auto', padding: '40px 20px', paddingBottom: 120 }}>
         
         {/* BOUTON RETOUR */}
-        <button onClick={() => navigate(-1)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24, fontSize: 14, fontWeight: 700 }}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Retour
+        <button onClick={() => navigate(-1)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, marginBottom: 32, fontSize: 14, fontWeight: 700 }}>
+          {Icons.arrowLeft} Retour
         </button>
 
-        {/* HEADER DU SON */}
-        <div style={{ display: 'flex', gap: 32, alignItems: 'flex-end', marginBottom: 40, flexWrap: 'wrap' }}>
-          <div style={{ width: 220, height: 220, borderRadius: 16, background: track.cover_url ? `url(${track.cover_url}) center/cover` : colors.border, boxShadow: '0 20px 40px rgba(0,0,0,0.3)', border: `1px solid ${colors.border}` }} />
+        <div style={{ display: 'flex', gap: 40, flexWrap: 'wrap' }}>
           
-          <div style={{ flex: 1, minWidth: 250 }}>
-            <div style={{ fontSize: 12, fontWeight: 800, color: themeColor, textTransform: 'uppercase', letterSpacing: '2px', marginBottom: 8 }}>{track.genre || 'Musique'}</div>
-            <h1 style={{ fontSize: 'clamp(2rem, 5vw, 3rem)', fontWeight: 900, margin: '0 0 12px 0', letterSpacing: '-0.03em' }}>{track.title}</h1>
-            <Link to={`/premium/${track.profiles?.username}`} style={{ fontSize: 18, color: colors.textMuted, textDecoration: 'none', fontWeight: 600, display: 'block', marginBottom: 24 }}>
-              {track.profiles?.username || track.artist}
-            </Link>
+          {/* --- COLONNE GAUCHE (Contenu Principal) --- */}
+          <div style={{ flex: '1 1 600px', minWidth: 0 }}>
+            
+            {/* HEADER DU SON */}
+            <div style={{ display: 'flex', gap: 24, marginBottom: 40, alignItems: 'flex-end' }}>
+              <div style={{ width: 180, height: 180, borderRadius: 16, background: track.cover_url ? `url(${track.cover_url}) center/cover` : colors.border, border: `1px solid ${colors.border}`, boxShadow: '0 20px 40px rgba(0,0,0,0.4)', flexShrink: 0 }} />
+              <div style={{ flex: 1, minWidth: 200 }}>
+                <div style={{ display: 'inline-block', fontSize: 11, fontWeight: 800, color: themeColor, background: `${themeColor}15`, padding: '4px 12px', borderRadius: 20, letterSpacing: '1px', textTransform: 'uppercase', marginBottom: 12 }}>{track.genre || 'Musique'}</div>
+                <h1 style={{ fontSize: 'clamp(2rem, 5vw, 3rem)', fontWeight: 900, margin: '0 0 12px 0', letterSpacing: '-0.03em', lineHeight: 1.1 }}>{track.title}</h1>
+                <Link to={`/premium/${artist?.username}`} style={{ fontSize: 18, color: colors.textMuted, textDecoration: 'none', fontWeight: 600, transition: 'color 0.2s' }} onMouseEnter={e => e.currentTarget.style.color = themeColor} onMouseLeave={e => e.currentTarget.style.color = colors.textMuted}>
+                  {artist?.username || track.artist}
+                </Link>
+              </div>
+            </div>
 
-            <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-              <button onClick={handlePlay} style={{ padding: '12px 32px', borderRadius: 30, background: isCurrent ? themeColor : colors.textMain, color: isCurrent ? '#000' : colors.bg, border: 'none', fontSize: 15, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
-                {isCurrent ? (
-                  <><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg> Pause</>
-                ) : (
-                  <><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> Écouter</>
-                )}
-              </button>
+            {/* WAVEFORM & PLAYER */}
+            <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 24, backdropFilter: 'blur(20px)', marginBottom: 32 }}>
               
-              <div style={{ display: 'flex', gap: 12, fontSize: 13, color: colors.textMuted, fontWeight: 600 }}>
-                {track.bpm && <span>• {track.bpm} BPM</span>}
-                {track.song_key && <span>• {track.song_key}</span>}
-                <span>• {track.plays || 0} écoutes</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* SECTION COMMENTAIRES */}
-        <div style={{ borderTop: `1px solid ${colors.border}`, paddingTop: 40 }}>
-          <h2 style={{ fontSize: 24, fontWeight: 800, marginBottom: 24 }}>Commentaires ({track.comments_count || 0})</h2>
-
-          {/* Formulaire d'ajout */}
-          {user ? (
-            <form onSubmit={handlePostComment} style={{ display: 'flex', gap: 16, marginBottom: 40 }}>
-              <div style={{ width: 48, height: 48, borderRadius: '50%', background: colors.inputBg, border: `1px solid ${colors.border}`, flexShrink: 0, overflow: 'hidden' }}>
-                {/* Avatar de l'utilisateur connecté (si dispo) */}
-              </div>
-              <div style={{ flex: 1 }}>
-                <textarea 
-                  value={newComment} onChange={e => setNewComment(e.target.value)}
-                  placeholder="Laisse un commentaire sur ce son..." 
-                  rows={2}
-                  style={{ width: '100%', padding: 16, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 12, color: colors.textMain, fontSize: 14, resize: 'vertical', outline: 'none' }}
-                />
-                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 12 }}>
-                  <button type="submit" disabled={posting || !newComment.trim()} style={{ padding: '8px 24px', background: themeColor, color: '#000', border: 'none', borderRadius: 20, fontWeight: 800, cursor: posting ? 'wait' : 'pointer', opacity: posting || !newComment.trim() ? 0.5 : 1 }}>
-                    {posting ? 'Envoi...' : 'Publier'}
-                  </button>
-                </div>
-              </div>
-            </form>
-          ) : (
-            <div style={{ padding: 24, background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 12, textAlign: 'center', marginBottom: 40 }}>
-              <p style={{ margin: '0 0 16px 0', color: colors.textMuted, fontSize: 14 }}>Connecte-toi pour laisser un commentaire.</p>
-              <Link to="/auth" style={{ padding: '8px 24px', background: colors.textMain, color: colors.bg, borderRadius: 20, textDecoration: 'none', fontWeight: 800, fontSize: 14 }}>Se connecter</Link>
-            </div>
-          )}
-
-          {/* Liste des commentaires */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-            {comments.length === 0 ? (
-              <div style={{ textAlign: 'center', color: colors.textMuted, fontStyle: 'italic', padding: 20 }}>Aucun commentaire pour le moment. Sois le premier !</div>
-            ) : (
-              comments.map(comment => (
-                <div key={comment.id} style={{ display: 'flex', gap: 16 }}>
-                  <Link to={`/premium/${comment.profiles?.username}`} style={{ width: 40, height: 40, borderRadius: '50%', background: comment.profiles?.avatar_url ? `url(${comment.profiles.avatar_url}) center/cover` : colors.border, flexShrink: 0 }} />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
-                      <Link to={`/premium/${comment.profiles?.username}`} style={{ fontSize: 14, fontWeight: 800, color: colors.textMain, textDecoration: 'none' }}>{comment.profiles?.username || 'Artiste'}</Link>
-                      <span style={{ fontSize: 12, color: colors.textMuted }}>{new Date(comment.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
-                      {user && user.id === comment.user_id && (
-                        <button onClick={() => handleDeleteComment(comment.id)} style={{ background: 'transparent', border: 'none', color: '#ff3366', cursor: 'pointer', fontSize: 11, fontWeight: 700, marginLeft: 'auto' }}>Supprimer</button>
-                      )}
-                    </div>
-                    <p style={{ margin: 0, fontSize: 15, color: colors.textMuted, lineHeight: 1.5 }}>{comment.content}</p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 24, marginBottom: 16 }}>
+                <button 
+                  onClick={handlePlay}
+                  style={{ 
+                    width: 64, height: 64, borderRadius: '50%', 
+                    background: isThisPlaying ? themeColor : colors.textMain, 
+                    color: isThisPlaying ? '#000' : colors.bg, 
+                    border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                    cursor: 'pointer', flexShrink: 0, transition: 'all 0.2s',
+                    boxShadow: isThisPlaying ? `0 0 30px ${themeColor}60` : 'none'
+                  }}
+                >
+                  {isThisPlaying ? Icons.pause : Icons.play}
+                </button>
+                
+                <div style={{ flex: 1 }}>
+                  <CanvasWaveform
+                    peaks={track.peaks || []}
+                    isPlaying={isThisPlaying}
+                    themeColor={themeColor}
+                    progress={isCurrent ? (duration > 0 ? currentTime / duration : 0) : 0}
+                    isCurrent={isCurrent}
+                    onSeek={(ratio) => {
+                      if (!isCurrent) { handlePlay(); setTimeout(() => seek(ratio), 100); } 
+                      else { seek(ratio); }
+                    }}
+                    isMobile={window.innerWidth < 768}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, fontSize: 12, color: colors.textMuted, fontFamily: 'monospace' }}>
+                    <span>{isCurrent ? formatTime(currentTime) : '0:00'}</span>
+                    <span>{formatTime(track.duration)}</span>
                   </div>
                 </div>
-              ))
-            )}
+              </div>
+
+              {/* BOUTONS D'ACTION */}
+              <div style={{ display: 'flex', gap: 12, paddingTop: 16, borderTop: `1px solid ${colors.border}` }}>
+                <button onClick={handleLike} disabled={likeLoading} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', background: isLiked ? 'rgba(255,51,102,0.1)' : 'transparent', border: `1px solid ${isLiked ? '#ff3366' : colors.border}`, color: isLiked ? '#ff3366' : colors.textMain, borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' }}>
+                  {isLiked ? Icons.heartFilled : Icons.heart}
+                  {track.likes_count || 0}
+                </button>
+                
+                <button onClick={() => document.getElementById('comments-section')?.scrollIntoView({ behavior: 'smooth' })} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', background: 'transparent', border: `1px solid ${colors.border}`, color: colors.textMain, borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                  {Icons.comment}
+                  {track.comments_count || 0}
+                </button>
+
+                <button onClick={handleShare} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', background: 'transparent', border: `1px solid ${colors.border}`, color: colors.textMain, borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer', marginLeft: 'auto' }}>
+                  {Icons.share} Partager
+                </button>
+
+                {track.is_downloadable && (
+                  <button onClick={handleDownload} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', background: 'transparent', border: `1px solid ${colors.border}`, color: colors.textMain, borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                    {Icons.download} DL
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* SECTION COMMENTAIRES */}
+            <div id="comments-section" style={{ scrollMarginTop: 100 }}>
+              <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 24, display: 'flex', alignItems: 'center', gap: 12 }}>
+                Commentaires <span style={{ fontSize: 14, color: colors.textMuted, fontWeight: 600 }}>({track.comments_count || 0})</span>
+              </h2>
+
+              {user ? (
+                <form onSubmit={handlePostComment} style={{ display: 'flex', gap: 16, marginBottom: 32 }}>
+                  <div style={{ width: 44, height: 44, borderRadius: '50%', background: colors.inputBg, border: `1px solid ${colors.border}`, flexShrink: 0 }} />
+                  <div style={{ flex: 1, position: 'relative' }}>
+                    <input 
+                      type="text"
+                      value={newComment} onChange={e => setNewComment(e.target.value)}
+                      placeholder="Écrire un commentaire..." 
+                      style={{ width: '100%', padding: '14px 56px 14px 20px', background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 30, color: colors.textMain, fontSize: 14, outline: 'none', backdropFilter: 'blur(10px)' }}
+                    />
+                    <button type="submit" disabled={posting || !newComment.trim()} style={{ position: 'absolute', right: 6, top: 6, width: 36, height: 36, borderRadius: '50%', background: newComment.trim() ? themeColor : colors.inputBg, color: newComment.trim() ? '#000' : colors.textMuted, border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: posting || !newComment.trim() ? 'not-allowed' : 'pointer', transition: 'all 0.2s' }}>
+                      {posting ? '...' : Icons.send}
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <div style={{ padding: 24, background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, textAlign: 'center', marginBottom: 32, backdropFilter: 'blur(10px)' }}>
+                  <p style={{ margin: '0 0 16px 0', color: colors.textMuted, fontSize: 14 }}>Connecte-toi pour rejoindre la discussion.</p>
+                  <Link to="/auth" style={{ padding: '10px 24px', background: colors.textMain, color: colors.bg, borderRadius: 20, textDecoration: 'none', fontWeight: 800, fontSize: 14 }}>Se connecter</Link>
+                </div>
+              )}
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+                {comments.length === 0 ? (
+                  <div style={{ textAlign: 'center', color: colors.textMuted, fontStyle: 'italic', padding: 40, border: `1px dashed ${colors.border}`, borderRadius: 16 }}>Aucun commentaire pour le moment. Sois le premier !</div>
+                ) : (
+                  comments.map(comment => (
+                    <div key={comment.id} style={{ display: 'flex', gap: 16 }}>
+                      <Link to={`/premium/${comment.profiles?.username}`} style={{ width: 44, height: 44, borderRadius: '50%', background: comment.profiles?.avatar_url ? `url(${comment.profiles.avatar_url}) center/cover` : colors.border, flexShrink: 0, border: `1px solid ${colors.border}` }} />
+                      <div style={{ flex: 1, background: colors.panelBg, padding: 16, borderRadius: 16, border: `1px solid ${colors.border}`, backdropFilter: 'blur(10px)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 6 }}>
+                          <Link to={`/premium/${comment.profiles?.username}`} style={{ fontSize: 14, fontWeight: 800, color: colors.textMain, textDecoration: 'none' }}>{comment.profiles?.username || 'Artiste'}</Link>
+                          <span style={{ fontSize: 12, color: colors.textMuted }}>{formatDate(comment.created_at)}</span>
+                          {user && user.id === comment.user_id && (
+                            <button onClick={() => handleDeleteComment(comment.id)} style={{ background: 'transparent', border: 'none', color: '#ff3366', cursor: 'pointer', fontSize: 11, fontWeight: 700, marginLeft: 'auto' }}>Supprimer</button>
+                          )}
+                        </div>
+                        <p style={{ margin: 0, fontSize: 14, color: colors.textMuted, lineHeight: 1.6 }}>{comment.content}</p>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* --- COLONNE DROITE (Sidebar Artiste) --- */}
+          <div style={{ flex: '0 0 300px', width: '100%' }}>
+            
+            {/* CARTE ARTISTE */}
+            <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 20, padding: 24, textAlign: 'center', backdropFilter: 'blur(20px)', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }}>
+              <Link to={`/premium/${artist?.username}`}>
+                <div style={{ width: 100, height: 100, borderRadius: '50%', background: artist?.avatar_url ? `url(${artist.avatar_url}) center/cover` : colors.border, margin: '0 auto 16px', border: `3px solid ${themeColor}40`, boxShadow: `0 0 20px ${themeColor}20` }} />
+              </Link>
+              <Link to={`/premium/${artist?.username}`} style={{ fontSize: 20, fontWeight: 900, color: colors.textMain, textDecoration: 'none' }}>{artist?.username || track.artist}</Link>
+              <div style={{ fontSize: 13, color: colors.textMuted, marginTop: 6, fontWeight: 600 }}>Artiste DropZone</div>
+              
+              <button onClick={() => navigate(`/premium/${artist?.username}`)} style={{ width: '100%', marginTop: 24, padding: '12px', background: themeColor, color: '#000', border: 'none', borderRadius: 30, fontWeight: 800, fontSize: 14, cursor: 'pointer', transition: 'transform 0.2s' }} onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.02)'} onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}>
+                Voir la page complète
+              </button>
+            </div>
+
+            {/* STATS DU SON */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 16 }}>
+              <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 20, textAlign: 'center', backdropFilter: 'blur(10px)' }}>
+                <div style={{ fontSize: 24, fontWeight: 900, color: colors.textMain }}>{track.plays || 0}</div>
+                <div style={{ fontSize: 10, color: colors.textMuted, textTransform: 'uppercase', fontWeight: 800, marginTop: 4, letterSpacing: '1px' }}>Écoutes</div>
+              </div>
+              <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 20, textAlign: 'center', backdropFilter: 'blur(10px)' }}>
+                <div style={{ fontSize: 24, fontWeight: 900, color: colors.textMain }}>{track.downloads || 0}</div>
+                <div style={{ fontSize: 10, color: colors.textMuted, textTransform: 'uppercase', fontWeight: 800, marginTop: 4, letterSpacing: '1px' }}>Téléch.</div>
+              </div>
+            </div>
+
+            {/* DÉTAILS TECHNIQUES */}
+            <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 20, padding: 24, marginTop: 16, backdropFilter: 'blur(10px)' }}>
+              <h3 style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase', color: colors.textMuted, marginBottom: 20, letterSpacing: '1px' }}>Détails du son</h3>
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 16, fontSize: 13 }}>
+                {track.genre && <li style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><span style={{ color: colors.textMuted }}>Genre</span> <strong style={{ color: colors.textMain }}>{track.genre}</strong></li>}
+                {track.bpm && <li style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><span style={{ color: colors.textMuted }}>BPM</span> <strong style={{ color: colors.textMain }}>{track.bpm}</strong></li>}
+                {track.song_key && <li style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><span style={{ color: colors.textMuted }}>Clé</span> <strong style={{ color: colors.textMain }}>{track.song_key}</strong></li>}
+                <li style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><span style={{ color: colors.textMuted }}>Sortie</span> <strong style={{ color: colors.textMain }}>{new Date(track.created_at).toLocaleDateString('fr-FR')}</strong></li>
+              </ul>
+            </div>
+
           </div>
         </div>
-
       </div>
     </div>
   );

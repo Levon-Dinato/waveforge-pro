@@ -30,6 +30,7 @@ const Icons = {
   sun: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>,
   moon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>,
   share: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>,
+  comment: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
 };
 
 const CanvasWaveform: React.FC<{ 
@@ -241,9 +242,9 @@ export const PremiumPage: React.FC = () => {
     textMuted: isDark ? 'rgba(255,255,255,0.5)' : '#666666',
     textSoft: isDark ? 'rgba(255,255,255,0.8)' : '#444444',
     border: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
-    panelBg: isDark ? 'rgba(20,20,20,0.6)' : 'rgba(255,255,255,0.7)', // ✅ Ajout de transparence pour le glassmorphism
+    panelBg: isDark ? 'rgba(20,20,20,0.6)' : 'rgba(255,255,255,0.7)',
     inputBg: isDark ? '#0a0a0a' : '#f3f4f6',
-    navBg: isDark ? 'rgba(5,5,5,0.7)' : 'rgba(245,245,247,0.7)', // ✅ Nav plus transparente
+    navBg: isDark ? 'rgba(5,5,5,0.7)' : 'rgba(245,245,247,0.7)',
     cardBg: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.8)',
     cardBorder: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
     skeleton: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
@@ -379,7 +380,7 @@ export const PremiumPage: React.FC = () => {
         genre: uploadForm.genre || 'Inconnu', bpm: Number(uploadForm.bpm) || 0,
         song_key: uploadForm.song_key || null, audio_url: audioUrlData.publicUrl,
         cover_url: coverUrl, purchase_url: uploadForm.purchase_url || null,
-        is_downloadable: uploadForm.is_downloadable, peaks: [], duration: 0, likes_count: 0, downloads: 0
+        is_downloadable: uploadForm.is_downloadable, peaks: [], duration: 0, likes_count: 0, downloads: 0, comments_count: 0
       }).select().single();
 
       if (dbError) throw dbError;
@@ -546,7 +547,6 @@ export const PremiumPage: React.FC = () => {
   return (
     <div style={{ background: colors.bg, minHeight: '100vh', color: colors.textMain, fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', '--accent': themeColor, transition: 'background 0.3s ease, color 0.3s ease', position: 'relative', overflow: 'hidden' } as React.CSSProperties}>
       
-      {/* ✅ SCROLLBAR PERSONNALISÉE & ANIMATIONS GLOBALES */}
       <style>{`
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: ${colors.bg}; }
@@ -574,7 +574,6 @@ export const PremiumPage: React.FC = () => {
         @keyframes float { 0% { transform: translateY(0px) scale(1); } 50% { transform: translateY(-20px) scale(1.05); } 100% { transform: translateY(0px) scale(1); } }
       `}</style>
 
-      {/* ✅ HALOS LUMINEUX D'ARRIÈRE-PLAN (AMBIENT GLOW) */}
       <div style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', top: '-10%', right: '-10%', width: '50vw', height: '50vw', borderRadius: '50%', background: themeColor, filter: 'blur(120px)', opacity: 0.15, animation: 'float 10s ease-in-out infinite' }} />
         <div style={{ position: 'absolute', bottom: '10%', left: '-10%', width: '40vw', height: '40vw', borderRadius: '50%', background: themeColor, filter: 'blur(100px)', opacity: 0.1, animation: 'float 12s ease-in-out infinite reverse' }} />
@@ -588,7 +587,6 @@ export const PremiumPage: React.FC = () => {
         <meta property="og:type" content="profile" />
       </Helmet>
 
-      {/* LIGHTBOX */}
       {lightboxImage && (
         <div onClick={() => setLightboxImage(null)} style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.95)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 40, cursor: 'zoom-out' }}>
           <button style={{ position: 'absolute', top: 24, right: 24, background: 'transparent', border: 'none', color: '#fff', fontSize: 32, cursor: 'pointer' }}>✕</button>
@@ -596,7 +594,6 @@ export const PremiumPage: React.FC = () => {
         </div>
       )}
 
-      {/* MODALE BOOKING */}
       {showBookingModal && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }} onClick={() => setShowBookingModal(false)}>
           <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 32, width: '100%', maxWidth: 500, maxHeight: '90vh', overflowY: 'auto', backdropFilter: 'blur(20px)' }} onClick={(e) => e.stopPropagation()}>
@@ -642,7 +639,6 @@ export const PremiumPage: React.FC = () => {
         </div>
       )}
 
-      {/* MODALE UPLOAD */}
       {showUploadModal && isOwner && createPortal(
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
           <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 32, width: '100%', maxWidth: 500, maxHeight: '90vh', overflowY: 'auto', backdropFilter: 'blur(20px)' }}>
@@ -704,7 +700,6 @@ export const PremiumPage: React.FC = () => {
         </div>, document.body
       )}
 
-      {/* NAVIGATION */}
       <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, height: isMobile ? 60 : 72, background: colors.navBg, backdropFilter: 'blur(24px)', zIndex: 1000, borderBottom: `1px solid ${colors.cardBorder}`, transition: 'background 0.3s ease', display: 'flex', flexDirection: 'column' }}>
         <div style={{ maxWidth: 1400, margin: '0 auto', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: isMobile ? '0 12px' : '0 24px', gap: isMobile ? 8 : 32 }}>
           
@@ -738,10 +733,8 @@ export const PremiumPage: React.FC = () => {
         </div>
       </nav>
 
-      {/* HERO */}
       <section style={{ position: 'relative', minHeight: isMobile ? '80vh' : '95vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', background: colors.bg, paddingTop: isMobile ? 100 : 72 }}>
         
-        {/* ✅ GRILLE TECH EN ARRIÈRE-PLAN DU HERO */}
         <div style={{ position: 'absolute', inset: 0, opacity: 0.1, backgroundImage: `linear-gradient(${themeColor} 1px, transparent 1px), linear-gradient(90deg, ${themeColor} 1px, transparent 1px)`, backgroundSize: '60px 60px', maskImage: 'radial-gradient(circle at center, black 30%, transparent 80%)', WebkitMaskImage: 'radial-gradient(circle at center, black 30%, transparent 80%)', zIndex: 0 }} />
 
         <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
@@ -1001,6 +994,20 @@ export const PremiumPage: React.FC = () => {
                             </button>
                           )}
 
+                          {/* ✅ NOUVEAU : BOUTON COMMENTAIRES */}
+                          <Link 
+                            to={`/track/${track.id}`}
+                            style={{ 
+                              background: 'transparent', border: `1px solid ${btnBorderColor}`, 
+                              color: btnTextColor, padding: '10px 16px', borderRadius: 8, 
+                              fontSize: 12, fontWeight: 700, cursor: 'pointer', 
+                              display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' 
+                            }}
+                          >
+                            {Icons.comment}
+                            {track.comments_count || 0}
+                          </Link>
+
                           <button
                             onClick={() => handlePlayTrack(track)}
                             style={{ width: 48, height: 48, borderRadius: '50%', background: isThisPlaying ? themeColor : (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'), border: 'none', color: isThisPlaying ? '#000' : btnTextColor, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s', boxShadow: isThisPlaying ? `0 0 20px ${themeColor}60` : 'none' }}
@@ -1061,7 +1068,6 @@ export const PremiumPage: React.FC = () => {
         )}
       </div>
 
-      {/* ✅ SECTION BOÎTE À OUTILS (Visible uniquement par le propriétaire) */}
       {isOwner && (
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '0 16px 40px' : '0 24px 80px', position: 'relative', zIndex: 10 }}>
           <ArtistPromoSection />

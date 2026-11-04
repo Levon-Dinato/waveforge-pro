@@ -6,23 +6,21 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { usePlayer } from '../contexts/PlayerContext';
 
-// --- ICÔNES SVG ---
+// --- ICÔNES ---
 const Icons = {
   play: <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>,
   pause: <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>,
   heart: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>,
   heartFilled: <svg width="20" height="20" viewBox="0 0 24 24" fill="#ff3366" stroke="#ff3366" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>,
-  comment: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>,
-  share: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>,
-  download: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>,
-  send: <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="2 21 23 12 2 3 2 10 17 12 2 14 2 21"></polygon></svg>,
-  arrowLeft: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+  send: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>,
+  close: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>,
+  comment: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
 };
 
 // --- WAVEFORM CANVAS ---
 const CanvasWaveform: React.FC<{ 
-  peaks: number[]; isPlaying: boolean; themeColor: string; progress: number; isCurrent: boolean; onSeek: (ratio: number) => void; isMobile: boolean;
-}> = ({ peaks, isPlaying, themeColor, progress, isCurrent, onSeek, isMobile }) => {
+  peaks: number[]; isPlaying: boolean; themeColor: string; progress: number; isCurrent: boolean; onSeek: (ratio: number) => void; isMobile: boolean; isDark: boolean; 
+}> = ({ peaks, isPlaying, themeColor, progress, isCurrent, onSeek, isMobile, isDark }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [dragProgress, setDragProgress] = useState<number | null>(null);
   const isDraggingRef = useRef(false);
@@ -54,8 +52,7 @@ const CanvasWaveform: React.FC<{
     const step = Math.max(1, Math.floor(safePeaks.length / barCount));
     const displayPeaks = safePeaks.filter((_: any, i: number) => i % step === 0).slice(0, barCount);
 
-    // Barres non jouées
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+    ctx.fillStyle = isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.15)';
     for (let i = 0; i < displayPeaks.length; i++) {
       const x = (i / displayPeaks.length) * W;
       const val = displayPeaks[i] > 1 ? displayPeaks[i] / 100 : displayPeaks[i];
@@ -63,7 +60,6 @@ const CanvasWaveform: React.FC<{
       if (x >= playedX) ctx.fillRect(x, centerY - barHeight, 2, barHeight * 2);
     }
 
-    // Barres jouées
     if (isPlaying || displayProgress > 0) {
       ctx.save();
       ctx.beginPath();
@@ -88,7 +84,7 @@ const CanvasWaveform: React.FC<{
       ctx.shadowBlur = 0;
       ctx.restore();
     }
-  }, [peaks, mockPeaks, isPlaying, themeColor, progress, dragProgress, isMobile]);
+  }, [peaks, mockPeaks, isPlaying, themeColor, progress, dragProgress, isMobile, isDark]);
 
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (!isCurrent) return;
@@ -135,6 +131,7 @@ interface Comment {
   content: string;
   created_at: string;
   user_id: string;
+  timestamp_seconds: number;
   profiles: { username: string; avatar_url: string | null } | null;
 }
 
@@ -154,6 +151,7 @@ export const TrackPage: React.FC = () => {
   const [posting, setPosting] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [likeLoading, setLikeLoading] = useState(false);
+  const [isCommenting, setIsCommenting] = useState(false);
 
   const colors = {
     bg: isDark ? '#050505' : '#f5f5f7',
@@ -170,26 +168,22 @@ export const TrackPage: React.FC = () => {
       setLoading(true);
       if (!id) return;
 
-      // Fetch Track
       const { data: trackData, error: trackError } = await supabase.from('tracks').select('*').eq('id', id).single();
       if (trackError || !trackData) { setTrack(null); setLoading(false); return; }
       setTrack(trackData);
 
-      // Fetch Artist
       if (trackData.user_id) {
         const { data: profileData } = await supabase.from('profiles').select('*').eq('id', trackData.user_id).single();
         setArtist(profileData);
       }
 
-      // Fetch Comments
-      const { data: commentsData } = await supabase.from('comments').select('*').eq('track_id', id).order('created_at', { ascending: false });
+      const { data: commentsData } = await supabase.from('comments').select('*').eq('track_id', id).order('timestamp_seconds', { ascending: true });
       if (commentsData) {
         const userIds = [...new Set(commentsData.map(c => c.user_id))];
         const { data: profilesData } = await supabase.from('profiles').select('id, username, avatar_url').in('id', userIds);
         setComments(commentsData.map(c => ({ ...c, profiles: profilesData?.find(p => p.id === c.user_id) || null })));
       }
 
-      // Check Like status
       if (user) {
         const { data: likeData } = await supabase.from('likes').select('id').eq('user_id', user.id).eq('track_id', id).maybeSingle();
         setIsLiked(!!likeData);
@@ -200,8 +194,37 @@ export const TrackPage: React.FC = () => {
     fetchData();
   }, [id, user]);
 
+  // ✅ COMPTABILISATION DES ÉCOUTES AVEC ANTI-SPAM
+  const incrementPlayCount = async () => {
+    if (!track || !user) return;
+    
+    // On ne compte pas les écoutes du propriétaire
+    if (user.id === track.user_id) return; 
+
+    // Anti-spam : on vérifie si l'utilisateur a déjà écouté ce son dans les 30 dernières minutes
+    const listenKey = `listened_${track.id}_${user.id}`;
+    const lastListen = localStorage.getItem(listenKey);
+    const now = Date.now();
+    
+    if (lastListen && now - parseInt(lastListen) < 30 * 60 * 1000) {
+      return; // Déjà écouté récemment, on ne recompte pas
+    }
+
+    // On incrémente
+    try {
+      await supabase.from('tracks').update({ plays: (track.plays || 0) + 1 }).eq('id', track.id);
+      setTrack((prev: any) => ({ ...prev, plays: (prev.plays || 0) + 1 }));
+      
+      // On enregistre le moment de l'écoute dans le localStorage
+      localStorage.setItem(listenKey, now.toString());
+    } catch (err) {
+      console.error("Erreur d'incrémentation:", err);
+    }
+  };
+
   const handlePlay = () => {
     if (!user) { navigate('/auth'); return; }
+    
     if (currentTrack?.id === track.id) {
       togglePlay();
     } else {
@@ -211,6 +234,9 @@ export const TrackPage: React.FC = () => {
         peaks: track.peaks, bpm: track.bpm, song_key: track.song_key, genre: track.genre,
         player_bg_image_url: track.player_bg_image_url, player_bg_color: track.player_bg_color
       });
+      
+      // ✅ On appelle la fonction de comptage
+      incrementPlayCount();
     }
   };
 
@@ -238,13 +264,23 @@ export const TrackPage: React.FC = () => {
 
     setPosting(true);
     try {
-      const { data, error } = await supabase.from('comments').insert({ track_id: track.id, user_id: user.id, content: newComment.trim() }).select('*').single();
+      const timestampToSave = currentTrack?.id === track.id ? currentTime : 0;
+      const { data, error } = await supabase.from('comments').insert({ 
+        track_id: track.id, 
+        user_id: user.id, 
+        content: newComment.trim(),
+        timestamp_seconds: timestampToSave 
+      }).select('*').single();
+      
       if (error) throw error;
       
       const { data: myProfile } = await supabase.from('profiles').select('username, avatar_url').eq('id', user.id).single();
-      setComments([{ ...data, profiles: myProfile }, ...comments]);
+      const newCommentsList = [{ ...data, profiles: myProfile }, ...comments].sort((a, b) => a.timestamp_seconds - b.timestamp_seconds);
+      setComments(newCommentsList);
+      
       setTrack((prev: any) => ({ ...prev, comments_count: (prev.comments_count || 0) + 1 }));
       setNewComment('');
+      setIsCommenting(false);
     } catch (err: any) {
       alert("Erreur : " + err.message);
     } finally {
@@ -262,23 +298,6 @@ export const TrackPage: React.FC = () => {
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href);
     alert("Lien copié dans le presse-papiers !");
-  };
-
-  const handleDownload = async () => {
-    if (!track.is_downloadable) return;
-    if (!user) { navigate('/auth'); return; }
-    try {
-      const response = await fetch(track.audio_url);
-      const blob = await response.blob();
-      const blobUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = blobUrl; link.download = `${track.artist} - ${track.title}.mp3`;
-      document.body.appendChild(link); link.click(); document.body.removeChild(link); window.URL.revokeObjectURL(blobUrl);
-      
-      // Incrémenter le compteur de DL
-      await supabase.from('tracks').update({ downloads: (track.downloads || 0) + 1 }).eq('id', track.id);
-      setTrack((prev: any) => ({ ...prev, downloads: (prev.downloads || 0) + 1 }));
-    } catch (error) { window.open(track.audio_url, '_blank'); }
   };
 
   const formatTime = (time: number) => {
@@ -318,24 +337,20 @@ export const TrackPage: React.FC = () => {
   return (
     <div style={{ background: colors.bg, minHeight: '100vh', color: colors.textMain, fontFamily: 'Inter, sans-serif', position: 'relative', overflowX: 'hidden' }}>
       
-      {/* ✅ ARRIÈRE-PLAN IMMERSIF (IMAGE FLOUTÉE) */}
       {track.cover_url && (
         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '60vh', backgroundImage: `url(${track.cover_url})`, backgroundSize: 'cover', backgroundPosition: 'center', filter: 'blur(80px)', opacity: isDark ? 0.3 : 0.15, zIndex: 0 }} />
       )}
 
       <div style={{ position: 'relative', zIndex: 1, maxWidth: 1200, margin: '0 auto', padding: '40px 20px', paddingBottom: 120 }}>
         
-        {/* BOUTON RETOUR */}
         <button onClick={() => navigate(-1)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, marginBottom: 32, fontSize: 14, fontWeight: 700 }}>
-          {Icons.arrowLeft} Retour
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Retour
         </button>
 
         <div style={{ display: 'flex', gap: 40, flexWrap: 'wrap' }}>
           
-          {/* --- COLONNE GAUCHE (Contenu Principal) --- */}
           <div style={{ flex: '1 1 600px', minWidth: 0 }}>
             
-            {/* HEADER DU SON */}
             <div style={{ display: 'flex', gap: 24, marginBottom: 40, alignItems: 'flex-end' }}>
               <div style={{ width: 180, height: 180, borderRadius: 16, background: track.cover_url ? `url(${track.cover_url}) center/cover` : colors.border, border: `1px solid ${colors.border}`, boxShadow: '0 20px 40px rgba(0,0,0,0.4)', flexShrink: 0 }} />
               <div style={{ flex: 1, minWidth: 200 }}>
@@ -347,8 +362,7 @@ export const TrackPage: React.FC = () => {
               </div>
             </div>
 
-            {/* WAVEFORM & PLAYER */}
-            <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 24, backdropFilter: 'blur(20px)', marginBottom: 32 }}>
+            <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 24, backdropFilter: 'blur(20px)', marginBottom: 32, position: 'relative' }}>
               
               <div style={{ display: 'flex', alignItems: 'center', gap: 24, marginBottom: 16 }}>
                 <button 
@@ -377,6 +391,7 @@ export const TrackPage: React.FC = () => {
                       else { seek(ratio); }
                     }}
                     isMobile={window.innerWidth < 768}
+                    isDark={isDark} 
                   />
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, fontSize: 12, color: colors.textMuted, fontFamily: 'monospace' }}>
                     <span>{isCurrent ? formatTime(currentTime) : '0:00'}</span>
@@ -385,61 +400,60 @@ export const TrackPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* BOUTONS D'ACTION */}
-              <div style={{ display: 'flex', gap: 12, paddingTop: 16, borderTop: `1px solid ${colors.border}` }}>
+              <div style={{ marginTop: 16 }}>
+                {!isCommenting ? (
+                  <button 
+                    onClick={() => setIsCommenting(true)}
+                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 30, color: colors.textMuted, cursor: 'text', textAlign: 'left' }}
+                  >
+                    <div style={{ width: 24, height: 24, borderRadius: '50%', background: colors.border, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10 }}>👤</div>
+                    Commentez à <span style={{ color: themeColor, fontWeight: 'bold' }}>{isCurrent ? formatTime(currentTime) : '0:00'}</span>
+                  </button>
+                ) : (
+                  <form onSubmit={handlePostComment} style={{ display: 'flex', alignItems: 'center', gap: 12, background: colors.inputBg, border: `1px solid ${themeColor}`, borderRadius: 30, padding: '8px 16px' }}>
+                    <div style={{ width: 24, height: 24, borderRadius: '50%', background: colors.border, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10 }}>👤</div>
+                    <input 
+                      autoFocus
+                      type="text" 
+                      value={newComment} 
+                      onChange={e => setNewComment(e.target.value)} 
+                      placeholder={`Commentez à ${isCurrent ? formatTime(currentTime) : '0:00'}...`}
+                      style={{ flex: 1, background: 'transparent', border: 'none', color: colors.textMain, outline: 'none', fontSize: 14 }}
+                    />
+                    <button type="submit" disabled={posting || !newComment.trim()} style={{ background: 'transparent', border: 'none', color: themeColor, cursor: posting ? 'wait' : 'pointer', display: 'flex', alignItems: 'center' }}>
+                      {Icons.send}
+                    </button>
+                    <button type="button" onClick={() => setIsCommenting(false)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                      {Icons.close}
+                    </button>
+                  </form>
+                )}
+              </div>
+
+              <div style={{ display: 'flex', gap: 12, paddingTop: 16, borderTop: `1px solid ${colors.border}`, marginTop: 16 }}>
                 <button onClick={handleLike} disabled={likeLoading} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', background: isLiked ? 'rgba(255,51,102,0.1)' : 'transparent', border: `1px solid ${isLiked ? '#ff3366' : colors.border}`, color: isLiked ? '#ff3366' : colors.textMain, borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' }}>
                   {isLiked ? Icons.heartFilled : Icons.heart}
                   {track.likes_count || 0}
                 </button>
                 
-                <button onClick={() => document.getElementById('comments-section')?.scrollIntoView({ behavior: 'smooth' })} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', background: 'transparent', border: `1px solid ${colors.border}`, color: colors.textMain, borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
-                  {Icons.comment}
-                  {track.comments_count || 0}
+                <button onClick={() => setIsCommenting(true)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', background: 'transparent', border: `1px solid ${colors.border}`, color: colors.textMain, borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                  {Icons.comment} {track.comments_count || 0}
                 </button>
 
                 <button onClick={handleShare} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', background: 'transparent', border: `1px solid ${colors.border}`, color: colors.textMain, borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer', marginLeft: 'auto' }}>
-                  {Icons.share} Partager
+                  Partager
                 </button>
-
-                {track.is_downloadable && (
-                  <button onClick={handleDownload} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', background: 'transparent', border: `1px solid ${colors.border}`, color: colors.textMain, borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
-                    {Icons.download} DL
-                  </button>
-                )}
               </div>
             </div>
 
-            {/* SECTION COMMENTAIRES */}
             <div id="comments-section" style={{ scrollMarginTop: 100 }}>
               <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 24, display: 'flex', alignItems: 'center', gap: 12 }}>
                 Commentaires <span style={{ fontSize: 14, color: colors.textMuted, fontWeight: 600 }}>({track.comments_count || 0})</span>
               </h2>
 
-              {user ? (
-                <form onSubmit={handlePostComment} style={{ display: 'flex', gap: 16, marginBottom: 32 }}>
-                  <div style={{ width: 44, height: 44, borderRadius: '50%', background: colors.inputBg, border: `1px solid ${colors.border}`, flexShrink: 0 }} />
-                  <div style={{ flex: 1, position: 'relative' }}>
-                    <input 
-                      type="text"
-                      value={newComment} onChange={e => setNewComment(e.target.value)}
-                      placeholder="Écrire un commentaire..." 
-                      style={{ width: '100%', padding: '14px 56px 14px 20px', background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 30, color: colors.textMain, fontSize: 14, outline: 'none', backdropFilter: 'blur(10px)' }}
-                    />
-                    <button type="submit" disabled={posting || !newComment.trim()} style={{ position: 'absolute', right: 6, top: 6, width: 36, height: 36, borderRadius: '50%', background: newComment.trim() ? themeColor : colors.inputBg, color: newComment.trim() ? '#000' : colors.textMuted, border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: posting || !newComment.trim() ? 'not-allowed' : 'pointer', transition: 'all 0.2s' }}>
-                      {posting ? '...' : Icons.send}
-                    </button>
-                  </div>
-                </form>
-              ) : (
-                <div style={{ padding: 24, background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, textAlign: 'center', marginBottom: 32, backdropFilter: 'blur(10px)' }}>
-                  <p style={{ margin: '0 0 16px 0', color: colors.textMuted, fontSize: 14 }}>Connecte-toi pour rejoindre la discussion.</p>
-                  <Link to="/auth" style={{ padding: '10px 24px', background: colors.textMain, color: colors.bg, borderRadius: 20, textDecoration: 'none', fontWeight: 800, fontSize: 14 }}>Se connecter</Link>
-                </div>
-              )}
-
               <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
                 {comments.length === 0 ? (
-                  <div style={{ textAlign: 'center', color: colors.textMuted, fontStyle: 'italic', padding: 40, border: `1px dashed ${colors.border}`, borderRadius: 16 }}>Aucun commentaire pour le moment. Sois le premier !</div>
+                  <div style={{ textAlign: 'center', color: colors.textMuted, fontStyle: 'italic', padding: 40, border: `1px dashed ${colors.border}`, borderRadius: 16 }}>Sois le premier à commenter !</div>
                 ) : (
                   comments.map(comment => (
                     <div key={comment.id} style={{ display: 'flex', gap: 16 }}>
@@ -447,9 +461,16 @@ export const TrackPage: React.FC = () => {
                       <div style={{ flex: 1, background: colors.panelBg, padding: 16, borderRadius: 16, border: `1px solid ${colors.border}`, backdropFilter: 'blur(10px)' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 6 }}>
                           <Link to={`/premium/${comment.profiles?.username}`} style={{ fontSize: 14, fontWeight: 800, color: colors.textMain, textDecoration: 'none' }}>{comment.profiles?.username || 'Artiste'}</Link>
-                          <span style={{ fontSize: 12, color: colors.textMuted }}>{formatDate(comment.created_at)}</span>
+                          
+                          {comment.timestamp_seconds > 0 && (
+                            <button onClick={() => seek(comment.timestamp_seconds / track.duration)} style={{ background: `${themeColor}20`, border: 'none', color: themeColor, fontSize: 11, fontWeight: 800, padding: '2px 8px', borderRadius: 4, cursor: 'pointer' }}>
+                              {formatTime(comment.timestamp_seconds)}
+                            </button>
+                          )}
+                          
+                          <span style={{ fontSize: 12, color: colors.textMuted, marginLeft: 'auto' }}>{formatDate(comment.created_at)}</span>
                           {user && user.id === comment.user_id && (
-                            <button onClick={() => handleDeleteComment(comment.id)} style={{ background: 'transparent', border: 'none', color: '#ff3366', cursor: 'pointer', fontSize: 11, fontWeight: 700, marginLeft: 'auto' }}>Supprimer</button>
+                            <button onClick={() => handleDeleteComment(comment.id)} style={{ background: 'transparent', border: 'none', color: '#ff3366', cursor: 'pointer', fontSize: 11, fontWeight: 700 }}>Supprimer</button>
                           )}
                         </div>
                         <p style={{ margin: 0, fontSize: 14, color: colors.textMuted, lineHeight: 1.6 }}>{comment.content}</p>
@@ -461,10 +482,7 @@ export const TrackPage: React.FC = () => {
             </div>
           </div>
 
-          {/* --- COLONNE DROITE (Sidebar Artiste) --- */}
           <div style={{ flex: '0 0 300px', width: '100%' }}>
-            
-            {/* CARTE ARTISTE */}
             <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 20, padding: 24, textAlign: 'center', backdropFilter: 'blur(20px)', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }}>
               <Link to={`/premium/${artist?.username}`}>
                 <div style={{ width: 100, height: 100, borderRadius: '50%', background: artist?.avatar_url ? `url(${artist.avatar_url}) center/cover` : colors.border, margin: '0 auto 16px', border: `3px solid ${themeColor}40`, boxShadow: `0 0 20px ${themeColor}20` }} />
@@ -477,7 +495,6 @@ export const TrackPage: React.FC = () => {
               </button>
             </div>
 
-            {/* STATS DU SON */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 16 }}>
               <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 20, textAlign: 'center', backdropFilter: 'blur(10px)' }}>
                 <div style={{ fontSize: 24, fontWeight: 900, color: colors.textMain }}>{track.plays || 0}</div>
@@ -488,18 +505,6 @@ export const TrackPage: React.FC = () => {
                 <div style={{ fontSize: 10, color: colors.textMuted, textTransform: 'uppercase', fontWeight: 800, marginTop: 4, letterSpacing: '1px' }}>Téléch.</div>
               </div>
             </div>
-
-            {/* DÉTAILS TECHNIQUES */}
-            <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 20, padding: 24, marginTop: 16, backdropFilter: 'blur(10px)' }}>
-              <h3 style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase', color: colors.textMuted, marginBottom: 20, letterSpacing: '1px' }}>Détails du son</h3>
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 16, fontSize: 13 }}>
-                {track.genre && <li style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><span style={{ color: colors.textMuted }}>Genre</span> <strong style={{ color: colors.textMain }}>{track.genre}</strong></li>}
-                {track.bpm && <li style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><span style={{ color: colors.textMuted }}>BPM</span> <strong style={{ color: colors.textMain }}>{track.bpm}</strong></li>}
-                {track.song_key && <li style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><span style={{ color: colors.textMuted }}>Clé</span> <strong style={{ color: colors.textMain }}>{track.song_key}</strong></li>}
-                <li style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><span style={{ color: colors.textMuted }}>Sortie</span> <strong style={{ color: colors.textMain }}>{new Date(track.created_at).toLocaleDateString('fr-FR')}</strong></li>
-              </ul>
-            </div>
-
           </div>
         </div>
       </div>

@@ -1,6 +1,7 @@
 // src/pages/FeedPage.tsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { createPortal } from 'react-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useIsMobile } from '../hooks/useIsMobile';
@@ -18,6 +19,7 @@ const Icons = {
   play: <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>,
   pause: <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>,
   music: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>,
+  sparkles: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path></svg>
 };
 
 interface DbEvent { id: string; title: string; event_date: string; location: string | null; city: string | null; url: string | null; image_url: string | null; created_at?: string; }
@@ -74,7 +76,6 @@ export const FeedPage: React.FC = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile(768);
   const { play, currentTrack, isPlaying } = usePlayer();
-  
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
@@ -82,23 +83,17 @@ export const FeedPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [topTracks, setTopTracks] = useState<Track[]>([]);
   const [upcomingEvents, setUpcomingEvents] = useState<DbEvent[]>([]);
-
-  // ✅ NOUVEAUX ÉTATS POUR LES FOLLOWS
   const [feedMode, setFeedMode] = useState<'following' | 'discover'>('discover');
   const [followedArtists, setFollowedArtists] = useState<FollowedArtist[]>([]);
   const [followedIds, setFollowedIds] = useState<string[]>([]);
-
   const [postContent, setPostContent] = useState('');
   const [postUrl, setPostUrl] = useState('');
   const [postType, setPostType] = useState<'texte' | 'lien' | 'image' | 'video'>('texte');
-
   const [linkPreview, setLinkPreview] = useState<{ title: string; desc: string; image: string } | null>(null);
   const [loadingPreview, setLoadingPreview] = useState(false);
-
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
   const [editUrl, setEditUrl] = useState('');
-
   const [userLikes, setUserLikes] = useState<Record<string, boolean>>({});
   const [userPostLikes, setUserPostLikes] = useState<Record<string, boolean>>({});
   const [commentsModalOpen, setCommentsModalOpen] = useState(false);
@@ -108,26 +103,33 @@ export const FeedPage: React.FC = () => {
   const [loadingComments, setLoadingComments] = useState(false);
 
   const colors = {
-    bg: isDark ? '#0a0a0a' : '#f5f5f7',
+    bg: isDark ? '#050505' : '#f5f5f7',
     textMain: isDark ? '#ffffff' : '#1a1a1a',
-    textMuted: isDark ? '#666666' : '#888888',
+    textMuted: isDark ? '#888888' : '#666666',
     textLight: isDark ? '#dddddd' : '#333333',
-    border: isDark ? '#222222' : '#e5e7eb',
-    panelBg: isDark ? '#121212' : '#ffffff',
+    border: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
+    panelBg: isDark ? 'rgba(18, 18, 18, 0.65)' : 'rgba(255, 255, 255, 0.75)',
+    modalBg: isDark ? '#121212' : '#ffffff',
     inputBg: isDark ? '#0a0a0a' : '#f3f4f6',
     avatarBg: isDark ? '#1a1a1a' : '#e5e7eb',
     btnPublishBg: isDark ? '#ffffff' : '#1a1a1a',
     btnPublishText: isDark ? '#000000' : '#ffffff',
     btnPublishDisabledBg: isDark ? '#1a1a1a' : '#e5e7eb',
     btnPublishDisabledText: isDark ? '#555555' : '#999999',
-    commentBg: isDark ? '#0a0a0a' : '#f3f4f6',
+    accent: '#00d9ff',
+    cardHoverBorder: isDark ? 'rgba(0, 217, 255, 0.3)' : 'rgba(0, 217, 255, 0.4)',
   };
+
+  useEffect(() => {
+    if (commentsModalOpen) document.body.style.overflow = 'hidden';
+    else document.body.style.overflow = 'unset';
+    return () => { document.body.style.overflow = 'unset'; };
+  }, [commentsModalOpen]);
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        // 1. Charger les follows de l'utilisateur
         let followedUserIds: string[] = [];
         if (user) {
           const { data: followsData } = await supabase.from('follows').select('following_id').eq('follower_id', user.id);
@@ -137,12 +139,10 @@ export const FeedPage: React.FC = () => {
           if (followedUserIds.length > 0) {
             const { data: profilesData } = await supabase.from('profiles').select('id, username, avatar_url').in('id', followedUserIds);
             setFollowedArtists(profilesData || []);
-            // Si l'utilisateur suit des artistes, on démarre sur son feed par défaut
             setFeedMode('following');
           }
         }
 
-        // 2. Charger les données du feed
         const { data: tracksData } = await supabase.from('tracks').select('*').order('created_at', { ascending: false }).limit(40);
         const today = new Date().toISOString().split('T')[0];
         const { data: eventsData } = await supabase.from('events').select('*').gte('event_date', today).order('event_date', { ascending: true }).limit(10);
@@ -166,7 +166,6 @@ export const FeedPage: React.FC = () => {
 
         const { data: topData } = await supabase.from('tracks').select('*').order('likes_count', { ascending: false }).limit(5);
         if (topData) setTopTracks(topData as Track[]);
-
         if (eventsData) setUpcomingEvents(eventsData.slice(0, 3) as DbEvent[]);
 
         if (user) {
@@ -190,13 +189,12 @@ export const FeedPage: React.FC = () => {
     fetchData();
   }, [user]);
 
-  // ✅ FILTRAGE DES ITEMS SELON L'ONGLET ACTIF
   const filteredFeedItems = useMemo(() => {
     if (feedMode === 'following' && followedIds.length > 0) {
       return feedItems.filter(item => {
         if (isTrackItem(item)) return followedIds.includes(item.data.user_id);
         if (isPostItem(item)) return followedIds.includes(item.data.profile_id);
-        return false; // Les événements n'apparaissent que dans "Découverte"
+        return false;
       });
     }
     return feedItems;
@@ -207,7 +205,6 @@ export const FeedPage: React.FC = () => {
       setLinkPreview(null);
       return;
     }
-
     const fetchPreview = async () => {
       setLoadingPreview(true);
       try {
@@ -222,7 +219,6 @@ export const FeedPage: React.FC = () => {
         }
       } catch (err) { console.log(err); } finally { setLoadingPreview(false); }
     };
-
     const timer = setTimeout(fetchPreview, 800); 
     return () => clearTimeout(timer);
   }, [postUrl, postType]);
@@ -343,57 +339,54 @@ export const FeedPage: React.FC = () => {
   };
 
   return (
-    <div style={{ background: colors.bg, minHeight: '100vh', color: colors.textMain, fontFamily: 'Inter, sans-serif', paddingBottom: 100, transition: 'background 0.3s ease, color 0.3s ease' }}>
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '16px 12px' : '40px 24px', display: 'flex', gap: 40, alignItems: 'flex-start', flexDirection: isMobile ? 'column' : 'row' }}>
+    <div style={{ background: colors.bg, minHeight: '100vh', color: colors.textMain, fontFamily: 'Inter, sans-serif', transition: 'background 0.3s ease, color 0.3s ease' }}>
+      
+      {/* ✅ CONTENEUR PRINCIPAL AVEC HAUTEUR FIXE POUR BLOQUER LA SIDEBAR */}
+      <div style={{ 
+        maxWidth: 1200, 
+        margin: '0 auto', 
+        padding: isMobile ? '16px 12px' : '24px', 
+        display: 'flex', 
+        gap: 40, 
+        flexDirection: isMobile ? 'column' : 'row',
+        height: isMobile ? 'auto' : 'calc(100vh - 120px)', // Ajuste cette valeur si ton header est plus grand
+      }}>
         
-        <div style={{ flex: 1, maxWidth: isMobile ? '100%' : 680, minWidth: 0, width: '100%' }}>
+        {/* --- COLONNE PRINCIPALE (FEED) SCROLLABLE --- */}
+        <div style={{ 
+          flex: 1, 
+          maxWidth: isMobile ? '100%' : 680, 
+          minWidth: 0, 
+          width: '100%',
+          overflowY: isMobile ? 'visible' : 'auto', // ✅ C'est ici que le scroll se passe
+          paddingRight: isMobile ? 0 : 20,
+          paddingBottom: currentTrack ? 100 : 20 // Espace pour le lecteur audio
+        }}>
           
-          {/* En-tête */}
-          <div style={{ marginBottom: 24 }}>
-            <h1 style={{ fontSize: isMobile ? 26 : 36, fontWeight: 800, margin: 0, letterSpacing: '-1px' }}>Fil d'<span style={{ color: '#00d9ff' }}>actualité</span></h1>
+          <div style={{ marginBottom: 32 }}>
+            <h1 style={{ fontSize: isMobile ? 26 : 36, fontWeight: 900, margin: 0, letterSpacing: '-1px' }}>Fil d'<span style={{ color: colors.accent }}>actualité</span></h1>
             <p style={{ color: colors.textMuted, fontSize: 14, marginTop: 8 }}>Toutes les dernières pépites et les prochains événements.</p>
           </div>
 
-          {/* ✅ ONGLETS MON FEED / DÉCOUVERTE */}
           {user && (
-            <div style={{ display: 'flex', gap: 8, marginBottom: 20, background: colors.panelBg, padding: 6, borderRadius: 12, border: `1px solid ${colors.border}`, width: 'fit-content' }}>
-              <button 
-                onClick={() => setFeedMode('following')}
-                style={{ 
-                  padding: '8px 16px', borderRadius: 8, border: 'none', cursor: 'pointer',
-                  background: feedMode === 'following' ? '#00d9ff' : 'transparent',
-                  color: feedMode === 'following' ? '#000' : colors.textMuted,
-                  fontWeight: 700, fontSize: 13, transition: 'all 0.2s'
-                }}
-              >
+            <div style={{ display: 'flex', gap: 8, marginBottom: 24, background: colors.panelBg, padding: 6, borderRadius: 12, border: `1px solid ${colors.border}`, width: 'fit-content', backdropFilter: 'blur(20px)' }}>
+              <button onClick={() => setFeedMode('following')} style={{ padding: '10px 20px', borderRadius: 8, border: 'none', cursor: 'pointer', background: feedMode === 'following' ? colors.accent : 'transparent', color: feedMode === 'following' ? '#000' : colors.textMuted, fontWeight: 800, fontSize: 13, transition: 'all 0.2s' }}>
                 Mon Feed {followedArtists.length > 0 && `(${followedArtists.length})`}
               </button>
-              <button 
-                onClick={() => setFeedMode('discover')}
-                style={{ 
-                  padding: '8px 16px', borderRadius: 8, border: 'none', cursor: 'pointer',
-                  background: feedMode === 'discover' ? '#00d9ff' : 'transparent',
-                  color: feedMode === 'discover' ? '#000' : colors.textMuted,
-                  fontWeight: 700, fontSize: 13, transition: 'all 0.2s'
-                }}
-              >
+              <button onClick={() => setFeedMode('discover')} style={{ padding: '10px 20px', borderRadius: 8, border: 'none', cursor: 'pointer', background: feedMode === 'discover' ? colors.accent : 'transparent', color: feedMode === 'discover' ? '#000' : colors.textMuted, fontWeight: 800, fontSize: 13, transition: 'all 0.2s' }}>
                 Découverte
               </button>
             </div>
           )}
 
-          {/* ✅ BARRE DES ARTISTES SUIVIS */}
+          {/* BARRE DES ARTISTES SUIVIS */}
           {feedMode === 'following' && followedArtists.length > 0 && (
-            <div style={{ marginBottom: 24, background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 16 }}>
-              <h3 style={{ fontSize: 11, fontWeight: 800, letterSpacing: '1px', margin: '0 0 12px 0', color: colors.textMuted, textTransform: 'uppercase' }}>Artistes que tu suis</h3>
+            <div style={{ marginBottom: 24, background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 16, backdropFilter: 'blur(20px)' }}>
+              <h3 style={{ fontSize: 11, fontWeight: 800, letterSpacing: '1px', margin: '0 0 16px 0', color: colors.textMuted, textTransform: 'uppercase' }}>Artistes que tu suis</h3>
               <div style={{ display: 'flex', gap: 16, overflowX: 'auto', paddingBottom: 4 }}>
                 {followedArtists.map(artist => (
-                  <div 
-                    key={artist.id} 
-                    onClick={() => navigate(`/premium/${artist.username}`)}
-                    style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, cursor: 'pointer', flexShrink: 0 }}
-                  >
-                    <div style={{ width: 56, height: 56, borderRadius: '50%', background: artist.avatar_url ? `url(${artist.avatar_url}) center/cover` : colors.avatarBg, border: `2px solid #00d9ff` }} />
+                  <div key={artist.id} onClick={() => navigate(`/premium/${artist.username}`)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, cursor: 'pointer', flexShrink: 0 }}>
+                    <div style={{ width: 60, height: 60, borderRadius: '50%', background: artist.avatar_url ? `url(${artist.avatar_url}) center/cover` : colors.avatarBg, border: `2px solid ${colors.accent}`, boxShadow: `0 0 15px ${colors.accent}40` }} />
                     <span style={{ fontSize: 11, fontWeight: 700, color: colors.textMain, whiteSpace: 'nowrap', maxWidth: 70, overflow: 'hidden', textOverflow: 'ellipsis' }}>{artist.username}</span>
                   </div>
                 ))}
@@ -401,71 +394,51 @@ export const FeedPage: React.FC = () => {
             </div>
           )}
 
-          {/* ✅ MESSAGE SI L'UTILISATEUR NE SUIT PERSONNE */}
           {feedMode === 'following' && followedArtists.length === 0 && (
-            <div style={{ textAlign: 'center', padding: '40px 20px', background: colors.panelBg, border: `1px dashed ${colors.border}`, borderRadius: 16, marginBottom: 24 }}>
+            <div style={{ textAlign: 'center', padding: '40px 20px', background: colors.panelBg, border: `1px dashed ${colors.border}`, borderRadius: 16, marginBottom: 24, backdropFilter: 'blur(20px)' }}>
               <div style={{ color: colors.textMuted, marginBottom: 16, display: 'flex', justifyContent: 'center' }}>{Icons.music}</div>
               <h3 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 8px 0', color: colors.textMain }}>Tu ne suis encore personne</h3>
               <p style={{ color: colors.textMuted, fontSize: 13, marginBottom: 16 }}>Découvre des artistes et clique sur "Suivre" sur leur profil.</p>
-              <button onClick={() => setFeedMode('discover')} style={{ padding: '10px 20px', background: '#00d9ff', color: '#000', borderRadius: 8, border: 'none', fontWeight: 800, fontSize: 13, cursor: 'pointer' }}>Explorer la découverte</button>
+              <button onClick={() => setFeedMode('discover')} style={{ padding: '10px 20px', background: colors.accent, color: '#000', borderRadius: 8, border: 'none', fontWeight: 800, fontSize: 13, cursor: 'pointer' }}>Explorer la découverte</button>
             </div>
           )}
 
+          {/* BARRE DE PUBLICATION */}
           {user && (
-            <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: isMobile ? 16 : 20, marginBottom: 24 }}>
-              <div style={{ display: 'flex', gap: 12 }}>
-                <div className="avatar-circle" style={{ width: 40, height: 40, flexShrink: 0, borderRadius: '50%', background: colors.avatarBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#00d9ff', border: `1px solid ${colors.border}` }}>
+            <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 20, padding: isMobile ? 16 : 24, marginBottom: 32, backdropFilter: 'blur(20px)', boxShadow: '0 10px 30px rgba(0,0,0,0.05)' }}>
+              <div style={{ display: 'flex', gap: 16 }}>
+                <div style={{ width: 44, height: 44, flexShrink: 0, borderRadius: '50%', background: colors.avatarBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: colors.accent, border: `1px solid ${colors.border}`, fontSize: 18 }}>
                   {(username || user.email)?.charAt(0).toUpperCase() || 'U'}
                 </div>
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 12, minWidth: 0 }}>
-                  <textarea 
-                    placeholder="Quoi de neuf ? Publie une actu..." 
-                    value={postContent}
-                    onChange={(e) => setPostContent(e.target.value)}
-                    rows={2}
-                    style={{ background: 'transparent', border: 'none', color: colors.textMain, fontSize: 15, outline: 'none', resize: 'vertical', fontFamily: 'inherit', width: '100%', overflowWrap: 'anywhere', whiteSpace: 'pre-wrap' }} 
-                  />
+                  <textarea placeholder="Quoi de neuf ? Publie une actu..." value={postContent} onChange={(e) => setPostContent(e.target.value)} rows={2} style={{ background: 'transparent', border: 'none', color: colors.textMain, fontSize: 15, outline: 'none', resize: 'vertical', fontFamily: 'inherit', width: '100%', overflowWrap: 'anywhere', whiteSpace: 'pre-wrap' }} />
                   
                   {postType !== 'texte' && (
-                    <input 
-                      type="text" 
-                      placeholder={postType === 'image' ? "Lien direct de l'image (https://...)" : "Lien YouTube, Twitch, Facebook..."}
-                      value={postUrl}
-                      onChange={(e) => setPostUrl(e.target.value)}
-                      style={{ padding: '10px', background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain, fontSize: 13, outline: 'none', width: '100%', overflowWrap: 'anywhere' }} 
-                    />
+                    <input type="text" placeholder={postType === 'image' ? "Lien direct de l'image (https://...)" : "Lien YouTube, Twitch, Facebook..."} value={postUrl} onChange={(e) => setPostUrl(e.target.value)} style={{ padding: '12px', background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 12, color: colors.textMain, fontSize: 13, outline: 'none', width: '100%', overflowWrap: 'anywhere' }} />
                   )}
 
-                  {postType === 'lien' && loadingPreview && <div style={{ fontSize: 12, color: '#00d9ff' }}>Chargement de l'aperçu...</div>}
+                  {postType === 'lien' && loadingPreview && <div style={{ fontSize: 12, color: colors.accent, fontWeight: 600 }}>Chargement de l'aperçu...</div>}
                   {postType === 'lien' && linkPreview && (
-                    <div style={{ border: `1px solid ${colors.border}`, borderRadius: 8, overflow: 'hidden', background: colors.inputBg, display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ border: `1px solid ${colors.border}`, borderRadius: 12, overflow: 'hidden', background: colors.inputBg, display: 'flex', flexDirection: 'column' }}>
                       {linkPreview.image && <img src={linkPreview.image} alt="Preview" style={{ width: '100%', maxHeight: 200, objectFit: 'cover' }} />}
-                      <div style={{ padding: 12 }}>
-                        <div style={{ fontSize: 14, fontWeight: 'bold', color: colors.textMain, wordBreak: 'break-word' }}>{linkPreview.title}</div>
+                      <div style={{ padding: 16 }}>
+                        <div style={{ fontSize: 14, fontWeight: 800, color: colors.textMain, wordBreak: 'break-word' }}>{linkPreview.title}</div>
                         <div style={{ fontSize: 12, color: colors.textMuted, marginTop: 4, wordBreak: 'break-word' }}>{linkPreview.desc}</div>
                       </div>
                     </div>
                   )}
 
-                  <div style={{ height: 1, background: colors.border }} />
+                  <div style={{ height: 1, background: colors.border, margin: '4px 0' }} />
                   
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
                     <div style={{ display: 'flex', gap: 12 }}>
                       {(['texte', 'lien', 'image', 'video'] as const).map((type) => (
-                        <button
-                          key={type}
-                          onClick={() => { setPostType(type); setPostUrl(''); setLinkPreview(null); }}
-                          style={{ background: 'transparent', border: 'none', color: postType === type ? '#00d9ff' : colors.textMuted, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', cursor: 'pointer', padding: 0 }}
-                        >
+                        <button key={type} onClick={() => { setPostType(type); setPostUrl(''); setLinkPreview(null); }} style={{ background: 'transparent', border: 'none', color: postType === type ? colors.accent : colors.textMuted, fontSize: 11, fontWeight: 800, textTransform: 'uppercase', cursor: 'pointer', padding: 0, letterSpacing: '0.5px' }}>
                           {type}
                         </button>
                       ))}
                     </div>
-                    <button 
-                      onClick={handlePublish}
-                      disabled={!postContent.trim() && !postUrl.trim()}
-                      style={{ background: (postContent.trim() || postUrl.trim()) ? colors.btnPublishBg : colors.btnPublishDisabledBg, color: (postContent.trim() || postUrl.trim()) ? colors.btnPublishText : colors.btnPublishDisabledText, border: 'none', padding: '8px 16px', borderRadius: 20, fontWeight: 700, fontSize: 12, cursor: (postContent.trim() || postUrl.trim()) ? 'pointer' : 'not-allowed' }}
-                    >
+                    <button onClick={handlePublish} disabled={!postContent.trim() && !postUrl.trim()} style={{ background: (postContent.trim() || postUrl.trim()) ? colors.btnPublishBg : colors.btnPublishDisabledBg, color: (postContent.trim() || postUrl.trim()) ? colors.btnPublishText : colors.btnPublishDisabledText, border: 'none', padding: '10px 24px', borderRadius: 20, fontWeight: 800, fontSize: 13, cursor: (postContent.trim() || postUrl.trim()) ? 'pointer' : 'not-allowed', transition: 'all 0.2s' }}>
                       Publier
                     </button>
                   </div>
@@ -474,16 +447,17 @@ export const FeedPage: React.FC = () => {
             </div>
           )}
 
+          {/* LISTE DES POSTS / SONS / EVENTS */}
           {loading ? (
             <div style={{ textAlign: 'center', color: colors.textMuted, padding: 40 }}>Chargement...</div>
           ) : filteredFeedItems.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '60px 20px', background: colors.panelBg, border: `1px dashed ${colors.border}`, borderRadius: 16 }}>
+            <div style={{ textAlign: 'center', padding: '60px 20px', background: colors.panelBg, border: `1px dashed ${colors.border}`, borderRadius: 16, backdropFilter: 'blur(20px)' }}>
               <div style={{ color: colors.border, marginBottom: 16 }}>{Icons.music}</div>
               <h3 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 8px 0' }}>{feedMode === 'following' ? "Rien de nouveau chez tes artistes" : "Le feed est vide"}</h3>
               {feedMode === 'following' && <p style={{ color: colors.textMuted, fontSize: 13 }}>Reviens plus tard ou découvre d'autres artistes.</p>}
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
               {filteredFeedItems.map((item, index) => {
                 
                 if (isPostItem(item)) {
@@ -493,49 +467,60 @@ export const FeedPage: React.FC = () => {
                   const hasOgData = !!item.data.ogImage;
 
                   return (
-                    <div key={`post-${item.data.id}-${index}`} style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, overflow: 'hidden' }}>
+                    <div key={`post-${item.data.id}-${index}`} style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 20, overflow: 'hidden', backdropFilter: 'blur(20px)', transition: 'all 0.2s' }} onMouseEnter={e => { e.currentTarget.style.borderColor = colors.cardHoverBorder; e.currentTarget.style.transform = 'translateY(-2px)'; }} onMouseLeave={e => { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.transform = 'none'; }}>
                       
-                      <div style={{ padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                          <div className="avatar-circle" onClick={() => navigate(`/profil/${item.data.profile_id}`)} style={{ width: 40, height: 40, flexShrink: 0, borderRadius: '50%', background: colors.avatarBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#00d9ff', cursor: 'pointer' }}>
+                      <div style={{ padding: '20px 20px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
+                          <div className="avatar-circle" onClick={() => navigate(`/profil/${item.data.profile_id}`)} style={{ width: 44, height: 44, flexShrink: 0, borderRadius: '50%', background: colors.avatarBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: colors.accent, cursor: 'pointer', fontSize: 18, border: `1px solid ${colors.border}` }}>
                             {item.data.author.charAt(0).toUpperCase()}
                           </div>
                           <div>
-                            <div style={{ fontSize: 14, fontWeight: 600, color: colors.textMain, cursor: 'pointer' }} onClick={() => navigate(`/profil/${item.data.profile_id}`)}>{item.data.author}</div>
+                            <div style={{ fontSize: 15, fontWeight: 800, color: colors.textMain, cursor: 'pointer' }} onClick={() => navigate(`/profil/${item.data.profile_id}`)}>{item.data.author}</div>
                             <div style={{ fontSize: 12, color: colors.textMuted, marginTop: 2 }}>{formatDate(item.date)}</div>
                           </div>
                         </div>
                         
                         {!isEditing && (isAdmin || user?.id === item.data.profile_id) && (
-                          <div style={{ display: 'flex', gap: 8 }}>
-                            <button onClick={() => startEditing(item.data)} style={{ background: 'transparent', border: 'none', color: '#00d9ff', cursor: 'pointer', fontSize: 11, fontWeight: 600 }}>Modifier</button>
-                            <button onClick={() => handleDeletePost(item.data.id)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', fontSize: 11, fontWeight: 600 }}>Supprimer</button>
+                          <div style={{ display: 'flex', gap: 12 }}>
+                            <button onClick={() => startEditing(item.data)} style={{ background: 'transparent', border: 'none', color: colors.accent, cursor: 'pointer', fontSize: 11, fontWeight: 700 }}>Modifier</button>
+                            <button onClick={() => handleDeletePost(item.data.id)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', fontSize: 11, fontWeight: 700 }}>Supprimer</button>
                           </div>
                         )}
                       </div>
                       
                       {isEditing ? (
-                        <div style={{ padding: '0 16px 16px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                          <textarea value={editContent} onChange={(e) => setEditContent(e.target.value)} rows={4} style={{ width: '100%', background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain, padding: 12, fontSize: 14, fontFamily: 'inherit' }} />
-                          {item.data.postType !== 'text' && <input type="text" value={editUrl} onChange={(e) => setEditUrl(e.target.value)} placeholder="Lien du média" style={{ width: '100%', background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain, padding: 12, fontSize: 13 }} />}
-                          <div style={{ display: 'flex', gap: 8 }}>
-                            <button onClick={() => handleSaveEdit(item.data.id)} style={{ padding: '8px 12px', background: '#00d9ff', color: '#000', border: 'none', borderRadius: 6, fontWeight: 700, cursor: 'pointer', fontSize: 12 }}>Enregistrer</button>
-                            <button onClick={() => setEditingPostId(null)} style={{ padding: '8px 12px', background: 'transparent', color: colors.textMuted, border: `1px solid ${colors.border}`, borderRadius: 6, fontWeight: 600, cursor: 'pointer', fontSize: 12 }}>Annuler</button>
+                        <div style={{ padding: '0 20px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                          <textarea value={editContent} onChange={(e) => setEditContent(e.target.value)} rows={4} style={{ width: '100%', background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 12, color: colors.textMain, padding: 16, fontSize: 14, fontFamily: 'inherit', outline: 'none' }} />
+                          {item.data.postType !== 'text' && <input type="text" value={editUrl} onChange={(e) => setEditUrl(e.target.value)} placeholder="Lien du média" style={{ width: '100%', background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 12, color: colors.textMain, padding: 16, fontSize: 13, outline: 'none' }} />}
+                          <div style={{ display: 'flex', gap: 12 }}>
+                            <button onClick={() => handleSaveEdit(item.data.id)} style={{ padding: '10px 20px', background: colors.accent, color: '#000', border: 'none', borderRadius: 8, fontWeight: 800, cursor: 'pointer', fontSize: 13 }}>Enregistrer</button>
+                            <button onClick={() => setEditingPostId(null)} style={{ padding: '10px 20px', background: 'transparent', color: colors.textMuted, border: `1px solid ${colors.border}`, borderRadius: 8, fontWeight: 700, cursor: 'pointer', fontSize: 13 }}>Annuler</button>
                           </div>
                         </div>
                       ) : (
-                        <div style={{ padding: '0 16px 16px 16px', fontSize: 14, color: colors.textLight, whiteSpace: 'pre-wrap', lineHeight: 1.5, wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
+                        <div style={{ padding: '0 20px 16px', fontSize: 15, color: colors.textLight, whiteSpace: 'pre-wrap', lineHeight: 1.6, wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
                           {linkify(item.data.text)}
+                        </div>
+                      )}
+
+                      {!isEditing && (
+                        <div style={{ padding: '0 20px 16px', display: 'flex', gap: 24 }}>
+                          <button onClick={(e) => handleLikePost(e, item.data.id)} style={{ background: 'transparent', border: 'none', color: isLiked ? '#ff3366' : colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, transition: 'transform 0.1s' }} onMouseDown={e => e.currentTarget.style.transform = 'scale(0.95)'} onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}>
+                            {isLiked ? Icons.heartFilled : Icons.heart} {item.data.likes_count || 0}
+                          </button>
+                          <button onClick={() => openComments('post', item.data.id)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, transition: 'transform 0.1s' }} onMouseDown={e => e.currentTarget.style.transform = 'scale(0.95)'} onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}>
+                            {Icons.message} Commenter
+                          </button>
                         </div>
                       )}
 
                       {!isEditing && hasOgData && (
                         <a href={cleanUrl} target="_blank" rel="noreferrer" style={{ display: 'flex', flexDirection: 'column', background: colors.inputBg, borderTop: `1px solid ${colors.border}`, borderBottom: `1px solid ${colors.border}`, textDecoration: 'none', color: colors.textMain }}>
                           {item.data.ogImage && <img src={item.data.ogImage} alt={item.data.ogTitle} style={{ width: '100%', maxHeight: 300, objectFit: 'cover' }} />}
-                          <div style={{ padding: '12px 16px' }}>
-                            {item.data.ogTitle && <div style={{ fontSize: 15, fontWeight: 'bold', marginBottom: 4 }}>{item.data.ogTitle}</div>}
-                            {item.data.ogDescription && <div style={{ fontSize: 12, color: colors.textMuted, lineHeight: 1.4 }}>{item.data.ogDescription}</div>}
-                            <div style={{ fontSize: 10, color: '#00d9ff', marginTop: 8, textTransform: 'uppercase' }}>{new URL(cleanUrl).hostname}</div>
+                          <div style={{ padding: '16px 20px' }}>
+                            {item.data.ogTitle && <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 6 }}>{item.data.ogTitle}</div>}
+                            {item.data.ogDescription && <div style={{ fontSize: 13, color: colors.textMuted, lineHeight: 1.5 }}>{item.data.ogDescription}</div>}
+                            <div style={{ fontSize: 11, color: colors.accent, marginTop: 10, textTransform: 'uppercase', fontWeight: 700, letterSpacing: '1px' }}>{new URL(cleanUrl).hostname}</div>
                           </div>
                         </a>
                       )}
@@ -547,7 +532,7 @@ export const FeedPage: React.FC = () => {
                       )}
 
                       {!isEditing && !hasOgData && item.data.postType === 'text' && cleanUrl && (
-                        <a href={cleanUrl} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 16px', background: colors.inputBg, color: '#00d9ff', textDecoration: 'none', fontSize: 12, borderTop: `1px solid ${colors.border}`, borderBottom: `1px solid ${colors.border}`, wordBreak: 'break-all' }}>
+                        <a href={cleanUrl} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '16px 20px', background: colors.inputBg, color: colors.accent, textDecoration: 'none', fontSize: 13, borderTop: `1px solid ${colors.border}`, borderBottom: `1px solid ${colors.border}`, wordBreak: 'break-all', fontWeight: 600 }}>
                           {Icons.link} {cleanUrl}
                         </a>
                       )}
@@ -557,17 +542,6 @@ export const FeedPage: React.FC = () => {
                           <iframe src={cleanUrl} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none' }} allowFullScreen title="YouTube" scrolling="no" />
                         </div>
                       )}
-
-                      <div style={{ padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div style={{ display: 'flex', gap: 20 }}>
-                          <button onClick={(e) => handleLikePost(e, item.data.id)} style={{ background: 'transparent', border: 'none', color: isLiked ? '#ff3366' : colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 600 }}>
-                            {isLiked ? Icons.heartFilled : Icons.heart} {item.data.likes_count || 0}
-                          </button>
-                          <button onClick={() => openComments('post', item.data.id)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 600 }}>
-                            {Icons.message} Commenter
-                          </button>
-                        </div>
-                      </div>
                     </div>
                   );
                 }
@@ -577,15 +551,15 @@ export const FeedPage: React.FC = () => {
                 const isLiked = isTrackItem(item) && userLikes[item.data.id];
                 
                 return (
-                  <div key={`${item.type}-${item.data.id}-${index}`} style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, overflow: 'hidden' }}>
-                    <div style={{ padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                        <div className="avatar-circle" style={{ width: 40, height: 40, flexShrink: 0, borderRadius: '50%', background: colors.avatarBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: item.type === 'track' ? '#00d9ff' : '#ff3366', fontWeight: 'bold' }}>
+                  <div key={`${item.type}-${item.data.id}-${index}`} style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 20, overflow: 'hidden', backdropFilter: 'blur(20px)', transition: 'all 0.2s' }} onMouseEnter={e => { e.currentTarget.style.borderColor = colors.cardHoverBorder; e.currentTarget.style.transform = 'translateY(-2px)'; }} onMouseLeave={e => { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.transform = 'none'; }}>
+                    <div style={{ padding: '20px 20px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
+                        <div className="avatar-circle" style={{ width: 44, height: 44, flexShrink: 0, borderRadius: '50%', background: colors.avatarBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: item.type === 'track' ? colors.accent : '#ff3366', fontWeight: 'bold', fontSize: 18, border: `1px solid ${colors.border}` }}>
                           {authorName.charAt(0).toUpperCase()}
                         </div>
                         <div>
-                          <div style={{ fontSize: 14, fontWeight: 600, color: colors.textMain }}>
-                            {authorName} <span style={{ color: colors.textMuted, fontWeight: 400 }}>{item.type === 'track' ? 'a partagé un son' : 'a créé un événement'}</span>
+                          <div style={{ fontSize: 15, fontWeight: 800, color: colors.textMain }}>
+                            {authorName} <span style={{ color: colors.textMuted, fontWeight: 500, fontSize: 13 }}>{item.type === 'track' ? 'a partagé un son' : 'a créé un événement'}</span>
                           </div>
                           <div style={{ fontSize: 12, color: colors.textMuted, marginTop: 2 }}>{formatDate(item.date)}</div>
                         </div>
@@ -594,12 +568,23 @@ export const FeedPage: React.FC = () => {
 
                     {isTrackItem(item) && (
                       <>
-                        <div style={{ padding: '0 16px 12px 16px', fontSize: 14, color: colors.textLight }}>
+                        <div style={{ padding: '0 20px 16px', fontSize: 15, color: colors.textLight }}>
                           Découvrez le nouveau son : <strong style={{ color: colors.textMain }}>{item.data.title}</strong>
                         </div>
-                        <div style={{ position: 'relative', width: '100%', height: isMobile ? 200 : 340, background: item.data.cover_url ? `url(${item.data.cover_url}) center/cover` : colors.inputBg, cursor: 'pointer', borderTop: `1px solid ${colors.border}`, borderBottom: `1px solid ${colors.border}` }} onClick={() => navigate(`/track/${item.data.id}`)}>
-                          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <button onClick={(e) => handlePlayClick(e, item.data)} style={{ width: 64, height: 64, borderRadius: '50%', background: isThisPlaying ? '#00d9ff' : 'rgba(255,255,255,0.1)', border: isThisPlaying ? 'none' : '1px solid rgba(255,255,255,0.3)', color: isThisPlaying ? '#000' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }}>
+                        
+                        <div style={{ padding: '0 20px 16px', display: 'flex', gap: 24 }}>
+                          <button onClick={(e) => handleLikeTrack(e, item.data.id)} style={{ background: 'transparent', border: 'none', color: isLiked ? '#ff3366' : colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, transition: 'transform 0.1s' }} onMouseDown={e => e.currentTarget.style.transform = 'scale(0.95)'} onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}>
+                            {isLiked ? Icons.heartFilled : Icons.heart} {item.data.likes_count || 0}
+                          </button>
+                          <button onClick={() => openComments('track', item.data.id)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, transition: 'transform 0.1s' }} onMouseDown={e => e.currentTarget.style.transform = 'scale(0.95)'} onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}>
+                            {Icons.message} Commenter
+                          </button>
+                        </div>
+
+                        <div style={{ position: 'relative', width: '100%', height: isMobile ? 220 : 360, background: item.data.cover_url ? `url(${item.data.cover_url}) center/cover` : colors.inputBg, cursor: 'pointer', borderTop: `1px solid ${colors.border}`, borderBottom: `1px solid ${colors.border}` }} onClick={() => navigate(`/track/${item.data.id}`)}>
+                          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)' }} />
+                          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <button onClick={(e) => handlePlayClick(e, item.data)} style={{ width: 72, height: 72, borderRadius: '50%', background: isThisPlaying ? colors.accent : 'rgba(255,255,255,0.1)', border: isThisPlaying ? 'none' : '1px solid rgba(255,255,255,0.4)', color: isThisPlaying ? '#000' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s', backdropFilter: 'blur(10px)', boxShadow: isThisPlaying ? `0 0 30px ${colors.accent}80` : 'none' }} onMouseEnter={e => { if (!isThisPlaying) e.currentTarget.style.background = 'rgba(255,255,255,0.2)' }} onMouseLeave={e => { if (!isThisPlaying) e.currentTarget.style.background = 'rgba(255,255,255,0.1)' }}>
                               {isThisPlaying ? Icons.pause : Icons.play}
                             </button>
                           </div>
@@ -609,34 +594,24 @@ export const FeedPage: React.FC = () => {
 
                     {isEventItem(item) && (
                       <>
-                        <div style={{ padding: '0 16px 12px 16px', fontSize: 14, color: colors.textLight }}>Nouvel événement : <strong style={{ color: colors.textMain }}>{item.data.title}</strong></div>
+                        <div style={{ padding: '0 20px 16px', fontSize: 15, color: colors.textLight }}>Nouvel événement : <strong style={{ color: colors.textMain }}>{item.data.title}</strong></div>
                         {item.data.image_url ? (
                           <div style={{ width: '100%', aspectRatio: '16 / 9', background: `url(${item.data.image_url}) center/cover`, borderTop: `1px solid ${colors.border}`, borderBottom: `1px solid ${colors.border}` }} />
                         ) : (
                           <div style={{ width: '100%', height: 160, background: colors.inputBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.border, borderTop: `1px solid ${colors.border}`, borderBottom: `1px solid ${colors.border}` }}>{Icons.calendar}</div>
                         )}
-                        <div style={{ padding: '16px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#00d9ff', fontWeight: 700, marginBottom: 6 }}>{Icons.calendar} {new Date(item.data.event_date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: colors.textMuted }}>{Icons.mapPin} {item.data.location} {item.data.city ? `, ${item.data.city}` : ''}</div>
+                        <div style={{ padding: '20px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: colors.accent, fontWeight: 800, marginBottom: 8 }}>{Icons.calendar} {new Date(item.data.event_date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: colors.textMuted }}>{Icons.mapPin} {item.data.location} {item.data.city ? `, ${item.data.city}` : ''}</div>
                         </div>
                       </>
                     )}
 
-                    <div style={{ padding: '12px 16px', borderTop: `1px solid ${colors.border}`, display: 'flex', gap: 20 }}>
-                      {isTrackItem(item) ? (
-                        <button onClick={(e) => handleLikeTrack(e, item.data.id)} style={{ background: 'transparent', border: 'none', color: isLiked ? '#ff3366' : colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 600 }}>
-                          {isLiked ? Icons.heartFilled : Icons.heart} {item.data.likes_count || 0}
-                        </button>
-                      ) : (
-                        <button style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 600 }}>{Icons.heart} J'aime</button>
-                      )}
-                      <button onClick={() => openComments(isTrackItem(item) ? 'track' : 'post', item.data.id)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 600 }}>
-                        {Icons.message} Commenter
-                      </button>
-                      {isTrackItem(item) && (
-                        <button onClick={() => navigate(`/track/${item.data.id}`)} style={{ marginLeft: 'auto', background: 'transparent', border: 'none', color: colors.textMain, cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>Écouter ↗</button>
-                      )}
-                    </div>
+                    {isTrackItem(item) && (
+                      <div style={{ padding: '16px 20px', borderTop: `1px solid ${colors.border}`, display: 'flex', justifyContent: 'flex-end' }}>
+                        <button onClick={() => navigate(`/track/${item.data.id}`)} style={{ background: 'transparent', border: 'none', color: colors.accent, cursor: 'pointer', fontSize: 13, fontWeight: 800 }}>Écouter ↗</button>
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -644,70 +619,151 @@ export const FeedPage: React.FC = () => {
           )}
         </div>
 
+        {/* --- SIDEBAR FIXE (NON SCROLLABLE) --- */}
         {!isMobile && (
-          <aside style={{ width: 320, flexShrink: 0, position: 'sticky', top: 32, alignSelf: 'flex-start', display: 'flex', flexDirection: 'column', gap: 24 }}>
-            <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 20 }}>
-              <h3 style={{ fontSize: 13, fontWeight: 800, letterSpacing: '1px', margin: '0 0 20px 0', color: colors.textMain, textTransform: 'uppercase' }}>Top 5 du moment</h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                {topTracks.map((track, index) => (
-                  <div key={track.id} style={{ display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer' }} onClick={() => navigate(`/track/${track.id}`)}>
-                    <div style={{ fontSize: 18, color: index === 0 ? '#00d9ff' : colors.textMuted, fontWeight: 900, fontStyle: 'italic', width: 24 }}>0{index + 1}</div>
-                    <div style={{ width: 44, height: 44, borderRadius: 6, background: track.cover_url ? `url(${track.cover_url}) center/cover` : colors.inputBg, flexShrink: 0 }} />
-                    <div style={{ minWidth: 0, flex: 1 }}>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: colors.textMain, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.title}</div>
-                      <div style={{ fontSize: 11, color: colors.textMuted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: 2 }}>{track.artist}</div>
+          <aside style={{ 
+            width: 320, 
+            flexShrink: 0,
+            height: '100%', // ✅ Prend toute la hauteur du conteneur
+            overflowY: 'auto', // ✅ Si le contenu est plus grand que l'écran, la sidebar scrolle indépendamment (sans faire bouger le feed)
+            paddingRight: 10
+          }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+              
+              {/* WIDGET DE BIENVENUE (Furniture) */}
+              <div style={{ background: `linear-gradient(135deg, ${colors.accent}15, transparent 60%), ${colors.panelBg}`, border: `1px solid ${colors.border}`, borderRadius: 20, padding: 24, backdropFilter: 'blur(20px)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                  <div style={{ color: colors.accent }}>{Icons.sparkles}</div>
+                  <h3 style={{ fontSize: 14, fontWeight: 900, color: colors.textMain, margin: 0 }}>Bienvenue sur DropZone</h3>
+                </div>
+                <p style={{ fontSize: 13, color: colors.textMuted, lineHeight: 1.5, margin: '0 0 16px 0' }}>
+                  Découvre les meilleurs sons, partage tes propres tracks et connecte-toi avec la communauté.
+                </p>
+              </div>
+
+              {/* TOP 5 DU MOMENT */}
+              <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 20, padding: 24, backdropFilter: 'blur(20px)' }}>
+                <h3 style={{ fontSize: 13, fontWeight: 800, letterSpacing: '1px', margin: '0 0 20px 0', color: colors.textMain, textTransform: 'uppercase' }}>Top 5 du moment</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                  {topTracks.map((track, index) => (
+                    <div 
+                      key={track.id} 
+                      style={{ display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer', transition: 'transform 0.2s' }} 
+                      onClick={() => navigate(`/track/${track.id}`)}
+                      onMouseEnter={e => e.currentTarget.style.transform = 'translateX(4px)'}
+                      onMouseLeave={e => e.currentTarget.style.transform = 'translateX(0)'}
+                    >
+                      <div style={{ 
+                        fontSize: 24, 
+                        background: index === 0 ? `linear-gradient(135deg, ${colors.accent}, #a855f7)` : 'transparent',
+                        WebkitBackgroundClip: index === 0 ? 'text' : 'unset',
+                        WebkitTextFillColor: index === 0 ? 'transparent' : colors.textMuted,
+                        color: index === 0 ? 'transparent' : colors.textMuted,
+                        fontWeight: 900, 
+                        fontStyle: 'italic', 
+                        width: 32, 
+                        textAlign: 'center' 
+                      }}>
+                        0{index + 1}
+                      </div>
+                      <div style={{ width: 48, height: 48, borderRadius: 8, background: track.cover_url ? `url(${track.cover_url}) center/cover` : colors.inputBg, flexShrink: 0, border: `1px solid ${colors.border}`, boxShadow: '0 4px 10px rgba(0,0,0,0.1)' }} />
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        <div style={{ fontSize: 14, fontWeight: 800, color: colors.textMain, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.title}</div>
+                        <div style={{ fontSize: 12, color: colors.textMuted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: 2 }}>{track.artist}</div>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
-            <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 20 }}>
-              <h3 style={{ fontSize: 13, fontWeight: 800, letterSpacing: '1px', margin: '0 0 20px 0', color: colors.textMain, textTransform: 'uppercase' }}>Événements à venir</h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                {upcomingEvents.map((event) => (
-                  <a key={event.id} href={event.url || '#'} target="_blank" rel="noopener noreferrer" style={{ display: 'block', textDecoration: 'none' }}>
-                    <div style={{ fontSize: 11, color: '#00d9ff', fontWeight: 800, marginBottom: 4, letterSpacing: '0.5px' }}>{new Date(event.event_date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }).toUpperCase()}</div>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: colors.textMain, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{event.title}</div>
-                    <div style={{ fontSize: 12, color: colors.textMuted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: 2 }}>{event.city || event.location}</div>
-                  </a>
-                ))}
+              
+              {/* ÉVÉNEMENTS À VENIR */}
+              <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 20, padding: 24, backdropFilter: 'blur(20px)' }}>
+                <h3 style={{ fontSize: 13, fontWeight: 800, letterSpacing: '1px', margin: '0 0 20px 0', color: colors.textMain, textTransform: 'uppercase' }}>Événements à venir</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  {upcomingEvents.map((event) => (
+                    <a 
+                      key={event.id} 
+                      href={event.url || '#'} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      style={{ 
+                        display: 'flex', 
+                        flexDirection: 'column', 
+                        textDecoration: 'none', 
+                        padding: 16, 
+                        borderRadius: 12, 
+                        background: colors.inputBg, 
+                        borderLeft: `3px solid ${colors.accent}`, 
+                        transition: 'all 0.2s'
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.background = `${colors.accent}10`; e.currentTarget.style.borderLeftWidth = '6px'; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = colors.inputBg; e.currentTarget.style.borderLeftWidth = '3px'; }}
+                    >
+                      <div style={{ fontSize: 11, color: colors.accent, fontWeight: 900, marginBottom: 6, letterSpacing: '1px' }}>
+                        {new Date(event.event_date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }).toUpperCase()}
+                      </div>
+                      <div style={{ fontSize: 14, fontWeight: 800, color: colors.textMain, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{event.title}</div>
+                      <div style={{ fontSize: 12, color: colors.textMuted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: 4 }}>{event.city || event.location}</div>
+                    </a>
+                  ))}
+                </div>
               </div>
-            </div>
-            <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 20 }}>
-              <OnlineUsersWidget />
+
+              {/* ONLINE USERS */}
+              <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 20, padding: 24, backdropFilter: 'blur(20px)' }}>
+                <OnlineUsersWidget />
+              </div>
+
+              {/* FOOTER SIDEBAR */}
+              <div style={{ padding: '0 24px', fontSize: 11, color: colors.textMuted, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                <span>© {new Date().getFullYear()} DropZone.dj</span>
+                <span>•</span>
+                <span style={{ cursor: 'pointer' }}>Confidentialité</span>
+                <span>•</span>
+                <span style={{ cursor: 'pointer' }}>CGU</span>
+              </div>
+
             </div>
           </aside>
         )}
       </div>
 
-      {commentsModalOpen && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 20, width: '100%', maxWidth: 500, maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <h2 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800 }}>Commentaires</h2>
-              <button onClick={() => setCommentsModalOpen(false)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, fontSize: 20, cursor: 'pointer' }}>✕</button>
+      {/* ✅ MODALE DES COMMENTAIRES AVEC REACT PORTAL */}
+      {commentsModalOpen && createPortal(
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={() => setCommentsModalOpen(false)}>
+          <div style={{ background: colors.modalBg, border: `1px solid ${colors.border}`, borderRadius: 20, padding: 24, width: '100%', maxWidth: 500, maxHeight: '80vh', display: 'flex', flexDirection: 'column', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)' }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <h2 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 900, color: colors.textMain }}>Commentaires</h2>
+              <button onClick={() => setCommentsModalOpen(false)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, fontSize: 24, cursor: 'pointer' }}>✕</button>
             </div>
             
-            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 16 }}>
-              {loadingComments ? <div style={{ color: colors.textMuted, textAlign: 'center', padding: 20 }}>Chargement...</div> : comments.length === 0 ? <div style={{ color: colors.textMuted, textAlign: 'center', padding: 20, fontStyle: 'italic' }}>Aucun commentaire.</div> : comments.map(c => (
-                  <div key={c.id} style={{ display: 'flex', gap: 10 }}>
-                    <div className="avatar-circle" style={{ width: 28, height: 28, flexShrink: 0, borderRadius: '50%', background: colors.avatarBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#00d9ff' }}>
+            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 20, paddingRight: 10 }}>
+              {loadingComments ? (
+                <div style={{ color: colors.textMuted, textAlign: 'center', padding: 20 }}>Chargement...</div>
+              ) : comments.length === 0 ? (
+                <div style={{ color: colors.textMuted, textAlign: 'center', padding: 20, fontStyle: 'italic' }}>Aucun commentaire.</div>
+              ) : (
+                comments.map(c => (
+                  <div key={c.id} style={{ display: 'flex', gap: 12 }}>
+                    <div className="avatar-circle" style={{ width: 32, height: 32, flexShrink: 0, borderRadius: '50%', background: colors.avatarBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: colors.accent, border: `1px solid ${colors.border}` }}>
                       {c.profiles?.username?.charAt(0).toUpperCase() || '?'}
                     </div>
                     <div>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: colors.textMain }}>{c.profiles?.username || 'Anonyme'} <span style={{ color: colors.textMuted, fontWeight: 400, fontSize: 10, marginLeft: 6 }}>{formatDate(new Date(c.created_at))}</span></div>
-                      <div style={{ fontSize: 13, color: colors.textLight, marginTop: 2 }}>{c.content}</div>
+                      <div style={{ fontSize: 13, fontWeight: 800, color: colors.textMain }}>{c.profiles?.username || 'Anonyme'} <span style={{ color: colors.textMuted, fontWeight: 500, fontSize: 11, marginLeft: 8 }}>{formatDate(new Date(c.created_at))}</span></div>
+                      <div style={{ fontSize: 14, color: colors.textLight, marginTop: 4, lineHeight: 1.5 }}>{c.content}</div>
                     </div>
                   </div>
-              ))}
+                ))
+              )}
             </div>
 
-            <div style={{ display: 'flex', gap: 8 }}>
-              <input type="text" value={newComment} onChange={(e) => setNewComment(e.target.value)} placeholder="Ajouter un commentaire..." onKeyDown={(e) => e.key === 'Enter' && submitComment()} style={{ flex: 1, padding: 10, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain, outline: 'none', fontSize: 13 }} />
-              <button onClick={submitComment} disabled={!newComment.trim() || !user} style={{ padding: '10px 16px', background: colors.btnPublishBg, color: colors.btnPublishText, border: 'none', borderRadius: 8, fontWeight: 700, cursor: 'pointer', fontSize: 13 }}>Envoyer</button>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <input type="text" value={newComment} onChange={(e) => setNewComment(e.target.value)} placeholder="Ajouter un commentaire..." onKeyDown={(e) => e.key === 'Enter' && submitComment()} style={{ flex: 1, padding: '12px 16px', background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 30, color: colors.textMain, outline: 'none', fontSize: 14 }} />
+              <button onClick={submitComment} disabled={!newComment.trim() || !user} style={{ padding: '12px 24px', background: colors.accent, color: '#000', border: 'none', borderRadius: 30, fontWeight: 800, cursor: 'pointer', fontSize: 13, opacity: (!newComment.trim() || !user) ? 0.5 : 1 }}>Envoyer</button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

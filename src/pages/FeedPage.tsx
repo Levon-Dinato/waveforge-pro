@@ -1,11 +1,11 @@
 // src/pages/FeedPage.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { usePlayer } from '../contexts/PlayerContext';
-import { useTheme } from '../contexts/ThemeContext'; // ✅ IMPORT DU THEME
+import { useTheme } from '../contexts/ThemeContext';
 import { OnlineUsersWidget } from '../components/OnlineUsersWidget';
 
 const Icons = {
@@ -23,6 +23,7 @@ const Icons = {
 interface DbEvent { id: string; title: string; event_date: string; location: string | null; city: string | null; url: string | null; image_url: string | null; created_at?: string; }
 interface Track { id: string; title: string; artist: string; genre: string; bpm: number; song_key: string | null; audio_url: string; cover_url: string | null; user_id: string; created_at: string; duration: number; peaks: number[]; likes_count?: number; }
 interface Comment { id: string; user_id: string; content: string; created_at: string; profiles?: { username: string; avatar_url: string | null } }
+interface FollowedArtist { id: string; username: string; avatar_url: string | null; }
 
 type PostData = { 
   id: string; author: string; text: string; url?: string; postType: string; date: Date; likes_count: number; profile_id: string;
@@ -74,7 +75,6 @@ export const FeedPage: React.FC = () => {
   const isMobile = useIsMobile(768);
   const { play, currentTrack, isPlaying } = usePlayer();
   
-  // ✅ RÉCUPÉRATION DU THÈME
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
@@ -82,6 +82,11 @@ export const FeedPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [topTracks, setTopTracks] = useState<Track[]>([]);
   const [upcomingEvents, setUpcomingEvents] = useState<DbEvent[]>([]);
+
+  // ✅ NOUVEAUX ÉTATS POUR LES FOLLOWS
+  const [feedMode, setFeedMode] = useState<'following' | 'discover'>('discover');
+  const [followedArtists, setFollowedArtists] = useState<FollowedArtist[]>([]);
+  const [followedIds, setFollowedIds] = useState<string[]>([]);
 
   const [postContent, setPostContent] = useState('');
   const [postUrl, setPostUrl] = useState('');
@@ -102,7 +107,6 @@ export const FeedPage: React.FC = () => {
   const [newComment, setNewComment] = useState('');
   const [loadingComments, setLoadingComments] = useState(false);
 
-  // ✅ PALETTE DE COULEURS DYNAMIQUES
   const colors = {
     bg: isDark ? '#0a0a0a' : '#f5f5f7',
     textMain: isDark ? '#ffffff' : '#1a1a1a',
@@ -123,7 +127,23 @@ export const FeedPage: React.FC = () => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const { data: tracksData } = await supabase.from('tracks').select('*').order('created_at', { ascending: false }).limit(20);
+        // 1. Charger les follows de l'utilisateur
+        let followedUserIds: string[] = [];
+        if (user) {
+          const { data: followsData } = await supabase.from('follows').select('following_id').eq('follower_id', user.id);
+          followedUserIds = followsData?.map(f => f.following_id) || [];
+          setFollowedIds(followedUserIds);
+
+          if (followedUserIds.length > 0) {
+            const { data: profilesData } = await supabase.from('profiles').select('id, username, avatar_url').in('id', followedUserIds);
+            setFollowedArtists(profilesData || []);
+            // Si l'utilisateur suit des artistes, on démarre sur son feed par défaut
+            setFeedMode('following');
+          }
+        }
+
+        // 2. Charger les données du feed
+        const { data: tracksData } = await supabase.from('tracks').select('*').order('created_at', { ascending: false }).limit(40);
         const today = new Date().toISOString().split('T')[0];
         const { data: eventsData } = await supabase.from('events').select('*').gte('event_date', today).order('event_date', { ascending: true }).limit(10);
         const { data: postsData } = await supabase.from('artist_posts').select('*, profiles:profile_id(username)').order('created_at', { ascending: false }).limit(20);
@@ -169,6 +189,18 @@ export const FeedPage: React.FC = () => {
     };
     fetchData();
   }, [user]);
+
+  // ✅ FILTRAGE DES ITEMS SELON L'ONGLET ACTIF
+  const filteredFeedItems = useMemo(() => {
+    if (feedMode === 'following' && followedIds.length > 0) {
+      return feedItems.filter(item => {
+        if (isTrackItem(item)) return followedIds.includes(item.data.user_id);
+        if (isPostItem(item)) return followedIds.includes(item.data.profile_id);
+        return false; // Les événements n'apparaissent que dans "Découverte"
+      });
+    }
+    return feedItems;
+  }, [feedItems, feedMode, followedIds]);
 
   useEffect(() => {
     if (postType !== 'lien' || !postUrl.includes('http')) {
@@ -300,7 +332,6 @@ export const FeedPage: React.FC = () => {
     setFeedItems(prev => prev.filter(item => !(isPostItem(item) && item.data.id === postId)));
   };
 
-  // ✅ BLOCAGE DE LA LECTURE (Intact)
   const handlePlayClick = (e: React.MouseEvent, track: Track) => {
     e.stopPropagation();
     if (!user) {
@@ -316,10 +347,69 @@ export const FeedPage: React.FC = () => {
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '16px 12px' : '40px 24px', display: 'flex', gap: 40, alignItems: 'flex-start', flexDirection: isMobile ? 'column' : 'row' }}>
         
         <div style={{ flex: 1, maxWidth: isMobile ? '100%' : 680, minWidth: 0, width: '100%' }}>
+          
+          {/* En-tête */}
           <div style={{ marginBottom: 24 }}>
             <h1 style={{ fontSize: isMobile ? 26 : 36, fontWeight: 800, margin: 0, letterSpacing: '-1px' }}>Fil d'<span style={{ color: '#00d9ff' }}>actualité</span></h1>
             <p style={{ color: colors.textMuted, fontSize: 14, marginTop: 8 }}>Toutes les dernières pépites et les prochains événements.</p>
           </div>
+
+          {/* ✅ ONGLETS MON FEED / DÉCOUVERTE */}
+          {user && (
+            <div style={{ display: 'flex', gap: 8, marginBottom: 20, background: colors.panelBg, padding: 6, borderRadius: 12, border: `1px solid ${colors.border}`, width: 'fit-content' }}>
+              <button 
+                onClick={() => setFeedMode('following')}
+                style={{ 
+                  padding: '8px 16px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                  background: feedMode === 'following' ? '#00d9ff' : 'transparent',
+                  color: feedMode === 'following' ? '#000' : colors.textMuted,
+                  fontWeight: 700, fontSize: 13, transition: 'all 0.2s'
+                }}
+              >
+                Mon Feed {followedArtists.length > 0 && `(${followedArtists.length})`}
+              </button>
+              <button 
+                onClick={() => setFeedMode('discover')}
+                style={{ 
+                  padding: '8px 16px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                  background: feedMode === 'discover' ? '#00d9ff' : 'transparent',
+                  color: feedMode === 'discover' ? '#000' : colors.textMuted,
+                  fontWeight: 700, fontSize: 13, transition: 'all 0.2s'
+                }}
+              >
+                Découverte
+              </button>
+            </div>
+          )}
+
+          {/* ✅ BARRE DES ARTISTES SUIVIS */}
+          {feedMode === 'following' && followedArtists.length > 0 && (
+            <div style={{ marginBottom: 24, background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 16 }}>
+              <h3 style={{ fontSize: 11, fontWeight: 800, letterSpacing: '1px', margin: '0 0 12px 0', color: colors.textMuted, textTransform: 'uppercase' }}>Artistes que tu suis</h3>
+              <div style={{ display: 'flex', gap: 16, overflowX: 'auto', paddingBottom: 4 }}>
+                {followedArtists.map(artist => (
+                  <div 
+                    key={artist.id} 
+                    onClick={() => navigate(`/premium/${artist.username}`)}
+                    style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, cursor: 'pointer', flexShrink: 0 }}
+                  >
+                    <div style={{ width: 56, height: 56, borderRadius: '50%', background: artist.avatar_url ? `url(${artist.avatar_url}) center/cover` : colors.avatarBg, border: `2px solid #00d9ff` }} />
+                    <span style={{ fontSize: 11, fontWeight: 700, color: colors.textMain, whiteSpace: 'nowrap', maxWidth: 70, overflow: 'hidden', textOverflow: 'ellipsis' }}>{artist.username}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ✅ MESSAGE SI L'UTILISATEUR NE SUIT PERSONNE */}
+          {feedMode === 'following' && followedArtists.length === 0 && (
+            <div style={{ textAlign: 'center', padding: '40px 20px', background: colors.panelBg, border: `1px dashed ${colors.border}`, borderRadius: 16, marginBottom: 24 }}>
+              <div style={{ color: colors.textMuted, marginBottom: 16, display: 'flex', justifyContent: 'center' }}>{Icons.music}</div>
+              <h3 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 8px 0', color: colors.textMain }}>Tu ne suis encore personne</h3>
+              <p style={{ color: colors.textMuted, fontSize: 13, marginBottom: 16 }}>Découvre des artistes et clique sur "Suivre" sur leur profil.</p>
+              <button onClick={() => setFeedMode('discover')} style={{ padding: '10px 20px', background: '#00d9ff', color: '#000', borderRadius: 8, border: 'none', fontWeight: 800, fontSize: 13, cursor: 'pointer' }}>Explorer la découverte</button>
+            </div>
+          )}
 
           {user && (
             <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: isMobile ? 16 : 20, marginBottom: 24 }}>
@@ -386,14 +476,15 @@ export const FeedPage: React.FC = () => {
 
           {loading ? (
             <div style={{ textAlign: 'center', color: colors.textMuted, padding: 40 }}>Chargement...</div>
-          ) : feedItems.length === 0 ? (
+          ) : filteredFeedItems.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '60px 20px', background: colors.panelBg, border: `1px dashed ${colors.border}`, borderRadius: 16 }}>
               <div style={{ color: colors.border, marginBottom: 16 }}>{Icons.music}</div>
-              <h3 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 8px 0' }}>Le feed est vide</h3>
+              <h3 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 8px 0' }}>{feedMode === 'following' ? "Rien de nouveau chez tes artistes" : "Le feed est vide"}</h3>
+              {feedMode === 'following' && <p style={{ color: colors.textMuted, fontSize: 13 }}>Reviens plus tard ou découvre d'autres artistes.</p>}
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              {feedItems.map((item, index) => {
+              {filteredFeedItems.map((item, index) => {
                 
                 if (isPostItem(item)) {
                   const { isYoutube, url: cleanUrl } = getCleanUrl(item.data.url || '');

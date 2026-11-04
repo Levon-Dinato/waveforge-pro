@@ -1,269 +1,257 @@
 // src/pages/AdminPage.tsx
-import React, { useState, useEffect, useRef } from 'react';
-import { supabase, AUDIO_BUCKET } from '../lib/supabase'; // ✅ Import de AUDIO_BUCKET
+import React, { useState, useEffect } from 'react';
+import { supabase, AUDIO_BUCKET } from '../lib/supabase';
+import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
-import { DeleteButton } from '../components/DeleteButton';
+import { PitchAdmin } from '../components/PitchAdmin';
+
+const Icons = {
+  users: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>,
+  music: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>,
+  chart: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>,
+  trash: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>,
+  star: <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>,
+  search: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>,
+};
+
+type Tab = 'stats' | 'users' | 'tracks' | 'pitches';
 
 export const AdminPage: React.FC = () => {
-  const { isAdmin, loading: authLoading, refreshProfile, profile } = useAuth();
-  const navigate = useNavigate();
-  
+  const { theme } = useTheme();
+  const { isAdmin, user } = useAuth();
+  const isDark = theme === 'dark';
+
+  const [activeTab, setActiveTab] = useState<Tab>('stats');
+  const [users, setUsers] = useState<any[]>([]);
   const [tracks, setTracks] = useState<any[]>([]);
-  const [posts, setPosts] = useState<any[]>([]);
-  const [activeTab, setActiveTab] = useState<'tracks' | 'posts'>('tracks');
   const [loading, setLoading] = useState(true);
-  
-  // Modale d'édition
-  const [editingTrack, setEditingTrack] = useState<any | null>(null);
-  const [editForm, setEditForm] = useState({ 
-    title: '', artist: '', bpm: 0, song_key: '', genre: '', cover_url: '' 
-  });
-  
-  // ✅ États pour l'upload de cover
-  const [uploadingCover, setUploadingCover] = useState(false);
-  const coverInputRef = useRef<HTMLInputElement>(null);
+  const [search, setSearch] = useState('');
+
+  const colors = {
+    bg: isDark ? '#0a0a0a' : '#f5f5f7',
+    panelBg: isDark ? '#121212' : '#ffffff',
+    border: isDark ? '#222222' : '#e5e7eb',
+    textMain: isDark ? '#ffffff' : '#1a1a1a',
+    textMuted: isDark ? '#888888' : '#666666',
+    inputBg: isDark ? '#0a0a0a' : '#f3f4f6',
+    accent: '#00d9ff',
+  };
 
   useEffect(() => {
-    refreshProfile();
-  }, []);
-
-  useEffect(() => {
-    if (authLoading) return;
-
+    if (!isAdmin) return;
+    
     const fetchData = async () => {
       setLoading(true);
-      
-      const [tracksRes, postsRes, profilesRes] = await Promise.all([
-        supabase.from('tracks').select('*').order('created_at', { ascending: false }),
-        supabase.from('artist_posts').select('*').order('created_at', { ascending: false }),
-        supabase.from('profiles').select('id, username')
-      ]);
-      
-      const profileMap = new Map();
-      if (profilesRes.data) {
-        profilesRes.data.forEach(p => profileMap.set(p.id, p.username));
+      try {
+        // Charger les utilisateurs
+        const { data: usersData } = await supabase.from('profiles').select('*').order('username');
+        if (usersData) setUsers(usersData);
+
+        // Charger tous les sons
+        const { data: tracksData } = await supabase.from('tracks').select('*').order('created_at', { ascending: false });
+        if (tracksData) setTracks(tracksData);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
       }
-      
-      if (tracksRes.data) {
-        setTracks(tracksRes.data.map(t => ({
-          ...t,
-          username: profileMap.get(t.user_id) || 'Inconnu'
-        })));
-      }
-      
-      if (postsRes.data) {
-        setPosts(postsRes.data.map(p => ({
-          ...p,
-          username: profileMap.get(p.profile_id) || 'Inconnu'
-        })));
-      }
-      
-      setLoading(false);
     };
-    
-    if (isAdmin) fetchData();
-    else setLoading(false);
+    fetchData();
+  }, [isAdmin]);
 
-  }, [isAdmin, authLoading]);
-
-  // ✅ Fonction pour uploader une nouvelle image
-  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    
-    setUploadingCover(true);
-    try {
-      const ext = file.name.split('.').pop() || 'jpg';
-      // On crée un nom de fichier unique
-      const fileName = `covers/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '')}`;
-      
-      const { error: uploadError } = await supabase.storage
-        .from(AUDIO_BUCKET)
-        .upload(fileName, file, { upsert: true });
-        
-      if (uploadError) throw uploadError;
-
-      const { data: urlData } = supabase.storage
-        .from(AUDIO_BUCKET)
-        .getPublicUrl(fileName);
-
-      // On met à jour le formulaire avec la nouvelle URL
-      setEditForm(prev => ({ ...prev, cover_url: urlData.publicUrl }));
-      
-    } catch (err: any) {
-      alert("Erreur lors de l'upload : " + err.message);
-    } finally {
-      setUploadingCover(false);
-      if (e.target) e.target.value = ''; // Reset l'input
+  // --- ACTIONS ---
+  const togglePremium = async (userId: string, currentStatus: boolean) => {
+    const newStatus = !currentStatus;
+    const { error } = await supabase.from('profiles').update({ is_premium: newStatus }).eq('id', userId);
+    if (!error) {
+      setUsers(users.map(u => u.id === userId ? { ...u, is_premium: newStatus } : u));
+    } else {
+      alert("Erreur lors de la modification : " + error.message);
     }
   };
 
-  if (!authLoading && !isAdmin) {
+  const deleteTrack = async (track: any) => {
+    if (!window.confirm(`Supprimer définitivement "${track.title}" ?`)) return;
+    
+    try {
+      // 1. Supprimer le fichier audio du Storage
+      if (track.audio_url) {
+        const audioPath = track.audio_url.split(`/${AUDIO_BUCKET}/`)[1];
+        if (audioPath) await supabase.storage.from(AUDIO_BUCKET).remove([audioPath]);
+      }
+      
+      // 2. Supprimer la cover du Storage
+      if (track.cover_url) {
+        const coverPath = track.cover_url.split(`/${AUDIO_BUCKET}/`)[1];
+        if (coverPath) await supabase.storage.from(AUDIO_BUCKET).remove([coverPath]);
+      }
+
+      // 3. Supprimer de la base de données
+      await supabase.from('tracks').delete().eq('id', track.id);
+      
+      setTracks(tracks.filter(t => t.id !== track.id));
+    } catch (err) {
+      alert("Erreur lors de la suppression.");
+    }
+  };
+
+  // --- FILTRES ---
+  const filteredUsers = users.filter(u => u.username?.toLowerCase().includes(search.toLowerCase()));
+  const filteredTracks = tracks.filter(t => t.title?.toLowerCase().includes(search.toLowerCase()) || t.artist?.toLowerCase().includes(search.toLowerCase()));
+
+  // --- RENDER ---
+  if (!isAdmin) {
     return (
-      <div style={{ background: '#121212', minHeight: '100vh', padding: 40, color: '#fff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-        <h1 style={{ color: '#ff4444', fontSize: '2rem' }}>Accès Refusé</h1>
-        <p>Ton rôle actuel est : <strong>{profile?.role || 'non connecté'}</strong></p>
-        <button onClick={() => navigate('/')} style={{ marginTop: 20, padding: 10, background: '#333', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer' }}>Retour à l'accueil</button>
+      <div style={{ padding: 40, textAlign: 'center', color: colors.textMain }}>
+        <h1>Accès refusé</h1>
+        <p style={{ color: colors.textMuted }}>Vous devez être administrateur pour voir cette page.</p>
       </div>
     );
   }
 
-  if (authLoading || loading) {
-    return <div style={{ color: '#fff', padding: 40, textAlign: 'center', background: '#121212', minHeight: '100vh' }}>Chargement du panel Admin...</div>;
-  }
-
-  const handleSaveEdit = async () => {
-    if (!editingTrack) return;
-    
-    const { error } = await supabase.from('tracks').update({
-      title: editForm.title, 
-      artist: editForm.artist, 
-      bpm: Number(editForm.bpm), 
-      song_key: editForm.song_key, 
-      genre: editForm.genre,
-      cover_url: editForm.cover_url || null // ✅ Sauvegarde de la cover
-    }).eq('id', editingTrack.id);
-
-    if (!error) {
-      setEditingTrack(null);
-      // Mise à jour locale pour ne pas avoir à recharger
-      setTracks(tracks.map(t => t.id === editingTrack.id ? { ...t, ...editForm, cover_url: editForm.cover_url } : t));
-    } else {
-      alert("Erreur : " + error.message);
-    }
-  };
+  const StatsCard = ({ title, value, icon, color }: any) => (
+    <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 24, flex: 1, minWidth: 200 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+        <div style={{ width: 40, height: 40, borderRadius: 10, background: `${color}15`, color: color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          {icon}
+        </div>
+        <span style={{ fontSize: 13, fontWeight: 700, color: colors.textMuted, textTransform: 'uppercase' }}>{title}</span>
+      </div>
+      <div style={{ fontSize: 32, fontWeight: 900, color: colors.textMain }}>{value}</div>
+    </div>
+  );
 
   return (
-    <div style={{ background: '#121212', minHeight: '100vh', padding: '40px 20px', color: '#fff', fontFamily: 'Inter, sans-serif' }}>
-      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-        
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 30 }}>
-          <div>
-            <h1 style={{ fontSize: '2rem', fontWeight: 900, color: '#ff4444', margin: '0 0 5px 0' }}>🛡️ Panel Administrateur</h1>
-            <p style={{ color: '#888', margin: 0 }}>Gère tout le contenu de DropZone DJ</p>
-          </div>
-          <button onClick={() => navigate('/')} style={{ background: '#333', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>Retour au site</button>
-        </div>
-
-        <div style={{ display: 'flex', gap: 10, marginBottom: 20, borderBottom: '1px solid #2a2a2a', paddingBottom: 10 }}>
-          <button onClick={() => setActiveTab('tracks')} style={{ background: 'none', border: 'none', color: activeTab === 'tracks' ? '#00d9ff' : '#888', fontSize: 16, fontWeight: 700, cursor: 'pointer', padding: '0 10px' }}>Morceaux ({tracks.length})</button>
-          <button onClick={() => setActiveTab('posts')} style={{ background: 'none', border: 'none', color: activeTab === 'posts' ? '#00d9ff' : '#888', fontSize: 16, fontWeight: 700, cursor: 'pointer', padding: '0 10px' }}>Posts Communauté ({posts.length})</button>
-        </div>
-
-        {activeTab === 'tracks' && (
-          <div style={{ background: '#181818', border: '1px solid #2a2a2a', borderRadius: 12, overflow: 'hidden' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-              <thead style={{ background: '#111', textAlign: 'left', color: '#888' }}>
-                <tr>
-                  <th style={{ padding: '12px 16px', width: 50 }}>Cover</th>
-                  <th style={{ padding: '12px 16px' }}>Titre</th>
-                  <th style={{ padding: '12px 16px' }}>Artiste</th>
-                  <th style={{ padding: '12px 16px' }}>Ajouté par</th>
-                  <th style={{ padding: '12px 16px', textAlign: 'right' }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {tracks.map(track => (
-                  <tr key={track.id} style={{ borderBottom: '1px solid #222' }}>
-                    <td style={{ padding: '12px 16px' }}>
-                      <div style={{ width: 36, height: 36, borderRadius: 4, background: track.cover_url ? `url(${track.cover_url}) center/cover` : '#222', border: '1px solid #333' }} />
-                    </td>
-                    <td style={{ padding: '12px 16px', fontWeight: 600 }}>{track.title}</td>
-                    <td style={{ padding: '12px 16px', color: '#aaa' }}>{track.artist}</td>
-                    <td style={{ padding: '12px 16px', color: '#00d9ff' }}>{track.username}</td>
-                    <td style={{ padding: '12px 16px', textAlign: 'right', display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-                      <button 
-                        onClick={() => { 
-                          setEditingTrack(track); 
-                          setEditForm({ 
-                            title: track.title, artist: track.artist, bpm: track.bpm, 
-                            song_key: track.song_key || '', genre: track.genre || '', cover_url: track.cover_url || '' 
-                          }); 
-                        }}
-                        style={{ background: 'rgba(0,217,255,0.1)', color: '#00d9ff', border: '1px solid rgba(0,217,255,0.3)', padding: '4px 12px', borderRadius: 4, cursor: 'pointer', fontWeight: 600 }}
-                      >
-                        ✏️ Modifier
-                      </button>
-                      <DeleteButton table="tracks" itemId={track.id} itemOwnerId={track.user_id} onDeleted={() => setTracks(tracks.filter(t => t.id !== track.id))} />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {activeTab === 'posts' && (
-          <div style={{ background: '#181818', border: '1px solid #2a2a2a', borderRadius: 12, overflow: 'hidden' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-              <thead style={{ background: '#111', textAlign: 'left', color: '#888' }}>
-                <tr>
-                  <th style={{ padding: '12px 16px' }}>Contenu</th>
-                  <th style={{ padding: '12px 16px' }}>Posté par</th>
-                  <th style={{ padding: '12px 16px', textAlign: 'right' }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {posts.map(post => (
-                  <tr key={post.id} style={{ borderBottom: '1px solid #222' }}>
-                    <td style={{ padding: '12px 16px', maxWidth: 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{post.content}</td>
-                    <td style={{ padding: '12px 16px', color: '#00d9ff' }}>{post.username}</td>
-                    <td style={{ padding: '12px 16px', textAlign: 'right' }}>
-                      <DeleteButton table="artist_posts" itemId={post.id} itemOwnerId={post.profile_id} onDeleted={() => setPosts(posts.filter(p => p.id !== post.id))} />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+    <div style={{ maxWidth: 1200, margin: '0 auto', padding: '40px 20px', fontFamily: 'Inter, sans-serif' }}>
+      
+      {/* En-tête */}
+      <div style={{ marginBottom: 32 }}>
+        <h1 style={{ fontSize: 32, fontWeight: 900, color: colors.textMain, margin: 0 }}>Panel Administrateur</h1>
+        <p style={{ color: colors.textMuted, marginTop: 8 }}>Gérez votre plateforme DropZone.</p>
       </div>
 
-      {/* MODALE D'ÉDITION */}
-      {editingTrack && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          <div style={{ background: '#1c1c1c', border: '1px solid #2a2a2a', borderRadius: 12, padding: 30, width: '100%', maxWidth: 500 }}>
-            <h2 style={{ marginTop: 0, marginBottom: 20, color: '#fff' }}>Modifier (Mode Admin)</h2>
-            
-            {/* ✅ SECTION UPLOAD COVER */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 20, padding: 15, background: '#121212', borderRadius: 8, border: '1px solid #222' }}>
-              <div style={{ 
-                width: 80, height: 80, borderRadius: 6, flexShrink: 0,
-                background: editForm.cover_url ? `url(${editForm.cover_url}) center/cover` : '#222', 
-                border: '1px solid #333', display: 'flex', alignItems: 'center', justifyContent: 'center' 
-              }}>
-                {!editForm.cover_url && <span style={{ fontSize: 30 }}>🎵</span>}
-              </div>
-              <div>
-                <div style={{ fontSize: 12, color: '#888', marginBottom: 8 }}>Image de couverture</div>
-                <input type="file" accept="image/*" ref={coverInputRef} onChange={handleCoverUpload} style={{ display: 'none' }} />
-                <button 
-                  onClick={() => coverInputRef.current?.click()} 
-                  disabled={uploadingCover} 
-                  style={{ background: '#333', color: '#fff', border: '1px solid #444', padding: '8px 16px', borderRadius: 6, cursor: uploadingCover ? 'wait' : 'pointer', fontSize: 12, fontWeight: 600 }}
-                >
-                  {uploadingCover ? 'Upload en cours...' : '📷 Changer la cover'}
-                </button>
-              </div>
-            </div>
+      {/* Onglets */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 24, flexWrap: 'wrap' }}>
+        {[
+          { id: 'stats', label: 'Vue d\'ensemble', icon: Icons.chart },
+          { id: 'users', label: 'Utilisateurs', icon: Icons.users },
+          { id: 'tracks', label: 'Tous les sons', icon: Icons.music },
+          { id: 'pitches', label: 'Pitchs', icon: Icons.star },
+        ].map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => { setActiveTab(tab.id as Tab); setSearch(''); }}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              padding: '10px 20px', borderRadius: 8, border: `1px solid ${activeTab === tab.id ? colors.accent : colors.border}`,
+              background: activeTab === tab.id ? `${colors.accent}15` : colors.panelBg,
+              color: activeTab === tab.id ? colors.accent : colors.textMain,
+              fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s'
+            }}
+          >
+            {tab.icon} {tab.label}
+          </button>
+        ))}
+      </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 15 }}>
-              <input type="text" value={editForm.title} onChange={e => setEditForm({...editForm, title: e.target.value})} placeholder="Titre" style={{ width: '100%', padding: 10, background: '#121212', border: '1px solid #2a2a2a', borderRadius: 6, color: '#fff' }} />
-              <input type="text" value={editForm.artist} onChange={e => setEditForm({...editForm, artist: e.target.value})} placeholder="Artiste" style={{ width: '100%', padding: 10, background: '#121212', border: '1px solid #2a2a2a', borderRadius: 6, color: '#fff' }} />
-              <div style={{ display: 'flex', gap: 10 }}>
-                <input type="number" value={editForm.bpm} onChange={e => setEditForm({...editForm, bpm: Number(e.target.value)})} placeholder="BPM" style={{ flex: 1, padding: 10, background: '#121212', border: '1px solid #2a2a2a', borderRadius: 6, color: '#fff' }} />
-                <input type="text" value={editForm.song_key} onChange={e => setEditForm({...editForm, song_key: e.target.value})} placeholder="Clé" style={{ flex: 1, padding: 10, background: '#121212', border: '1px solid #2a2a2a', borderRadius: 6, color: '#fff' }} />
-              </div>
-              <input type="text" value={editForm.genre} onChange={e => setEditForm({...editForm, genre: e.target.value})} placeholder="Genre" style={{ width: '100%', padding: 10, background: '#121212', border: '1px solid #2a2a2a', borderRadius: 6, color: '#fff' }} />
-              
-              <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
-                <button onClick={() => setEditingTrack(null)} style={{ flex: 1, padding: 12, background: 'transparent', border: '1px solid #333', color: '#fff', borderRadius: 6, cursor: 'pointer' }}>Annuler</button>
-                <button onClick={handleSaveEdit} disabled={uploadingCover} style={{ flex: 1, padding: 12, background: '#00d9ff', border: 'none', color: '#000', borderRadius: 6, fontWeight: 800, cursor: 'pointer', opacity: uploadingCover ? 0.5 : 1 }}>Enregistrer</button>
-              </div>
-            </div>
-          </div>
+      {/* Barre de recherche (pour Users et Tracks) */}
+      {(activeTab === 'users' || activeTab === 'tracks') && (
+        <div style={{ position: 'relative', marginBottom: 24, maxWidth: 400 }}>
+          <div style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: colors.textMuted }}>{Icons.search}</div>
+          <input 
+            type="text" 
+            placeholder={`Rechercher un ${activeTab === 'users' ? 'utilisateur' : 'son'}...`}
+            value={search} onChange={e => setSearch(e.target.value)}
+            style={{ width: '100%', padding: '12px 14px 12px 40px', background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain, outline: 'none' }}
+          />
         </div>
+      )}
+
+      {loading ? (
+        <div style={{ color: colors.textMuted, textAlign: 'center', padding: 60 }}>Chargement des données...</div>
+      ) : (
+        <>
+          {/* --- ONGLET STATS --- */}
+          {activeTab === 'stats' && (
+            <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+              <StatsCard title="Total Artistes" value={users.length} icon={Icons.users} color="#00d9ff" />
+              <StatsCard title="Artistes Premium" value={users.filter(u => u.is_premium).length} icon={Icons.star} color="#fbbf24" />
+              <StatsCard title="Total Sons" value={tracks.length} icon={Icons.music} color="#ec4899" />
+              <StatsCard title="Likes Totaux" value={tracks.reduce((acc, t) => acc + (t.likes_count || 0), 0)} icon={Icons.star} color="#10b981" />
+            </div>
+          )}
+
+          {/* --- ONGLET USERS --- */}
+          {activeTab === 'users' && (
+            <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, overflow: 'hidden' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                <thead>
+                  <tr style={{ background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', borderBottom: `1px solid ${colors.border}` }}>
+                    <th style={{ padding: '16px', fontSize: 12, color: colors.textMuted, textTransform: 'uppercase' }}>Artiste</th>
+                    <th style={{ padding: '16px', fontSize: 12, color: colors.textMuted, textTransform: 'uppercase' }}>Statut</th>
+                    <th style={{ padding: '16px', fontSize: 12, color: colors.textMuted, textTransform: 'uppercase', textAlign: 'right' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredUsers.map(u => (
+                    <tr key={u.id} style={{ borderBottom: `1px solid ${colors.border}` }}>
+                      <td style={{ padding: '16px', display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <div style={{ width: 40, height: 40, borderRadius: '50%', background: u.avatar_url ? `url(${u.avatar_url}) center/cover` : '#333', border: `1px solid ${colors.border}` }} />
+                        <div>
+                          <div style={{ fontSize: 14, fontWeight: 700, color: colors.textMain }}>{u.username}</div>
+                          <div style={{ fontSize: 12, color: colors.textMuted }}>ID: {u.id.substring(0, 8)}...</div>
+                        </div>
+                      </td>
+                      <td style={{ padding: '16px' }}>
+                        <span style={{ fontSize: 11, fontWeight: 800, padding: '4px 10px', borderRadius: 20, background: u.is_premium ? 'rgba(251, 191, 36, 0.15)' : 'rgba(255,255,255,0.05)', color: u.is_premium ? '#fbbf24' : colors.textMuted }}>
+                          {u.is_premium ? 'PREMIUM' : 'GRATUIT'}
+                        </span>
+                      </td>
+                      <td style={{ padding: '16px', textAlign: 'right' }}>
+                        <button 
+                          onClick={() => togglePremium(u.id, u.is_premium)}
+                          style={{ padding: '6px 12px', background: 'transparent', border: `1px solid ${u.is_premium ? '#fbbf24' : colors.border}`, color: u.is_premium ? '#fbbf24' : colors.textMain, borderRadius: 6, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+                        >
+                          {u.is_premium ? 'Retirer Premium' : 'Passer Premium'}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* --- ONGLET TRACKS --- */}
+          {activeTab === 'tracks' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {filteredTracks.map(t => (
+                <div key={t.id} style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 12, padding: 16, display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+                  <div style={{ width: 48, height: 48, borderRadius: 8, background: t.cover_url ? `url(${t.cover_url}) center/cover` : '#333' }} />
+                  <div style={{ flex: 1, minWidth: 200 }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: colors.textMain }}>{t.title}</div>
+                    <div style={{ fontSize: 12, color: colors.textMuted }}>{t.artist} • {t.genre} • {t.bpm} BPM</div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                    <div style={{ fontSize: 12, color: colors.textMuted, display: 'flex', gap: 12 }}>
+                      <span>❤️ {t.likes_count || 0}</span>
+                      <span>⬇️ {t.downloads || 0}</span>
+                    </div>
+                    <button onClick={() => deleteTrack(t)} style={{ background: 'rgba(255, 92, 92, 0.1)', border: 'none', color: '#ff5c5c', padding: 10, borderRadius: 8, cursor: 'pointer' }} title="Supprimer">
+                      {Icons.trash}
+                    </button>
+                  </div>
+                </div>
+              ))}
+              {filteredTracks.length === 0 && <div style={{ color: colors.textMuted, textAlign: 'center', padding: 40 }}>Aucun son trouvé.</div>}
+            </div>
+          )}
+
+          {/* --- ONGLET PITCHES --- */}
+          {activeTab === 'pitches' && (
+            <PitchAdmin />
+          )}
+        </>
       )}
     </div>
   );

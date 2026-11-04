@@ -41,6 +41,10 @@ const AdminPage = lazy(() => import('./pages/AdminPage').then((m) => ({ default:
 const LevonDinatoPage = lazy(() => import('./pages/LevonDinatoPage').then((m) => ({ default: m.LevonDinatoPage })));
 const PremiumPage = lazy(() => import('./pages/PremiumPage').then((m) => ({ default: m.PremiumPage })));
 const DropZoneVideosPage = lazy(() => import('./pages/DropZoneVideosPage').then((m) => ({ default: m.DropZoneVideosPage })));
+const SmartLinkPage = lazy(() => import('./pages/SmartLinkPage').then((m) => ({ default: m.SmartLinkPage })));
+
+// ✅ NOUVEL IMPORT : Page des Playlists
+const MyPlaylistsPage = lazy(() => import('./pages/MyPlaylistsPage').then((m) => ({ default: m.MyPlaylistsPage })));
 
 const PageLoader = () => (
   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', flexDirection: 'column', gap: 16 }}>
@@ -62,8 +66,11 @@ function AnimatedRoutes() {
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/levon-dinato" element={<LevonDinatoPage />} />
         <Route path="/premium/:username" element={<PremiumPage />} />
+        
+        {/* ✅ ROUTE SMART LINK (Publique) */}
+        <Route path="/link/:slug" element={<SmartLinkPage />} />
 
-        {/* ✅ LAYOUT PRINCIPAL (Gère lui-même le plein écran pour /mastering et /cdj) */}
+        {/* ✅ LAYOUT PRINCIPAL */}
         <Route path="/" element={<MainLayout />}>
           
           <Route index element={<PageTransition><HomePage /></PageTransition>} />
@@ -77,6 +84,9 @@ function AnimatedRoutes() {
           <Route path="profil/:id" element={<PageTransition><ProfilePage /></PageTransition>} />
           <Route path="search" element={<PageTransition><SearchPage /></PageTransition>} />
           <Route path="track/:id" element={<PageTransition><TrackPage /></PageTransition>} />
+          
+          {/* ✅ NOUVELLE ROUTE : Mes Playlists */}
+          <Route path="mes-playlists" element={<PageTransition><MyPlaylistsPage /></PageTransition>} />
 
           <Route path="tools" element={<PageTransition><PremiumGuard><ToolsPage /></PremiumGuard></PageTransition>} />
           <Route path="settings" element={<PageTransition><PremiumGuard><SettingsPage /></PremiumGuard></PageTransition>} />
@@ -87,7 +97,7 @@ function AnimatedRoutes() {
           <Route path="generator" element={<PageTransition><PremiumGuard><GeneratorPage /></PremiumGuard></PageTransition>} />
           <Route path="video" element={<PageTransition><PremiumGuard><VideoPage /></PremiumGuard></PageTransition>} />
 
-          {/* ✅ ROUTES PLEIN ÉCRAN (Le MainLayout les reconnaîtra et enlèvera la sidebar) */}
+          {/* ✅ ROUTES PLEIN ÉCRAN */}
           <Route path="cdj" element={<PageTransition><PremiumGuard><CDJPage /></PremiumGuard></PageTransition>} />
           <Route path="mastering" element={<PageTransition><PremiumGuard><MasteringPage /></PremiumGuard></PageTransition>} />
 

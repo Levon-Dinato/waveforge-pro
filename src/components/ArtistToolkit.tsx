@@ -28,12 +28,16 @@ export const ArtistToolkit: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  // Référence pour l'image à télécharger
   const cardRef = useRef<HTMLDivElement>(null);
 
-  const [smartLinkData, setSmartLinkData] = useState({ title: '', url: '' });
+  const [smartLinkData, setSmartLinkData] = useState({ 
+    title: '', slug: '', coverUrl: '', spotify: '', apple: '', soundcloud: '', youtube: '' 
+  });
   const [promoData, setPromoData] = useState({ title: '', coverUrl: '', artistName: '' });
   const [pitchData, setPitchData] = useState({ title: '', url: '', message: '' });
+  
+  // Pour stocker le lien généré
+  const [generatedLink, setGeneratedLink] = useState('');
 
   const colors = {
     bg: isDark ? '#050505' : '#f5f5f7',
@@ -61,8 +65,8 @@ export const ArtistToolkit: React.FC = () => {
       navigate('/auth');
       return;
     }
-
     setIsSuccess(false);
+    setGeneratedLink('');
     if (toolId === 'premium') navigate('/settings');
     else if (toolId === 'stats') navigate(`/premium/${user.user_metadata?.username || user.id}`);
     else if (toolId === 'support') window.location.href = "mailto:support@dropzone.dj";
@@ -74,15 +78,47 @@ export const ArtistToolkit: React.FC = () => {
     setIsSuccess(false);
   };
 
-  // --- EXPORT IMAGE (Option 1) ---
+  // --- SMART LINK SUBMIT ---
+  const handleGenerateLink = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !smartLinkData.title || !smartLinkData.slug) return;
+
+    setIsSubmitting(true);
+    try {
+      const cleanSlug = smartLinkData.slug.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-');
+      
+      const { error } = await supabase.from('smart_links').insert({
+        user_id: user.id,
+        title: smartLinkData.title,
+        slug: cleanSlug,
+        cover_url: smartLinkData.coverUrl,
+        spotify_url: smartLinkData.spotify,
+        apple_url: smartLinkData.apple,
+        soundcloud_url: smartLinkData.soundcloud,
+        youtube_url: smartLinkData.youtube,
+      });
+
+      if (error) {
+        if (error.code === '23505') throw new Error("Ce lien (slug) est déjà utilisé. Essayez-en un autre.");
+        throw error;
+      }
+
+      const finalUrl = `${window.location.origin}/link/${cleanSlug}`;
+      setGeneratedLink(finalUrl);
+      setIsSuccess(true);
+      
+    } catch (err: any) {
+      alert("Erreur : " + err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // --- EXPORT IMAGE ---
   const handleDownloadImage = async () => {
     if (!cardRef.current) return;
     try {
-      const canvas = await html2canvas(cardRef.current, {
-        backgroundColor: '#000000',
-        scale: 2, // Haute résolution
-        useCORS: true, // Pour charger l'image depuis Supabase
-      });
+      const canvas = await html2canvas(cardRef.current, { backgroundColor: '#000000', scale: 2, useCORS: true });
       const link = document.createElement('a');
       link.download = `dropzone-promo-${Date.now()}.png`;
       link.href = canvas.toDataURL('image/png');
@@ -93,7 +129,7 @@ export const ArtistToolkit: React.FC = () => {
     }
   };
 
-  // --- PITCH SUBMIT (Option 3) ---
+  // --- PITCH SUBMIT ---
   const handlePitchSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
@@ -117,14 +153,6 @@ export const ArtistToolkit: React.FC = () => {
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  // --- SMART LINK SUBMIT (Génération locale basique pour l'instant) ---
-  const handleGenerateLink = (e: React.FormEvent) => {
-    e.preventDefault();
-    const slug = smartLinkData.title.toLowerCase().replace(/\s+/g, '-');
-    alert(`Lien généré : dropzone.dj/link/${user?.id}/${slug}\n(Copiez-le et partagez-le !)`);
-    closeModal();
   };
 
   return (
@@ -178,7 +206,7 @@ export const ArtistToolkit: React.FC = () => {
       {/* ✅ MODALES */}
       {activeModal && createPortal(
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }} onClick={closeModal}>
-          <div style={{ background: colors.modalBg, border: `1px solid ${colors.border}`, borderRadius: 24, padding: 32, width: '100%', maxWidth: 500, position: 'relative' }} onClick={(e) => e.stopPropagation()}>
+          <div style={{ background: colors.modalBg, border: `1px solid ${colors.border}`, borderRadius: 24, padding: 32, width: '100%', maxWidth: 500, maxHeight: '90vh', overflowY: 'auto', position: 'relative' }} onClick={(e) => e.stopPropagation()}>
             
             <button onClick={closeModal} style={{ position: 'absolute', top: 24, right: 24, background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer' }}>
               {Icons.close}
@@ -186,22 +214,52 @@ export const ArtistToolkit: React.FC = () => {
 
             {/* --- MODALE SMART LINK --- */}
             {activeModal === 'smartlink' && (
-              <form onSubmit={handleGenerateLink}>
-                <h2 style={{ fontSize: 24, fontWeight: 900, color: colors.textMain, marginBottom: 8 }}>Créer un Smart Link</h2>
-                <p style={{ fontSize: 13, color: colors.textMuted, marginBottom: 24 }}>Regroupez tous vos liens sur une seule page.</p>
-                
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                  <div>
-                    <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 8, fontWeight: 700 }}>Titre du morceau</label>
-                    <input type="text" required value={smartLinkData.title} onChange={e => setSmartLinkData({...smartLinkData, title: e.target.value})} style={{ width: '100%', padding: 12, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain }} placeholder="Ex: My New Track" />
+              <>
+                {isSuccess ? (
+                  <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                    <div style={{ color: '#3b82f6', marginBottom: 16, display: 'flex', justifyContent: 'center' }}>{Icons.check}</div>
+                    <h2 style={{ fontSize: 24, fontWeight: 900, color: colors.textMain, marginBottom: 8 }}>Smart Link créé !</h2>
+                    <p style={{ fontSize: 14, color: colors.textMuted, marginBottom: 16 }}>Voici votre lien à partager en bio :</p>
+                    <div style={{ display: 'flex', gap: 10 }}>
+                      <input type="text" readOnly value={generatedLink} style={{ flex: 1, padding: 12, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain, fontSize: 13 }} />
+                      <button onClick={() => { navigator.clipboard.writeText(generatedLink); alert('Copié !'); }} style={{ padding: '0 16px', background: '#3b82f6', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 700, cursor: 'pointer' }}>Copier</button>
+                    </div>
                   </div>
-                  <div>
-                    <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 8, fontWeight: 700 }}>Lien principal (Spotify, etc.)</label>
-                    <input type="url" required value={smartLinkData.url} onChange={e => setSmartLinkData({...smartLinkData, url: e.target.value})} style={{ width: '100%', padding: 12, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain }} placeholder="https://open.spotify.com/..." />
-                  </div>
-                  <button type="submit" style={{ marginTop: 10, padding: 16, background: '#3b82f6', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 800, cursor: 'pointer' }}>Générer mon lien</button>
-                </div>
-              </form>
+                ) : (
+                  <form onSubmit={handleGenerateLink}>
+                    <h2 style={{ fontSize: 24, fontWeight: 900, color: colors.textMain, marginBottom: 8 }}>Créer un Smart Link</h2>
+                    <p style={{ fontSize: 13, color: colors.textMuted, marginBottom: 24 }}>Regroupez tous vos liens sur une seule page.</p>
+                    
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                      <div>
+                        <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 4, fontWeight: 700 }}>Titre du morceau *</label>
+                        <input type="text" required value={smartLinkData.title} onChange={e => setSmartLinkData({...smartLinkData, title: e.target.value})} style={{ width: '100%', padding: 10, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain }} placeholder="Ex: Take On Me" />
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 4, fontWeight: 700 }}>Lien personnalisé (URL) *</label>
+                        <div style={{ display: 'flex', alignItems: 'center', background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, paddingLeft: 10 }}>
+                          <span style={{ fontSize: 13, color: colors.textMuted }}>dropzone.dj/link/</span>
+                          <input type="text" required value={smartLinkData.slug} onChange={e => setSmartLinkData({...smartLinkData, slug: e.target.value.toLowerCase().replace(/\s+/g, '-')})} style={{ flex: 1, padding: 10, background: 'transparent', border: 'none', color: colors.textMain, outline: 'none' }} placeholder="take-on-me" />
+                        </div>
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 4, fontWeight: 700 }}>URL de la pochette (Optionnel)</label>
+                        <input type="url" value={smartLinkData.coverUrl} onChange={e => setSmartLinkData({...smartLinkData, coverUrl: e.target.value})} style={{ width: '100%', padding: 10, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain }} placeholder="https://..." />
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                        <input type="url" value={smartLinkData.spotify} onChange={e => setSmartLinkData({...smartLinkData, spotify: e.target.value})} style={{ width: '100%', padding: 10, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain }} placeholder="Lien Spotify" />
+                        <input type="url" value={smartLinkData.apple} onChange={e => setSmartLinkData({...smartLinkData, apple: e.target.value})} style={{ width: '100%', padding: 10, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain }} placeholder="Lien Apple Music" />
+                        <input type="url" value={smartLinkData.soundcloud} onChange={e => setSmartLinkData({...smartLinkData, soundcloud: e.target.value})} style={{ width: '100%', padding: 10, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain }} placeholder="Lien SoundCloud" />
+                        <input type="url" value={smartLinkData.youtube} onChange={e => setSmartLinkData({...smartLinkData, youtube: e.target.value})} style={{ width: '100%', padding: 10, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain }} placeholder="Lien YouTube" />
+                      </div>
+                      
+                      <button type="submit" disabled={isSubmitting} style={{ marginTop: 10, padding: 16, background: '#3b82f6', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 800, cursor: isSubmitting ? 'wait' : 'pointer' }}>
+                        {isSubmitting ? 'Création...' : 'Générer mon lien'}
+                      </button>
+                    </div>
+                  </form>
+                )}
+              </>
             )}
 
             {/* --- MODALE CARTES PROMO --- */}
@@ -211,12 +269,7 @@ export const ArtistToolkit: React.FC = () => {
                 <p style={{ fontSize: 13, color: colors.textMuted, marginBottom: 24 }}>Un aperçu de votre cover au format Instagram.</p>
                 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16, alignItems: 'center' }}>
-                  
-                  {/* La carte qu'on va exporter en image */}
-                  <div 
-                    ref={cardRef}
-                    style={{ width: 280, height: 280, background: '#111', borderRadius: 12, overflow: 'hidden', position: 'relative', border: `1px solid ${colors.border}` }}
-                  >
+                  <div ref={cardRef} style={{ width: 280, height: 280, background: '#111', borderRadius: 12, overflow: 'hidden', position: 'relative', border: `1px solid ${colors.border}` }}>
                     {promoData.coverUrl ? (
                       <img src={promoData.coverUrl} alt="Cover" crossOrigin="anonymous" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : (
@@ -232,7 +285,6 @@ export const ArtistToolkit: React.FC = () => {
                     <input type="text" placeholder="Titre du son" value={promoData.title} onChange={e => setPromoData({...promoData, title: e.target.value})} style={{ width: '100%', padding: 12, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain }} />
                     <input type="text" placeholder="Nom de l'artiste" value={promoData.artistName} onChange={e => setPromoData({...promoData, artistName: e.target.value})} style={{ width: '100%', padding: 12, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain }} />
                     <input type="url" placeholder="URL de la cover (optionnel)" value={promoData.coverUrl} onChange={e => setPromoData({...promoData, coverUrl: e.target.value})} style={{ width: '100%', padding: 12, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain }} />
-                    
                     <button onClick={handleDownloadImage} style={{ marginTop: 10, padding: 16, background: '#ec4899', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 800, cursor: 'pointer' }}>Télécharger l'image</button>
                   </div>
                 </div>

@@ -7,7 +7,6 @@ import { supabase, AUDIO_BUCKET } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { PayPalButton } from '../components/PayPalButton';
-import { ArtistToolkit } from '../components/ArtistToolkit'; // ✅ IMPORT AJOUTÉ
 
 export const SettingsPage: React.FC = () => {
   const { user } = useAuth();
@@ -25,18 +24,22 @@ export const SettingsPage: React.FC = () => {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [uploading, setUploading] = useState(false);
   
+  // ✅ ÉTAT UPLOAD FORM (Avec is_downloadable)
   const [uploadForm, setUploadForm] = useState({ 
     title: '', artist: '', genre: '', bpm: '', song_key: '',
-    purchase_url: '', embed_code: '', player_bg_color: '#000000', player_bg_image_url: ''
+    purchase_url: '', embed_code: '', player_bg_color: '#000000', player_bg_image_url: '',
+    is_downloadable: true 
   });
   
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [uploadingPlayerBg, setUploadingPlayerBg] = useState(false);
 
+  // ✅ ÉTAT EDIT FORM (Avec is_downloadable)
   const [editTrackForm, setEditTrackForm] = useState({ 
     title: '', genre: '', bpm: 0, purchase_url: '', embed_code: '',
-    player_bg_color: '#000000', player_bg_image_url: ''
+    player_bg_color: '#000000', player_bg_image_url: '',
+    is_downloadable: true 
   });
   
   const [showLinkForm, setShowLinkForm] = useState(false);
@@ -358,6 +361,7 @@ export const SettingsPage: React.FC = () => {
         embed_code: uploadForm.embed_code || null,
         player_bg_color: uploadForm.player_bg_color,
         player_bg_image_url: uploadForm.player_bg_image_url || null,
+        is_downloadable: uploadForm.is_downloadable,
         peaks: [], duration: 0, likes_count: 0, downloads: 0
       }).select().single();
 
@@ -367,7 +371,8 @@ export const SettingsPage: React.FC = () => {
       setShowUploadModal(false);
       setUploadForm({ 
         title: '', artist: '', genre: '', bpm: '', song_key: '',
-        purchase_url: '', embed_code: '', player_bg_color: '#000000', player_bg_image_url: ''
+        purchase_url: '', embed_code: '', player_bg_color: '#000000', player_bg_image_url: '',
+        is_downloadable: true
       });
       setAudioFile(null);
       setCoverFile(null);
@@ -469,7 +474,8 @@ export const SettingsPage: React.FC = () => {
     setEditTrackForm({ 
       title: track.title, genre: track.genre || '', bpm: track.bpm || 0,
       purchase_url: track.purchase_url || '', embed_code: track.embed_code || '',
-      player_bg_color: track.player_bg_color || '#000000', player_bg_image_url: track.player_bg_image_url || ''
+      player_bg_color: track.player_bg_color || '#000000', player_bg_image_url: track.player_bg_image_url || '',
+      is_downloadable: track.is_downloadable !== false
     });
   };
 
@@ -477,7 +483,8 @@ export const SettingsPage: React.FC = () => {
     const { error } = await supabase.from('tracks').update({
       title: editTrackForm.title, genre: editTrackForm.genre, bpm: Number(editTrackForm.bpm),
       purchase_url: editTrackForm.purchase_url, embed_code: editTrackForm.embed_code,
-      player_bg_color: editTrackForm.player_bg_color, player_bg_image_url: editTrackForm.player_bg_image_url
+      player_bg_color: editTrackForm.player_bg_color, player_bg_image_url: editTrackForm.player_bg_image_url,
+      is_downloadable: editTrackForm.is_downloadable
     }).eq('id', trackId);
     
     if (!error) {
@@ -527,11 +534,6 @@ export const SettingsPage: React.FC = () => {
       </div>
       
       <p style={{ color: colors.textMuted, marginBottom: 30 }}>Gère ton identité, ta musique, tes photos et les modules de ta page.</p>
-
-      {/* ✅ AJOUT DU TOOLKIT ICI */}
-      <div style={{ marginBottom: 40, marginLeft: -20, marginRight: -20 }}>
-        <ArtistToolkit />
-      </div>
 
       {message && <div style={{ padding: 16, background: 'rgba(0,217,255,0.1)', border: '1px solid #00d9ff', borderRadius: 8, marginBottom: 24, color: '#00d9ff' }}>{message}</div>}
 
@@ -687,6 +689,11 @@ export const SettingsPage: React.FC = () => {
                     <input type="url" value={editTrackForm.purchase_url} onChange={e => setEditTrackForm({...editTrackForm, purchase_url: e.target.value})} style={{ width: '100%', padding: 8, background: colors.panelBg, border: `1px solid ${colors.borderLight}`, color: colors.textMain, borderRadius: 4 }} placeholder="Lien d'achat" />
                     <textarea value={editTrackForm.embed_code} onChange={e => setEditTrackForm({...editTrackForm, embed_code: e.target.value})} rows={2} style={{ width: '100%', padding: 8, background: colors.panelBg, border: `1px solid ${colors.borderLight}`, color: colors.textMain, borderRadius: 4, fontFamily: 'monospace', fontSize: 11 }} placeholder="Code iframe (Beatport, Audio.com...)" />
                     
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 4, padding: '8px 12px', background: colors.panelBg, borderRadius: 6, border: `1px solid ${colors.borderLight}` }}>
+                      <input type="checkbox" id={`dl-${track.id}`} checked={editTrackForm.is_downloadable} onChange={(e) => setEditTrackForm({...editTrackForm, is_downloadable: e.target.checked})} style={{ width: 16, height: 16, accentColor: form.theme_color, cursor: 'pointer' }} />
+                      <label htmlFor={`dl-${track.id}`} style={{ fontSize: 12, color: colors.textMain, cursor: 'pointer', fontWeight: 600 }}>Autoriser le téléchargement gratuit</label>
+                    </div>
+
                     <div style={{ padding: 12, background: colors.panelBg, borderRadius: 8, border: `1px dashed ${colors.borderLight}`, marginTop: 4 }}>
                       <p style={{ margin: '0 0 10px 0', fontSize: 12, color: colors.textLight, fontWeight: 'bold' }}>Personnalisation visuelle du Player (Optionnel)</p>
                       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
@@ -726,6 +733,14 @@ export const SettingsPage: React.FC = () => {
                           {track.title}
                           {track.player_bg_image_url && (
                             <span style={{ fontSize: 9, background: 'rgba(0,217,255,0.2)', color: '#00d9ff', padding: '2px 6px', borderRadius: 4 }}>FOND PERSO</span>
+                          )}
+                          {track.is_downloadable === false ? (
+                            <span style={{ fontSize: 9, background: 'rgba(255,51,102,0.15)', color: '#ff3366', padding: '2px 6px', borderRadius: 4 }}>SANS DL</span>
+                          ) : (
+                            <span style={{ fontSize: 9, background: 'rgba(16,185,129,0.15)', color: '#10b981', padding: '2px 6px', borderRadius: 4 }}>TÉLÉCHARGEABLE</span>
+                          )}
+                          {track.purchase_url && (
+                            <span style={{ fontSize: 9, background: 'rgba(251,191,36,0.15)', color: '#fbbf24', padding: '2px 6px', borderRadius: 4 }}>PAYANT</span>
                           )}
                         </div>
                         <div style={{ fontSize: 12, color: colors.textMuted }}>{track.genre || 'Inconnu'} • {track.bpm || 0} BPM</div>
@@ -875,7 +890,6 @@ export const SettingsPage: React.FC = () => {
         </button>
       </form>
 
-      {/* ✅ MODALE D'UPLOAD AVEC REACT PORTAL */}
       {showUploadModal && createPortal(
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
           <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 32, width: '100%', maxWidth: 500, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}>
@@ -945,6 +959,13 @@ export const SettingsPage: React.FC = () => {
                   <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6 }}>Code d'intégration (iframe)</label>
                   <textarea value={uploadForm.embed_code} onChange={e => setUploadForm({...uploadForm, embed_code: e.target.value})} placeholder="<iframe src='...'></iframe>" rows={2} style={{ width: '100%', padding: 10, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, color: colors.textMain, fontFamily: 'monospace', fontSize: 11 }} />
                 </div>
+              </div>
+
+              <div style={{ padding: 16, background: colors.inputBg, borderRadius: 8, border: `1px solid ${colors.borderLight}`, marginTop: 4 }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
+                  <input type="checkbox" checked={uploadForm.is_downloadable} onChange={e => setUploadForm({...uploadForm, is_downloadable: e.target.checked})} style={{ width: 18, height: 18, accentColor: form.theme_color, cursor: 'pointer' }} />
+                  <span style={{ fontSize: 14, fontWeight: 600, color: colors.textMain }}>Autoriser le téléchargement gratuit de ce son</span>
+                </label>
               </div>
 
               <div style={{ padding: 12, background: colors.inputBg, borderRadius: 8, border: `1px dashed ${colors.borderLight}`, marginTop: 4 }}>

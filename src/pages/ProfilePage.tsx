@@ -1,655 +1,405 @@
 // src/pages/ProfilePage.tsx
-import React, { useState, useEffect, useRef } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { supabase, AUDIO_BUCKET } from '../lib/supabase';
-import { useIsMobile } from '../hooks/useIsMobile';
+import React, { useEffect, useState } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { usePlayer } from '../contexts/PlayerContext';
-import { useTheme } from '../contexts/ThemeContext'; // ✅ IMPORT DU THEME
-import { ChatWidget } from '../components/ChatWidget';
-import { TrackGrid } from '../components/TrackGrid';
-import { BadgeList } from '../components/BadgeList';
-import { VideoEmbed } from '../components/VideoEmbed';
-import { SocialLinks } from '../components/SocialLinks';
-import { DeleteButton } from '../components/DeleteButton';
-import type { Track } from '../components/TrackGrid';
 
-// ✅ SVG Icons
 const Icons = {
-  mapPin: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>,
-  edit: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>,
-  camera: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>,
-  link: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>,
-  play: <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>,
-  pause: <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>,
-  music: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>,
+  music: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>,
+  playlist: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>,
+  heart: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>,
+  user: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>,
+  play: <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>,
+  pause: <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>,
+  settings: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>,
+  plus: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>,
+  check: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>,
 };
 
-const extractCleanUrl = (input: string): string | null => {
-  if (!input) return null;
-  const trimmed = input.trim();
-  if (trimmed.startsWith('http')) return trimmed;
-  const match = trimmed.match(/src=["']([^"']+)["']/i);
-  if (match && match[1]) return match[1];
-  const hrefMatch = trimmed.match(/href=["']([^"']+)["']/i);
-  if (hrefMatch && hrefMatch[1]) return hrefMatch[1];
-  return null;
-};
-
-interface ProfileData {
-  id: string; email: string; bio: string; banner_url: string; avatar_url: string; username: string; created_at: string;
-  city?: string; country?: string; music_style?: string; influences?: string; gear?: string; badges?: string[];
-  social_links?: Record<string, string>;
-  banner_position?: number;
-}
-interface Stats { tracks: number; followers: number; plays: number; }
-interface Playlist { id: string; title: string; description?: string; playlist_tracks: { track_id: string; tracks: Track | null }[]; }
-interface Event { id: string; title: string; event_date: string; location: string | null; city: string | null; url: string | null; }
-interface Photo { id: string; image_url: string; caption: string | null; created_at: string; }
-interface Video { id: string; title: string; url: string; created_at: string; }
-interface ArtistPost { id: string; content: string; media_type: 'text' | 'image' | 'video' | 'link' | 'iframe'; media_url: string | null; created_at: string; }
+type Tab = 'tracks' | 'playlists' | 'likes' | 'about';
 
 export const ProfilePage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { user, isAdmin, refreshProfile } = useAuth(); 
-  const isMobile = useIsMobile(768);
-  const { play, isPlaying, isCurrentTrack } = usePlayer();
-  
-  // ✅ RÉCUPÉRATION DU THÈME
+  const { user } = useAuth();
   const { theme } = useTheme();
   const isDark = theme === 'dark';
+  const navigate = useNavigate();
+  const { play, currentTrack, isPlaying } = usePlayer();
 
-  const [profile, setProfile] = useState<ProfileData | null>(null);
-  const [stats, setStats] = useState<Stats>({ tracks: 0, followers: 0, plays: 0 });
-  const [tracks, setTracks] = useState<Track[]>([]);
+  const [profile, setProfile] = useState<any>(null);
+  const [userTracks, setUserTracks] = useState<any[]>([]);
+  const [userPlaylists, setUserPlaylists] = useState<any[]>([]);
+  const [userLikes, setUserLikes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('featured');
+  const [activeTab, setActiveTab] = useState<Tab>('tracks');
 
-  const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([]);
-  const [photos, setPhotos] = useState<Photo[]>([]);
-  const [uploadingPhoto, setUploadingPhoto] = useState(false);
-  const photoInputRef = useRef<HTMLInputElement>(null);
-
-  const [isChatOpen, setIsChatOpen] = useState(false);
-  const [isFollowing, setIsFollowing] = useState(false);
+  // ✅ ÉTATS POUR LES FOLLOWERS
   const [followersCount, setFollowersCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followLoading, setFollowLoading] = useState(false);
 
-  const [isEditing, setIsEditing] = useState(false);
-  const [editForm, setEditForm] = useState({ 
-    username: '', city: '', country: '', bio: '', music_style: '', influences: '', gear: '',
-    spotify: '', soundcloud: '', instagram: '', youtube: '', twitter: '', tiktok: '', facebook: '', beatport: '',
-    banner_position: 50
-  });
-  const [uploadingImage, setUploadingImage] = useState(false);
-  const bannerInputRef = useRef<HTMLInputElement>(null);
-  const avatarInputRef = useRef<HTMLInputElement>(null);
+  // ✅ ÉTATS POUR LES PLAYLISTS
+  const [showCreatePlaylist, setShowCreatePlaylist] = useState(false);
+  const [newPlaylistName, setNewPlaylistName] = useState('');
+  const [addingTrackId, setAddingTrackId] = useState<string | null>(null);
+  const [recentlyAdded, setRecentlyAdded] = useState<string | null>(null);
 
-  const [playlists, setPlaylists] = useState<Playlist[]>([]);
-  const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
-  const [newPlaylistTitle, setNewPlaylistTitle] = useState('');
-  const [newPlaylistDesc, setNewPlaylistDesc] = useState('');
-  const [selectedTracks, setSelectedTracks] = useState<string[]>([]);
+  const isOwner = user?.id === id;
 
-  const [videos, setVideos] = useState<Video[]>([]);
-  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
-  const [newVideoTitle, setNewVideoTitle] = useState('');
-  const [newVideoUrl, setNewVideoUrl] = useState('');
-  const [uploadingVideo, setUploadingVideo] = useState(false);
-
-  const [artistPosts, setArtistPosts] = useState<ArtistPost[]>([]);
-  const [newArtistPost, setNewArtistPost] = useState('');
-  const [newArtistPostType, setNewArtistPostType] = useState<'text' | 'image' | 'video' | 'link' | 'iframe'>('text');
-  const [newArtistPostMediaUrl, setNewArtistPostMediaUrl] = useState('');
-  const [postingArtist, setPostingArtist] = useState(false);
-
-  const [creationPage, setCreationPage] = useState(1);
-  const ITEMS_PER_PAGE = 12;
-
-  // ✅ PALETTE DE COULEURS DYNAMIQUES
   const colors = {
-    bg: isDark ? '#0a0a0a' : '#f5f5f7',
+    bg: isDark ? '#050505' : '#f5f5f7',
     panelBg: isDark ? '#121212' : '#ffffff',
-    inputBg: isDark ? '#0a0a0a' : '#f3f4f6',
-    modalBg: isDark ? '#121212' : '#ffffff',
     border: isDark ? '#222222' : '#e5e7eb',
-    borderLight: isDark ? '#333333' : '#d1d5db',
     textMain: isDark ? '#ffffff' : '#1a1a1a',
     textMuted: isDark ? '#888888' : '#666666',
-    textLight: isDark ? '#cccccc' : '#444444',
-    textDark: isDark ? '#555555' : '#999999',
-    tagBg: isDark ? '#1a1a1a' : '#f3f4f6',
-    bannerOverlay: isDark ? 'linear-gradient(to top, #0a0a0a 0%, transparent 100%)' : 'linear-gradient(to top, #f5f5f7 0%, transparent 100%)',
-    avatarBorder: isDark ? '#0a0a0a' : '#ffffff',
-    btnPrimaryBg: isDark ? '#ffffff' : '#1a1a1a',
-    btnPrimaryText: isDark ? '#000000' : '#ffffff',
-    btnSecondaryBg: isDark ? '#1a1a1a' : '#f3f4f6',
-    publishBg: isDark ? '#ffffff' : '#1a1a1a',
-    publishText: isDark ? '#000000' : '#ffffff',
+    accent: '#00d9ff',
+    hoverBg: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
+    inputBg: isDark ? '#0a0a0a' : '#f3f4f6',
   };
 
-  // ✅ STYLES DYNAMIQUES
-  const PANEL_STYLE: React.CSSProperties = { background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16 };
-  const TEXT_MUTED = { color: colors.textMuted, fontSize: '0.85rem' };
-  const TEXT_TITLE = { color: colors.textMain, fontSize: '1rem', fontWeight: 800, letterSpacing: '-0.5px' };
-  const PAGINATION_BTN: React.CSSProperties = { background: 'transparent', border: `1px solid ${colors.border}`, color: colors.textMain, width: 32, height: 32, borderRadius: '50%', fontWeight: 700, fontSize: '0.75rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s ease', flexShrink: 0 };
-
   useEffect(() => {
-    const fetchProfileData = async () => {
+    const fetchAllData = async () => {
+      if (!id) return;
       setLoading(true);
       try {
-        const { data: profileData, error: profileError } = await supabase.from('profiles').select('*').eq('id', id).maybeSingle();
-        if (profileError) throw profileError;
+        const { data: profileData } = await supabase.from('profiles').select('*').eq('id', id).single();
+        if (!profileData) { setProfile(null); setLoading(false); return; }
+        setProfile(profileData);
+
+        const { data: tracksData } = await supabase.from('tracks').select('*').eq('user_id', id).order('created_at', { ascending: false });
+        if (tracksData) setUserTracks(tracksData);
+
+        const { data: playlistsData } = await supabase.from('playlists').select('*').eq('user_id', id).order('created_at', { ascending: false });
+        if (playlistsData) setUserPlaylists(playlistsData);
+
+        const { data: likesData } = await supabase
+          .from('likes')
+          .select('track_id, tracks (*)')
+          .eq('user_id', id)
+          .order('created_at', { ascending: false });
         
-        if (profileData) {
-          setProfile(profileData);
-          setEditForm({
-            username: profileData.username || '', city: profileData.city || '', country: profileData.country || '',
-            bio: profileData.bio || '', music_style: profileData.music_style || '', influences: profileData.influences || '', gear: profileData.gear || '',
-            spotify: profileData.social_links?.spotify || '', soundcloud: profileData.social_links?.soundcloud || '',
-            instagram: profileData.social_links?.instagram || '', youtube: profileData.social_links?.youtube || '',
-            twitter: profileData.social_links?.twitter || '', tiktok: profileData.social_links?.tiktok || '',
-            facebook: profileData.social_links?.facebook || '', beatport: profileData.social_links?.beatport || '',
-            banner_position: profileData.banner_position ?? 50
-          });
+        if (likesData) {
+          const likedTracks = likesData.map(like => like.tracks).filter(Boolean);
+          setUserLikes(likedTracks);
         }
 
-        const { data: eventsData } = await supabase.from('events').select('id, title, event_date, location, city, url').eq('created_by', id).gte('event_date', new Date().toISOString()).order('event_date', { ascending: true }).limit(3);
-        if (eventsData) setUpcomingEvents(eventsData);
+        // ✅ CHARGER LES STATS DE FOLLOW
+        const { count: followers } = await supabase.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', id);
+        setFollowersCount(followers || 0);
 
-        const { data: photosData } = await supabase.from('photos').select('*').eq('profile_id', id).order('created_at', { ascending: false });
-        if (photosData) setPhotos(photosData);
+        const { count: following } = await supabase.from('follows').select('*', { count: 'exact', head: true }).eq('follower_id', id);
+        setFollowingCount(following || 0);
 
-        const { data: videosData } = await supabase.from('videos').select('*').eq('profile_id', id).order('created_at', { ascending: false });
-        if (videosData) setVideos(videosData);
-
-        const { data: artistPostsData } = await supabase.from('artist_posts').select('*').eq('profile_id', id).order('created_at', { ascending: false });
-        if (artistPostsData) setArtistPosts(artistPostsData as ArtistPost[]);
-
-        const { data: tracksData, error: tracksError } = await supabase.from('tracks').select('*').eq('user_id', id).order('created_at', { ascending: false });
-        if (!tracksError && tracksData) {
-          const totalPlays = tracksData.reduce((acc, t: any) => acc + (t.downloads || 0) + (t.likes_count || 0), 0);
-          setStats({ tracks: tracksData.length, followers: 0, plays: totalPlays });
-          setTracks(tracksData as Track[]);
+        // ✅ VÉRIFIER SI JE SUIS CET UTILISATEUR
+        if (user && user.id !== id) {
+          const { data: followData } = await supabase
+            .from('follows')
+            .select('id')
+            .eq('follower_id', user.id)
+            .eq('following_id', id)
+            .maybeSingle();
+          setIsFollowing(!!followData);
         }
 
-        const { data: playlistsData } = await supabase.from('playlists').select(`*, playlist_tracks (track_id, tracks (*))`).eq('user_id', id).order('created_at', { ascending: false });
-        if (playlistsData) setPlaylists(playlistsData as Playlist[]);
       } catch (err) {
-        console.error("Erreur chargement profil:", err);
+        console.error("Erreur de chargement:", err);
       } finally {
         setLoading(false);
       }
     };
-    if (id) fetchProfileData();
-  }, [id]);
-
-  useEffect(() => {
-    const fetchFollowStatus = async () => {
-      if (!id) return;
-      const { count } = await supabase.from('followers').select('*', { count: 'exact', head: true }).eq('following_id', id);
-      setFollowersCount(count || 0);
-      if (user) {
-        const { data } = await supabase.from('followers').select('id').eq('follower_id', user.id).eq('following_id', id).maybeSingle();
-        setIsFollowing(!!data);
-      }
-    };
-    fetchFollowStatus();
+    fetchAllData();
   }, [id, user]);
 
-  const handleFollowToggle = async () => {
-    if (!user || !id) return alert("Connecte-toi pour suivre cet artiste.");
-    if (isFollowing) {
-      await supabase.from('followers').delete().eq('follower_id', user.id).eq('following_id', id);
-      setIsFollowing(false); setFollowersCount(prev => Math.max(0, prev - 1));
-    } else {
-      await supabase.from('followers').insert({ follower_id: user.id, following_id: id });
-      setIsFollowing(true); setFollowersCount(prev => prev + 1);
+  const handleFollow = async () => {
+    if (!user) { navigate('/auth'); return; }
+    if (followLoading) return;
+    
+    setFollowLoading(true);
+    try {
+      if (isFollowing) {
+        // Se désabonner
+        await supabase.from('follows').delete().eq('follower_id', user.id).eq('following_id', id);
+        setIsFollowing(false);
+        setFollowersCount(prev => Math.max(0, prev - 1));
+      } else {
+        // S'abonner
+        await supabase.from('follows').insert({ follower_id: user.id, following_id: id });
+        setIsFollowing(true);
+        setFollowersCount(prev => prev + 1);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Une erreur est survenue. Réessaie.");
+    } finally {
+      setFollowLoading(false);
     }
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'banner' | 'avatar') => {
-    const file = e.target.files?.[0];
-    if (!file || !id) return;
-    setUploadingImage(true);
-    try {
-      const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
-      const fileName = `${type}s/${id}_${Date.now()}.${ext}`;
-      const { error: uploadError } = await supabase.storage.from(AUDIO_BUCKET).upload(fileName, file, { upsert: true });
-      if (uploadError) throw uploadError;
-      const { data: urlData } = supabase.storage.from(AUDIO_BUCKET).getPublicUrl(fileName);
-      const updateField = type === 'banner' ? 'banner_url' : 'avatar_url';
-      
-      const { error: updateError } = await supabase.from('profiles').update({ 
-        [updateField]: urlData.publicUrl,
-        ...(type === 'banner' ? { banner_position: 50 } : {})
-      }).eq('id', id);
-      
-      if (updateError) throw updateError;
-      setProfile(prev => prev ? { ...prev, [updateField]: urlData.publicUrl, ...(type === 'banner' ? { banner_position: 50 } : {}) } : prev);
-      refreshProfile();
-    } catch (err: any) { alert("Erreur upload : " + err.message); } 
-    finally { setUploadingImage(false); e.target.value = ''; }
+  const handlePlay = (track: any) => {
+    play({ 
+      id: track.id, title: track.title, artist: track.artist, audio_url: track.audio_url, 
+      cover_url: track.cover_url, user_id: track.user_id, duration: track.duration, 
+      peaks: track.peaks, bpm: track.bpm, song_key: track.song_key, genre: track.genre, 
+      player_bg_image_url: track.player_bg_image_url, player_bg_color: track.player_bg_color 
+    });
   };
 
-  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !id || !user) return;
-    setUploadingPhoto(true);
-    try {
-      const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
-      const fileName = `photos/${id}_${Date.now()}.${ext}`;
-      const { error: uploadError } = await supabase.storage.from(AUDIO_BUCKET).upload(fileName, file);
-      if (uploadError) throw uploadError;
-      const { data: urlData } = supabase.storage.from(AUDIO_BUCKET).getPublicUrl(fileName);
-      const { data: inserted } = await supabase.from('photos').insert({ profile_id: id, image_url: urlData.publicUrl }).select().single();
-      if (inserted) setPhotos([inserted, ...photos]);
-    } catch (err: any) { alert("Erreur : " + err.message); } 
-    finally { setUploadingPhoto(false); e.target.value = ''; }
-  };
-
-  const handleDeletePhoto = async (photoId: string) => {
-    if (!window.confirm('Supprimer cette photo ?')) return;
-    const { error } = await supabase.from('photos').delete().eq('id', photoId);
-    if (!error) setPhotos(prev => prev.filter(p => p.id !== photoId));
-  };
-
-  const handleSaveProfile = async () => {
-    if (!id) return;
-    try {
-      const socialLinks = { spotify: editForm.spotify, soundcloud: editForm.soundcloud, instagram: editForm.instagram, youtube: editForm.youtube, twitter: editForm.twitter, tiktok: editForm.tiktok, facebook: editForm.facebook, beatport: editForm.beatport };
-      const cleanedLinks = Object.fromEntries(Object.entries(socialLinks).filter(([_, v]) => v.trim() !== ''));
-      
-      const { error } = await supabase.from('profiles').update({ 
-        username: editForm.username, city: editForm.city, country: editForm.country, 
-        bio: editForm.bio, music_style: editForm.music_style, influences: editForm.influences, gear: editForm.gear, 
-        social_links: cleanedLinks,
-        banner_position: editForm.banner_position
-      }).eq('id', id);
-      
-      if (error) throw error;
-      
-      setProfile(prev => prev ? { ...prev, ...editForm, social_links: cleanedLinks } : prev);
-      await refreshProfile();
-      setIsEditing(false);
-    } catch (err: any) { alert("Erreur : " + err.message); }
-  };
-
-  const handleCreatePlaylist = async () => {
-    if (!newPlaylistTitle.trim() || !user || !id) return;
-    const { data, error } = await supabase.from('playlists').insert({ user_id: id, title: newPlaylistTitle, description: newPlaylistDesc }).select().single();
-    if (error || !data) return alert("Erreur création playlist : " + error?.message);
-    if (selectedTracks.length > 0) {
-      await supabase.from('playlist_tracks').insert(selectedTracks.map(trackId => ({ playlist_id: data.id, track_id: trackId })));
-    }
-    setNewPlaylistTitle(''); setNewPlaylistDesc(''); setSelectedTracks([]); setIsPlaylistModalOpen(false);
-    const { data: updatedPlaylists } = await supabase.from('playlists').select(`*, playlist_tracks (track_id, tracks (*))`).eq('user_id', id).order('created_at', { ascending: false });
-    if (updatedPlaylists) setPlaylists(updatedPlaylists as Playlist[]);
-  };
-
-  const handleAddVideo = async () => {
-    if (!newVideoTitle.trim() || !newVideoUrl.trim() || !id) return;
-    setUploadingVideo(true);
-    try {
-      const { data, error } = await supabase.from('videos').insert({ profile_id: id, title: newVideoTitle.trim(), url: newVideoUrl.trim() }).select().single();
-      if (error) throw error;
-      if (data) { setVideos([data, ...videos]); setIsVideoModalOpen(false); setNewVideoTitle(''); setNewVideoUrl(''); }
-    } catch (err: any) { alert("Erreur : " + err.message); } 
-    finally { setUploadingVideo(false); }
-  };
-
-  const handleDeleteVideo = async (videoId: string) => {
-    if (!window.confirm('Supprimer cette vidéo ?')) return;
-    const { error } = await supabase.from('videos').delete().eq('id', videoId);
-    if (!error) setVideos(prev => prev.filter(v => v.id !== videoId));
-  };
-
-  const handleArtistPostSubmit = async (e: React.FormEvent) => {
+  const handleCreatePlaylist = async (e: React.FormEvent) => {
     e.preventDefault();
-    if ((!newArtistPost.trim() && !newArtistPostMediaUrl.trim()) || !user || !id) return;
-    setPostingArtist(true);
-    let finalMediaUrl = newArtistPostMediaUrl.trim();
-    let finalMediaType = newArtistPostType;
-    if (finalMediaUrl) {
-      const extracted = extractCleanUrl(finalMediaUrl);
-      if (extracted) finalMediaUrl = extracted;
-      if (finalMediaUrl.includes('youtube.com') || finalMediaUrl.includes('youtu.be') || finalMediaUrl.includes('vimeo.com')) finalMediaType = 'video';
+    if (!user || !newPlaylistName.trim()) return;
+
+    const { data, error } = await supabase.from('playlists').insert({
+      user_id: user.id, name: newPlaylistName.trim()
+    }).select().single();
+
+    if (!error && data) {
+      setUserPlaylists([data, ...userPlaylists]);
+      setNewPlaylistName('');
+      setShowCreatePlaylist(false);
     }
-    const { data, error } = await supabase.from('artist_posts').insert({ profile_id: id, content: newArtistPost.trim() || ' ', media_type: finalMediaType, media_url: finalMediaUrl || null }).select().single();
-    if (!error && data) { setArtistPosts([data, ...artistPosts]); setNewArtistPost(''); setNewArtistPostMediaUrl(''); setNewArtistPostType('text'); } 
-    else { alert("Erreur d'envoi : " + error?.message); }
-    setPostingArtist(false);
   };
 
-  const handleDeleteArtistPost = async (postId: string) => {
-    if (!window.confirm('Supprimer cette actualité ?')) return;
-    const { error } = await supabase.from('artist_posts').delete().eq('id', postId);
-    if (!error) setArtistPosts(prev => prev.filter(p => p.id !== postId));
+  const handleAddTrackToPlaylist = async (playlistId: string, trackId: string) => {
+    try {
+      const { error } = await supabase.from('playlist_tracks').insert({ playlist_id: playlistId, track_id: trackId });
+      if (error) {
+        if (error.code === '23505') alert("Ce son est déjà dans cette playlist !");
+        else throw error;
+      } else {
+        setRecentlyAdded(trackId);
+        setTimeout(() => { setRecentlyAdded(null); setAddingTrackId(null); }, 1000);
+      }
+    } catch (err) { alert("Erreur lors de l'ajout."); }
   };
 
-  if (loading) return <div style={{ color: colors.textMuted, padding: 40, textAlign: 'center', background: colors.bg, minHeight: '100vh' }}>Chargement...</div>;
-  if (!profile) return <div style={{ color: colors.textMuted, padding: 40, textAlign: 'center', background: colors.bg, minHeight: '100vh' }}>Profil introuvable</div>;
+  if (loading) return <div style={{ padding: 40, textAlign: 'center', color: colors.textMain, background: colors.bg, minHeight: '100vh' }}>Chargement du profil...</div>;
+  if (!profile) return <div style={{ padding: 40, textAlign: 'center', color: colors.textMain, background: colors.bg, minHeight: '100vh' }}>Utilisateur introuvable.</div>;
 
-  const displayName = profile.username || profile.email?.split('@')[0] || 'Artiste';
-  const canEdit = user?.id === profile.id || isAdmin;
-  const styleTags = profile.music_style ? profile.music_style.split(',').map(s => s.trim()).filter(Boolean) : [];
-  const influenceTags = profile.influences ? profile.influences.split(',').map(s => s.trim()).filter(Boolean) : [];
-  const gearTags = profile.gear ? profile.gear.split(',').map(s => s.trim()).filter(Boolean) : [];
-
-  const topTrack = [...tracks].sort((a, b) => (b.likes_count || 0) - (a.likes_count || 0))[0];
-  const isTopTrackPlaying = topTrack ? isCurrentTrack(topTrack.id) && isPlaying : false;
-  const totalCreationPages = Math.max(1, Math.ceil(tracks.length / ITEMS_PER_PAGE));
-  const safeCreationPage = Math.min(creationPage, totalCreationPages);
-  const paginatedCreationTracks = tracks.slice((safeCreationPage - 1) * ITEMS_PER_PAGE, safeCreationPage * ITEMS_PER_PAGE);
-
-  const Pagination = ({ currentPage, totalPages, onPageChange }: { currentPage: number, totalPages: number, onPageChange: (p: number) => void }) => {
-    if (totalPages <= 1) return null;
-    return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 6, marginTop: 24 }}>
-        <button onClick={() => onPageChange(Math.max(1, currentPage - 1))} disabled={currentPage === 1} style={{ ...PAGINATION_BTN, width: 'auto', borderRadius: 6, padding: '0 12px', opacity: currentPage === 1 ? 0.3 : 1, fontSize: '0.7rem' }}>←</button>
-        {Array.from({ length: totalPages }).map((_, i) => {
-          if (Math.abs(i + 1 - currentPage) > 2 && i !== 0 && i !== totalPages - 1) {
-            if (Math.abs(i + 1 - currentPage) === 3) return <span key={i} style={{ color: colors.textMuted, fontSize: '0.7rem' }}>...</span>;
-            return null;
-          }
-          return <button key={i} onClick={() => onPageChange(i + 1)} style={{ ...PAGINATION_BTN, background: currentPage === i + 1 ? '#00d9ff' : 'transparent', color: currentPage === i + 1 ? '#000' : colors.textMuted, border: currentPage === i + 1 ? 'none' : `1px solid ${colors.border}` }}>{i + 1}</button>;
-        })}
-        <button onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))} disabled={currentPage === totalPages} style={{ ...PAGINATION_BTN, width: 'auto', borderRadius: 6, padding: '0 12px', opacity: currentPage === totalPages ? 0.3 : 1, fontSize: '0.7rem' }}>→</button>
-      </div>
-    );
-  };
-
-  const FeedSection = () => (
-    <div style={{ ...PANEL_STYLE, padding: 24, marginBottom: 24 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-        <h3 style={{ ...TEXT_TITLE, fontSize: '1.1rem', margin: 0 }}>ACTUALITÉS</h3>
-        {artistPosts.length > 3 && (
-          <button onClick={() => setActiveTab('journal')} style={{ background: 'none', border: 'none', color: '#00d9ff', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer' }}>TOUT VOIR</button>
-        )}
-      </div>
-
-      {canEdit && (
-        <form onSubmit={handleArtistPostSubmit} style={{ marginBottom: 24, background: colors.inputBg, padding: 16, borderRadius: 12, border: `1px solid ${colors.border}` }}>
-          <textarea value={newArtistPost} onChange={(e) => setNewArtistPost(e.target.value)} disabled={postingArtist} rows={2} placeholder="Quoi de neuf ?" style={{ width: '100%', padding: 10, background: 'transparent', border: 'none', borderBottom: `1px solid ${colors.border}`, color: colors.textMain, outline: 'none', resize: 'none', marginBottom: 10, fontSize: '0.95rem' }} />
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ display: 'flex', gap: 16 }}>
-              {['text', 'link', 'image', 'video', 'iframe'].map((type) => (
-                <button key={type} type="button" onClick={() => setNewArtistPostType(type as any)} style={{ background: 'transparent', border: 'none', color: newArtistPostType === type ? '#00d9ff' : colors.textMuted, fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', padding: 0, transition: 'color 0.2s' }}>{type.toUpperCase()}</button>
-              ))}
-            </div>
-            <button type="submit" disabled={(!newArtistPost.trim() && !newArtistPostMediaUrl.trim()) || postingArtist} style={{ background: (newArtistPost.trim() || newArtistPostMediaUrl.trim()) ? colors.publishBg : colors.border, color: (newArtistPost.trim() || newArtistPostMediaUrl.trim()) ? colors.publishText : colors.textMuted, border: 'none', padding: '6px 16px', borderRadius: 20, fontSize: '0.75rem', fontWeight: 700, cursor: ((!newArtistPost.trim() && !newArtistPostMediaUrl.trim()) || postingArtist) ? 'default' : 'pointer', transition: 'all 0.2s' }}>{postingArtist ? '...' : 'PUBLIER'}</button>
-          </div>
-          {newArtistPostType !== 'text' && <textarea value={newArtistPostMediaUrl} onChange={(e) => setNewArtistPostMediaUrl(e.target.value)} placeholder={newArtistPostType === 'iframe' ? 'Code <iframe src="..."></iframe>' : 'Lien (https://...)'} rows={newArtistPostType === 'iframe' ? 2 : 1} style={{ width: '100%', padding: '10px', background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain, outline: 'none', marginTop: 12, fontSize: '0.85rem', fontFamily: newArtistPostType === 'iframe' ? 'monospace' : 'inherit' }} />}
-        </form>
-      )}
-
-      {artistPosts.length === 0 ? (
-        <div style={{ ...TEXT_MUTED, textAlign: 'center', padding: 20 }}>Aucune actualité.</div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {artistPosts.slice(0, 3).map(post => (
-            <div key={post.id} style={{ padding: 16, background: colors.inputBg, borderRadius: 12, border: `1px solid ${colors.border}`, position: 'relative' }}>
-              <div style={{ fontSize: '0.75rem', color: '#00d9ff', fontWeight: 700, marginBottom: 8 }}>{new Date(post.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}</div>
-              <div style={{ fontSize: '0.95rem', color: colors.textLight, marginBottom: 12, whiteSpace: 'pre-wrap', lineHeight: 1.5 }}>{post.content.trim()}</div>
-              {post.media_url && post.media_type === 'image' && <img src={post.media_url} alt="" style={{ width: '100%', borderRadius: 8, marginTop: 8, border: `1px solid ${colors.border}` }} />}
-              {post.media_url && post.media_type === 'video' && <div style={{ marginTop: 8, borderRadius: 8, overflow: 'hidden', border: `1px solid ${colors.border}` }}><VideoEmbed url={post.media_url} /></div>}
-              {post.media_url && post.media_type === 'link' && <a href={post.media_url} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, padding: 12, background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: '#00d9ff', fontSize: '0.85rem', fontWeight: 600, textDecoration: 'none' }}>{Icons.link} Voir le lien</a>}
-              {post.media_url && post.media_type === 'iframe' && <div style={{ width: '100%', borderRadius: 8, overflow: 'hidden', border: `1px solid ${colors.border}`, marginTop: 8 }}><iframe src={post.media_url} width="100%" height={post.media_url.includes('soundcloud') ? "166" : "300"} frameBorder="0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy" style={{ display: 'block' }} /></div>}
-              {canEdit && <button onClick={() => handleDeleteArtistPost(post.id)} style={{ position: 'absolute', top: 16, right: 16, background: 'transparent', border: 'none', color: colors.textDark, cursor: 'pointer', fontSize: '0.8rem', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#ff5c5c'} onMouseLeave={(e) => e.currentTarget.style.color = colors.textDark}>Supprimer</button>}
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
+  const socials = [
+    { url: profile.instagram_url, label: 'Instagram', color: '#E1306C' },
+    { url: profile.spotify_url, label: 'Spotify', color: '#1DB954' },
+    { url: profile.soundcloud_url, label: 'SoundCloud', color: '#FF5500' },
+    { url: profile.tiktok_url, label: 'TikTok', color: '#fff' },
+    { url: profile.youtube_url, label: 'YouTube', color: '#FF0000' },
+    { url: profile.beatport_url, label: 'Beatport', color: '#01FF95' },
+  ].filter(s => s.url && s.url.trim() !== '');
 
   return (
-    <div style={{ background: colors.bg, minHeight: '100vh', color: colors.textMain, fontFamily: 'Inter, sans-serif', transition: 'background 0.3s ease, color 0.3s ease' }}>
+    <div style={{ background: colors.bg, minHeight: '100vh', fontFamily: 'Inter, sans-serif', paddingBottom: 40 }}>
       
-      <input type="file" accept="image/*" ref={bannerInputRef} onChange={(e) => handleImageUpload(e, 'banner')} style={{ display: 'none' }} />
-      <input type="file" accept="image/*" ref={avatarInputRef} onChange={(e) => handleImageUpload(e, 'avatar')} style={{ display: 'none' }} />
-      <input type="file" accept="image/*" ref={photoInputRef} onChange={handlePhotoUpload} style={{ display: 'none' }} />
-
-      {/* HEADER AVEC BANNIÈRE AJUSTABLE */}
-      <div style={{ position: 'relative', height: isMobile ? 200 : 320, background: colors.tagBg, overflow: 'hidden' }}>
-        {profile.banner_url && (
-          <img 
-            src={profile.banner_url} 
-            alt="Banner" 
-            style={{ 
-              width: '100%', 
-              height: '100%', 
-              objectFit: 'cover', 
-              objectPosition: `center ${profile.banner_position ?? 50}%`,
-              opacity: 0.7 
-            }} 
-          />
-        )}
-        <div style={{ position: 'absolute', inset: 0, background: colors.bannerOverlay }} />
-        
-        {canEdit && (
-          <button onClick={() => bannerInputRef.current?.click()} style={{ position: 'absolute', top: 24, right: 24, background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', padding: '8px 16px', borderRadius: 20, fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, backdropFilter: 'blur(10px)' }}>
-            {Icons.camera} Changer
-          </button>
-        )}
-
-        <div style={{ position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: 1200, padding: '0 24px', display: 'flex', alignItems: 'flex-end', gap: 24 }}>
-          <div style={{ position: 'relative' }}>
-            <div style={{ width: 140, height: 140, borderRadius: '50%', background: colors.tagBg, border: `4px solid ${colors.avatarBorder}`, overflow: 'hidden', flexShrink: 0, transform: 'translateY(30px)', boxShadow: '0 8px 30px rgba(0,0,0,0.2)' }}>
-              {profile.avatar_url && <img src={profile.avatar_url} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
+      {/* HEADER DU PROFIL */}
+      <div style={{ 
+        background: isDark ? `linear-gradient(to bottom, ${colors.accent}15, ${colors.bg})` : `linear-gradient(to bottom, ${colors.accent}10, ${colors.bg})`,
+        padding: '60px 20px 20px', borderBottom: `1px solid ${colors.border}` 
+      }}>
+        <div style={{ maxWidth: 1000, margin: '0 auto', display: 'flex', gap: 24, alignItems: 'center', flexWrap: 'wrap' }}>
+          
+          <div style={{ width: 120, height: 120, borderRadius: '50%', background: profile.avatar_url ? `url(${profile.avatar_url}) center/cover` : '#222', border: `3px solid ${colors.accent}`, flexShrink: 0 }} />
+          
+          <div style={{ flex: 1, minWidth: 250 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 8 }}>
+              <h1 style={{ fontSize: 32, fontWeight: 900, color: colors.textMain, margin: 0 }}>{profile.username}</h1>
+              {profile.is_premium && (
+                <span style={{ fontSize: 10, background: '#fbbf24', color: '#000', padding: '4px 10px', borderRadius: 20, fontWeight: 900 }}>PREMIUM</span>
+              )}
+              {isOwner ? (
+                <button onClick={() => navigate('/settings')} style={{ background: 'transparent', border: `1px solid ${colors.border}`, color: colors.textMain, padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  {Icons.settings} Modifier
+                </button>
+              ) : (
+                <button 
+                  onClick={handleFollow} 
+                  disabled={followLoading}
+                  style={{ 
+                    padding: '8px 20px', borderRadius: 8, fontSize: 13, fontWeight: 800, cursor: followLoading ? 'wait' : 'pointer',
+                    background: isFollowing ? 'transparent' : colors.accent,
+                    color: isFollowing ? colors.textMain : '#000',
+                    border: isFollowing ? `1px solid ${colors.border}` : 'none',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  {isFollowing ? '✓ Suivi' : '+ Suivre'}
+                </button>
+              )}
             </div>
-            {canEdit && (
-              <button onClick={() => avatarInputRef.current?.click()} style={{ position: 'absolute', bottom: 26, right: -4, width: 36, height: 36, borderRadius: '50%', background: colors.btnPrimaryBg, color: colors.btnPrimaryText, border: `2px solid ${colors.avatarBorder}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>
-                {Icons.camera}
-              </button>
-            )}
+
+            {/* ✅ STATS FOLLOWERS/FOLLOWING */}
+            <div style={{ display: 'flex', gap: 20, marginBottom: 12 }}>
+              <span style={{ fontSize: 14, color: colors.textMuted }}>
+                <strong style={{ color: colors.textMain, fontWeight: 800 }}>{followersCount}</strong> abonné{followersCount > 1 ? 's' : ''}
+              </span>
+              <span style={{ fontSize: 14, color: colors.textMuted }}>
+                <strong style={{ color: colors.textMain, fontWeight: 800 }}>{followingCount}</strong> abonnement{followingCount > 1 ? 's' : ''}
+              </span>
+            </div>
+            
+            <p style={{ color: colors.textMuted, fontSize: 15, lineHeight: 1.5, marginBottom: 16, maxWidth: 600 }}>
+              {profile.bio || "Aucune biographie pour le moment."}
+            </p>
+
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+              {socials.map(s => (
+                <a key={s.label} href={s.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: s.color, textDecoration: 'none', fontWeight: 700, borderBottom: `1px solid ${s.color}40` }}>
+                  {s.label}
+                </a>
+              ))}
+            </div>
           </div>
-
-          <div style={{ marginBottom: 40, flex: 1 }}>
-            <h1 style={{ fontSize: isMobile ? 28 : 40, margin: 0, fontWeight: 800, letterSpacing: '-1px', color: colors.textMain, textShadow: isDark ? '0 2px 10px rgba(0,0,0,0.5)' : 'none' }}>{displayName}</h1>
-            {(profile.city || profile.country) && (
-              <div style={{ color: colors.textMuted, fontSize: '0.9rem', marginTop: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
-                {Icons.mapPin} {profile.city} {profile.country ? `, ${profile.country}` : ''}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* BARRE D'ACTIONS */}
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '24px 24px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
-        <div style={{ display: 'flex', gap: 32 }}>
-          <div style={{ display: 'flex', flexDirection: 'column' }}><span style={{ fontSize: 20, fontWeight: 800, color: colors.textMain }}>{stats.tracks}</span><span style={{ fontSize: 12, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Tracks</span></div>
-          <div style={{ display: 'flex', flexDirection: 'column' }}><span style={{ fontSize: 20, fontWeight: 800, color: colors.textMain }}>{followersCount}</span><span style={{ fontSize: 12, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Followers</span></div>
-          <div style={{ display: 'flex', flexDirection: 'column' }}><span style={{ fontSize: 20, fontWeight: 800, color: colors.textMain }}>{stats.plays}</span><span style={{ fontSize: 12, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Plays</span></div>
-        </div>
-
-        <div style={{ display: 'flex', gap: 12 }}>
-          {canEdit && <button onClick={() => setIsEditing(true)} style={{ background: colors.btnSecondaryBg, border: `1px solid ${colors.border}`, color: colors.textMain, padding: '8px 20px', borderRadius: 20, fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>{Icons.edit} Modifier</button>}
-          {user?.id !== profile.id && <button onClick={handleFollowToggle} style={{ background: isFollowing ? 'transparent' : colors.btnPrimaryBg, border: isFollowing ? `1px solid ${colors.border}` : 'none', color: isFollowing ? colors.textMain : colors.btnPrimaryText, padding: '8px 24px', borderRadius: 20, fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer' }}>{isFollowing ? 'Abonné' : 'Suivre'}</button>}
-          {user?.id !== profile.id && <button onClick={() => setIsChatOpen(true)} style={{ background: colors.btnSecondaryBg, border: `1px solid ${colors.border}`, color: colors.textMain, padding: '8px 24px', borderRadius: 20, fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer' }}>Message</button>}
         </div>
       </div>
 
       {/* TABS */}
-      <div style={{ maxWidth: 1200, margin: '24px auto 0', padding: '0 24px' }}>
-        <div style={{ display: 'flex', gap: 24, borderBottom: `1px solid ${colors.border}`, overflowX: 'auto' }}>
-          {['Featured', 'Creation', 'Playlists', 'Journal', 'Photos', 'Video'].map(tab => (
-            <button key={tab} onClick={() => setActiveTab(tab.toLowerCase())} style={{ background: 'none', border: 'none', padding: '12px 0', color: activeTab === tab.toLowerCase() ? colors.textMain : colors.textMuted, fontSize: '0.9rem', fontWeight: 700, cursor: 'pointer', borderBottom: activeTab === tab.toLowerCase() ? '2px solid #00d9ff' : '2px solid transparent', whiteSpace: 'nowrap', textTransform: 'capitalize' }}>{tab}</button>
+      <div style={{ maxWidth: 1000, margin: '0 auto', padding: '0 20px' }}>
+        <div style={{ display: 'flex', gap: 24, borderBottom: `1px solid ${colors.border}`, overflowX: 'auto', paddingTop: 20 }}>
+          {[
+            { id: 'tracks', label: 'Sons', icon: Icons.music, count: userTracks.length },
+            { id: 'playlists', label: 'Playlists', icon: Icons.playlist, count: userPlaylists.length },
+            { id: 'likes', label: 'Likes', icon: Icons.heart, count: userLikes.length },
+            { id: 'about', label: 'À propos', icon: Icons.user, count: null },
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as Tab)}
+              style={{
+                background: 'transparent', border: 'none', padding: '12px 0', borderBottom: activeTab === tab.id ? `2px solid ${colors.accent}` : '2px solid transparent',
+                color: activeTab === tab.id ? colors.accent : colors.textMuted, fontSize: 14, fontWeight: 700, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: 8, transition: 'all 0.2s', whiteSpace: 'nowrap'
+              }}
+            >
+              {tab.icon} {tab.label}
+              {tab.count !== null && <span style={{ fontSize: 11, background: colors.panelBg, padding: '2px 8px', borderRadius: 10, color: colors.textMuted }}>{tab.count}</span>}
+            </button>
           ))}
         </div>
-      </div>
 
-      {/* CONTENU */}
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '20px' : '32px 24px 60px', display: 'flex', gap: 32, flexDirection: isMobile ? 'column' : 'row' }}>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          {activeTab === 'featured' && topTrack && (
-            <div style={{ ...PANEL_STYLE, marginBottom: 24, padding: 0, overflow: 'hidden', display: 'flex', flexDirection: isMobile ? 'column' : 'row', height: isMobile ? 'auto' : 260 }}>
-              <div style={{ width: isMobile ? '100%' : 260, height: isMobile ? 260 : '100%', background: topTrack.cover_url ? `url(${topTrack.cover_url}) center/cover` : colors.tagBg, position: 'relative', flexShrink: 0 }}><div style={{ position: 'absolute', top: 16, left: 16, background: '#ff3366', color: '#fff', padding: '4px 12px', borderRadius: 4, fontSize: 11, fontWeight: 800, letterSpacing: '1px', zIndex: 2 }}>TOP TRACK</div></div>
-              <div style={{ flex: 1, padding: isMobile ? 20 : 32, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 16 }}>
-                <div><div style={{ fontSize: 12, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700, marginBottom: 8 }}>Le son signature de {displayName}</div><h2 style={{ fontSize: isMobile ? 24 : 32, fontWeight: 800, margin: '0 0 8px 0', lineHeight: 1.1, letterSpacing: '-0.5px', color: colors.textMain }}>{topTrack.title}</h2><div style={{ fontSize: 15, color: colors.textLight }}>{topTrack.artist}</div></div>
-                <button onClick={() => play({ id: topTrack.id, title: topTrack.title, artist: topTrack.artist, audio_url: topTrack.audio_url, cover_url: topTrack.cover_url, user_id: topTrack.user_id || null, duration: topTrack.duration, peaks: topTrack.peaks })} style={{ alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 24px', background: isTopTrackPlaying ? 'rgba(0, 217, 255, 0.15)' : colors.btnPrimaryBg, color: isTopTrackPlaying ? '#00d9ff' : colors.btnPrimaryText, border: isTopTrackPlaying ? '1px solid #00d9ff' : 'none', borderRadius: 24, fontSize: 14, fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' }}>{isTopTrackPlaying ? <>{Icons.pause} En lecture...</> : <>{Icons.play} Écouter</>}</button>
-              </div>
-            </div>
-          )}
-          {activeTab === 'featured' && <FeedSection />}
-          {activeTab === 'featured' && (<div style={{ ...PANEL_STYLE, padding: 24 }}><div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}><h3 style={{ ...TEXT_TITLE, margin: 0 }}>NOUVELLES CRÉATIONS</h3><Link to="/nouveautes" style={{ color: colors.textMuted, fontSize: '0.85rem', textDecoration: 'none', fontWeight: 600 }}>TOUT VOIR</Link></div><TrackGrid tracks={tracks.slice(0, 4)} /></div>)}
-          {activeTab === 'creation' && (<div style={{ ...PANEL_STYLE, padding: 24 }}><div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}><h3 style={{ ...TEXT_TITLE, margin: 0 }}>TOUTES LES CRÉATIONS ({tracks.length})</h3></div><TrackGrid tracks={paginatedCreationTracks} /><Pagination currentPage={safeCreationPage} totalPages={totalCreationPages} onPageChange={setCreationPage} /></div>)}
-          {activeTab === 'playlists' && (
-            <div style={{ ...PANEL_STYLE, padding: 24 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}><h3 style={{ ...TEXT_TITLE, margin: 0 }}>PLAYLISTS ({playlists.length})</h3>{canEdit && <button onClick={() => setIsPlaylistModalOpen(true)} style={{ background: colors.btnPrimaryBg, color: colors.btnPrimaryText, border: 'none', padding: '8px 16px', borderRadius: 20, fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer' }}>+ Créer</button>}</div>
-              {playlists.length === 0 ? <div style={{ ...TEXT_MUTED, textAlign: 'center', padding: 40 }}>Aucune playlist.</div> : (
-                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: 16 }}>
-                  {playlists.map(pl => { const cover = pl.playlist_tracks?.[0]?.tracks?.cover_url; return (<div key={pl.id} style={{ cursor: 'pointer' }}><div style={{ position: 'relative', width: '100%', aspectRatio: '1/1', background: colors.inputBg, borderRadius: 12, overflow: 'hidden', marginBottom: 12, border: `1px solid ${colors.border}` }}>{cover ? <img src={cover} alt={pl.title} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.textDark }}>{Icons.music}</div>}<div style={{ position: 'absolute', bottom: 8, left: 8, background: 'rgba(0,0,0,0.8)', padding: '4px 8px', borderRadius: 6, fontSize: '0.7rem', zIndex: 2, fontWeight: 700, color: '#fff' }}>{pl.playlist_tracks?.length || 0} tracks</div></div><div style={{ fontSize: '0.9rem', fontWeight: 700, color: colors.textMain }}>{pl.title}</div></div>); })}
-                </div>
-              )}
-            </div>
-          )}
-          {activeTab === 'journal' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-              <div style={{ ...PANEL_STYLE, padding: 24 }}>
-                <h3 style={{ ...TEXT_TITLE, marginBottom: 20 }}>BIOGRAPHIE</h3>
-                <div style={{ ...TEXT_MUTED, lineHeight: 1.7, fontSize: '0.95rem', marginBottom: 24, whiteSpace: 'pre-wrap' }}>{profile.bio || "Aucune biographie."}</div>
-                {(styleTags.length > 0 || influenceTags.length > 0 || gearTags.length > 0) && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 20, paddingTop: 20, borderTop: `1px solid ${colors.border}` }}>
-                    {styleTags.length > 0 && (<div><div style={{ fontSize: '0.75rem', color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 10, fontWeight: 700 }}>Style musical</div><div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>{styleTags.map(tag => <Link key={tag} to={`/search?q=${encodeURIComponent(tag)}`} style={{ padding: '6px 12px', background: 'rgba(0, 217, 255, 0.1)', border: '1px solid rgba(0, 217, 255, 0.3)', color: '#00d9ff', borderRadius: 20, fontSize: '0.8rem', fontWeight: 600, textDecoration: 'none' }}>{tag}</Link>)}</div></div>)}
-                    {influenceTags.length > 0 && (<div><div style={{ fontSize: '0.75rem', color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 10, fontWeight: 700 }}>Influences</div><div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>{influenceTags.map(tag => <span key={tag} style={{ padding: '6px 12px', background: colors.inputBg, border: `1px solid ${colors.border}`, color: colors.textLight, borderRadius: 20, fontSize: '0.8rem', fontWeight: 600 }}>{tag}</span>)}</div></div>)}
-                    {gearTags.length > 0 && (<div><div style={{ fontSize: '0.75rem', color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 10, fontWeight: 700 }}>Matériel</div><div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>{gearTags.map(tag => <span key={tag} style={{ padding: '6px 12px', background: colors.inputBg, border: `1px solid ${colors.border}`, color: colors.textLight, borderRadius: 20, fontSize: '0.8rem', fontWeight: 600 }}>{tag}</span>)}</div></div>)}
+        <div style={{ padding: '32px 0' }}>
+          
+          {/* ONGLET SONS */}
+          {activeTab === 'tracks' && (
+            userTracks.length === 0 ? <p style={{ color: colors.textMuted }}>Aucun son publié pour le moment.</p> :
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {userTracks.map(track => {
+                const isThisPlaying = currentTrack?.id === track.id && isPlaying;
+                return (
+                  <div key={track.id} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: 16, background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 12 }}>
+                    <button onClick={() => handlePlay(track)} style={{ width: 40, height: 40, borderRadius: '50%', background: isThisPlaying ? colors.accent : 'transparent', border: `1px solid ${isThisPlaying ? colors.accent : colors.border}`, color: isThisPlaying ? '#000' : colors.textMain, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
+                      {isThisPlaying ? Icons.pause : Icons.play}
+                    </button>
+                    <div style={{ width: 48, height: 48, borderRadius: 8, background: track.cover_url ? `url(${track.cover_url}) center/cover` : '#333' }} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: colors.textMain, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.title}</div>
+                      <div style={{ fontSize: 13, color: colors.textMuted }}>{track.artist} • {track.bpm} BPM</div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      {isOwner && (
+                        <div style={{ position: 'relative' }}>
+                          <button onClick={() => setAddingTrackId(addingTrackId === track.id ? null : track.id)} style={{ width: 32, height: 32, borderRadius: 6, background: 'transparent', border: `1px solid ${colors.border}`, color: colors.textMuted, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                            {recentlyAdded === track.id ? Icons.check : Icons.playlist}
+                          </button>
+                          {addingTrackId === track.id && (
+                            <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: 8, background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 8, padding: 8, width: 200, zIndex: 10, boxShadow: '0 10px 20px rgba(0,0,0,0.2)' }}>
+                              <div style={{ fontSize: 10, fontWeight: 800, color: colors.textMuted, textTransform: 'uppercase', marginBottom: 8, padding: '0 4px' }}>Ajouter à...</div>
+                              {userPlaylists.length === 0 ? (
+                                <div style={{ fontSize: 12, color: colors.textMuted, padding: 4 }}>Aucune playlist.</div>
+                              ) : (
+                                userPlaylists.map(p => (
+                                  <button key={p.id} onClick={() => handleAddTrackToPlaylist(p.id, track.id)} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '6px 8px', background: 'transparent', border: 'none', color: colors.textMain, fontSize: 12, cursor: 'pointer', borderRadius: 4 }} onMouseEnter={(e) => e.currentTarget.style.background = colors.hoverBg} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
+                                    {p.name}
+                                  </button>
+                                ))
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      <Link to={`/track/${track.id}`} style={{ padding: '6px 12px', background: 'transparent', border: `1px solid ${colors.border}`, color: colors.textMain, borderRadius: 6, fontSize: 12, textDecoration: 'none' }}>Voir</Link>
+                    </div>
                   </div>
-                )}
-              </div>
-              <FeedSection />
+                );
+              })}
             </div>
           )}
-          {activeTab === 'photos' && (
-            <div style={{ ...PANEL_STYLE, padding: 24 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}><h3 style={{ ...TEXT_TITLE, margin: 0 }}>GALERIE PHOTOS ({photos.length})</h3>{canEdit && <button onClick={() => photoInputRef.current?.click()} disabled={uploadingPhoto} style={{ background: colors.btnPrimaryBg, color: colors.btnPrimaryText, border: 'none', padding: '8px 16px', borderRadius: 20, fontWeight: 700, fontSize: '0.8rem', cursor: uploadingPhoto ? 'wait' : 'pointer' }}>{uploadingPhoto ? 'Upload...' : '+ Ajouter'}</button>}</div>
-              {photos.length === 0 ? <div style={{ ...TEXT_MUTED, textAlign: 'center', padding: 40 }}>Aucune photo.</div> : (
-                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)', gap: 16 }}>
-                  {photos.map(photo => (<div key={photo.id} style={{ position: 'relative', width: '100%', aspectRatio: '1/1', background: colors.inputBg, borderRadius: 12, overflow: 'hidden', border: `1px solid ${colors.border}` }}><img src={photo.image_url} alt="Photo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />{canEdit && <button onClick={() => handleDeletePhoto(photo.id)} style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(0,0,0,0.7)', border: `1px solid ${colors.border}`, color: '#ff5c5c', cursor: 'pointer', padding: '4px 8px', borderRadius: 4, fontSize: 11 }}>Supprimer</button>}</div>))}
-                </div>
-              )}
-            </div>
-          )}
-          {activeTab === 'video' && (
-            <div style={{ ...PANEL_STYLE, padding: 24 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}><h3 style={{ ...TEXT_TITLE, margin: 0 }}>VIDÉOS ({videos.length})</h3>{canEdit && <button onClick={() => setIsVideoModalOpen(true)} style={{ background: colors.btnPrimaryBg, color: colors.btnPrimaryText, border: 'none', padding: '8px 16px', borderRadius: 20, fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer' }}>+ Ajouter</button>}</div>
-              {videos.length === 0 ? <div style={{ ...TEXT_MUTED, textAlign: 'center', padding: 40 }}>Aucune vidéo.</div> : (
-                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: 20 }}>
-                  {videos.map(video => (<div key={video.id} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}><div style={{ borderRadius: 12, overflow: 'hidden', border: `1px solid ${colors.border}` }}><VideoEmbed url={video.url} /></div><div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}><div style={{ fontSize: '0.95rem', fontWeight: 700, color: colors.textMain }}>{video.title}</div>{canEdit && <button onClick={() => handleDeleteVideo(video.id)} style={{ background: 'none', border: 'none', color: colors.textDark, cursor: 'pointer', fontSize: '0.8rem', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#ff5c5c'} onMouseLeave={(e) => e.currentTarget.style.color = colors.textDark}>Supprimer</button>}</div></div>))}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
 
-        {/* SIDEBAR */}
-        <aside style={{ width: isMobile ? '100%' : 320, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 24 }}>
-          <div style={{ ...PANEL_STYLE, padding: 24, textAlign: 'center' }}>
-            <div style={{ width: 100, height: 100, borderRadius: '50%', margin: '0 auto 16px', background: colors.inputBg, overflow: 'hidden', border: `2px solid ${colors.border}` }}>{profile.avatar_url ? <img src={profile.avatar_url} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.textDark }}>{Icons.music}</div>}</div>
-            <h2 style={{ fontSize: '1.2rem', fontWeight: 800, margin: '0 0 4px 0', color: colors.textMain }}>{displayName}</h2>
-            <div style={{ ...TEXT_MUTED, fontSize: '0.85rem' }}>{profile.city || 'France'}, {profile.country || 'Valence'}</div>
-            {profile.badges && profile.badges.length > 0 && (<div style={{ marginTop: 16, paddingTop: 16, borderTop: `1px solid ${colors.border}` }}><BadgeList badges={profile.badges} /></div>)}
-          </div>
-          {profile.social_links && Object.keys(profile.social_links).length > 0 && (
-            <div style={{ ...PANEL_STYLE, padding: 20 }}>
-              <h4 style={{ fontSize: '0.8rem', color: colors.textMuted, margin: '0 0 12px 0', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}>Réseaux</h4>
-              <SocialLinks links={profile.social_links} />
+          {/* ONGLET PLAYLISTS */}
+          {activeTab === 'playlists' && (
+            <div>
+              {isOwner && (
+                <div style={{ marginBottom: 24 }}>
+                  {!showCreatePlaylist ? (
+                    <button onClick={() => setShowCreatePlaylist(true)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', background: colors.accent, color: '#000', borderRadius: 8, fontWeight: 800, border: 'none', cursor: 'pointer' }}>
+                      {Icons.plus} Créer une playlist
+                    </button>
+                  ) : (
+                    <form onSubmit={handleCreatePlaylist} style={{ display: 'flex', gap: 8, maxWidth: 400 }}>
+                      <input type="text" placeholder="Nom de la playlist..." autoFocus value={newPlaylistName} onChange={e => setNewPlaylistName(e.target.value)} style={{ flex: 1, padding: '10px 14px', background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain, outline: 'none' }} />
+                      <button type="submit" style={{ padding: '0 16px', background: colors.accent, color: '#000', borderRadius: 8, fontWeight: 800, border: 'none', cursor: 'pointer' }}>Créer</button>
+                      <button type="button" onClick={() => setShowCreatePlaylist(false)} style={{ padding: '0 16px', background: 'transparent', color: colors.textMuted, border: `1px solid ${colors.border}`, borderRadius: 8, fontWeight: 600, cursor: 'pointer' }}>Annuler</button>
+                    </form>
+                  )}
+                </div>
+              )}
+
+              {userPlaylists.length === 0 ? <p style={{ color: colors.textMuted }}>Aucune playlist publique.</p> :
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 16 }}>
+                {userPlaylists.map(p => (
+                  <div key={p.id} style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 12, padding: 20 }}>
+                    <div style={{ width: 40, height: 40, borderRadius: 8, background: `${colors.accent}15`, color: colors.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
+                      {Icons.playlist}
+                    </div>
+                    <h4 style={{ fontSize: 15, fontWeight: 800, color: colors.textMain, margin: '0 0 4px 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</h4>
+                    <p style={{ fontSize: 12, color: colors.textMuted, margin: 0 }}>Créée le {new Date(p.created_at).toLocaleDateString('fr-FR')}</p>
+                  </div>
+                ))}
+              </div>}
             </div>
           )}
-          {upcomingEvents.length > 0 && (
-            <div style={{ ...PANEL_STYLE, padding: 20 }}>
-              <h4 style={{ fontSize: '0.8rem', color: colors.textMuted, margin: '0 0 16px 0', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}>Prochaines dates</h4>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                {upcomingEvents.map(evt => (<a key={evt.id} href={evt.url || '/events'} target={evt.url ? '_blank' : '_self'} rel="noopener noreferrer" style={{ textDecoration: 'none', color: colors.textMain, display: 'block' }}><div style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: 4 }}>{evt.title}</div><div style={{ fontSize: '0.8rem', color: colors.textMuted }}>{new Date(evt.event_date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} · {evt.city || evt.location || 'À venir'}</div></a>))}
+
+          {/* ONGLET LIKES */}
+          {activeTab === 'likes' && (
+            userLikes.length === 0 ? <p style={{ color: colors.textMuted }}>Aucun son liké pour le moment.</p> :
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {userLikes.map(track => {
+                const isThisPlaying = currentTrack?.id === track.id && isPlaying;
+                return (
+                  <div key={track.id} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: 16, background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 12 }}>
+                    <button onClick={() => handlePlay(track)} style={{ width: 40, height: 40, borderRadius: '50%', background: isThisPlaying ? colors.accent : 'transparent', border: `1px solid ${isThisPlaying ? colors.accent : colors.border}`, color: isThisPlaying ? '#000' : colors.textMain, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
+                      {isThisPlaying ? Icons.pause : Icons.play}
+                    </button>
+                    <div style={{ width: 48, height: 48, borderRadius: 8, background: track.cover_url ? `url(${track.cover_url}) center/cover` : '#333' }} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: colors.textMain, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.title}</div>
+                      <div style={{ fontSize: 13, color: colors.textMuted }}>{track.artist}</div>
+                    </div>
+                    <Link to={`/track/${track.id}`} style={{ padding: '6px 12px', background: 'transparent', border: `1px solid ${colors.border}`, color: colors.textMain, borderRadius: 6, fontSize: 12, textDecoration: 'none' }}>Voir</Link>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* ONGLET À PROPOS */}
+          {activeTab === 'about' && (
+            <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 32, maxWidth: 600 }}>
+              <h3 style={{ fontSize: 18, fontWeight: 800, color: colors.textMain, margin: '0 0 16px 0' }}>Biographie</h3>
+              <p style={{ color: colors.textMuted, lineHeight: 1.6, whiteSpace: 'pre-wrap', marginBottom: 32 }}>{profile.bio || "Aucune biographie."}</p>
+              
+              <h3 style={{ fontSize: 18, fontWeight: 800, color: colors.textMain, margin: '0 0 16px 0' }}>Réseaux</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {socials.length === 0 ? <p style={{ color: colors.textMuted }}>Aucun réseau renseigné.</p> : socials.map(s => (
+                  <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <span style={{ color: s.color, fontWeight: 700, width: 100 }}>{s.label}</span>
+                    <a href={s.url} target="_blank" rel="noopener noreferrer" style={{ color: colors.textMuted, textDecoration: 'none', fontSize: 14 }}>{s.url}</a>
+                  </div>
+                ))}
               </div>
             </div>
           )}
-        </aside>
+
+        </div>
       </div>
-
-      {/* MODALE D'ÉDITION */}
-      {isEditing && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          <div style={{ background: colors.modalBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 32, width: '100%', maxWidth: 500, maxHeight: '90vh', overflowY: 'auto' }}>
-            <h2 style={{ margin: '0 0 24px 0', fontSize: '1.4rem', fontWeight: 800, color: colors.textMain }}>Modifier mon profil</h2>
-            
-            {profile.banner_url && (
-              <div style={{ marginBottom: 24, padding: 16, background: colors.inputBg, borderRadius: 12, border: `1px solid ${colors.border}` }}>
-                <div style={{ fontSize: 12, color: colors.textMuted, fontWeight: 600, marginBottom: 12 }}>Ajuster la bannière (haut/bas)</div>
-                <div style={{ width: '100%', height: 100, borderRadius: 8, overflow: 'hidden', marginBottom: 12, border: `1px solid ${colors.border}`, position: 'relative' }}>
-                  <img src={profile.banner_url} alt="Banner preview" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: `center ${editForm.banner_position}%` }} />
-                </div>
-                <input type="range" min="0" max="100" value={editForm.banner_position} onChange={(e) => setEditForm({ ...editForm, banner_position: Number(e.target.value) })} style={{ width: '100%', accentColor: '#00d9ff', cursor: 'pointer' }} />
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: colors.textMuted, marginTop: 4 }}>
-                  <span>Haut</span><span>Centre</span><span>Bas</span>
-                </div>
-              </div>
-            )}
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-              <div><label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 8, fontWeight: 600 }}>Nom d'artiste</label><input type="text" value={editForm.username} onChange={(e) => setEditForm({ ...editForm, username: e.target.value })} style={{ width: '100%', padding: 12, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain, outline: 'none', fontSize: 14 }} /></div>
-              <div style={{ display: 'flex', gap: 12 }}>
-                <div style={{ flex: 1 }}><label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 8, fontWeight: 600 }}>Ville</label><input type="text" value={editForm.city} onChange={(e) => setEditForm({ ...editForm, city: e.target.value })} style={{ width: '100%', padding: 12, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain, outline: 'none', fontSize: 14 }} /></div>
-                <div style={{ flex: 1 }}><label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 8, fontWeight: 600 }}>Pays</label><input type="text" value={editForm.country} onChange={(e) => setEditForm({ ...editForm, country: e.target.value })} style={{ width: '100%', padding: 12, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain, outline: 'none', fontSize: 14 }} /></div>
-              </div>
-              <div><label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 8, fontWeight: 600 }}>Biographie</label><textarea value={editForm.bio} onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })} rows={4} style={{ width: '100%', padding: 12, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain, outline: 'none', resize: 'vertical', fontSize: 14 }} placeholder="Parle de toi..." /></div>
-              <div><label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 8, fontWeight: 600 }}>Styles musicaux</label><input type="text" value={editForm.music_style} onChange={(e) => setEditForm({ ...editForm, music_style: e.target.value })} style={{ width: '100%', padding: 12, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain, outline: 'none', fontSize: 14 }} placeholder="Techno, House..." /></div>
-              <div><label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 8, fontWeight: 600 }}>Influences</label><input type="text" value={editForm.influences} onChange={(e) => setEditForm({ ...editForm, influences: e.target.value })} style={{ width: '100%', padding: 12, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain, outline: 'none', fontSize: 14 }} placeholder="Solomun..." /></div>
-              <div><label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 8, fontWeight: 600 }}>Matériel</label><input type="text" value={editForm.gear} onChange={(e) => setEditForm({ ...editForm, gear: e.target.value })} style={{ width: '100%', padding: 12, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain, outline: 'none', fontSize: 14 }} placeholder="Pioneer CDJ..." /></div>
-              <div style={{ borderTop: `1px solid ${colors.border}`, marginTop: 12, paddingTop: 20 }}>
-                <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 16, color: colors.textMain }}>Réseaux Sociaux</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  {['spotify', 'soundcloud', 'instagram', 'youtube', 'twitter', 'tiktok', 'facebook', 'beatport'].map(platform => (
-                    <input key={platform} type="text" value={(editForm as any)[platform]} onChange={(e) => setEditForm({ ...editForm, [platform]: e.target.value })} style={{ width: '100%', padding: 12, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain, outline: 'none', fontSize: 14 }} placeholder={`Lien ${platform.charAt(0).toUpperCase() + platform.slice(1)}`} />
-                  ))}
-                </div>
-              </div>
-              <div style={{ display: 'flex', gap: 12, marginTop: 12 }}>
-                <button onClick={() => setIsEditing(false)} style={{ flex: 1, padding: 14, background: 'transparent', border: `1px solid ${colors.border}`, color: colors.textMain, borderRadius: 8, fontWeight: 600, cursor: 'pointer' }}>Annuler</button>
-                <button onClick={handleSaveProfile} disabled={uploadingImage} style={{ flex: 1, padding: 14, background: colors.btnPrimaryBg, border: 'none', color: colors.btnPrimaryText, borderRadius: 8, fontWeight: 800, cursor: 'pointer' }}>Enregistrer</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* MODALE PLAYLIST */}
-      {isPlaylistModalOpen && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          <div style={{ background: colors.modalBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 32, width: '100%', maxWidth: 500, maxHeight: '90vh', overflowY: 'auto' }}>
-            <h2 style={{ marginTop: 0, marginBottom: 24, fontSize: '1.4rem', fontWeight: 800, color: colors.textMain }}>Créer une playlist</h2>
-            <div style={{ marginBottom: 20 }}><label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 8, fontWeight: 600 }}>Titre</label><input type="text" value={newPlaylistTitle} onChange={(e) => setNewPlaylistTitle(e.target.value)} style={{ width: '100%', padding: 12, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain, outline: 'none' }} placeholder="Ma super playlist" /></div>
-            <div style={{ marginBottom: 20 }}><label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 8, fontWeight: 600 }}>Description</label><textarea value={newPlaylistDesc} onChange={(e) => setNewPlaylistDesc(e.target.value)} rows={2} style={{ width: '100%', padding: 12, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain, outline: 'none', resize: 'vertical' }} placeholder="..." /></div>
-            <div style={{ marginBottom: 20 }}>
-              <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 8, fontWeight: 600 }}>Ajouter des tracks</label>
-              <div style={{ maxHeight: 200, overflowY: 'auto', border: `1px solid ${colors.border}`, borderRadius: 8, padding: 12, background: colors.inputBg }}>
-                {tracks.map(t => (<label key={t.id} style={{ display: 'flex', gap: 12, alignItems: 'center', padding: 8, cursor: 'pointer', color: colors.textLight, fontSize: 13 }}><input type="checkbox" checked={selectedTracks.includes(t.id)} onChange={(e) => { if (e.target.checked) setSelectedTracks([...selectedTracks, t.id]); else setSelectedTracks(selectedTracks.filter(tid => tid !== t.id)); }} style={{ accentColor: '#00d9ff' }} /> {t.title}</label>))}
-              </div>
-            </div>
-            <div style={{ display: 'flex', gap: 12 }}>
-              <button onClick={() => setIsPlaylistModalOpen(false)} style={{ flex: 1, padding: 14, background: 'transparent', border: `1px solid ${colors.border}`, color: colors.textMain, borderRadius: 8, fontWeight: 600, cursor: 'pointer' }}>Annuler</button>
-              <button onClick={handleCreatePlaylist} style={{ flex: 1, padding: 14, background: colors.btnPrimaryBg, border: 'none', color: colors.btnPrimaryText, borderRadius: 8, fontWeight: 800, cursor: 'pointer' }}>Créer</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* MODALE VIDÉO */}
-      {isVideoModalOpen && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          <div style={{ background: colors.modalBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 32, width: '100%', maxWidth: 500 }}>
-            <h2 style={{ marginTop: 0, marginBottom: 24, fontSize: '1.4rem', fontWeight: 800, color: colors.textMain }}>Ajouter une vidéo</h2>
-            <div style={{ marginBottom: 20 }}><label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 8, fontWeight: 600 }}>Titre de la vidéo</label><input type="text" value={newVideoTitle} onChange={(e) => setNewVideoTitle(e.target.value)} style={{ width: '100%', padding: 12, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain, outline: 'none' }} placeholder="Ex: Mon live..." /></div>
-            <div style={{ marginBottom: 24 }}><label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 8, fontWeight: 600 }}>Lien de la vidéo</label><input type="text" value={newVideoUrl} onChange={(e) => setNewVideoUrl(e.target.value)} style={{ width: '100%', padding: 12, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain, outline: 'none' }} placeholder="https://..." /></div>
-            <div style={{ display: 'flex', gap: 12 }}>
-              <button onClick={() => setIsVideoModalOpen(false)} style={{ flex: 1, padding: 14, background: 'transparent', border: `1px solid ${colors.border}`, color: colors.textMain, borderRadius: 8, fontWeight: 600, cursor: 'pointer' }}>Annuler</button>
-              <button onClick={handleAddVideo} disabled={uploadingVideo} style={{ flex: 1, padding: 14, background: colors.btnPrimaryBg, border: 'none', color: colors.btnPrimaryText, borderRadius: 8, fontWeight: 800, cursor: 'pointer' }}>Ajouter</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {profile && <ChatWidget receiverId={profile.id} receiverName={displayName} isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />}
     </div>
   );
 };

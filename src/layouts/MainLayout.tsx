@@ -4,6 +4,7 @@ import { Outlet, NavLink, useNavigate, useLocation, Link } from 'react-router-do
 import { useAuth } from '../contexts/AuthContext';
 import { usePlayer } from '../contexts/PlayerContext';
 import { GlobalPlayer } from '../components/GlobalPlayer';
+import { GlobalSearch } from '../components/GlobalSearch'; // ✅ IMPORT AJOUTÉ
 import { useIsMobile } from '../hooks/useIsMobile';
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -11,6 +12,7 @@ const Icons = {
   home: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>,
   feed: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 11a9 9 0 0 1 9 9" /><path d="M4 4a16 16 0 0 1 16 16" /><circle cx="5" cy="19" r="1" /></svg>,
   new: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M2 12h20" /></svg>,
+  playlist: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>,
   events: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>,
   live: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="2" /><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14" /></svg>,
   genres: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" /></svg>,
@@ -28,6 +30,7 @@ const NAV_ITEMS = [
   { path: '/', label: 'Accueil', icon: Icons.home, exact: true },
   { path: '/feed', label: 'Feed', icon: Icons.feed },
   { path: '/nouveautes', label: 'Nouveautés', icon: Icons.new },
+  { path: '/mes-playlists', label: 'Mes Playlists', icon: Icons.playlist },
   { path: '/events', label: 'Événements', icon: Icons.events },
   { path: '/live', label: 'Live DJ', icon: Icons.live },
   { path: '/genres', label: 'Genres', icon: Icons.genres },
@@ -57,7 +60,6 @@ export const MainLayout: React.FC = () => {
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // ✅ PALETTE DE COULEURS DYNAMIQUES
   const colors = {
     bg: isDark ? '#0a0a0a' : '#ffffff',
     textMain: isDark ? '#ffffff' : '#1a1a1a',
@@ -66,7 +68,7 @@ export const MainLayout: React.FC = () => {
     hoverBg: isDark ? '#121212' : '#f3f4f6',
     activeBg: isDark ? 'rgba(0, 217, 255, 0.05)' : 'rgba(0, 217, 255, 0.1)',
     mainBg: isDark ? '#0a0a0a' : '#f5f5f7',
-    panelBg: isDark ? '#121212' : '#ffffff', // ✅ Ajout de panelBg qui manquait
+    panelBg: isDark ? '#121212' : '#ffffff',
   };
 
   const isFullScreen = location.pathname === '/mastering' || location.pathname === '/cdj' || location.pathname === '/studio' || location.pathname === '/nouveautes';
@@ -77,25 +79,17 @@ export const MainLayout: React.FC = () => {
   const displayName = profile?.username || user?.email?.split('@')[0] || 'Artiste';
   const avatarUrl = profile?.avatar_url;
 
-  // ✅ BOUTON FLOTTANT CORRIGÉ
   const ThemeToggleButton = () => (
     <button
       onClick={toggleTheme}
       style={{
-        position: 'fixed',
-        top: 20,
-        right: 20,
-        zIndex: 9999,
-        width: 44, height: 44,
-        borderRadius: '50%',
-        // Contraste forcé pour toujours voir l'icône
+        position: 'fixed', top: 20, right: 20, zIndex: 9999,
+        width: 44, height: 44, borderRadius: '50%',
         background: isDark ? '#ffffff' : '#1a1a1a', 
         border: `1px solid ${isDark ? '#e5e7eb' : '#333333'}`,
         color: isDark ? '#000000' : '#ffffff', 
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        cursor: 'pointer',
-        boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
-        transition: 'all 0.2s',
+        cursor: 'pointer', boxShadow: '0 4px 15px rgba(0,0,0,0.2)', transition: 'all 0.2s',
       }}
       title={isDark ? 'Passer en mode clair' : 'Passer en mode sombre'}
     >
@@ -103,20 +97,16 @@ export const MainLayout: React.FC = () => {
     </button>
   );
 
-    // ✅ SI PLEIN ÉCRAN
   if (isFullScreen) {
     return (
       <div style={{ minHeight: '100vh', background: colors.bg, color: colors.textMain, transition: 'background 0.3s ease' }}>
-        {/* ✅ On cache le bouton flottant sur /nouveautes car la page a déjà son propre bouton */}
         {location.pathname !== '/nouveautes' && <ThemeToggleButton />}
-        
         <Outlet />
         {currentTrack && <GlobalPlayer currentTrack={currentTrack} isPlaying={isPlaying} onTogglePlay={togglePlay} onStop={stop} />}
       </div>
     );
   }
 
-  // ✅ VERSION MOBILE
   if (isMobile) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: colors.bg, color: colors.textMain, overflowX: 'hidden', width: '100%', maxWidth: '100vw', transition: 'background 0.3s ease' }}>
@@ -127,7 +117,6 @@ export const MainLayout: React.FC = () => {
             <span style={{ fontWeight: 800, fontSize: '1rem', color: colors.textMain, letterSpacing: '-0.5px' }}>DROPZONE <span style={{ color: '#00d9ff' }}>DJ</span></span>
           </Link>
           <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-            {/* Bouton mobile avec icône bien visible */}
             <button onClick={toggleTheme} style={{ background: 'transparent', border: 'none', color: colors.textMain, cursor: 'pointer', padding: 4 }}>
               {isDark ? Icons.sun : Icons.moon}
             </button>
@@ -147,8 +136,7 @@ export const MainLayout: React.FC = () => {
           position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50,
           background: colors.bg, borderTop: `1px solid ${colors.border}`,
           display: 'flex', justifyContent: 'space-around', alignItems: 'center',
-          padding: '8px 4px',
-          paddingBottom: 'calc(8px + env(safe-area-inset-bottom))',
+          padding: '8px 4px', paddingBottom: 'calc(8px + env(safe-area-inset-bottom))',
         }}>
           {MOBILE_NAV.map(item => {
             const isMenu = item.path === '#menu';
@@ -165,11 +153,9 @@ export const MainLayout: React.FC = () => {
     );
   }
 
-  // ✅ VERSION DESKTOP
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: colors.mainBg, color: colors.textMain, transition: 'background 0.3s ease' }}>
       
-      {/* ✅ BOUTON FLOTTANT EN HAUT À DROITE */}
       <ThemeToggleButton />
 
       <aside style={{ width: 240, background: colors.bg, borderRight: `1px solid ${colors.border}`, display: 'flex', flexDirection: 'column', position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 50, transition: 'background 0.3s ease, border-color 0.3s ease' }}>
@@ -192,7 +178,6 @@ export const MainLayout: React.FC = () => {
             );
           })}
           
-          {/* BOUTON DE THEME DANS LE MENU */}
           <button onClick={toggleTheme} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', marginTop: 16, border: `1px solid ${colors.border}`, borderRadius: 8, background: 'transparent', color: colors.textMain, cursor: 'pointer', fontWeight: 600, fontSize: '0.9rem', transition: 'all 0.2s' }}>
              {isDark ? Icons.sun : Icons.moon}
              {isDark ? 'Mode Clair' : 'Mode Sombre'}
@@ -218,6 +203,12 @@ export const MainLayout: React.FC = () => {
       </aside>
 
       <div style={{ flex: 1, marginLeft: 240, display: 'flex', flexDirection: 'column', minHeight: '100vh', paddingBottom: currentTrack ? 100 : 0 }}>
+        
+        {/* ✅ BARRE DE RECHERCHE GLOBALE AJOUTÉE */}
+        <div style={{ background: colors.bg, borderBottom: `1px solid ${colors.border}`, padding: '12px 32px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <GlobalSearch />
+        </div>
+
         <main style={{ flex: 1, padding: 32, maxWidth: 1400, margin: '0 auto', width: '100%' }}>
           <Outlet />
         </main>

@@ -21,6 +21,9 @@ const Icons = {
   music: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>,
   sun: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>,
   moon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>,
+  playlist: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>,
+  check: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>,
+  plus: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>,
 };
 
 const forceDownload = async (url: string, filename: string) => {
@@ -77,7 +80,15 @@ export const NouveautesPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 20;
 
-  // ✅ DÉFINITION DES COULEURS DYNAMIQUES
+  // ✅ ÉTATS POUR LES PLAYLISTS
+  const [userPlaylists, setUserPlaylists] = useState<any[]>([]);
+  const [addingTrackId, setAddingTrackId] = useState<string | null>(null);
+  const [recentlyAdded, setRecentlyAdded] = useState<string | null>(null);
+  
+  // ✅ NOUVEAUX ÉTATS POUR LA CRÉATION RAPIDE
+  const [isCreatingPlaylistInMenu, setIsCreatingPlaylistInMenu] = useState(false);
+  const [newPlaylistNameInMenu, setNewPlaylistNameInMenu] = useState('');
+
   const colors = {
     bg: isDark ? '#05050a' : '#f5f5f7',
     textMain: isDark ? '#ffffff' : '#1a1a1a',
@@ -87,11 +98,15 @@ export const NouveautesPage: React.FC = () => {
     inputBg: isDark ? 'rgba(255, 255, 255, 0.03)' : '#ffffff',
     inputBorder: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
     rowHover: isDark ? 'rgba(0, 217, 255, 0.05)' : 'rgba(0, 217, 255, 0.08)',
+    dropdownBg: isDark ? '#18181b' : '#ffffff',
   };
 
   useEffect(() => {
     loadTracks();
-    if (user) loadUserLikes();
+    if (user) {
+      loadUserLikes();
+      loadUserPlaylists();
+    }
   }, [user]);
 
   const loadTracks = async () => {
@@ -110,6 +125,73 @@ export const NouveautesPage: React.FC = () => {
       const likesMap: Record<string, boolean> = {};
       data.forEach((like) => { likesMap[like.track_id] = true; });
       setUserLikes(likesMap);
+    }
+  };
+
+  const loadUserPlaylists = async () => {
+    if (!user) return;
+    const { data } = await supabase.from('playlists').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
+    if (data) setUserPlaylists(data);
+  };
+
+  const handleAddToPlaylist = async (playlistId: string, trackId: string) => {
+    try {
+      const { error } = await supabase.from('playlist_tracks').insert({
+        playlist_id: playlistId,
+        track_id: trackId
+      });
+
+      if (error) {
+        if (error.code === '23505') alert("Ce son est déjà dans cette playlist !");
+        else throw error;
+      } else {
+        setRecentlyAdded(trackId);
+        setTimeout(() => {
+          setRecentlyAdded(null);
+          setAddingTrackId(null);
+        }, 1000);
+      }
+    } catch (err) {
+      alert("Erreur lors de l'ajout.");
+    }
+  };
+
+  // ✅ FONCTION POUR CRÉER UNE PLAYLIST ET Y AJOUTER LE SON DIRECTEMENT
+  const handleCreatePlaylistAndAdd = async (e: React.FormEvent, trackId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!user || !newPlaylistNameInMenu.trim()) return;
+
+    try {
+      // 1. Créer la playlist
+      const { data: newPlaylist, error: createError } = await supabase.from('playlists').insert({
+        user_id: user.id,
+        name: newPlaylistNameInMenu.trim()
+      }).select().single();
+
+      if (createError) throw createError;
+
+      // 2. Ajouter le son à cette nouvelle playlist
+      const { error: addError } = await supabase.from('playlist_tracks').insert({
+        playlist_id: newPlaylist.id,
+        track_id: trackId
+      });
+
+      if (addError) throw addError;
+
+      // 3. Mettre à jour l'UI
+      setUserPlaylists(prev => [newPlaylist, ...prev]);
+      setRecentlyAdded(trackId);
+      setNewPlaylistNameInMenu('');
+      setIsCreatingPlaylistInMenu(false);
+      
+      setTimeout(() => {
+        setRecentlyAdded(null);
+        setAddingTrackId(null);
+      }, 1500);
+
+    } catch (err: any) {
+      alert("Erreur : " + err.message);
     }
   };
 
@@ -314,7 +396,6 @@ export const NouveautesPage: React.FC = () => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: colors.bg, fontFamily: 'Inter, sans-serif', color: colors.textMain, position: 'relative', transition: 'background 0.3s ease' }}>
       
-      {/* EFFETS DE FOND NÉON (Uniquement en mode sombre) */}
       {isDark && (
         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, pointerEvents: 'none', zIndex: 0, overflow: 'hidden' }}>
           <div style={{ position: 'absolute', top: '-20%', left: '-10%', width: '50vw', height: '50vw', background: 'radial-gradient(circle, rgba(0, 217, 255, 0.15) 0%, transparent 60%)', filter: 'blur(80px)' }} />
@@ -322,7 +403,6 @@ export const NouveautesPage: React.FC = () => {
         </div>
       )}
 
-      {/* TOP BAR */}
       <div style={{ position: 'relative', zIndex: 10, padding: '16px 24px', borderBottom: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: isDark ? 'rgba(5, 5, 10, 0.7)' : 'rgba(255, 255, 255, 0.8)', backdropFilter: 'blur(20px)', position: 'sticky', top: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           <button onClick={() => navigate('/')} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600, transition: 'color 0.2s' }} onMouseEnter={e => e.currentTarget.style.color = colors.textMain} onMouseLeave={e => e.currentTarget.style.color = colors.textMuted}>
@@ -335,7 +415,6 @@ export const NouveautesPage: React.FC = () => {
           </h1>
         </div>
 
-        {/* ✅ BOUTON TOGGLE THEME CORRIGÉ */}
         <button 
           onClick={toggleTheme} 
           style={{ 
@@ -360,7 +439,6 @@ export const NouveautesPage: React.FC = () => {
         
         <div style={{ display: 'flex', gap: 32, alignItems: 'flex-start', width: '100%', maxWidth: 1600, margin: '0 auto' }}>
           
-          {/* SIDEBAR GAUCHE (GENRES) */}
           {!isMobile && (
             <aside style={{ width: 240, flexShrink: 0, position: 'sticky', top: 100, alignSelf: 'flex-start' }}>
               <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: '20px 16px', backdropFilter: 'blur(20px)', boxShadow: isDark ? 'none' : '0 4px 20px rgba(0,0,0,0.05)' }}>
@@ -379,7 +457,6 @@ export const NouveautesPage: React.FC = () => {
             </aside>
           )}
 
-          {/* CONTENU PRINCIPAL */}
           <main style={{ flex: 1, minWidth: 0, width: '100%', minHeight: 'calc(100vh - 150px)' }}>
             
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
@@ -462,9 +539,47 @@ export const NouveautesPage: React.FC = () => {
                         <span style={{ background: 'rgba(0,217,255,0.1)', color: '#00d9ff', padding: '2px 8px', borderRadius: 4, fontWeight: 700 }}>{track.bpm} BPM</span>
                         {track.song_key && <span style={{ background: colors.inputBg, padding: '2px 8px', borderRadius: 4 }}>{track.song_key}</span>}
                       </div>
-                      <div style={{ display: 'flex', gap: 20, paddingLeft: 52 }}>
+                      <div style={{ display: 'flex', gap: 20, paddingLeft: 52, alignItems: 'center' }}>
                          <button onClick={() => handleLike(track.id)} style={{ background: 'transparent', border: 'none', color: isLiked ? '#ff3366' : colors.textMuted, fontSize: 14 }}>{isLiked ? '❤️' : '🤍'} {track.likes_count}</button>
                          <button onClick={(e) => handleDownloadClick(e, track)} style={{ background: 'transparent', border: 'none', color: colors.textMuted }}>{Icons.download}</button>
+                         
+                         {/* Bouton Playlist Mobile */}
+                         <div style={{ position: 'relative' }}>
+                            <button onClick={() => setAddingTrackId(addingTrackId === track.id ? null : track.id)} style={{ background: 'transparent', border: 'none', color: recentlyAdded === track.id ? '#10b981' : colors.textMuted, display: 'flex', alignItems: 'center' }}>
+                              {recentlyAdded === track.id ? Icons.check : Icons.playlist}
+                            </button>
+                            {addingTrackId === track.id && (
+                              <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: 8, background: colors.dropdownBg, border: `1px solid ${colors.border}`, borderRadius: 8, padding: 8, width: 220, zIndex: 10, boxShadow: '0 10px 20px rgba(0,0,0,0.5)' }}>
+                                {!isCreatingPlaylistInMenu ? (
+                                  <>
+                                    <div style={{ fontSize: 9, fontWeight: 800, color: colors.textMuted, textTransform: 'uppercase', marginBottom: 6, padding: '0 4px' }}>Ajouter à...</div>
+                                    {userPlaylists.length === 0 ? (
+                                      <div style={{ fontSize: 11, color: colors.textMuted, padding: 4 }}>Aucune playlist.</div>
+                                    ) : (
+                                      userPlaylists.map(p => (
+                                        <button key={p.id} onClick={() => handleAddToPlaylist(p.id, track.id)} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '6px 8px', background: 'transparent', border: 'none', color: colors.textMain, fontSize: 12, cursor: 'pointer', borderRadius: 4 }} onMouseEnter={(e) => e.currentTarget.style.background = colors.rowHover} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
+                                          {p.name}
+                                        </button>
+                                      ))
+                                    )}
+                                    <div style={{ borderTop: `1px solid ${colors.border}`, marginTop: 6, paddingTop: 6 }}>
+                                      <button onClick={(e) => { e.stopPropagation(); setIsCreatingPlaylistInMenu(true); }} style={{ display: 'flex', alignItems: 'center', gap: 6, width: '100%', textAlign: 'left', padding: '6px 8px', background: 'transparent', border: 'none', color: '#00d9ff', fontSize: 12, cursor: 'pointer', borderRadius: 4, fontWeight: 700 }}>
+                                        {Icons.plus} Créer une playlist
+                                      </button>
+                                    </div>
+                                  </>
+                                ) : (
+                                  <form onSubmit={(e) => handleCreatePlaylistAndAdd(e, track.id)} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                    <input type="text" autoFocus placeholder="Nom..." value={newPlaylistNameInMenu} onChange={e => setNewPlaylistNameInMenu(e.target.value)} style={{ width: '100%', padding: '6px 8px', background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 4, color: colors.textMain, fontSize: 12, outline: 'none' }} />
+                                    <div style={{ display: 'flex', gap: 4 }}>
+                                      <button type="submit" style={{ flex: 1, padding: '6px', background: '#00d9ff', color: '#000', border: 'none', borderRadius: 4, fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>Créer</button>
+                                      <button type="button" onClick={() => setIsCreatingPlaylistInMenu(false)} style={{ padding: '6px 8px', background: 'transparent', color: colors.textMuted, border: `1px solid ${colors.border}`, borderRadius: 4, fontSize: 11, cursor: 'pointer' }}>X</button>
+                                    </div>
+                                  </form>
+                                )}
+                              </div>
+                            )}
+                          </div>
                          {isOwner && <button onClick={(e) => startEdit(e, track)} style={{ background: 'transparent', border: 'none', color: colors.textMuted }}>{Icons.edit}</button>}
                          {isOwner && <button onClick={(e) => handleDelete(e, track.id)} style={{ background: 'transparent', border: 'none', color: '#ff5c5c' }}>{Icons.trash}</button>}
                       </div>
@@ -512,6 +627,47 @@ export const NouveautesPage: React.FC = () => {
                         {track.purchase_url && <a href={track.purchase_url} target="_blank" rel="noopener noreferrer" style={{ color: '#00d9ff', display: 'flex', alignItems: 'center' }}>{Icons.buy}</a>}
                         <button onClick={(e) => handleDownloadClick(e, track)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center' }}>{Icons.download}</button>
                         <ShareButton url={`${window.location.origin}/share/${track.id}`} title={`${track.title} — ${track.artist}`} text={`Écoute sur DropZone DJ 🎵`} variant="icon" size="small" label="" position="bottom" />
+                        
+                        {/* ✅ BOUTON PLAYLIST DESKTOP MIS À JOUR */}
+                        {user && (
+                          <div style={{ position: 'relative' }}>
+                            <button onClick={() => setAddingTrackId(addingTrackId === track.id ? null : track.id)} style={{ background: 'transparent', border: 'none', color: recentlyAdded === track.id ? '#10b981' : colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                              {recentlyAdded === track.id ? Icons.check : Icons.playlist}
+                            </button>
+                            {addingTrackId === track.id && (
+                              <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: 8, background: colors.dropdownBg, border: `1px solid ${colors.border}`, borderRadius: 8, padding: 8, width: 220, zIndex: 10, boxShadow: '0 10px 20px rgba(0,0,0,0.5)' }}>
+                                {!isCreatingPlaylistInMenu ? (
+                                  <>
+                                    <div style={{ fontSize: 9, fontWeight: 800, color: colors.textMuted, textTransform: 'uppercase', marginBottom: 6, padding: '0 4px' }}>Ajouter à...</div>
+                                    {userPlaylists.length === 0 ? (
+                                      <div style={{ fontSize: 11, color: colors.textMuted, padding: 4 }}>Aucune playlist.</div>
+                                    ) : (
+                                      userPlaylists.map(p => (
+                                        <button key={p.id} onClick={() => handleAddToPlaylist(p.id, track.id)} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '6px 8px', background: 'transparent', border: 'none', color: colors.textMain, fontSize: 12, cursor: 'pointer', borderRadius: 4 }} onMouseEnter={(e) => e.currentTarget.style.background = colors.rowHover} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
+                                          {p.name}
+                                        </button>
+                                      ))
+                                    )}
+                                    <div style={{ borderTop: `1px solid ${colors.border}`, marginTop: 6, paddingTop: 6 }}>
+                                      <button onClick={(e) => { e.stopPropagation(); setIsCreatingPlaylistInMenu(true); }} style={{ display: 'flex', alignItems: 'center', gap: 6, width: '100%', textAlign: 'left', padding: '6px 8px', background: 'transparent', border: 'none', color: '#00d9ff', fontSize: 12, cursor: 'pointer', borderRadius: 4, fontWeight: 700 }}>
+                                        {Icons.plus} Créer une playlist
+                                      </button>
+                                    </div>
+                                  </>
+                                ) : (
+                                  <form onSubmit={(e) => handleCreatePlaylistAndAdd(e, track.id)} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                    <input type="text" autoFocus placeholder="Nom..." value={newPlaylistNameInMenu} onChange={e => setNewPlaylistNameInMenu(e.target.value)} style={{ width: '100%', padding: '6px 8px', background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 4, color: colors.textMain, fontSize: 12, outline: 'none' }} />
+                                    <div style={{ display: 'flex', gap: 4 }}>
+                                      <button type="submit" style={{ flex: 1, padding: '6px', background: '#00d9ff', color: '#000', border: 'none', borderRadius: 4, fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>Créer</button>
+                                      <button type="button" onClick={() => setIsCreatingPlaylistInMenu(false)} style={{ padding: '6px 8px', background: 'transparent', color: colors.textMuted, border: `1px solid ${colors.border}`, borderRadius: 4, fontSize: 11, cursor: 'pointer' }}>X</button>
+                                    </div>
+                                  </form>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        
                         {isOwner && <button onClick={(e) => startEdit(e, track)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center' }}>{Icons.edit}</button>}
                         {isOwner && <button onClick={(e) => handleDelete(e, track.id)} style={{ background: 'transparent', border: 'none', color: '#ff5c5c', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>{Icons.trash}</button>}
                       </div>
@@ -541,8 +697,7 @@ export const NouveautesPage: React.FC = () => {
                   <span style={{ color: '#00d9ff' }}>🔥</span> Top 10
                 </h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                  {/* ✅ CORRECTION : Tri par likes_count avant de prendre les 10 premiers */}
-                  {[...tracks].sort((a, b) => b.likes_count - a.likes_count).slice(0, 10).map((track, index) => (
+                  {tracks.slice(0, 10).map((track, index) => (
                     <div key={track.id} style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }} onClick={() => navigate(`/track/${track.id}`)}>
                       <div style={{ width: 20, textAlign: 'center', fontSize: 14, color: index === 0 ? '#00d9ff' : index === 1 ? '#c0c0c0' : index === 2 ? '#cd7f32' : colors.textMuted, fontWeight: 900, fontStyle: 'italic' }}>{index + 1}</div>
                       <div style={{ width: 36, height: 36, borderRadius: 6, background: track.cover_url ? `url(${track.cover_url}) center/cover` : '#222', flexShrink: 0, border: `1px solid ${colors.border}` }} />
@@ -562,12 +717,11 @@ export const NouveautesPage: React.FC = () => {
         </div>
       </div>
 
-      {/* MODAL D'UPLOAD */}
       {showUploadModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', zIndex: 3000, display: 'flex', alignItems: 'flex', justifyContent: 'center', padding: 20 }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
           <div style={{ background: isDark ? 'rgba(15, 15, 20, 0.95)' : '#ffffff', border: `1px solid ${colors.border}`, borderRadius: 20, padding: 32, width: '100%', maxWidth: 500, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 0 50px rgba(0, 217, 255, 0.1)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-              <h2 style={{ margin: 0, fontSize: 22, fontWeight: 600, color: colors.textMain, letterSpacing: '-0.5px' }}>Ajouter un son</h2>
+              <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: colors.textMain, letterSpacing: '-0.5px' }}>Ajouter un son</h2>
               <button onClick={() => setShowUploadModal(false)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, fontSize: 24, cursor: 'pointer' }}>✕</button>
             </div>
 

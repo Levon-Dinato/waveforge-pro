@@ -1,7 +1,7 @@
 // src/pages/ToolsPage.tsx
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { useTheme } from '../contexts/ThemeContext'; // ✅ IMPORT DU THEME
+import { useTheme } from '../contexts/ThemeContext';
 
 const TOOLS = [
   {
@@ -35,11 +35,9 @@ const TOOLS = [
 ];
 
 export const ToolsPage: React.FC = () => {
-  // ✅ RÉCUPÉRATION DU THÈME
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  // ✅ PALETTE DE COULEURS DYNAMIQUES
   const colors = {
     bg: isDark ? '#0a0a0a' : '#f5f5f7',
     panelBg: isDark ? '#1c1c1c' : '#ffffff',

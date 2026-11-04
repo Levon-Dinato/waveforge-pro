@@ -9,7 +9,7 @@ import { usePlayer } from '../contexts/PlayerContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { EventsTicker } from '../components/EventsTicker';
-import { ArtistToolkit } from '../components/ArtistToolkit'; // ✅ IMPORT AJOUTÉ
+import { ArtistPromoSection } from '../components/ArtistPromoSection'; // ✅ REMPLACÉ ICI
 
 const Icons = {
   play: <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>,
@@ -338,12 +338,12 @@ export const HomePage = () => {
           </div>
         </section>
 
-        {/* ✅ 9. SECTION SERVICES ARTISTES (NOUVEAU) */}
-        <ArtistToolkit />
+        {/* 9. SECTION SERVICES ARTISTES */}
+        <ArtistPromoSection />
 
       </div>
 
-      {/* 9. FOOTER */}
+      {/* 10. FOOTER */}
       <footer style={{ background: colors.footerBg, borderTop: `1px solid ${colors.border}`, marginTop: 'auto' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', width: '100%', padding: isMobile ? '40px 16px 24px' : '60px 24px 32px' }}>
 

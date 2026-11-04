@@ -7,6 +7,7 @@ import { supabase, AUDIO_BUCKET } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { PayPalButton } from '../components/PayPalButton';
+import { PremiumStats } from '../components/PremiumStats'; // ✅ IMPORT AJOUTÉ
 
 export const SettingsPage: React.FC = () => {
   const { user } = useAuth();
@@ -534,6 +535,15 @@ export const SettingsPage: React.FC = () => {
       <p style={{ color: colors.textMuted, marginBottom: 30 }}>Gère ton identité, ta musique, tes photos et les modules de ta page.</p>
 
       {message && <div style={{ padding: 16, background: 'rgba(0,217,255,0.1)', border: '1px solid #00d9ff', borderRadius: 8, marginBottom: 24, color: '#00d9ff' }}>{message}</div>}
+
+      {/* ✅ NOUVEAU : TABLEAU DE BORD PERSONNEL DE L'ARTISTE (Sécurisé par RLS) */}
+      <div style={{ marginBottom: 32 }}>
+        <PremiumStats
+          profile={{ id: user?.id, theme_color: form.theme_color }}
+          tracks={myTracks}
+          embedded
+        />
+      </div>
 
       <div style={{ background: colors.panelBg, padding: 24, borderRadius: 12, border: `1px solid ${colors.border}`, marginBottom: 24 }}>
         <h2 style={{ fontSize: 18, color: colors.textMain, margin: '0 0 20px 0' }}>🎛️ Modules de la page Premium</h2>

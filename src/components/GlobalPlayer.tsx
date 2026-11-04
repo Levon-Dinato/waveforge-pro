@@ -55,7 +55,7 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
   const [isMobile, setIsMobile] = useState(false);
 
   const colors = {
-    bg: isDark ? '#09090b' : '#ffffff',
+    bg: isDark ? 'rgba(9, 9, 11, 0.85)' : 'rgba(255, 255, 255, 0.85)', // ✅ Fond légèrement transparent
     border: isDark ? '#27272a' : '#e5e7eb',
     textMain: isDark ? '#ffffff' : '#1a1a1a',
     textMuted: isDark ? '#a1a1aa' : '#666666',
@@ -245,7 +245,11 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
   return (
     <div style={{
       position: 'fixed', bottom: isMobile ? 70 : 0, left: 0, right: 0, zIndex: 1000,
-      background: colors.bg, borderTop: `1px solid ${colors.border}`, boxShadow: colors.shadow,
+      background: colors.bg, 
+      backdropFilter: 'blur(16px)', // ✅ EFFET VERRE DÉPOLI
+      WebkitBackdropFilter: 'blur(16px)',
+      borderTop: `1px solid ${colors.border}`, // ✅ LISERET CONSERVÉ
+      boxShadow: colors.shadow,
       transition: 'background 0.3s ease, border-color 0.3s ease'
     }}>
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'rgba(255,255,255,0.1)' }}>
@@ -255,7 +259,12 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
       <div style={{ maxWidth: 1400, margin: '0 auto', height: isMobile ? '72px' : '96px', display: 'flex', alignItems: 'center', gap: isMobile ? '12px' : '32px', padding: isMobile ? '0 16px' : '0 32px' }}>
         
         <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 12 : 16, width: isMobile ? 'auto' : '320px', flexShrink: 0 }}>
-          <div style={{ width: isMobile ? 40 : 56, height: isMobile ? 40 : 56, borderRadius: 8, background: currentTrack.cover_url ? `url(${currentTrack.cover_url}) center/cover` : colors.coverPlaceholder, boxShadow: '0 4px 12px rgba(0,0,0,0.3)', flexShrink: 0, border: `1px solid ${colors.border}` }} />
+          <div style={{ 
+            width: isMobile ? 40 : 56, height: isMobile ? 40 : 56, borderRadius: 8, 
+            background: currentTrack.cover_url ? `url(${currentTrack.cover_url}) center/cover` : colors.coverPlaceholder, 
+            boxShadow: '0 4px 12px rgba(0,0,0,0.3)', flexShrink: 0, 
+            border: `1px solid ${colors.border}` // ✅ LISERET POCHETTE CONSERVÉ
+          }} />
           <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', maxWidth: isMobile ? '120px' : 'none' }}>
             <div style={{ fontSize: isMobile ? 13 : 15, fontWeight: 800, color: colors.textMain, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{currentTrack.title}</div>
             <div style={{ fontSize: isMobile ? 11 : 13, color: colors.textMuted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: 4 }}>{currentTrack.artist}</div>
@@ -273,9 +282,12 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
           </button>
 
           {!isMobile && <span style={{ fontSize: 12, fontFamily: 'monospace', color: colors.textMuted, width: 40, textAlign: 'right', fontWeight: 600 }}>{formatTime(currentTime)}</span>}
-          <div style={{ flex: 1, height: isMobile ? 40 : 60, position: 'relative', display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+          
+          {/* ✅ WAVEFORM RESSERRÉE (40px au lieu de 60px) */}
+          <div style={{ flex: 1, height: isMobile ? 32 : 40, position: 'relative', display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
             <canvas ref={canvasRef} onClick={handleSeek} style={{ width: '100%', height: '100%' }} />
           </div>
+
           {!isMobile && <span style={{ fontSize: 12, fontFamily: 'monospace', color: colors.textMuted, width: 40, fontWeight: 600 }}>{formatTime(duration)}</span>}
         </div>
 
@@ -286,7 +298,6 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
             {isLiked ? Icons.heartFilled : Icons.heart}
           </button>
 
-          {/* ✅ MENU PLAYLIST FONCTIONNEL */}
           <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
             <button onClick={() => setShowPlaylistMenu(!showPlaylistMenu)} style={{ background: 'transparent', border: 'none', color: showPlaylistMenu ? '#00d9ff' : colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'all 0.2s' }}
               onMouseEnter={e => { if (!showPlaylistMenu) e.currentTarget.style.color = colors.textMain; }} onMouseLeave={e => { if (!showPlaylistMenu) e.currentTarget.style.color = colors.textMuted; }}>

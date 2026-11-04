@@ -8,9 +8,9 @@ import { supabase, AUDIO_BUCKET } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { usePlayer } from '../contexts/PlayerContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { ArtistPromoSection } from '../components/ArtistPromoSection';
 import * as GlobalPlayerModule from '../components/GlobalPlayer';
 import * as ArrowButtonModule from '../components/ArrowButton';
-import { ArtistPromoSection } from '../components/ArtistPromoSection'; // ✅ IMPORT AJOUTÉ
 import './LevonDinato.css';
 
 const GlobalPlayer = (GlobalPlayerModule as any).GlobalPlayer || (GlobalPlayerModule as any).default || null;
@@ -241,11 +241,11 @@ export const PremiumPage: React.FC = () => {
     textMuted: isDark ? 'rgba(255,255,255,0.5)' : '#666666',
     textSoft: isDark ? 'rgba(255,255,255,0.8)' : '#444444',
     border: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
-    panelBg: isDark ? '#121212' : '#ffffff',
+    panelBg: isDark ? 'rgba(20,20,20,0.6)' : 'rgba(255,255,255,0.7)', // ✅ Ajout de transparence pour le glassmorphism
     inputBg: isDark ? '#0a0a0a' : '#f3f4f6',
-    navBg: isDark ? 'rgba(5,5,5,0.85)' : 'rgba(245,245,247,0.85)',
-    cardBg: isDark ? 'rgba(255,255,255,0.02)' : '#ffffff',
-    cardBorder: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)',
+    navBg: isDark ? 'rgba(5,5,5,0.7)' : 'rgba(245,245,247,0.7)', // ✅ Nav plus transparente
+    cardBg: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.8)',
+    cardBorder: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
     skeleton: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
   };
 
@@ -544,17 +544,15 @@ export const PremiumPage: React.FC = () => {
   const bioRest = bioParts.slice(1).join('.').trim();
 
   return (
-    <div style={{ background: colors.bg, minHeight: '100vh', color: colors.textMain, fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', '--accent': themeColor, transition: 'background 0.3s ease, color 0.3s ease' } as React.CSSProperties}>
+    <div style={{ background: colors.bg, minHeight: '100vh', color: colors.textMain, fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', '--accent': themeColor, transition: 'background 0.3s ease, color 0.3s ease', position: 'relative', overflow: 'hidden' } as React.CSSProperties}>
       
-      <Helmet>
-        <title>{profile.username} — Artiste DropZone</title>
-        <meta property="og:title" content={`${profile.username} — Artiste DropZone`} />
-        <meta property="og:description" content={heroDesc} />
-        <meta property="og:image" content={profile.avatar_url || '/og-image.jpg'} />
-        <meta property="og:type" content="profile" />
-      </Helmet>
-
+      {/* ✅ SCROLLBAR PERSONNALISÉE & ANIMATIONS GLOBALES */}
       <style>{`
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: ${colors.bg}; }
+        ::-webkit-scrollbar-thumb { background: ${themeColor}40; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: ${themeColor}; }
+        
         .hover-row:hover .play-btn { opacity: 1; transform: scale(1); }
         .play-btn { opacity: 0; transform: scale(0.9); transition: all 0.2s; }
         .nav-link { color: ${colors.textMuted}; text-decoration: none; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; transition: color 0.2s; }
@@ -573,7 +571,22 @@ export const PremiumPage: React.FC = () => {
           .hero-title { font-size: 3.5rem !important; }
           .desktop-nav-links { display: none !important; }
         }
+        @keyframes float { 0% { transform: translateY(0px) scale(1); } 50% { transform: translateY(-20px) scale(1.05); } 100% { transform: translateY(0px) scale(1); } }
       `}</style>
+
+      {/* ✅ HALOS LUMINEUX D'ARRIÈRE-PLAN (AMBIENT GLOW) */}
+      <div style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', top: '-10%', right: '-10%', width: '50vw', height: '50vw', borderRadius: '50%', background: themeColor, filter: 'blur(120px)', opacity: 0.15, animation: 'float 10s ease-in-out infinite' }} />
+        <div style={{ position: 'absolute', bottom: '10%', left: '-10%', width: '40vw', height: '40vw', borderRadius: '50%', background: themeColor, filter: 'blur(100px)', opacity: 0.1, animation: 'float 12s ease-in-out infinite reverse' }} />
+      </div>
+
+      <Helmet>
+        <title>{profile.username} — Artiste DropZone</title>
+        <meta property="og:title" content={`${profile.username} — Artiste DropZone`} />
+        <meta property="og:description" content={heroDesc} />
+        <meta property="og:image" content={profile.avatar_url || '/og-image.jpg'} />
+        <meta property="og:type" content="profile" />
+      </Helmet>
 
       {/* LIGHTBOX */}
       {lightboxImage && (
@@ -586,7 +599,7 @@ export const PremiumPage: React.FC = () => {
       {/* MODALE BOOKING */}
       {showBookingModal && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }} onClick={() => setShowBookingModal(false)}>
-          <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 32, width: '100%', maxWidth: 500, maxHeight: '90vh', overflowY: 'auto' }} onClick={(e) => e.stopPropagation()}>
+          <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 32, width: '100%', maxWidth: 500, maxHeight: '90vh', overflowY: 'auto', backdropFilter: 'blur(20px)' }} onClick={(e) => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
               <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: colors.textMain }}>Contact / Booking</h2>
               <button onClick={() => setShowBookingModal(false)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, fontSize: 20, cursor: 'pointer' }}>✕</button>
@@ -632,7 +645,7 @@ export const PremiumPage: React.FC = () => {
       {/* MODALE UPLOAD */}
       {showUploadModal && isOwner && createPortal(
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 32, width: '100%', maxWidth: 500, maxHeight: '90vh', overflowY: 'auto' }}>
+          <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 32, width: '100%', maxWidth: 500, maxHeight: '90vh', overflowY: 'auto', backdropFilter: 'blur(20px)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
               <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: colors.textMain }}>Uploader un son</h2>
               <button onClick={() => setShowUploadModal(false)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, fontSize: 20, cursor: 'pointer' }}>✕</button>
@@ -727,16 +740,20 @@ export const PremiumPage: React.FC = () => {
 
       {/* HERO */}
       <section style={{ position: 'relative', minHeight: isMobile ? '80vh' : '95vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', background: colors.bg, paddingTop: isMobile ? 100 : 72 }}>
+        
+        {/* ✅ GRILLE TECH EN ARRIÈRE-PLAN DU HERO */}
+        <div style={{ position: 'absolute', inset: 0, opacity: 0.1, backgroundImage: `linear-gradient(${themeColor} 1px, transparent 1px), linear-gradient(90deg, ${themeColor} 1px, transparent 1px)`, backgroundSize: '60px 60px', maskImage: 'radial-gradient(circle at center, black 30%, transparent 80%)', WebkitMaskImage: 'radial-gradient(circle at center, black 30%, transparent 80%)', zIndex: 0 }} />
+
         <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
-          <video autoPlay muted loop playsInline poster={profile.avatar_url || "/logo.jpg"} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: isDark ? 0.8 : 0.4, filter: isDark ? 'grayscale(100%) contrast(1.2) brightness(0.6)' : 'grayscale(100%) contrast(1.2) brightness(1)' }}>
+          <video autoPlay muted loop playsInline poster={profile.avatar_url || "/logo.jpg"} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: isDark ? 0.6 : 0.3, filter: isDark ? 'grayscale(50%) contrast(1.2) brightness(0.8)' : 'grayscale(50%) contrast(1.2) brightness(1)' }}>
             <source src={profile.background_video_url || "/background.mp4"} type="video/mp4" />
           </video>
-          <div style={{ position: 'absolute', inset: 0, background: themeColor, mixBlendMode: 'overlay', opacity: 0.4 }} />
-          <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(to bottom, ${isDark ? 'rgba(5,5,5,0.4) 0%, rgba(5,5,5,0) 40%, rgba(5,5,5,0.9) 80%, #050505 100%' : 'rgba(245,245,247,0.3) 0%, rgba(245,245,247,0) 40%, rgba(245,245,247,0.9) 80%, #f5f5f7 100%'})` }} />
+          <div style={{ position: 'absolute', inset: 0, background: themeColor, mixBlendMode: 'overlay', opacity: 0.5 }} />
+          <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(to bottom, ${isDark ? 'rgba(5,5,5,0.2) 0%, rgba(5,5,5,0) 50%, rgba(5,5,5,0.9) 90%, #050505 100%' : 'rgba(245,245,247,0.1) 0%, rgba(245,245,247,0) 50%, rgba(245,245,247,0.9) 90%, #f5f5f7 100%'})` }} />
         </div>
         
         <div style={{ position: 'relative', zIndex: 10, textAlign: 'center', maxWidth: 1000, padding: '0 24px', marginTop: isMobile ? '5vh' : '15vh' }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: isDark ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.8)', backdropFilter: 'blur(10px)', padding: '6px 16px', borderRadius: 50, border: `1px solid ${colors.border}`, marginBottom: 32 }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: isDark ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.6)', backdropFilter: 'blur(12px)', padding: '6px 16px', borderRadius: 50, border: `1px solid ${themeColor}40`, marginBottom: 32, boxShadow: `0 4px 20px ${themeColor}20` }}>
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: themeColor, boxShadow: `0 0 10px ${themeColor}` }} />
             <span style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: colors.textMain }}>{heroTagline}</span>
           </div>
@@ -746,8 +763,8 @@ export const PremiumPage: React.FC = () => {
           </h1>
 
           <div style={{ display: 'flex', justifyContent: 'center', gap: 24, marginBottom: 24 }}>
-            <span style={{ fontSize: 14, color: colors.textMuted }}><strong style={{ color: colors.textMain, fontWeight: 800 }}>{followersCount}</strong> abonné{followersCount > 1 ? 's' : ''}</span>
-            <span style={{ fontSize: 14, color: colors.textMuted }}><strong style={{ color: colors.textMain, fontWeight: 800 }}>{followingCount}</strong> abonnement{followingCount > 1 ? 's' : ''}</span>
+            <span style={{ fontSize: 14, color: colors.textSoft }}><strong style={{ color: colors.textMain, fontWeight: 800 }}>{followersCount}</strong> abonné{followersCount > 1 ? 's' : ''}</span>
+            <span style={{ fontSize: 14, color: colors.textSoft }}><strong style={{ color: colors.textMain, fontWeight: 800 }}>{followingCount}</strong> abonnement{followingCount > 1 ? 's' : ''}</span>
           </div>
           
           <p style={{ color: colors.textSoft, fontSize: isMobile ? '0.95rem' : 'clamp(1.1rem, 2vw, 1.4rem)', fontWeight: 400, lineHeight: 1.6, marginBottom: 48, maxWidth: 700, margin: '0 auto 48px auto' }}>
@@ -762,13 +779,13 @@ export const PremiumPage: React.FC = () => {
               </>
             ) : (
               <>
-                <a href="#releases" style={{ background: 'transparent', border: `1px solid ${themeColor}`, color: themeColor, padding: '16px 32px', fontSize: 14, borderRadius: 8, fontWeight: 800, textDecoration: 'none' }}>ÉCOUTER</a>
-                <button onClick={handleShare} style={{ background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)', border: `1px solid ${colors.border}`, color: colors.textMain, padding: '16px 32px', borderRadius: 8, fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>PARTAGER</button>
+                <a href="#releases" style={{ background: themeColor, border: `1px solid ${themeColor}`, color: '#000', padding: '16px 32px', fontSize: 14, borderRadius: 8, fontWeight: 800, textDecoration: 'none', boxShadow: `0 8px 20px ${themeColor}40` }}>ÉCOUTER</a>
+                <button onClick={handleShare} style={{ background: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)', border: `1px solid ${colors.border}`, color: colors.textMain, padding: '16px 32px', borderRadius: 8, fontSize: 14, fontWeight: 800, cursor: 'pointer', backdropFilter: 'blur(10px)' }}>PARTAGER</button>
               </>
             )}
 
             {user && !isOwner && (
-              <button onClick={handleFollow} disabled={followLoading} style={{ padding: isMobile ? '10px 20px' : '16px 32px', borderRadius: 8, fontSize: 14, fontWeight: 800, cursor: followLoading ? 'wait' : 'pointer', background: isFollowing ? 'transparent' : themeColor, color: isFollowing ? colors.textMain : '#000', border: isFollowing ? `1px solid ${colors.border}` : 'none' }}>
+              <button onClick={handleFollow} disabled={followLoading} style={{ padding: isMobile ? '10px 20px' : '16px 32px', borderRadius: 8, fontSize: 14, fontWeight: 800, cursor: followLoading ? 'wait' : 'pointer', background: isFollowing ? 'transparent' : themeColor, color: isFollowing ? colors.textMain : '#000', border: isFollowing ? `1px solid ${colors.border}` : 'none', backdropFilter: 'blur(10px)' }}>
                 {isFollowing ? '✓ Suivi' : '+ Suivre'}
               </button>
             )}
@@ -776,32 +793,32 @@ export const PremiumPage: React.FC = () => {
         </div>
       </section>
 
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '40px 16px' : '100px 24px' }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '40px 16px' : '100px 24px', position: 'relative', zIndex: 10 }}>
         
         {showDuo && (
           <section id="duo" style={{ marginBottom: isMobile ? 40 : 120 }}>
             <div className="section-subtitle">{settings.duo_title || 'Bio'}</div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: isMobile ? 20 : 60, alignItems: 'start' }}>
-              <div className="premium-glow" style={{ position: 'relative', borderRadius: 12, padding: 2 }}>
-                <div style={{ width: '100%', aspectRatio: isMobile ? '1/1' : '4/5', borderRadius: 10, overflow: 'hidden', border: `1px solid ${colors.border}`, position: 'relative', zIndex: 2 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: isMobile ? 20 : 60, alignItems: 'center', background: colors.cardBg, backdropFilter: 'blur(20px)', border: `1px solid ${colors.cardBorder}`, borderRadius: 24, padding: isMobile ? 20 : 40 }}>
+              <div className="premium-glow" style={{ position: 'relative', borderRadius: 16, padding: 2 }}>
+                <div style={{ width: '100%', aspectRatio: isMobile ? '1/1' : '4/5', borderRadius: 14, overflow: 'hidden', border: `1px solid ${colors.border}`, position: 'relative', zIndex: 2 }}>
                   <img src={profile.avatar_url || "/logo.jpg"} alt={profile.username} onError={(e) => { (e.target as HTMLImageElement).src = '/logo.jpg'; }} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 </div>
-                <div style={{ position: 'absolute', bottom: -10, left: 20, width: 60, height: 4, background: themeColor, borderRadius: 2, zIndex: 3 }} />
+                <div style={{ position: 'absolute', bottom: -10, left: 30, width: 80, height: 6, background: themeColor, borderRadius: 3, zIndex: 3, boxShadow: `0 0 20px ${themeColor}` }} />
               </div>
               <div>
                 <blockquote style={{ margin: 0, padding: 0, border: 'none' }}>
                   <p style={{ fontSize: isMobile ? '1.2rem' : 'clamp(1.5rem, 2.5vw, 2rem)', fontWeight: 600, lineHeight: 1.4, color: colors.textMain, marginBottom: isMobile ? 20 : 40 }}>"{bioQuote}"</p>
                 </blockquote>
-                <p style={{ color: colors.textMuted, fontSize: isMobile ? 14 : 16, lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>{bioRest}</p>
+                <p style={{ color: colors.textSoft, fontSize: isMobile ? 14 : 16, lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>{bioRest}</p>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: isMobile ? 20 : 40 }}>
                   {profile.music_style && profile.music_style.split(',').map((style: string, i: number) => (
-                    <span key={i} style={{ borderBottom: `1px solid ${themeColor}`, padding: '4px 0', fontSize: 12, fontWeight: 700, color: colors.textMain, textTransform: 'uppercase', marginRight: 16 }}>{style.trim()}</span>
+                    <span key={i} style={{ borderBottom: `2px solid ${themeColor}`, padding: '4px 0', fontSize: 12, fontWeight: 800, color: colors.textMain, textTransform: 'uppercase', marginRight: 16, letterSpacing: '1px' }}>{style.trim()}</span>
                   ))}
                 </div>
                 {socials.length > 0 && (
                   <div style={{ display: 'flex', gap: 12, marginTop: 30 }}>
                     {socials.map(s => (
-                      <a key={s.key} href={profile[s.key]} target="_blank" rel="noopener noreferrer" title={s.label} style={{ width: 40, height: 40, borderRadius: '50%', background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.textMuted, border: `1px solid ${colors.border}` }} onMouseEnter={e => { e.currentTarget.style.color = themeColor; e.currentTarget.style.borderColor = themeColor; }} onMouseLeave={e => { e.currentTarget.style.color = colors.textMuted; e.currentTarget.style.borderColor = colors.border; }}>
+                      <a key={s.key} href={profile[s.key]} target="_blank" rel="noopener noreferrer" title={s.label} style={{ width: 44, height: 44, borderRadius: '50%', background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.textMuted, border: `1px solid ${colors.border}`, transition: 'all 0.2s' }} onMouseEnter={e => { e.currentTarget.style.color = themeColor; e.currentTarget.style.borderColor = themeColor; e.currentTarget.style.transform = 'translateY(-3px)'; }} onMouseLeave={e => { e.currentTarget.style.color = colors.textMuted; e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.transform = 'none'; }}>
                         {s.logo}
                       </a>
                     ))}
@@ -820,7 +837,7 @@ export const PremiumPage: React.FC = () => {
               {events.map((event: any) => {
                 const dateInfo = formatEventDate(event.event_date);
                 return (
-                  <div key={event.id} style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'flex-start' : 'center', gap: isMobile ? 16 : 24, background: colors.cardBg, border: `1px solid ${colors.cardBorder}`, borderRadius: 16, padding: isMobile ? 20 : 24 }}>
+                  <div key={event.id} style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'flex-start' : 'center', gap: isMobile ? 16 : 24, background: colors.cardBg, backdropFilter: 'blur(10px)', border: `1px solid ${colors.cardBorder}`, borderRadius: 16, padding: isMobile ? 20 : 24, transition: 'border-color 0.2s' }} onMouseEnter={e => e.currentTarget.style.borderColor = `${themeColor}50`} onMouseLeave={e => e.currentTarget.style.borderColor = colors.cardBorder}>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: `${themeColor}15`, border: `1px solid ${themeColor}40`, borderRadius: 12, padding: '12px 20px', minWidth: isMobile ? 'auto' : 80 }}>
                       <div style={{ fontSize: 24, fontWeight: 900, color: themeColor }}>{dateInfo.day}</div>
                       <div style={{ fontSize: 11, fontWeight: 700, color: themeColor, textTransform: 'uppercase', marginTop: 4 }}>{dateInfo.month}</div>
@@ -849,8 +866,8 @@ export const PremiumPage: React.FC = () => {
             <h2 className="section-title">Un parcours visible,<br/>des événements qui parlent.</h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: isMobile ? 20 : 60, marginTop: isMobile ? 20 : 60 }}>
               <div>
-                <p style={{ fontSize: isMobile ? 16 : 18, color: colors.textMain, lineHeight: 1.6, marginBottom: 24 }}>Ces moments retracent les événements qui ont marqué le parcours de {profile.username}.</p>
-                <div style={{ background: colors.panelBg, padding: isMobile ? 20 : 32, borderRadius: 16, border: `1px solid ${colors.border}` }}>
+                <p style={{ fontSize: isMobile ? 16 : 18, color: colors.textSoft, lineHeight: 1.6, marginBottom: 24 }}>Ces moments retracent les événements qui ont marqué le parcours de {profile.username}.</p>
+                <div style={{ background: colors.cardBg, backdropFilter: 'blur(20px)', padding: isMobile ? 20 : 32, borderRadius: 16, border: `1px solid ${colors.cardBorder}` }}>
                   <h3 style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: themeColor, marginBottom: 24 }}>{settings.parcours_card_tag || 'Pourquoi ça compte'}</h3>
                   <h4 style={{ fontSize: isMobile ? 18 : 22, fontWeight: 800, color: colors.textMain, marginBottom: 24 }}>{settings.parcours_card_title || 'Pour les événements qui doivent marquer les esprits.'}</h4>
                   <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -906,7 +923,7 @@ export const PremiumPage: React.FC = () => {
               <h2 className="section-title" style={{ margin: 0 }}>{settings.releases_title || 'Dernières Sorties'}</h2>
               {isOwner && (
                 <div style={{ display: 'flex', gap: 12 }}>
-                  <button onClick={() => setShowUploadModal(true)} style={{ padding: '8px 16px', background: themeColor, color: '#000', borderRadius: 6, fontSize: 12, fontWeight: 800, border: 'none', cursor: 'pointer' }}>
+                  <button onClick={() => setShowUploadModal(true)} style={{ padding: '8px 16px', background: themeColor, color: '#000', borderRadius: 6, fontSize: 12, fontWeight: 800, border: 'none', cursor: 'pointer', boxShadow: `0 4px 15px ${themeColor}40` }}>
                     + Nouveau son
                   </button>
                   <Link to="/settings" style={{ color: themeColor, fontSize: 13, fontWeight: 800, textDecoration: 'none', textTransform: 'uppercase', letterSpacing: '1px', display: 'flex', alignItems: 'center' }}>Gérer</Link>
@@ -929,14 +946,14 @@ export const PremiumPage: React.FC = () => {
                 const btnTextColor = hasCustomBg ? '#ffffff' : colors.textMain;
 
                 const bgStyle = track.player_bg_image_url
-                  ? { backgroundImage: `linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('${track.player_bg_image_url}')`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundColor: 'transparent' }
+                  ? { backgroundImage: `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('${track.player_bg_image_url}')`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundColor: 'transparent' }
                   : { background: track.player_bg_color || colors.cardBg };
 
                 if (isExternalEmbed) {
                   const isAudioCom = iframeSrc?.includes('audio.com');
                   return (
-                    <div key={track.id} className="premium-glow" style={{ background: 'transparent', padding: 2, borderRadius: 18 }}>
-                      <div style={{ ...bgStyle, border: `1px solid ${colors.cardBorder}`, borderRadius: 16, overflow: 'hidden', padding: 24 }}>
+                    <div key={track.id} className="premium-glow" style={{ background: 'transparent', padding: 2, borderRadius: 18, transition: 'transform 0.3s' }} onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseLeave={e => e.currentTarget.style.transform = 'none'}>
+                      <div style={{ ...bgStyle, border: `1px solid ${colors.cardBorder}`, borderRadius: 16, overflow: 'hidden', padding: 24, backdropFilter: 'blur(20px)' }}>
                         <div style={{ display: 'flex', gap: 20, alignItems: 'center', marginBottom: 16 }}>
                           <div style={{ width: 60, height: 60, borderRadius: 8, overflow: 'hidden', flexShrink: 0, background: colors.inputBg }}>
                             {track.cover_url ? <img src={track.cover_url} alt={track.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : null}
@@ -955,8 +972,8 @@ export const PremiumPage: React.FC = () => {
                 }
 
                 return (
-                  <div key={track.id} className="premium-glow" style={{ background: 'transparent', padding: 2, borderRadius: 18 }}>
-                    <div style={{ ...bgStyle, border: `1px solid ${colors.cardBorder}`, borderRadius: 16, overflow: 'hidden', padding: 24 }}>
+                  <div key={track.id} className="premium-glow" style={{ background: 'transparent', padding: 2, borderRadius: 18, transition: 'transform 0.3s' }} onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-4px)'} onMouseLeave={e => e.currentTarget.style.transform = 'none'}>
+                    <div style={{ ...bgStyle, border: `1px solid ${colors.cardBorder}`, borderRadius: 16, overflow: 'hidden', padding: 24, backdropFilter: 'blur(20px)', boxShadow: hasCustomBg ? 'none' : '0 10px 30px rgba(0,0,0,0.1)' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 16 }}>
                         <div style={{ width: 60, height: 60, borderRadius: 8, overflow: 'hidden', flexShrink: 0, background: colors.inputBg, position: 'relative' }}>
                           {track.cover_url ? <img src={track.cover_url} alt={track.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : null}
@@ -986,7 +1003,7 @@ export const PremiumPage: React.FC = () => {
 
                           <button
                             onClick={() => handlePlayTrack(track)}
-                            style={{ width: 48, height: 48, borderRadius: '50%', background: isThisPlaying ? themeColor : (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'), border: 'none', color: isThisPlaying ? '#000' : btnTextColor, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }}
+                            style={{ width: 48, height: 48, borderRadius: '50%', background: isThisPlaying ? themeColor : (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'), border: 'none', color: isThisPlaying ? '#000' : btnTextColor, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s', boxShadow: isThisPlaying ? `0 0 20px ${themeColor}60` : 'none' }}
                           >
                             {isThisPlaying ? (
                               <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
@@ -1046,12 +1063,12 @@ export const PremiumPage: React.FC = () => {
 
       {/* ✅ SECTION BOÎTE À OUTILS (Visible uniquement par le propriétaire) */}
       {isOwner && (
-        <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '0 16px 40px' : '0 24px 80px' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '0 16px 40px' : '0 24px 80px', position: 'relative', zIndex: 10 }}>
           <ArtistPromoSection />
         </div>
       )}
 
-      <footer style={{ borderTop: `1px solid ${colors.border}`, padding: '40px 24px', marginTop: 'auto', textAlign: 'center', background: colors.panelBg }}>
+      <footer style={{ borderTop: `1px solid ${colors.border}`, padding: '40px 24px', marginTop: 'auto', textAlign: 'center', background: colors.panelBg, backdropFilter: 'blur(20px)', position: 'relative', zIndex: 10 }}>
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10, marginBottom: 16 }}>
           <span style={{ fontSize: 20, fontWeight: 900, color: colors.textMain, letterSpacing: '-0.5px' }}>DropZone<span style={{ color: themeColor }}>.dj</span></span>
         </div>

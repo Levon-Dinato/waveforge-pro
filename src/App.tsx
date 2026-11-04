@@ -43,9 +43,10 @@ const PremiumPage = lazy(() => import('./pages/PremiumPage').then((m) => ({ defa
 const DropZoneVideosPage = lazy(() => import('./pages/DropZoneVideosPage').then((m) => ({ default: m.DropZoneVideosPage })));
 const SmartLinkPage = lazy(() => import('./pages/SmartLinkPage').then((m) => ({ default: m.SmartLinkPage })));
 const MyPlaylistsPage = lazy(() => import('./pages/MyPlaylistsPage').then((m) => ({ default: m.MyPlaylistsPage })));
-
-// ✅ NOUVEL IMPORT : Page Découvrir
 const DiscoverPage = lazy(() => import('./pages/DiscoverPage').then((m) => ({ default: m.DiscoverPage })));
+
+// ✅ NOUVEL IMPORT : Page Top 50 (Charts)
+const ChartsPage = lazy(() => import('./pages/ChartsPage').then((m) => ({ default: m.ChartsPage })));
 
 const PageLoader = () => (
   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', flexDirection: 'column', gap: 16 }}>
@@ -77,9 +78,10 @@ function AnimatedRoutes() {
           <Route index element={<PageTransition><HomePage /></PageTransition>} />
           <Route path="feed" element={<PageTransition><FeedPage /></PageTransition>} />
           <Route path="nouveautes" element={<PageTransition><NouveautesPage /></PageTransition>} />
-          
-          {/* ✅ NOUVELLE ROUTE : Découvrir */}
           <Route path="discover" element={<PageTransition><DiscoverPage /></PageTransition>} />
+          
+          {/* ✅ NOUVELLE ROUTE : Top 50 */}
+          <Route path="charts" element={<PageTransition><ChartsPage /></PageTransition>} />
           
           <Route path="events" element={<PageTransition><EventsPage /></PageTransition>} />
           <Route path="live" element={<PageTransition><LivePage /></PageTransition>} />

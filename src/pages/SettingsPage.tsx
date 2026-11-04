@@ -24,7 +24,6 @@ export const SettingsPage: React.FC = () => {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [uploading, setUploading] = useState(false);
   
-  // ✅ ÉTAT UPLOAD FORM (Avec is_downloadable)
   const [uploadForm, setUploadForm] = useState({ 
     title: '', artist: '', genre: '', bpm: '', song_key: '',
     purchase_url: '', embed_code: '', player_bg_color: '#000000', player_bg_image_url: '',
@@ -35,7 +34,6 @@ export const SettingsPage: React.FC = () => {
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [uploadingPlayerBg, setUploadingPlayerBg] = useState(false);
 
-  // ✅ ÉTAT EDIT FORM (Avec is_downloadable)
   const [editTrackForm, setEditTrackForm] = useState({ 
     title: '', genre: '', bpm: 0, purchase_url: '', embed_code: '',
     player_bg_color: '#000000', player_bg_image_url: '',
@@ -71,7 +69,7 @@ export const SettingsPage: React.FC = () => {
     parcours_description: "DropZone n'est pas juste une page web, c'est votre QG numérique. Un espace centralisé où votre musique, votre identité visuelle et vos outils de production se rencontrent. Conçu pour les artistes de la nuit, le site évolue constamment pour vous offrir la vitrine et les fonctionnalités que vous méritez, sans les contraintes des grosses plateformes.",
     parcours_card_tag: 'POURQUOI NOUS REJOINDRE',
     parcours_card_title: 'La plateforme qui propulse votre son.',
-    show_stats: true, show_duo: true, show_prestations: true, show_releases: true, show_sidebar_top: true, show_sidebar_dates: true,
+    show_duo: true, show_prestations: true, show_releases: true, show_sidebar_top: true, show_sidebar_dates: true,
     prestations: [
       { title: 'Studio & Outils intégrés', desc: 'Mastering, séparation de stems, générateur... Des outils pro directement dans votre navigateur, sans installation.' },
       { title: 'Visibilité & Partage', desc: 'Un feed dynamique pour dénicher de nouveaux sons, et des pages artistes uniques pour montrer votre univers.' },
@@ -584,7 +582,6 @@ export const SettingsPage: React.FC = () => {
             <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Afficher / Masquer les sections :</label>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
               {[
-                { key: 'show_stats', label: 'Statistiques (Hero)' },
                 { key: 'show_duo', label: 'Section Bio' },
                 { key: 'show_prestations', label: 'Section Prestations' },
                 { key: 'show_releases', label: 'Section Dernières Sorties' },

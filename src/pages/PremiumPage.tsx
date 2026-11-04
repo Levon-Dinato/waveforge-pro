@@ -8,7 +8,6 @@ import { supabase, AUDIO_BUCKET } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { usePlayer } from '../contexts/PlayerContext';
 import { useTheme } from '../contexts/ThemeContext';
-import { PremiumStats } from '../components/PremiumStats';
 import * as GlobalPlayerModule from '../components/GlobalPlayer';
 import * as ArrowButtonModule from '../components/ArrowButton';
 import './LevonDinato.css';
@@ -217,13 +216,11 @@ export const PremiumPage: React.FC = () => {
   const [sendingBooking, setSendingBooking] = useState(false);
   const [bookingSent, setBookingSent] = useState(false);
 
-  // ÉTATS FOLLOWERS
   const [followersCount, setFollowersCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
 
-  // ✅ ÉTATS UPLOAD
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadForm, setUploadForm] = useState({ 
@@ -351,7 +348,6 @@ export const PremiumPage: React.FC = () => {
     return src;
   };
 
-  // ✅ UPLOAD SUBMIT
   const handleUploadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return alert("Connecte-toi pour uploader.");
@@ -528,7 +524,6 @@ export const PremiumPage: React.FC = () => {
   const heroDesc = profile.hero_description || settings.hero_description || `Découvrez les productions Funky House, Nu-Disco et Tech House du duo ${profile.username}.`;
   const bio = profile.bio || settings.bio || "Levon & Dinato est un duo électrisant...";
   const heroTagline = profile.hero_tagline || settings.hero_tagline || "Nouveaux remixes disponibles";
-  const showStats = settings.show_stats !== false;
   const showDuo = settings.show_duo !== false;
   const showPrestations = settings.show_prestations !== false;
   const showReleases = settings.show_releases !== false;
@@ -903,7 +898,6 @@ export const PremiumPage: React.FC = () => {
           </section>
         )}
 
-        {/* ✅ SECTION RELEASES (CORRIGÉE) */}
         {showReleases && (
           <section id="releases" style={{ paddingTop: isMobile ? 40 : 80, borderTop: `1px solid ${colors.border}` }}>
             <div className="section-subtitle">Écouter</div>
@@ -972,7 +966,6 @@ export const PremiumPage: React.FC = () => {
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                           
-                          {/* BOUTON ACHETER */}
                           {track.purchase_url && (
                             <a 
                               href={track.purchase_url} 
@@ -984,14 +977,12 @@ export const PremiumPage: React.FC = () => {
                             </a>
                           )}
 
-                          {/* BOUTON TÉLÉCHARGER */}
                           {track.is_downloadable !== false && (
                             <button onClick={(e) => handleDownload(e, track.audio_url, `${track.artist} - ${track.title}.mp3`, track.id, track.downloads)} style={{ background: 'transparent', border: `1px solid ${btnBorderColor}`, color: btnTextColor, padding: '10px 16px', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
                               Télécharger
                             </button>
                           )}
 
-                          {/* BOUTON PLAY */}
                           <button
                             onClick={() => handlePlayTrack(track)}
                             style={{ width: 48, height: 48, borderRadius: '50%', background: isThisPlaying ? themeColor : (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'), border: 'none', color: isThisPlaying ? '#000' : btnTextColor, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }}
@@ -1051,12 +1042,6 @@ export const PremiumPage: React.FC = () => {
           </section>
         )}
       </div>
-
-      {showStats && isOwner && (
-        <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '20px 16px 60px' : '40px 24px 100px' }}>
-          <PremiumStats profile={profile} tracks={tracks} />
-        </div>
-      )}
 
       <footer style={{ borderTop: `1px solid ${colors.border}`, padding: '40px 24px', marginTop: 'auto', textAlign: 'center', background: colors.panelBg }}>
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10, marginBottom: 16 }}>

@@ -521,7 +521,7 @@ export const SettingsPage: React.FC = () => {
   const totalPages = Math.ceil(myTracks.length / tracksPerPage);
 
   return (
-    <div style={{ maxWidth: 800, margin: '0 auto', padding: '40px 20px', color: colors.textMain, fontFamily: 'Inter, sans-serif', background: colors.bg, minHeight: '100vh', transition: 'background 0.3s ease' }}>
+    <div style={{ maxWidth: 800, margin: '0 auto', padding: '40px 20px', color: colors.textMain, fontFamily: 'Inter, sans-serif', background: colors.bg, minHeight: '100vh', transition: 'background 0.3s ease', position: 'relative' }}>
       
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16, marginBottom: 10 }}>
         <h1 style={{ fontSize: 32, fontWeight: 800, margin: 0 }}>
@@ -1006,6 +1006,37 @@ export const SettingsPage: React.FC = () => {
         </div>,
         document.body
       )}
+
+      {/* ✅ BOUTONS DE RETOUR RAPIDE (Haut / Bas) */}
+      <div style={{ position: 'fixed', bottom: 30, right: 30, display: 'flex', flexDirection: 'column', gap: 10, zIndex: 9999 }}>
+        <button 
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          style={{ 
+            width: 44, height: 44, borderRadius: '50%', background: colors.panelBg, border: `1px solid ${colors.border}`, 
+            color: colors.textMain, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', 
+            boxShadow: '0 4px 12px rgba(0,0,0,0.2)', transition: 'all 0.2s' 
+          }}
+          title="Retour en haut"
+          onMouseEnter={e => e.currentTarget.style.borderColor = form.theme_color}
+          onMouseLeave={e => e.currentTarget.style.borderColor = colors.border}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+        </button>
+        <button 
+          onClick={() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })}
+          style={{ 
+            width: 44, height: 44, borderRadius: '50%', background: colors.panelBg, border: `1px solid ${colors.border}`, 
+            color: colors.textMain, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', 
+            boxShadow: '0 4px 12px rgba(0,0,0,0.2)', transition: 'all 0.2s' 
+          }}
+          title="Aller en bas"
+          onMouseEnter={e => e.currentTarget.style.borderColor = form.theme_color}
+          onMouseLeave={e => e.currentTarget.style.borderColor = colors.border}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+        </button>
+      </div>
+      
     </div>
   );
 };

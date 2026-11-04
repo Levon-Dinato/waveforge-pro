@@ -42,9 +42,10 @@ const LevonDinatoPage = lazy(() => import('./pages/LevonDinatoPage').then((m) =>
 const PremiumPage = lazy(() => import('./pages/PremiumPage').then((m) => ({ default: m.PremiumPage })));
 const DropZoneVideosPage = lazy(() => import('./pages/DropZoneVideosPage').then((m) => ({ default: m.DropZoneVideosPage })));
 const SmartLinkPage = lazy(() => import('./pages/SmartLinkPage').then((m) => ({ default: m.SmartLinkPage })));
-
-// ✅ NOUVEL IMPORT : Page des Playlists
 const MyPlaylistsPage = lazy(() => import('./pages/MyPlaylistsPage').then((m) => ({ default: m.MyPlaylistsPage })));
+
+// ✅ NOUVEL IMPORT : Page Découvrir
+const DiscoverPage = lazy(() => import('./pages/DiscoverPage').then((m) => ({ default: m.DiscoverPage })));
 
 const PageLoader = () => (
   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', flexDirection: 'column', gap: 16 }}>
@@ -76,6 +77,10 @@ function AnimatedRoutes() {
           <Route index element={<PageTransition><HomePage /></PageTransition>} />
           <Route path="feed" element={<PageTransition><FeedPage /></PageTransition>} />
           <Route path="nouveautes" element={<PageTransition><NouveautesPage /></PageTransition>} />
+          
+          {/* ✅ NOUVELLE ROUTE : Découvrir */}
+          <Route path="discover" element={<PageTransition><DiscoverPage /></PageTransition>} />
+          
           <Route path="events" element={<PageTransition><EventsPage /></PageTransition>} />
           <Route path="live" element={<PageTransition><LivePage /></PageTransition>} />
           <Route path="genres" element={<PageTransition><GenresPage /></PageTransition>} />
@@ -85,7 +90,6 @@ function AnimatedRoutes() {
           <Route path="search" element={<PageTransition><SearchPage /></PageTransition>} />
           <Route path="track/:id" element={<PageTransition><TrackPage /></PageTransition>} />
           
-          {/* ✅ NOUVELLE ROUTE : Mes Playlists */}
           <Route path="mes-playlists" element={<PageTransition><MyPlaylistsPage /></PageTransition>} />
 
           <Route path="tools" element={<PageTransition><PremiumGuard><ToolsPage /></PremiumGuard></PageTransition>} />
@@ -97,7 +101,6 @@ function AnimatedRoutes() {
           <Route path="generator" element={<PageTransition><PremiumGuard><GeneratorPage /></PremiumGuard></PageTransition>} />
           <Route path="video" element={<PageTransition><PremiumGuard><VideoPage /></PremiumGuard></PageTransition>} />
 
-          {/* ✅ ROUTES PLEIN ÉCRAN */}
           <Route path="cdj" element={<PageTransition><PremiumGuard><CDJPage /></PremiumGuard></PageTransition>} />
           <Route path="mastering" element={<PageTransition><PremiumGuard><MasteringPage /></PremiumGuard></PageTransition>} />
 

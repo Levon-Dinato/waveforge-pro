@@ -4,7 +4,7 @@ import { Outlet, NavLink, useNavigate, useLocation, Link } from 'react-router-do
 import { useAuth } from '../contexts/AuthContext';
 import { usePlayer } from '../contexts/PlayerContext';
 import { GlobalPlayer } from '../components/GlobalPlayer';
-import { GlobalSearch } from '../components/GlobalSearch'; // ✅ IMPORT AJOUTÉ
+import { GlobalSearch } from '../components/GlobalSearch'; 
 import { useIsMobile } from '../hooks/useIsMobile';
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -24,10 +24,13 @@ const Icons = {
   menu: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>,
   sun: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>,
   moon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>,
+  // ✅ NOUVELLE ICÔNE DÉCOUVRIR
+  discover: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>,
 };
 
 const NAV_ITEMS = [
   { path: '/', label: 'Accueil', icon: Icons.home, exact: true },
+  { path: '/discover', label: 'Découvrir', icon: Icons.discover }, // ✅ AJOUTÉ
   { path: '/feed', label: 'Feed', icon: Icons.feed },
   { path: '/nouveautes', label: 'Nouveautés', icon: Icons.new },
   { path: '/mes-playlists', label: 'Mes Playlists', icon: Icons.playlist },
@@ -42,10 +45,10 @@ const NAV_ITEMS = [
 
 const MOBILE_NAV = [
   { path: '/', label: 'Accueil', icon: Icons.home, exact: true },
+  { path: '/discover', label: 'Découvrir', icon: Icons.discover }, // ✅ AJOUTÉ
   { path: '/nouveautes', label: 'Sorties', icon: Icons.new },
   { path: '/feed', label: 'Feed', icon: Icons.feed },
-  { path: '/artists', label: 'Artistes', icon: Icons.artists },
-  { path: '#menu', label: 'Menu', icon: Icons.menu },
+  { path: '#menu', label: 'Menu', icon: Icons.menu }, // Remplacé Artistes par Menu
 ];
 
 export const MainLayout: React.FC = () => {
@@ -204,7 +207,6 @@ export const MainLayout: React.FC = () => {
 
       <div style={{ flex: 1, marginLeft: 240, display: 'flex', flexDirection: 'column', minHeight: '100vh', paddingBottom: currentTrack ? 100 : 0 }}>
         
-        {/* ✅ BARRE DE RECHERCHE GLOBALE AJOUTÉE */}
         <div style={{ background: colors.bg, borderBottom: `1px solid ${colors.border}`, padding: '12px 32px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
           <GlobalSearch />
         </div>

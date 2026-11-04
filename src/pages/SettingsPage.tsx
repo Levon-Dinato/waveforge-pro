@@ -7,7 +7,7 @@ import { supabase, AUDIO_BUCKET } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { PayPalButton } from '../components/PayPalButton';
-import { PremiumStats } from '../components/PremiumStats'; // ✅ IMPORT AJOUTÉ
+import { PremiumStats } from '../components/PremiumStats';
 
 export const SettingsPage: React.FC = () => {
   const { user } = useAuth();
@@ -25,6 +25,9 @@ export const SettingsPage: React.FC = () => {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [uploading, setUploading] = useState(false);
   
+  // ✅ NOUVEL ÉTAT POUR LE GUIDE
+  const [showGuideModal, setShowGuideModal] = useState(false);
+
   const [uploadForm, setUploadForm] = useState({ 
     title: '', artist: '', genre: '', bpm: '', song_key: '',
     purchase_url: '', embed_code: '', player_bg_color: '#000000', player_bg_image_url: '',
@@ -523,21 +526,43 @@ export const SettingsPage: React.FC = () => {
   return (
     <div style={{ maxWidth: 800, margin: '0 auto', padding: '40px 20px', color: colors.textMain, fontFamily: 'Inter, sans-serif', background: colors.bg, minHeight: '100vh', transition: 'background 0.3s ease', position: 'relative' }}>
       
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16, marginBottom: 10 }}>
-        <h1 style={{ fontSize: 32, fontWeight: 800, margin: 0 }}>
-          Espace Artiste <span style={{ fontSize: 12, background: form.theme_color, color: '#000', padding: '4px 8px', borderRadius: 4, verticalAlign: 'middle', marginLeft: 10 }}>PREMIUM</span>
-        </h1>
-        {form.username && (
-          <Link to={`/premium/${form.username}`} target="_blank" style={{ padding: '10px 20px', background: form.theme_color, color: '#000', borderRadius: 8, fontWeight: 700, textDecoration: 'none' }}>Voir ma page ↗</Link>
-        )}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16, marginBottom: 10 }}>
+        <div>
+          <h1 style={{ fontSize: 32, fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
+            Espace Artiste <span style={{ fontSize: 12, background: form.theme_color, color: '#000', padding: '4px 8px', borderRadius: 4 }}>PREMIUM</span>
+          </h1>
+          <p style={{ color: colors.textMuted, marginTop: 10, margin: '10px 0 0 0' }}>Gère ton identité, ta musique, tes photos et les modules de ta page.</p>
+        </div>
+        <div style={{ display: 'flex', gap: 10 }}>
+          {/* ✅ BOUTON GUIDE AJOUTÉ */}
+          <button onClick={() => setShowGuideModal(true)} style={{ padding: '10px 20px', background: 'transparent', color: form.theme_color, border: `1px solid ${form.theme_color}`, borderRadius: 8, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            Guide
+          </button>
+          {form.username && (
+            <Link to={`/premium/${form.username}`} target="_blank" style={{ padding: '10px 20px', background: form.theme_color, color: '#000', borderRadius: 8, fontWeight: 700, textDecoration: 'none' }}>Voir ma page ↗</Link>
+          )}
+        </div>
       </div>
-      
-      <p style={{ color: colors.textMuted, marginBottom: 30 }}>Gère ton identité, ta musique, tes photos et les modules de ta page.</p>
+
+      {/* ✅ BARRE DE NAVIGATION COLLANTE (STICKY) */}
+      <div style={{ 
+        position: 'sticky', top: 0, zIndex: 100, 
+        background: colors.bg, padding: '12px 0', 
+        display: 'flex', gap: 10, overflowX: 'auto', 
+        borderBottom: `1px solid ${colors.border}`, marginBottom: 24,
+        scrollbarWidth: 'none' 
+      }}>
+        <a href="#dashboard" style={{ padding: '8px 16px', background: colors.inputBg, borderRadius: 20, textDecoration: 'none', color: colors.textMain, fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap' }}>📊 Dashboard</a>
+        <a href="#modules" style={{ padding: '8px 16px', background: colors.inputBg, borderRadius: 20, textDecoration: 'none', color: colors.textMain, fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap' }}>🎛️ Modules</a>
+        <a href="#musique" style={{ padding: '8px 16px', background: colors.inputBg, borderRadius: 20, textDecoration: 'none', color: colors.textMain, fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap' }}>🎵 Musique</a>
+        <a href="#galerie" style={{ padding: '8px 16px', background: colors.inputBg, borderRadius: 20, textDecoration: 'none', color: colors.textMain, fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap' }}>📸 Galerie</a>
+        <a href="#parametres" style={{ padding: '8px 16px', background: colors.inputBg, borderRadius: 20, textDecoration: 'none', color: colors.textMain, fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap' }}>⚙️ Paramètres</a>
+      </div>
 
       {message && <div style={{ padding: 16, background: 'rgba(0,217,255,0.1)', border: '1px solid #00d9ff', borderRadius: 8, marginBottom: 24, color: '#00d9ff' }}>{message}</div>}
 
-      {/* ✅ NOUVEAU : TABLEAU DE BORD PERSONNEL DE L'ARTISTE (Sécurisé par RLS) */}
-      <div style={{ marginBottom: 32 }}>
+      <div id="dashboard" style={{ marginBottom: 32, scrollMarginTop: 80 }}>
         <PremiumStats
           profile={{ id: user?.id, theme_color: form.theme_color }}
           tracks={myTracks}
@@ -545,7 +570,7 @@ export const SettingsPage: React.FC = () => {
         />
       </div>
 
-      <div style={{ background: colors.panelBg, padding: 24, borderRadius: 12, border: `1px solid ${colors.border}`, marginBottom: 24 }}>
+      <div id="modules" style={{ background: colors.panelBg, padding: 24, borderRadius: 12, border: `1px solid ${colors.border}`, marginBottom: 24, scrollMarginTop: 80 }}>
         <h2 style={{ fontSize: 18, color: colors.textMain, margin: '0 0 20px 0' }}>🎛️ Modules de la page Premium</h2>
         
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -649,7 +674,7 @@ export const SettingsPage: React.FC = () => {
         </div>
       </div>
 
-      <div style={{ background: colors.panelBg, padding: 24, borderRadius: 12, border: `1px solid ${colors.border}`, marginBottom: 24 }}>
+      <div id="musique" style={{ background: colors.panelBg, padding: 24, borderRadius: 12, border: `1px solid ${colors.border}`, marginBottom: 24, scrollMarginTop: 80 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 10 }}>
           <h2 style={{ fontSize: 18, color: colors.textMain, margin: 0 }}>Ma Musique ({myTracks.length})</h2>
           <div style={{ display: 'flex', gap: 10 }}>
@@ -795,7 +820,7 @@ export const SettingsPage: React.FC = () => {
         )}
       </div>
 
-      <div style={{ background: colors.panelBg, padding: 24, borderRadius: 12, border: `1px solid ${colors.border}`, marginBottom: 24 }}>
+      <div id="galerie" style={{ background: colors.panelBg, padding: 24, borderRadius: 12, border: `1px solid ${colors.border}`, marginBottom: 24, scrollMarginTop: 80 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
           <h2 style={{ fontSize: 18, color: colors.textMain, margin: 0 }}>Ma Galerie Photos ({galleryImages.length})</h2>
           <label style={{ background: colors.primaryBg, color: colors.primaryText, padding: '8px 16px', borderRadius: 6, fontWeight: 800, cursor: uploadingGallery ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -817,7 +842,7 @@ export const SettingsPage: React.FC = () => {
         )}
       </div>
 
-      <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+      <form id="parametres" onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: 24, scrollMarginTop: 80 }}>
         <div style={{ background: colors.panelBg, padding: 24, borderRadius: 12, border: `1px solid ${colors.border}` }}>
           <h2 style={{ fontSize: 18, marginBottom: 20, color: colors.textMain }}>Identité & Thème</h2>
           <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
@@ -897,7 +922,68 @@ export const SettingsPage: React.FC = () => {
         </button>
       </form>
 
+      {/* ✅ MODALE DU GUIDE (CREATE PORTAL) */}
+      {showGuideModal && createPortal(
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }} onClick={() => setShowGuideModal(false)}>
+          <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 32, width: '100%', maxWidth: 600, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }} onClick={(e) => e.stopPropagation()}>
+            
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+              <h2 style={{ margin: 0, fontSize: 24, fontWeight: 900, color: colors.textMain, display: 'flex', alignItems: 'center', gap: 10 }}>
+                📖 Guide de la Page Premium
+              </h2>
+              <button onClick={() => setShowGuideModal(false)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, fontSize: 24, cursor: 'pointer' }}>✕</button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 20, color: colors.textMain }}>
+              
+              <div style={{ padding: 16, background: colors.inputBg, borderRadius: 8, borderLeft: `4px solid ${form.theme_color}` }}>
+                <h3 style={{ margin: '0 0 8px', fontSize: 16 }}>🎨 1. Identité Visuelle</h3>
+                <p style={{ margin: 0, fontSize: 14, color: colors.textMuted, lineHeight: 1.5 }}>
+                  Personnalise ton univers ! Change ta <strong>couleur de thème</strong>, ajoute un <strong>avatar</strong> et une <strong>vidéo de fond</strong> dans la section "Identité & Thème" tout en bas.
+                </p>
+              </div>
+
+              <div style={{ padding: 16, background: colors.inputBg, borderRadius: 8, borderLeft: `4px solid ${form.theme_color}` }}>
+                <h3 style={{ margin: '0 0 8px', fontSize: 16 }}>🎵 2. Uploader tes Sons</h3>
+                <p style={{ margin: 0, fontSize: 14, color: colors.textMuted, lineHeight: 1.5 }}>
+                  Dans la section "Ma Musique", clique sur <strong>+ Uploader un MP3</strong>. Le système lira automatiquement les tags ID3 (Titre, Artiste, BPM, Cover) si le fichier les contient.
+                </p>
+              </div>
+
+              <div style={{ padding: 16, background: colors.inputBg, borderRadius: 8, borderLeft: `4px solid ${form.theme_color}` }}>
+                <h3 style={{ margin: '0 0 8px', fontSize: 16 }}>💰 3. Monétisation & Téléchargement</h3>
+                <p style={{ margin: 0, fontSize: 14, color: colors.textMuted, lineHeight: 1.5 }}>
+                  Lors de l'upload, coche <strong>"Autoriser le téléchargement gratuit"</strong> si tu veux que les gens puissent télécharger ton son. Tu peux aussi ajouter un <strong>lien Beatport</strong> pour afficher un bouton "Acheter".
+                </p>
+              </div>
+
+              <div style={{ padding: 16, background: colors.inputBg, borderRadius: 8, borderLeft: `4px solid ${form.theme_color}` }}>
+                <h3 style={{ margin: '0 0 8px', fontSize: 16 }}>🖼️ 4. Galerie & Affiches</h3>
+                <p style={{ margin: 0, fontSize: 14, color: colors.textMuted, lineHeight: 1.5 }}>
+                  Ajoute des photos de tes lives dans la section <strong>Ma Galerie Photos</strong>. Tu peux aussi ajouter des affiches d'événements qui défileront sur ta page.
+                </p>
+              </div>
+
+              <div style={{ padding: 16, background: colors.inputBg, borderRadius: 8, borderLeft: `4px solid ${form.theme_color}` }}>
+                <h3 style={{ margin: '0 0 8px', fontSize: 16 }}>🔗 5. Partage</h3>
+                <p style={{ margin: 0, fontSize: 14, color: colors.textMuted, lineHeight: 1.5 }}>
+                  Une fois ta page prête, clique sur <strong>"Voir ma page ↗"</strong> tout en haut et copie l'URL pour la partager sur tes réseaux sociaux.
+                </p>
+              </div>
+
+            </div>
+
+            <button onClick={() => setShowGuideModal(false)} style={{ marginTop: 24, width: '100%', padding: 14, background: form.theme_color, color: '#000', border: 'none', borderRadius: 8, fontWeight: 800, fontSize: 14, cursor: 'pointer' }}>
+              J'ai compris, c'est parti ! 🚀
+            </button>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* ... Les autres modales (Upload) ... */}
       {showUploadModal && createPortal(
+        // ... (Ton code existant pour la modale d'upload)
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
           <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 32, width: '100%', maxWidth: 500, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>

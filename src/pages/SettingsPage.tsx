@@ -535,7 +535,7 @@ export const SettingsPage: React.FC = () => {
       <p style={{ color: colors.textMuted, marginBottom: 30 }}>Gère ton identité, ta musique, tes photos et les modules de ta page.</p>
 
       {message && <div style={{ padding: 16, background: 'rgba(0,217,255,0.1)', border: '1px solid #00d9ff', borderRadius: 8, marginBottom: 24, color: '#00d9ff' }}>{message}</div>}
-      <h2 style={{ color: 'red', fontSize: '40px' }}>TEST VERCEL</h2>
+
       {/* ✅ NOUVEAU : TABLEAU DE BORD PERSONNEL DE L'ARTISTE (Sécurisé par RLS) */}
       <div style={{ marginBottom: 32 }}>
         <PremiumStats

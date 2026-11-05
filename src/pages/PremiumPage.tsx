@@ -1,15 +1,16 @@
 // src/pages/PremiumPage.tsx
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { createPortal } from 'react-dom';
-import { parseBlob } from 'music-metadata-browser';
-import { supabase, AUDIO_BUCKET } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { usePlayer } from '../contexts/PlayerContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { ArtistPromoSection } from '../components/ArtistPromoSection';
 import { ScrollButtons } from '../components/ScrollButtons'; 
+import { ReleaseCard } from '../components/ReleaseCard';
+import { BookingModal, UploadModal, Lightbox } from '../components/PremiumModals';
 import * as GlobalPlayerModule from '../components/GlobalPlayer';
 import * as ArrowButtonModule from '../components/ArrowButton';
 import './LevonDinato.css';
@@ -32,134 +33,32 @@ const Icons = {
   moon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>,
   share: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>,
   comment: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>,
-  download: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+  download: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>,
+  menu: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>,
+  close: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
 };
 
-const CanvasWaveform: React.FC<{ 
-  peaks: number[]; isPlaying: boolean; themeColor: string; progress: number; isCurrent: boolean; onSeek: (ratio: number) => void; isMobile: boolean;
-}> = ({ peaks, isPlaying, themeColor, progress, isCurrent, onSeek, isMobile }) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [dragProgress, setDragProgress] = useState<number | null>(null);
-  const isDraggingRef = useRef(false);
+const getVideoUrlInfo = (url: string) => {
+  if (!url) return { type: 'unknown', src: '' };
+  
+  if (url.match(/\.(mp4|webm|ogg)$/i)) {
+    return { type: 'video', src: url };
+  }
+  
+  if (url.includes('youtube.com') || url.includes('youtu.be')) {
+    let videoId = '';
+    if (url.includes('youtu.be/')) videoId = url.split('youtu.be/')[1].split('?')[0];
+    else if (url.includes('shorts/')) videoId = url.split('shorts/')[1].split('?')[0];
+    else if (url.includes('watch?v=')) videoId = url.split('watch?v=')[1].split('&')[0];
+    return { type: 'iframe', src: `https://www.youtube.com/embed/${videoId}` };
+  }
 
-  const mockPeaks = useMemo(() => Array.from({ length: 150 }, () => Math.random() * 70 + 30), [peaks]);
+  if (url.includes('tiktok.com')) {
+    const match = url.match(/\/video\/(\d+)/);
+    if (match) return { type: 'iframe', src: `https://www.tiktok.com/embed/v2/${match[1]}` };
+  }
 
-  useEffect(() => { if (!isDraggingRef.current) setDragProgress(null); }, [progress]);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const DPR = window.devicePixelRatio || 1;
-    const W = canvas.clientWidth;
-    const H = canvas.clientHeight;
-    canvas.width = W * DPR; canvas.height = H * DPR;
-    ctx.scale(DPR, DPR);
-    ctx.clearRect(0, 0, W, H);
-
-    let safePeaks = Array.isArray(peaks) && peaks.length > 0 ? peaks : mockPeaks;
-    const centerY = H / 2;
-    const maxAmplitude = H * 0.45;
-    const displayProgress = dragProgress !== null ? dragProgress : progress;
-    const playedX = displayProgress * W;
-
-    const barCount = isMobile ? 150 : 300;
-    const step = Math.max(1, Math.floor(safePeaks.length / barCount));
-    const displayPeaks = safePeaks.filter((_: any, i: number) => i % step === 0).slice(0, barCount);
-
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-    for (let i = 0; i < displayPeaks.length; i++) {
-      const x = (i / displayPeaks.length) * W;
-      const val = displayPeaks[i] > 1 ? displayPeaks[i] / 100 : displayPeaks[i];
-      const barHeight = Math.max(val * maxAmplitude, 2);
-      if (x >= playedX) ctx.fillRect(x, centerY - barHeight, 1, barHeight * 2);
-    }
-
-    if (isPlaying || displayProgress > 0) {
-      ctx.save();
-      ctx.beginPath();
-      ctx.rect(0, 0, playedX, H);
-      ctx.clip();
-
-      const gradient = ctx.createLinearGradient(0, 0, 0, H);
-      gradient.addColorStop(0, `${themeColor}20`);
-      gradient.addColorStop(0.5, themeColor);
-      gradient.addColorStop(1, `${themeColor}20`);
-
-      ctx.fillStyle = gradient;
-      ctx.shadowColor = themeColor;
-      ctx.shadowBlur = isMobile ? 2 : 6; 
-
-      for (let i = 0; i < displayPeaks.length; i++) {
-        const x = (i / displayPeaks.length) * W;
-        const val = displayPeaks[i] > 1 ? displayPeaks[i] / 100 : displayPeaks[i];
-        const barHeight = Math.max(val * maxAmplitude, 2);
-        ctx.fillRect(x, centerY - barHeight, 1, barHeight * 2);
-      }
-      ctx.shadowBlur = 0;
-      ctx.restore();
-    }
-
-    if (isPlaying || displayProgress > 0) {
-      ctx.strokeStyle = '#fff';
-      ctx.lineWidth = 2;
-      ctx.shadowColor = '#fff';
-      ctx.shadowBlur = 4;
-      ctx.beginPath();
-      ctx.moveTo(playedX, 0);
-      ctx.lineTo(playedX, H);
-      ctx.stroke();
-      ctx.shadowBlur = 0;
-    }
-  }, [peaks, mockPeaks, isPlaying, themeColor, progress, dragProgress, isMobile]);
-
-  const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!isCurrent) return;
-    e.preventDefault();
-    e.stopPropagation();
-    isDraggingRef.current = true;
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const getRatio = (clientX: number) => {
-      const rect = canvas.getBoundingClientRect();
-      return Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
-    };
-
-    const initialRatio = getRatio(e.clientX);
-    setDragProgress(initialRatio);
-    onSeek(initialRatio);
-
-    let lastSeekTime = 0;
-    const handleMouseMove = (moveEvent: MouseEvent) => {
-      const ratio = getRatio(moveEvent.clientX);
-      setDragProgress(ratio);
-      const now = Date.now();
-      if (now - lastSeekTime > 100) {
-        lastSeekTime = now;
-        onSeek(ratio);
-      }
-    };
-
-    const handleMouseUp = (upEvent: MouseEvent) => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-      onSeek(getRatio(upEvent.clientX));
-      isDraggingRef.current = false;
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
-  };
-
-  return (
-    <canvas 
-      ref={canvasRef} onMouseDown={handleMouseDown} onClick={(e) => { if (isCurrent) e.stopPropagation(); }}
-      style={{ width: '100%', height: isMobile ? '30px' : '40px', display: 'block', cursor: isCurrent ? 'pointer' : 'default', touchAction: 'none', opacity: isCurrent ? 1 : 0.6 }} 
-    />
-  );
+  return { type: 'iframe', src: url };
 };
 
 const useIsMobile = (breakpoint = 768) => {
@@ -183,88 +82,46 @@ export const PremiumPage: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
   const isDark = theme === 'dark';
 
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [visibleTracksCount, setVisibleTracksCount] = useState(4);
+  const [activeShort, setActiveShort] = useState<any>(null);
 
   const [isPremium, setIsPremium] = useState(false);
-  useEffect(() => {
-    const check = async () => {
-      if (!user) return;
-      const { data } = await supabase.from('profiles').select('is_premium').eq('id', user.id).single();
-      setIsPremium(data?.is_premium || false);
-    };
-    check();
-  }, [user]);
-
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<any>(null);
   const [tracks, setTracks] = useState<any[]>([]);
   const [events, setEvents] = useState<any[]>([]);
   const [gallery, setGallery] = useState<any[]>([]);
+  const [shorts, setShorts] = useState<any[]>([]);
 
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
-
   const [showBookingModal, setShowBookingModal] = useState(false);
-  const [bookingForm, setBookingForm] = useState({ name: '', email: '', type: 'booking', message: '' });
-  const [sendingBooking, setSendingBooking] = useState(false);
-  const [bookingSent, setBookingSent] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
 
   const [followersCount, setFollowersCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
 
-  const [showUploadModal, setShowUploadModal] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [uploadForm, setUploadForm] = useState({ 
-    title: '', artist: '', genre: '', bpm: '', song_key: '', 
-    purchase_url: '', is_downloadable: true 
-  });
-  const [audioFile, setAudioFile] = useState<File | null>(null);
-  const [coverFile, setCoverFile] = useState<File | null>(null);
-  const [uploadingPlayerBg, setUploadingPlayerBg] = useState(false);
-
   const isOwner = user && profile && user.id === profile.id;
   const themeColor = profile?.theme_color || '#00d9ff';
+  const fontFamily = profile?.settings?.font_family || 'Inter, sans-serif';
 
   const colors = {
-    bg: isDark ? '#050505' : '#f5f5f7',
-    textMain: isDark ? '#ffffff' : '#1a1a1a',
-    textMuted: isDark ? 'rgba(255,255,255,0.5)' : '#666666',
-    textSoft: isDark ? 'rgba(255,255,255,0.8)' : '#444444',
-    border: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
-    panelBg: isDark ? 'rgba(20,20,20,0.6)' : 'rgba(255,255,255,0.7)',
-    inputBg: isDark ? '#0a0a0a' : '#f3f4f6',
-    navBg: isDark ? 'rgba(5,5,5,0.7)' : 'rgba(245,245,247,0.7)',
-    cardBg: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.8)',
-    cardBorder: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
+    bg: isDark ? '#050505' : '#f5f5f7', textMain: isDark ? '#ffffff' : '#1a1a1a',
+    textMuted: isDark ? 'rgba(255,255,255,0.5)' : '#666666', textSoft: isDark ? 'rgba(255,255,255,0.8)' : '#444444',
+    border: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)', panelBg: isDark ? 'rgba(20,20,20,0.6)' : 'rgba(255,255,255,0.7)',
+    inputBg: isDark ? '#0a0a0a' : '#f3f4f6', navBg: isDark ? 'rgba(5,5,5,0.7)' : 'rgba(245,245,247,0.7)',
+    cardBg: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.8)', cardBorder: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
     skeleton: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
   };
 
-  const formatTime = (time: number) => {
-    if (isNaN(time) || time === 0) return "0:00";
-    const mins = Math.floor(time / 60);
-    const secs = Math.floor(time % 60);
-    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-  };
-
-  const formatEventDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    const day = date.toLocaleDateString('fr-FR', { day: 'numeric' });
-    const month = date.toLocaleDateString('fr-FR', { month: 'short' });
-    const year = date.toLocaleDateString('fr-FR', { year: 'numeric' });
-    return { day, month, year, full: `${day} ${month} ${year}` };
-  };
-
+  const formatTime = (time: number) => { if (isNaN(time) || time === 0) return "0:00"; const mins = Math.floor(time / 60); const secs = Math.floor(time % 60); return `${mins}:${secs < 10 ? '0' : ''}${secs}`; };
+  const formatEventDate = (dateStr: string) => { const date = new Date(dateStr); const day = date.toLocaleDateString('fr-FR', { day: 'numeric' }); const month = date.toLocaleDateString('fr-FR', { month: 'short' }); const year = date.toLocaleDateString('fr-FR', { year: 'numeric' }); return { day, month, year, full: `${day} ${month} ${year}` }; };
+  
   const handleShare = async () => {
-    const shareData = {
-      title: `${profile?.username} — Artiste DropZone`,
-      text: `Découvre l'univers de ${profile?.username} sur DropZone.dj`,
-      url: window.location.href,
-    };
-    try {
-      if (navigator.share) { await navigator.share(shareData); }
-      else { await navigator.clipboard.writeText(window.location.href); alert('Lien copié !'); }
-    } catch (err) { console.log(err); }
+    const shareData = { title: `${profile?.username} — Artiste DropZone`, text: `Découvre l'univers de ${profile?.username} sur DropZone.dj`, url: window.location.href };
+    try { if (navigator.share) { await navigator.share(shareData); } else { await navigator.clipboard.writeText(window.location.href); alert('Lien copié !'); } } catch (err) { console.log(err); }
   };
 
   const handleFollow = async () => {
@@ -295,22 +152,6 @@ export const PremiumPage: React.FC = () => {
     window.URL.revokeObjectURL(url);
   };
 
-  const handleSendBooking = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!profile) return;
-    if (!bookingForm.name || !bookingForm.email || !bookingForm.message) { alert("Remplis tous les champs."); return; }
-    setSendingBooking(true);
-    try {
-      const artistEmail = profile.booking_email || 'djcontrolradiotv1@gmail.com';
-      const { error } = await supabase.functions.invoke('send-booking-email', {
-        body: { to: artistEmail, from: bookingForm.email, subject: `${bookingForm.type} - ${profile.username}`, name: bookingForm.name, type: bookingForm.type, message: bookingForm.message },
-      });
-      if (error) throw error;
-      setBookingSent(true); setBookingForm({ name: '', email: '', type: 'booking', message: '' });
-      setTimeout(() => { setShowBookingModal(false); setBookingSent(false); }, 3000);
-    } catch (err: any) { alert("Erreur : " + err.message); } finally { setSendingBooking(false); }
-  };
-
   const handleDownload = async (e: React.MouseEvent, url: string, filename: string, trackId: string) => {
     e.stopPropagation();
     if (!user) { alert("🔒 Inscrivez-vous pour télécharger."); navigate('/auth'); return; }
@@ -330,138 +171,43 @@ export const PremiumPage: React.FC = () => {
     } catch (error) { window.open(url, '_blank'); }
   };
 
-  const getIframeSrc = (embedCode: string) => {
-    if (!embedCode) return null;
-    let src = embedCode;
-    if (!embedCode.startsWith('http')) {
-      const match = embedCode.match(/src=["'](.*?)["']/);
-      if (match) src = match[1];
-    }
-    if (src.startsWith('http://')) src = src.replace('http://', 'https://');
-    return src;
-  };
-
-  const handleUploadSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user) return alert("Connecte-toi pour uploader.");
-    if (!audioFile) return alert("Sélectionne un fichier audio.");
-    if (!uploadForm.title || !uploadForm.artist) return alert("Titre et Artiste obligatoires.");
-
-    setUploading(true);
-    try {
-      const audioExt = audioFile.name.split('.').pop();
-      const audioName = `${user.id}/${Date.now()}-audio.${audioExt}`;
-      const { error: audioError } = await supabase.storage.from(AUDIO_BUCKET).upload(audioName, audioFile);
-      if (audioError) throw audioError;
-      const { data: audioUrlData } = supabase.storage.from(AUDIO_BUCKET).getPublicUrl(audioName);
-
-      let coverUrl = null;
-      if (coverFile) {
-        const coverExt = coverFile.name.split('.').pop() || 'jpg';
-        const coverName = `${user.id}/${Date.now()}-cover.${coverExt}`;
-        const { error: coverError } = await supabase.storage.from(AUDIO_BUCKET).upload(coverName, coverFile);
-        if (!coverError) {
-          const { data: coverUrlData } = supabase.storage.from(AUDIO_BUCKET).getPublicUrl(coverName);
-          coverUrl = coverUrlData.publicUrl;
-        }
-      }
-
-      const { data, error: dbError } = await supabase.from('tracks').insert({
-        user_id: user.id, title: uploadForm.title, artist: uploadForm.artist,
-        genre: uploadForm.genre || 'Inconnu', bpm: Number(uploadForm.bpm) || 0,
-        song_key: uploadForm.song_key || null, audio_url: audioUrlData.publicUrl,
-        cover_url: coverUrl, purchase_url: uploadForm.purchase_url || null,
-        is_downloadable: uploadForm.is_downloadable, peaks: [], duration: 0, likes_count: 0, downloads: 0
-      }).select().single();
-
-      if (dbError) throw dbError;
-      if (data) setTracks([data, ...tracks]);
-      
-      setShowUploadModal(false);
-      setUploadForm({ title: '', artist: '', genre: '', bpm: '', song_key: '', purchase_url: '', is_downloadable: true });
-      setAudioFile(null); setCoverFile(null);
-      alert("Son uploadé ! 🎵");
-    } catch (err: any) { alert("Erreur : " + err.message); } finally { setUploading(false); }
-  };
-
-  const handleAudioFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setAudioFile(file);
-    const fileNameWithoutExt = file.name.replace(/\.[^/.]+$/, "");
-    let guessArtist = ""; let guessTitle = fileNameWithoutExt;
-    if (fileNameWithoutExt.includes(' - ')) {
-      const parts = fileNameWithoutExt.split(' - ');
-      guessArtist = parts[0].trim(); guessTitle = parts.slice(1).join(' - ').trim();
-    }
-    setUploadForm(prev => ({ ...prev, title: prev.title || guessTitle, artist: prev.artist || guessArtist }));
-    try {
-      const metadata = await parseBlob(file, { skipCovers: false });
-      const { common } = metadata;
-      setUploadForm(prev => ({
-        ...prev, title: common.title || prev.title, artist: common.artist || prev.artist,
-        genre: common.genre?.[0] || prev.genre, bpm: common.bpm ? String(Math.round(common.bpm)) : prev.bpm,
-        song_key: common.key || prev.song_key
-      }));
-      if (common.picture && common.picture.length > 0) {
-        const pic = common.picture[0];
-        const blob = new Blob([new Uint8Array(pic.data)], { type: pic.format });
-        setCoverFile(new File([blob], `cover-${Date.now()}.jpg`, { type: pic.format }));
-      }
-    } catch (err) { console.warn(err); }
-  };
-
   useEffect(() => {
     const fetchData = async () => {
       if (!username) return;
       setLoading(true);
       try {
         const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(username);
-        let query = supabase.from('profiles').select('*');
-        if (isUUID) query = query.eq('id', username);
-        else query = query.ilike('username', username);
+        let q = supabase.from('profiles').select('*');
+        if (isUUID) q = q.eq('id', username); else q = q.ilike('username', username);
+        const { data: p, error } = await q.single();
+        if (error) { setProfile(null); setLoading(false); return; }
+        
+        setProfile(p);
+        const { data: t } = await supabase.from('tracks').select('*').eq('user_id', p.id).order('created_at', { ascending: false });
+        if (t) {
+          const formatted = t.map(x => ({ ...x, peaks: typeof x.peaks === 'string' ? JSON.parse(x.peaks) : x.peaks || [] }));
+          setTracks(formatted);
+          formatted.forEach(track => { if (track.audio_url && !track.duration) { const a = new Audio(track.audio_url); a.onloadedmetadata = () => setTracks(prev => prev.map(x => x.id === track.id ? { ...x, duration: a.duration } : x)); } });
+        }
 
-        const { data: profileData, error: profileError } = await query.single();
-        if (profileError) { setProfile(null); setLoading(false); return; }
+        const today = new Date().toISOString().split('T')[0];
+        const { data: e } = await supabase.from('events').select('*').eq('created_by', p.id).gte('event_date', today).order('event_date');
+        if (e) setEvents(e);
 
-        if (profileData) {
-          setProfile(profileData);
-          const { data: tracksData } = await supabase.from('tracks').select('*').eq('user_id', profileData.id).order('created_at', { ascending: false });
-          
-          if (tracksData) {
-            const formattedTracks = tracksData.map(t => {
-              let parsedPeaks = [];
-              if (typeof t.peaks === 'string') { try { parsedPeaks = JSON.parse(t.peaks); } catch (e) {} } 
-              else if (Array.isArray(t.peaks)) parsedPeaks = t.peaks;
-              return { ...t, peaks: parsedPeaks };
-            });
-            setTracks(formattedTracks);
-            formattedTracks.forEach(track => {
-              if (track.audio_url && (!track.duration || track.duration === 0)) {
-                const audio = new Audio(track.audio_url);
-                audio.addEventListener('loadedmetadata', () => {
-                  setTracks(prev => prev.map(t => t.id === track.id ? { ...t, duration: audio.duration } : t));
-                });
-              }
-            });
-          }
+        const { data: g } = await supabase.from('profile_gallery').select('*').eq('user_id', p.id);
+        if (g) setGallery(g);
 
-          const today = new Date().toISOString().split('T')[0];
-          const { data: eventsData } = await supabase.from('events').select('*').eq('created_by', profileData.id).gte('event_date', today).order('event_date', { ascending: true });
-          if (eventsData) setEvents(eventsData);
+        const { data: s } = await supabase.from('artist_shorts').select('*').eq('user_id', p.id).order('created_at', { ascending: false });
+        if (s) setShorts(s);
 
-          const { data: galleryData } = await supabase.from('profile_gallery').select('*').eq('user_id', profileData.id).order('created_at', { ascending: false });
-          if (galleryData) setGallery(galleryData);
+        const { count: f1 } = await supabase.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', p.id);
+        setFollowersCount(f1 || 0);
+        const { count: f2 } = await supabase.from('follows').select('*', { count: 'exact', head: true }).eq('follower_id', p.id);
+        setFollowingCount(f2 || 0);
 
-          const { count: followers } = await supabase.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', profileData.id);
-          setFollowersCount(followers || 0);
-          const { count: following } = await supabase.from('follows').select('*', { count: 'exact', head: true }).eq('follower_id', profileData.id);
-          setFollowingCount(following || 0);
-
-          if (user && user.id !== profileData.id) {
-            const { data: followData } = await supabase.from('follows').select('id').eq('follower_id', user.id).eq('following_id', profileData.id).maybeSingle();
-            setIsFollowing(!!followData);
-          }
+        if (user && user.id !== p.id) {
+          const { data: f } = await supabase.from('follows').select('id').eq('follower_id', user.id).eq('following_id', p.id).maybeSingle();
+          setIsFollowing(!!f);
         }
       } catch (err) { console.error(err); } finally { setLoading(false); }
     };
@@ -469,63 +215,25 @@ export const PremiumPage: React.FC = () => {
   }, [username, user]);
 
   useEffect(() => {
-    const recordPageView = async () => {
-      if (!profile) return; 
-      if (user && user.id === profile.id) return; 
-
-      const viewKey = `viewed_profile_${profile.id}`;
-      if (sessionStorage.getItem(viewKey)) return;
-
-      try {
-        const { error } = await supabase.from('page_views').insert({
-          profile_id: profile.id
-        });
-        
-        if (!error) {
-          sessionStorage.setItem(viewKey, 'true');
-          console.log("✅ Vue de page enregistrée pour", profile.username);
-        } else {
-          console.warn("Erreur vue:", error.message);
-        }
-      } catch (err) {
-        console.error("Erreur enregistrement vue :", err);
-      }
-    };
-    
-    const timer = setTimeout(recordPageView, 1500);
-    return () => clearTimeout(timer);
+    if (!profile || (user && user.id === profile.id)) return;
+    const key = `viewed_profile_${profile.id}`;
+    if (sessionStorage.getItem(key)) return;
+    setTimeout(async () => {
+      await supabase.from('page_views').insert({ profile_id: profile.id });
+      sessionStorage.setItem(key, 'true');
+    }, 1500);
   }, [profile, user]);
 
   const handlePlayTrack = async (track: any) => {
-    if (!user) { alert("🔒 Inscrivez-vous pour écouter."); navigate('/auth'); return; }
-    if (!isPremium) { alert("🔒 Passez au Premium."); return; }
+    if (!user) return alert("🔒 Inscrivez-vous pour écouter.");
     if (track.audio_url && track.audio_url.length > 0) {
-      const isNewTrack = currentTrack?.id !== track.id;
-      play({
-        id: track.id, title: track.title, artist: track.artist, audio_url: track.audio_url,
-        cover_url: track.cover_url, user_id: track.user_id, duration: track.duration,
-        peaks: track.peaks, bpm: track.bpm, song_key: track.song_key, genre: track.genre,
-        player_bg_image_url: track.player_bg_image_url, player_bg_color: track.player_bg_color
-      });
-      if (isNewTrack && !isOwner) {
-        try {
-          await supabase.rpc('increment_play_count', { track_id_param: track.id });
-          setTracks(prev => prev.map(t => t.id === track.id ? { ...t, plays: (t.plays || 0) + 1 } : t));
-        } catch (err) {}
-      }
+      const isNew = currentTrack?.id !== track.id;
+      play({ ...track, peaks: track.peaks });
+      if (isNew && !isOwner) { await supabase.rpc('increment_play_count', { track_id_param: track.id }); setTracks(prev => prev.map(t => t.id === track.id ? { ...t, plays: (t.plays || 0) + 1 } : t)); }
     }
   };
 
-  const renderTitle = (title: string): React.ReactNode => {
-    if (!title) return null;
-    const parts = title.split(/(\*.*?\*)/g);
-    return parts.map((part, index) => {
-      if (part.startsWith('*') && part.endsWith('*') && part.length > 2) {
-        return <span key={index} style={{ color: 'var(--accent)' }}>{part.slice(1, -1)}</span>;
-      }
-      return <React.Fragment key={index}>{part}</React.Fragment>;
-    });
-  };
+  const renderTitle = (title: string): React.ReactNode => { if (!title) return null; return title.split(/(\*.*?\*)/g).map((p, i) => p.startsWith('*') && p.endsWith('*') ? <span key={i} style={{ color: 'var(--accent)' }}>{p.slice(1, -1)}</span> : <React.Fragment key={i}>{p}</React.Fragment>); };
 
   if (loading) {
     return (
@@ -564,7 +272,7 @@ export const PremiumPage: React.FC = () => {
   const bioRest = bioParts.slice(1).join('.').trim();
 
   return (
-    <div style={{ background: colors.bg, minHeight: '100vh', color: colors.textMain, fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', '--accent': themeColor, transition: 'background 0.3s ease, color 0.3s ease', position: 'relative', overflow: 'hidden' } as React.CSSProperties}>
+    <div style={{ background: colors.bg, minHeight: '100vh', color: colors.textMain, fontFamily: fontFamily, '--accent': themeColor, transition: 'background 0.3s ease, color 0.3s ease', position: 'relative', overflow: 'hidden' } as React.CSSProperties}>
       
       <style>{`
         ::-webkit-scrollbar { width: 8px; }
@@ -591,6 +299,17 @@ export const PremiumPage: React.FC = () => {
           .desktop-nav-links { display: none !important; }
         }
         @keyframes float { 0% { transform: translateY(0px) scale(1); } 50% { transform: translateY(-20px) scale(1.05); } 100% { transform: translateY(0px) scale(1); } }
+        
+        @keyframes bounce { 
+          0%, 20%, 50%, 80%, 100% { transform: translateY(0) translateX(-50%); } 
+          40% { transform: translateY(-15px) translateX(-50%); } 
+          60% { transform: translateY(-7px) translateX(-50%); } 
+        }
+        @keyframes glow {
+          0% { text-shadow: 0 0 20px ${themeColor}40, 0 0 40px ${themeColor}20; }
+          50% { text-shadow: 0 0 30px ${themeColor}80, 0 0 60px ${themeColor}40; }
+          100% { text-shadow: 0 0 20px ${themeColor}40, 0 0 40px ${themeColor}20; }
+        }
       `}</style>
 
       <div style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none', overflow: 'hidden' }}>
@@ -606,119 +325,25 @@ export const PremiumPage: React.FC = () => {
         <meta property="og:type" content="profile" />
       </Helmet>
 
-      {lightboxImage && (
-        <div onClick={() => setLightboxImage(null)} style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.95)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 40, cursor: 'zoom-out' }}>
-          <button style={{ position: 'absolute', top: 24, right: 24, background: 'transparent', border: 'none', color: '#fff', fontSize: 32, cursor: 'pointer' }}>✕</button>
-          <img src={lightboxImage} alt="Plein écran" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', borderRadius: 8 }} onClick={(e) => e.stopPropagation()} />
+      <Lightbox image={lightboxImage} onClose={() => setLightboxImage(null)} />
+      <BookingModal isOpen={showBookingModal} onClose={() => setShowBookingModal(false)} profile={profile} isDark={isDark} colors={colors} themeColor={themeColor} />
+      {isOwner && <UploadModal isOpen={showUploadModal} onClose={() => setShowUploadModal(false)} user={user} isDark={isDark} colors={colors} themeColor={themeColor} onUploadSuccess={(newTrack) => setTracks([newTrack, ...tracks])} />}
+
+      {/* MENU MOBILE */}
+      {isMobile && mobileMenuOpen && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.95)', backdropFilter: 'blur(20px)', zIndex: 99999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 32 }}>
+          <button onClick={() => setMobileMenuOpen(false)} style={{ position: 'absolute', top: 24, right: 24, background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer' }}>
+            {Icons.close}
+          </button>
+          <a href="#duo" onClick={() => setMobileMenuOpen(false)} style={{ fontSize: 24, fontWeight: 900, color: '#fff', textDecoration: 'none', textTransform: 'uppercase', letterSpacing: '2px' }}>Bio</a>
+          <a href="#dates" onClick={() => setMobileMenuOpen(false)} style={{ fontSize: 24, fontWeight: 900, color: '#fff', textDecoration: 'none', textTransform: 'uppercase', letterSpacing: '2px' }}>Dates</a>
+          <a href="#prestations" onClick={() => setMobileMenuOpen(false)} style={{ fontSize: 24, fontWeight: 900, color: '#fff', textDecoration: 'none', textTransform: 'uppercase', letterSpacing: '2px' }}>Références</a>
+          <a href="#gallery" onClick={() => setMobileMenuOpen(false)} style={{ fontSize: 24, fontWeight: 900, color: '#fff', textDecoration: 'none', textTransform: 'uppercase', letterSpacing: '2px' }}>Galerie</a>
+          <a href="#releases" onClick={() => setMobileMenuOpen(false)} style={{ fontSize: 24, fontWeight: 900, color: '#fff', textDecoration: 'none', textTransform: 'uppercase', letterSpacing: '2px' }}>Musique</a>
         </div>
       )}
 
-      {showBookingModal && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }} onClick={() => setShowBookingModal(false)}>
-          <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 32, width: '100%', maxWidth: 500, maxHeight: '90vh', overflowY: 'auto', backdropFilter: 'blur(20px)' }} onClick={(e) => e.stopPropagation()}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-              <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: colors.textMain }}>Contact / Booking</h2>
-              <button onClick={() => setShowBookingModal(false)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, fontSize: 20, cursor: 'pointer' }}>✕</button>
-            </div>
-            {bookingSent ? (
-              <div style={{ textAlign: 'center', padding: '40px 0' }}>
-                <div style={{ fontSize: 48, marginBottom: 16 }}>✅</div>
-                <div style={{ fontSize: 16, color: colors.textMain, fontWeight: 700, marginBottom: 8 }}>Message envoyé !</div>
-                <div style={{ fontSize: 13, color: colors.textMuted }}>{profile.username} te répondra bientôt.</div>
-              </div>
-            ) : (
-              <form onSubmit={handleSendBooking} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6 }}>Nom *</label>
-                  <input type="text" value={bookingForm.name} onChange={(e) => setBookingForm({ ...bookingForm, name: e.target.value })} required style={{ width: '100%', padding: 12, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain, outline: 'none' }} />
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6 }}>Email *</label>
-                  <input type="email" value={bookingForm.email} onChange={(e) => setBookingForm({ ...bookingForm, email: e.target.value })} required style={{ width: '100%', padding: 12, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain, outline: 'none' }} />
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6 }}>Type</label>
-                  <select value={bookingForm.type} onChange={(e) => setBookingForm({ ...bookingForm, type: e.target.value })} style={{ width: '100%', padding: 12, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain, outline: 'none' }}>
-                    <option value="booking">Booking</option>
-                    <option value="remix">Remix / Collab</option>
-                    <option value="presse">Presse</option>
-                    <option value="autre">Autre</option>
-                  </select>
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6 }}>Message *</label>
-                  <textarea value={bookingForm.message} onChange={(e) => setBookingForm({ ...bookingForm, message: e.target.value })} required rows={4} style={{ width: '100%', padding: 12, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain, outline: 'none', resize: 'vertical' }} />
-                </div>
-                <button type="submit" disabled={sendingBooking} style={{ padding: 14, background: themeColor, color: '#000', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 800, cursor: sendingBooking ? 'wait' : 'pointer', textTransform: 'uppercase' }}>
-                  {sendingBooking ? 'Envoi...' : 'Envoyer'}
-                </button>
-              </form>
-            )}
-          </div>
-        </div>
-      )}
-
-      {showUploadModal && isOwner && createPortal(
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 32, width: '100%', maxWidth: 500, maxHeight: '90vh', overflowY: 'auto', backdropFilter: 'blur(20px)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-              <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: colors.textMain }}>Uploader un son</h2>
-              <button onClick={() => setShowUploadModal(false)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, fontSize: 20, cursor: 'pointer' }}>✕</button>
-            </div>
-
-            <form onSubmit={handleUploadSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <div>
-                <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6 }}>Fichier Audio *</label>
-                <input type="file" accept="audio/*" onChange={handleAudioFileChange} required style={{ width: '100%', padding: 10, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain }} />
-                {audioFile && <p style={{ fontSize: 11, color: '#00d9ff', marginTop: 4 }}>{audioFile.name}</p>}
-              </div>
-              
-              <div>
-                <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6 }}>Image de couverture (Optionnel)</label>
-                <input type="file" accept="image/*" onChange={(e) => setCoverFile(e.target.files?.[0] || null)} style={{ width: '100%', padding: 10, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain }} />
-                {coverFile && <img src={URL.createObjectURL(coverFile)} alt="Cover" style={{ width: 50, height: 50, borderRadius: 6, objectFit: 'cover', marginTop: 10 }} />}
-              </div>
-
-              <div style={{ display: 'flex', gap: 12 }}>
-                <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6 }}>Titre *</label>
-                  <input type="text" value={uploadForm.title} onChange={e => setUploadForm({...uploadForm, title: e.target.value})} required style={{ width: '100%', padding: 10, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain }} />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6 }}>Artiste *</label>
-                  <input type="text" value={uploadForm.artist} onChange={e => setUploadForm({...uploadForm, artist: e.target.value})} required style={{ width: '100%', padding: 10, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain }} />
-                </div>
-              </div>
-              
-              <div style={{ display: 'flex', gap: 12 }}>
-                <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6 }}>Genre</label>
-                  <input type="text" value={uploadForm.genre} onChange={e => setUploadForm({...uploadForm, genre: e.target.value})} placeholder="Ex: Techno" style={{ width: '100%', padding: 10, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain }} />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6 }}>BPM</label>
-                  <input type="number" value={uploadForm.bpm} onChange={e => setUploadForm({...uploadForm, bpm: e.target.value})} placeholder="128" style={{ width: '100%', padding: 10, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain }} />
-                </div>
-              </div>
-
-              <div style={{ padding: 16, background: colors.inputBg, borderRadius: 8, border: `1px solid ${colors.border}` }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', marginBottom: 16 }}>
-                  <input type="checkbox" checked={uploadForm.is_downloadable} onChange={e => setUploadForm({...uploadForm, is_downloadable: e.target.checked})} style={{ width: 18, height: 18, accentColor: themeColor }} />
-                  <span style={{ fontSize: 14, fontWeight: 600, color: colors.textMain }}>Autoriser le téléchargement gratuit</span>
-                </label>
-
-                <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6 }}>Lien d'achat (Optionnel)</label>
-                <input type="url" value={uploadForm.purchase_url} onChange={e => setUploadForm({...uploadForm, purchase_url: e.target.value})} placeholder="https://beatport.com/..." style={{ width: '100%', padding: 10, background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain }} />
-              </div>
-
-              <button type="submit" disabled={uploading} style={{ marginTop: 12, padding: 16, background: themeColor, color: '#000', border: 'none', borderRadius: 8, fontWeight: 800, fontSize: 14, cursor: uploading ? 'wait' : 'pointer' }}>
-                {uploading ? 'Upload...' : 'Publier le son'}
-              </button>
-            </form>
-          </div>
-        </div>, document.body
-      )}
-
+      {/* NAVIGATION */}
       <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, height: isMobile ? 60 : 72, background: colors.navBg, backdropFilter: 'blur(24px)', zIndex: 1000, borderBottom: `1px solid ${colors.cardBorder}`, transition: 'background 0.3s ease', display: 'flex', flexDirection: 'column' }}>
         <div style={{ maxWidth: 1400, margin: '0 auto', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: isMobile ? '0 12px' : '0 24px', gap: isMobile ? 8 : 32 }}>
           
@@ -742,52 +367,46 @@ export const PremiumPage: React.FC = () => {
           )}
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+            {isMobile && (
+              <button onClick={() => setMobileMenuOpen(true)} style={{ background: 'transparent', border: 'none', color: colors.textMain, cursor: 'pointer' }}>
+                {Icons.menu}
+              </button>
+            )}
             <button onClick={toggleTheme} style={{ width: 36, height: 36, borderRadius: '50%', background: isDark ? '#ffffff' : '#1a1a1a', color: isDark ? '#000000' : '#ffffff', border: `1px solid ${isDark ? '#e5e7eb' : '#333333'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
               {isDark ? Icons.sun : Icons.moon}
             </button>
-            <button onClick={() => setShowBookingModal(true)} style={{ padding: isMobile ? '6px 12px' : '8px 20px', fontSize: 12, background: 'transparent', border: `1px solid ${themeColor}`, color: themeColor, borderRadius: 6, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <button onClick={() => setShowBookingModal(true)} style={{ 
+              padding: isMobile ? '6px 12px' : '8px 20px', fontSize: 12, 
+              background: `linear-gradient(135deg, ${themeColor}, #a855f7)`, color: '#fff', 
+              border: 'none', borderRadius: 6, fontWeight: 800, cursor: 'pointer', 
+              display: 'flex', alignItems: 'center', gap: 8, boxShadow: `0 4px 15px ${themeColor}40`
+            }}>
               {isMobile ? 'BOOKING' : 'Booking'}
             </button>
           </div>
         </div>
       </nav>
 
-      <section style={{ position: 'relative', minHeight: isMobile ? '80vh' : '95vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', background: colors.bg, paddingTop: isMobile ? 100 : 72 }}>
+      {/* HERO */}
+      <section style={{ position: 'relative', minHeight: isMobile ? '90vh' : '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', background: colors.bg, paddingTop: isMobile ? 80 : 100 }}>
         
         <div style={{ position: 'absolute', inset: 0, opacity: 0.1, backgroundImage: `linear-gradient(${themeColor} 1px, transparent 1px), linear-gradient(90deg, ${themeColor} 1px, transparent 1px)`, backgroundSize: '60px 60px', maskImage: 'radial-gradient(circle at center, black 30%, transparent 80%)', WebkitMaskImage: 'radial-gradient(circle at center, black 30%, transparent 80%)', zIndex: 0 }} />
 
-        {/* ✅ CORRECTION : FONDU DE LA VIDÉO */}
         <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
-          <video autoPlay muted loop playsInline poster={profile.avatar_url || "/logo.jpg"} style={{ 
-            width: '100%', height: '100%', objectFit: 'cover', 
-            opacity: isDark ? 0.6 : 0.3, 
-            filter: isDark ? 'grayscale(50%) contrast(1.2) brightness(0.8)' : 'grayscale(50%) contrast(1.2) brightness(1)',
-            maskImage: 'linear-gradient(to bottom, black 50%, transparent 100%)',
-            WebkitMaskImage: 'linear-gradient(to bottom, black 50%, transparent 100%)'
-          }}>
+          <video autoPlay muted loop playsInline poster={profile.avatar_url || "/logo.jpg"} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: isDark ? 0.6 : 0.3, filter: isDark ? 'grayscale(50%) contrast(1.2) brightness(0.8)' : 'grayscale(50%) contrast(1.2) brightness(1)' }}>
             <source src={profile.background_video_url || "/background.mp4"} type="video/mp4" />
           </video>
-          
-          <div style={{ 
-            position: 'absolute', inset: 0, 
-            background: themeColor, mixBlendMode: 'overlay', opacity: 0.5,
-            maskImage: 'linear-gradient(to bottom, black 50%, transparent 100%)',
-            WebkitMaskImage: 'linear-gradient(to bottom, black 50%, transparent 100%)'
-          }} />
-          
-          <div style={{ 
-            position: 'absolute', inset: 0, 
-            background: `linear-gradient(to bottom, ${isDark ? 'rgba(5,5,5,0) 0%, rgba(5,5,5,0.8) 60%, #050505 100%' : 'rgba(245,245,247,0) 0%, rgba(245,245,247,0.8) 60%, #f5f5f7 100%'})` 
-          }} />
+          <div style={{ position: 'absolute', inset: 0, background: themeColor, mixBlendMode: 'overlay', opacity: 0.5 }} />
+          <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(to bottom, ${isDark ? 'rgba(5,5,5,0.9) 0%, rgba(5,5,5,0) 20%, rgba(5,5,5,0) 70%, #050505 100%' : 'rgba(245,245,247,0.9) 0%, rgba(245,245,247,0) 20%, rgba(245,245,247,0) 70%, #f5f5f7 100%'})` }} />
         </div>
         
-        <div style={{ position: 'relative', zIndex: 10, textAlign: 'center', maxWidth: 1000, padding: '0 24px', marginTop: isMobile ? '5vh' : '15vh' }}>
+        <div style={{ position: 'relative', zIndex: 10, textAlign: 'center', maxWidth: 1000, padding: '0 24px', marginTop: isMobile ? '5vh' : '10vh' }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: isDark ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.6)', backdropFilter: 'blur(12px)', padding: '6px 16px', borderRadius: 50, border: `1px solid ${themeColor}40`, marginBottom: 32, boxShadow: `0 4px 20px ${themeColor}20` }}>
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: themeColor, boxShadow: `0 0 10px ${themeColor}` }} />
             <span style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: colors.textMain }}>{heroTagline}</span>
           </div>
           
-          <h1 className="hero-title" style={{ fontSize: isMobile ? '2.5rem' : 'clamp(4rem, 10vw, 8rem)', fontWeight: 900, lineHeight: 0.9, letterSpacing: '-0.05em', marginBottom: 16, textShadow: isDark ? '0 20px 60px rgba(0,0,0,0.9)' : 'none', color: colors.textMain }}>
+          <h1 className="hero-title" style={{ fontSize: isMobile ? '3rem' : 'clamp(4rem, 10vw, 8rem)', fontWeight: 900, lineHeight: 1, letterSpacing: '-0.05em', marginBottom: 24, animation: 'glow 3s infinite alternate', color: colors.textMain }}>
             {renderTitle(heroTitle)}
           </h1>
 
@@ -819,11 +438,16 @@ export const PremiumPage: React.FC = () => {
               </button>
             )}
           </div>
+
+          <div style={{ position: 'absolute', bottom: isMobile ? -80 : -150, left: '50%', animation: 'bounce 2s infinite', cursor: 'pointer' }} onClick={() => window.scrollTo({ top: window.innerHeight, behavior: 'smooth' })}>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={themeColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 13l5 5 5-5M7 6l5 5 5-5"/></svg>
+          </div>
         </div>
       </section>
 
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '40px 16px' : '100px 24px', position: 'relative', zIndex: 10 }}>
         
+        {/* SECTION BIO */}
         {showDuo && (
           <section id="duo" style={{ marginBottom: isMobile ? 40 : 120 }}>
             <div className="section-subtitle">{settings.duo_title || 'Bio'}</div>
@@ -858,6 +482,7 @@ export const PremiumPage: React.FC = () => {
           </section>
         )}
 
+        {/* SECTION DATES */}
         {events.length > 0 && (
           <section id="dates" style={{ marginBottom: isMobile ? 40 : 120, paddingTop: isMobile ? 40 : 80, borderTop: `1px solid ${colors.border}` }}>
             <div className="section-subtitle">Agenda</div>
@@ -889,6 +514,52 @@ export const PremiumPage: React.FC = () => {
           </section>
         )}
 
+        {/* SECTION SHORTS VIDÉOS */}
+        {shorts.length > 0 && (
+          <section id="shorts" style={{ marginBottom: isMobile ? 40 : 120, paddingTop: isMobile ? 40 : 80, borderTop: `1px solid ${colors.border}` }}>
+            <div className="section-subtitle">Shorts Vidéos</div>
+            <h2 className="section-title">Découvre en vidéo</h2>
+            <div style={{ display: 'flex', gap: 16, overflowX: 'auto', paddingBottom: 20, scrollbarWidth: 'none' }}>
+              {shorts.map(short => {
+                const videoInfo = getVideoUrlInfo(short.video_url);
+                return (
+                  <div 
+                    key={short.id} 
+                    onClick={() => setActiveShort(short)}
+                    style={{ 
+                      width: isMobile ? 140 : 180, 
+                      height: isMobile ? 248 : 320, 
+                      borderRadius: 16, 
+                      overflow: 'hidden', 
+                      position: 'relative', 
+                      flexShrink: 0, 
+                      cursor: 'pointer',
+                      border: `2px solid ${colors.cardBorder}`,
+                      transition: 'transform 0.3s, borderColor 0.3s',
+                      background: '#000'
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.05)'; e.currentTarget.style.borderColor = themeColor; }}
+                    onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.borderColor = colors.cardBorder; }}
+                  >
+                    {videoInfo.type === 'video' ? (
+                      <video src={videoInfo.src} style={{ width: '100%', height: '100%', objectFit: 'cover' }} muted />
+                    ) : (
+                      <iframe src={videoInfo.src} style={{ width: '100%', height: '100%', border: 'none', pointerEvents: 'none' }} />
+                    )}
+                    
+                    <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255,255,255,0.5)' }}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff" style={{ marginLeft: 3 }}><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
+        {/* SECTION PRESTATIONS */}
         {showPrestations && (
           <section id="prestations" style={{ marginBottom: isMobile ? 40 : 120, paddingTop: isMobile ? 40 : 80, borderTop: `1px solid ${colors.border}` }}>
             <div className="section-subtitle">{settings.prestations_title || 'Parcours'}</div>
@@ -927,6 +598,7 @@ export const PremiumPage: React.FC = () => {
           </section>
         )}
 
+        {/* SECTION GALERIE */}
         {gallery && gallery.length > 0 && (
           <section id="gallery" style={{ marginBottom: isMobile ? 40 : 120, paddingTop: isMobile ? 40 : 80, borderTop: `1px solid ${colors.border}` }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: isMobile ? 20 : 40, flexDirection: isMobile ? 'column' : 'row', gap: 16 }}>
@@ -937,7 +609,7 @@ export const PremiumPage: React.FC = () => {
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: isMobile ? 12 : 24 }}>
               {gallery.map((img) => (
-                <div key={img.id} className="gallery-item premium-glow" style={{ aspectRatio: '16/9', padding: 2 }} onClick={() => setLightboxImage(img.image_url)}>
+                <div key={img.id} className="gallery-item premium-glow" style={{ aspectRatio: '16/9', padding: 2, boxShadow: `0 10px 30px rgba(0,0,0,0.1)`, transition: 'transform 0.3s, boxShadow 0.3s' }} onClick={() => setLightboxImage(img.image_url)} onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-5px)'; e.currentTarget.style.boxShadow = `0 15px 40px ${themeColor}30`; }} onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 10px 30px rgba(0,0,0,0.1)'; }}>
                   <img src={img.image_url} alt="Galerie" loading="lazy" style={{ borderRadius: 6 }} />
                 </div>
               ))}
@@ -945,6 +617,7 @@ export const PremiumPage: React.FC = () => {
           </section>
         )}
 
+        {/* SECTION MUSIQUE (Utilise ReleaseCard) */}
         {showReleases && (
           <section id="releases" style={{ paddingTop: isMobile ? 40 : 80, borderTop: `1px solid ${colors.border}` }}>
             <div className="section-subtitle">Écouter</div>
@@ -961,131 +634,25 @@ export const PremiumPage: React.FC = () => {
             </div>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 16 : 24 }}>
-              {tracks.length > 0 ? tracks.slice(0, visibleTracksCount).map((track) => {
-                const isPlayable = track.audio_url && track.audio_url.length > 0;
-                const isThisPlaying = currentTrack?.id === track.id && isPlaying;
-                const isCurrentTrack = currentTrack?.id === track.id;
-                const iframeSrc = getIframeSrc(track.embed_code);
-                const isExternalEmbed = !!iframeSrc && (iframeSrc.includes('beatport.com') || iframeSrc.includes('traxsource.com') || iframeSrc.includes('audio.com') || iframeSrc.includes('spotify.com'));
-
-                const hasCustomBg = !!track.player_bg_image_url || !!track.player_bg_color;
-                const titleColor = hasCustomBg ? '#ffffff' : colors.textMain;
-                const mutedColor = hasCustomBg ? 'rgba(255,255,255,0.7)' : colors.textMuted;
-                const btnBorderColor = hasCustomBg ? 'rgba(255,255,255,0.3)' : colors.border;
-                const btnTextColor = hasCustomBg ? '#ffffff' : colors.textMain;
-
-                const bgStyle = track.player_bg_image_url
-                  ? { backgroundImage: `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('${track.player_bg_image_url}')`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundColor: 'transparent' }
-                  : { background: track.player_bg_color || colors.cardBg };
-
-                if (isExternalEmbed) {
-                  const isAudioCom = iframeSrc?.includes('audio.com');
-                  return (
-                    <div key={track.id} className="premium-glow" style={{ background: 'transparent', padding: 2, borderRadius: 18, transition: 'transform 0.3s' }} onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseLeave={e => e.currentTarget.style.transform = 'none'}>
-                      <div style={{ ...bgStyle, border: `1px solid ${colors.cardBorder}`, borderRadius: 16, overflow: 'hidden', padding: 24, backdropFilter: 'blur(20px)' }}>
-                        <div style={{ display: 'flex', gap: 20, alignItems: 'center', marginBottom: 16 }}>
-                          <div style={{ width: 60, height: 60, borderRadius: 8, overflow: 'hidden', flexShrink: 0, background: colors.inputBg }}>
-                            {track.cover_url ? <img src={track.cover_url} alt={track.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : null}
-                          </div>
-                          <div style={{ flex: 1 }}>
-                            <h3 style={{ fontSize: 18, fontWeight: 800, color: titleColor, margin: 0 }}>{track.title}</h3>
-                            <div style={{ fontSize: 13, color: mutedColor, marginTop: 2 }}>{track.artist} • {track.genre}</div>
-                          </div>
-                        </div>
-                        <div style={{ borderRadius: 12, overflow: 'hidden', background: 'transparent', width: '100%' }}>
-                          <iframe src={iframeSrc!} width="100%" height={isAudioCom ? "180" : "162"} frameBorder="0" scrolling="no" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" sandbox="allow-scripts allow-same-origin allow-presentation" style={{ display: 'block', borderRadius: 8 }} />
-                        </div>
-                      </div>
-                    </div>
-                  );
-                }
-
-                return (
-                  <div key={track.id} className="premium-glow" style={{ background: 'transparent', padding: 2, borderRadius: 18, transition: 'transform 0.3s' }} onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-4px)'} onMouseLeave={e => e.currentTarget.style.transform = 'none'}>
-                    <div style={{ ...bgStyle, border: `1px solid ${colors.cardBorder}`, borderRadius: 16, overflow: 'hidden', padding: 24, backdropFilter: 'blur(20px)', boxShadow: hasCustomBg ? 'none' : '0 10px 30px rgba(0,0,0,0.1)' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 16 }}>
-                        <div style={{ width: 60, height: 60, borderRadius: 8, overflow: 'hidden', flexShrink: 0, background: colors.inputBg, position: 'relative' }}>
-                          {track.cover_url ? <img src={track.cover_url} alt={track.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : null}
-                        </div>
-                        <div style={{ flex: 1 }}>
-                          <h3 style={{ fontSize: 18, fontWeight: 800, color: titleColor, margin: 0 }}>{track.title}</h3>
-                          <div style={{ fontSize: 13, color: mutedColor, marginTop: 2 }}>{track.artist} • {track.genre}</div>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                          
-                          {track.purchase_url && (
-                            <a 
-                              href={track.purchase_url} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              style={{ background: 'transparent', border: `1px solid #00d9ff`, color: '#00d9ff', padding: '10px 16px', borderRadius: 8, fontSize: 12, fontWeight: 700, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 8 }}
-                            >
-                              Acheter
-                            </a>
-                          )}
-
-                          {track.is_downloadable !== false && (
-                            <button onClick={(e) => handleDownload(e, track.audio_url, `${track.artist} - ${track.title}.mp3`, track.id)} style={{ background: 'transparent', border: `1px solid ${btnBorderColor}`, color: btnTextColor, padding: '10px 16px', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
-                              Télécharger
-                            </button>
-                          )}
-
-                          <Link 
-                            to={`/track/${track.id}`}
-                            style={{ 
-                              background: 'transparent', border: `1px solid ${btnBorderColor}`, 
-                              color: btnTextColor, padding: '10px 16px', borderRadius: 8, 
-                              fontSize: 12, fontWeight: 700, cursor: 'pointer', 
-                              display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' 
-                            }}
-                          >
-                            {Icons.comment}
-                            {track.comments_count || 0}
-                          </Link>
-
-                          <button
-                            onClick={() => handlePlayTrack(track)}
-                            style={{ width: 48, height: 48, borderRadius: '50%', background: isThisPlaying ? themeColor : (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'), border: 'none', color: isThisPlaying ? '#000' : btnTextColor, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s', boxShadow: isThisPlaying ? `0 0 20px ${themeColor}60` : 'none' }}
-                          >
-                            {isThisPlaying ? (
-                              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
-                            ) : (
-                              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: 3 }}><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-                            )}
-                          </button>
-                        </div>
-                      </div>
-                      
-                      {isPlayable && (
-                        <div style={{ padding: '0 8px', marginTop: 12 }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                            <span style={{ fontSize: 11, color: themeColor, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>Dropzone</span>
-                            <span style={{ fontSize: 11, color: mutedColor, fontFamily: 'monospace', fontWeight: 600 }}>
-                              {isCurrentTrack ? `${formatTime(currentTime)} / ${formatTime(duration)}` : `0:00 / ${formatTime(track.duration)}`}
-                            </span>
-                          </div>
-                          <CanvasWaveform
-                            peaks={track.peaks || []}
-                            isPlaying={isThisPlaying}
-                            themeColor={themeColor}
-                            progress={isCurrentTrack ? (duration > 0 ? currentTime / duration : 0) : 0}
-                            isCurrent={isCurrentTrack}
-                            onSeek={(ratio) => {
-                              if (!isCurrentTrack) {
-                                handlePlayTrack(track);
-                                setTimeout(() => seek(ratio), 100);
-                              } else {
-                                seek(ratio);
-                              }
-                            }}
-                            isMobile={isMobile}
-                          />
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              }) : (
+              {tracks.length > 0 ? tracks.slice(0, visibleTracksCount).map((track) => (
+                <ReleaseCard 
+                  key={track.id}
+                  track={track}
+                  isDark={isDark}
+                  themeColor={themeColor}
+                  colors={colors}
+                  isCurrentTrack={currentTrack?.id === track.id}
+                  isThisPlaying={currentTrack?.id === track.id && isPlaying}
+                  isMobile={isMobile}
+                  handlePlayTrack={handlePlayTrack}
+                  handleDownload={handleDownload}
+                  seek={seek}
+                  currentTime={currentTime}
+                  duration={duration}
+                  formatTime={formatTime}
+                  isOwner={isOwner}
+                />
+              )) : (
                 <div style={{ textAlign: 'center', color: colors.textMuted, padding: 40, border: `1px dashed ${colors.border}`, borderRadius: 16 }}>
                   Aucun son pour le moment.
                 </div>
@@ -1109,6 +676,7 @@ export const PremiumPage: React.FC = () => {
         </div>
       )}
 
+      {/* FOOTER */}
       <footer style={{ borderTop: `1px solid ${colors.border}`, padding: '40px 24px', marginTop: 'auto', textAlign: 'center', background: colors.panelBg, backdropFilter: 'blur(20px)', position: 'relative', zIndex: 10 }}>
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10, marginBottom: 16 }}>
           <span style={{ fontSize: 20, fontWeight: 900, color: colors.textMain, letterSpacing: '-0.5px' }}>DropZone<span style={{ color: themeColor }}>.dj</span></span>
@@ -1126,11 +694,25 @@ export const PremiumPage: React.FC = () => {
         <div style={{ fontSize: 11, color: colors.textMuted }}>© {new Date().getFullYear()} DropZone.dj — Tous droits réservés</div>
       </footer>
 
-      {currentTrack && GlobalPlayer && (
-        <GlobalPlayer currentTrack={currentTrack} isPlaying={isPlaying} onTogglePlay={togglePlay} onStop={stop} />
-      )}
-
+      {currentTrack && GlobalPlayer && <GlobalPlayer currentTrack={currentTrack} isPlaying={isPlaying} onTogglePlay={togglePlay} onStop={stop} />}
       <ScrollButtons />
+
+      {/* ✅ MODALE PLEIN ÉCRAN POUR LES SHORTS */}
+      {activeShort && createPortal(
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.95)', backdropFilter: 'blur(10px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => setActiveShort(null)}>
+          <button onClick={() => setActiveShort(null)} style={{ position: 'absolute', top: 24, right: 24, background: 'transparent', border: 'none', color: '#fff', fontSize: 32, cursor: 'pointer', zIndex: 10 }}>✕</button>
+          <div style={{ width: '100%', maxWidth: 400, height: '100%', maxHeight: 700, background: '#000', borderRadius: 16, overflow: 'hidden', position: 'relative' }} onClick={e => e.stopPropagation()}>
+            {(() => {
+              const info = getVideoUrlInfo(activeShort.video_url);
+              if (info.type === 'video') {
+                return <video src={info.src} autoPlay controls playsInline style={{ width: '100%', height: '100%', objectFit: 'contain' }} />;
+              }
+              return <iframe src={info.src} allow="autoplay; encrypted-media" allowFullScreen style={{ width: '100%', height: '100%', border: 'none' }} />;
+            })()}
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 };

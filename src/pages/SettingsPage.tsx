@@ -9,6 +9,23 @@ import { useTheme } from '../contexts/ThemeContext';
 import { PayPalButton } from '../components/PayPalButton';
 import { PremiumStats } from '../components/PremiumStats';
 
+// ✅ FONCTION POUR GÉRER LES LIENS YOUTUBE / TIKTOK
+const getEmbedUrl = (url: string) => {
+  if (!url) return '';
+  if (url.includes('youtube.com') || url.includes('youtu.be')) {
+    let videoId = '';
+    if (url.includes('youtu.be/')) videoId = url.split('youtu.be/')[1].split('?')[0];
+    else if (url.includes('shorts/')) videoId = url.split('shorts/')[1].split('?')[0];
+    else if (url.includes('watch?v=')) videoId = url.split('watch?v=')[1].split('&')[0];
+    return `https://www.youtube.com/embed/${videoId}`;
+  }
+  if (url.includes('tiktok.com')) {
+    const match = url.match(/\/video\/(\d+)/);
+    if (match) return `https://www.tiktok.com/embed/v2/${match[1]}`;
+  }
+  return url;
+};
+
 export const SettingsPage: React.FC = () => {
   const { user } = useAuth();
   const { theme } = useTheme();
@@ -20,13 +37,15 @@ export const SettingsPage: React.FC = () => {
   
   const [isPremium, setIsPremium] = useState(false);
   const [myTracks, setMyTracks] = useState<any[]>([]);
+  const [myShorts, setMyShorts] = useState<any[]>([]);
   const [editingTrackId, setEditingTrackId] = useState<string | null>(null);
   
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [uploading, setUploading] = useState(false);
   
-  // ✅ ÉTAT POUR LE GUIDE
   const [showGuideModal, setShowGuideModal] = useState(false);
+  const [showShortLinkInput, setShowShortLinkInput] = useState(false);
+  const [shortLinkInput, setShortLinkInput] = useState('');
 
   const [uploadForm, setUploadForm] = useState({ 
     title: '', artist: '', genre: '', bpm: '', song_key: '',
@@ -37,6 +56,7 @@ export const SettingsPage: React.FC = () => {
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [uploadingPlayerBg, setUploadingPlayerBg] = useState(false);
+  const [uploadingShort, setUploadingShort] = useState(false);
 
   const [editTrackForm, setEditTrackForm] = useState({ 
     title: '', genre: '', bpm: 0, purchase_url: '', embed_code: '',
@@ -58,6 +78,7 @@ export const SettingsPage: React.FC = () => {
   const [form, setForm] = useState({
     username: '', bio: '', hero_tagline: 'Nouveaux remixes disponibles', hero_title: '', hero_description: '',
     theme_color: '#00d9ff', avatar_url: '', background_video_url: '',
+    font_family: 'Inter',
     instagram_url: '', spotify_url: '', soundcloud_url: '', tiktok_url: '', youtube_url: '',
     beatport_url: '', x_url: '', facebook_url: '',
     booking_email: '',
@@ -107,6 +128,7 @@ export const SettingsPage: React.FC = () => {
           hero_title: data.hero_title || '', hero_description: data.hero_description || '',
           theme_color: data.theme_color || '#00d9ff', avatar_url: data.avatar_url || '',
           background_video_url: data.background_video_url || '',
+          font_family: data.settings?.font_family || 'Inter',
           instagram_url: data.instagram_url || '', spotify_url: data.spotify_url || '',
           soundcloud_url: data.soundcloud_url || '', tiktok_url: data.tiktok_url || '',
           youtube_url: data.youtube_url || '', beatport_url: data.beatport_url || '',
@@ -140,8 +162,14 @@ export const SettingsPage: React.FC = () => {
     if (data) setMyTracks(data);
   };
 
+  const fetchMyShorts = async () => {
+    if (!user) return;
+    const { data } = await supabase.from('artist_shorts').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
+    if (data) setMyShorts(data);
+  };
+
   useEffect(() => { 
-    if (user) { fetchGallery(); fetchMyTracks(); }
+    if (user) { fetchGallery(); fetchMyTracks(); fetchMyShorts(); }
   }, [user]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -181,6 +209,58 @@ export const SettingsPage: React.FC = () => {
     }
   };
 
+  const handleShortUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    if (!file.type.includes('video')) {
+      alert("Veuillez sélectionner une vidéo (MP4, WebM).");
+      return;
+    }
+    setUploadingShort(true);
+    try {
+      const fileName = `${user.id}/short-${Date.now()}.${file.name.split('.').pop()}`;
+      const { error: uploadError } = await supabase.storage.from('media').upload(fileName, file);
+      if (uploadError) throw uploadError;
+      const { data } = await supabase.storage.from('media').getPublicUrl(fileName);
+      
+      const { error: dbError } = await supabase.from('artist_shorts').insert({
+        user_id: user.id,
+        video_url: data.publicUrl,
+        title: "Nouveau Short"
+      });
+
+      if (dbError) throw dbError;
+      fetchMyShorts();
+    } catch (error: any) {
+      alert("Erreur d'upload : " + error.message);
+    } finally {
+      setUploadingShort(false);
+    }
+  };
+
+  const handleAddShortByLink = async () => {
+    if (!user || !shortLinkInput.trim()) return;
+    try {
+      const { error } = await supabase.from('artist_shorts').insert({
+        user_id: user.id,
+        video_url: shortLinkInput.trim(),
+        title: "Vidéo importée"
+      });
+      if (error) throw error;
+      fetchMyShorts();
+      setShortLinkInput('');
+      setShowShortLinkInput(false);
+    } catch (error: any) {
+      alert("Erreur : " + error.message);
+    }
+  };
+
+  const handleDeleteShort = async (id: string) => {
+    if (!window.confirm("Supprimer cette vidéo ?")) return;
+    await supabase.from('artist_shorts').delete().eq('id', id);
+    setMyShorts(myShorts.filter(s => s.id !== id));
+  };
+
   const handlePlayerBgUpload = async (e: React.ChangeEvent<HTMLInputElement>, target: 'edit' | 'upload') => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
@@ -189,7 +269,7 @@ export const SettingsPage: React.FC = () => {
       const fileName = `${user.id}/player-bg-${Date.now()}.${file.name.split('.').pop()}`;
       const { error: uploadError } = await supabase.storage.from('media').upload(fileName, file);
       if (uploadError) throw uploadError;
-      const { data } = await supabase.storage.from('media').getPublicUrl(fileName);
+      const { data } = supabase.storage.from('media').getPublicUrl(fileName);
       
       if (target === 'edit') {
         setEditTrackForm(prev => ({ ...prev, player_bg_image_url: data.publicUrl }));
@@ -316,7 +396,6 @@ export const SettingsPage: React.FC = () => {
         if (pic.format.includes('png')) ext = 'png';
         else if (pic.format.includes('webp')) ext = 'webp';
 
-        // ✅ CORRECTION TYPESCRIPT : ajout de "as any" sur dataArray
         const blob = new Blob([dataArray as any], { type: pic.format });
         
         const coverFileFromTag = new File([blob], `cover-${Date.now()}.${ext}`, { type: pic.format });
@@ -353,17 +432,11 @@ export const SettingsPage: React.FC = () => {
       }
 
       const { data, error: dbError } = await supabase.from('tracks').insert({
-        user_id: user.id,
-        title: uploadForm.title,
-        artist: uploadForm.artist,
-        genre: uploadForm.genre || 'Inconnu',
-        bpm: Number(uploadForm.bpm) || 0,
-        song_key: uploadForm.song_key || null,
-        audio_url: audioUrlData.publicUrl,
-        cover_url: coverUrl,
-        purchase_url: uploadForm.purchase_url || null,
-        embed_code: uploadForm.embed_code || null,
-        player_bg_color: uploadForm.player_bg_color,
+        user_id: user.id, title: uploadForm.title, artist: uploadForm.artist,
+        genre: uploadForm.genre || 'Inconnu', bpm: Number(uploadForm.bpm) || 0,
+        song_key: uploadForm.song_key || null, audio_url: audioUrlData.publicUrl,
+        cover_url: coverUrl, purchase_url: uploadForm.purchase_url || null,
+        embed_code: uploadForm.embed_code || null, player_bg_color: uploadForm.player_bg_color,
         player_bg_image_url: uploadForm.player_bg_image_url || null,
         is_downloadable: uploadForm.is_downloadable,
         peaks: [], duration: 0, likes_count: 0, downloads: 0
@@ -373,13 +446,8 @@ export const SettingsPage: React.FC = () => {
       if (data) setMyTracks([data, ...myTracks]);
       
       setShowUploadModal(false);
-      setUploadForm({ 
-        title: '', artist: '', genre: '', bpm: '', song_key: '',
-        purchase_url: '', embed_code: '', player_bg_color: '#000000', player_bg_image_url: '',
-        is_downloadable: true
-      });
-      setAudioFile(null);
-      setCoverFile(null);
+      setUploadForm({ title: '', artist: '', genre: '', bpm: '', song_key: '', purchase_url: '', embed_code: '', player_bg_color: '#000000', player_bg_image_url: '', is_downloadable: true });
+      setAudioFile(null); setCoverFile(null);
       alert("Son uploadé avec succès ! 🎵");
     } catch (err: any) {
       alert("Erreur lors de l'upload : " + err.message);
@@ -405,7 +473,7 @@ export const SettingsPage: React.FC = () => {
       x_url: form.x_url, facebook_url: form.facebook_url,
       booking_email: form.booking_email,
       parcours_images: form.parcours_images,
-      settings: settings
+      settings: { ...settings, font_family: form.font_family }
     }).eq('id', user.id);
     
     if (error) setMessage("Erreur : " + error.message);
@@ -546,17 +614,11 @@ export const SettingsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* ✅ BARRE DE NAVIGATION COLLANTE (STICKY) */}
-      <div style={{ 
-        position: 'sticky', top: 0, zIndex: 100, 
-        background: colors.bg, padding: '12px 0', 
-        display: 'flex', gap: 10, overflowX: 'auto', 
-        borderBottom: `1px solid ${colors.border}`, marginBottom: 24,
-        scrollbarWidth: 'none' 
-      }}>
+      <div style={{ position: 'sticky', top: 0, zIndex: 100, background: colors.bg, padding: '12px 0', display: 'flex', gap: 10, overflowX: 'auto', borderBottom: `1px solid ${colors.border}`, marginBottom: 24, scrollbarWidth: 'none' }}>
         <a href="#dashboard" style={{ padding: '8px 16px', background: colors.inputBg, borderRadius: 20, textDecoration: 'none', color: colors.textMain, fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap' }}>📊 Dashboard</a>
         <a href="#modules" style={{ padding: '8px 16px', background: colors.inputBg, borderRadius: 20, textDecoration: 'none', color: colors.textMain, fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap' }}>🎛️ Modules</a>
         <a href="#musique" style={{ padding: '8px 16px', background: colors.inputBg, borderRadius: 20, textDecoration: 'none', color: colors.textMain, fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap' }}>🎵 Musique</a>
+        <a href="#shorts" style={{ padding: '8px 16px', background: colors.inputBg, borderRadius: 20, textDecoration: 'none', color: colors.textMain, fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap' }}>🎬 Shorts</a>
         <a href="#galerie" style={{ padding: '8px 16px', background: colors.inputBg, borderRadius: 20, textDecoration: 'none', color: colors.textMain, fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap' }}>📸 Galerie</a>
         <a href="#parametres" style={{ padding: '8px 16px', background: colors.inputBg, borderRadius: 20, textDecoration: 'none', color: colors.textMain, fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap' }}>⚙️ Paramètres</a>
       </div>
@@ -564,11 +626,61 @@ export const SettingsPage: React.FC = () => {
       {message && <div style={{ padding: 16, background: 'rgba(0,217,255,0.1)', border: '1px solid #00d9ff', borderRadius: 8, marginBottom: 24, color: '#00d9ff' }}>{message}</div>}
 
       <div id="dashboard" style={{ marginBottom: 32, scrollMarginTop: 80 }}>
-        <PremiumStats
-          profile={{ id: user?.id, theme_color: form.theme_color }}
-          tracks={myTracks}
-          embedded
-        />
+        <PremiumStats profile={{ id: user?.id, theme_color: form.theme_color }} tracks={myTracks} embedded />
+      </div>
+
+      <div id="shorts" style={{ background: colors.panelBg, padding: 24, borderRadius: 12, border: `1px solid ${colors.border}`, marginBottom: 24, scrollMarginTop: 80 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 10 }}>
+          <h2 style={{ fontSize: 18, color: colors.textMain, margin: 0 }}>🎬 Mes Shorts Vidéos ({myShorts.length})</h2>
+          
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button onClick={() => setShowShortLinkInput(!showShortLinkInput)} style={{ background: 'transparent', color: '#00d9ff', border: '1px solid #00d9ff', padding: '8px 16px', borderRadius: 6, fontWeight: 800, cursor: 'pointer' }}>
+              {showShortLinkInput ? 'Annuler' : '+ Importer via un lien'}
+            </button>
+            <label style={{ background: colors.primaryBg, color: colors.primaryText, padding: '8px 16px', borderRadius: 6, fontWeight: 800, cursor: uploadingShort ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+              {uploadingShort ? 'Upload...' : '+ Uploader un MP4'}
+              <input type="file" accept="video/mp4,video/webm" onChange={handleShortUpload} disabled={uploadingShort} style={{ display: 'none' }} />
+            </label>
+          </div>
+        </div>
+
+        {showShortLinkInput && (
+          <div style={{ background: colors.inputBg, padding: 16, borderRadius: 8, border: `1px solid ${colors.borderLight}`, marginBottom: 20, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            <input 
+              type="url" 
+              placeholder="Colle le lien (YouTube Shorts, TikTok, .mp4...)" 
+              value={shortLinkInput} 
+              onChange={e => setShortLinkInput(e.target.value)} 
+              style={{ flex: 1, minWidth: 200, padding: 10, background: colors.panelBg, border: `1px solid ${colors.border}`, color: colors.textMain, borderRadius: 6 }} 
+            />
+            <button onClick={handleAddShortByLink} style={{ padding: '10px 20px', background: '#00d9ff', color: '#000', border: 'none', borderRadius: 6, fontWeight: 'bold', cursor: 'pointer' }}>
+              Ajouter
+            </button>
+          </div>
+        )}
+
+        {myShorts.length === 0 ? (
+          <p style={{ color: colors.textMuted, fontSize: 14 }}>Aucune vidéo pour le moment. Uploadez un MP4 ou collez un lien YouTube/TikTok.</p>
+        ) : (
+          <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 10 }}>
+            {myShorts.map(short => (
+              <div key={short.id} style={{ position: 'relative', width: 120, height: 213, borderRadius: 8, overflow: 'hidden', border: `1px solid ${colors.borderLight}`, flexShrink: 0, background: '#000' }}>
+                {short.video_url.match(/\.(mp4|webm)$/i) ? (
+                  <video src={short.video_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  // ✅ CORRECTION ICI : On affiche le vrai iframe au lieu du texte
+                  <iframe 
+                    src={getEmbedUrl(short.video_url)} 
+                    style={{ width: '100%', height: '100%', border: 'none' }} 
+                    allow="encrypted-media;" 
+                    allowFullScreen
+                  />
+                )}
+                <button onClick={() => handleDeleteShort(short.id)} style={{ position: 'absolute', top: 4, right: 4, background: 'rgba(255,0,0,0.8)', color: '#fff', border: 'none', borderRadius: '50%', width: 24, height: 24, cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10 }}>X</button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div id="modules" style={{ background: colors.panelBg, padding: 24, borderRadius: 12, border: `1px solid ${colors.border}`, marginBottom: 24, scrollMarginTop: 80 }}>
@@ -625,12 +737,7 @@ export const SettingsPage: React.FC = () => {
                 { key: 'show_sidebar_dates', label: 'Sidebar : Prochaines Dates' },
               ].map((item) => (
                 <label key={item.key} style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', fontSize: 14, background: colors.inputBg, padding: 12, borderRadius: 8, border: `1px solid ${colors.border}` }}>
-                  <input 
-                    type="checkbox" 
-                    checked={(settings as any)[item.key]} 
-                    onChange={(e) => setSettings({ ...settings, [item.key]: e.target.checked })} 
-                    style={{ width: 18, height: 18, accentColor: '#00d9ff', cursor: 'pointer' }} 
-                  />
+                  <input type="checkbox" checked={(settings as any)[item.key]} onChange={(e) => setSettings({ ...settings, [item.key]: e.target.checked })} style={{ width: 18, height: 18, accentColor: '#00d9ff', cursor: 'pointer' }} />
                   {item.label}
                 </label>
               ))}
@@ -644,29 +751,11 @@ export const SettingsPage: React.FC = () => {
                 <div key={index} style={{ display: 'flex', gap: 12, flexWrap: 'wrap', background: colors.inputBg, padding: 16, borderRadius: 8, border: `1px solid ${colors.border}` }}>
                   <div style={{ flex: 1, minWidth: 200 }}>
                     <label style={{ display: 'block', fontSize: 11, color: colors.textMuted, marginBottom: 4 }}>Titre de la carte {index + 1}</label>
-                    <input 
-                      type="text" 
-                      value={presta.title} 
-                      onChange={(e) => {
-                        const newPrestations = [...settings.prestations];
-                        newPrestations[index].title = e.target.value;
-                        setSettings({...settings, prestations: newPrestations});
-                      }} 
-                      style={{ width: '100%', padding: 8, background: colors.panelBg, border: `1px solid ${colors.borderLight}`, borderRadius: 6, color: colors.textMain }} 
-                    />
+                    <input type="text" value={presta.title} onChange={(e) => { const newPrestations = [...settings.prestations]; newPrestations[index].title = e.target.value; setSettings({...settings, prestations: newPrestations}); }} style={{ width: '100%', padding: 8, background: colors.panelBg, border: `1px solid ${colors.borderLight}`, borderRadius: 6, color: colors.textMain }} />
                   </div>
                   <div style={{ flex: 2, minWidth: 200 }}>
                     <label style={{ display: 'block', fontSize: 11, color: colors.textMuted, marginBottom: 4 }}>Description</label>
-                    <input 
-                      type="text" 
-                      value={presta.desc} 
-                      onChange={(e) => {
-                        const newPrestations = [...settings.prestations];
-                        newPrestations[index].desc = e.target.value;
-                        setSettings({...settings, prestations: newPrestations});
-                      }} 
-                      style={{ width: '100%', padding: 8, background: colors.panelBg, border: `1px solid ${colors.borderLight}`, borderRadius: 6, color: colors.textMain }} 
-                    />
+                    <input type="text" value={presta.desc} onChange={(e) => { const newPrestations = [...settings.prestations]; newPrestations[index].desc = e.target.value; setSettings({...settings, prestations: newPrestations}); }} style={{ width: '100%', padding: 8, background: colors.panelBg, border: `1px solid ${colors.borderLight}`, borderRadius: 6, color: colors.textMain }} />
                   </div>
                 </div>
               ))}
@@ -734,7 +823,6 @@ export const SettingsPage: React.FC = () => {
                           <label style={{ fontSize: 12, color: colors.textMuted }}>Couleur :</label>
                           <input type="color" value={editTrackForm.player_bg_color} onChange={e => setEditTrackForm({...editTrackForm, player_bg_color: e.target.value})} style={{ width: 30, height: 30, padding: 0, background: 'transparent', border: 'none', cursor: 'pointer' }} />
                         </div>
-                        
                         <div style={{ flex: 1, display: 'flex', gap: 8, minWidth: 200, alignItems: 'center' }}>
                           <input type="url" placeholder="URL d'une image de fond (https://...)" value={editTrackForm.player_bg_image_url} onChange={e => setEditTrackForm({...editTrackForm, player_bg_image_url: e.target.value})} style={{ flex: 1, padding: 8, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, color: colors.textMain, borderRadius: 4, fontSize: 12 }} />
                           <label style={{ background: uploadingPlayerBg ? colors.borderLight : '#00d9ff', color: '#000', padding: '8px 12px', borderRadius: 4, cursor: uploadingPlayerBg ? 'wait' : 'pointer', fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -743,7 +831,6 @@ export const SettingsPage: React.FC = () => {
                           </label>
                         </div>
                       </div>
-                      
                       {editTrackForm.player_bg_image_url && (
                         <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 10 }}>
                           <img src={editTrackForm.player_bg_image_url} alt="Aperçu" style={{ width: 60, height: 40, borderRadius: 4, objectFit: 'cover', border: `1px solid ${colors.border}` }} />
@@ -764,17 +851,9 @@ export const SettingsPage: React.FC = () => {
                       <div>
                         <div style={{ fontSize: 14, fontWeight: 'bold', color: colors.textMain, display: 'flex', alignItems: 'center', gap: 8 }}>
                           {track.title}
-                          {track.player_bg_image_url && (
-                            <span style={{ fontSize: 9, background: 'rgba(0,217,255,0.2)', color: '#00d9ff', padding: '2px 6px', borderRadius: 4 }}>FOND PERSO</span>
-                          )}
-                          {track.is_downloadable === false ? (
-                            <span style={{ fontSize: 9, background: 'rgba(255,51,102,0.15)', color: '#ff3366', padding: '2px 6px', borderRadius: 4 }}>SANS DL</span>
-                          ) : (
-                            <span style={{ fontSize: 9, background: 'rgba(16,185,129,0.15)', color: '#10b981', padding: '2px 6px', borderRadius: 4 }}>TÉLÉCHARGEABLE</span>
-                          )}
-                          {track.purchase_url && (
-                            <span style={{ fontSize: 9, background: 'rgba(251,191,36,0.15)', color: '#fbbf24', padding: '2px 6px', borderRadius: 4 }}>PAYANT</span>
-                          )}
+                          {track.player_bg_image_url && <span style={{ fontSize: 9, background: 'rgba(0,217,255,0.2)', color: '#00d9ff', padding: '2px 6px', borderRadius: 4 }}>FOND PERSO</span>}
+                          {track.is_downloadable === false ? <span style={{ fontSize: 9, background: 'rgba(255,51,102,0.15)', color: '#ff3366', padding: '2px 6px', borderRadius: 4 }}>SANS DL</span> : <span style={{ fontSize: 9, background: 'rgba(16,185,129,0.15)', color: '#10b981', padding: '2px 6px', borderRadius: 4 }}>TÉLÉCHARGEABLE</span>}
+                          {track.purchase_url && <span style={{ fontSize: 9, background: 'rgba(251,191,36,0.15)', color: '#fbbf24', padding: '2px 6px', borderRadius: 4 }}>PAYANT</span>}
                         </div>
                         <div style={{ fontSize: 12, color: colors.textMuted }}>{track.genre || 'Inconnu'} • {track.bpm || 0} BPM</div>
                       </div>
@@ -844,6 +923,7 @@ export const SettingsPage: React.FC = () => {
       </div>
 
       <form id="parametres" onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: 24, scrollMarginTop: 80 }}>
+        
         <div style={{ background: colors.panelBg, padding: 24, borderRadius: 12, border: `1px solid ${colors.border}` }}>
           <h2 style={{ fontSize: 18, marginBottom: 20, color: colors.textMain }}>Identité & Thème</h2>
           <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
@@ -859,6 +939,22 @@ export const SettingsPage: React.FC = () => {
               </div>
             </div>
           </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 20 }}>
+            <label style={{ fontSize: 13, color: colors.textLight }}>Typographie (Police d'écriture)</label>
+            <select value={form.font_family} onChange={(e) => setForm({ ...form, font_family: e.target.value })} style={{ padding: 12, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, color: colors.textMain, fontFamily: form.font_family }}>
+              <option value="Inter, sans-serif">Inter (Moderne)</option>
+              <option value="Montserrat, sans-serif">Montserrat (Élégant)</option>
+              <option value="Poppins, sans-serif">Poppins (Arrondi)</option>
+              <option value="Bebas Neue, sans-serif">Bebas Neue (Impact)</option>
+              <option value="Orbitron, sans-serif">Orbitron (Futuriste)</option>
+              <option value="Playfair Display, serif">Playfair Display (Luxe)</option>
+              <option value="Syne, sans-serif">Syne (Avant-garde)</option>
+              <option value="Space Grotesk, sans-serif">Space Grotesk (Techno)</option>
+            </select>
+            <p style={{ fontSize: 11, color: colors.textMuted, margin: 0 }}>Cette police sera appliquée aux titres de votre page.</p>
+          </div>
+
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 20 }}>
             <label style={{ fontSize: 13, color: colors.textLight }}>Image de profil (Avatar)</label>
             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
@@ -901,7 +997,6 @@ export const SettingsPage: React.FC = () => {
           <h2 style={{ fontSize: 18, marginBottom: 20, color: colors.textMain }}>Booking</h2>
           <label style={{ fontSize: 13, color: colors.textLight, display: 'block', marginBottom: 8 }}>Adresse email pour le booking</label>
           <input type="email" placeholder="contact@mon-label.com" value={form.booking_email} onChange={(e) => setForm({ ...form, booking_email: e.target.value })} style={{ width: '100%', padding: 12, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, color: colors.textMain }} />
-          <p style={{ color: colors.textMuted, fontSize: 12, marginTop: 8 }}>Cette adresse sera utilisée pour le bouton "Booking" de ta page.</p>
         </div>
 
         <div style={{ background: colors.panelBg, padding: 24, borderRadius: 12, border: `1px solid ${colors.border}` }}>
@@ -923,7 +1018,6 @@ export const SettingsPage: React.FC = () => {
         </button>
       </form>
 
-      {/* ✅ MODALE DU GUIDE (CREATE PORTAL) */}
       {showGuideModal && createPortal(
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }} onClick={() => setShowGuideModal(false)}>
           <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 32, width: '100%', maxWidth: 600, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }} onClick={(e) => e.stopPropagation()}>
@@ -940,7 +1034,7 @@ export const SettingsPage: React.FC = () => {
               <div style={{ padding: 16, background: colors.inputBg, borderRadius: 8, borderLeft: `4px solid ${form.theme_color}` }}>
                 <h3 style={{ margin: '0 0 8px', fontSize: 16 }}>🎨 1. Identité Visuelle</h3>
                 <p style={{ margin: 0, fontSize: 14, color: colors.textMuted, lineHeight: 1.5 }}>
-                  Personnalise ton univers ! Change ta <strong>couleur de thème</strong>, ajoute un <strong>avatar</strong> et une <strong>vidéo de fond</strong> dans la section "Identité & Thème" tout en bas.
+                  Personnalise ton univers ! Change ta <strong>couleur de thème</strong>, ta <strong>typographie</strong>, ajoute un <strong>avatar</strong> et une <strong>vidéo de fond</strong> dans la section "Identité & Thème" tout en bas.
                 </p>
               </div>
 
@@ -952,9 +1046,9 @@ export const SettingsPage: React.FC = () => {
               </div>
 
               <div style={{ padding: 16, background: colors.inputBg, borderRadius: 8, borderLeft: `4px solid ${form.theme_color}` }}>
-                <h3 style={{ margin: '0 0 8px', fontSize: 16 }}>💰 3. Monétisation & Téléchargement</h3>
+                <h3 style={{ margin: '0 0 8px', fontSize: 16 }}>🎬 3. Tes Shorts Vidéos</h3>
                 <p style={{ margin: 0, fontSize: 14, color: colors.textMuted, lineHeight: 1.5 }}>
-                  Lors de l'upload, coche <strong>"Autoriser le téléchargement gratuit"</strong> si tu veux que les gens puissent télécharger ton son. Tu peux aussi ajouter un <strong>lien Beatport</strong> pour afficher un bouton "Acheter".
+                  Ajoute des vidéos verticales (format 9:16) dans la section <strong>Shorts Vidéos</strong>. Tu peux uploader un MP4 ou coller un lien YouTube/TikTok.
                 </p>
               </div>
 
@@ -962,13 +1056,6 @@ export const SettingsPage: React.FC = () => {
                 <h3 style={{ margin: '0 0 8px', fontSize: 16 }}>🖼️ 4. Galerie & Affiches</h3>
                 <p style={{ margin: 0, fontSize: 14, color: colors.textMuted, lineHeight: 1.5 }}>
                   Ajoute des photos de tes lives dans la section <strong>Ma Galerie Photos</strong>. Tu peux aussi ajouter des affiches d'événements qui défileront sur ta page.
-                </p>
-              </div>
-
-              <div style={{ padding: 16, background: colors.inputBg, borderRadius: 8, borderLeft: `4px solid ${form.theme_color}` }}>
-                <h3 style={{ margin: '0 0 8px', fontSize: 16 }}>🔗 5. Partage</h3>
-                <p style={{ margin: 0, fontSize: 14, color: colors.textMuted, lineHeight: 1.5 }}>
-                  Une fois ta page prête, clique sur <strong>"Voir ma page ↗"</strong> tout en haut et copie l'URL pour la partager sur tes réseaux sociaux.
                 </p>
               </div>
 
@@ -982,7 +1069,6 @@ export const SettingsPage: React.FC = () => {
         document.body
       )}
 
-      {/* MODALE D'UPLOAD */}
       {showUploadModal && createPortal(
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
           <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 32, width: '100%', maxWidth: 500, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}>

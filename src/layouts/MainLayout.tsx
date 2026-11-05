@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { usePlayer } from '../contexts/PlayerContext';
 import { GlobalPlayer } from '../components/GlobalPlayer';
 import { GlobalSearch } from '../components/GlobalSearch'; 
+import { ScrollButtons } from '../components/ScrollButtons'; // ✅ IMPORT AJOUTÉ
 import { useIsMobile } from '../hooks/useIsMobile';
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -25,14 +26,13 @@ const Icons = {
   sun: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>,
   moon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>,
   discover: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>,
-  // ✅ NOUVELLE ICÔNE : Trophée pour le Top 50
   trophy: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path></svg>,
 };
 
 const NAV_ITEMS = [
   { path: '/', label: 'Accueil', icon: Icons.home, exact: true },
   { path: '/discover', label: 'Découvrir', icon: Icons.discover },
-  { path: '/charts', label: 'Top 50', icon: Icons.trophy }, // ✅ AJOUTÉ
+  { path: '/charts', label: 'Top 50', icon: Icons.trophy },
   { path: '/feed', label: 'Feed', icon: Icons.feed },
   { path: '/nouveautes', label: 'Nouveautés', icon: Icons.new },
   { path: '/mes-playlists', label: 'Mes Playlists', icon: Icons.playlist },
@@ -48,7 +48,7 @@ const NAV_ITEMS = [
 const MOBILE_NAV = [
   { path: '/', label: 'Accueil', icon: Icons.home, exact: true },
   { path: '/discover', label: 'Découvrir', icon: Icons.discover }, 
-  { path: '/charts', label: 'Top 50', icon: Icons.trophy }, // ✅ AJOUTÉ
+  { path: '/charts', label: 'Top 50', icon: Icons.trophy },
   { path: '/nouveautes', label: 'Sorties', icon: Icons.new },
   { path: '#menu', label: 'Menu', icon: Icons.menu }, 
 ];
@@ -107,6 +107,8 @@ export const MainLayout: React.FC = () => {
       <div style={{ minHeight: '100vh', background: colors.bg, color: colors.textMain, transition: 'background 0.3s ease' }}>
         {location.pathname !== '/nouveautes' && <ThemeToggleButton />}
         <Outlet />
+        {/* ✅ BOUTONS AJOUTÉS ICI */}
+        <ScrollButtons />
         {currentTrack && <GlobalPlayer currentTrack={currentTrack} isPlaying={isPlaying} onTogglePlay={togglePlay} onStop={stop} />}
       </div>
     );
@@ -135,6 +137,9 @@ export const MainLayout: React.FC = () => {
           <Outlet />
         </main>
 
+        {/* ✅ BOUTONS AJOUTÉS ICI */}
+        <ScrollButtons />
+        
         {currentTrack && <GlobalPlayer currentTrack={currentTrack} isPlaying={isPlaying} onTogglePlay={togglePlay} onStop={stop} />}
 
         <nav style={{ 
@@ -217,6 +222,10 @@ export const MainLayout: React.FC = () => {
           <Outlet />
         </main>
       </div>
+
+      {/* ✅ BOUTONS AJOUTÉS ICI */}
+      <ScrollButtons />
+
       {currentTrack && <GlobalPlayer currentTrack={currentTrack} isPlaying={isPlaying} onTogglePlay={togglePlay} onStop={stop} />}
     </div>
   );

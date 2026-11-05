@@ -25,7 +25,7 @@ export const SettingsPage: React.FC = () => {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [uploading, setUploading] = useState(false);
   
-  // ✅ NOUVEL ÉTAT POUR LE GUIDE
+  // ✅ ÉTAT POUR LE GUIDE
   const [showGuideModal, setShowGuideModal] = useState(false);
 
   const [uploadForm, setUploadForm] = useState({ 
@@ -189,7 +189,7 @@ export const SettingsPage: React.FC = () => {
       const fileName = `${user.id}/player-bg-${Date.now()}.${file.name.split('.').pop()}`;
       const { error: uploadError } = await supabase.storage.from('media').upload(fileName, file);
       if (uploadError) throw uploadError;
-      const { data } = supabase.storage.from('media').getPublicUrl(fileName);
+      const { data } = await supabase.storage.from('media').getPublicUrl(fileName);
       
       if (target === 'edit') {
         setEditTrackForm(prev => ({ ...prev, player_bg_image_url: data.publicUrl }));
@@ -316,7 +316,9 @@ export const SettingsPage: React.FC = () => {
         if (pic.format.includes('png')) ext = 'png';
         else if (pic.format.includes('webp')) ext = 'webp';
 
-        const blob = new Blob([dataArray], { type: pic.format });
+        // ✅ CORRECTION TYPESCRIPT : ajout de "as any" sur dataArray
+        const blob = new Blob([dataArray as any], { type: pic.format });
+        
         const coverFileFromTag = new File([blob], `cover-${Date.now()}.${ext}`, { type: pic.format });
         setCoverFile(coverFileFromTag);
       }
@@ -534,7 +536,6 @@ export const SettingsPage: React.FC = () => {
           <p style={{ color: colors.textMuted, marginTop: 10, margin: '10px 0 0 0' }}>Gère ton identité, ta musique, tes photos et les modules de ta page.</p>
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
-          {/* ✅ BOUTON GUIDE AJOUTÉ */}
           <button onClick={() => setShowGuideModal(true)} style={{ padding: '10px 20px', background: 'transparent', color: form.theme_color, border: `1px solid ${form.theme_color}`, borderRadius: 8, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
             Guide
@@ -981,9 +982,8 @@ export const SettingsPage: React.FC = () => {
         document.body
       )}
 
-      {/* ... Les autres modales (Upload) ... */}
+      {/* MODALE D'UPLOAD */}
       {showUploadModal && createPortal(
-        // ... (Ton code existant pour la modale d'upload)
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
           <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 32, width: '100%', maxWidth: 500, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
@@ -1092,37 +1092,6 @@ export const SettingsPage: React.FC = () => {
         </div>,
         document.body
       )}
-
-      {/* ✅ BOUTONS DE RETOUR RAPIDE (Haut / Bas) */}
-      <div style={{ position: 'fixed', bottom: 30, right: 30, display: 'flex', flexDirection: 'column', gap: 10, zIndex: 9999 }}>
-        <button 
-          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          style={{ 
-            width: 44, height: 44, borderRadius: '50%', background: colors.panelBg, border: `1px solid ${colors.border}`, 
-            color: colors.textMain, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', 
-            boxShadow: '0 4px 12px rgba(0,0,0,0.2)', transition: 'all 0.2s' 
-          }}
-          title="Retour en haut"
-          onMouseEnter={e => e.currentTarget.style.borderColor = form.theme_color}
-          onMouseLeave={e => e.currentTarget.style.borderColor = colors.border}
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
-        </button>
-        <button 
-          onClick={() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })}
-          style={{ 
-            width: 44, height: 44, borderRadius: '50%', background: colors.panelBg, border: `1px solid ${colors.border}`, 
-            color: colors.textMain, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', 
-            boxShadow: '0 4px 12px rgba(0,0,0,0.2)', transition: 'all 0.2s' 
-          }}
-          title="Aller en bas"
-          onMouseEnter={e => e.currentTarget.style.borderColor = form.theme_color}
-          onMouseLeave={e => e.currentTarget.style.borderColor = colors.border}
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
-        </button>
-      </div>
-      
     </div>
   );
 };

@@ -9,6 +9,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { usePlayer } from '../contexts/PlayerContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { ArtistPromoSection } from '../components/ArtistPromoSection';
+import { ScrollButtons } from '../components/ScrollButtons'; // ✅ IMPORT AJOUTÉ
 import * as GlobalPlayerModule from '../components/GlobalPlayer';
 import * as ArrowButtonModule from '../components/ArrowButton';
 import './LevonDinato.css';
@@ -322,7 +323,6 @@ export const PremiumPage: React.FC = () => {
       link.href = blobUrl; link.download = filename;
       document.body.appendChild(link); link.click(); document.body.removeChild(link); window.URL.revokeObjectURL(blobUrl);
       
-      // ✅ Appel de la fonction RPC pour incrémenter proprement
       const { error } = await supabase.rpc('increment_download_count', { track_id_param: trackId });
       if (!error) {
         setTracks(prev => prev.map(t => t.id === trackId ? { ...t, downloads: (t.downloads || 0) + 1 } : t));
@@ -468,6 +468,35 @@ export const PremiumPage: React.FC = () => {
     fetchData();
   }, [username, user]);
 
+  // ✅ NOUVEL EFFET : ENREGISTREMENT DES VUES DE PAGE
+  useEffect(() => {
+    const recordPageView = async () => {
+      if (!profile) return; 
+      if (user && user.id === profile.id) return; 
+
+      const viewKey = `viewed_profile_${profile.id}`;
+      if (sessionStorage.getItem(viewKey)) return;
+
+      try {
+        const { error } = await supabase.from('page_views').insert({
+          profile_id: profile.id
+        });
+        
+        if (!error) {
+          sessionStorage.setItem(viewKey, 'true');
+          console.log("✅ Vue de page enregistrée pour", profile.username);
+        } else {
+          console.warn("Erreur vue:", error.message);
+        }
+      } catch (err) {
+        console.error("Erreur enregistrement vue :", err);
+      }
+    };
+    
+    const timer = setTimeout(recordPageView, 1500);
+    return () => clearTimeout(timer);
+  }, [profile, user]);
+
   const handlePlayTrack = async (track: any) => {
     if (!user) { alert("🔒 Inscrivez-vous pour écouter."); navigate('/auth'); return; }
     if (!isPremium) { alert("🔒 Passez au Premium."); return; }
@@ -481,7 +510,7 @@ export const PremiumPage: React.FC = () => {
       });
       if (isNewTrack && !isOwner) {
         try {
-          await supabase.from('tracks').update({ plays: (track.plays || 0) + 1 }).eq('id', track.id);
+          await supabase.rpc('increment_play_count', { track_id_param: track.id });
           setTracks(prev => prev.map(t => t.id === track.id ? { ...t, plays: (t.plays || 0) + 1 } : t));
         } catch (err) {}
       }
@@ -1084,6 +1113,9 @@ export const PremiumPage: React.FC = () => {
       {currentTrack && GlobalPlayer && (
         <GlobalPlayer currentTrack={currentTrack} isPlaying={isPlaying} onTogglePlay={togglePlay} onStop={stop} />
       )}
+
+      {/* ✅ BOUTONS DE DÉFILEMENT AJOUTÉS ICI */}
+      <ScrollButtons />
     </div>
   );
 };

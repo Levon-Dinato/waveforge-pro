@@ -1,12 +1,12 @@
 // src/pages/ChartsPage.tsx
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { usePlayer } from '../contexts/PlayerContext';
+import { ScrollToTop } from '../components/ScrollToTop'; // ✅ Import du bouton
 
-// ✅ INTERFACE TRACK COMPLÈTE
 interface Track {
   id: string;
   title: string;
@@ -15,7 +15,6 @@ interface Track {
   plays: number;
   duration: number;
   audio_url: string;
-  profiles: { username: string } | null;
   user_id: string;
   peaks: any;
   bpm: number;
@@ -28,7 +27,7 @@ interface Track {
 export const ChartsPage: React.FC = () => {
   const { theme } = useTheme();
   const { user } = useAuth();
-  const { play, currentTrack, isPlaying, togglePlay } = usePlayer();
+  const { play, currentTrack, isPlaying, togglePlay } = usePlayer() as any;
   const navigate = useNavigate();
   const isDark = theme === 'dark';
 
@@ -50,17 +49,46 @@ export const ChartsPage: React.FC = () => {
   useEffect(() => {
     const fetchTopTracks = async () => {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('tracks')
-        .select('*, profiles(username)')
-        .order('plays', { ascending: false })
-        .limit(50);
+      try {
+        const { data, error } = await supabase
+          .from('tracks')
+          .select('*')
+          .order('plays', { ascending: false })
+          .limit(50);
 
-      if (!error && data) setTracks(data);
-      setLoading(false);
+        if (error) {
+          console.error("Erreur Supabase:", error);
+        } else if (data) {
+          setTracks(data);
+        }
+      } catch (err) {
+        console.error("Erreur catch:", err);
+      } finally {
+        setLoading(false);
+      }
     };
     fetchTopTracks();
   }, []);
+
+  const incrementPlayCount = async (track: Track) => {
+    if (!user || user.id === track.user_id) return;
+    
+    const listenKey = `listened_${track.id}_${user.id}`;
+    const lastListen = localStorage.getItem(listenKey);
+    const now = Date.now();
+    
+    if (lastListen && now - parseInt(lastListen) < 60 * 1000) return;
+
+    try {
+      const { error } = await supabase.rpc('increment_play_count', { track_id_param: track.id });
+      if (!error) {
+        setTracks(prev => prev.map(t => t.id === track.id ? { ...t, plays: (t.plays || 0) + 1 } : t));
+        localStorage.setItem(listenKey, now.toString());
+      }
+    } catch (err) {
+      console.error("Erreur RPC:", err);
+    }
+  };
 
   const handlePlay = (track: Track) => {
     if (!user) {
@@ -72,6 +100,8 @@ export const ChartsPage: React.FC = () => {
     if (currentTrack?.id === track.id) {
       togglePlay();
     } else {
+      const isNew = currentTrack?.id !== track.id;
+      
       play({
         id: track.id,
         title: track.title,
@@ -87,6 +117,8 @@ export const ChartsPage: React.FC = () => {
         player_bg_image_url: track.player_bg_image_url,
         player_bg_color: track.player_bg_color
       });
+
+      if (isNew) incrementPlayCount(track);
     }
   };
 
@@ -98,8 +130,6 @@ export const ChartsPage: React.FC = () => {
 
   const top3 = tracks.slice(0, 3);
   const rest = tracks.slice(3);
-
-  // Ordre du podium : 2ème - 1er - 3ème
   const podiumOrder = [top3[1], top3[0], top3[2]];
 
   return (
@@ -121,6 +151,11 @@ export const ChartsPage: React.FC = () => {
 
         {loading ? (
           <div style={{ textAlign: 'center', padding: 60, color: colors.textMuted }}>Chargement du classement...</div>
+        ) : tracks.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: 60, color: colors.textMuted, background: colors.panelBg, borderRadius: 16, border: `1px solid ${colors.border}` }}>
+            <h2 style={{ fontSize: 20, fontWeight: 800, color: colors.textMain, marginBottom: 8 }}>Aucun son dans le classement</h2>
+            <p>Il n'y a pas encore assez d'écoutes pour établir un Top 50. Reviens plus tard !</p>
+          </div>
         ) : (
           <>
             {/* PODIUM TOP 3 */}
@@ -140,7 +175,6 @@ export const ChartsPage: React.FC = () => {
                 return (
                   <div key={track.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: isFirst ? 220 : 180 }}>
                     
-                    {/* Couronne pour le 1er */}
                     {isFirst && <div style={{ fontSize: 40, marginBottom: -10 }}>👑</div>}
                     
                     <div 
@@ -183,7 +217,7 @@ export const ChartsPage: React.FC = () => {
                     }}>
                       <div style={{ fontSize: 32, fontWeight: 900, color: medalColor, marginBottom: 8 }}>#{rank}</div>
                       <div style={{ fontSize: 15, fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: 4 }}>{track.title}</div>
-                      <div style={{ fontSize: 13, color: colors.textMuted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.profiles?.username || track.artist}</div>
+                      <div style={{ fontSize: 13, color: colors.textMuted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.artist}</div>
                       
                       <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontSize: 12, color: colors.textMuted, fontWeight: 700 }}>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
@@ -229,7 +263,7 @@ export const ChartsPage: React.FC = () => {
                         {track.title}
                       </div>
                       <div style={{ fontSize: 13, color: colors.textMuted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {track.profiles?.username || track.artist}
+                        {track.artist}
                       </div>
                     </div>
 
@@ -260,6 +294,9 @@ export const ChartsPage: React.FC = () => {
           </>
         )}
       </div>
+      
+      {/* ✅ BOUTON RETOUR EN HAUT */}
+      <ScrollToTop />
       
       <style>{`@keyframes spin { 100% { transform: rotate(360deg); } }`}</style>
     </div>

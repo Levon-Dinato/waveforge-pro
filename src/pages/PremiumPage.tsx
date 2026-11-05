@@ -9,7 +9,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { usePlayer } from '../contexts/PlayerContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { ArtistPromoSection } from '../components/ArtistPromoSection';
-import { ScrollButtons } from '../components/ScrollButtons'; // ✅ IMPORT AJOUTÉ
+import { ScrollButtons } from '../components/ScrollButtons'; 
 import * as GlobalPlayerModule from '../components/GlobalPlayer';
 import * as ArrowButtonModule from '../components/ArrowButton';
 import './LevonDinato.css';
@@ -468,7 +468,6 @@ export const PremiumPage: React.FC = () => {
     fetchData();
   }, [username, user]);
 
-  // ✅ NOUVEL EFFET : ENREGISTREMENT DES VUES DE PAGE
   useEffect(() => {
     const recordPageView = async () => {
       if (!profile) return; 
@@ -757,12 +756,29 @@ export const PremiumPage: React.FC = () => {
         
         <div style={{ position: 'absolute', inset: 0, opacity: 0.1, backgroundImage: `linear-gradient(${themeColor} 1px, transparent 1px), linear-gradient(90deg, ${themeColor} 1px, transparent 1px)`, backgroundSize: '60px 60px', maskImage: 'radial-gradient(circle at center, black 30%, transparent 80%)', WebkitMaskImage: 'radial-gradient(circle at center, black 30%, transparent 80%)', zIndex: 0 }} />
 
+        {/* ✅ CORRECTION : FONDU DE LA VIDÉO */}
         <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
-          <video autoPlay muted loop playsInline poster={profile.avatar_url || "/logo.jpg"} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: isDark ? 0.6 : 0.3, filter: isDark ? 'grayscale(50%) contrast(1.2) brightness(0.8)' : 'grayscale(50%) contrast(1.2) brightness(1)' }}>
+          <video autoPlay muted loop playsInline poster={profile.avatar_url || "/logo.jpg"} style={{ 
+            width: '100%', height: '100%', objectFit: 'cover', 
+            opacity: isDark ? 0.6 : 0.3, 
+            filter: isDark ? 'grayscale(50%) contrast(1.2) brightness(0.8)' : 'grayscale(50%) contrast(1.2) brightness(1)',
+            maskImage: 'linear-gradient(to bottom, black 50%, transparent 100%)',
+            WebkitMaskImage: 'linear-gradient(to bottom, black 50%, transparent 100%)'
+          }}>
             <source src={profile.background_video_url || "/background.mp4"} type="video/mp4" />
           </video>
-          <div style={{ position: 'absolute', inset: 0, background: themeColor, mixBlendMode: 'overlay', opacity: 0.5 }} />
-          <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(to bottom, ${isDark ? 'rgba(5,5,5,0.2) 0%, rgba(5,5,5,0) 50%, rgba(5,5,5,0.9) 90%, #050505 100%' : 'rgba(245,245,247,0.1) 0%, rgba(245,245,247,0) 50%, rgba(245,245,247,0.9) 90%, #f5f5f7 100%'})` }} />
+          
+          <div style={{ 
+            position: 'absolute', inset: 0, 
+            background: themeColor, mixBlendMode: 'overlay', opacity: 0.5,
+            maskImage: 'linear-gradient(to bottom, black 50%, transparent 100%)',
+            WebkitMaskImage: 'linear-gradient(to bottom, black 50%, transparent 100%)'
+          }} />
+          
+          <div style={{ 
+            position: 'absolute', inset: 0, 
+            background: `linear-gradient(to bottom, ${isDark ? 'rgba(5,5,5,0) 0%, rgba(5,5,5,0.8) 60%, #050505 100%' : 'rgba(245,245,247,0) 0%, rgba(245,245,247,0.8) 60%, #f5f5f7 100%'})` 
+          }} />
         </div>
         
         <div style={{ position: 'relative', zIndex: 10, textAlign: 'center', maxWidth: 1000, padding: '0 24px', marginTop: isMobile ? '5vh' : '15vh' }}>
@@ -1114,7 +1130,6 @@ export const PremiumPage: React.FC = () => {
         <GlobalPlayer currentTrack={currentTrack} isPlaying={isPlaying} onTogglePlay={togglePlay} onStop={stop} />
       )}
 
-      {/* ✅ BOUTONS DE DÉFILEMENT AJOUTÉS ICI */}
       <ScrollButtons />
     </div>
   );

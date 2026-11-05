@@ -205,7 +205,7 @@ export const TrackPage: React.FC = () => {
     const lastListen = localStorage.getItem(listenKey);
     const now = Date.now();
     
-    if (lastListen && now - parseInt(lastListen) < 30 * 60 * 1000) return; 
+    if (lastListen && now - parseInt(lastListen) < 0.1 * 60 * 1000) return; 
 
     try {
       const { error } = await supabase.rpc('increment_play_count', { track_id_param: track.id });

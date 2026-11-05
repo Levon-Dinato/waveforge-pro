@@ -28,6 +28,7 @@ const Icons = {
   discover: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>,
   trophy: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path></svg>,
   logout: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>,
+  close: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>,
 };
 
 const NAV_ITEMS = [
@@ -156,13 +157,9 @@ export const MainLayout: React.FC = () => {
           </div>
         </header>
 
-        {/* ✅ paddingBottom augmenté à 90 pour laisser de la place à la navbar */}
         <main style={{ flex: 1, padding: '16px 12px', paddingBottom: currentTrack ? 140 : 90, overflowX: 'hidden', width: '100%', maxWidth: '100vw' }}>
           <Outlet />
         </main>
-
-        {/* ✅ SUPPRIMÉ sur mobile pour ne pas cacher le bouton "Menu" */}
-        {/* <ScrollButtons /> */}
         
         {currentTrack && <GlobalPlayer currentTrack={currentTrack} isPlaying={isPlaying} onTogglePlay={togglePlay} onStop={stop} />}
 
@@ -183,6 +180,56 @@ export const MainLayout: React.FC = () => {
             );
           })}
         </nav>
+
+        {/* ✅ LE PANNEAU DU MENU MOBILE EST MAINTENANT ICI */}
+        {mobileMenuOpen && (
+          <div style={{
+            position: 'fixed', inset: 0, zIndex: 9999, background: colors.bg,
+            display: 'flex', flexDirection: 'column', animation: 'fadeIn 0.2s ease'
+          }}>
+            <style>{`@keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }`}</style>
+            
+            {/* Header du menu */}
+            <div style={{ padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid ${colors.border}` }}>
+              <span style={{ fontWeight: 800, fontSize: '1.2rem', color: colors.textMain }}>Menu</span>
+              <button onClick={() => setMobileMenuOpen(false)} style={{ background: 'transparent', border: 'none', color: colors.textMain, cursor: 'pointer', padding: 8 }}>
+                {Icons.close}
+              </button>
+            </div>
+
+            {/* Liens du menu */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {NAV_ITEMS.map(item => {
+                const isActive = item.exact ? location.pathname === item.path : location.pathname.startsWith(item.path);
+                return (
+                  <NavLink key={item.path} to={item.path} onClick={() => setMobileMenuOpen(false)} style={{
+                    display: 'flex', alignItems: 'center', gap: 16, padding: '16px', borderRadius: 12,
+                    textDecoration: 'none', color: isActive ? '#00d9ff' : colors.textMain,
+                    background: isActive ? colors.activeBg : 'transparent', fontWeight: isActive ? 700 : 500,
+                  }}>
+                    <span style={{ display: 'flex', color: isActive ? '#00d9ff' : colors.textMuted }}>{item.icon}</span>
+                    {item.label}
+                  </NavLink>
+                );
+              })}
+            </div>
+
+            {/* Boutons Auth & Theme en bas du menu */}
+            <div style={{ padding: '20px', borderTop: `1px solid ${colors.border}`, display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <button onClick={() => { toggleTheme(); setMobileMenuOpen(false); }} style={{ width: '100%', padding: '14px', background: colors.hoverBg, color: colors.textMain, border: 'none', borderRadius: 8, fontWeight: 700, fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                {isDark ? Icons.sun : Icons.moon} {isDark ? 'Mode Clair' : 'Mode Sombre'}
+              </button>
+              
+              <button onClick={() => { handleAuthClick(); setMobileMenuOpen(false); }} style={{
+                width: '100%', padding: '14px', background: user ? 'rgba(255, 92, 92, 0.1)' : '#00d9ff',
+                color: user ? '#ff5c5c' : '#000', border: user ? '1px solid #ff5c5c' : 'none',
+                borderRadius: 8, fontWeight: 800, fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8
+              }}>
+                {user ? <>{Icons.logout} Déconnexion</> : 'Se connecter'}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     );
   }

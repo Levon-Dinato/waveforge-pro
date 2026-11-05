@@ -41,7 +41,8 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,jpg,jpeg,mp3}'], // Mise en cache des audios récurrents
-        maximumFileSizeToCacheInBytes: 10 * 1024 * 1024, // Jusqu'à 10 Mo pour le cache
+        // ✅ MODIFIÉ : On passe de 10 Mo à 20 Mo pour accepter fever-climbing.mp3 (12.4 Mo)
+        maximumFileSizeToCacheInBytes: 20 * 1024 * 1024, 
       }
     })
   ],

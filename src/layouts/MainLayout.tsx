@@ -55,7 +55,6 @@ const MOBILE_NAV = [
 ];
 
 export const MainLayout: React.FC = () => {
-  // ✅ Ajout de signOut ici
   const { user, profile, refreshProfile, isAdmin, signOut } = useAuth();
   const { currentTrack, isPlaying, togglePlay, stop } = usePlayer();
   const isMobile = useIsMobile(768);
@@ -86,7 +85,6 @@ export const MainLayout: React.FC = () => {
   const displayName = profile?.username || user?.email?.split('@')[0] || 'Artiste';
   const avatarUrl = profile?.avatar_url;
 
-  // ✅ Fonction pour gérer le clic sur le bouton de connexion/déconnexion
   const handleAuthClick = async () => {
     if (user) {
       await signOut();
@@ -136,7 +134,6 @@ export const MainLayout: React.FC = () => {
           </Link>
           
           <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-            {/* ✅ Bouton de connexion/déconnexion ajouté sur mobile */}
             {user ? (
               <button onClick={handleAuthClick} style={{ background: 'transparent', border: 'none', color: '#ff5c5c', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
                 Déconnexion
@@ -151,7 +148,6 @@ export const MainLayout: React.FC = () => {
               {isDark ? Icons.sun : Icons.moon}
             </button>
 
-            {/* ✅ Lien profil sécurisé : ne s'affiche que si connecté */}
             {user && (
               <Link to={`/profil/${user.id}`} className="avatar-circle" style={{ width: 34, height: 34, overflow: 'hidden', background: colors.hoverBg, border: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#00d9ff', fontWeight: 700, fontSize: 13, textDecoration: 'none' }}>
                 {avatarUrl ? <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : displayName.charAt(0).toUpperCase()}
@@ -195,11 +191,14 @@ export const MainLayout: React.FC = () => {
       <ThemeToggleButton />
 
       <aside style={{ width: 240, background: colors.bg, borderRight: `1px solid ${colors.border}`, display: 'flex', flexDirection: 'column', position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 50, transition: 'background 0.3s ease, border-color 0.3s ease' }}>
-        <div style={{ padding: '24px 20px', borderBottom: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', gap: 12 }}>
+        
+        {/* LOGO */}
+        <div style={{ padding: '24px 20px', borderBottom: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
           <img src="/icons/icon-192.png" alt="DropZone DJ" style={{ width: 36, height: 36, objectFit: 'contain', borderRadius: 8 }} />
           <span style={{ fontWeight: 800, fontSize: '1.1rem', letterSpacing: '-0.5px', color: colors.textMain }}>DropZone DJ</span>
         </div>
 
+        {/* MENU SCROLLABLE */}
         <nav style={{ flex: 1, padding: '16px 12px', display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
           {NAV_ITEMS.map(item => {
             const isActive = item.exact ? location.pathname === item.path : location.pathname.startsWith(item.path);
@@ -213,34 +212,41 @@ export const MainLayout: React.FC = () => {
               </NavLink>
             );
           })}
+        </nav>
+
+        {/* ZONE FIXE EN BAS (Boutons + Profil) */}
+        <div style={{ padding: '16px', borderTop: `1px solid ${colors.border}`, display: 'flex', flexDirection: 'column', gap: '12px', flexShrink: 0 }}>
           
-          <button onClick={toggleTheme} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', marginTop: 16, border: `1px solid ${colors.border}`, borderRadius: 8, background: 'transparent', color: colors.textMain, cursor: 'pointer', fontWeight: 600, fontSize: '0.9rem', transition: 'all 0.2s' }}>
+          {/* Bouton Thème */}
+          <button onClick={toggleTheme} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '10px 12px', border: `1px solid ${colors.border}`, borderRadius: 8, background: 'transparent', color: colors.textMain, cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem', transition: 'all 0.2s' }}>
              {isDark ? Icons.sun : Icons.moon}
              {isDark ? 'Mode Clair' : 'Mode Sombre'}
           </button>
 
+          {/* Bouton Admin */}
           {isAdmin && (
-            <NavLink to="/admin" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', textDecoration: 'none', color: '#ff4444', background: 'rgba(255, 68, 68, 0.05)', fontWeight: 700, fontSize: '0.9rem', marginTop: 16, border: '1px solid rgba(255, 68, 68, 0.2)', borderRadius: 8 }}>
-              <span style={{ display: 'flex' }}>{Icons.admin}</span>
+            <NavLink to="/admin" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '10px 12px', textDecoration: 'none', color: '#ff4444', background: 'rgba(255, 68, 68, 0.05)', fontWeight: 700, fontSize: '0.85rem', border: '1px solid rgba(255, 68, 68, 0.2)', borderRadius: 8, transition: 'all 0.2s' }}
+              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 68, 68, 0.1)'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255, 68, 68, 0.05)'}
+            >
+              {Icons.admin}
               Panel Admin
             </NavLink>
           )}
-        </nav>
 
-        {/* ✅ BOUTON CONNEXION / DÉCONNEXION AJOUTÉ ICI */}
-        <div style={{ padding: '0 12px', marginBottom: '8px' }}>
+          {/* Bouton Connexion / Déconnexion */}
           <button 
             onClick={handleAuthClick}
             style={{
-              width: '100%', padding: '12px',
-              background: user ? 'rgba(255, 92, 92, 0.1)' : '#00d9ff',
+              width: '100%', padding: '10px',
+              background: user ? 'transparent' : '#00d9ff',
               color: user ? '#ff5c5c' : '#000',
-              border: user ? '1px solid #ff5c5c' : 'none',
-              borderRadius: '8px', fontWeight: 800, fontSize: '14px',
+              border: user ? '1px solid rgba(255, 92, 92, 0.5)' : 'none',
+              borderRadius: '8px', fontWeight: 700, fontSize: '0.85rem',
               cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', transition: 'all 0.2s'
             }}
-            onMouseEnter={(e) => { if (user) e.currentTarget.style.background = 'rgba(255, 92, 92, 0.2)'; }}
-            onMouseLeave={(e) => { if (user) e.currentTarget.style.background = 'rgba(255, 92, 92, 0.1)'; }}
+            onMouseEnter={(e) => { if (user) e.currentTarget.style.background = 'rgba(255, 92, 92, 0.1)'; }}
+            onMouseLeave={(e) => { if (user) e.currentTarget.style.background = 'transparent'; }}
           >
             {user ? (
               <>{Icons.logout} Déconnexion</>
@@ -248,18 +254,18 @@ export const MainLayout: React.FC = () => {
               'Se connecter'
             )}
           </button>
-        </div>
 
-        {/* ✅ LIEN PROFIL SÉCURISÉ */}
-        <Link to={user ? `/profil/${user.id}` : '/auth'} style={{ padding: '16px 20px', borderTop: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none', color: colors.textMain }} onMouseEnter={(e) => e.currentTarget.style.background = colors.hoverBg} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
-          <div style={{ width: 36, height: 36, borderRadius: '50%', background: colors.hoverBg, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#00d9ff', fontWeight: 700, fontSize: 13, border: `1px solid ${colors.border}` }}>
-            {avatarUrl ? <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (user ? displayName.charAt(0).toUpperCase() : '?')}
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-             <div style={{ fontSize: '0.9rem', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user ? displayName : 'Invité'}</div>
-             <div style={{ fontSize: '0.75rem', color: colors.textMuted }}>{user ? 'Voir mon profil' : 'Se connecter'}</div>
-          </div>
-        </Link>
+          {/* Profil Utilisateur */}
+          <Link to={user ? `/profil/${user.id}` : '/auth'} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px', borderRadius: 8, textDecoration: 'none', color: colors.textMain, background: colors.hoverBg }} onMouseEnter={(e) => e.currentTarget.style.filter = 'brightness(0.95)'} onMouseLeave={(e) => e.currentTarget.style.filter = 'none'}>
+            <div style={{ width: 36, height: 36, borderRadius: '50%', background: colors.bg, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#00d9ff', fontWeight: 700, fontSize: 14, border: `1px solid ${colors.border}`, flexShrink: 0 }}>
+              {avatarUrl ? <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (user ? displayName.charAt(0).toUpperCase() : '?')}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+               <div style={{ fontSize: '0.85rem', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: colors.textMain }}>{user ? displayName : 'Invité'}</div>
+               <div style={{ fontSize: '0.7rem', color: colors.textMuted }}>{user ? 'Voir mon profil' : 'Se connecter'}</div>
+            </div>
+          </Link>
+        </div>
       </aside>
 
       <div style={{ flex: 1, marginLeft: 240, display: 'flex', flexDirection: 'column', minHeight: '100vh', paddingBottom: currentTrack ? 100 : 0 }}>

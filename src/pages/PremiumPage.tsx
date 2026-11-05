@@ -11,7 +11,7 @@ import { ArtistPromoSection } from '../components/ArtistPromoSection';
 import { ScrollButtons } from '../components/ScrollButtons'; 
 import { ReleaseCard } from '../components/ReleaseCard';
 import { BookingModal, UploadModal, Lightbox } from '../components/PremiumModals';
-import { SpotifyPlayer } from '../components/SpotifyPlayer'; // ✅ IMPORT SPOTIFY
+import { SpotifyPlayer } from '../components/SpotifyPlayer';
 import * as GlobalPlayerModule from '../components/GlobalPlayer';
 import * as ArrowButtonModule from '../components/ArrowButton';
 import './LevonDinato.css';
@@ -32,7 +32,7 @@ const SocialIcons = {
 const Icons = {
   sun: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>,
   moon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>,
-  share: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>,
+  share: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>,
   comment: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>,
   download: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>,
   menu: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>,
@@ -121,8 +121,21 @@ export const PremiumPage: React.FC = () => {
   const formatEventDate = (dateStr: string) => { const date = new Date(dateStr); const day = date.toLocaleDateString('fr-FR', { day: 'numeric' }); const month = date.toLocaleDateString('fr-FR', { month: 'short' }); const year = date.toLocaleDateString('fr-FR', { year: 'numeric' }); return { day, month, year, full: `${day} ${month} ${year}` }; };
   
   const handleShare = async () => {
-    const shareData = { title: `${profile?.username} — Artiste DropZone`, text: `Découvre l'univers de ${profile?.username} sur DropZone.dj`, url: window.location.href };
-    try { if (navigator.share) { await navigator.share(shareData); } else { await navigator.clipboard.writeText(window.location.href); alert('Lien copié !'); } } catch (err) { console.log(err); }
+    const shareData = { 
+      title: `${profile?.username} — Artiste DropZone`, 
+      text: `Découvre l'univers de ${profile?.username} sur DropZone.dj`, 
+      url: window.location.href 
+    };
+    try { 
+      if (navigator.share) { 
+        await navigator.share(shareData); 
+      } else { 
+        await navigator.clipboard.writeText(window.location.href); 
+        alert('Lien de la page copié dans le presse-papiers !'); 
+      } 
+    } catch (err) { 
+      console.log(err); 
+    }
   };
 
   const handleFollow = async () => {
@@ -272,6 +285,16 @@ export const PremiumPage: React.FC = () => {
   const bioQuote = bioParts[0] ? `${bioParts[0]}.` : bio;
   const bioRest = bioParts.slice(1).join('.').trim();
 
+  // 🖼️ LOGIQUE POUR L'IMAGE DE PARTAGE (OG:IMAGE)
+  const defaultShareImage = '/og-image.jpg';
+  let shareImage = defaultShareImage;
+  if (profile.avatar_url) {
+    // Si l'image ne commence pas par http, on ajoute le domaine (très important pour les réseaux sociaux)
+    shareImage = profile.avatar_url.startsWith('http') 
+      ? profile.avatar_url 
+      : `${window.location.origin}${profile.avatar_url}`;
+  }
+
   return (
     <div style={{ background: colors.bg, minHeight: '100vh', color: colors.textMain, fontFamily: fontFamily, '--accent': themeColor, transition: 'background 0.3s ease, color 0.3s ease', position: 'relative', overflow: 'hidden' } as React.CSSProperties}>
       
@@ -318,12 +341,20 @@ export const PremiumPage: React.FC = () => {
         <div style={{ position: 'absolute', bottom: '10%', left: '-10%', width: '40vw', height: '40vw', borderRadius: '50%', background: themeColor, filter: 'blur(100px)', opacity: 0.1, animation: 'float 12s ease-in-out infinite reverse' }} />
       </div>
 
+      {/* ✅ BALISES META CORRIGÉES POUR LE PARTAGE */}
       <Helmet>
         <title>{profile.username} — Artiste DropZone</title>
         <meta property="og:title" content={`${profile.username} — Artiste DropZone`} />
         <meta property="og:description" content={heroDesc} />
-        <meta property="og:image" content={profile.avatar_url || '/og-image.jpg'} />
+        <meta property="og:url" content={window.location.href} />
         <meta property="og:type" content="profile" />
+        <meta property="og:image" content={shareImage} />
+        
+        {/* Balises Twitter (très utilisées par WhatsApp/Mobile) */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={`${profile.username} — Artiste DropZone`} />
+        <meta name="twitter:description" content={heroDesc} />
+        <meta name="twitter:image" content={shareImage} />
       </Helmet>
 
       <Lightbox image={lightboxImage} onClose={() => setLightboxImage(null)} />
@@ -373,6 +404,12 @@ export const PremiumPage: React.FC = () => {
                 {Icons.menu}
               </button>
             )}
+            
+            {/* ✅ BOUTON PARTAGER */}
+            <button onClick={handleShare} title="Partager cette page" style={{ width: 36, height: 36, borderRadius: '50%', background: 'transparent', color: colors.textMain, border: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = themeColor} onMouseLeave={(e) => e.currentTarget.style.color = colors.textMain}>
+              {Icons.share}
+            </button>
+
             <button onClick={toggleTheme} style={{ width: 36, height: 36, borderRadius: '50%', background: isDark ? '#ffffff' : '#1a1a1a', color: isDark ? '#000000' : '#ffffff', border: `1px solid ${isDark ? '#e5e7eb' : '#333333'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
               {isDark ? Icons.sun : Icons.moon}
             </button>

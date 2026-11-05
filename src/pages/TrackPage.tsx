@@ -14,7 +14,8 @@ const Icons = {
   heartFilled: <svg width="20" height="20" viewBox="0 0 24 24" fill="#ff3366" stroke="#ff3366" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>,
   send: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>,
   close: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>,
-  comment: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+  comment: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>,
+  download: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
 };
 
 // --- WAVEFORM CANVAS ---
@@ -152,6 +153,7 @@ export const TrackPage: React.FC = () => {
   const [isLiked, setIsLiked] = useState(false);
   const [likeLoading, setLikeLoading] = useState(false);
   const [isCommenting, setIsCommenting] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false); // ✅ NOUVEL ÉTAT
 
   const colors = {
     bg: isDark ? '#050505' : '#f5f5f7',
@@ -194,28 +196,24 @@ export const TrackPage: React.FC = () => {
     fetchData();
   }, [id, user]);
 
-  // ✅ COMPTABILISATION DES ÉCOUTES (VERSION TEST SANS ANTI-SPAM)
+  // ✅ COMPTABILISATION DES ÉCOUTES VIA RPC
   const incrementPlayCount = async () => {
-    if (!track) return;
+    if (!track || !user) return;
+    if (user.id === track.user_id) return;
+
+    const listenKey = `listened_${track.id}_${user.id}`;
+    const lastListen = localStorage.getItem(listenKey);
+    const now = Date.now();
     
+    if (lastListen && now - parseInt(lastListen) < 30 * 60 * 1000) return; 
+
     try {
-      console.log("Tentative d'incrémentation pour le son :", track.id);
-      const newPlays = (track.plays || 0) + 1;
-      
-      const { error } = await supabase
-        .from('tracks')
-        .update({ plays: newPlays })
-        .eq('id', track.id);
-        
-      if (error) {
-        console.error("❌ ERREUR SUPABASE (Vérifie tes policies RLS) :", error);
-      } else {
-        console.log("✅ SUCCÈS ! Le compteur est passé à", newPlays);
-        setTrack((prev: any) => ({ ...prev, plays: newPlays }));
+      const { error } = await supabase.rpc('increment_play_count', { track_id_param: track.id });
+      if (!error) {
+        setTrack((prev: any) => ({ ...prev, plays: (prev.plays || 0) + 1 }));
+        localStorage.setItem(listenKey, now.toString());
       }
-    } catch (err) {
-      console.error("❌ ERREUR GLOBALE :", err);
-    }
+    } catch (err) { console.error(err); }
   };
 
   const handlePlay = () => {
@@ -230,9 +228,38 @@ export const TrackPage: React.FC = () => {
         peaks: track.peaks, bpm: track.bpm, song_key: track.song_key, genre: track.genre,
         player_bg_image_url: track.player_bg_image_url, player_bg_color: track.player_bg_color
       });
-      
-      // ✅ On déclenche le compteur
       incrementPlayCount();
+    }
+  };
+
+  // ✅ NOUVELLE FONCTION DE TÉLÉCHARGEMENT
+  const handleDownload = async () => {
+    if (!user) { navigate('/auth'); return; }
+    if (isDownloading) return;
+    setIsDownloading(true);
+
+    try {
+      // 1. Télécharger le fichier
+      const response = await fetch(track.audio_url);
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl; 
+      link.download = `${track.artist || artist?.username} - ${track.title}.mp3`;
+      document.body.appendChild(link); 
+      link.click(); 
+      document.body.removeChild(link); 
+      window.URL.revokeObjectURL(blobUrl);
+
+      // 2. Incrémenter le compteur via RPC
+      const { error } = await supabase.rpc('increment_download_count', { track_id_param: track.id });
+      if (!error) {
+        setTrack((prev: any) => ({ ...prev, downloads: (prev.downloads || 0) + 1 }));
+      }
+    } catch (error) {
+      window.open(track.audio_url, '_blank');
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -435,6 +462,13 @@ export const TrackPage: React.FC = () => {
                 <button onClick={() => setIsCommenting(true)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', background: 'transparent', border: `1px solid ${colors.border}`, color: colors.textMain, borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
                   {Icons.comment} {track.comments_count || 0}
                 </button>
+
+                {/* ✅ BOUTON DE TÉLÉCHARGEMENT */}
+                {track.is_downloadable !== false && (
+                  <button onClick={handleDownload} disabled={isDownloading} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', background: 'transparent', border: `1px solid ${colors.border}`, color: colors.textMain, borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: isDownloading ? 'wait' : 'pointer' }}>
+                    {Icons.download} {isDownloading ? '...' : 'Télécharger'}
+                  </button>
+                )}
 
                 <button onClick={handleShare} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', background: 'transparent', border: `1px solid ${colors.border}`, color: colors.textMain, borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer', marginLeft: 'auto' }}>
                   Partager

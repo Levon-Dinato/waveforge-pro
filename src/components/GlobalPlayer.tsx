@@ -21,16 +21,25 @@ const Icons = {
   check: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
 };
 
-const forceDownload = async (url: string, filename: string) => {
+// ✅ CORRECTION : ajout du paramètre trackId et appel RPC
+const forceDownload = async (url: string, filename: string, trackId: string) => {
   try {
     const response = await fetch(url);
     const blob = await response.blob();
     const blobUrl = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
-    link.href = blobUrl; link.download = filename;
-    document.body.appendChild(link); link.click();
-    document.body.removeChild(link); window.URL.revokeObjectURL(blobUrl);
-  } catch (error) { window.open(url, '_blank'); }
+    link.href = blobUrl;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(blobUrl);
+
+    // ✅ Incrémentation du compteur via la fonction RPC sécurisée
+    await supabase.rpc('increment_download_count', { track_id_param: trackId });
+  } catch (error) {
+    window.open(url, '_blank');
+  }
 };
 
 export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlaying, onTogglePlay, onStop }) => {
@@ -55,7 +64,7 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
   const [isMobile, setIsMobile] = useState(false);
 
   const colors = {
-    bg: isDark ? 'rgba(9, 9, 11, 0.85)' : 'rgba(255, 255, 255, 0.85)', // ✅ Fond légèrement transparent
+    bg: isDark ? 'rgba(9, 9, 11, 0.85)' : 'rgba(255, 255, 255, 0.85)',
     border: isDark ? '#27272a' : '#e5e7eb',
     textMain: isDark ? '#ffffff' : '#1a1a1a',
     textMuted: isDark ? '#a1a1aa' : '#666666',
@@ -171,7 +180,7 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
   };
 
-  // Ton Canvas original non modifié...
+  // Canvas original non modifié
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || !currentTrack) return;
@@ -246,9 +255,9 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
     <div style={{
       position: 'fixed', bottom: isMobile ? 70 : 0, left: 0, right: 0, zIndex: 1000,
       background: colors.bg, 
-      backdropFilter: 'blur(16px)', // ✅ EFFET VERRE DÉPOLI
+      backdropFilter: 'blur(16px)',
       WebkitBackdropFilter: 'blur(16px)',
-      borderTop: `1px solid ${colors.border}`, // ✅ LISERET CONSERVÉ
+      borderTop: `1px solid ${colors.border}`,
       boxShadow: colors.shadow,
       transition: 'background 0.3s ease, border-color 0.3s ease'
     }}>
@@ -263,7 +272,7 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
             width: isMobile ? 40 : 56, height: isMobile ? 40 : 56, borderRadius: 8, 
             background: currentTrack.cover_url ? `url(${currentTrack.cover_url}) center/cover` : colors.coverPlaceholder, 
             boxShadow: '0 4px 12px rgba(0,0,0,0.3)', flexShrink: 0, 
-            border: `1px solid ${colors.border}` // ✅ LISERET POCHETTE CONSERVÉ
+            border: `1px solid ${colors.border}`
           }} />
           <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', maxWidth: isMobile ? '120px' : 'none' }}>
             <div style={{ fontSize: isMobile ? 13 : 15, fontWeight: 800, color: colors.textMain, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{currentTrack.title}</div>
@@ -283,7 +292,6 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
 
           {!isMobile && <span style={{ fontSize: 12, fontFamily: 'monospace', color: colors.textMuted, width: 40, textAlign: 'right', fontWeight: 600 }}>{formatTime(currentTime)}</span>}
           
-          {/* ✅ WAVEFORM RESSERRÉE (40px au lieu de 60px) */}
           <div style={{ flex: 1, height: isMobile ? 32 : 40, position: 'relative', display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
             <canvas ref={canvasRef} onClick={handleSeek} style={{ width: '100%', height: '100%' }} />
           </div>
@@ -348,8 +356,9 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
             )}
           </div>
 
+          {/* ✅ CORRECTION : passage de currentTrack.id à forceDownload */}
           {!isMobile && (
-            <button onClick={() => forceDownload(currentTrack.audio_url, `${currentTrack.artist} - ${currentTrack.title}.mp3`)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'color 0.2s' }} onMouseEnter={e => e.currentTarget.style.color = colors.textMain} onMouseLeave={e => e.currentTarget.style.color = colors.textMuted}>
+            <button onClick={() => forceDownload(currentTrack.audio_url, `${currentTrack.artist} - ${currentTrack.title}.mp3`, currentTrack.id)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'color 0.2s' }} onMouseEnter={e => e.currentTarget.style.color = colors.textMain} onMouseLeave={e => e.currentTarget.style.color = colors.textMuted}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
             </button>
           )}

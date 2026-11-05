@@ -156,11 +156,13 @@ export const MainLayout: React.FC = () => {
           </div>
         </header>
 
-        <main style={{ flex: 1, padding: '16px 12px', paddingBottom: currentTrack ? 140 : 80, overflowX: 'hidden', width: '100%', maxWidth: '100vw' }}>
+        {/* ✅ paddingBottom augmenté à 90 pour laisser de la place à la navbar */}
+        <main style={{ flex: 1, padding: '16px 12px', paddingBottom: currentTrack ? 140 : 90, overflowX: 'hidden', width: '100%', maxWidth: '100vw' }}>
           <Outlet />
         </main>
 
-        <ScrollButtons />
+        {/* ✅ SUPPRIMÉ sur mobile pour ne pas cacher le bouton "Menu" */}
+        {/* <ScrollButtons /> */}
         
         {currentTrack && <GlobalPlayer currentTrack={currentTrack} isPlaying={isPlaying} onTogglePlay={togglePlay} onStop={stop} />}
 
@@ -192,13 +194,11 @@ export const MainLayout: React.FC = () => {
 
       <aside style={{ width: 240, background: colors.bg, borderRight: `1px solid ${colors.border}`, display: 'flex', flexDirection: 'column', position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 50, transition: 'background 0.3s ease, border-color 0.3s ease' }}>
         
-        {/* LOGO */}
         <div style={{ padding: '24px 20px', borderBottom: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
           <img src="/icons/icon-192.png" alt="DropZone DJ" style={{ width: 36, height: 36, objectFit: 'contain', borderRadius: 8 }} />
           <span style={{ fontWeight: 800, fontSize: '1.1rem', letterSpacing: '-0.5px', color: colors.textMain }}>DropZone DJ</span>
         </div>
 
-        {/* MENU SCROLLABLE */}
         <nav style={{ flex: 1, padding: '16px 12px', display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
           {NAV_ITEMS.map(item => {
             const isActive = item.exact ? location.pathname === item.path : location.pathname.startsWith(item.path);
@@ -214,16 +214,13 @@ export const MainLayout: React.FC = () => {
           })}
         </nav>
 
-        {/* ZONE FIXE EN BAS (Boutons + Profil) */}
         <div style={{ padding: '16px', borderTop: `1px solid ${colors.border}`, display: 'flex', flexDirection: 'column', gap: '12px', flexShrink: 0 }}>
           
-          {/* Bouton Thème */}
           <button onClick={toggleTheme} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '10px 12px', border: `1px solid ${colors.border}`, borderRadius: 8, background: 'transparent', color: colors.textMain, cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem', transition: 'all 0.2s' }}>
              {isDark ? Icons.sun : Icons.moon}
              {isDark ? 'Mode Clair' : 'Mode Sombre'}
           </button>
 
-          {/* Bouton Admin */}
           {isAdmin && (
             <NavLink to="/admin" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '10px 12px', textDecoration: 'none', color: '#ff4444', background: 'rgba(255, 68, 68, 0.05)', fontWeight: 700, fontSize: '0.85rem', border: '1px solid rgba(255, 68, 68, 0.2)', borderRadius: 8, transition: 'all 0.2s' }}
               onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 68, 68, 0.1)'}
@@ -234,7 +231,6 @@ export const MainLayout: React.FC = () => {
             </NavLink>
           )}
 
-          {/* Bouton Connexion / Déconnexion */}
           <button 
             onClick={handleAuthClick}
             style={{
@@ -255,7 +251,6 @@ export const MainLayout: React.FC = () => {
             )}
           </button>
 
-          {/* Profil Utilisateur */}
           <Link to={user ? `/profil/${user.id}` : '/auth'} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px', borderRadius: 8, textDecoration: 'none', color: colors.textMain, background: colors.hoverBg }} onMouseEnter={(e) => e.currentTarget.style.filter = 'brightness(0.95)'} onMouseLeave={(e) => e.currentTarget.style.filter = 'none'}>
             <div style={{ width: 36, height: 36, borderRadius: '50%', background: colors.bg, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#00d9ff', fontWeight: 700, fontSize: 14, border: `1px solid ${colors.border}`, flexShrink: 0 }}>
               {avatarUrl ? <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (user ? displayName.charAt(0).toUpperCase() : '?')}

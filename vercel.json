@@ -3,6 +3,17 @@
     { "source": "/share/live", "destination": "/api/share?id=live" },
     { "source": "/share/:id", "destination": "/api/share?id=:id" },
     { "source": "/levon-dinato", "destination": "/api/levon-dinato" },
+    {
+      "source": "/premium/:username",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(facebookexternalhit|twitterbot|whatsapp|linkedinbot|discordbot|telegrambot|pinterest|slackbot|skypeuripreview).*"
+        }
+      ],
+      "destination": "/api/share?premium=:username"
+    },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { usePlayer } from '../contexts/PlayerContext';
 import { GlobalPlayer } from '../components/GlobalPlayer';
 import { GlobalSearch } from '../components/GlobalSearch'; 
-import { ScrollButtons } from '../components/ScrollButtons'; // ✅ IMPORT AJOUTÉ
+import { ScrollButtons } from '../components/ScrollButtons';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -27,6 +27,7 @@ const Icons = {
   moon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>,
   discover: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>,
   trophy: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path></svg>,
+  logout: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>,
 };
 
 const NAV_ITEMS = [
@@ -54,7 +55,8 @@ const MOBILE_NAV = [
 ];
 
 export const MainLayout: React.FC = () => {
-  const { user, profile, refreshProfile, isAdmin } = useAuth();
+  // ✅ Ajout de signOut ici
+  const { user, profile, refreshProfile, isAdmin, signOut } = useAuth();
   const { currentTrack, isPlaying, togglePlay, stop } = usePlayer();
   const isMobile = useIsMobile(768);
   const location = useLocation();
@@ -84,6 +86,16 @@ export const MainLayout: React.FC = () => {
   const displayName = profile?.username || user?.email?.split('@')[0] || 'Artiste';
   const avatarUrl = profile?.avatar_url;
 
+  // ✅ Fonction pour gérer le clic sur le bouton de connexion/déconnexion
+  const handleAuthClick = async () => {
+    if (user) {
+      await signOut();
+      navigate('/');
+    } else {
+      navigate('/auth');
+    }
+  };
+
   const ThemeToggleButton = () => (
     <button
       onClick={toggleTheme}
@@ -107,7 +119,6 @@ export const MainLayout: React.FC = () => {
       <div style={{ minHeight: '100vh', background: colors.bg, color: colors.textMain, transition: 'background 0.3s ease' }}>
         {location.pathname !== '/nouveautes' && <ThemeToggleButton />}
         <Outlet />
-        {/* ✅ BOUTONS AJOUTÉS ICI */}
         <ScrollButtons />
         {currentTrack && <GlobalPlayer currentTrack={currentTrack} isPlaying={isPlaying} onTogglePlay={togglePlay} onStop={stop} />}
       </div>
@@ -123,13 +134,29 @@ export const MainLayout: React.FC = () => {
             <img src="/icons/icon-192.png" alt="DropZone DJ" style={{ width: 32, height: 32, objectFit: 'contain', borderRadius: 8 }} />
             <span style={{ fontWeight: 800, fontSize: '1rem', color: colors.textMain, letterSpacing: '-0.5px' }}>DROPZONE <span style={{ color: '#00d9ff' }}>DJ</span></span>
           </Link>
+          
           <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+            {/* ✅ Bouton de connexion/déconnexion ajouté sur mobile */}
+            {user ? (
+              <button onClick={handleAuthClick} style={{ background: 'transparent', border: 'none', color: '#ff5c5c', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+                Déconnexion
+              </button>
+            ) : (
+              <button onClick={handleAuthClick} style={{ background: '#00d9ff', border: 'none', color: '#000', fontWeight: 700, fontSize: 13, padding: '6px 12px', borderRadius: 6, cursor: 'pointer' }}>
+                Connexion
+              </button>
+            )}
+
             <button onClick={toggleTheme} style={{ background: 'transparent', border: 'none', color: colors.textMain, cursor: 'pointer', padding: 4 }}>
               {isDark ? Icons.sun : Icons.moon}
             </button>
-            <Link to={`/profil/${user?.id}`} className="avatar-circle" style={{ width: 34, height: 34, overflow: 'hidden', background: colors.hoverBg, border: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#00d9ff', fontWeight: 700, fontSize: 13, textDecoration: 'none' }}>
-              {avatarUrl ? <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : displayName.charAt(0).toUpperCase()}
-            </Link>
+
+            {/* ✅ Lien profil sécurisé : ne s'affiche que si connecté */}
+            {user && (
+              <Link to={`/profil/${user.id}`} className="avatar-circle" style={{ width: 34, height: 34, overflow: 'hidden', background: colors.hoverBg, border: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#00d9ff', fontWeight: 700, fontSize: 13, textDecoration: 'none' }}>
+                {avatarUrl ? <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : displayName.charAt(0).toUpperCase()}
+              </Link>
+            )}
           </div>
         </header>
 
@@ -137,7 +164,6 @@ export const MainLayout: React.FC = () => {
           <Outlet />
         </main>
 
-        {/* ✅ BOUTONS AJOUTÉS ICI */}
         <ScrollButtons />
         
         {currentTrack && <GlobalPlayer currentTrack={currentTrack} isPlaying={isPlaying} onTogglePlay={togglePlay} onStop={stop} />}
@@ -201,13 +227,37 @@ export const MainLayout: React.FC = () => {
           )}
         </nav>
 
-        <Link to={`/profil/${user?.id}`} style={{ padding: '16px 20px', borderTop: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none', color: colors.textMain }} onMouseEnter={(e) => e.currentTarget.style.background = colors.hoverBg} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
+        {/* ✅ BOUTON CONNEXION / DÉCONNEXION AJOUTÉ ICI */}
+        <div style={{ padding: '0 12px', marginBottom: '8px' }}>
+          <button 
+            onClick={handleAuthClick}
+            style={{
+              width: '100%', padding: '12px',
+              background: user ? 'rgba(255, 92, 92, 0.1)' : '#00d9ff',
+              color: user ? '#ff5c5c' : '#000',
+              border: user ? '1px solid #ff5c5c' : 'none',
+              borderRadius: '8px', fontWeight: 800, fontSize: '14px',
+              cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', transition: 'all 0.2s'
+            }}
+            onMouseEnter={(e) => { if (user) e.currentTarget.style.background = 'rgba(255, 92, 92, 0.2)'; }}
+            onMouseLeave={(e) => { if (user) e.currentTarget.style.background = 'rgba(255, 92, 92, 0.1)'; }}
+          >
+            {user ? (
+              <>{Icons.logout} Déconnexion</>
+            ) : (
+              'Se connecter'
+            )}
+          </button>
+        </div>
+
+        {/* ✅ LIEN PROFIL SÉCURISÉ */}
+        <Link to={user ? `/profil/${user.id}` : '/auth'} style={{ padding: '16px 20px', borderTop: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none', color: colors.textMain }} onMouseEnter={(e) => e.currentTarget.style.background = colors.hoverBg} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
           <div style={{ width: 36, height: 36, borderRadius: '50%', background: colors.hoverBg, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#00d9ff', fontWeight: 700, fontSize: 13, border: `1px solid ${colors.border}` }}>
-            {avatarUrl ? <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : displayName.charAt(0).toUpperCase()}
+            {avatarUrl ? <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (user ? displayName.charAt(0).toUpperCase() : '?')}
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
-             <div style={{ fontSize: '0.9rem', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{displayName}</div>
-             <div style={{ fontSize: '0.75rem', color: colors.textMuted }}>Voir mon profil</div>
+             <div style={{ fontSize: '0.9rem', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user ? displayName : 'Invité'}</div>
+             <div style={{ fontSize: '0.75rem', color: colors.textMuted }}>{user ? 'Voir mon profil' : 'Se connecter'}</div>
           </div>
         </Link>
       </aside>
@@ -223,7 +273,6 @@ export const MainLayout: React.FC = () => {
         </main>
       </div>
 
-      {/* ✅ BOUTONS AJOUTÉS ICI */}
       <ScrollButtons />
 
       {currentTrack && <GlobalPlayer currentTrack={currentTrack} isPlaying={isPlaying} onTogglePlay={togglePlay} onStop={stop} />}

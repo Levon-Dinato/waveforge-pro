@@ -23,7 +23,8 @@ const Icons = {
 };
 
 interface DbEvent { id: string; title: string; event_date: string; location: string | null; city: string | null; url: string | null; image_url: string | null; created_at?: string; }
-interface Track { id: string; title: string; artist: string; genre: string; bpm: number; song_key: string | null; audio_url: string; cover_url: string | null; user_id: string; created_at: string; duration: number; peaks: number[]; likes_count?: number; }
+// ✅ Ajout de plays et downloads dans l'interface
+interface Track { id: string; title: string; artist: string; genre: string; bpm: number; song_key: string | null; audio_url: string; cover_url: string | null; user_id: string; created_at: string; duration: number; peaks: number[]; likes_count?: number; plays?: number; downloads?: number; }
 interface Comment { id: string; user_id: string; content: string; created_at: string; profiles?: { username: string; avatar_url: string | null } }
 interface FollowedArtist { id: string; username: string; avatar_url: string | null; }
 
@@ -328,20 +329,42 @@ export const FeedPage: React.FC = () => {
     setFeedItems(prev => prev.filter(item => !(isPostItem(item) && item.data.id === postId)));
   };
 
-  const handlePlayClick = (e: React.MouseEvent, track: Track) => {
+  // ✅ MODIFICATION ICI : On ajoute la logique de comptage d'écoute
+  const handlePlayClick = async (e: React.MouseEvent, track: Track) => {
     e.stopPropagation();
     if (!user) {
       alert("🔒 Inscrivez-vous gratuitement pour écouter les morceaux en entier.");
       navigate('/auth');
       return;
     }
+    
+    const isNew = currentTrack?.id !== track.id;
     play(track);
+
+    if (isNew && user.id !== track.user_id) {
+      const listenKey = `listened_${track.id}_${user.id}`;
+      const lastListen = localStorage.getItem(listenKey);
+      const now = Date.now();
+      
+      if (!lastListen || now - parseInt(lastListen) >= 30 * 60 * 1000) {
+        try {
+          const { error } = await supabase.rpc('increment_play_count', { track_id_param: track.id });
+          if (!error) {
+            setFeedItems(prev => prev.map(item => 
+              isTrackItem(item) && item.data.id === track.id 
+                ? { ...item, data: { ...item.data, plays: (item.data.plays || 0) + 1 } } 
+                : item
+            ));
+            localStorage.setItem(listenKey, now.toString());
+          }
+        } catch (err) { console.error(err); }
+      }
+    }
   };
 
   return (
     <div style={{ background: colors.bg, minHeight: '100vh', color: colors.textMain, fontFamily: 'Inter, sans-serif', transition: 'background 0.3s ease, color 0.3s ease' }}>
       
-      {/* ✅ CONTENEUR PRINCIPAL AVEC HAUTEUR FIXE POUR BLOQUER LA SIDEBAR */}
       <div style={{ 
         maxWidth: 1200, 
         margin: '0 auto', 
@@ -349,18 +372,17 @@ export const FeedPage: React.FC = () => {
         display: 'flex', 
         gap: 40, 
         flexDirection: isMobile ? 'column' : 'row',
-        height: isMobile ? 'auto' : 'calc(100vh - 120px)', // Ajuste cette valeur si ton header est plus grand
+        height: isMobile ? 'auto' : 'calc(100vh - 120px)',
       }}>
         
-        {/* --- COLONNE PRINCIPALE (FEED) SCROLLABLE --- */}
         <div style={{ 
           flex: 1, 
           maxWidth: isMobile ? '100%' : 680, 
           minWidth: 0, 
           width: '100%',
-          overflowY: isMobile ? 'visible' : 'auto', // ✅ C'est ici que le scroll se passe
+          overflowY: isMobile ? 'visible' : 'auto',
           paddingRight: isMobile ? 0 : 20,
-          paddingBottom: currentTrack ? 100 : 20 // Espace pour le lecteur audio
+          paddingBottom: currentTrack ? 100 : 20
         }}>
           
           <div style={{ marginBottom: 32 }}>
@@ -379,7 +401,6 @@ export const FeedPage: React.FC = () => {
             </div>
           )}
 
-          {/* BARRE DES ARTISTES SUIVIS */}
           {feedMode === 'following' && followedArtists.length > 0 && (
             <div style={{ marginBottom: 24, background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 16, backdropFilter: 'blur(20px)' }}>
               <h3 style={{ fontSize: 11, fontWeight: 800, letterSpacing: '1px', margin: '0 0 16px 0', color: colors.textMuted, textTransform: 'uppercase' }}>Artistes que tu suis</h3>
@@ -403,7 +424,6 @@ export const FeedPage: React.FC = () => {
             </div>
           )}
 
-          {/* BARRE DE PUBLICATION */}
           {user && (
             <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 20, padding: isMobile ? 16 : 24, marginBottom: 32, backdropFilter: 'blur(20px)', boxShadow: '0 10px 30px rgba(0,0,0,0.05)' }}>
               <div style={{ display: 'flex', gap: 16 }}>
@@ -447,7 +467,6 @@ export const FeedPage: React.FC = () => {
             </div>
           )}
 
-          {/* LISTE DES POSTS / SONS / EVENTS */}
           {loading ? (
             <div style={{ textAlign: 'center', color: colors.textMuted, padding: 40 }}>Chargement...</div>
           ) : filteredFeedItems.length === 0 ? (
@@ -619,18 +638,16 @@ export const FeedPage: React.FC = () => {
           )}
         </div>
 
-        {/* --- SIDEBAR FIXE (NON SCROLLABLE) --- */}
         {!isMobile && (
           <aside style={{ 
             width: 320, 
             flexShrink: 0,
-            height: '100%', // ✅ Prend toute la hauteur du conteneur
-            overflowY: 'auto', // ✅ Si le contenu est plus grand que l'écran, la sidebar scrolle indépendamment (sans faire bouger le feed)
+            height: '100%',
+            overflowY: 'auto',
             paddingRight: 10
           }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
               
-              {/* WIDGET DE BIENVENUE (Furniture) */}
               <div style={{ background: `linear-gradient(135deg, ${colors.accent}15, transparent 60%), ${colors.panelBg}`, border: `1px solid ${colors.border}`, borderRadius: 20, padding: 24, backdropFilter: 'blur(20px)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
                   <div style={{ color: colors.accent }}>{Icons.sparkles}</div>
@@ -641,7 +658,6 @@ export const FeedPage: React.FC = () => {
                 </p>
               </div>
 
-              {/* TOP 5 DU MOMENT */}
               <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 20, padding: 24, backdropFilter: 'blur(20px)' }}>
                 <h3 style={{ fontSize: 13, fontWeight: 800, letterSpacing: '1px', margin: '0 0 20px 0', color: colors.textMain, textTransform: 'uppercase' }}>Top 5 du moment</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -676,7 +692,6 @@ export const FeedPage: React.FC = () => {
                 </div>
               </div>
               
-              {/* ÉVÉNEMENTS À VENIR */}
               <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 20, padding: 24, backdropFilter: 'blur(20px)' }}>
                 <h3 style={{ fontSize: 13, fontWeight: 800, letterSpacing: '1px', margin: '0 0 20px 0', color: colors.textMain, textTransform: 'uppercase' }}>Événements à venir</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -709,12 +724,10 @@ export const FeedPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* ONLINE USERS */}
               <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 20, padding: 24, backdropFilter: 'blur(20px)' }}>
                 <OnlineUsersWidget />
               </div>
 
-              {/* FOOTER SIDEBAR */}
               <div style={{ padding: '0 24px', fontSize: 11, color: colors.textMuted, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                 <span>© {new Date().getFullYear()} DropZone.dj</span>
                 <span>•</span>
@@ -728,7 +741,6 @@ export const FeedPage: React.FC = () => {
         )}
       </div>
 
-      {/* ✅ MODALE DES COMMENTAIRES AVEC REACT PORTAL */}
       {commentsModalOpen && createPortal(
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={() => setCommentsModalOpen(false)}>
           <div style={{ background: colors.modalBg, border: `1px solid ${colors.border}`, borderRadius: 20, padding: 24, width: '100%', maxWidth: 500, maxHeight: '80vh', display: 'flex', flexDirection: 'column', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)' }} onClick={e => e.stopPropagation()}>

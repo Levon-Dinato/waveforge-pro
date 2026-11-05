@@ -3,13 +3,12 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { TrackGrid } from '../components/TrackGrid';
-import type { Track } from '../components/TrackGrid';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { usePlayer } from '../contexts/PlayerContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { EventsTicker } from '../components/EventsTicker';
-import { ArtistPromoSection } from '../components/ArtistPromoSection'; // ✅ REMPLACÉ ICI
+import { ArtistPromoSection } from '../components/ArtistPromoSection';
 
 const Icons = {
   play: <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>,
@@ -27,15 +26,33 @@ const Icons = {
 
 interface Artist { id: string; username: string; avatar_url?: string; }
 
+// ✅ CORRECTION : L'interface est maintenant autonome et ne dépend plus de TrackGrid
+interface ExtendedTrack {
+  id: string;
+  title: string;
+  artist: string;
+  audio_url: string;
+  cover_url: string | null;
+  user_id?: string;
+  duration: number;
+  peaks: number[];
+  genre?: string;
+  bpm?: number;
+  song_key?: string;
+  likes_count?: number;
+  plays?: number;
+  downloads?: number;
+}
+
 export const HomePage = () => {
   const isMobile = useIsMobile(768);
   const navigate = useNavigate();
-  const { play, isPlaying, isCurrentTrack } = usePlayer();
+  const { play, isPlaying, currentTrack } = usePlayer() as any;
   const { user } = useAuth();
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  const [tracks, setTracks] = useState<Track[]>([]);
+  const [tracks, setTracks] = useState<ExtendedTrack[]>([]);
   const [artists, setArtists] = useState<Artist[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -61,7 +78,7 @@ export const HomePage = () => {
     const fetchData = async () => {
       try {
         const { data: tracksData } = await supabase.from('tracks').select('*').order('created_at', { ascending: false }).limit(30);
-        if (tracksData) setTracks(tracksData as Track[]);
+        if (tracksData) setTracks(tracksData as ExtendedTrack[]);
 
         const { data: profilesData } = await supabase.from('profiles').select('id, username, avatar_url').limit(12);
         if (profilesData) setArtists(profilesData as Artist[]);
@@ -74,12 +91,31 @@ export const HomePage = () => {
     fetchData();
   }, []);
 
+  const incrementPlayCount = async (track: ExtendedTrack) => {
+    if (!user || user.id === track.user_id) return; 
+    
+    const listenKey = `listened_${track.id}_${user.id}`;
+    const lastListen = localStorage.getItem(listenKey);
+    const now = Date.now();
+    
+    if (lastListen && now - parseInt(lastListen) < 30 * 60 * 1000) return; 
+
+    try {
+      const { error } = await supabase.rpc('increment_play_count', { track_id_param: track.id });
+      if (!error) {
+        setTracks(prev => prev.map(t => t.id === track.id ? { ...t, plays: (t.plays || 0) + 1 } : t));
+        localStorage.setItem(listenKey, now.toString());
+      }
+    } catch (err) { console.error("Erreur RPC:", err); }
+  };
+
   if (loading) return <div style={{ color: colors.textMuted, padding: 60, textAlign: 'center', fontSize: 14, background: colors.bg, minHeight: '100vh' }}>CHARGEMENT...</div>;
 
   const featured = tracks[0];
   const top10 = [...tracks].sort((a, b) => (b.likes_count || 0) - (a.likes_count || 0)).slice(0, 10);
   const newReleases = tracks.slice(1, 13);
-  const isFeaturedPlaying = featured ? isCurrentTrack(featured.id) && isPlaying : false;
+  
+  const isFeaturedPlaying = featured ? (currentTrack as any)?.id === featured.id && isPlaying : false; 
 
   const genres = Array.from(new Set(tracks.map(t => t.genre).filter(Boolean))).slice(0, 8);
 
@@ -92,16 +128,54 @@ export const HomePage = () => {
       return;
     }
     if (!featured) return;
-    play({ id: featured.id, title: featured.title, artist: featured.artist, audio_url: featured.audio_url, cover_url: featured.cover_url, user_id: featured.user_id || null, duration: featured.duration, peaks: featured.peaks, bpm: featured.bpm, song_key: featured.song_key, genre: featured.genre });
+
+    const isNew = (currentTrack as any)?.id !== featured.id;
+    
+    const trackToPlay = {
+      id: featured.id, 
+      title: featured.title, 
+      artist: featured.artist, 
+      audio_url: featured.audio_url, 
+      cover_url: featured.cover_url, 
+      user_id: featured.user_id || undefined, 
+      duration: featured.duration, 
+      peaks: featured.peaks, 
+      bpm: featured.bpm, 
+      song_key: featured.song_key, 
+      genre: featured.genre 
+    };
+    
+    play(trackToPlay as any);
+    
+    if (isNew) incrementPlayCount(featured);
   };
 
-  const handlePlayTrack = (track: Track) => {
+  const handlePlayTrack = (track: any) => {
     if (!user) {
       alert("🔒 Inscrivez-vous gratuitement pour écouter les morceaux en entier.");
       navigate('/auth');
       return;
     }
-    play({ id: track.id, title: track.title, artist: track.artist, audio_url: track.audio_url, cover_url: track.cover_url, user_id: track.user_id || null, duration: track.duration, peaks: track.peaks, bpm: track.bpm, song_key: track.song_key, genre: track.genre });
+    
+    const isNew = (currentTrack as any)?.id !== track.id;
+    
+    const trackToPlay = {
+      id: track.id, 
+      title: track.title, 
+      artist: track.artist, 
+      audio_url: track.audio_url, 
+      cover_url: track.cover_url, 
+      user_id: track.user_id || undefined, 
+      duration: track.duration, 
+      peaks: track.peaks, 
+      bpm: track.bpm, 
+      song_key: track.song_key, 
+      genre: track.genre 
+    };
+
+    play(trackToPlay as any);
+
+    if (isNew) incrementPlayCount(track);
   };
 
   const steps = [
@@ -219,7 +293,7 @@ export const HomePage = () => {
                 Tout voir {Icons.arrowRight}
               </Link>
             </div>
-            <TrackGrid tracks={newReleases} onPlay={handlePlayTrack} />
+            <TrackGrid tracks={newReleases as any} onPlay={(t) => handlePlayTrack(t as any)} />
           </div>
 
           {!isMobile && (
@@ -349,7 +423,6 @@ export const HomePage = () => {
 
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : '2fr 1fr 1fr 1fr', gap: isMobile ? 32 : 48, marginBottom: 40 }}>
 
-            {/* Colonne 1 : Logo + description */}
             <div style={{ gridColumn: isMobile ? '1 / -1' : 'auto' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
                 <div style={{ width: 32, height: 32, borderRadius: 8, background: colors.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', fontWeight: 900, fontSize: 13 }}>DZ</div>
@@ -362,7 +435,6 @@ export const HomePage = () => {
               </p>
             </div>
 
-            {/* Colonne 2 : Plateforme */}
             <div>
               <h4 style={{ fontSize: 12, fontWeight: 800, color: colors.textMain, textTransform: 'uppercase', letterSpacing: '1.5px', margin: '0 0 16px 0' }}>Plateforme</h4>
               <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -379,7 +451,6 @@ export const HomePage = () => {
               </ul>
             </div>
 
-            {/* Colonne 3 : Compte */}
             <div>
               <h4 style={{ fontSize: 12, fontWeight: 800, color: colors.textMain, textTransform: 'uppercase', letterSpacing: '1.5px', margin: '0 0 16px 0' }}>Compte</h4>
               <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -396,7 +467,6 @@ export const HomePage = () => {
               </ul>
             </div>
 
-            {/* Colonne 4 : Légal */}
             <div>
               <h4 style={{ fontSize: 12, fontWeight: 800, color: colors.textMain, textTransform: 'uppercase', letterSpacing: '1.5px', margin: '0 0 16px 0' }}>Légal</h4>
               <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>

@@ -39,37 +39,41 @@ export const DiscoverPage: React.FC = () => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        // 1. Récupérer tous les sons pour le Top 10 et les stats
-        const { data: tracksData } = await supabase
+        // ✅ CORRECTION : On récupère simplement les tracks sans jointure complexe
+        const { data: tracksData, error: tracksError } = await supabase
           .from('tracks')
-          .select('*, profiles(username)')
+          .select('*')
           .order('plays', { ascending: false });
 
-        // 2. Récupérer tous les profils (artistes)
-        const { data: profilesData } = await supabase
+        if (tracksError) console.error("Erreur tracks:", tracksError);
+
+        // ✅ CORRECTION : On sécurise la récupération des profils
+        const { data: profilesData, error: profilesError } = await supabase
           .from('profiles')
           .select('id, username, avatar_url, theme_color, bio')
-          .not('username', 'is', null)
           .order('username', { ascending: true });
 
-        if (tracksData) {
-          // Calculer les stats globales
-          const totalPlays = tracksData.reduce((acc, t) => acc + (Number(t.plays) || 0), 0);
-          setStats({
-            tracks: tracksData.length,
-            plays: totalPlays,
-            artists: profilesData?.length || 0
-          });
+        if (profilesError) console.error("Erreur profiles:", profilesError);
 
-          // Prendre le top 10
-          setTopTracks(tracksData.slice(0, 10));
-        }
+        // ✅ CORRECTION : On utilise des tableaux vides par défaut si les données sont null
+        const safeTracks = tracksData || [];
+        const safeProfiles = profilesData || [];
 
-        if (profilesData) {
-          setArtists(profilesData);
-        }
+        // Calcul des statistiques
+        const totalPlays = safeTracks.reduce((acc, t) => acc + (Number(t.plays) || 0), 0);
+        
+        setStats({
+          tracks: safeTracks.length,
+          plays: totalPlays,
+          artists: safeProfiles.length
+        });
+
+        // Prendre le top 10
+        setTopTracks(safeTracks.slice(0, 10));
+        setArtists(safeProfiles);
+
       } catch (err) {
-        console.error("Erreur de chargement", err);
+        console.error("Erreur globale de chargement", err);
       } finally {
         setLoading(false);
       }
@@ -141,42 +145,55 @@ export const DiscoverPage: React.FC = () => {
             <span style={{ fontSize: 11, background: colors.accent, color: '#000', padding: '4px 8px', borderRadius: 4, fontWeight: 800 }}>HITS</span>
           </div>
           
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
-            {topTracks.map((track, index) => {
-              const isCurrent = currentTrack?.id === track.id && isPlaying;
-              return (
-                <div key={track.id} style={{ display: 'flex', alignItems: 'center', gap: 16, background: colors.cardBg, padding: 16, borderRadius: 12, border: `1px solid ${colors.border}`, cursor: 'pointer', transition: 'transform 0.2s' }} onClick={() => handlePlay(track)} onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseLeave={e => e.currentTarget.style.transform = 'none'}>
-                  <div style={{ fontSize: 20, fontWeight: 900, color: colors.textMuted, width: 24 }}>{index + 1}</div>
-                  <div style={{ width: 56, height: 56, borderRadius: 8, background: track.cover_url ? `url(${track.cover_url}) center/cover` : colors.border, flexShrink: 0 }} />
-                  <div style={{ flex: 1, overflow: 'hidden' }}>
-                    <div style={{ fontSize: 15, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.title}</div>
-                    <div style={{ fontSize: 12, color: colors.textMuted }}>{track.profiles?.username || track.artist}</div>
+          {topTracks.length === 0 ? (
+            <div style={{ textAlign: 'center', color: colors.textMuted, padding: 40, border: `1px dashed ${colors.border}`, borderRadius: 16 }}>
+              Aucun son disponible pour le moment.
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
+              {topTracks.map((track, index) => {
+                const isCurrent = currentTrack?.id === track.id && isPlaying;
+                return (
+                  <div key={track.id} style={{ display: 'flex', alignItems: 'center', gap: 16, background: colors.cardBg, padding: 16, borderRadius: 12, border: `1px solid ${colors.border}`, cursor: 'pointer', transition: 'transform 0.2s' }} onClick={() => handlePlay(track)} onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseLeave={e => e.currentTarget.style.transform = 'none'}>
+                    <div style={{ fontSize: 20, fontWeight: 900, color: colors.textMuted, width: 24 }}>{index + 1}</div>
+                    <div style={{ width: 56, height: 56, borderRadius: 8, background: track.cover_url ? `url(${track.cover_url}) center/cover` : colors.border, flexShrink: 0 }} />
+                    <div style={{ flex: 1, overflow: 'hidden' }}>
+                      <div style={{ fontSize: 15, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.title}</div>
+                      {/* ✅ CORRECTION : On utilise track.artist directement */}
+                      <div style={{ fontSize: 12, color: colors.textMuted }}>{track.artist}</div>
+                    </div>
+                    <div style={{ width: 40, height: 40, borderRadius: '50%', background: isCurrent ? colors.accent : 'transparent', border: `1px solid ${isCurrent ? colors.accent : colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: isCurrent ? '#000' : colors.textMain }}>
+                      {isCurrent ? <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg> : Icons.play}
+                    </div>
                   </div>
-                  <div style={{ width: 40, height: 40, borderRadius: '50%', background: isCurrent ? colors.accent : 'transparent', border: `1px solid ${isCurrent ? colors.accent : colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: isCurrent ? '#000' : colors.textMain }}>
-                    {isCurrent ? <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg> : Icons.play}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* ANNUAIRE DES ARTISTES */}
         <div>
           <h2 style={{ fontSize: 24, fontWeight: 800, marginBottom: 30 }}>🎧 Découvrir les artistes</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: 20 }}>
-            {artists.map(artist => (
-              <Link key={artist.id} to={`/premium/${artist.username}`} style={{ textDecoration: 'none' }}>
-                <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 24, textAlign: 'center', transition: 'all 0.2s', cursor: 'pointer' }} onMouseEnter={e => e.currentTarget.style.borderColor = artist.theme_color || colors.accent} onMouseLeave={e => e.currentTarget.style.borderColor = colors.border}>
-                  <div style={{ width: 80, height: 80, borderRadius: '50%', margin: '0 auto 16px', background: artist.avatar_url ? `url(${artist.avatar_url}) center/cover` : colors.border, border: `2px solid ${artist.theme_color || colors.accent}40` }} />
-                  <h3 style={{ fontSize: 18, fontWeight: 800, color: colors.textMain, margin: '0 0 8px' }}>{artist.username}</h3>
-                  <p style={{ fontSize: 12, color: colors.textMuted, margin: 0, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                    {artist.bio || "Nouvel artiste sur DropZone."}
-                  </p>
-                </div>
-              </Link>
-            ))}
-          </div>
+          {artists.length === 0 ? (
+            <div style={{ textAlign: 'center', color: colors.textMuted, padding: 40, border: `1px dashed ${colors.border}`, borderRadius: 16 }}>
+              Aucun artiste inscrit pour le moment.
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: 20 }}>
+              {artists.map(artist => (
+                <Link key={artist.id} to={`/premium/${artist.username}`} style={{ textDecoration: 'none' }}>
+                  <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 24, textAlign: 'center', transition: 'all 0.2s', cursor: 'pointer' }} onMouseEnter={e => e.currentTarget.style.borderColor = artist.theme_color || colors.accent} onMouseLeave={e => e.currentTarget.style.borderColor = colors.border}>
+                    <div style={{ width: 80, height: 80, borderRadius: '50%', margin: '0 auto 16px', background: artist.avatar_url ? `url(${artist.avatar_url}) center/cover` : colors.border, border: `2px solid ${artist.theme_color || colors.accent}40` }} />
+                    <h3 style={{ fontSize: 18, fontWeight: 800, color: colors.textMain, margin: '0 0 8px' }}>{artist.username}</h3>
+                    <p style={{ fontSize: 12, color: colors.textMuted, margin: 0, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                      {artist.bio || "Nouvel artiste sur DropZone."}
+                    </p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
 
       </div>

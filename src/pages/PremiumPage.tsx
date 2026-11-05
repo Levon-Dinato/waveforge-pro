@@ -55,7 +55,7 @@ const getVideoUrlInfo = (url: string) => {
 
   if (url.includes('tiktok.com')) {
     const match = url.match(/\/video\/(\d+)/);
-    if (match) return { type: 'iframe', src: `https://www.tiktok.com/embed/v2/${match[1]}` };
+    if (match) return { type: 'iframe', src: `https://www.tiktok.com/player/v1/${match[1]}` };
   }
 
   return { type: 'iframe', src: url };
@@ -544,7 +544,13 @@ export const PremiumPage: React.FC = () => {
                     {videoInfo.type === 'video' ? (
                       <video src={videoInfo.src} style={{ width: '100%', height: '100%', objectFit: 'cover' }} muted />
                     ) : (
-                      <iframe src={videoInfo.src} style={{ width: '100%', height: '100%', border: 'none', pointerEvents: 'none' }} />
+                      <iframe 
+                        src={videoInfo.src} 
+                        style={{ width: '100%', height: '100%', border: 'none', pointerEvents: 'none' }} 
+                        allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+                        sandbox="allow-scripts allow-same-origin allow-presentation allow-popups"
+                        allowFullScreen
+                      />
                     )}
                     
                     <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -707,7 +713,15 @@ export const PremiumPage: React.FC = () => {
               if (info.type === 'video') {
                 return <video src={info.src} autoPlay controls playsInline style={{ width: '100%', height: '100%', objectFit: 'contain' }} />;
               }
-              return <iframe src={info.src} allow="autoplay; encrypted-media" allowFullScreen style={{ width: '100%', height: '100%', border: 'none' }} />;
+              return (
+                <iframe 
+                  src={info.src} 
+                  allow="autoplay; encrypted-media; fullscreen; picture-in-picture" 
+                  sandbox="allow-scripts allow-same-origin allow-presentation allow-popups"
+                  allowFullScreen
+                  style={{ width: '100%', height: '100%', border: 'none' }} 
+                />
+              );
             })()}
           </div>
         </div>,

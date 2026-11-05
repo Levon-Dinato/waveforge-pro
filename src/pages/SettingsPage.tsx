@@ -9,9 +9,10 @@ import { useTheme } from '../contexts/ThemeContext';
 import { PayPalButton } from '../components/PayPalButton';
 import { PremiumStats } from '../components/PremiumStats';
 
-// ✅ FONCTION POUR GÉRER LES LIENS YOUTUBE / TIKTOK
+// ✅ CORRECTION : Utilisation de l'API officielle du lecteur TikTok
 const getEmbedUrl = (url: string) => {
   if (!url) return '';
+  // YouTube
   if (url.includes('youtube.com') || url.includes('youtu.be')) {
     let videoId = '';
     if (url.includes('youtu.be/')) videoId = url.split('youtu.be/')[1].split('?')[0];
@@ -19,9 +20,10 @@ const getEmbedUrl = (url: string) => {
     else if (url.includes('watch?v=')) videoId = url.split('watch?v=')[1].split('&')[0];
     return `https://www.youtube.com/embed/${videoId}`;
   }
+  // TikTok - Utilisation de l'API Player officielle
   if (url.includes('tiktok.com')) {
     const match = url.match(/\/video\/(\d+)/);
-    if (match) return `https://www.tiktok.com/embed/v2/${match[1]}`;
+    if (match) return `https://www.tiktok.com/player/v1/${match[1]}`;
   }
   return url;
 };
@@ -199,7 +201,7 @@ export const SettingsPage: React.FC = () => {
       const fileName = `${user.id}/background-video-${Date.now()}.${file.name.split('.').pop()}`;
       const { error: uploadError } = await supabase.storage.from('media').upload(fileName, file);
       if (uploadError) throw uploadError;
-      const { data } = supabase.storage.from('media').getPublicUrl(fileName);
+      const { data } = await supabase.storage.from('media').getPublicUrl(fileName);
       setForm(prev => ({ ...prev, background_video_url: data.publicUrl }));
       alert("Vidéo uploadée avec succès ! ✅");
     } catch (error: any) {
@@ -668,11 +670,11 @@ export const SettingsPage: React.FC = () => {
                 {short.video_url.match(/\.(mp4|webm)$/i) ? (
                   <video src={short.video_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 ) : (
-                  // ✅ CORRECTION ICI : On affiche le vrai iframe au lieu du texte
                   <iframe 
                     src={getEmbedUrl(short.video_url)} 
                     style={{ width: '100%', height: '100%', border: 'none' }} 
-                    allow="encrypted-media;" 
+                    allow="autoplay; encrypted-media; fullscreen; picture-in-picture" 
+                    sandbox="allow-scripts allow-same-origin allow-presentation allow-popups"
                     allowFullScreen
                   />
                 )}

@@ -1,6 +1,7 @@
 // src/pages/NouveautesPage.tsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { createPortal } from 'react-dom';
 import { OnlineUsersWidget } from '../components/OnlineUsersWidget';
 import { ShareButton } from '../components/ShareButton';
 import { supabase, AUDIO_BUCKET } from '../lib/supabase';
@@ -80,12 +81,10 @@ export const NouveautesPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 20;
 
-  // ✅ ÉTATS POUR LES PLAYLISTS
   const [userPlaylists, setUserPlaylists] = useState<any[]>([]);
   const [addingTrackId, setAddingTrackId] = useState<string | null>(null);
   const [recentlyAdded, setRecentlyAdded] = useState<string | null>(null);
   
-  // ✅ NOUVEAUX ÉTATS POUR LA CRÉATION RAPIDE
   const [isCreatingPlaylistInMenu, setIsCreatingPlaylistInMenu] = useState(false);
   const [newPlaylistNameInMenu, setNewPlaylistNameInMenu] = useState('');
 
@@ -156,14 +155,12 @@ export const NouveautesPage: React.FC = () => {
     }
   };
 
-  // ✅ FONCTION POUR CRÉER UNE PLAYLIST ET Y AJOUTER LE SON DIRECTEMENT
   const handleCreatePlaylistAndAdd = async (e: React.FormEvent, trackId: string) => {
     e.preventDefault();
     e.stopPropagation();
     if (!user || !newPlaylistNameInMenu.trim()) return;
 
     try {
-      // 1. Créer la playlist
       const { data: newPlaylist, error: createError } = await supabase.from('playlists').insert({
         user_id: user.id,
         name: newPlaylistNameInMenu.trim()
@@ -171,7 +168,6 @@ export const NouveautesPage: React.FC = () => {
 
       if (createError) throw createError;
 
-      // 2. Ajouter le son à cette nouvelle playlist
       const { error: addError } = await supabase.from('playlist_tracks').insert({
         playlist_id: newPlaylist.id,
         track_id: trackId
@@ -179,7 +175,6 @@ export const NouveautesPage: React.FC = () => {
 
       if (addError) throw addError;
 
-      // 3. Mettre à jour l'UI
       setUserPlaylists(prev => [newPlaylist, ...prev]);
       setRecentlyAdded(trackId);
       setNewPlaylistNameInMenu('');
@@ -255,6 +250,7 @@ export const NouveautesPage: React.FC = () => {
     setEditingId(null);
   };
 
+  // ✅ FONCTION CORRIGÉE : Extraction profonde de la clé, typage TS propre
   const handleAudioFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -263,6 +259,7 @@ export const NouveautesPage: React.FC = () => {
     const fileNameWithoutExt = file.name.replace(/\.[^/.]+$/, "");
     let guessArtist = "";
     let guessTitle = fileNameWithoutExt;
+    let guessKey = "";
     
     if (fileNameWithoutExt.includes(' - ')) {
       const parts = fileNameWithoutExt.split(' - ');
@@ -270,15 +267,73 @@ export const NouveautesPage: React.FC = () => {
       guessTitle = parts.slice(1).join(' - ').trim();
     }
 
+    const keyMatch = fileNameWithoutExt.match(/(?:\[|\()([A-G][#b]?m?(?:aj|in|j)?|[1-9][0-9]?[AB])(?:\]|\))/i);
+    if (keyMatch) {
+      guessKey = keyMatch[1];
+    }
+
     setUploadForm(prev => ({
       ...prev,
       title: prev.title || guessTitle,
       artist: prev.artist || guessArtist,
+      song_key: prev.song_key || guessKey,
     }));
 
     try {
-      const metadata = await parseBlob(file);
-      const { common } = metadata;
+      const metadata = await parseBlob(file, { skipCovers: false });
+      const { common, native } = metadata;
+
+      let nativeKey = "";
+      
+      if ((native as any)['ID3v2.3']) {
+        const tkey = (native as any)['ID3v2.3'].find((tag: any) => tag.id === 'TKEY');
+        if (tkey) nativeKey = tkey.value as string;
+      }
+      if (!nativeKey && (native as any)['ID3v2.4']) {
+        const tkey = (native as any)['ID3v2.4'].find((tag: any) => tag.id === 'TKEY');
+        if (tkey) nativeKey = tkey.value as string;
+      }
+      if (!nativeKey && (native as any)['ID3v2.2']) {
+        const tke = (native as any)['ID3v2.2'].find((tag: any) => tag.id === 'TKE');
+        if (tke) nativeKey = tke.value as string;
+      }
+      
+      const scanTXXX = (tags: any[]) => {
+        for (const tag of tags) {
+          if (tag.id === 'TXXX' && tag.description) {
+            const desc = tag.description.toUpperCase();
+            if (desc.includes('KEY') || desc.includes('INITIAL') || desc.includes('CAMELOT') || desc.includes('SERATO')) {
+              if (tag.value) return tag.value.toString().trim();
+            }
+          }
+        }
+        return "";
+      };
+
+      if (!nativeKey && (native as any)['ID3v2.3']) {
+        nativeKey = scanTXXX((native as any)['ID3v2.3']);
+      }
+      if (!nativeKey && (native as any)['ID3v2.4']) {
+        nativeKey = scanTXXX((native as any)['ID3v2.4']);
+      }
+
+      // ✅ CORRECTION ICI : common.comment est un tableau d'objets, on extrait le texte
+      if (!nativeKey && common.comment && common.comment.length > 0) {
+        const commentText = (common.comment as any[])?.[0]?.text;
+        if (commentText) {
+           const camelotMatch = commentText.match(/\b([1-9][0-9]?[AB])\b/i);
+           if (camelotMatch) nativeKey = camelotMatch[1];
+        }
+      }
+
+      let finalKey = common.key || nativeKey || guessKey;
+      
+      if (finalKey) {
+        finalKey = finalKey.trim();
+        if (/^[1-9][0-9]?[AB]$/i.test(finalKey)) {
+          finalKey = finalKey.toUpperCase();
+        }
+      }
 
       setUploadForm(prev => ({
         ...prev,
@@ -286,16 +341,18 @@ export const NouveautesPage: React.FC = () => {
         artist: common.artist || prev.artist,
         genre: common.genre?.[0] || prev.genre,
         bpm: common.bpm ? String(Math.round(common.bpm)) : prev.bpm,
-        song_key: common.key || prev.song_key
+        song_key: finalKey || prev.song_key 
       }));
 
+      // ✅ CORRECTION ICI : as any sur dataArray pour le Blob
       if (common.picture && common.picture.length > 0) {
         const pic = common.picture[0];
-        const blob = new Blob([new Uint8Array(pic.data)], { type: pic.format });
+        const dataArray = pic.data instanceof Uint8Array ? pic.data : new Uint8Array(pic.data as any);
+        const blob = new Blob([dataArray as any], { type: pic.format });
         const coverFileFromTag = new File([blob], `cover-${Date.now()}.jpg`, { type: pic.format });
         setCoverFile(coverFileFromTag); 
       }
-    } catch (err) {
+    } catch (err: any) {
       console.warn("Impossible de lire les tags ID3", err);
     }
   };
@@ -403,7 +460,7 @@ export const NouveautesPage: React.FC = () => {
         </div>
       )}
 
-      <div style={{ position: 'relative', zIndex: 10, padding: '16px 24px', borderBottom: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: isDark ? 'rgba(5, 5, 10, 0.7)' : 'rgba(255, 255, 255, 0.8)', backdropFilter: 'blur(20px)', position: 'sticky', top: 0 }}>
+      <div style={{ zIndex: 10, padding: '16px 24px', borderBottom: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: isDark ? 'rgba(5, 5, 10, 0.7)' : 'rgba(255, 255, 255, 0.8)', backdropFilter: 'blur(20px)', position: 'sticky', top: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           <button onClick={() => navigate('/')} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600, transition: 'color 0.2s' }} onMouseEnter={e => e.currentTarget.style.color = colors.textMain} onMouseLeave={e => e.currentTarget.style.color = colors.textMuted}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
@@ -543,7 +600,6 @@ export const NouveautesPage: React.FC = () => {
                          <button onClick={() => handleLike(track.id)} style={{ background: 'transparent', border: 'none', color: isLiked ? '#ff3366' : colors.textMuted, fontSize: 14 }}>{isLiked ? '❤️' : '🤍'} {track.likes_count}</button>
                          <button onClick={(e) => handleDownloadClick(e, track)} style={{ background: 'transparent', border: 'none', color: colors.textMuted }}>{Icons.download}</button>
                          
-                         {/* Bouton Playlist Mobile */}
                          <div style={{ position: 'relative' }}>
                             <button onClick={() => setAddingTrackId(addingTrackId === track.id ? null : track.id)} style={{ background: 'transparent', border: 'none', color: recentlyAdded === track.id ? '#10b981' : colors.textMuted, display: 'flex', alignItems: 'center' }}>
                               {recentlyAdded === track.id ? Icons.check : Icons.playlist}
@@ -628,7 +684,6 @@ export const NouveautesPage: React.FC = () => {
                         <button onClick={(e) => handleDownloadClick(e, track)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center' }}>{Icons.download}</button>
                         <ShareButton url={`${window.location.origin}/share/${track.id}`} title={`${track.title} — ${track.artist}`} text={`Écoute sur DropZone DJ 🎵`} variant="icon" size="small" label="" position="bottom" />
                         
-                        {/* ✅ BOUTON PLAYLIST DESKTOP MIS À JOUR */}
                         {user && (
                           <div style={{ position: 'relative' }}>
                             <button onClick={() => setAddingTrackId(addingTrackId === track.id ? null : track.id)} style={{ background: 'transparent', border: 'none', color: recentlyAdded === track.id ? '#10b981' : colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
@@ -717,8 +772,9 @@ export const NouveautesPage: React.FC = () => {
         </div>
       </div>
 
-      {showUploadModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+      {/* ✅ MODALE AVEC CREATE PORTAL POUR ÊTRE CENTRÉE ET AU-DESSUS DE TOUT */}
+      {showUploadModal && createPortal(
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
           <div style={{ background: isDark ? 'rgba(15, 15, 20, 0.95)' : '#ffffff', border: `1px solid ${colors.border}`, borderRadius: 20, padding: 32, width: '100%', maxWidth: 500, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 0 50px rgba(0, 217, 255, 0.1)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
               <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: colors.textMain, letterSpacing: '-0.5px' }}>Ajouter un son</h2>
@@ -794,7 +850,7 @@ export const NouveautesPage: React.FC = () => {
               </button>
             </form>
           </div>
-        </div>
+        </div>, document.body
       )}
     </div>
   );

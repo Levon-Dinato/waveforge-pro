@@ -11,6 +11,7 @@ import { ArtistPromoSection } from '../components/ArtistPromoSection';
 import { ScrollButtons } from '../components/ScrollButtons'; 
 import { ReleaseCard } from '../components/ReleaseCard';
 import { BookingModal, UploadModal, Lightbox } from '../components/PremiumModals';
+import { SpotifyPlayer } from '../components/SpotifyPlayer'; // ✅ IMPORT SPOTIFY
 import * as GlobalPlayerModule from '../components/GlobalPlayer';
 import * as ArrowButtonModule from '../components/ArrowButton';
 import './LevonDinato.css';
@@ -638,6 +639,34 @@ export const PremiumPage: React.FC = () => {
                 </div>
               )}
             </div>
+
+            {/* ✅ LECTEUR SPOTIFY HARMONISÉ ICI */}
+            {profile.spotify_url && (
+              <div style={{
+                background: colors.cardBg,
+                backdropFilter: 'blur(20px)',
+                border: `1px solid ${colors.cardBorder}`,
+                borderRadius: 16,
+                padding: isMobile ? 16 : 24,
+                marginBottom: isMobile ? 16 : 24,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center'
+              }}>
+                <h3 style={{
+                  fontSize: 12, 
+                  fontWeight: 800, 
+                  color: colors.textMain,
+                  marginBottom: 16, 
+                  textTransform: 'uppercase', 
+                  letterSpacing: '1px', 
+                  alignSelf: 'flex-start'
+                }}>
+                  Écouter sur Spotify
+                </h3>
+                <SpotifyPlayer url={profile.spotify_url} height={352} />
+              </div>
+            )}
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 16 : 24 }}>
               {tracks.length > 0 ? tracks.slice(0, visibleTracksCount).map((track) => (

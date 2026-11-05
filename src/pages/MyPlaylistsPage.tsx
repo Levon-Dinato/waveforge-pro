@@ -6,6 +6,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { usePlayer } from '../contexts/PlayerContext';
+import { useIsMobile } from '../hooks/useIsMobile'; // ✅ Import ajouté
 
 const Icons = {
   playlist: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>,
@@ -22,14 +23,16 @@ export const MyPlaylistsPage: React.FC = () => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   const navigate = useNavigate();
-  const { play, currentTrack, isPlaying } = usePlayer();
+  const isMobile = useIsMobile(768); // ✅ Hook ajouté
+  
+  // ✅ On ajoute togglePlay pour gérer le Pause
+  const { play, currentTrack, isPlaying, togglePlay } = usePlayer() as any;
 
   const [playlists, setPlaylists] = useState<any[]>([]);
   const [selectedPlaylist, setSelectedPlaylist] = useState<any | null>(null);
   const [playlistTracks, setPlaylistTracks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // ✅ ÉTATS POUR LA CRÉATION DE PLAYLIST
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newPlaylistName, setNewPlaylistName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
@@ -85,16 +88,29 @@ export const MyPlaylistsPage: React.FC = () => {
     }
   };
 
+  // ✅ Gestion du Play / Pause intelligent
   const handlePlayTrack = (track: any) => {
     if (!user) return;
-    play({ 
-      id: track.id, title: track.title, artist: track.artist, 
-      audio_url: track.audio_url, cover_url: track.cover_url, 
-      user_id: track.user_id, duration: track.duration, 
-      peaks: track.peaks, bpm: track.bpm, song_key: track.song_key, 
-      genre: track.genre, player_bg_image_url: track.player_bg_image_url, 
-      player_bg_color: track.player_bg_color 
-    });
+    
+    if (currentTrack?.id === track.id) {
+      togglePlay();
+    } else {
+      play({ 
+        id: track.id, title: track.title, artist: track.artist, 
+        audio_url: track.audio_url, cover_url: track.cover_url, 
+        user_id: track.user_id, duration: track.duration, 
+        peaks: track.peaks, bpm: track.bpm, song_key: track.song_key, 
+        genre: track.genre, player_bg_image_url: track.player_bg_image_url, 
+        player_bg_color: track.player_bg_color 
+      });
+    }
+  };
+
+  // ✅ Nouveau : Lancer toute la playlist
+  const handlePlayAll = () => {
+    if (playlistTracks.length > 0) {
+      handlePlayTrack(playlistTracks[0]);
+    }
   };
 
   const deletePlaylist = async (e: React.MouseEvent, id: string) => {
@@ -106,7 +122,6 @@ export const MyPlaylistsPage: React.FC = () => {
     if (selectedPlaylist?.id === id) setSelectedPlaylist(null);
   };
 
-  // ✅ FONCTION POUR RETIRER UN SON DE LA PLAYLIST
   const removeTrackFromPlaylist = async (e: React.MouseEvent, trackId: string) => {
     e.stopPropagation();
     if (!selectedPlaylist) return;
@@ -121,14 +136,12 @@ export const MyPlaylistsPage: React.FC = () => {
 
       if (error) throw error;
       
-      // Mise à jour locale de l'UI
       setPlaylistTracks(prev => prev.filter(t => t.id !== trackId));
     } catch (err) {
       alert("Erreur lors de la suppression du son.");
     }
   };
 
-  // ✅ FONCTION CRÉER UNE PLAYLIST
   const handleCreatePlaylist = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !newPlaylistName.trim()) return;
@@ -155,11 +168,11 @@ export const MyPlaylistsPage: React.FC = () => {
   if (loading) return <div style={{ padding: 40, textAlign: 'center', color: colors.textMain, background: colors.bg, minHeight: '100vh' }}>Chargement...</div>;
 
   return (
-    <div style={{ background: colors.bg, minHeight: '100vh', padding: '40px 20px', fontFamily: 'Inter, sans-serif' }}>
+    <div style={{ background: colors.bg, minHeight: '100vh', padding: isMobile ? '20px 12px' : '40px 20px', fontFamily: 'Inter, sans-serif', color: colors.textMain }}>
       <div style={{ maxWidth: 1000, margin: '0 auto' }}>
         
         {/* En-tête */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 40 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 40, flexWrap: 'wrap', gap: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             {selectedPlaylist && (
               <button onClick={() => setSelectedPlaylist(null)} style={{ background: 'transparent', border: 'none', color: colors.textMain, cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
@@ -167,7 +180,7 @@ export const MyPlaylistsPage: React.FC = () => {
               </button>
             )}
             <div>
-              <h1 style={{ fontSize: 32, fontWeight: 900, color: colors.textMain, margin: 0 }}>
+              <h1 style={{ fontSize: isMobile ? 28 : 32, fontWeight: 900, color: colors.textMain, margin: 0 }}>
                 {selectedPlaylist ? selectedPlaylist.name : 'Mes Playlists'}
               </h1>
               <p style={{ color: colors.textMuted, margin: '4px 0 0 0', fontSize: 14 }}>
@@ -176,20 +189,32 @@ export const MyPlaylistsPage: React.FC = () => {
             </div>
           </div>
 
-          {/* ✅ BOUTON CRÉER UNE PLAYLIST (Visible seulement sur la vue globale) */}
-          {!selectedPlaylist && (
-            <button 
-              onClick={() => setShowCreateModal(true)} 
-              style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', background: colors.accent, color: '#000', borderRadius: 8, fontWeight: 800, border: 'none', cursor: 'pointer' }}
-            >
-              {Icons.plus} Créer une playlist
-            </button>
-          )}
+          <div style={{ display: 'flex', gap: 12 }}>
+            {/* ✅ Bouton "Tout lire" */}
+            {selectedPlaylist && playlistTracks.length > 0 && (
+              <button 
+                onClick={handlePlayAll}
+                style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', background: colors.textMain, color: colors.bg, borderRadius: 8, fontWeight: 800, border: 'none', cursor: 'pointer' }}
+              >
+                {Icons.play} Tout lire
+              </button>
+            )}
+
+            {/* ✅ Bouton Créer (uniquement sur la vue globale) */}
+            {!selectedPlaylist && (
+              <button 
+                onClick={() => setShowCreateModal(true)} 
+                style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', background: colors.accent, color: '#000', borderRadius: 8, fontWeight: 800, border: 'none', cursor: 'pointer' }}
+              >
+                {Icons.plus} Créer une playlist
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Vue Liste des Playlists */}
         {!selectedPlaylist && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: `repeat(auto-fill, minmax(${isMobile ? '100%' : '280px'}, 1fr))`, gap: 20 }}>
             {playlists.length === 0 ? (
               <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: 60, border: `1px dashed ${colors.border}`, borderRadius: 16 }}>
                 <div style={{ color: colors.textMuted, marginBottom: 16, display: 'flex', justifyContent: 'center' }}>{Icons.playlist}</div>
@@ -234,7 +259,7 @@ export const MyPlaylistsPage: React.FC = () => {
               playlistTracks.map((track, index) => {
                 const isThisPlaying = currentTrack?.id === track.id && isPlaying;
                 return (
-                  <div key={track.id} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '12px 20px', borderBottom: index < playlistTracks.length - 1 ? `1px solid ${colors.border}` : 'none' }}
+                  <div key={track.id} style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 12 : 16, padding: isMobile ? '10px 16px' : '12px 20px', borderBottom: index < playlistTracks.length - 1 ? `1px solid ${colors.border}` : 'none' }}
                     onMouseEnter={(e) => e.currentTarget.style.background = colors.hoverBg}
                     onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
                     
@@ -252,17 +277,18 @@ export const MyPlaylistsPage: React.FC = () => {
                       <Link to={`/track/${track.id}`} style={{ textDecoration: 'none' }}>
                         <div style={{ fontSize: 14, fontWeight: 700, color: isThisPlaying ? colors.accent : colors.textMain, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.title}</div>
                       </Link>
-                      <div style={{ fontSize: 12, color: colors.textMuted }}>{track.artist}</div>
+                      <div style={{ fontSize: 12, color: colors.textMuted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.artist}</div>
                     </div>
 
-                    <div style={{ fontSize: 12, color: colors.textMuted, fontFamily: 'monospace', marginRight: 16 }}>
-                      {track.bpm ? `${track.bpm} BPM` : ''}
-                    </div>
+                    {!isMobile && (
+                      <div style={{ fontSize: 12, color: colors.textMuted, fontFamily: 'monospace', marginRight: 16 }}>
+                        {track.bpm ? `${track.bpm} BPM` : ''}
+                      </div>
+                    )}
 
-                    {/* ✅ BOUTON SUPPRIMER DU SON DE LA PLAYLIST */}
                     <button 
                       onClick={(e) => removeTrackFromPlaylist(e, track.id)} 
-                      style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', padding: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 6, transition: 'all 0.2s' }}
+                      style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', padding: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 6, transition: 'all 0.2s', flexShrink: 0 }}
                       title="Retirer de la playlist"
                       onMouseEnter={(e) => { e.currentTarget.style.color = '#ff5c5c'; e.currentTarget.style.background = 'rgba(255,92,92,0.1)'; }}
                       onMouseLeave={(e) => { e.currentTarget.style.color = colors.textMuted; e.currentTarget.style.background = 'transparent'; }}

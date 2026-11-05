@@ -13,7 +13,6 @@ export interface PlayerTrack {
   bpm?: number | null;
   song_key?: string | null;
   genre?: string | null;
-  // ✅ Ajout des propriétés manquantes
   player_bg_image_url?: string | null;
   player_bg_color?: string | null;
 }
@@ -51,8 +50,57 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
   }, []);
 
+  // ✅ AJOUT : MEDIA SESSION API (Contrôles sur écran verrouillé / TV)
+  useEffect(() => {
+    if (!currentTrack || !('mediaSession' in navigator)) return;
+
+    // 1. Mise à jour des métadonnées
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: currentTrack.title,
+      artist: currentTrack.artist,
+      album: 'DropZone.dj',
+      artwork: [
+        { 
+          src: currentTrack.cover_url || `${window.location.origin}/og-image.jpg`, 
+          sizes: '512x512', 
+          type: 'image/jpeg' 
+        }
+      ]
+    });
+
+    // 2. Synchronisation de l'état de lecture
+    navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
+
+    // 3. Gestion des boutons
+    navigator.mediaSession.setActionHandler('play', () => {
+      if (!isPlaying) togglePlay();
+    });
+    navigator.mediaSession.setActionHandler('pause', () => {
+      if (isPlaying) togglePlay();
+    });
+    navigator.mediaSession.setActionHandler('seekbackward', () => {
+      if (duration > 0) seek(Math.max(0, (currentTime - 10) / duration));
+    });
+    navigator.mediaSession.setActionHandler('seekforward', () => {
+      if (duration > 0) seek(Math.min(1, (currentTime + 10) / duration));
+    });
+    navigator.mediaSession.setActionHandler('seekto', (details) => {
+      if (details.seekTime && duration > 0) {
+        seek(details.seekTime / duration);
+      }
+    });
+
+    // Nettoyage
+    return () => {
+      navigator.mediaSession.setActionHandler('play', null);
+      navigator.mediaSession.setActionHandler('pause', null);
+      navigator.mediaSession.setActionHandler('seekbackward', null);
+      navigator.mediaSession.setActionHandler('seekforward', null);
+      navigator.mediaSession.setActionHandler('seekto', null);
+    };
+  }, [currentTrack, isPlaying, currentTime, duration]);
+
   const play = (track: PlayerTrack) => {
-    // Si c'est le même morceau, on toggle Play/Pause
     if (currentTrack?.id === track.id && audioRef.current) {
       if (audioRef.current.paused) {
         audioRef.current.play().catch((e) => console.error("Lecture bloquée:", e));
@@ -64,13 +112,11 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       return;
     }
 
-    // Si c'est un nouveau morceau, on arrête l'ancien
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current = null;
     }
 
-    // Création de l'élément audio
     const audio = new Audio(track.audio_url);
     audio.volume = volume;
     audioRef.current = audio;
@@ -91,7 +137,6 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setCurrentTime(0);
     });
 
-    // Tentative de lecture
     audio.play().catch((e) => {
       console.error('Erreur de lecture (navigateur bloque ?):', e);
       setIsPlaying(false);
@@ -119,6 +164,10 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setIsPlaying(false);
     setCurrentTime(0);
     setDuration(0);
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.metadata = null;
+      navigator.mediaSession.playbackState = 'none';
+    }
   };
 
   const seek = (ratio: number) => {

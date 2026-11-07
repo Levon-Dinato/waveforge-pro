@@ -21,7 +21,7 @@ const MasteringPage = lazy(() => import('./pages/MasteringPage').then((m) => ({ 
 const MusicGenPage = lazy(() => import('./pages/MusicGenPage').then((m) => ({ default: m.MusicGenPage })));
 const GeneratorPage = lazy(() => import('./pages/GeneratorPage').then((m) => ({ default: m.GeneratorPage })));
 const VideoPage = lazy(() => import('./pages/VideoPage').then((m) => ({ default: m.VideoPage })));
-const CDJPage = lazy(() => import('./pages/Edge Function').then((m) => ({ default: m.CDJPage })));
+const CDJPage = lazy(() => import('./pages/CDJPage').then((m) => ({ default: m.CDJPage })));
 const HelpPage = lazy(() => import('./pages/HelpPage').then((m) => ({ default: m.HelpPage })));
 const SettingsPage = lazy(() => import('./pages/SettingsPage').then((m) => ({ default: m.SettingsPage })));
 const NouveautesPage = lazy(() => import('./pages/NouveautesPage').then((m) => ({ default: m.NouveautesPage })));

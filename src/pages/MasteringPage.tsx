@@ -1,24 +1,28 @@
 // src/pages/MasteringPage.tsx
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { MasteringPanel } from '../components/MasteringPanel';
 import { useAudioEngineContext } from '../contexts/AudioEngineContext';
-import { useTheme } from '../contexts/ThemeContext'; // ✅ IMPORT DU THEME
+import { useTheme } from '../contexts/ThemeContext';
 import { LUFSMeter, MasteringChain, type MasteringPreset } from '../audio/masteringChain';
-
 import { Knob } from '../components/ui/Knob';
 import { CurveVisualizer } from '../components/ui/CurveVisualizer';
-import { ToggleSwitch } from '../components/ui/ToggleSwitch';
 
 const PRESETS = [
-  { id: 'universal', name: 'Universel', color: '#a08aff', icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg> },
-  { id: 'fire', name: 'Feu', color: '#ef4444', icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 2.5z"/></svg> },
-  { id: 'clarity', name: 'Clarté', color: '#00d9ff', icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M6 3h12l4 6-10 13L2 9z"/><path d="M11 3L8 9l4 13 4-13-3-6"/><path d="M2 9h20"/></svg> },
-  { id: 'cassette', name: 'Cassette', color: '#f59e0b', icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="8" cy="12" r="2"/><circle cx="16" cy="12" r="2"/><path d="M6 18h12"/></svg> },
-  { id: 'natural', name: 'Naturel', color: '#10b981', icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M11 20A7 7 0 019.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg> },
-  { id: 'spatial', name: 'Spatial', color: '#00d9ff', icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/><path d="M2 12h20"/></svg> },
-  { id: 'cinematic', name: 'Cinématique', color: '#f59e0b', icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg> },
-  { id: 'punch', name: 'Punch', color: '#ec4899', icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> },
+  { id: 'universal', name: 'Universel', desc: 'Équilibre parfait', color: '#a08aff', icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg> },
+  { id: 'fire', name: 'Feu', desc: 'Chaleur & Distorsion', color: '#ef4444', icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 2.5z"/></svg> },
+  { id: 'clarity', name: 'Clarté', desc: 'Aigus cristallins', color: '#00d9ff', icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M6 3h12l4 6-10 13L2 9z"/><path d="M11 3L8 9l4 13 4-13-3-6"/><path d="M2 9h20"/></svg> },
+  { id: 'cassette', name: 'Cassette', desc: 'Vintage & Coloration', color: '#f59e0b', icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="8" cy="12" r="2"/><circle cx="16" cy="12" r="2"/><path d="M6 18h12"/></svg> },
+  { id: 'natural', name: 'Naturel', desc: 'Transparence totale', color: '#10b981', icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M11 20A7 7 0 019.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg> },
+  { id: 'spatial', name: 'Spatial', desc: 'Stéréo large', color: '#00d9ff', icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/><path d="M2 12h20"/></svg> },
+  { id: 'cinematic', name: 'Cinéma', desc: 'Impact & Profondeur', color: '#f59e0b', icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg> },
+  { id: 'punch', name: 'Punch', desc: 'Frappe percutante', color: '#ec4899', icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> },
+];
+
+const LUFS_TARGETS = [
+  { label: 'Spotify', target: -14, color: '#1db954' },
+  { label: 'Apple', target: -16, color: '#fa2d48' },
+  { label: 'YouTube', target: -14, color: '#ff0000' },
+  { label: 'Club', target: -9, color: '#ffb800' },
 ];
 
 const formatTime = (seconds: number) => {
@@ -31,20 +35,20 @@ const formatTime = (seconds: number) => {
 export const MasteringPage: React.FC = () => {
   const engine = useAudioEngineContext();
   const hasAudio = !!engine.audioBuffer;
-
-  // ✅ RÉCUPÉRATION DU THÈME
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
   const [localFileName, setLocalFileName] = useState<string | null>(null);
   const [isImporting, setIsImporting] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [presetIntensity, setPresetIntensity] = useState(50);
+  const [presetIntensity, setPresetIntensity] = useState(75);
   const [activePreset, setActivePreset] = useState<string>('universal');
   const [abMode, setAbMode] = useState<'original' | 'mastered'>('mastered');
   const [isPlayingAB, setIsPlayingAB] = useState(false);
   const [abAnalyser, setAbAnalyser] = useState<AnalyserNode | null>(null);
+  
   const [lufs, setLufs] = useState({ m: -Infinity, s: -Infinity, i: -Infinity });
   
   const [gainVal, setGainVal] = useState(50);
@@ -57,112 +61,134 @@ export const MasteringPage: React.FC = () => {
 
   const abGraphRef = useRef<{
     source: AudioBufferSourceNode; dryGain: GainNode; wetGain: GainNode;
+    originalMatchGain: GainNode;
     analyser: AnalyserNode; masterOut: GainNode; startTime: number;
   } | null>(null);
 
   const chainRef = useRef<MasteringChain | null>(null);
   const lufsRef = useRef<LUFSMeter | null>(null);
   const lufsContextRef = useRef<AudioContext | null>(null);
+  const presetTimerRef = useRef<number | null>(null);
 
-  // ✅ PALETTE DE COULEURS DYNAMIQUES
   const colors = {
     bg: isDark ? '#050505' : '#f5f5f7',
-    panelBg: isDark ? '#08080a' : '#ffffff',
-    cardBg: isDark ? '#0a0a0c' : '#f9fafb',
-    border: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.08)',
-    borderLight: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.15)',
+    panelBg: isDark ? '#0a0a0c' : '#ffffff',
+    cardBg: isDark ? '#111114' : '#f9fafb',
+    border: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
+    borderLight: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.15)',
     textMain: isDark ? '#ffffff' : '#1a1a1a',
     textMuted: isDark ? '#888888' : '#666666',
     textDark: isDark ? '#555555' : '#999999',
-    sliderBg: isDark ? '#151515' : '#e5e7eb',
-    waveBg: isDark ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.05)',
-    presetCardBg: isDark ? '#0a0a0c' : '#f9fafb',
-    presetCardHover: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)',
+    sliderBg: isDark ? '#1a1a1f' : '#e5e7eb',
+    waveBg: isDark ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.05)',
+    presetCardBg: isDark ? '#111114' : '#f9fafb',
+    presetCardHover: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
   };
 
   useEffect(() => {
-    if (engine.audioBuffer) {
+    if (engine.audioBuffer && engine.audioContext) {
       setDuration(engine.audioBuffer.duration);
       setCurrentTime(0);
-    }
-  }, [engine.audioBuffer]);
-
-  const handleLocalFileLoad = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setIsImporting(true);
-    setLocalFileName(file.name);
-    try {
-      const formData = new FormData();
-      formData.append('audio', file);
-      const response = await fetch('https://mastering-server.onrender.com/master', { method: 'POST', body: formData });
-      if (!response.ok) throw new Error('Erreur de mastering.');
-      const blob = await response.blob();
-      const masteredFile = new File([blob], `mastered-${file.name.replace(/\.[^/.]+$/, "")}.wav`, { type: 'audio/wav' });
-      await engine.loadFile(masteredFile);
-    } catch (err) {
-      console.error("Erreur d'importation :", err);
-      alert("Impossible de charger ou masteriser ce fichier audio.");
-      setLocalFileName(null);
-    } finally {
-      setIsImporting(false);
-    }
-  };
-
-  const handleChainReady = useCallback((chain: MasteringChain | null) => {
-    chainRef.current = chain;
-    if (chain && engine.audioContext) {
+      if (!chainRef.current) chainRef.current = new MasteringChain(engine.audioContext);
       if (!lufsRef.current || lufsContextRef.current !== engine.audioContext) {
         lufsRef.current?.destroy();
         lufsRef.current = new LUFSMeter(engine.audioContext);
         lufsContextRef.current = engine.audioContext;
       }
     }
-  }, [engine.audioContext]);
+  }, [engine.audioBuffer, engine.audioContext]);
 
   useEffect(() => {
-    if (chainRef.current) {
-      const curvedIntensity = Math.pow(presetIntensity / 100, 2.5);
-      chainRef.current.applyPreset(activePreset as MasteringPreset, curvedIntensity);
-    }
-  }, [activePreset, presetIntensity]);
-
-  useEffect(() => {
-    if (!chainRef.current) return;
-    const gainDb = (gainVal - 50) / 4.16; 
-    chainRef.current.setInputGain(gainDb);
-  }, [gainVal]);
-
-  useEffect(() => {
-    if (!chainRef.current) return;
-    chainRef.current.setEQGain(0, ((eq.bass - 50) / 50) * 6);
-    chainRef.current.setEQGain(1, ((eq.lowMid - 50) / 50) * 6);
-    chainRef.current.setEQGain(2, ((eq.mid - 50) / 50) * 6);
-    chainRef.current.setEQGain(3, ((eq.highMid - 50) / 50) * 6);
-    chainRef.current.setEQGain(4, ((eq.high - 50) / 50) * 6);
-  }, [eq]);
-
-  useEffect(() => {
-    if (!chainRef.current) return;
-    const widthFactor = 0.5 + (widthVal / 100) * 0.7; 
-    chainRef.current.setWidth(widthFactor);
-  }, [widthVal]);
-
-  useEffect(() => {
-    if (!chainRef.current) return;
-    const ratio = 1 + ((dynVal - 50) / 50) * 2; 
-    chainRef.current.setCompressor(-12, Math.max(1, ratio), 0.02, 0.25);
-  }, [dynVal]);
-
-  useEffect(() => {
-    const id = setInterval(() => {
+    const interval = setInterval(() => {
       if (lufsRef.current) {
         const data = lufsRef.current.read();
         setLufs({ m: data.momentary, s: data.shortTerm, i: data.integrated });
       }
-    }, 200);
-    return () => clearInterval(id);
+    }, 100);
+    return () => clearInterval(interval);
   }, []);
+
+  // ✅ NOUVEAU : Récupère les valeurs du preset actif pour l'affichage
+  const activePresetData = useMemo(() => {
+    return PRESETS.find(p => p.id === activePreset) || PRESETS[0];
+  }, [activePreset]);
+
+  // ✅ NOUVEAU : Calcule les vraies valeurs du preset pour l'affichage
+  const presetDisplayValues = useMemo(() => {
+    const presetValues: Record<string, any> = {
+      universal: { gain: 3.0, comp: 1.8, width: 100, eqBass: 3.0, eqHigh: 3.0, sat: 15 },
+      fire: { gain: 5.0, comp: 2.5, width: 100, eqBass: 6.0, eqHigh: -1.5, sat: 40 },
+      clarity: { gain: 3.0, comp: 1.5, width: 100, eqBass: -3.0, eqHigh: 6.0, sat: 15 },
+      cassette: { gain: 2.5, comp: 2.0, width: 90, eqBass: 3.0, eqHigh: -6.0, sat: 50 },
+      natural: { gain: 0.5, comp: 1.3, width: 100, eqBass: 0, eqHigh: 0, sat: 5 },
+      spatial: { gain: 2.5, comp: 1.5, width: 140, eqBass: -2.5, eqHigh: 4.5, sat: 15 },
+      cinematic: { gain: 4.5, comp: 2.2, width: 110, eqBass: 4.5, eqHigh: 2.5, sat: 30 },
+      punch: { gain: 6.0, comp: 3.0, width: 100, eqBass: 7.0, eqHigh: 4.5, sat: 40 },
+    };
+    return presetValues[activePreset] || presetValues.universal;
+  }, [activePreset]);
+
+  // ✅ NOUVEAU : Valeurs effectives (preset × intensité + manuel)
+  const effectiveValues = useMemo(() => {
+    const k = presetIntensity / 100;
+    return {
+      gain: (presetDisplayValues.gain * k) + ((gainVal - 50) / 6),
+      comp: 1 + ((presetDisplayValues.comp - 1) * k),
+      width: presetDisplayValues.width + (widthVal - 50),
+      eqBass: (presetDisplayValues.eqBass * k) + ((eq.bass - 50) / 50 * 10),
+      eqHigh: (presetDisplayValues.eqHigh * k) + ((eq.high - 50) / 50 * 10),
+      sat: presetDisplayValues.sat * k,
+    };
+  }, [presetDisplayValues, presetIntensity, gainVal, widthVal, eq]);
+
+  const handleLocalFileLoad = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsImporting(true);
+    setImportError(null);
+    setLocalFileName(file.name);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    try {
+      const formData = new FormData();
+      formData.append('audio', file);
+      const response = await fetch('https://mastering-server.onrender.com/master', { method: 'POST', body: formData, signal: controller.signal });
+      clearTimeout(timeoutId);
+      if (!response.ok) throw new Error('Erreur de mastering.');
+      const blob = await response.blob();
+      const masteredFile = new File([blob], `mastered-${file.name.replace(/\.[^/.]+$/, "")}.wav`, { type: 'audio/wav' });
+      await engine.loadFile(masteredFile);
+    } catch (err: any) {
+      try {
+        await engine.loadFile(file);
+        setImportError("⚠️ Serveur distant injoignable. Mode Mastering Local (Navigateur) activé.");
+      } catch (localErr) {
+        setImportError("Impossible de lire ce fichier audio.");
+        setLocalFileName(null);
+      }
+    } finally { setIsImporting(false); }
+  };
+
+  useEffect(() => {
+    if (!chainRef.current) return;
+    chainRef.current.setInputGain((gainVal - 50) / 6);
+    chainRef.current.setManualEQGain(0, ((eq.bass - 50) / 50) * 10);
+    chainRef.current.setManualEQGain(1, ((eq.lowMid - 50) / 50) * 10);
+    chainRef.current.setManualEQGain(2, ((eq.mid - 50) / 50) * 10);
+    chainRef.current.setManualEQGain(3, ((eq.highMid - 50) / 50) * 10);
+    chainRef.current.setManualEQGain(4, ((eq.high - 50) / 50) * 10);
+    chainRef.current.setWidth(0.7 + (widthVal / 100) * 0.6);
+    
+    if (presetTimerRef.current) clearTimeout(presetTimerRef.current);
+    presetTimerRef.current = window.setTimeout(() => {
+      if (chainRef.current) {
+        const intensity = presetIntensity / 100;
+        chainRef.current.applyPreset(activePreset as MasteringPreset, intensity);
+      }
+    }, 150);
+    
+    return () => { if (presetTimerRef.current) clearTimeout(presetTimerRef.current); };
+  }, [gainVal, eq, widthVal, dynVal, activePreset, presetIntensity]);
 
   useEffect(() => {
     let animationFrame: number;
@@ -173,164 +199,150 @@ export const MasteringPage: React.FC = () => {
         animationFrame = requestAnimationFrame(updateTime);
       }
     };
-    if (isPlayingAB) {
-      updateTime();
-    }
+    if (isPlayingAB) updateTime();
     return () => cancelAnimationFrame(animationFrame);
   }, [isPlayingAB, duration, engine.audioContext]);
 
-  const handleStopAB = useCallback(() => {
+  const handlePauseAB = useCallback(() => {
     const g = abGraphRef.current;
     if (!g) return;
     try { g.source.stop(); } catch {}
     try { g.source.disconnect(); } catch {}
     try { g.dryGain.disconnect(); } catch {}
     try { g.wetGain.disconnect(); } catch {}
+    try { g.originalMatchGain.disconnect(); } catch {}
     try { g.masterOut.disconnect(); } catch {}
     try { g.analyser.disconnect(); } catch {}
     abGraphRef.current = null;
     setIsPlayingAB(false);
     setAbAnalyser(null);
-    setCurrentTime(0);
   }, []);
 
-  const handlePlayAB = useCallback(async () => {
-    if (abGraphRef.current) { handleStopAB(); return; }
-    
+  const handleStopAB = useCallback(() => { handlePauseAB(); setCurrentTime(0); }, [handlePauseAB]);
+
+  const handlePlayAB = useCallback(async (startTime = currentTime) => {
+    if (abGraphRef.current) { handlePauseAB(); }
     let ctx = engine.audioContext;
     const buffer = engine.audioBuffer;
-    
-    if (!chainRef.current && ctx) {
-      chainRef.current = new MasteringChain(ctx);
-    }
-
+    if (!ctx || !buffer) return;
+    if (!chainRef.current && ctx) chainRef.current = new MasteringChain(ctx);
     const chain = chainRef.current;
-    
-    if (!ctx || !chain || !buffer) {
-      console.warn("⛔ Contexte audio, chaîne ou buffer manquant.");
-      return;
-    }
+    if (!chain) return;
 
     try {
-      if (ctx.state !== 'running') {
-        await ctx.resume();
-      }
-
-      const curvedIntensity = Math.pow(presetIntensity / 100, 2.5);
-      chain.applyPreset(activePreset as MasteringPreset, curvedIntensity);
+      if (ctx.state !== 'running') await ctx.resume();
+      const intensity = presetIntensity / 100;
+      chain.applyPreset(activePreset as MasteringPreset, intensity);
+      
+      if (lufsRef.current) lufsRef.current.reset();
       
       const source = ctx.createBufferSource(); 
       source.buffer = buffer;
-      
       const dryGain = ctx.createGain(); dryGain.gain.value = abMode === 'original' ? 1 : 0;
       const wetGain = ctx.createGain(); wetGain.gain.value = abMode === 'mastered' ? 1 : 0;
+      const originalMatchGain = ctx.createGain();
+      originalMatchGain.gain.value = 1.15;
       const analyser = ctx.createAnalyser(); analyser.fftSize = 2048; analyser.smoothingTimeConstant = 0.92;
       const masterOut = ctx.createGain();
       
-      source.connect(dryGain); 
-      source.connect(chain.getInputNode()); 
+      source.connect(dryGain);
+      source.connect(chain.getInputNode());
       chain.getOutputNode().connect(wetGain);
-      
-      dryGain.connect(masterOut); 
+      dryGain.connect(originalMatchGain);
+      originalMatchGain.connect(masterOut);
       wetGain.connect(masterOut);
-      
       masterOut.connect(analyser); 
       analyser.connect(ctx.destination);
       
-      if (lufsRef.current) { 
-        try { masterOut.connect(lufsRef.current.getInput()); } catch {} 
-      }
+      if (lufsRef.current) { try { masterOut.connect(lufsRef.current.getInput()); } catch {} }
       
-      source.start(0, currentTime);
-      
-      abGraphRef.current = { source, dryGain, wetGain, analyser, masterOut, startTime: ctx.currentTime - currentTime };
+      source.start(0, startTime);
+      abGraphRef.current = { source, dryGain, wetGain, originalMatchGain, analyser, masterOut, startTime: ctx.currentTime - startTime };
       setAbAnalyser(analyser); 
       setIsPlayingAB(true);
-      
-      source.onended = () => { 
-        if (abGraphRef.current?.source === source) handleStopAB(); 
-      };
-      
-    } catch (err) {
-      console.error("❌ Erreur lors de la lecture :", err);
-    }
-  }, [engine, activePreset, presetIntensity, abMode, handleStopAB, currentTime]);
+      source.onended = () => { if (abGraphRef.current?.source === source) handleStopAB(); };
+    } catch (err) { console.error("❌ Erreur de lecture :", err); }
+  }, [engine, activePreset, presetIntensity, abMode, handlePauseAB, handleStopAB, currentTime]);
 
   const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!duration || !engine.audioBuffer) return;
     const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const percent = Math.max(0, Math.min(1, x / rect.width));
+    const percent = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
     const newTime = percent * duration;
-    setCurrentTime(newTime);
-    
-    if (isPlayingAB) {
-      handleStopAB();
-    }
+    if (isPlayingAB) { handlePauseAB(); setCurrentTime(newTime); handlePlayAB(newTime); }
+    else { setCurrentTime(newTime); }
   };
 
   useEffect(() => {
     const g = abGraphRef.current;
     if (!g || !engine.audioContext) return;
     const t = engine.audioContext.currentTime;
-    g.dryGain.gain.setTargetAtTime(abMode === 'original' ? 1 : 0, t, 0.01);
-    g.wetGain.gain.setTargetAtTime(abMode === 'mastered' ? 1 : 0, t, 0.01);
+    g.dryGain.gain.setTargetAtTime(abMode === 'original' ? 1 : 0, t, 0.02);
+    g.wetGain.gain.setTargetAtTime(abMode === 'mastered' ? 1 : 0, t, 0.02);
   }, [abMode, engine.audioContext]);
 
-  const handleExport = useCallback(() => {
+  const handleExport = useCallback(async () => {
     const buffer = engine.audioBuffer;
-    if (!buffer) {
-      alert("Aucun fichier audio à exporter.");
-      return;
+    if (!buffer) return alert("Aucun fichier audio à exporter.");
+    try {
+      const offlineCtx = new OfflineAudioContext(buffer.numberOfChannels, buffer.length, buffer.sampleRate);
+      const offlineChain = new MasteringChain(offlineCtx);
+      const intensity = presetIntensity / 100;
+      offlineChain.applyPreset(activePreset as MasteringPreset, intensity);
+      offlineChain.setInputGain((gainVal - 50) / 6);
+      offlineChain.setManualEQGain(0, ((eq.bass - 50) / 50) * 10);
+      offlineChain.setManualEQGain(1, ((eq.lowMid - 50) / 50) * 10);
+      offlineChain.setManualEQGain(2, ((eq.mid - 50) / 50) * 10);
+      offlineChain.setManualEQGain(3, ((eq.highMid - 50) / 50) * 10);
+      offlineChain.setManualEQGain(4, ((eq.high - 50) / 50) * 10);
+      offlineChain.setWidth(0.7 + (widthVal / 100) * 0.6);
+      
+      const source = offlineCtx.createBufferSource();
+      source.buffer = buffer;
+      source.connect(offlineChain.getInputNode());
+      offlineChain.getOutputNode().connect(offlineCtx.destination);
+      source.start();
+      const renderedBuffer = await offlineCtx.startRendering();
+      const wavBlob = audioBufferToWav(renderedBuffer);
+      const url = URL.createObjectURL(wavBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = localFileName ? `mastered-${localFileName.replace(/\.[^/.]+$/, "")}.wav` : 'mastered-audio.wav';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Erreur d'exportation :", err);
+      alert("Impossible d'exporter le fichier masterisé.");
     }
-    const wavBlob = audioBufferToWav(buffer);
-    const url = URL.createObjectURL(wavBlob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = localFileName ? `mastered-${localFileName.replace(/\.[^/.]+$/, "")}.wav` : 'mastered-audio.wav';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }, [engine.audioBuffer, localFileName]);
+  }, [engine.audioBuffer, localFileName, activePreset, presetIntensity, gainVal, eq, widthVal]);
+
+  const gainDb = ((gainVal - 50) / 6).toFixed(1);
+  const compRatio = effectiveValues.comp.toFixed(1);
+  const widthPercent = effectiveValues.width.toFixed(0);
 
   return (
-    <div style={{ 
-      display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', 
-      background: colors.bg, color: colors.textMain, fontFamily: 'Inter, sans-serif', 
-      overflow: 'hidden',
-      transition: 'background 0.3s ease, color 0.3s ease',
-      // ✅ INJECTION DES VARIABLES CSS POUR LE <style>
-      ['--bg-main' as any]: colors.bg,
-      ['--bg-panel' as any]: colors.panelBg,
-      ['--bg-card' as any]: colors.cardBg,
-      ['--border' as any]: colors.border,
-      ['--border-light' as any]: colors.borderLight,
-      ['--text-main' as any]: colors.textMain,
-      ['--text-muted' as any]: colors.textMuted,
-      ['--slider-bg' as any]: colors.sliderBg,
-      ['--preset-card-bg' as any]: colors.presetCardBg,
-      ['--preset-card-hover' as any]: colors.presetCardHover,
-    }}>
-      
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', background: colors.bg, color: colors.textMain, fontFamily: 'Inter, sans-serif', overflow: 'hidden' }}>
       <style>{`
         .btn-modern { position: relative; overflow: hidden; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); text-transform: uppercase; letter-spacing: 1px; }
-        .btn-modern::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent); transition: all 0.5s; }
-        .btn-modern:hover::before { left: 100%; }
         .btn-import { background: linear-gradient(135deg, #00d9ff, #0077ff); box-shadow: 0 4px 15px rgba(0,217,255,0.3); }
         .btn-import:hover { box-shadow: 0 6px 20px rgba(0,217,255,0.5); transform: translateY(-1px); }
+        .preset-card-grid { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 8px; padding: 12px 14px; background: ${colors.presetCardBg}; border: 1px solid ${colors.border}; border-radius: 12px; cursor: pointer; transition: all 0.2s; text-align: left; position: relative; overflow: hidden; }
+        .preset-card-grid:hover { background: ${colors.presetCardHover}; border-color: ${colors.borderLight}; transform: translateY(-2px); }
+        .preset-card-grid.active { border-color: currentColor; box-shadow: 0 0 20px -4px currentColor; background: ${colors.presetCardHover}; }
+        .preset-icon-wrapper { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 8px; background: rgba(255,255,255,0.05); margin-bottom: 4px; }
+        .preset-card-grid.active .preset-icon-wrapper { background: rgba(0,0,0,0.2); box-shadow: inset 0 0 10px currentColor; }
+        .eq-slider { -webkit-appearance: none; width: 100%; height: 6px; background: ${colors.sliderBg}; border-radius: 3px; outline: none; box-shadow: inset 0 1px 3px rgba(0,0,0,0.5); }
+        .eq-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 16px; height: 16px; border-radius: 50%; background: #fff; cursor: pointer; box-shadow: 0 0 10px rgba(0,0,0,0.3), 0 0 0 2px rgba(255,255,255,0.2); }
+        .spectrum-grid { background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px); background-size: 20% 25%; }
         
-        .preset-card-grid { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 12px 6px; background: var(--preset-card-bg); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.2s; text-align: center; }
-        .preset-card-grid:hover { background: var(--preset-card-hover); border-color: var(--border-light); }
-        .preset-card-grid.active { border-color: currentColor; box-shadow: 0 0 15px -2px currentColor; background: var(--preset-card-hover); }
-        
-        .eq-slider { -webkit-appearance: none; width: 100%; height: 4px; background: var(--slider-bg); border-radius: 2px; outline: none; }
-        .eq-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 12px; height: 12px; border-radius: 50%; background: var(--text-main); cursor: pointer; box-shadow: 0 0 10px rgba(0,0,0,0.2); transition: transform 0.1s; }
-        .eq-slider::-webkit-slider-thumb:hover { transform: scale(1.2); }
-        .eq-slider::-moz-range-thumb { width: 12px; height: 12px; border-radius: 50%; background: var(--text-main); cursor: pointer; box-shadow: 0 0 10px rgba(0,0,0,0.2); border: none; }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(-5px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .chain-value { animation: fadeIn 0.3s ease; }
       `}</style>
 
-      <div style={{ height: 64, borderBottom: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', padding: '0 24px', justifyContent: 'space-between', background: colors.panelBg, flexShrink: 0, transition: 'background 0.3s ease' }}>
+      <div style={{ height: 64, borderBottom: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', padding: '0 24px', justifyContent: 'space-between', background: colors.panelBg, flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
           <Link to="/tools" style={{ color: colors.textMuted, textDecoration: 'none', fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
@@ -347,93 +359,126 @@ export const MasteringPage: React.FC = () => {
         </div>
       </div>
 
+      {importError && (
+        <div style={{ background: 'rgba(245, 158, 11, 0.1)', borderBottom: '1px solid rgba(245, 158, 11, 0.3)', color: '#f59e0b', padding: '12px 24px', fontSize: 13, fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>⚠️ {importError}</span>
+          <button onClick={() => setImportError(null)} style={{ background: 'transparent', border: 'none', color: '#f59e0b', cursor: 'pointer', fontWeight: 900 }}>✕</button>
+        </div>
+      )}
+
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-        
-        <div style={{ width: 320, background: colors.panelBg, borderRight: `1px solid ${colors.border}`, padding: 20, display: 'flex', flexDirection: 'column', gap: 20, overflowY: 'auto', flexShrink: 0, transition: 'background 0.3s ease' }}>
-          
+        <div style={{ width: 300, background: colors.panelBg, borderRight: `1px solid ${colors.border}`, padding: 20, display: 'flex', flexDirection: 'column', gap: 20, overflowY: 'auto', flexShrink: 0 }}>
           <div style={{ background: colors.cardBg, padding: 12, borderRadius: 8, border: `1px solid ${colors.border}` }}>
             <div style={{ fontSize: 9, color: colors.textDark, fontWeight: 800, letterSpacing: '1px', marginBottom: 4 }}>FICHIER SOURCE</div>
             <div style={{ fontSize: 11, color: colors.textMain, fontWeight: 600, wordBreak: 'break-all' }}>{localFileName || engine.fileName || 'Aucun fichier'}</div>
           </div>
-
-          <div style={{ fontSize: 11, color: colors.textMuted, fontWeight: 800, letterSpacing: '1px' }}>CHOISIR UN STYLE</div>
-          
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+          <div style={{ fontSize: 11, color: colors.textMuted, fontWeight: 800, letterSpacing: '1px' }}>STYLE DE MASTERING</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {PRESETS.map((p) => (
               <div key={p.id} onClick={() => setActivePreset(p.id)} className={`preset-card-grid ${activePreset === p.id ? 'active' : ''}`} style={{ color: p.color }}>
-                <div style={{ filter: 'drop-shadow(0 0 8px currentColor)' }}>{p.icon}</div>
-                <div style={{ fontSize: 10, fontWeight: 700, color: activePreset === p.id ? colors.textMain : colors.textMuted }}>{p.name}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%' }}>
+                  <div className="preset-icon-wrapper">{p.icon}</div>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: colors.textMain }}>{p.name}</div>
+                    <div style={{ fontSize: 10, color: colors.textMuted, fontWeight: 600 }}>{p.desc}</div>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
         </div>
 
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: 20, background: colors.bg, gap: 20, overflowY: 'auto', transition: 'background 0.3s ease' }}>
-          
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: 24, background: colors.bg, gap: 24, overflowY: 'auto' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
               <div style={{ fontSize: 14, fontWeight: 800, color: hasAudio ? colors.textMain : colors.textDark }}>Prévisualisation</div>
               {hasAudio && (
-                <div style={{ fontSize: 11, color: '#00d9ff', fontFamily: 'monospace', background: colors.waveBg, padding: '4px 8px', borderRadius: 4 }}>
+                <div style={{ fontSize: 11, color: '#00d9ff', fontFamily: 'monospace', background: colors.waveBg, padding: '4px 10px', borderRadius: 6, border: `1px solid ${colors.border}` }}>
                   {formatTime(currentTime)} / {formatTime(duration)}
                 </div>
               )}
             </div>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <ToggleSwitch isActive={abMode === 'original'} onClick={() => setAbMode('original')} label="ORIGINAL" color={colors.textMuted} />
-              <ToggleSwitch isActive={abMode === 'mastered'} onClick={() => setAbMode('mastered')} label="MASTERISÉ" color="#a08aff" />
+            <div style={{ display: 'flex', gap: 4, background: colors.panelBg, padding: 4, borderRadius: 8, border: `1px solid ${colors.border}` }}>
+              <button onClick={() => setAbMode('original')} style={{ padding: '8px 16px', borderRadius: 6, fontSize: 11, fontWeight: 800, cursor: 'pointer', background: abMode === 'original' ? colors.borderLight : 'transparent', color: abMode === 'original' ? colors.textMain : colors.textMuted, border: 'none' }}>ORIGINAL</button>
+              <button onClick={() => setAbMode('mastered')} style={{ padding: '8px 16px', borderRadius: 6, fontSize: 11, fontWeight: 800, cursor: 'pointer', background: abMode === 'mastered' ? '#a08aff' : 'transparent', color: abMode === 'mastered' ? '#000' : colors.textMuted, border: 'none', boxShadow: abMode === 'mastered' ? '0 0 15px rgba(160,138,255,0.4)' : 'none' }}>MASTERISÉ</button>
             </div>
           </div>
 
-          <div style={{ minHeight: 250, background: colors.cardBg, borderRadius: 12, border: `1px solid ${colors.border}`, position: 'relative', display: 'flex', flexDirection: 'column', flexShrink: 0, transition: 'background 0.3s ease' }}>
-            <div style={{ position: 'absolute', top: 12, left: 16, fontSize: 9, color: colors.textDark, fontWeight: 800, letterSpacing: '1.5px' }}>TONAL BALANCE</div>
-            <div style={{ flex: 1, padding: '30px 20px 0 20px', minHeight: 100 }}>
-              <CurveVisualizer analyser={abAnalyser} isActive={isPlayingAB} height={140} color="#00d9ff" />
+          <div style={{ minHeight: 280, background: colors.cardBg, borderRadius: 16, border: `1px solid ${colors.border}`, position: 'relative', display: 'flex', flexDirection: 'column', flexShrink: 0, overflow: 'hidden' }}>
+            <div className="spectrum-grid" style={{ position: 'absolute', inset: '0 0 60px 0', pointerEvents: 'none', opacity: 0.5 }} />
+            <div style={{ position: 'absolute', top: 16, left: 20, fontSize: 10, color: colors.textMuted, fontWeight: 900, letterSpacing: '2px', zIndex: 10 }}>TONAL BALANCE</div>
+            <div style={{ position: 'absolute', top: 40, left: 20, right: 20, bottom: 80, pointerEvents: 'none', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', zIndex: 5 }}>
+              <div style={{ borderTop: '1px dashed rgba(255,255,255,0.1)', width: '100%', position: 'relative' }}><span style={{ position: 'absolute', right: 0, top: -8, fontSize: 9, color: 'rgba(255,255,255,0.3)', fontFamily: 'monospace' }}>0 dB</span></div>
+              <div style={{ borderTop: '1px dashed rgba(255,255,255,0.1)', width: '100%', position: 'relative' }}><span style={{ position: 'absolute', right: 0, top: -8, fontSize: 9, color: 'rgba(255,255,255,0.3)', fontFamily: 'monospace' }}>-12 dB</span></div>
+              <div style={{ borderTop: '1px dashed rgba(255,255,255,0.1)', width: '100%', position: 'relative' }}><span style={{ position: 'absolute', right: 0, top: -8, fontSize: 9, color: 'rgba(255,255,255,0.3)', fontFamily: 'monospace' }}>-24 dB</span></div>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 40px 10px 40px', fontSize: 9, color: colors.textDark, fontWeight: 800 }}>
-              <span>LOW</span><span>LOW-MID</span><span>HIGH-MID</span><span>HIGH</span>
+            <div style={{ flex: 1, padding: '50px 30px 0 30px', minHeight: 150, zIndex: 6 }}>
+              <CurveVisualizer analyser={abAnalyser} isActive={isPlayingAB} height={160} color="#00d9ff" />
             </div>
-            
-            <div style={{ padding: '0 20px 20px 20px', display: 'flex', alignItems: 'center', gap: 16 }}>
-              <button 
-                onClick={handlePlayAB} 
-                style={{ 
-                  width: 44, height: 44, borderRadius: '50%', 
-                  background: isPlayingAB ? 'rgba(239,68,68,0.2)' : 'linear-gradient(135deg, #a08aff, #7c5cff)', 
-                  border: isPlayingAB ? '2px solid #ef4444' : '2px solid transparent', 
-                  color: isPlayingAB ? '#ef4444' : '#fff', 
-                  cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', 
-                  boxShadow: isPlayingAB ? '0 0 20px rgba(239,68,68,0.3)' : '0 0 20px rgba(160,138,255,0.4)',
-                  transition: 'all 0.2s', flexShrink: 0
-                }}
-              >
-                {isPlayingAB ? (
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
-                ) : (
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: 2 }}><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-                )}
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 40px 16px 40px', fontSize: 10, color: colors.textMuted, fontWeight: 800, fontFamily: 'monospace', zIndex: 10 }}>
+              <span>20 Hz</span><span>200 Hz</span><span>2 kHz</span><span>20 kHz</span>
+            </div>
+            <div style={{ padding: '0 24px 24px 24px', display: 'flex', alignItems: 'center', gap: 20, zIndex: 10 }}>
+              <button onClick={() => isPlayingAB ? handlePauseAB() : handlePlayAB(currentTime)} style={{ width: 50, height: 50, borderRadius: '50%', background: isPlayingAB ? 'rgba(239,68,68,0.15)' : 'linear-gradient(135deg, #a08aff, #7c5cff)', border: isPlayingAB ? '2px solid #ef4444' : '2px solid transparent', color: isPlayingAB ? '#ef4444' : '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: isPlayingAB ? '0 0 20px rgba(239,68,68,0.3)' : '0 0 25px rgba(160,138,255,0.5)', flexShrink: 0 }}>
+                {isPlayingAB ? <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg> : <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: 2 }}><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>}
               </button>
-              
-              <div onClick={handleSeek} style={{ flex: 1, height: 10, background: colors.sliderBg, borderRadius: 5, position: 'relative', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-                <div style={{ height: '100%', width: `${(currentTime / (duration || 1)) * 100}%`, background: 'linear-gradient(90deg, #0088aa, #a08aff)', borderRadius: 5, boxShadow: '0 0 15px rgba(160,138,255,0.4)', position: 'relative' }}>
-                  {hasAudio && (
-                    <div style={{ position: 'absolute', right: -5, top: -3, width: 16, height: 16, borderRadius: '50%', background: colors.textMain, boxShadow: '0 0 10px #a08aff' }} />
-                  )}
+              <div onClick={handleSeek} style={{ flex: 1, height: 12, background: colors.sliderBg, borderRadius: 6, position: 'relative', cursor: 'pointer', display: 'flex', alignItems: 'center', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.5)' }}>
+                <div style={{ height: '100%', width: `${(currentTime / (duration || 1)) * 100}%`, background: 'linear-gradient(90deg, #0088aa, #a08aff)', borderRadius: 6, boxShadow: '0 0 15px rgba(160,138,255,0.5)', position: 'relative' }}>
+                  {hasAudio && <div style={{ position: 'absolute', right: -6, top: -3, width: 18, height: 18, borderRadius: '50%', background: '#fff', boxShadow: '0 0 10px #a08aff' }} />}
                 </div>
               </div>
-
-              <div style={{ fontSize: 11, color: colors.textMuted, fontFamily: 'monospace', fontWeight: 700, width: 45, textAlign: 'right' }}>
-                {formatTime(duration)}
-              </div>
+              <div style={{ fontSize: 12, color: colors.textMuted, fontFamily: 'monospace', fontWeight: 800, width: 45, textAlign: 'right' }}>{formatTime(duration)}</div>
             </div>
           </div>
 
-          <div style={{ background: colors.cardBg, borderRadius: 12, border: `1px solid ${colors.border}`, padding: '20px 24px', flexShrink: 0, transition: 'background 0.3s ease' }}>
+          <div style={{ background: colors.cardBg, borderRadius: 16, border: `1px solid ${colors.border}`, padding: '20px 24px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <div style={{ fontSize: 10, color: colors.textDark, fontWeight: 800, letterSpacing: '1.5px' }}>ÉGALISEUR 5 BANDES</div>
-              <button onClick={() => setEq({ bass: 50, lowMid: 50, mid: 50, highMid: 50, high: 50 })} style={{ background: 'transparent', border: 'none', color: colors.textMuted, fontSize: 10, cursor: 'pointer', textDecoration: 'underline' }}>Réinitialiser</button>
+              <div style={{ fontSize: 11, color: colors.textMuted, fontWeight: 900, letterSpacing: '1.5px' }}>LOUDNESS METER (LUFS)</div>
+              <div style={{ fontSize: 10, color: colors.textMuted, fontWeight: 700 }}>Cible : -14 LUFS (streaming)</div>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 20 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 16 }}>
+              {[
+                { label: 'MOMENTARY', value: lufs.m, desc: 'Instantané' },
+                { label: 'SHORT-TERM', value: lufs.s, desc: '3 secondes' },
+                { label: 'INTEGRATED', value: lufs.i, desc: 'Moyenne' }
+              ].map((item) => {
+                const isGood = item.value > -16 && item.value < -8;
+                const isTooLoud = item.value > -8;
+                return (
+                  <div key={item.label} style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 10, padding: '12px 14px', textAlign: 'center' }}>
+                    <div style={{ fontSize: 9, color: colors.textDark, fontWeight: 800, letterSpacing: '1px', marginBottom: 6 }}>{item.label}</div>
+                    <div style={{ fontSize: 22, fontWeight: 900, fontFamily: 'monospace', color: isTooLoud ? '#ef4444' : isGood ? '#10b981' : colors.textMain, letterSpacing: '-1px' }}>
+                      {item.value > -Infinity ? item.value.toFixed(1) : '-∞'}
+                    </div>
+                    <div style={{ fontSize: 9, color: colors.textMuted, marginTop: 4 }}>{item.desc}</div>
+                  </div>
+                );
+              })}
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+              {LUFS_TARGETS.map((t) => {
+                const diff = lufs.i - t.target;
+                const isAligned = Math.abs(diff) < 1.5;
+                const isTooLoud = diff > 1.5;
+                return (
+                  <div key={t.label} style={{ background: colors.panelBg, border: `1px solid ${isAligned ? t.color : colors.border}`, borderRadius: 8, padding: '8px 10px', textAlign: 'center', boxShadow: isAligned ? `0 0 15px ${t.color}30` : 'none' }}>
+                    <div style={{ fontSize: 10, fontWeight: 800, color: t.color, marginBottom: 2 }}>{t.label}</div>
+                    <div style={{ fontSize: 9, color: colors.textMuted, fontFamily: 'monospace' }}>{t.target} LUFS</div>
+                    <div style={{ fontSize: 9, marginTop: 4, fontWeight: 800, color: isAligned ? '#10b981' : isTooLoud ? '#ef4444' : colors.textMuted }}>
+                      {lufs.i > -Infinity ? (isAligned ? '✓ OK' : (diff > 0 ? `+${diff.toFixed(1)}` : diff.toFixed(1)) + ' dB') : '—'}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div style={{ background: colors.cardBg, borderRadius: 16, border: `1px solid ${colors.border}`, padding: '24px 32px', flexShrink: 0 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <div style={{ fontSize: 11, color: colors.textMuted, fontWeight: 900, letterSpacing: '1.5px' }}>ÉGALISEUR PARAMÉTRIQUE</div>
+              <button onClick={() => setEq({ bass: 50, lowMid: 50, mid: 50, highMid: 50, high: 50 })} style={{ background: 'transparent', border: `1px solid ${colors.border}`, color: colors.textMuted, fontSize: 10, fontWeight: 700, cursor: 'pointer', padding: '6px 12px', borderRadius: 6 }}>RÉINITIALISER</button>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 24 }}>
               {[
                 { key: 'bass', label: 'Basses', freq: '80Hz' },
                 { key: 'lowMid', label: 'Low-Mid', freq: '250Hz' },
@@ -442,84 +487,129 @@ export const MasteringPage: React.FC = () => {
                 { key: 'high', label: 'Aigus', freq: '12kHz' }
               ].map((band) => (
                 <div key={band.key}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: colors.textMuted, marginBottom: 8 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, marginBottom: 12 }}>
                     <span style={{ fontWeight: 800, color: colors.textMain }}>{band.label}</span>
-                    <span>{eq[band.key as keyof typeof eq] > 50 ? '+' : ''}{((eq[band.key as keyof typeof eq] - 50) / 50 * 6).toFixed(1)} dB</span>
+                    <span style={{ color: '#00d9ff', fontFamily: 'monospace', fontWeight: 700 }}>{eq[band.key as keyof typeof eq] > 50 ? '+' : ''}{((eq[band.key as keyof typeof eq] - 50) / 50 * 10).toFixed(1)} dB</span>
                   </div>
                   <input type="range" min="0" max="100" step="1" value={eq[band.key as keyof typeof eq]} onChange={(e) => setEq({ ...eq, [band.key]: Number(e.target.value) })} className="eq-slider" />
-                  <div style={{ fontSize: 9, color: colors.textDark, marginTop: 4 }}>{band.freq}</div>
+                  <div style={{ fontSize: 10, color: colors.textDark, marginTop: 8, fontFamily: 'monospace', textAlign: 'center' }}>{band.freq}</div>
                 </div>
               ))}
             </div>
           </div>
-
         </div>
 
-        <div style={{ width: 260, background: colors.panelBg, borderLeft: `1px solid ${colors.border}`, padding: 20, display: 'flex', flexDirection: 'column', gap: 20, overflowY: 'auto', flexShrink: 0, transition: 'background 0.3s ease' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
-            
-            <Knob value={gainVal} onChange={setGainVal} label="GAIN" color="#ff5cf0" size={70} />
-
-            <Knob value={presetIntensity} onChange={setPresetIntensity} label="INTENSITÉ" color="#ffb800" size={100} />
-            
-            <div style={{ display: 'flex', gap: 12 }}>
-              <Knob value={widthVal} onChange={setWidthVal} label="WIDTH" color="#00d9ff" size={60} />
-              <Knob value={dynVal} onChange={setDynVal} label="DYNAMIQUE" color="#a08aff" size={60} />
+        {/* ✅ PANNEAU DROIT : CHAÎNE DE MASTERING DYNAMIQUE */}
+        <div style={{ width: 280, background: colors.panelBg, borderLeft: `1px solid ${colors.border}`, padding: 24, display: 'flex', flexDirection: 'column', gap: 24, overflowY: 'auto', flexShrink: 0 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 32 }}>
+            <Knob value={gainVal} onChange={setGainVal} label="GAIN D'ENTRÉE" color="#ff5cf0" size={80} />
+            <Knob value={presetIntensity} onChange={setPresetIntensity} label="INTENSITÉ DU STYLE" color="#ffb800" size={110} />
+            <div style={{ display: 'flex', gap: 20 }}>
+              <Knob value={widthVal} onChange={setWidthVal} label="LARGEUR STÉRÉO" color="#00d9ff" size={65} />
+              <Knob value={dynVal} onChange={setDynVal} label="DYNAMIQUE" color="#a08aff" size={65} />
             </div>
           </div>
 
-          <div style={{ marginTop: 'auto' }}>
-            <MasteringPanel audioContext={engine.audioContext} sourceNode={null} sourceBuffer={engine.audioBuffer} preset={activePreset as MasteringPreset} intensity={presetIntensity} onChainReady={handleChainReady} onExport={handleExport} />
+          {/* ✅ PANNEAU CHAÎNE DE MASTERING DYNAMIQUE */}
+          <div style={{ marginTop: 'auto', background: colors.cardBg, border: `2px solid ${activePresetData.color}40`, borderRadius: 12, padding: 16, transition: 'border-color 0.3s ease' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <div style={{ fontSize: 10, color: colors.textDark, fontWeight: 800, letterSpacing: '1.5px' }}>CHAÎNE ACTIVE</div>
+              <div style={{ width: 8, height: 8, borderRadius: '50%', background: activePresetData.color, boxShadow: `0 0 10px ${activePresetData.color}` }} />
+            </div>
+            
+            {/* Style actif en grand */}
+            <div style={{ background: `${activePresetData.color}15`, border: `1px solid ${activePresetData.color}40`, borderRadius: 8, padding: '10px 12px', marginBottom: 12 }}>
+              <div style={{ fontSize: 9, color: colors.textMuted, fontWeight: 800, letterSpacing: '1px', marginBottom: 2 }}>STYLE ACTIF</div>
+              <div style={{ fontSize: 15, fontWeight: 900, color: activePresetData.color, letterSpacing: '-0.5px' }}>{activePresetData.name.toUpperCase()}</div>
+              <div style={{ fontSize: 10, color: colors.textMuted, marginTop: 2 }}>{activePresetData.desc}</div>
+            </div>
+            
+            {/* Barre de progression de l'intensité */}
+            <div style={{ marginBottom: 12 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: colors.textMuted, marginBottom: 4 }}>
+                <span>Intensité</span>
+                <span style={{ color: activePresetData.color, fontWeight: 800 }}>{presetIntensity}%</span>
+              </div>
+              <div style={{ height: 4, background: colors.border, borderRadius: 2, overflow: 'hidden' }}>
+                <div style={{ width: `${presetIntensity}%`, height: '100%', background: activePresetData.color, boxShadow: `0 0 10px ${activePresetData.color}`, transition: 'width 0.2s ease' }} />
+              </div>
+            </div>
+
+            {/* Valeurs dynamiques */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <div className="chain-value" style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, padding: '4px 0', borderBottom: `1px solid ${colors.border}` }}>
+                <span style={{ color: colors.textMuted }}>Gain total</span>
+                <span style={{ color: colors.textMain, fontWeight: 800, fontFamily: 'monospace' }}>{effectiveValues.gain > 0 ? '+' : ''}{effectiveValues.gain.toFixed(1)} dB</span>
+              </div>
+              <div className="chain-value" style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, padding: '4px 0', borderBottom: `1px solid ${colors.border}` }}>
+                <span style={{ color: colors.textMuted }}>Compression</span>
+                <span style={{ color: colors.textMain, fontWeight: 800, fontFamily: 'monospace' }}>{effectiveValues.comp.toFixed(1)}:1</span>
+              </div>
+              <div className="chain-value" style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, padding: '4px 0', borderBottom: `1px solid ${colors.border}` }}>
+                <span style={{ color: colors.textMuted }}>Stéréo</span>
+                <span style={{ color: colors.textMain, fontWeight: 800, fontFamily: 'monospace' }}>{effectiveValues.width.toFixed(0)}%</span>
+              </div>
+              <div className="chain-value" style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, padding: '4px 0', borderBottom: `1px solid ${colors.border}` }}>
+                <span style={{ color: colors.textMuted }}>Basses</span>
+                <span style={{ color: effectiveValues.eqBass > 0 ? '#00ff88' : effectiveValues.eqBass < 0 ? '#ef4444' : colors.textMain, fontWeight: 800, fontFamily: 'monospace' }}>{effectiveValues.eqBass > 0 ? '+' : ''}{effectiveValues.eqBass.toFixed(1)} dB</span>
+              </div>
+              <div className="chain-value" style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, padding: '4px 0', borderBottom: `1px solid ${colors.border}` }}>
+                <span style={{ color: colors.textMuted }}>Aigus</span>
+                <span style={{ color: effectiveValues.eqHigh > 0 ? '#00ff88' : effectiveValues.eqHigh < 0 ? '#ef4444' : colors.textMain, fontWeight: 800, fontFamily: 'monospace' }}>{effectiveValues.eqHigh > 0 ? '+' : ''}{effectiveValues.eqHigh.toFixed(1)} dB</span>
+              </div>
+              <div className="chain-value" style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, padding: '4px 0', borderBottom: `1px solid ${colors.border}` }}>
+                <span style={{ color: colors.textMuted }}>Saturation</span>
+                <span style={{ color: '#ffb800', fontWeight: 800, fontFamily: 'monospace' }}>{effectiveValues.sat.toFixed(0)}%</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, padding: '6px 0', background: 'rgba(16, 185, 129, 0.1)', borderRadius: 4, marginTop: 4, paddingLeft: 8, paddingRight: 8 }}>
+                <span style={{ color: '#10b981', fontWeight: 700 }}>Limiteur</span>
+                <span style={{ color: '#10b981', fontWeight: 800, fontFamily: 'monospace' }}>-0.3 dB ✓</span>
+              </div>
+            </div>
+
+            <button onClick={handleExport} className="btn-modern" style={{ width: '100%', marginTop: 16, padding: '14px', background: 'linear-gradient(135deg, #10b981, #059669)', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 900, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)' }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              EXPORT WAV
+            </button>
           </div>
         </div>
-
       </div>
     </div>
   );
 };
 
-// ✅ FONCTIONS DE CONVERSION WAV
 function audioBufferToWav(buffer: AudioBuffer): Blob {
   const numChannels = buffer.numberOfChannels;
   const sampleRate = buffer.sampleRate;
-  const format = 1; // PCM
   const bitDepth = 16;
-  
   let result;
   if (numChannels === 2) {
     result = interleave(buffer.getChannelData(0), buffer.getChannelData(1));
   } else {
     result = buffer.getChannelData(0);
   }
-
-  return encodeWAV(result, format, sampleRate, numChannels, bitDepth);
+  return encodeWAV(result, sampleRate, numChannels, bitDepth);
 }
 
 function interleave(inputL: Float32Array, inputR: Float32Array): Float32Array {
   const length = inputL.length + inputR.length;
   const result = new Float32Array(length);
-  let index = 0;
-  let inputIndex = 0;
-  while (index < length) {
-    result[index++] = inputL[inputIndex];
-    result[index++] = inputR[inputIndex];
-    inputIndex++;
-  }
+  let index = 0; let inputIndex = 0;
+  while (index < length) { result[index++] = inputL[inputIndex]; result[index++] = inputR[inputIndex]; inputIndex++; }
   return result;
 }
 
-function encodeWAV(samples: Float32Array, format: number, sampleRate: number, numChannels: number, bitDepth: number): Blob {
+function encodeWAV(samples: Float32Array, sampleRate: number, numChannels: number, bitDepth: number): Blob {
   const bytesPerSample = bitDepth / 8;
   const blockAlign = numChannels * bytesPerSample;
   const buffer = new ArrayBuffer(44 + samples.length * bytesPerSample);
   const view = new DataView(buffer);
-
   writeString(view, 0, 'RIFF');
   view.setUint32(4, 36 + samples.length * bytesPerSample, true);
   writeString(view, 8, 'WAVE');
   writeString(view, 12, 'fmt ');
   view.setUint32(16, 16, true);
-  view.setUint16(20, format, true);
+  view.setUint16(20, 1, true);
   view.setUint16(22, numChannels, true);
   view.setUint32(24, sampleRate, true);
   view.setUint32(28, sampleRate * blockAlign, true);
@@ -527,7 +617,6 @@ function encodeWAV(samples: Float32Array, format: number, sampleRate: number, nu
   view.setUint16(34, bitDepth, true);
   writeString(view, 36, 'data');
   view.setUint32(40, samples.length * bytesPerSample, true);
-
   floatTo16BitPCM(view, 44, samples);
   return new Blob([view], { type: 'audio/wav' });
 }
@@ -540,7 +629,5 @@ function floatTo16BitPCM(output: DataView, offset: number, input: Float32Array) 
 }
 
 function writeString(view: DataView, offset: number, string: string) {
-  for (let i = 0; i < string.length; i++) {
-    view.setUint8(offset + i, string.charCodeAt(i));
-  }
+  for (let i = 0; i < string.length; i++) { view.setUint8(offset + i, string.charCodeAt(i)); }
 }

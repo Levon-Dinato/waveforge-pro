@@ -30,7 +30,6 @@ export const DEFAULT_EQ_BANDS: EQBand[] = [
 ];
 
 export class LUFSMeter {
-  // ... (Le code du LUFSMeter reste identique, voir version précédente)
   private ctx: BaseAudioContext;
   private kHS: BiquadFilterNode;
   private kHP: BiquadFilterNode;
@@ -73,6 +72,8 @@ export class LUFSMeter {
     return { momentary, shortTerm, integrated };
   }
 
+  reset() { this.sampleHistory = []; }
+
   destroy(): void {
     try { this.kHS.disconnect(); } catch {}
     try { this.kHP.disconnect(); } catch {}
@@ -89,13 +90,16 @@ export class MasteringChain {
   private saturatorWet: GainNode;
   private saturatorDry: GainNode;
   
-  // ✅ Réactivation des nœuds pour le Width et la Dynamique
   private widenerInput: GainNode; private widenerOutput: GainNode;
   private widenerSplitter: ChannelSplitterNode; private widenerMerger: ChannelMergerNode;
   private widenerMidL: GainNode; private widenerMidR: GainNode; private widenerMidSum: GainNode;
   private widenerSideL: GainNode; private widenerSideR: GainNode; private widenerSideSum: GainNode;
   private widenerMidToL: GainNode; private widenerMidToR: GainNode; private widenerSideToL: GainNode; private widenerSideToR: GainNode;
   private compressor: DynamicsCompressorNode; private compressorMakeup: GainNode;
+  
+  // ✅ NOUVEAU : LIMITEUR BRICKWALL
+  private limiter: DynamicsCompressorNode;
+  private limiterOutputGain: GainNode;
 
   private bypassGain: GainNode;
   private processedGain: GainNode;
@@ -103,6 +107,9 @@ export class MasteringChain {
   private inputNode: AudioNode | null = null;
   private context: BaseAudioContext;
   private curveCache = new Map<string, Float32Array<ArrayBuffer>>();
+  
+  private presetEQBase: number[] = [0, 0, 0, 0, 0];
+  private manualEQ: number[] = [0, 0, 0, 0, 0];
 
   constructor(context: BaseAudioContext) {
     this.context = context;
@@ -120,7 +127,6 @@ export class MasteringChain {
     this.saturatorWet = context.createGain(); this.saturatorWet.gain.value = 0;
     this.saturatorDry = context.createGain(); this.saturatorDry.gain.value = 1;
 
-    // ✅ INITIALISATION WIDENER
     this.widenerInput = context.createGain(); this.widenerOutput = context.createGain();
     this.widenerSplitter = context.createChannelSplitter(2); this.widenerMerger = context.createChannelMerger(2);
     this.widenerMidL = context.createGain(); this.widenerMidL.gain.value = 0.5; this.widenerMidR = context.createGain(); this.widenerMidR.gain.value = 0.5;
@@ -138,20 +144,29 @@ export class MasteringChain {
     this.widenerSideToL.connect(this.widenerMerger, 0, 0); this.widenerSideToR.connect(this.widenerMerger, 0, 1);
     this.widenerMerger.connect(this.widenerOutput);
 
-    // ✅ INITIALISATION COMPRESSEUR (Dynamique)
     this.compressor = context.createDynamicsCompressor(); 
-    this.compressor.threshold.value = -12; 
+    this.compressor.threshold.value = -18; 
     this.compressor.knee.value = 10; 
-    this.compressor.ratio.value = 1; // Ratio 1 = pas de compression par défaut
-    this.compressor.attack.value = 0.02; 
+    this.compressor.ratio.value = 1.5;
+    this.compressor.attack.value = 0.03; 
     this.compressor.release.value = 0.25;
     this.compressorMakeup = context.createGain(); this.compressorMakeup.gain.value = 1.0;
+    
+    // ✅ LIMITEUR BRICKWALL (Ratio 20:1, Attack 1ms, threshold -0.3dB)
+    this.limiter = context.createDynamicsCompressor();
+    this.limiter.threshold.value = -0.3;
+    this.limiter.knee.value = 0;
+    this.limiter.ratio.value = 20;
+    this.limiter.attack.value = 0.001;
+    this.limiter.release.value = 0.05;
+    
+    this.limiterOutputGain = context.createGain(); this.limiterOutputGain.gain.value = 1.0;
 
     this.processedGain = context.createGain(); this.processedGain.gain.value = 1;
     this.bypassGain = context.createGain(); this.bypassGain.gain.value = 0;
     this.outputGain = context.createGain();
 
-    // ✅ CHAÎNE : Gain -> EQ -> Saturateur -> Widener -> Compresseur -> Sortie
+    // Câblage : Gain -> EQ -> Saturateur -> Widener -> Compresseur -> Limiteur -> Sortie
     let prev: AudioNode = this.inputGain;
     for (const band of this.eqBands) { prev.connect(band); prev = band; }
     prev.connect(this.eqMid); 
@@ -167,8 +182,12 @@ export class MasteringChain {
     this.compressor.connect(this.compressorMakeup);
     this.compressorMakeup.connect(this.processedGain);
     
+    // ✅ Limiteur branché juste avant la sortie
+    this.processedGain.connect(this.limiter);
+    this.limiter.connect(this.limiterOutputGain);
+    this.limiterOutputGain.connect(this.outputGain);
+    
     this.inputGain.connect(this.bypassGain);
-    this.processedGain.connect(this.outputGain);
     this.bypassGain.connect(this.outputGain);
   }
 
@@ -203,21 +222,21 @@ export class MasteringChain {
   
   setPresence(value: number): void { this.eqMid.gain.setTargetAtTime(value, this.context.currentTime, 0.02); }
   
-  // ✅ WIDTH RÉACTIVÉ (Effet perceptible mais contrôlé)
   setWidth(value: number): void {
-    const sideGain = value > 1 ? Math.min(0.3, (value - 1) * 0.3) : 0;
-    const midGain = value > 1 ? 1 - (sideGain * 0.2) : 1;
+    const sideGain = value > 1 ? Math.min(0.25, (value - 1) * 0.25) : 0;
+    const midGain = value > 1 ? 1 - (sideGain * 0.15) : 1;
     const now = this.context.currentTime;
-    this.widenerSideToL.gain.setTargetAtTime(sideGain, now, 0.02);
-    this.widenerSideToR.gain.setTargetAtTime(-sideGain, now, 0.02);
-    this.widenerMidToL.gain.setTargetAtTime(midGain, now, 0.02);
-    this.widenerMidToR.gain.setTargetAtTime(midGain, now, 0.02);
+    this.widenerSideToL.gain.setTargetAtTime(sideGain, now, 0.05);
+    this.widenerSideToR.gain.setTargetAtTime(-sideGain, now, 0.05);
+    this.widenerMidToL.gain.setTargetAtTime(midGain, now, 0.05);
+    this.widenerMidToR.gain.setTargetAtTime(midGain, now, 0.05);
   }
   
   setSaturation(value: number): void { 
     this.saturator.curve = this.getCachedDistortionCurve(value) as any;
-    this.saturatorWet.gain.setTargetAtTime(value > 0 ? 0.5 : 0, this.context.currentTime, 0.02);
-    this.saturatorDry.gain.setTargetAtTime(value > 0 ? 0.5 : 1, this.context.currentTime, 0.02);
+    const wetAmount = value > 0 ? Math.min(0.35, value * 0.4) : 0;
+    this.saturatorWet.gain.setTargetAtTime(wetAmount, this.context.currentTime, 0.05);
+    this.saturatorDry.gain.setTargetAtTime(1 - wetAmount, this.context.currentTime, 0.05);
   }
   
   setBypass(bypass: boolean): void {
@@ -228,30 +247,47 @@ export class MasteringChain {
   
   setEQBand(index: number, frequency: number, gain: number, q?: number): void {
     const band = this.eqBands[index]; if (!band) return;
-    band.frequency.value = frequency; band.gain.setTargetAtTime(gain, this.context.currentTime, 0.02); if (q !== undefined) band.Q.value = q;
+    band.frequency.setTargetAtTime(frequency, this.context.currentTime, 0.05); 
+    band.gain.setTargetAtTime(gain, this.context.currentTime, 0.05); 
+    if (q !== undefined) band.Q.setTargetAtTime(q, this.context.currentTime, 0.05);
   }
 
   setEQGain(bandIndex: number, gainDb: number): void {
+    this.setManualEQGain(bandIndex, gainDb);
+  }
+  
+  // ✅ Combine le preset et le manuel
+  setManualEQGain(bandIndex: number, gainDb: number): void {
+    this.manualEQ[bandIndex] = gainDb;
     const band = this.eqBands[bandIndex];
-    if (band) band.gain.setTargetAtTime(gainDb, this.context.currentTime, 0.02);
+    if (band) {
+      const totalGain = this.presetEQBase[bandIndex] + this.manualEQ[bandIndex];
+      band.gain.setTargetAtTime(totalGain, this.context.currentTime, 0.03);
+    }
   }
 
-  // ✅ COMPRESSEUR RÉACTIVÉ (Dynamique perceptible)
   setCompressor(thresholdDb: number, ratio: number, attack: number, release: number): void {
     const now = this.context.currentTime;
-    this.compressor.threshold.setTargetAtTime(thresholdDb, now, 0.02); 
-    this.compressor.ratio.setTargetAtTime(ratio, now, 0.02);
-    this.compressor.attack.setTargetAtTime(attack, now, 0.02); 
-    this.compressor.release.setTargetAtTime(release, now, 0.02);
+    this.compressor.threshold.setTargetAtTime(thresholdDb, now, 0.05); 
+    this.compressor.ratio.setTargetAtTime(ratio, now, 0.05);
+    this.compressor.attack.setTargetAtTime(attack, now, 0.05); 
+    this.compressor.release.setTargetAtTime(release, now, 0.05);
     
-    // Compensation de gain (Makeup) quand on compresse
-    const makeupDb = ratio > 1 ? (ratio - 1) * 2 : 0;
-    this.compressorMakeup.gain.setTargetAtTime(Math.pow(10, makeupDb / 20), now, 0.02);
+    let makeupDb = 0;
+    if (ratio > 1 && thresholdDb < 0) {
+      makeupDb = Math.abs(thresholdDb) * (1 - 1/ratio) * 0.7;
+    }
+    this.compressorMakeup.gain.setTargetAtTime(Math.pow(10, makeupDb / 20), now, 0.05);
+  }
+  
+  // ✅ Réglage du limiteur (Ceiling)
+  setLimiterCeiling(ceilingDb: number): void {
+    const now = this.context.currentTime;
+    this.limiter.threshold.setTargetAtTime(ceilingDb, now, 0.05);
   }
 
-  setLimiterCeiling(ceilingDb: number): void { /* Désactivé */ }
-  setMonoMaker(...args: any[]): void { /* Désactivé */ }
-  setImager(...args: any[]): void { /* Désactivé */ }
+  setMonoMaker(...args: any[]): void { }
+  setImager(...args: any[]): void { }
   isMonoMakerEnabled(): boolean { return false; }
   getMonoMakerFrequency(): number { return 120; }
   getEQBandCount(): number { return this.eqBands.length; }
@@ -264,34 +300,71 @@ export class MasteringChain {
     this.setSaturation(v.saturation * k);
     
     const eq = this.getEQPreset(preset); 
-    eq.forEach((band, i) => { 
-      this.setEQBand(i, band.frequency, band.gain * k, band.q); 
+    eq.forEach((band, i) => {
+      this.presetEQBase[i] = band.gain * k;
+      this.eqBands[i].frequency.setTargetAtTime(band.frequency, this.context.currentTime, 0.05);
+      this.eqBands[i].Q.setTargetAtTime(band.q, this.context.currentTime, 0.05);
+      const totalGain = this.presetEQBase[i] + this.manualEQ[i];
+      this.eqBands[i].gain.setTargetAtTime(totalGain, this.context.currentTime, 0.05);
     });
+    
+    this.setWidth(1 + (v.width - 1) * k);
+    
+    const comp = this.getCompressorPreset(preset);
+    this.setCompressor(comp.threshold, 1 + (comp.ratio - 1) * k, comp.attack, comp.release);
+  }
+
+  // ✅ NOUVEAU : Récupérer l'état actuel pour l'affichage UI
+  getCurrentState(preset: MasteringPreset): {
+    presetName: string;
+    presetValues: PresetValues;
+    compressor: { threshold: number; ratio: number; attack: number; release: number };
+    eq: { frequency: number; gain: number; q: number }[];
+  } {
+    return {
+      presetName: preset,
+      presetValues: this.getPresetValues(preset),
+      compressor: this.getCompressorPreset(preset),
+      eq: this.getEQPreset(preset),
+    };
+  }
+
+  getCompressorPreset(preset: MasteringPreset): { threshold: number; ratio: number; attack: number; release: number } {
+    switch (preset) {
+      case 'universal': return { threshold: -18, ratio: 1.8, attack: 0.03, release: 0.25 };
+      case 'fire':      return { threshold: -16, ratio: 2.5, attack: 0.02, release: 0.20 };
+      case 'clarity':   return { threshold: -20, ratio: 1.5, attack: 0.04, release: 0.30 };
+      case 'cassette':  return { threshold: -22, ratio: 2.0, attack: 0.05, release: 0.40 };
+      case 'natural':   return { threshold: -20, ratio: 1.3, attack: 0.05, release: 0.30 };
+      case 'spatial':   return { threshold: -20, ratio: 1.5, attack: 0.04, release: 0.30 };
+      case 'cinematic': return { threshold: -18, ratio: 2.2, attack: 0.03, release: 0.35 };
+      case 'punch':     return { threshold: -14, ratio: 3.0, attack: 0.01, release: 0.10 };
+    }
   }
 
   getPresetValues(preset: MasteringPreset): PresetValues {
     switch (preset) {
-      case 'universal': return { loudness: 2.0, presence: 0, width: 1, saturation: 0.1 };
-      case 'fire':      return { loudness: 4.0, presence: 0, width: 1, saturation: 0.4 };
-      case 'clarity':   return { loudness: 2.0, presence: 0, width: 1, saturation: 0.1 };
-      case 'cassette':  return { loudness: 1.5, presence: 0, width: 1, saturation: 0.6 };
-      case 'natural':   return { loudness: 0.0, presence: 0, width: 1, saturation: 0.0 };
-      case 'spatial':   return { loudness: 1.5, presence: 0, width: 1.5, saturation: 0.1 };
-      case 'cinematic': return { loudness: 3.5, presence: 0, width: 1, saturation: 0.3 };
-      case 'punch':     return { loudness: 5.0, presence: 0, width: 1, saturation: 0.5 };
+      case 'universal': return { loudness: 3.0, presence: 0, width: 1.0, saturation: 0.15 };
+      case 'fire':      return { loudness: 5.0, presence: 0, width: 1.0, saturation: 0.4 };
+      case 'clarity':   return { loudness: 3.0, presence: 0, width: 1.0, saturation: 0.15 };
+      case 'cassette':  return { loudness: 2.5, presence: 0, width: 0.9, saturation: 0.5 };
+      case 'natural':   return { loudness: 0.5, presence: 0, width: 1.0, saturation: 0.05 };
+      case 'spatial':   return { loudness: 2.5, presence: 0, width: 1.4, saturation: 0.15 };
+      case 'cinematic': return { loudness: 4.5, presence: 0, width: 1.1, saturation: 0.3 };
+      case 'punch':     return { loudness: 6.0, presence: 0, width: 1.0, saturation: 0.4 };
     }
   }
 
   getEQPreset(preset: MasteringPreset): { frequency: number; gain: number; q: number }[] {
     switch (preset) {
       case 'universal': return [ { frequency: 80, gain: 3.0, q: 0.7 }, { frequency: 250, gain: 0.0, q: 0.8 }, { frequency: 1000, gain: 0.0, q: 0.8 }, { frequency: 4000, gain: 1.5, q: 0.8 }, { frequency: 12000, gain: 3.0, q: 0.7 } ];
-      case 'fire': return [ { frequency: 80, gain: 8.0, q: 0.7 }, { frequency: 250, gain: 3.0, q: 0.8 }, { frequency: 1000, gain: -2.0, q: 0.8 }, { frequency: 4000, gain: 1.0, q: 0.8 }, { frequency: 12000, gain: -2.0, q: 0.7 } ];
-      case 'clarity': return [ { frequency: 80, gain: -4.0, q: 0.7 }, { frequency: 250, gain: -3.0, q: 0.8 }, { frequency: 1000, gain: 0.0, q: 0.8 }, { frequency: 4000, gain: 5.0, q: 0.8 }, { frequency: 12000, gain: 8.0, q: 0.7 } ];
-      case 'cassette': return [ { frequency: 80, gain: 4.0, q: 0.7 }, { frequency: 250, gain: 2.0, q: 0.8 }, { frequency: 1000, gain: -4.0, q: 0.8 }, { frequency: 4000, gain: -5.0, q: 0.8 }, { frequency: 12000, gain: -8.0, q: 0.7 } ];
+      case 'fire': return [ { frequency: 80, gain: 6.0, q: 0.7 }, { frequency: 250, gain: 3.0, q: 0.8 }, { frequency: 1000, gain: -1.5, q: 0.8 }, { frequency: 4000, gain: 1.0, q: 0.8 }, { frequency: 12000, gain: -1.5, q: 0.7 } ];
+      case 'clarity': return [ { frequency: 80, gain: -3.0, q: 0.7 }, { frequency: 250, gain: -2.0, q: 0.8 }, { frequency: 1000, gain: 0.0, q: 0.8 }, { frequency: 4000, gain: 4.0, q: 0.8 }, { frequency: 12000, gain: 6.0, q: 0.7 } ];
+      case 'cassette': return [ { frequency: 80, gain: 3.0, q: 0.7 }, { frequency: 250, gain: 1.5, q: 0.8 }, { frequency: 1000, gain: -3.0, q: 0.8 }, { frequency: 4000, gain: -4.0, q: 0.8 }, { frequency: 12000, gain: -6.0, q: 0.7 } ];
       case 'natural': return [ { frequency: 80, gain: 0, q: 0.7 }, { frequency: 250, gain: 0, q: 0.8 }, { frequency: 1000, gain: 0, q: 0.8 }, { frequency: 4000, gain: 0, q: 0.8 }, { frequency: 12000, gain: 0, q: 0.7 } ];
-      case 'spatial': return [ { frequency: 80, gain: -3.0, q: 0.7 }, { frequency: 250, gain: -2.0, q: 0.8 }, { frequency: 1000, gain: -3.0, q: 0.8 }, { frequency: 4000, gain: 3.0, q: 0.8 }, { frequency: 12000, gain: 6.0, q: 0.7 } ];
-      case 'cinematic': return [ { frequency: 80, gain: 6.0, q: 0.7 }, { frequency: 250, gain: 3.0, q: 0.8 }, { frequency: 1000, gain: 0.0, q: 0.8 }, { frequency: 4000, gain: -3.0, q: 0.8 }, { frequency: 12000, gain: 3.0, q: 0.7 } ];
-      case 'punch': return [ { frequency: 80, gain: 9.0, q: 0.7 }, { frequency: 250, gain: 4.0, q: 0.8 }, { frequency: 1000, gain: 0.0, q: 0.8 }, { frequency: 4000, gain: 4.0, q: 0.8 }, { frequency: 12000, gain: 6.0, q: 0.7 } ];
+      case 'spatial': return [ { frequency: 80, gain: -2.5, q: 0.7 }, { frequency: 250, gain: -1.5, q: 0.8 }, { frequency: 1000, gain: -2.5, q: 0.8 }, { frequency: 4000, gain: 2.5, q: 0.8 }, { frequency: 12000, gain: 4.5, q: 0.7 } ];
+      case 'cinematic': return [ { frequency: 80, gain: 4.5, q: 0.7 }, { frequency: 250, gain: 2.5, q: 0.8 }, { frequency: 1000, gain: 0.0, q: 0.8 }, { frequency: 4000, gain: -2.5, q: 0.8 }, { frequency: 12000, gain: 2.5, q: 0.7 } ];
+      case 'punch': return [ { frequency: 80, gain: 7.0, q: 0.7 }, { frequency: 250, gain: 3.0, q: 0.8 }, { frequency: 1000, gain: 0.0, q: 0.8 }, { frequency: 4000, gain: 3.0, q: 0.8 }, { frequency: 12000, gain: 4.5, q: 0.7 } ];
     }
   }
 
@@ -306,6 +379,8 @@ export class MasteringChain {
     try { this.widenerOutput.disconnect(); } catch {}
     try { this.compressor.disconnect(); } catch {}
     try { this.compressorMakeup.disconnect(); } catch {}
+    try { this.limiter.disconnect(); } catch {}
+    try { this.limiterOutputGain.disconnect(); } catch {}
     try { this.bypassGain.disconnect(); } catch {}
     try { this.processedGain.disconnect(); } catch {}
     try { this.outputGain.disconnect(); } catch {}

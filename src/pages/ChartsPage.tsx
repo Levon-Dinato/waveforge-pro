@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabase';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { usePlayer } from '../contexts/PlayerContext';
-import { ScrollToTop } from '../components/ScrollToTop'; // ✅ Import du bouton
+import { ScrollToTop } from '../components/ScrollToTop';
 
 interface Track {
   id: string;
@@ -22,7 +22,64 @@ interface Track {
   genre: string;
   player_bg_image_url: string | null;
   player_bg_color: string | null;
+  previous_rank?: number | null;
 }
+
+// ✅ Composant de tendance (Flèches/Badges)
+const TrendBadge = ({ currentRank, previousRank, size = 'normal' }: { currentRank: number, previousRank?: number | null, size?: 'small' | 'normal' }) => {
+  const isSmall = size === 'small';
+  const boxSize = isSmall ? 24 : 32;
+
+  if (previousRank === null || previousRank === undefined) {
+    return (
+      <div style={{ 
+        width: boxSize, height: boxSize, background: '#00d9ff', color: '#000', 
+        display: 'flex', alignItems: 'center', justifyContent: 'center', 
+        borderRadius: 4, fontSize: isSmall ? 9 : 10, fontWeight: 900 
+      }}>
+        NEW
+      </div>
+    );
+  }
+
+  const diff = previousRank - currentRank;
+
+  if (diff > 0) {
+    return (
+      <div style={{ 
+        width: boxSize, height: boxSize, background: '#10b981', color: '#fff', 
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', 
+        borderRadius: 4, fontSize: isSmall ? 10 : 12, fontWeight: 900, lineHeight: 1
+      }}>
+        <svg width={isSmall ? 8 : 12} height={isSmall ? 8 : 12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="18 15 12 9 6 15"></polyline></svg>
+        {diff}
+      </div>
+    );
+  } 
+  
+  if (diff < 0) {
+    return (
+      <div style={{ 
+        width: boxSize, height: boxSize, background: '#ef4444', color: '#fff', 
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', 
+        borderRadius: 4, fontSize: isSmall ? 10 : 12, fontWeight: 900, lineHeight: 1
+      }}>
+        <svg width={isSmall ? 8 : 12} height={isSmall ? 8 : 12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        {Math.abs(diff)}
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ 
+      width: boxSize, height: boxSize, background: '#f59e0b', color: '#fff', 
+      display: 'flex', alignItems: 'center', justifyContent: 'center', 
+      borderRadius: 4, fontSize: isSmall ? 14 : 18, fontWeight: 900 
+    }}>
+      -
+    </div>
+  );
+};
 
 export const ChartsPage: React.FC = () => {
   const { theme } = useTheme();
@@ -33,6 +90,7 @@ export const ChartsPage: React.FC = () => {
 
   const [tracks, setTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(true);
+  const [timeRange, setTimeRange] = useState<'weekly' | 'alltime'>('weekly');
 
   const colors = {
     bg: isDark ? '#050505' : '#f5f5f7',
@@ -72,11 +130,9 @@ export const ChartsPage: React.FC = () => {
 
   const incrementPlayCount = async (track: Track) => {
     if (!user || user.id === track.user_id) return;
-    
     const listenKey = `listened_${track.id}_${user.id}`;
     const lastListen = localStorage.getItem(listenKey);
     const now = Date.now();
-    
     if (lastListen && now - parseInt(lastListen) < 60 * 1000) return;
 
     try {
@@ -101,23 +157,13 @@ export const ChartsPage: React.FC = () => {
       togglePlay();
     } else {
       const isNew = currentTrack?.id !== track.id;
-      
       play({
-        id: track.id,
-        title: track.title,
-        artist: track.artist,
-        audio_url: track.audio_url,
-        cover_url: track.cover_url,
-        user_id: track.user_id,
-        duration: track.duration,
-        peaks: track.peaks,
-        bpm: track.bpm,
-        song_key: track.song_key,
-        genre: track.genre,
-        player_bg_image_url: track.player_bg_image_url,
-        player_bg_color: track.player_bg_color
+        id: track.id, title: track.title, artist: track.artist,
+        audio_url: track.audio_url, cover_url: track.cover_url,
+        user_id: track.user_id, duration: track.duration, peaks: track.peaks,
+        bpm: track.bpm, song_key: track.song_key, genre: track.genre,
+        player_bg_image_url: track.player_bg_image_url, player_bg_color: track.player_bg_color
       });
-
       if (isNew) incrementPlayCount(track);
     }
   };
@@ -130,6 +176,7 @@ export const ChartsPage: React.FC = () => {
 
   const top3 = tracks.slice(0, 3);
   const rest = tracks.slice(3);
+  // L'ordre visuel du podium : 2ème, 1er, 3ème
   const podiumOrder = [top3[1], top3[0], top3[2]];
 
   return (
@@ -137,7 +184,7 @@ export const ChartsPage: React.FC = () => {
       <div style={{ maxWidth: 1000, margin: '0 auto' }}>
         
         {/* HEADER */}
-        <div style={{ textAlign: 'center', marginBottom: 60 }}>
+        <div style={{ textAlign: 'center', marginBottom: 40 }}>
           <div style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: colors.accent, marginBottom: 12 }}>
             DropZone Charts
           </div>
@@ -149,6 +196,22 @@ export const ChartsPage: React.FC = () => {
           </p>
         </div>
 
+        {/* FILTRES */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 12, marginBottom: 40 }}>
+          <button 
+            onClick={() => setTimeRange('weekly')}
+            style={{ padding: '8px 20px', borderRadius: 20, fontSize: 13, fontWeight: 700, cursor: 'pointer', background: timeRange === 'weekly' ? colors.accent : 'transparent', color: timeRange === 'weekly' ? '#000' : colors.textMuted, border: `1px solid ${timeRange === 'weekly' ? colors.accent : colors.border}`, transition: 'all 0.2s' }}
+          >
+            Top de la semaine
+          </button>
+          <button 
+            onClick={() => setTimeRange('alltime')}
+            style={{ padding: '8px 20px', borderRadius: 20, fontSize: 13, fontWeight: 700, cursor: 'pointer', background: timeRange === 'alltime' ? colors.textMain : 'transparent', color: timeRange === 'alltime' ? colors.bg : colors.textMuted, border: `1px solid ${timeRange === 'alltime' ? colors.textMain : colors.border}`, transition: 'all 0.2s' }}
+          >
+            Tous les temps
+          </button>
+        </div>
+
         {loading ? (
           <div style={{ textAlign: 'center', padding: 60, color: colors.textMuted }}>Chargement du classement...</div>
         ) : tracks.length === 0 ? (
@@ -158,7 +221,7 @@ export const ChartsPage: React.FC = () => {
           </div>
         ) : (
           <>
-            {/* PODIUM TOP 3 */}
+            {/* PODIUM TOP 3 (Design moderne + Badges de tendance) */}
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-end', gap: 20, marginBottom: 60, flexWrap: 'wrap' }}>
               {podiumOrder.map((track, index) => {
                 if (!track) return null;
@@ -168,7 +231,7 @@ export const ChartsPage: React.FC = () => {
                 const isThird = rank === 3;
                 
                 const medalColor = isFirst ? colors.gold : isSecond ? colors.silver : colors.bronze;
-                const height = isFirst ? 280 : isSecond ? 220 : 200;
+                const height = isFirst ? 290 : isSecond ? 230 : 210;
                 const coverSize = isFirst ? 120 : isSecond ? 90 : 80;
                 const isCurrent = currentTrack?.id === track.id && isPlaying;
 
@@ -215,7 +278,12 @@ export const ChartsPage: React.FC = () => {
                       flexDirection: 'column',
                       justifyContent: 'flex-start'
                     }}>
-                      <div style={{ fontSize: 32, fontWeight: 900, color: medalColor, marginBottom: 8 }}>#{rank}</div>
+                      {/* RANG + BADGE DE TENDANCE */}
+                      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                        <div style={{ fontSize: 28, fontWeight: 900, color: medalColor }}>#{rank}</div>
+                        <TrendBadge currentRank={rank} previousRank={track.previous_rank} />
+                      </div>
+                      
                       <div style={{ fontSize: 15, fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: 4 }}>{track.title}</div>
                       <div style={{ fontSize: 13, color: colors.textMuted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.artist}</div>
                       
@@ -229,7 +297,7 @@ export const ChartsPage: React.FC = () => {
               })}
             </div>
 
-            {/* LISTE RESTE DU TOP 50 */}
+            {/* LISTE RESTE DU TOP 50 (Design spacieux + Badges de tendance) */}
             <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, overflow: 'hidden' }}>
               {rest.map((track, index) => {
                 const rank = index + 4;
@@ -239,7 +307,7 @@ export const ChartsPage: React.FC = () => {
                   <div 
                     key={track.id} 
                     style={{ 
-                      display: 'flex', alignItems: 'center', gap: 16, padding: '16px 24px', 
+                      display: 'flex', alignItems: 'center', gap: 20, padding: '16px 24px', 
                       borderBottom: index !== rest.length - 1 ? `1px solid ${colors.border}` : 'none',
                       transition: 'background 0.2s',
                       cursor: 'pointer'
@@ -248,7 +316,11 @@ export const ChartsPage: React.FC = () => {
                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                     onClick={() => handlePlay(track)}
                   >
-                    <div style={{ width: 40, fontSize: 18, fontWeight: 800, color: colors.textMuted, textAlign: 'center' }}>{rank}</div>
+                    {/* RANG + BADGE DE TENDANCE */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 75 }}>
+                      <div style={{ width: 30, fontSize: 20, fontWeight: 800, color: colors.textMuted, textAlign: 'center' }}>{rank}</div>
+                      <TrendBadge currentRank={rank} previousRank={track.previous_rank} size="small" />
+                    </div>
                     
                     <div style={{ position: 'relative', width: 56, height: 56, borderRadius: 8, background: track.cover_url ? `url(${track.cover_url}) center/cover` : colors.border, flexShrink: 0 }}>
                       {isCurrent && (
@@ -295,7 +367,6 @@ export const ChartsPage: React.FC = () => {
         )}
       </div>
       
-      {/* ✅ BOUTON RETOUR EN HAUT */}
       <ScrollToTop />
       
       <style>{`@keyframes spin { 100% { transform: rotate(360deg); } }`}</style>

@@ -26,6 +26,10 @@ const HelpPage = lazy(() => import('./pages/HelpPage').then((m) => ({ default: m
 const SettingsPage = lazy(() => import('./pages/SettingsPage').then((m) => ({ default: m.SettingsPage })));
 const NouveautesPage = lazy(() => import('./pages/NouveautesPage').then((m) => ({ default: m.NouveautesPage })));
 const AuthPage = lazy(() => import('./pages/AuthPage').then((m) => ({ default: m.AuthPage })));
+
+// ✅ NOUVEL IMPORT : Page de Callback OAuth
+const AuthCallback = lazy(() => import('./pages/AuthCallback').then((m) => ({ default: m.AuthCallback })));
+
 const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage').then((m) => ({ default: m.ResetPasswordPage })));
 const ProfilePage = lazy(() => import('./pages/ProfilePage').then((m) => ({ default: m.ProfilePage })));
 const GenresPage = lazy(() => import('./pages/GenresPage').then((m) => ({ default: m.GenresPage })));
@@ -44,8 +48,6 @@ const DropZoneVideosPage = lazy(() => import('./pages/DropZoneVideosPage').then(
 const SmartLinkPage = lazy(() => import('./pages/SmartLinkPage').then((m) => ({ default: m.SmartLinkPage })));
 const MyPlaylistsPage = lazy(() => import('./pages/MyPlaylistsPage').then((m) => ({ default: m.MyPlaylistsPage })));
 const DiscoverPage = lazy(() => import('./pages/DiscoverPage').then((m) => ({ default: m.DiscoverPage })));
-
-// ✅ NOUVEL IMPORT : Page Top 50 (Charts)
 const ChartsPage = lazy(() => import('./pages/ChartsPage').then((m) => ({ default: m.ChartsPage })));
 
 const PageLoader = () => (
@@ -65,6 +67,10 @@ function AnimatedRoutes() {
         
         {/* ✅ PAGES PUBLIQUES */}
         <Route path="/auth" element={<AuthPage />} />
+        
+        {/* ✅ ROUTE DE CALLBACK OAUTH */}
+        <Route path="/auth/callback" element={<AuthCallback />} />
+
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/levon-dinato" element={<LevonDinatoPage />} />
         <Route path="/premium/:username" element={<PremiumPage />} />
@@ -80,7 +86,6 @@ function AnimatedRoutes() {
           <Route path="nouveautes" element={<PageTransition><NouveautesPage /></PageTransition>} />
           <Route path="discover" element={<PageTransition><DiscoverPage /></PageTransition>} />
           
-          {/* ✅ NOUVELLE ROUTE : Top 50 */}
           <Route path="charts" element={<PageTransition><ChartsPage /></PageTransition>} />
           
           <Route path="events" element={<PageTransition><EventsPage /></PageTransition>} />
@@ -102,7 +107,6 @@ function AnimatedRoutes() {
           <Route path="musicgen" element={<PageTransition><PremiumGuard><MusicGenPage /></PremiumGuard></PageTransition>} />
           <Route path="generator" element={<PageTransition><PremiumGuard><GeneratorPage /></PremiumGuard></PageTransition>} />
           <Route path="video" element={<PageTransition><PremiumGuard><VideoPage /></PremiumGuard></PageTransition>} />
-
           <Route path="cdj" element={<PageTransition><PremiumGuard><CDJPage /></PremiumGuard></PageTransition>} />
           <Route path="mastering" element={<PageTransition><PremiumGuard><MasteringPage /></PremiumGuard></PageTransition>} />
 

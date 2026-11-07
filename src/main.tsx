@@ -1,4 +1,12 @@
 // src/main.tsx
+
+// ✅ SÉCURITÉ ANTI-CACHE POUR VERCEL (Empêche l'écran noir après un déploiement)
+window.addEventListener('vite:preloadError', (event) => {
+  event.preventDefault();
+  window.location.reload();
+});
+// ---------------------------------------------------------------------------
+
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';

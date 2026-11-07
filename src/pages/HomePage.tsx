@@ -26,7 +26,6 @@ const Icons = {
 
 interface Artist { id: string; username: string; avatar_url?: string; }
 
-// ✅ CORRECTION : L'interface est maintenant autonome et ne dépend plus de TrackGrid
 interface ExtendedTrack {
   id: string;
   title: string;
@@ -122,13 +121,9 @@ export const HomePage = () => {
   const playFeatured = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    if (!user) {
-      alert("🔒 Inscrivez-vous gratuitement pour écouter les morceaux en entier.");
-      navigate('/auth');
-      return;
-    }
     if (!featured) return;
 
+    // ✅ On ne bloque plus la lecture pour les invités !
     const isNew = (currentTrack as any)?.id !== featured.id;
     
     const trackToPlay = {
@@ -147,16 +142,12 @@ export const HomePage = () => {
     
     play(trackToPlay as any);
     
-    if (isNew) incrementPlayCount(featured);
+    // On ne compte la lecture que si l'utilisateur est connecté
+    if (isNew && user) incrementPlayCount(featured);
   };
 
   const handlePlayTrack = (track: any) => {
-    if (!user) {
-      alert("🔒 Inscrivez-vous gratuitement pour écouter les morceaux en entier.");
-      navigate('/auth');
-      return;
-    }
-    
+    // ✅ On ne bloque plus la lecture pour les invités !
     const isNew = (currentTrack as any)?.id !== track.id;
     
     const trackToPlay = {
@@ -175,7 +166,7 @@ export const HomePage = () => {
 
     play(trackToPlay as any);
 
-    if (isNew) incrementPlayCount(track);
+    if (isNew && user) incrementPlayCount(track);
   };
 
   const steps = [

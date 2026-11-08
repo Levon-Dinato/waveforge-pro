@@ -37,14 +37,13 @@ export const RadioPage: React.FC = () => {
 
   const [customBgUrl, setCustomBgUrl] = useState('');
   const [customBgType, setCustomBgType] = useState('animated');
+  const [customBgOpacity, setCustomBgOpacity] = useState(0.6); // ✅ Nouvel état
 
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const chatEndRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const channelRef = useRef<any>(null);
-  
-  // ✅ REF pour tracker si c'est le premier chargement
   const isInitialMount = useRef(true);
 
   const colors = {
@@ -57,7 +56,6 @@ export const RadioPage: React.FC = () => {
     accentGradient: 'linear-gradient(135deg, #ff3366, #7c5cff)',
   };
 
-  // ✅ CHARGEMENT UNIQUEMENT AU MONTAGE (dépend de username)
   useEffect(() => {
     if (!username) return;
     
@@ -72,8 +70,8 @@ export const RadioPage: React.FC = () => {
         setLiveUrl(profileData.live_url || '');
         setCustomBgUrl(profileData.radio_bg_url || '');
         setCustomBgType(profileData.radio_bg_type || 'animated');
+        setCustomBgOpacity(profileData.radio_bg_opacity ?? 0.6); // ✅ Récupération de l'opacité
 
-        // Récupérer le profil de l'utilisateur connecté séparément
         if (user) {
           const { data: myProfile } = await supabase.from('profiles').select('username, avatar_url').eq('id', user.id).single();
           setUserProfile(myProfile);
@@ -104,7 +102,6 @@ export const RadioPage: React.FC = () => {
         setTracks(tracksToPlay);
         
         if (tracksToPlay.length > 0) {
-          // ✅ RESTAURER LA POSITION SI ELLE EXISTE
           const savedState = sessionStorage.getItem(`radio_${profileData.id}`);
           if (savedState) {
             try {
@@ -115,7 +112,6 @@ export const RadioPage: React.FC = () => {
                 setProgress(state.progress || 0);
                 setLikeCount(tracksToPlay[savedIndex].likes_count || 0);
                 
-                // Restaurer le temps après que l'audio soit prêt
                 setTimeout(() => {
                   if (audioRef.current) {
                     audioRef.current.currentTime = state.progress || 0;
@@ -141,7 +137,6 @@ export const RadioPage: React.FC = () => {
           }
         }
 
-        // ✅ REALTIME CHAT (une seule fois)
         if (channelRef.current) {
           supabase.removeChannel(channelRef.current);
         }
@@ -185,9 +180,8 @@ export const RadioPage: React.FC = () => {
     return () => {
       if (channelRef.current) supabase.removeChannel(channelRef.current);
     };
-  }, [username]); // ✅ UNIQUEMENT username, pas user
+  }, [username]);
 
-  // ✅ SAUVEGARDER LA POSITION EN CONTINU
   useEffect(() => {
     if (!profile || tracks.length === 0 || isLive) return;
     
@@ -200,7 +194,7 @@ export const RadioPage: React.FC = () => {
         };
         sessionStorage.setItem(`radio_${profile.id}`, JSON.stringify(state));
       }
-    }, 2000); // Toutes les 2 secondes
+    }, 2000);
 
     return () => clearInterval(interval);
   }, [profile, tracks, currentIndex, isPlaying, isLive]);
@@ -316,9 +310,9 @@ export const RadioPage: React.FC = () => {
 
       <div className="animated-bg">
         {customBgType === 'video' && customBgUrl ? (
-          <video src={customBgUrl} autoPlay loop muted playsInline style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0, opacity: isDark ? 0.6 : 0.8 }} />
+          <video src={customBgUrl} autoPlay loop muted playsInline style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0, opacity: customBgOpacity }} />
         ) : customBgType === 'image' && customBgUrl ? (
-          <div style={{ position: 'absolute', inset: 0, background: `url(${customBgUrl}) center/cover`, opacity: isDark ? 0.6 : 0.8 }} />
+          <div style={{ position: 'absolute', inset: 0, background: `url(${customBgUrl}) center/cover`, opacity: customBgOpacity }} />
         ) : (
           <>
             <div className="aurora-blob blob1" />

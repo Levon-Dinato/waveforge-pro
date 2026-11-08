@@ -18,7 +18,6 @@ export const RadioManagerPage: React.FC = () => {
   const [myPlaylists, setMyPlaylists] = useState<any[]>([]);
   const [schedules, setSchedules] = useState<any[]>([]);
 
-  // Modales
   const [showJingleModal, setShowJingleModal] = useState(false);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -26,20 +25,18 @@ export const RadioManagerPage: React.FC = () => {
   const [jingleForm, setJingleForm] = useState({ title: '', audioFile: null as File | null });
   const [scheduleForm, setScheduleForm] = useState({ title: '', start_time: '08:00', end_time: '10:00', playlist_id: '' });
 
-  // États pour le Control Panel Radio
   const [radioSearch, setRadioSearch] = useState('');
   const [radioTab, setRadioTab] = useState<'musics' | 'jingles' | 'schedules' | 'settings'>('musics');
   const [radioPage, setRadioPage] = useState(1);
   const itemsPerPageRadio = 8;
 
-  // États Live & Profil
   const [isLive, setIsLive] = useState(false);
   const [liveUrl, setLiveUrl] = useState('');
   const [profileUsername, setProfileUsername] = useState('');
   
-  // ✅ NOUVEAUX ÉTATS : Fond d'écran
   const [radioBgUrl, setRadioBgUrl] = useState('');
   const [radioBgType, setRadioBgType] = useState('animated');
+  const [radioBgOpacity, setRadioBgOpacity] = useState(0.6); // ✅ Nouvel état
   const [uploadingBg, setUploadingBg] = useState(false);
 
   const colors = {
@@ -62,6 +59,7 @@ export const RadioManagerPage: React.FC = () => {
         setProfileUsername(profileData.username || '');
         setRadioBgUrl(profileData.radio_bg_url || '');
         setRadioBgType(profileData.radio_bg_type || 'animated');
+        setRadioBgOpacity(profileData.radio_bg_opacity ?? 0.6); // ✅ Récupération
       }
 
       const { data: tracksData } = await supabase.from('tracks').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
@@ -78,7 +76,6 @@ export const RadioManagerPage: React.FC = () => {
     fetchData();
   }, [user]);
 
-  // ... (Autres fonctions : toggleLive, toggleRadio, handleJingle, handleSchedule, etc. restent inchangées) ...
   const toggleLiveStatus = async () => {
     if (!user) return;
     if (!isLive && !liveUrl.trim()) return alert("Renseigne un lien de flux audio.");
@@ -139,7 +136,6 @@ export const RadioManagerPage: React.FC = () => {
     setSchedules(schedules.filter(s => s.id !== id));
   };
 
-  // ✅ NOUVELLE FONCTION : Upload du fond d'écran
   const handleBgUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
@@ -161,13 +157,13 @@ export const RadioManagerPage: React.FC = () => {
     }
   };
 
-  // ✅ NOUVELLE FONCTION : Sauvegarder le fond d'écran
   const handleSaveBackground = async () => {
     if (!user) return;
     setSaving(true);
     const { error } = await supabase.from('profiles').update({
       radio_bg_url: radioBgUrl,
-      radio_bg_type: radioBgType
+      radio_bg_type: radioBgType,
+      radio_bg_opacity: radioBgOpacity // ✅ Sauvegarde de l'opacité
     }).eq('id', user.id);
     setSaving(false);
     if (!error) alert("Fond d'écran mis à jour ! ✅");
@@ -203,7 +199,6 @@ export const RadioManagerPage: React.FC = () => {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
         
-        {/* BLOC LIVE */}
         <div style={{ background: isLive ? 'rgba(255,51,102,0.05)' : colors.panelBg, padding: 32, borderRadius: 16, border: `1px solid ${isLive ? '#ff3366' : colors.border}` }}>
           <div style={{ display: 'flex', gap: 24, alignItems: 'center', flexWrap: 'wrap' }}>
             <div style={{ flex: 1, minWidth: 300 }}>
@@ -218,7 +213,6 @@ export const RadioManagerPage: React.FC = () => {
           </div>
         </div>
 
-        {/* TABLEAU DE GESTION */}
         <div style={{ background: colors.panelBg, borderRadius: 16, border: `1px solid ${colors.border}`, overflow: 'hidden' }}>
           
           <div style={{ padding: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16, borderBottom: `1px solid ${colors.border}` }}>
@@ -241,7 +235,6 @@ export const RadioManagerPage: React.FC = () => {
           </div>
 
           {radioTab === 'settings' ? (
-            /* ✅ NOUVEL ONGLET : APPARENCE */
             <div style={{ padding: 32 }}>
               <h3 style={{ margin: '0 0 24px 0', fontSize: 20 }}>🎨 Fond d'écran de la Radio</h3>
               
@@ -267,14 +260,28 @@ export const RadioManagerPage: React.FC = () => {
                       <input type="url" placeholder="Coller un lien direct (https://...)" value={radioBgUrl} onChange={(e) => setRadioBgUrl(e.target.value)} style={{ flex: 1, minWidth: 200, padding: 12, background: colors.panelBg, border: `1px solid ${colors.border}`, color: colors.textMain, borderRadius: 8 }} />
                     </div>
 
+                    {/* ✅ NOUVEAU : CURSEUR D'OPACITÉ */}
+                    <div style={{ marginTop: 24 }}>
+                      <label style={{ display: 'block', marginBottom: 8, fontWeight: 600 }}>Opacité du fond : {Math.round(radioBgOpacity * 100)}%</label>
+                      <input 
+                        type="range" 
+                        min="0" max="1" step="0.05" 
+                        value={radioBgOpacity} 
+                        onChange={(e) => setRadioBgOpacity(Number(e.target.value))} 
+                        style={{ width: '100%', accentColor: '#ff3366', cursor: 'pointer' }} 
+                      />
+                    </div>
+
                     {radioBgUrl && (
-                      <div style={{ marginTop: 20 }}>
-                        <p style={{ margin: '0 0 8px 0', fontSize: 12, color: colors.textMuted }}>Aperçu :</p>
+                      <div style={{ marginTop: 20, position: 'relative', height: 200, borderRadius: 8, overflow: 'hidden', border: `1px solid ${colors.border}` }}>
                         {radioBgType === 'video' ? (
-                          <video src={radioBgUrl} autoPlay loop muted style={{ width: '100%', maxHeight: 200, borderRadius: 8, objectFit: 'cover' }} />
+                          <video src={radioBgUrl} autoPlay loop muted playsInline style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: radioBgOpacity }} />
                         ) : (
-                          <img src={radioBgUrl} alt="Aperçu" style={{ width: '100%', maxHeight: 200, borderRadius: 8, objectFit: 'cover' }} />
+                          <img src={radioBgUrl} alt="Aperçu" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: radioBgOpacity }} />
                         )}
+                        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+                          <span style={{ color: '#fff', fontWeight: 900, fontSize: 24, textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>Aperçu de la lisibilité</span>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -286,7 +293,6 @@ export const RadioManagerPage: React.FC = () => {
               </div>
             </div>
           ) : radioTab !== 'schedules' ? (
-            /* TABLEAU MUSIQUES / JINGLES */
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
@@ -323,7 +329,6 @@ export const RadioManagerPage: React.FC = () => {
               )}
             </div>
           ) : (
-            /* TABLEAU PROGRAMMATION */
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
@@ -356,7 +361,6 @@ export const RadioManagerPage: React.FC = () => {
         </div>
       </div>
 
-      {/* MODALES (Jingle & Programme) */}
       {showJingleModal && createPortal(
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ background: colors.panelBg, padding: 32, borderRadius: 16, width: '100%', maxWidth: 400 }}>

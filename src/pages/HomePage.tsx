@@ -123,7 +123,6 @@ export const HomePage = () => {
     e.preventDefault();
     if (!featured) return;
 
-    // ✅ On ne bloque plus la lecture pour les invités !
     const isNew = (currentTrack as any)?.id !== featured.id;
     
     const trackToPlay = {
@@ -142,12 +141,10 @@ export const HomePage = () => {
     
     play(trackToPlay as any);
     
-    // On ne compte la lecture que si l'utilisateur est connecté
     if (isNew && user) incrementPlayCount(featured);
   };
 
   const handlePlayTrack = (track: any) => {
-    // ✅ On ne bloque plus la lecture pour les invités !
     const isNew = (currentTrack as any)?.id !== track.id;
     
     const trackToPlay = {
@@ -354,6 +351,37 @@ export const HomePage = () => {
           </section>
         )}
 
+        {/* ✅ NOUVELLE SECTION : RADIOS EN DIRECT */}
+        <section>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 20 }}>
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: '#ff3366', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#ff3366', animation: 'pulse 1.5s infinite' }} />
+                En Direct
+              </div>
+              <h2 style={{ fontSize: isMobile ? 20 : 28, fontWeight: 900, color: colors.textMain, margin: 0, letterSpacing: '-0.5px' }}>Radios de la communauté</h2>
+            </div>
+            <Link to="/radios" style={{ fontSize: 12, color: colors.textMuted, textDecoration: 'none', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+              Voir toutes les radios {Icons.arrowRight}
+            </Link>
+          </div>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 16 }}>
+            {artists.slice(0, 3).map((artist) => (
+              <Link key={artist.id} to={`/radio/${artist.username}`} style={{ display: 'flex', alignItems: 'center', gap: 16, background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 16, textDecoration: 'none', transition: 'all 0.2s' }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#ff3366'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.transform = 'translateY(0)'; }}
+              >
+                <div style={{ width: 60, height: 60, borderRadius: '50%', background: artist.avatar_url ? `url(${artist.avatar_url}) center/cover` : colors.textDark, flexShrink: 0, border: '2px solid rgba(255, 51, 102, 0.3)' }} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: colors.textMain, marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{artist.username}</div>
+                  <div style={{ fontSize: 12, color: '#ff3366', fontWeight: 600 }}>Écouter la radio →</div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+
         {/* 7. COMMENT ÇA MARCHE */}
         <section>
           <div style={{ textAlign: 'center', marginBottom: isMobile ? 24 : 40 }}>
@@ -502,6 +530,8 @@ export const HomePage = () => {
         </div>
       </footer>
 
+      {/* ✅ ANIMATION POUR LE POINT ROUGE */}
+      <style>{`@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }`}</style>
     </div>
   );
 };

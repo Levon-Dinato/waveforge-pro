@@ -17,7 +17,6 @@ export const RadioPage: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // ✅ Utilisation du contexte radio pour l'audio
   const {
     tracks, currentIndex, currentTrack, isPlaying, progress, duration,
     isLive, liveUrl, startRadio, togglePlay, playNext, playPrev, seek
@@ -33,7 +32,6 @@ export const RadioPage: React.FC = () => {
   const [showToast, setShowToast] = useState(false);
   const [listeners, setListeners] = useState(1);
 
-  // États Personnalisation
   const [customBgUrl, setCustomBgUrl] = useState('');
   const [customBgType, setCustomBgType] = useState('animated');
   const [customBgOpacity, setCustomBgOpacity] = useState(0.6);
@@ -79,11 +77,14 @@ export const RadioPage: React.FC = () => {
 
           const now = new Date();
           const currentTime = now.toTimeString().split(' ')[0];
+          const currentDay = now.getDay() === 0 ? '7' : now.getDay().toString(); // 1=Lundi, 7=Dimanche
+
           const { data: schedules } = await supabase.from('radio_schedules')
             .select('*, playlists(id, name)')
             .eq('user_id', profileData.id)
             .lte('start_time', currentTime)
-            .gte('end_time', currentTime);
+            .gte('end_time', currentTime)
+            .contains('days', [currentDay]); // ✅ Vérifie si le jour correspond
 
           let tracksToPlay: any[] = [];
           if (schedules && schedules.length > 0) {
@@ -189,6 +190,13 @@ export const RadioPage: React.FC = () => {
     });
   };
 
+  // ✅ SUPPRESSION DE MESSAGE (Modération)
+  const handleDeleteMessage = async (messageId: string) => {
+    if (!window.confirm("Supprimer ce message ?")) return;
+    await supabase.from('radio_messages').delete().eq('id', messageId);
+    setMessages(prev => prev.filter(m => m.id !== messageId));
+  };
+
   const size = isMobile ? 260 : 320;
   const strokeWidth = 4;
   const radius = (size - strokeWidth) / 2;
@@ -255,6 +263,19 @@ export const RadioPage: React.FC = () => {
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
           </button>
         </div>
+      </div>
+
+      {/* ✅ NOUVELLE BANNIÈRE "NOW PLAYING" */}
+      <div style={{ zIndex: 2, width: '100%', maxWidth: 1000, background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(10px)', padding: '10px 20px', borderRadius: 30, display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, border: `1px solid ${colors.border}` }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ width: 8, height: 8, borderRadius: '50%', background: isPlaying ? colors.accent : colors.textMuted, animation: isPlaying ? 'pulse 1.5s infinite' : 'none' }} />
+          <span style={{ fontSize: 13, fontWeight: 600, color: colors.textMain }}>
+            {isLive ? '🔴 EN DIRECT' : activeSchedule ? `📻 Programme: ${activeSchedule}` : '🎵 Musique'}
+          </span>
+        </div>
+        <span style={{ fontSize: 13, color: colors.textMuted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '60%' }}>
+          {isLive ? 'Live Set' : currentTrack ? `${currentTrack.title} — ${currentTrack.artist}` : 'En attente...'}
+        </span>
       </div>
 
       <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 40, width: '100%', maxWidth: 1000, zIndex: 2, alignItems: 'center' }}>
@@ -357,12 +378,25 @@ export const RadioPage: React.FC = () => {
               <div style={{ textAlign: 'center', color: colors.textMuted, fontSize: 13, marginTop: 20 }}>Sois le premier à dire bonjour ! 👋</div>
             ) : (
               messages.map((msg) => (
-                <div key={msg.id} style={{ display: 'flex', gap: 10 }}>
+                <div key={msg.id} style={{ display: 'flex', gap: 10, position: 'relative' }}>
                   <img src={msg.avatar_url || `https://ui-avatars.com/api/?name=${msg.username}&background=random`} alt="avatar" style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
-                  <div>
+                  <div style={{ paddingRight: 20 }}>
                     <span style={{ fontSize: 12, fontWeight: 800, color: msg.username === userProfile?.username ? '#ff3366' : colors.textMain }}>{msg.username}</span>
                     <div style={{ fontSize: 13, color: colors.textMuted, marginTop: 2, lineHeight: 1.4, wordBreak: 'break-word' }}>{msg.text}</div>
                   </div>
+                  
+                  {/* ✅ BOUTON DE SUPPRESSION (Modération) */}
+                  {(user?.id === msg.user_id || user?.id === profile.id) && (
+                    <button 
+                      onClick={() => handleDeleteMessage(msg.id)}
+                      title="Supprimer ce message"
+                      style={{ position: 'absolute', right: 0, top: 0, background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', fontSize: 14 }}
+                      onMouseEnter={(e) => e.currentTarget.style.color = '#ff3366'}
+                      onMouseLeave={(e) => e.currentTarget.style.color = colors.textMuted}
+                    >
+                      ✕
+                    </button>
+                  )}
                 </div>
               ))
             )}

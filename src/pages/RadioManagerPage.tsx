@@ -1,6 +1,6 @@
 // src/pages/RadioManagerPage.tsx
 import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom'; // ✅ Ajout de useSearchParams
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import { supabase, AUDIO_BUCKET } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -12,7 +12,7 @@ export const RadioManagerPage: React.FC = () => {
   const isDark = theme === 'dark';
   const navigate = useNavigate();
 
-  // ✅ GESTION DES ONGLETS VIA L'URL
+  // ✅ SYNCHRONISATION DES ONGLETS VIA L'URL
   const [searchParams, setSearchParams] = useSearchParams();
   const radioTab = (searchParams.get('tab') || 'musics') as 'musics' | 'jingles' | 'schedules' | 'appearance';
   const setRadioTab = (tab: 'musics' | 'jingles' | 'schedules' | 'appearance') => {
@@ -30,7 +30,14 @@ export const RadioManagerPage: React.FC = () => {
   const [uploading, setUploading] = useState(false);
   
   const [jingleForm, setJingleForm] = useState({ title: '', audioFile: null as File | null });
-  const [scheduleForm, setScheduleForm] = useState({ title: '', start_time: '08:00', end_time: '10:00', playlist_id: '' });
+  
+  // ✅ AJOUT DES JOURS DANS LE FORMULAIRE DE PROGRAMMATION
+  const [scheduleForm, setScheduleForm] = useState({ title: '', start_time: '08:00', end_time: '10:00', playlist_id: '', days: [] as string[] });
+
+  // ✅ AJOUT DES STATES POUR L'UPLOAD RAPIDE ET LE LECTEUR
+  const [uploadForm, setUploadForm] = useState({ title: '', artist: '', genre: '' });
+  const [audioFile, setAudioFile] = useState<File | null>(null);
+  const [previewTrack, setPreviewTrack] = useState<any>(null);
 
   const [radioSearch, setRadioSearch] = useState('');
   const [radioPage, setRadioPage] = useState(1);
@@ -112,6 +119,40 @@ export const RadioManagerPage: React.FC = () => {
     setMyTracks(myTracks.filter(t => t.id !== trackId));
   };
 
+  // ✅ NOUVELLE FONCTION : UPLOAD DIRECT DEPUIS LE RADIO MANAGER
+  const handleRadioUpload = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !audioFile || !uploadForm.title) return alert("Titre et fichier audio obligatoires.");
+    setUploading(true);
+    try {
+      const ext = audioFile.name.split('.').pop();
+      const name = `${user.id}/radio-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from(AUDIO_BUCKET).upload(name, audioFile);
+      if (upErr) throw upErr;
+      const { data: urlData } = supabase.storage.from(AUDIO_BUCKET).getPublicUrl(name);
+
+      const { data, error } = await supabase.from('tracks').insert({
+        user_id: user.id, 
+        title: uploadForm.title, 
+        artist: uploadForm.artist || profileUsername, 
+        genre: uploadForm.genre || 'Inconnu', 
+        audio_url: urlData.publicUrl, 
+        in_radio: true, is_jingle: false, peaks: [], duration: 0, likes_count: 0, downloads: 0
+      }).select().single();
+
+      if (error) throw error;
+      if (data) setMyTracks([data, ...myTracks]);
+      
+      setAudioFile(null);
+      setUploadForm({ title: '', artist: '', genre: '' });
+      alert("Son ajouté à la radio ! 🎵");
+    } catch (err: any) {
+      alert("Erreur : " + err.message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handleJingleUpload = async (e: React.FormEvent) => {
     e.preventDefault(); if (!user || !jingleForm.audioFile || !jingleForm.title) return;
     setUploading(true);
@@ -134,15 +175,22 @@ export const RadioManagerPage: React.FC = () => {
 
   const handleAddSchedule = async (e: React.FormEvent) => {
     e.preventDefault(); if (!user || !scheduleForm.playlist_id || !scheduleForm.title) return;
+    if (scheduleForm.days.length === 0) return alert("Sélectionne au moins un jour.");
     setUploading(true);
     try {
       const { data, error } = await supabase.from('radio_schedules').insert({
-        user_id: user.id, title: scheduleForm.title, start_time: scheduleForm.start_time, end_time: scheduleForm.end_time, playlist_id: scheduleForm.playlist_id
+        user_id: user.id, 
+        title: scheduleForm.title, 
+        start_time: scheduleForm.start_time, 
+        end_time: scheduleForm.end_time, 
+        playlist_id: scheduleForm.playlist_id,
+        days: scheduleForm.days // ✅ ENREGISTREMENT DES JOURS
       }).select('*, playlists(name)').single();
       
       if (error) throw error;
       if (data) setSchedules([...schedules, data].sort((a,b) => a.start_time.localeCompare(b.start_time)));
-      setShowScheduleModal(false); setScheduleForm({ title: '', start_time: '08:00', end_time: '10:00', playlist_id: '' });
+      setShowScheduleModal(false); 
+      setScheduleForm({ title: '', start_time: '08:00', end_time: '10:00', playlist_id: '', days: [] });
     } catch (err: any) { alert("Erreur : " + err.message); } finally { setUploading(false); }
   };
 
@@ -242,14 +290,13 @@ export const RadioManagerPage: React.FC = () => {
         .dash-table th { padding: 12px 16px; font-size: 11px; font-weight: 600; text-transform: uppercase; color: ${colors.textMuted}; border-bottom: 1px solid ${colors.border}; letter-spacing: 0.5px; }
         .dash-table td { padding: 12px 16px; border-bottom: 1px solid ${colors.border}; font-size: 14px; }
         .dash-table tr:hover { background: rgba(255,255,255,0.02); }
-        .dropzone { border: 1px dashed ${colors.border}; border-radius: 8px; padding: 24px; text-align: center; cursor: pointer; transition: all 0.2s; background: ${colors.inputBg}; }
+        .dropzone { border: 1px dashed ${colors.border}; border-radius: 8px; padding: 16px; text-align: center; cursor: pointer; transition: all 0.2s; background: ${colors.inputBg}; }
         .dropzone:hover { border-color: ${colors.textMuted}; }
       `}</style>
 
       {/* HEADER */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16, marginBottom: 24 }}>
         <div>
-          {/* ✅ BOUTON RETOUR VERS L'ESPACE ARTISTE */}
           <button onClick={() => navigate('/settings')} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 500, marginBottom: 8, padding: 0 }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Retour à l'Espace Artiste
           </button>
@@ -263,7 +310,7 @@ export const RadioManagerPage: React.FC = () => {
             <a href={`/radio/${profileUsername}`} target="_blank" rel="noopener noreferrer" className="dash-btn dash-btn-secondary" style={{ textDecoration: 'none' }}>
               Écouter la Radio ↗
             </a>
-            <button className="dash-btn dash-btn-primary" onClick={() => setShowJingleModal(true)}>+ Uploader</button>
+            <button className="dash-btn dash-btn-primary" onClick={() => setShowJingleModal(true)}>+ Jingle</button>
           </div>
         )}
       </div>
@@ -370,18 +417,22 @@ export const RadioManagerPage: React.FC = () => {
               <tr>
                 <th>Nom</th>
                 <th>Horaires</th>
+                <th>Jours</th>
                 <th>Playlist</th>
                 <th style={{ textAlign: 'right' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {schedules.length === 0 ? (
-                <tr><td colSpan={4} style={{ padding: 40, textAlign: 'center', color: colors.textMuted }}>Aucun programme défini.</td></tr>
+                <tr><td colSpan={5} style={{ padding: 40, textAlign: 'center', color: colors.textMuted }}>Aucun programme défini.</td></tr>
               ) : (
                 schedules.map(s => (
                   <tr key={s.id}>
                     <td style={{ fontWeight: 600 }}>{s.title}</td>
                     <td style={{ color: colors.textMuted }}>{s.start_time.slice(0, 5)} - {s.end_time.slice(0, 5)}</td>
+                    <td style={{ fontSize: 12, color: colors.textMuted }}>
+                      {s.days && s.days.length > 0 ? s.days.map((d: string) => ['L','M','M','J','V','S','D'][parseInt(d)-1]).join(', ') : 'Tous les jours'}
+                    </td>
                     <td>{s.playlists?.name || '-'}</td>
                     <td style={{ textAlign: 'right' }}>
                       <button onClick={() => handleDeleteSchedule(s.id)} className="dash-btn dash-btn-danger" style={{ padding: '4px 8px', fontSize: 12 }}>Suppr.</button>
@@ -396,46 +447,35 @@ export const RadioManagerPage: React.FC = () => {
         <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start' }}>
           
           {/* COLONNE 1 : UPLOAD & FILTRES */}
-          <div style={{ width: 260, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 24 }}>
+          <div style={{ width: 280, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 24 }}>
             
+            {/* ✅ NOUVEAU FORMULAIRE D'UPLOAD FONCTIONNEL */}
             <div className="dash-card" style={{ padding: 20 }}>
-              <h3 style={{ fontSize: 14, fontWeight: 600, margin: '0 0 16px 0' }}>Uploader</h3>
-              <label className="dropzone" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, height: 120 }}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={colors.textMuted} strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg>
-                <span style={{ fontSize: 12, fontWeight: 500, color: colors.textMuted }}>Glissez vos MP3</span>
-                <input type="file" accept="audio/*" onChange={(e) => { /* Logique d'upload ici si besoin */ }} style={{ display: 'none' }} />
-              </label>
-              <div style={{ marginTop: 12 }}>
-                <select className="dash-input" style={{ fontSize: 12, padding: '8px' }}>
-                  <option>Non classé</option>
-                </select>
-              </div>
-              <button className="dash-btn dash-btn-primary" style={{ width: '100%', marginTop: 12 }}>
-                Uploader
-              </button>
+              <h3 style={{ fontSize: 14, fontWeight: 600, margin: '0 0 16px 0' }}>Ajouter un son</h3>
+              <form onSubmit={handleRadioUpload} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <input type="text" placeholder="Titre *" value={uploadForm.title} onChange={e => setUploadForm({...uploadForm, title: e.target.value})} required className="dash-input" style={{ fontSize: 12, padding: '8px' }} />
+                <input type="text" placeholder="Artiste" value={uploadForm.artist} onChange={e => setUploadForm({...uploadForm, artist: e.target.value})} className="dash-input" style={{ fontSize: 12, padding: '8px' }} />
+                <input type="text" placeholder="Genre (ex: House)" value={uploadForm.genre} onChange={e => setUploadForm({...uploadForm, genre: e.target.value})} className="dash-input" style={{ fontSize: 12, padding: '8px' }} />
+                
+                <label className="dropzone" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, height: 80 }}>
+                  <span style={{ fontSize: 11, fontWeight: 500, color: colors.textMuted }}>{audioFile ? audioFile.name : 'Choisir un MP3 *'}</span>
+                  <input type="file" accept="audio/*" required onChange={(e) => setAudioFile(e.target.files?.[0] || null)} style={{ display: 'none' }} />
+                </label>
+                
+                <button type="submit" disabled={uploading} className="dash-btn dash-btn-primary" style={{ width: '100%', marginTop: 4 }}>
+                  {uploading ? 'Upload...' : 'Ajouter à la radio'}
+                </button>
+              </form>
             </div>
 
             <div className="dash-card" style={{ padding: 20 }}>
               <h3 style={{ fontSize: 14, fontWeight: 600, margin: '0 0 12px 0', display: 'flex', justifyContent: 'space-between' }}>
                 Catégories
-                <span style={{ fontSize: 16, cursor: 'pointer' }}>+</span>
               </h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: colors.inputBg, borderRadius: 4, fontSize: 13, fontWeight: 600 }}>
                   <span>Toutes</span>
                   <span style={{ color: colors.textMuted }}>{filteredRadioTracks.length}</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', fontSize: 13, color: colors.textMuted, cursor: 'pointer' }}>
-                  <span>Pop</span>
-                  <span>11</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', fontSize: 13, color: colors.textMuted, cursor: 'pointer' }}>
-                  <span>Electro</span>
-                  <span>3</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', fontSize: 13, color: colors.textMuted, cursor: 'pointer' }}>
-                  <span>Hip-Hop</span>
-                  <span>0</span>
                 </div>
               </div>
             </div>
@@ -468,7 +508,8 @@ export const RadioManagerPage: React.FC = () => {
                   {currentTracks.map(track => (
                     <tr key={track.id}>
                       <td>
-                        <button style={{ width: 24, height: 24, borderRadius: '50%', background: colors.inputBg, border: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                        {/* ✅ BOUTON PLAY FONCTIONNEL */}
+                        <button onClick={() => setPreviewTrack(track)} style={{ width: 24, height: 24, borderRadius: '50%', background: colors.inputBg, border: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
                           <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
                         </button>
                       </td>
@@ -489,9 +530,6 @@ export const RadioManagerPage: React.FC = () => {
                       </td>
                       <td style={{ textAlign: 'right' }}>
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-                          <button style={{ background: 'transparent', border: `1px solid ${colors.border}`, borderRadius: 4, width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: colors.textMuted }}>
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-                          </button>
                           <button onClick={() => handleDeleteTrack(track.id)} style={{ background: 'transparent', border: `1px solid ${colors.border}`, borderRadius: 4, width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: colors.danger }}>
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                           </button>
@@ -511,6 +549,18 @@ export const RadioManagerPage: React.FC = () => {
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      {/* ✅ LECTEUR AUDIO FLOTTANT */}
+      {previewTrack && (
+        <div style={{ position: 'fixed', bottom: 20, right: 20, background: colors.panelBg, padding: 16, borderRadius: 12, border: `1px solid ${colors.accent}`, boxShadow: '0 10px 30px rgba(0,0,0,0.5)', zIndex: 999, display: 'flex', alignItems: 'center', gap: 16 }}>
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 700 }}>{previewTrack.title}</div>
+            <div style={{ fontSize: 12, color: colors.textMuted }}>{previewTrack.artist}</div>
+          </div>
+          <audio src={previewTrack.audio_url} controls autoPlay style={{ height: 36 }} />
+          <button onClick={() => setPreviewTrack(null)} style={{ background: 'transparent', border: 'none', color: colors.danger, cursor: 'pointer', fontSize: 18 }}>✕</button>
         </div>
       )}
 
@@ -534,6 +584,7 @@ export const RadioManagerPage: React.FC = () => {
             <h2 style={{ color: colors.textMain, marginTop: 0, fontSize: 18 }}>Nouveau Programme</h2>
             <form onSubmit={handleAddSchedule} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <input type="text" placeholder="Nom (ex: Morning Show)" value={scheduleForm.title} onChange={e => setScheduleForm({...scheduleForm, title: e.target.value})} required className="dash-input" />
+              
               <div style={{ display: 'flex', gap: 12 }}>
                 <div style={{ flex: 1 }}>
                   <label style={{ color: colors.textMuted, fontSize: 12, marginBottom: 4, display: 'block' }}>Début</label>
@@ -544,6 +595,31 @@ export const RadioManagerPage: React.FC = () => {
                   <input type="time" value={scheduleForm.end_time} onChange={e => setScheduleForm({...scheduleForm, end_time: e.target.value})} required className="dash-input" />
                 </div>
               </div>
+
+              {/* ✅ SELECTION DES JOURS */}
+              <div>
+                <label style={{ color: colors.textMuted, fontSize: 12, marginBottom: 4, display: 'block' }}>Jours de diffusion</label>
+                <div style={{ display: 'flex', gap: 4 }}>
+                  {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((day, i) => {
+                    const dayNum = (i + 1).toString();
+                    const isActive = scheduleForm.days.includes(dayNum);
+                    return (
+                      <button key={i} type="button" 
+                        onClick={() => {
+                          setScheduleForm(prev => ({
+                            ...prev, 
+                            days: isActive ? prev.days.filter(x => x !== dayNum) : [...prev.days, dayNum]
+                          }));
+                        }}
+                        style={{ flex: 1, padding: '8px 0', borderRadius: 4, border: `1px solid ${isActive ? colors.accent : colors.border}`, background: isActive ? `${colors.accent}20` : 'transparent', color: colors.textMain, cursor: 'pointer', fontSize: 12, fontWeight: 700 }}
+                      >
+                        {day}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
               <div>
                 <label style={{ color: colors.textMuted, fontSize: 12, marginBottom: 4, display: 'block' }}>Playlist</label>
                 <select value={scheduleForm.playlist_id} onChange={e => setScheduleForm({...scheduleForm, playlist_id: e.target.value})} required className="dash-input">

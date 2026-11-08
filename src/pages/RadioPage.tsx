@@ -18,7 +18,7 @@ export const RadioPage: React.FC = () => {
   const navigate = useNavigate();
 
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [userProfile, setUserProfile] = useState<any>(null); // Profil de l'utilisateur connecté (pour le chat)
+  const [userProfile, setUserProfile] = useState<any>(null);
   const [tracks, setTracks] = useState<Track[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -35,7 +35,10 @@ export const RadioPage: React.FC = () => {
   const [liveUrl, setLiveUrl] = useState('');
   const [listeners, setListeners] = useState(1);
 
-  // Chat
+  // ✅ NOUVEAUX ÉTATS : Fond d'écran
+  const [customBgUrl, setCustomBgUrl] = useState('');
+  const [customBgType, setCustomBgType] = useState('animated');
+
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -51,7 +54,6 @@ export const RadioPage: React.FC = () => {
     accentGradient: 'linear-gradient(135deg, #ff3366, #7c5cff)',
   };
 
-  // ✅ 1. CHARGEMENT DES DONNÉES & CHAT REALTIME
   useEffect(() => {
     if (!username) return;
     let channel: any;
@@ -59,21 +61,22 @@ export const RadioPage: React.FC = () => {
     const initRadio = async () => {
       setLoading(true);
 
-      // Récupérer le profil du DJ
       const { data: profileData } = await supabase.from('profiles').select('*').eq('username', username).single();
       
       if (profileData) {
         setProfile(profileData);
         setIsLive(profileData.is_live || false);
         setLiveUrl(profileData.live_url || '');
+        
+        // ✅ CHARGEMENT DU FOND D'ÉCRAN CUSTOM
+        setCustomBgUrl(profileData.radio_bg_url || '');
+        setCustomBgType(profileData.radio_bg_type || 'animated');
 
-        // Récupérer le profil de l'utilisateur connecté (pour le chat)
         if (user) {
           const { data: myProfile } = await supabase.from('profiles').select('username, avatar_url').eq('id', user.id).single();
           setUserProfile(myProfile);
         }
 
-        // --- PROGRAMMATION HORAIRE ---
         const now = new Date();
         const currentTime = now.toTimeString().split(' ')[0];
         const { data: schedules } = await supabase.from('radio_schedules')
@@ -99,14 +102,12 @@ export const RadioPage: React.FC = () => {
         setTracks(tracksToPlay);
         if (tracksToPlay.length > 0) {
           setLikeCount(tracksToPlay[0].likes_count || 0);
-          // Vérifier si l'utilisateur a déjà liké le premier son
           if (user) {
             const { data: like } = await supabase.from('likes').select('id').eq('user_id', user.id).eq('track_id', tracksToPlay[0].id).maybeSingle();
             setIsLiked(!!like);
           }
         }
 
-        // --- REALTIME CHAT & PRESENCE ---
         channel = supabase.channel(`radio_${profileData.id}`, {
           config: { presence: { key: user?.id || Math.random().toString() } },
         });
@@ -127,7 +128,6 @@ export const RadioPage: React.FC = () => {
             }
           });
 
-        // Charger les anciens messages
         const { data: oldMessages } = await supabase
           .from('radio_messages')
           .select('*')
@@ -146,10 +146,8 @@ export const RadioPage: React.FC = () => {
     };
   }, [username, user]);
 
-  // Scroll automatique du chat
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
-  // --- AUDIO LOGIC ---
   const togglePlay = () => {
     if (!audioRef.current) return;
     if (isPlaying) audioRef.current.pause();
@@ -196,12 +194,8 @@ export const RadioPage: React.FC = () => {
     if (audioRef.current && isPlaying && tracks[currentIndex] && !isLive) audioRef.current.play().catch(e => console.error(e));
   }, [currentIndex, isLive]);
 
-  // --- ACTIONS (LIKE & CHAT) ---
   const handleLike = async () => {
-    if (!user || !tracks[currentIndex] || isLive) {
-      if(!user) alert("Connecte-toi pour liker !");
-      return;
-    }
+    if (!user || !tracks[currentIndex] || isLive) { if(!user) alert("Connecte-toi pour liker !"); return; }
     const trackId = tracks[currentIndex].id;
     const newStatus = !isLiked;
     setIsLiked(newStatus);
@@ -209,10 +203,8 @@ export const RadioPage: React.FC = () => {
 
     if (newStatus) {
       await supabase.from('likes').insert({ user_id: user.id, track_id: trackId });
-      await supabase.rpc('increment_like_count', { track_id_param: trackId }); // Assure-toi d'avoir cette RPC
     } else {
       await supabase.from('likes').delete().eq('user_id', user.id).eq('track_id', trackId);
-      await supabase.rpc('decrement_like_count', { track_id_param: trackId });
     }
   };
 
@@ -224,25 +216,17 @@ export const RadioPage: React.FC = () => {
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim() || !profile) return;
-    if (!user) {
-      alert("Connecte-toi pour participer au chat !");
-      navigate('/auth');
-      return;
-    }
-
+    if (!user) { alert("Connecte-toi pour participer au chat !"); navigate('/auth'); return; }
     const msgText = newMessage;
-    setNewMessage(''); // On vide l'input tout de suite
-
+    setNewMessage('');
     await supabase.from('radio_messages').insert({
-      radio_owner_id: profile.id,
-      user_id: user.id,
+      radio_owner_id: profile.id, user_id: user.id,
       username: userProfile?.username || user.email?.split('@')[0] || 'Anonyme',
       avatar_url: userProfile?.avatar_url || `https://ui-avatars.com/api/?name=${user.email?.split('@')[0]}&background=random`,
       text: msgText
     });
   };
 
-  // --- UI ---
   const size = isMobile ? 260 : 320;
   const strokeWidth = 4;
   const radius = (size - strokeWidth) / 2;
@@ -254,25 +238,33 @@ export const RadioPage: React.FC = () => {
   if (!profile) return <div style={{ color: colors.textMain, background: colors.bg, height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>DJ introuvable.</div>;
 
   const currentTrack = tracks[currentIndex];
-  const bgImage = currentTrack?.cover_url || profile.avatar_url || '';
+  const coverImage = currentTrack?.cover_url || profile.avatar_url || '';
 
   return (
     <div style={{ background: colors.bg, minHeight: '100vh', color: colors.textMain, fontFamily: 'Inter, sans-serif', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: isMobile ? '20px' : '40px' }}>
       
-      {/* FOND ANIMÉ */}
+      {/* ✅ GESTION DU FOND D'ÉCRAN (CUSTOM OU ANIMÉ) */}
       <style>{`
         @keyframes aurora1 { 0% { transform: translate(0, 0) scale(1); } 50% { transform: translate(50px, -50px) scale(1.1); } 100% { transform: translate(0, 0) scale(1); } }
         @keyframes aurora2 { 0% { transform: translate(0, 0) scale(1); } 50% { transform: translate(-50px, 50px) scale(1.1); } 100% { transform: translate(0, 0) scale(1); } }
         .animated-bg { position: absolute; inset: 0; z-index: 0; overflow: hidden; background: ${isDark ? '#05050a' : '#f5f5f7'}; }
         .aurora-blob { position: absolute; width: 60vw; height: 60vw; border-radius: 50%; filter: blur(100px); opacity: ${isDark ? '0.4' : '0.2'}; }
-        .blob1 { background: ${bgImage ? `url(${bgImage}) center/cover` : '#ff3366'}; top: -10%; left: -10%; animation: aurora1 15s ease-in-out infinite; }
+        .blob1 { background: ${coverImage ? `url(${coverImage}) center/cover` : '#ff3366'}; top: -10%; left: -10%; animation: aurora1 15s ease-in-out infinite; }
         .blob2 { background: #7c5cff; bottom: -10%; right: -10%; animation: aurora2 18s ease-in-out infinite; }
         .grid-overlay { position: absolute; inset: 0; z-index: 1; background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px); background-size: 40px 40px; mask-image: radial-gradient(circle at center, black 40%, transparent 80%); }
       `}</style>
 
       <div className="animated-bg">
-        <div className="aurora-blob blob1" />
-        <div className="aurora-blob blob2" />
+        {customBgType === 'video' && customBgUrl ? (
+          <video src={customBgUrl} autoPlay loop muted playsInline style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0, opacity: isDark ? 0.6 : 0.8 }} />
+        ) : customBgType === 'image' && customBgUrl ? (
+          <div style={{ position: 'absolute', inset: 0, background: `url(${customBgUrl}) center/cover`, opacity: isDark ? 0.6 : 0.8 }} />
+        ) : (
+          <>
+            <div className="aurora-blob blob1" />
+            <div className="aurora-blob blob2" />
+          </>
+        )}
         <div className="grid-overlay" />
       </div>
 
@@ -292,7 +284,7 @@ export const RadioPage: React.FC = () => {
         </div>
       </div>
 
-      {/* LAYOUT */}
+      {/* LAYOUT (PLAYER + CHAT) */}
       <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 40, width: '100%', maxWidth: 1000, zIndex: 2, alignItems: 'center' }}>
         
         {/* PLAYER */}
@@ -317,7 +309,7 @@ export const RadioPage: React.FC = () => {
                 <circle cx={size / 2} cy={size / 2} r={radius} stroke="url(#progressGradient)" strokeWidth={strokeWidth} fill="none" strokeDasharray={circumference} strokeDashoffset={strokeDashoffset} strokeLinecap="round" style={{ transition: 'stroke-dashoffset 0.1s linear' }} />
               </svg>
               <input type="range" min={0} max={duration || 100} value={progress} onChange={handleSeek} style={{ position: 'absolute', width: size, height: size, opacity: 0, cursor: 'pointer', zIndex: 10, transform: 'rotate(-90deg)' }} />
-              <div style={{ width: size - 30, height: size - 30, borderRadius: '50%', background: bgImage ? `url(${bgImage}) center/cover` : colors.border, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }}>
+              <div style={{ width: size - 30, height: size - 30, borderRadius: '50%', background: coverImage ? `url(${coverImage}) center/cover` : colors.border, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }}>
                 <div style={{ width: 50, height: 50, borderRadius: '50%', background: '#05050a', border: '2px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <div style={{ width: 10, height: 10, borderRadius: '50%', background: colors.border }} />
                 </div>

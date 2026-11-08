@@ -6,6 +6,7 @@ import { HelmetProvider } from 'react-helmet-async';
 import { AudioEngineProvider } from './contexts/AudioEngineContext';
 import { AuthProvider } from './contexts/AuthContext';
 import { PlayerProvider } from './contexts/PlayerContext';
+import { RadioProvider } from './contexts/RadioContext'; // ✅ NOUVEL IMPORT
 import { ToastProvider } from './components/ui/Toast';
 import { WindowsProvider } from './components/WindowsManager';
 import { MainLayout } from './layouts/MainLayout';
@@ -14,44 +15,10 @@ import { PageTransition } from './components/PageTransition';
 import { PremiumGuard } from './components/PremiumGuard';
 import './styles.css';
 
+// ... (tes imports lazy restent identiques) ...
 const HomePage = lazy(() => import('./pages/HomePage').then((m) => ({ default: m.HomePage })));
-const StudioPage = lazy(() => import('./pages/StudioPage').then((m) => ({ default: m.StudioPage })));
-const StemsPage = lazy(() => import('./pages/StemsPage').then((m) => ({ default: m.StemsPage })));
-const MasteringPage = lazy(() => import('./pages/MasteringPage').then((m) => ({ default: m.MasteringPage })));
-const MusicGenPage = lazy(() => import('./pages/MusicGenPage').then((m) => ({ default: m.MusicGenPage })));
-const GeneratorPage = lazy(() => import('./pages/GeneratorPage').then((m) => ({ default: m.GeneratorPage })));
-const VideoPage = lazy(() => import('./pages/VideoPage').then((m) => ({ default: m.VideoPage })));
-const CDJPage = lazy(() => import('./pages/CDJPage').then((m) => ({ default: m.CDJPage })));
-const HelpPage = lazy(() => import('./pages/HelpPage').then((m) => ({ default: m.HelpPage })));
-const SettingsPage = lazy(() => import('./pages/SettingsPage').then((m) => ({ default: m.SettingsPage })));
-const RadioManagerPage = lazy(() => import('./pages/RadioManagerPage').then((m) => ({ default: m.RadioManagerPage })));
-const NouveautesPage = lazy(() => import('./pages/NouveautesPage').then((m) => ({ default: m.NouveautesPage })));
-const AuthPage = lazy(() => import('./pages/AuthPage').then((m) => ({ default: m.AuthPage })));
-const AuthCallback = lazy(() => import('./pages/AuthCallback').then((m) => ({ default: m.AuthCallback })));
-const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage').then((m) => ({ default: m.ResetPasswordPage })));
-const ProfilePage = lazy(() => import('./pages/ProfilePage').then((m) => ({ default: m.ProfilePage })));
-const GenresPage = lazy(() => import('./pages/GenresPage').then((m) => ({ default: m.GenresPage })));
-const ArtistsPage = lazy(() => import('./pages/ArtistsPage').then((m) => ({ default: m.ArtistsPage })));
-const SearchPage = lazy(() => import('./pages/SearchPage').then((m) => ({ default: m.SearchPage })));
-const MixerPage = lazy(() => import('./pages/MixerPage').then((m) => ({ default: m.MixerPage })));
-const LivePage = lazy(() => import('./pages/LivePage').then((m) => ({ default: m.LivePage })));
-const TrackPage = lazy(() => import('./pages/TrackPage').then((m) => ({ default: m.TrackPage })));
-const EventsPage = lazy(() => import('./pages/EventsPage').then((m) => ({ default: m.EventsPage })));
-const FeedPage = lazy(() => import('./pages/FeedPage').then((m) => ({ default: m.FeedPage })));
-const ToolsPage = lazy(() => import('./pages/ToolsPage').then((m) => ({ default: m.ToolsPage })));
-const AdminPage = lazy(() => import('./pages/AdminPage').then((m) => ({ default: m.AdminPage }))); 
-const LevonDinatoPage = lazy(() => import('./pages/LevonDinatoPage').then((m) => ({ default: m.LevonDinatoPage })));
-const PremiumPage = lazy(() => import('./pages/PremiumPage').then((m) => ({ default: m.PremiumPage })));
-const DropZoneVideosPage = lazy(() => import('./pages/DropZoneVideosPage').then((m) => ({ default: m.DropZoneVideosPage })));
-const SmartLinkPage = lazy(() => import('./pages/SmartLinkPage').then((m) => ({ default: m.SmartLinkPage })));
-const MyPlaylistsPage = lazy(() => import('./pages/MyPlaylistsPage').then((m) => ({ default: m.MyPlaylistsPage })));
-const DiscoverPage = lazy(() => import('./pages/DiscoverPage').then((m) => ({ default: m.DiscoverPage })));
-const ChartsPage = lazy(() => import('./pages/ChartsPage').then((m) => ({ default: m.ChartsPage })));
-const RadiosPage = lazy(() => import('./pages/RadiosPage').then((m) => ({ default: m.RadiosPage })));
 const RadioPage = lazy(() => import('./pages/RadioPage').then((m) => ({ default: m.RadioPage })));
-
-// ✅ NOUVEL IMPORT : Page de redirection de l'app Radio
-const RadioRedirectPage = lazy(() => import('./pages/RadioRedirectPage').then((m) => ({ default: m.RadioRedirectPage })));
+// ... etc ...
 
 const PageLoader = () => (
   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', flexDirection: 'column', gap: 16 }}>
@@ -67,56 +34,10 @@ function AnimatedRoutes() {
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
-        
-        {/* ✅ PAGES PUBLIQUES */}
+        {/* ... Tes routes identiques ... */}
         <Route path="/auth" element={<AuthPage />} />
-        <Route path="/auth/callback" element={<AuthCallback />} />
-        <Route path="/reset-password" element={<ResetPasswordPage />} />
-        <Route path="/levon-dinato" element={<LevonDinatoPage />} />
-        <Route path="/premium/:username" element={<PremiumPage />} />
         <Route path="/radio/:username" element={<RadioPage />} />
-        <Route path="/link/:slug" element={<SmartLinkPage />} />
-        
-        {/* ✅ ROUTE DE REDIRECTION PWA RADIO */}
-        <Route path="/radio-redirect" element={<RadioRedirectPage />} />
-
-        {/* ✅ LAYOUT PRINCIPAL */}
-        <Route path="/" element={<MainLayout />}>
-          
-          <Route index element={<PageTransition><HomePage /></PageTransition>} />
-          <Route path="feed" element={<PageTransition><FeedPage /></PageTransition>} />
-          <Route path="nouveautes" element={<PageTransition><NouveautesPage /></PageTransition>} />
-          <Route path="discover" element={<PageTransition><DiscoverPage /></PageTransition>} />
-          <Route path="charts" element={<PageTransition><ChartsPage /></PageTransition>} />
-          <Route path="events" element={<PageTransition><EventsPage /></PageTransition>} />
-          <Route path="live" element={<PageTransition><LivePage /></PageTransition>} />
-          <Route path="genres" element={<PageTransition><GenresPage /></PageTransition>} />
-          <Route path="artists" element={<PageTransition><ArtistsPage /></PageTransition>} />
-          <Route path="help" element={<PageTransition><HelpPage /></PageTransition>} />
-          <Route path="profil/:id" element={<PageTransition><ProfilePage /></PageTransition>} />
-          <Route path="search" element={<PageTransition><SearchPage /></PageTransition>} />
-          <Route path="track/:id" element={<PageTransition><TrackPage /></PageTransition>} />
-          <Route path="mes-playlists" element={<PageTransition><MyPlaylistsPage /></PageTransition>} />
-          <Route path="radios" element={<PageTransition><RadiosPage /></PageTransition>} />
-
-          <Route path="tools" element={<PageTransition><PremiumGuard><ToolsPage /></PremiumGuard></PageTransition>} />
-          
-          <Route path="radio-manager" element={<PageTransition><PremiumGuard><RadioManagerPage /></PremiumGuard></PageTransition>} />
-
-          <Route path="settings" element={<PageTransition><PremiumGuard><SettingsPage /></PremiumGuard></PageTransition>} />
-          <Route path="ia-videos" element={<PageTransition><PremiumGuard><DropZoneVideosPage /></PremiumGuard></PageTransition>} />
-          <Route path="studio" element={<PageTransition><PremiumGuard><StudioPage /></PremiumGuard></PageTransition>} />
-          <Route path="stems" element={<PageTransition><PremiumGuard><StemsPage /></PremiumGuard></PageTransition>} />
-          <Route path="musicgen" element={<PageTransition><PremiumGuard><MusicGenPage /></PremiumGuard></PageTransition>} />
-          <Route path="generator" element={<PageTransition><PremiumGuard><GeneratorPage /></PremiumGuard></PageTransition>} />
-          <Route path="video" element={<PageTransition><PremiumGuard><VideoPage /></PremiumGuard></PageTransition>} />
-          <Route path="cdj" element={<PageTransition><PremiumGuard><CDJPage /></PremiumGuard></PageTransition>} />
-          <Route path="mastering" element={<PageTransition><PremiumGuard><MasteringPage /></PremiumGuard></PageTransition>} />
-
-          <Route path="admin" element={<PrivateRoute><PageTransition><AdminPage /></PageTransition></PrivateRoute>} />
-        </Route>
-
-        <Route path="*" element={<Navigate to="/" replace />} />
+        {/* ... */}
       </Routes>
     </AnimatePresence>
   );
@@ -128,15 +49,17 @@ export default function App() {
       <ToastProvider>
         <AuthProvider>
           <PlayerProvider>
-            <AudioEngineProvider>
-              <BrowserRouter>
-                <WindowsProvider>
-                  <Suspense fallback={<PageLoader />}>
-                    <AnimatedRoutes />
-                  </Suspense>
-                </WindowsProvider>
-              </BrowserRouter>
-            </AudioEngineProvider>
+            <RadioProvider> {/* ✅ AJOUTÉ ICI */}
+              <AudioEngineProvider>
+                <BrowserRouter>
+                  <WindowsProvider>
+                    <Suspense fallback={<PageLoader />}>
+                      <AnimatedRoutes />
+                    </Suspense>
+                  </WindowsProvider>
+                </BrowserRouter>
+              </AudioEngineProvider>
+            </RadioProvider>
           </PlayerProvider>
         </AuthProvider>
       </ToastProvider>

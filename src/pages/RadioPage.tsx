@@ -1,14 +1,12 @@
 // src/pages/RadioPage.tsx
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import { supabase } from '../lib/supabase';
 import { useTheme } from '../contexts/ThemeContext';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { useAuth } from '../contexts/AuthContext';
-
-interface Track { id: string; title: string; artist: string; audio_url: string; cover_url: string | null; duration: number; likes_count?: number; }
-interface Profile { id: string; username: string; avatar_url: string | null; }
+import { useRadio } from '../contexts/RadioContext'; // ✅ IMPORT DU CONTEXTE
 
 export const RadioPage: React.FC = () => {
   const { username } = useParams<{ username: string }>();
@@ -18,22 +16,21 @@ export const RadioPage: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const [profile, setProfile] = useState<Profile | null>(null);
+  // ✅ UTILISATION DU CONTEXTE RADIO
+  const {
+    tracks, currentIndex, currentTrack, isPlaying, progress, duration,
+    isLive, liveUrl, startRadio, togglePlay, playNext, playPrev, seek
+  } = useRadio();
+
+  const [profile, setProfile] = useState<any>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
-  const [tracks, setTracks] = useState<Track[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
   const [loading, setLoading] = useState(true);
   const [activeSchedule, setActiveSchedule] = useState<string | null>(null);
 
-  const [progress, setProgress] = useState(0);
-  const [duration, setDuration] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
   const [showToast, setShowToast] = useState(false);
 
-  const [isLive, setIsLive] = useState(false);
-  const [liveUrl, setLiveUrl] = useState('');
   const [listeners, setListeners] = useState(1);
 
   const [customBgUrl, setCustomBgUrl] = useState('');
@@ -42,13 +39,10 @@ export const RadioPage: React.FC = () => {
 
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState('');
-  const chatEndRef = useRef<HTMLDivElement>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const channelRef = useRef<any>(null);
+  const chatEndRef = React.useRef<HTMLDivElement>(null);
   
-  // États pour l'installation PWA
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-  const [showIosInstallModal, setShowIosInstallModal] = useState(false);
+  // États pour l'installation rapide (QR Code)
+  const [showQrModal, setShowQrModal] = useState(false);
 
   const colors = {
     bg: isDark ? '#0a0a0e' : '#f5f5f7',
@@ -58,51 +52,6 @@ export const RadioPage: React.FC = () => {
     panelBg: isDark ? 'rgba(20,20,25,0.6)' : 'rgba(255,255,255,0.7)',
     accent: '#ff3366',
     accentGradient: 'linear-gradient(135deg, #ff3366, #7c5cff)',
-  };
-
-  // ✅ LOGIQUE DU MANIFEST PWA ET SAUVEGARDE RADIO
-  useEffect(() => {
-    if (username) {
-      // 1. On sauvegarde la radio en cours dans le localStorage
-      localStorage.setItem('last_radio_username', username);
-
-      // 2. On change le manifest pour pointer vers la radio
-      const manifestLink = document.querySelector('link[rel="manifest"]');
-      if (manifestLink) {
-        manifestLink.setAttribute('href', '/radio-manifest.json');
-      }
-    }
-
-    return () => {
-      // Quand on quitte la page, on remet le manifest original du site
-      const manifestLink = document.querySelector('link[rel="manifest"]');
-      if (manifestLink) {
-        // ✅ CORRECTION ICI : On remet /manifest.json (comme dans ton index.html)
-        manifestLink.setAttribute('href', '/manifest.json'); 
-      }
-    };
-  }, [username]);
-
-  // --- LOGIQUE D'INSTALLATION PWA ---
-  useEffect(() => {
-    const handler = (e: any) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-    };
-    window.addEventListener('beforeinstallprompt', handler);
-    return () => window.removeEventListener('beforeinstallprompt', handler);
-  }, []);
-
-  const handleInstallClick = async () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted') {
-        setDeferredPrompt(null);
-      }
-    } else {
-      setShowIosInstallModal(true);
-    }
   };
 
   // --- CHARGEMENT DES DONNÉES ---
@@ -116,8 +65,6 @@ export const RadioPage: React.FC = () => {
       
       if (profileData) {
         setProfile(profileData);
-        setIsLive(profileData.is_live || false);
-        setLiveUrl(profileData.live_url || '');
         setCustomBgUrl(profileData.radio_bg_url || '');
         setCustomBgType(profileData.radio_bg_type || 'animated');
         setCustomBgOpacity(profileData.radio_bg_opacity ?? 0.6);
@@ -149,43 +96,14 @@ export const RadioPage: React.FC = () => {
           if (tracksData) tracksToPlay = [...tracksData].sort(() => Math.random() - 0.5);
         }
 
-        setTracks(tracksToPlay);
+        // ✅ ON LANCE LA RADIO VIA LE CONTEXTE
+        startRadio(tracksToPlay, profileData.is_live || false, profileData.live_url || '');
         
         if (tracksToPlay.length > 0) {
-          let activeIndex = 0; 
-
-          const savedState = sessionStorage.getItem(`radio_${profileData.id}`);
-          if (savedState) {
-            try {
-              const state = JSON.parse(savedState);
-              const savedIndex = tracksToPlay.findIndex(t => t.id === state.trackId);
-              if (savedIndex !== -1) {
-                activeIndex = savedIndex;
-                setCurrentIndex(savedIndex);
-                setProgress(state.progress || 0);
-                setLikeCount(tracksToPlay[savedIndex].likes_count || 0);
-                
-                setTimeout(() => {
-                  if (audioRef.current) {
-                    audioRef.current.currentTime = state.progress || 0;
-                    if (state.isPlaying) {
-                      audioRef.current.play().catch(e => console.log('Autoplay bloqué:', e));
-                      setIsPlaying(true);
-                    }
-                  }
-                }, 500);
-              } else {
-                setLikeCount(tracksToPlay[0].likes_count || 0);
-              }
-            } catch (e) {
-              setLikeCount(tracksToPlay[0].likes_count || 0);
-            }
-          } else {
-            setLikeCount(tracksToPlay[0].likes_count || 0);
-          }
-
+          setLikeCount(tracksToPlay[currentIndex]?.likes_count || 0);
+          
           if (user) {
-            const trackIdToCheck = tracksToPlay[activeIndex]?.id;
+            const trackIdToCheck = tracksToPlay[currentIndex]?.id;
             if (trackIdToCheck) {
               const { data: like } = await supabase.from('likes').select('id').eq('user_id', user.id).eq('track_id', trackIdToCheck).maybeSingle();
               setIsLiked(!!like);
@@ -193,8 +111,7 @@ export const RadioPage: React.FC = () => {
           }
         }
 
-        if (channelRef.current) supabase.removeChannel(channelRef.current);
-
+        // Realtime Chat
         const channel = supabase.channel(`radio_${profileData.id}`, {
           config: { presence: { key: user?.id || Math.random().toString() } },
         });
@@ -215,107 +132,48 @@ export const RadioPage: React.FC = () => {
             }
           });
 
-        channelRef.current = channel;
-
-        const { data: oldMessages } = await supabase
-          .from('radio_messages')
-          .select('*')
-          .eq('radio_owner_id', profileData.id)
-          .order('created_at', { ascending: true })
-          .limit(50);
+        const { data: oldMessages } = await supabase.from('radio_messages').select('*').eq('radio_owner_id', profileData.id).order('created_at', { ascending: true }).limit(50);
         if (oldMessages) setMessages(oldMessages);
+
+        // Nettoyage
+        return () => { supabase.removeChannel(channel); };
       }
       setLoading(false);
     };
 
     initRadio();
+  }, [username, user]); // On ne met pas currentIndex ici pour ne pas recharger à chaque changement de son
 
-    return () => {
-      if (channelRef.current) supabase.removeChannel(channelRef.current);
-    };
-  }, [username, user]);
-
-  // --- SAUVEGARDE DE LA POSITION ---
-  useEffect(() => {
-    if (!profile || tracks.length === 0 || isLive) return;
-    
-    const interval = setInterval(() => {
-      if (audioRef.current && tracks[currentIndex]) {
-        const state = {
-          trackId: tracks[currentIndex].id,
-          progress: audioRef.current.currentTime,
-          isPlaying: isPlaying
-        };
-        sessionStorage.setItem(`radio_${profile.id}`, JSON.stringify(state));
-      }
-    }, 2000);
-
-    return () => clearInterval(interval);
-  }, [profile, tracks, currentIndex, isPlaying, isLive]);
-
+  // Scroll auto du chat
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
-  // --- CONTRÔLES AUDIO ---
-  const togglePlay = () => {
-    if (!audioRef.current) return;
-    if (isPlaying) audioRef.current.pause();
-    else audioRef.current.play().catch(e => console.error(e));
-    setIsPlaying(!isPlaying);
-  };
-
-  const playNext = () => {
-    if (isLive || tracks.length === 0) return;
-    const nextIndex = (currentIndex + 1) % tracks.length;
-    setCurrentIndex(nextIndex);
-    setIsPlaying(true);
-    setIsLiked(false);
-    setLikeCount(tracks[nextIndex].likes_count || 0);
-  };
-
-  const playPrev = () => {
-    if (isLive || tracks.length === 0) return;
-    const prevIndex = (currentIndex - 1 + tracks.length) % tracks.length;
-    setCurrentIndex(prevIndex);
-    setIsPlaying(true);
-    setIsLiked(false);
-    setLikeCount(tracks[prevIndex].likes_count || 0);
-  };
-
-  const handleTimeUpdate = () => {
-    if (isLive || !audioRef.current) return;
-    setProgress(audioRef.current.currentTime);
-    setDuration(audioRef.current.duration || 0);
-  };
-
-  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (isLive) return;
-    const time = Number(e.target.value);
-    if (audioRef.current) { audioRef.current.currentTime = time; setProgress(time); }
-  };
+  // Mettre à jour le compteur de likes quand le son change
+  useEffect(() => {
+    if (currentTrack) {
+      setLikeCount(currentTrack.likes_count || 0);
+      // Vérifier si l'utilisateur a liké ce son
+      if (user) {
+        supabase.from('likes').select('id').eq('user_id', user.id).eq('track_id', currentTrack.id).maybeSingle()
+          .then(({ data }) => setIsLiked(!!data));
+      }
+    }
+  }, [currentIndex, currentTrack, user]);
 
   const formatTime = (time: number) => {
     if (isNaN(time)) return '00:00';
     return `${Math.floor(time / 60).toString().padStart(2, '0')}:${Math.floor(time % 60).toString().padStart(2, '0')}`;
   };
 
-  useEffect(() => {
-    if (audioRef.current && isPlaying && tracks[currentIndex] && !isLive) {
-      audioRef.current.play().catch(e => console.error(e));
-    }
-  }, [currentIndex, isLive]);
-
-  // --- ACTIONS (LIKE & CHAT) ---
   const handleLike = async () => {
-    if (!user || !tracks[currentIndex] || isLive) { if(!user) alert("Connecte-toi pour liker !"); return; }
-    const trackId = tracks[currentIndex].id;
+    if (!user || !currentTrack) { if(!user) alert("Connecte-toi pour liker !"); return; }
     const newStatus = !isLiked;
     setIsLiked(newStatus);
     setLikeCount(prev => newStatus ? prev + 1 : prev - 1);
 
     if (newStatus) {
-      await supabase.from('likes').insert({ user_id: user.id, track_id: trackId });
+      await supabase.from('likes').insert({ user_id: user.id, track_id: currentTrack.id });
     } else {
-      await supabase.from('likes').delete().eq('user_id', user.id).eq('track_id', trackId);
+      await supabase.from('likes').delete().eq('user_id', user.id).eq('track_id', currentTrack.id);
     }
   };
 
@@ -349,8 +207,8 @@ export const RadioPage: React.FC = () => {
   if (loading) return <div style={{ color: colors.textMain, background: colors.bg, height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Connexion...</div>;
   if (!profile) return <div style={{ color: colors.textMain, background: colors.bg, height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>DJ introuvable.</div>;
 
-  const currentTrack = tracks[currentIndex];
   const coverImage = currentTrack?.cover_url || profile.avatar_url || '';
+  const currentUrl = window.location.href;
 
   return (
     <div style={{ background: colors.bg, minHeight: '100vh', color: colors.textMain, fontFamily: 'Inter, sans-serif', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: isMobile ? '20px' : '40px' }}>
@@ -390,7 +248,7 @@ export const RadioPage: React.FC = () => {
             <span style={{ fontSize: 10, fontWeight: 800, color: '#fff', letterSpacing: '1px' }}>{isLive ? 'LIVE' : activeSchedule ? `PROG: ${activeSchedule}` : 'EN DIRECT'}</span>
           </div>
           
-          <button onClick={handleInstallClick} title="Installer l'application" style={{ background: 'transparent', border: 'none', color: colors.textMain, cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+          <button onClick={() => setShowQrModal(true)} title="Installer / Partager" style={{ background: 'transparent', border: 'none', color: colors.textMain, cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
           </button>
 
@@ -422,7 +280,7 @@ export const RadioPage: React.FC = () => {
                 <defs><linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#ff3366" /><stop offset="100%" stopColor="#7c5cff" /></linearGradient></defs>
                 <circle cx={size / 2} cy={size / 2} r={radius} stroke="url(#progressGradient)" strokeWidth={strokeWidth} fill="none" strokeDasharray={circumference} strokeDashoffset={strokeDashoffset} strokeLinecap="round" style={{ transition: 'stroke-dashoffset 0.1s linear' }} />
               </svg>
-              <input type="range" min={0} max={duration || 100} value={progress} onChange={handleSeek} style={{ position: 'absolute', width: size, height: size, opacity: 0, cursor: 'pointer', zIndex: 10, transform: 'rotate(-90deg)' }} />
+              <input type="range" min={0} max={duration || 100} value={progress} onChange={(e) => seek(Number(e.target.value))} style={{ position: 'absolute', width: size, height: size, opacity: 0, cursor: 'pointer', zIndex: 10, transform: 'rotate(-90deg)' }} />
               <div style={{ width: size - 30, height: size - 30, borderRadius: '50%', background: coverImage ? `url(${coverImage}) center/cover` : colors.border, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }}>
                 <div style={{ width: 50, height: 50, borderRadius: '50%', background: '#05050a', border: '2px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <div style={{ width: 10, height: 10, borderRadius: '50%', background: colors.border }} />
@@ -520,49 +378,30 @@ export const RadioPage: React.FC = () => {
         </div>
       )}
 
-      {showIosInstallModal && createPortal(
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 99999, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', padding: 20 }} onClick={() => setShowIosInstallModal(false)}>
-          <div style={{ background: colors.panelBg, borderRadius: '24px 24px 0 0', padding: 32, width: '100%', maxWidth: 500, color: colors.textMain }} onClick={(e) => e.stopPropagation()}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-              <h2 style={{ margin: 0, fontSize: 20, fontWeight: 900 }}>📲 Installer l'App</h2>
-              <button onClick={() => setShowIosInstallModal(false)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, fontSize: 20, cursor: 'pointer' }}>✕</button>
-            </div>
-            
-            <p style={{ fontSize: 14, color: colors.textMuted, lineHeight: 1.5, marginBottom: 24 }}>
-              Sur iPhone/iPad, l'installation se fait manuellement en quelques secondes :
+      {showQrModal && createPortal(
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }} onClick={() => setShowQrModal(false)}>
+          <div style={{ background: colors.panelBg, borderRadius: 24, padding: 32, width: '100%', maxWidth: 400, color: colors.textMain, textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
+            <h2 style={{ margin: '0 0 8px 0', fontSize: 22, fontWeight: 900 }}>📲 Écouter sur mobile</h2>
+            <p style={{ fontSize: 14, color: colors.textMuted, marginBottom: 24 }}>
+              Scanne ce QR Code avec ton téléphone pour ouvrir la radio et l'ajouter à ton écran d'accueil.
             </p>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: colors.bg, padding: 16, borderRadius: 12 }}>
-                <div style={{ width: 40, height: 40, borderRadius: 8, background: 'rgba(0,217,255,0.1)', color: '#00d9ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg></div>
-                <span style={{ fontSize: 14, fontWeight: 600 }}>1. Appuie sur le bouton <strong>Partager</strong> en bas</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: colors.bg, padding: 16, borderRadius: 12 }}>
-                <div style={{ width: 40, height: 40, borderRadius: 8, background: 'rgba(0,217,255,0.1)', color: '#00d9ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg></div>
-                <span style={{ fontSize: 14, fontWeight: 600 }}>2. Choisis <strong>Sur l'écran d'accueil</strong></span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: colors.bg, padding: 16, borderRadius: 12 }}>
-                <div style={{ width: 40, height: 40, borderRadius: 8, background: 'rgba(0,217,255,0.1)', color: '#00d9ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-                <span style={{ fontSize: 14, fontWeight: 600 }}>3. Appuie sur <strong>Ajouter</strong></span>
-              </div>
+            
+            <div style={{ background: '#fff', padding: 16, borderRadius: 16, display: 'inline-block', marginBottom: 24 }}>
+              <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(currentUrl)}`} alt="QR Code Radio" style={{ width: 200, height: 200, display: 'block' }} />
             </div>
 
-            <button onClick={() => setShowIosInstallModal(false)} style={{ marginTop: 24, width: '100%', padding: 16, background: '#ff3366', color: '#fff', border: 'none', borderRadius: 12, fontWeight: 800, fontSize: 16, cursor: 'pointer' }}>
-              J'ai compris !
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 12, color: colors.textMuted, textAlign: 'left', background: colors.bg, padding: 16, borderRadius: 12 }}>
+              <div><strong>Sur iPhone :</strong> Scanne le code, puis <strong>Partager &gt; Sur l'écran d'accueil</strong>.</div>
+              <div><strong>Sur Android :</strong> Scanne le code, puis <strong>Ajouter à l'écran d'accueil</strong>.</div>
+            </div>
+
+            <button onClick={() => setShowQrModal(false)} style={{ marginTop: 24, width: '100%', padding: 14, background: '#ff3366', color: '#fff', border: 'none', borderRadius: 12, fontWeight: 800, fontSize: 16, cursor: 'pointer' }}>
+              Fermer
             </button>
           </div>
         </div>,
         document.body
       )}
-
-      <audio 
-        ref={audioRef} 
-        src={isLive ? liveUrl : (currentTrack?.audio_url || '')} 
-        onEnded={isLive ? undefined : playNext} 
-        onTimeUpdate={isLive ? undefined : handleTimeUpdate} 
-        autoPlay={isPlaying} 
-        preload="auto"
-      />
 
       <style>{`
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }

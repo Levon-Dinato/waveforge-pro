@@ -39,6 +39,7 @@ export const SettingsPage: React.FC = () => {
   const [myShorts, setMyShorts] = useState<any[]>([]);
   const [editingTrackId, setEditingTrackId] = useState<string | null>(null);
   
+  // Modales
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [uploading, setUploading] = useState(false);
   
@@ -46,6 +47,7 @@ export const SettingsPage: React.FC = () => {
   const [showShortLinkInput, setShowShortLinkInput] = useState(false);
   const [shortLinkInput, setShortLinkInput] = useState('');
 
+  // Formulaires d'upload
   const [uploadForm, setUploadForm] = useState({ 
     title: '', artist: '', genre: '', bpm: '', song_key: '',
     purchase_url: '', embed_code: '', player_bg_color: '#000000', player_bg_image_url: '',
@@ -60,7 +62,7 @@ export const SettingsPage: React.FC = () => {
   const [editTrackForm, setEditTrackForm] = useState({ 
     title: '', genre: '', bpm: 0, purchase_url: '', embed_code: '',
     player_bg_color: '#000000', player_bg_image_url: '',
-    is_downloadable: true 
+    is_downloadable: true
   });
   
   const [showLinkForm, setShowLinkForm] = useState(false);
@@ -172,27 +174,19 @@ export const SettingsPage: React.FC = () => {
   }, [user]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploadingImage(true);
+    const file = e.target.files?.[0]; if (!file) return; setUploadingImage(true);
     try {
       const fileName = `${user?.id}/avatar-${Date.now()}.${file.name.split('.').pop()}`;
       const { error: uploadError } = await supabase.storage.from('media').upload(fileName, file);
       if (uploadError) throw uploadError;
       const { data } = supabase.storage.from('media').getPublicUrl(fileName);
       setForm(prev => ({ ...prev, avatar_url: data.publicUrl }));
-    } catch (error: any) {
-      alert("Erreur : " + error.message);
-    } finally { setUploadingImage(false); }
+    } catch (error: any) { alert("Erreur : " + error.message); } finally { setUploadingImage(false); }
   };
 
   const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !user) return;
-    if (!file.type.includes('video')) {
-      alert("Veuillez sélectionner un fichier vidéo (MP4).");
-      return;
-    }
+    const file = e.target.files?.[0]; if (!file || !user) return;
+    if (!file.type.includes('video')) return alert("Veuillez sélectionner un fichier vidéo (MP4).");
     setUploadingVideo(true);
     try {
       const fileName = `${user.id}/background-video-${Date.now()}.${file.name.split('.').pop()}`;
@@ -201,57 +195,31 @@ export const SettingsPage: React.FC = () => {
       const { data } = supabase.storage.from('media').getPublicUrl(fileName);
       setForm(prev => ({ ...prev, background_video_url: data.publicUrl }));
       alert("Vidéo uploadée avec succès ! ✅");
-    } catch (error: any) {
-      alert("Erreur d'upload de la vidéo : " + error.message);
-    } finally {
-      setUploadingVideo(false);
-    }
+    } catch (error: any) { alert("Erreur d'upload : " + error.message); } finally { setUploadingVideo(false); }
   };
 
   const handleShortUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !user) return;
-    if (!file.type.includes('video')) {
-      alert("Veuillez sélectionner une vidéo (MP4, WebM).");
-      return;
-    }
+    const file = e.target.files?.[0]; if (!file || !user) return;
+    if (!file.type.includes('video')) return alert("Veuillez sélectionner une vidéo.");
     setUploadingShort(true);
     try {
       const fileName = `${user.id}/short-${Date.now()}.${file.name.split('.').pop()}`;
       const { error: uploadError } = await supabase.storage.from('media').upload(fileName, file);
       if (uploadError) throw uploadError;
       const { data } = supabase.storage.from('media').getPublicUrl(fileName);
-      
-      const { error: dbError } = await supabase.from('artist_shorts').insert({
-        user_id: user.id,
-        video_url: data.publicUrl,
-        title: "Nouveau Short"
-      });
-
+      const { error: dbError } = await supabase.from('artist_shorts').insert({ user_id: user.id, video_url: data.publicUrl, title: "Nouveau Short" });
       if (dbError) throw dbError;
       fetchMyShorts();
-    } catch (error: any) {
-      alert("Erreur d'upload : " + error.message);
-    } finally {
-      setUploadingShort(false);
-    }
+    } catch (error: any) { alert("Erreur d'upload : " + error.message); } finally { setUploadingShort(false); }
   };
 
   const handleAddShortByLink = async () => {
     if (!user || !shortLinkInput.trim()) return;
     try {
-      const { error } = await supabase.from('artist_shorts').insert({
-        user_id: user.id,
-        video_url: shortLinkInput.trim(),
-        title: "Vidéo importée"
-      });
+      const { error } = await supabase.from('artist_shorts').insert({ user_id: user.id, video_url: shortLinkInput.trim(), title: "Vidéo importée" });
       if (error) throw error;
-      fetchMyShorts();
-      setShortLinkInput('');
-      setShowShortLinkInput(false);
-    } catch (error: any) {
-      alert("Erreur : " + error.message);
-    }
+      fetchMyShorts(); setShortLinkInput(''); setShowShortLinkInput(false);
+    } catch (error: any) { alert("Erreur : " + error.message); }
   };
 
   const handleDeleteShort = async (id: string) => {
@@ -261,31 +229,19 @@ export const SettingsPage: React.FC = () => {
   };
 
   const handlePlayerBgUpload = async (e: React.ChangeEvent<HTMLInputElement>, target: 'edit' | 'upload') => {
-    const file = e.target.files?.[0];
-    if (!file || !user) return;
-    setUploadingPlayerBg(true);
+    const file = e.target.files?.[0]; if (!file || !user) return; setUploadingPlayerBg(true);
     try {
       const fileName = `${user.id}/player-bg-${Date.now()}.${file.name.split('.').pop()}`;
       const { error: uploadError } = await supabase.storage.from('media').upload(fileName, file);
       if (uploadError) throw uploadError;
       const { data } = supabase.storage.from('media').getPublicUrl(fileName);
-      
-      if (target === 'edit') {
-        setEditTrackForm(prev => ({ ...prev, player_bg_image_url: data.publicUrl }));
-      } else {
-        setUploadForm(prev => ({ ...prev, player_bg_image_url: data.publicUrl }));
-      }
-    } catch (error: any) {
-      alert("Erreur d'upload : " + error.message);
-    } finally {
-      setUploadingPlayerBg(false);
-    }
+      if (target === 'edit') setEditTrackForm(prev => ({ ...prev, player_bg_image_url: data.publicUrl }));
+      else setUploadForm(prev => ({ ...prev, player_bg_image_url: data.publicUrl }));
+    } catch (error: any) { alert("Erreur d'upload : " + error.message); } finally { setUploadingPlayerBg(false); }
   };
 
   const handleGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-    setUploadingGallery(true);
+    const files = e.target.files; if (!files || files.length === 0) return; setUploadingGallery(true);
     try {
       const uploadPromises = Array.from(files).map(async (file) => {
         const fileName = `${user?.id}/gallery-${Date.now()}-${Math.random().toString(36).substring(7)}.${file.name.split('.').pop()}`;
@@ -295,12 +251,9 @@ export const SettingsPage: React.FC = () => {
         return { user_id: user?.id, image_url: data.publicUrl };
       });
       const newImages = await Promise.all(uploadPromises);
-      const { error: dbError } = await supabase.from('profile_gallery').insert(newImages);
-      if (dbError) throw dbError;
+      await supabase.from('profile_gallery').insert(newImages);
       fetchGallery();
-    } catch (error: any) {
-      alert("Erreur : " + error.message);
-    } finally { setUploadingGallery(false); }
+    } catch (error: any) { alert("Erreur : " + error.message); } finally { setUploadingGallery(false); }
   };
 
   const handleDeleteGalleryImage = async (id: string, url: string) => {
@@ -312,9 +265,7 @@ export const SettingsPage: React.FC = () => {
   };
 
   const handleParcoursUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0 || !user) return;
-    setUploadingGallery(true);
+    const files = e.target.files; if (!files || files.length === 0 || !user) return; setUploadingGallery(true);
     try {
       const uploadPromises = Array.from(files).map(async (file) => {
         const fileName = `${user.id}/parcours-${Date.now()}-${Math.random().toString(36).substring(7)}.${file.name.split('.').pop()}`;
@@ -325,92 +276,44 @@ export const SettingsPage: React.FC = () => {
       });
       const newUrls = await Promise.all(uploadPromises);
       setForm(prev => ({ ...prev, parcours_images: [...prev.parcours_images, ...newUrls] }));
-    } catch (error: any) {
-      alert("Erreur : " + error.message);
-    } finally { setUploadingGallery(false); }
+    } catch (error: any) { alert("Erreur : " + error.message); } finally { setUploadingGallery(false); }
   };
 
   const handleAudioFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setAudioFile(file);
-
+    const file = e.target.files?.[0]; if (!file) return; setAudioFile(file);
     const fileNameWithoutExt = file.name.replace(/\.[^/.]+$/, "");
-    let guessArtist = "";
-    let guessTitle = fileNameWithoutExt;
-    let guessGenre = "";
-    let guessBpm = "";
-
+    let guessArtist = ""; let guessTitle = fileNameWithoutExt; let guessGenre = ""; let guessBpm = "";
+    
     if (fileNameWithoutExt.includes(' - ')) {
       const parts = fileNameWithoutExt.split(' - ');
-      guessArtist = parts[0].trim();
-      guessTitle = parts.slice(1).join(' - ').trim();
+      guessArtist = parts[0].trim(); guessTitle = parts.slice(1).join(' - ').trim();
     }
-
     const lowerName = fileNameWithoutExt.toLowerCase();
     const bpmMatch = lowerName.match(/(\d{2,3})\s?bpm/);
-    if (bpmMatch) {
-      guessBpm = bpmMatch[1];
-    } else {
-      const numMatch = lowerName.match(/(\d{2,3})/);
-      if (numMatch && parseInt(numMatch[1]) >= 60 && parseInt(numMatch[1]) <= 200) {
-        guessBpm = numMatch[1];
-      }
-    }
+    if (bpmMatch) guessBpm = bpmMatch[1];
+    else { const numMatch = lowerName.match(/(\d{2,3})/); if (numMatch && parseInt(numMatch[1]) >= 60 && parseInt(numMatch[1]) <= 200) guessBpm = numMatch[1]; }
 
-    const genres = ['techno', 'house', 'tech house', 'deep house', 'afro house', 'dance', 'k-pop', 'pop', 'hip-hop', 'rap', 'trap', 'dubstep', 'drum and bass', 'dnb', 'trance', 'hardstyle', 'reggaeton', 'latin', 'funk', 'disco', 'electro', 'edm', 'remix'];
-    for (const g of genres) {
-      if (lowerName.includes(g)) {
-        guessGenre = g.charAt(0).toUpperCase() + g.slice(1);
-        break;
-      }
-    }
+    const genres = ['techno', 'house', 'tech house', 'deep house', 'afro house', 'dance', 'pop', 'hip-hop', 'rap', 'trap', 'dubstep', 'drum and bass', 'dnb', 'trance', 'hardstyle', 'reggaeton', 'latin', 'funk', 'disco', 'electro', 'edm', 'remix'];
+    for (const g of genres) { if (lowerName.includes(g)) { guessGenre = g.charAt(0).toUpperCase() + g.slice(1); break; } }
 
-    setUploadForm(prev => ({
-      ...prev,
-      title: prev.title || guessTitle,
-      artist: prev.artist || guessArtist,
-      genre: prev.genre || guessGenre,
-      bpm: prev.bpm || guessBpm,
-    }));
+    setUploadForm(prev => ({ ...prev, title: prev.title || guessTitle, artist: prev.artist || guessArtist, genre: prev.genre || guessGenre, bpm: prev.bpm || guessBpm }));
 
     try {
       const metadata = await parseBlob(file, { skipCovers: false });
       const { common } = metadata;
-
-      setUploadForm(prev => ({
-        ...prev,
-        title: common.title || prev.title,
-        artist: common.artist || prev.artist,
-        genre: common.genre?.[0] || prev.genre,
-        bpm: common.bpm ? String(Math.round(common.bpm)) : prev.bpm,
-        song_key: common.key || prev.song_key
-      }));
-
+      setUploadForm(prev => ({ ...prev, title: common.title || prev.title, artist: common.artist || prev.artist, genre: common.genre?.[0] || prev.genre, bpm: common.bpm ? String(Math.round(common.bpm)) : prev.bpm, song_key: common.key || prev.song_key }));
       if (common.picture && common.picture.length > 0) {
         const pic = common.picture[0];
         const dataArray = pic.data instanceof Uint8Array ? pic.data : new Uint8Array(pic.data as any);
-        
-        let ext = 'jpg';
-        if (pic.format.includes('png')) ext = 'png';
-        else if (pic.format.includes('webp')) ext = 'webp';
-
+        let ext = 'jpg'; if (pic.format.includes('png')) ext = 'png'; else if (pic.format.includes('webp')) ext = 'webp';
         const blob = new Blob([dataArray as any], { type: pic.format });
-        
-        const coverFileFromTag = new File([blob], `cover-${Date.now()}.${ext}`, { type: pic.format });
-        setCoverFile(coverFileFromTag);
+        setCoverFile(new File([blob], `cover-${Date.now()}.${ext}`, { type: pic.format }));
       }
-    } catch (err) {
-      console.warn("Impossible de lire les tags ID3", err);
-    }
+    } catch (err) { console.warn("Impossible de lire les tags ID3", err); }
   };
 
   const handleUploadSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user) return alert("Connecte-toi pour uploader.");
-    if (!audioFile) return alert("Sélectionne un fichier audio.");
-    if (!uploadForm.title || !uploadForm.artist) return alert("Titre et Artiste obligatoires.");
-
+    e.preventDefault(); if (!user || !audioFile || !uploadForm.title || !uploadForm.artist) return alert("Champs obligatoires manquants.");
     setUploading(true);
     try {
       const audioExt = audioFile.name.split('.').pop();
@@ -424,113 +327,40 @@ export const SettingsPage: React.FC = () => {
         const coverExt = coverFile.name.split('.').pop() || 'jpg';
         const coverName = `${user.id}/${Date.now()}-cover.${coverExt}`;
         const { error: coverError } = await supabase.storage.from(AUDIO_BUCKET).upload(coverName, coverFile);
-        if (!coverError) {
-          const { data: coverUrlData } = supabase.storage.from(AUDIO_BUCKET).getPublicUrl(coverName);
-          coverUrl = coverUrlData.publicUrl;
-        }
+        if (!coverError) { const { data: coverUrlData } = supabase.storage.from(AUDIO_BUCKET).getPublicUrl(coverName); coverUrl = coverUrlData.publicUrl; }
       }
 
       const { data, error: dbError } = await supabase.from('tracks').insert({
-        user_id: user.id, title: uploadForm.title, artist: uploadForm.artist,
-        genre: uploadForm.genre || 'Inconnu', bpm: Number(uploadForm.bpm) || 0,
-        song_key: uploadForm.song_key || null, audio_url: audioUrlData.publicUrl,
-        cover_url: coverUrl, purchase_url: uploadForm.purchase_url || null,
-        embed_code: uploadForm.embed_code || null, player_bg_color: uploadForm.player_bg_color,
-        player_bg_image_url: uploadForm.player_bg_image_url || null,
-        is_downloadable: uploadForm.is_downloadable,
-        peaks: [], duration: 0, likes_count: 0, downloads: 0
+        user_id: user.id, title: uploadForm.title, artist: uploadForm.artist, genre: uploadForm.genre || 'Inconnu', bpm: Number(uploadForm.bpm) || 0, song_key: uploadForm.song_key || null, audio_url: audioUrlData.publicUrl, cover_url: coverUrl, purchase_url: uploadForm.purchase_url || null, embed_code: uploadForm.embed_code || null, player_bg_color: uploadForm.player_bg_color, player_bg_image_url: uploadForm.player_bg_image_url || null, is_downloadable: uploadForm.is_downloadable, in_radio: true, is_jingle: false, peaks: [], duration: 0, likes_count: 0, downloads: 0
       }).select().single();
 
       if (dbError) throw dbError;
       if (data) setMyTracks([data, ...myTracks]);
-      
-      setShowUploadModal(false);
-      setUploadForm({ title: '', artist: '', genre: '', bpm: '', song_key: '', purchase_url: '', embed_code: '', player_bg_color: '#000000', player_bg_image_url: '', is_downloadable: true });
-      setAudioFile(null); setCoverFile(null);
+      setShowUploadModal(false); setUploadForm({ title: '', artist: '', genre: '', bpm: '', song_key: '', purchase_url: '', embed_code: '', player_bg_color: '#000000', player_bg_image_url: '', is_downloadable: true }); setAudioFile(null); setCoverFile(null);
       alert("Son uploadé avec succès ! 🎵");
-    } catch (err: any) {
-      alert("Erreur lors de l'upload : " + err.message);
-    } finally {
-      setUploading(false);
-    }
+    } catch (err: any) { alert("Erreur : " + err.message); } finally { setUploading(false); }
   };
 
   const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user) return;
-    setSaving(true);
-    setMessage('');
-    
+    e.preventDefault(); if (!user) return; setSaving(true); setMessage('');
     const { error } = await supabase.from('profiles').update({
-      username: form.username, bio: form.bio, hero_tagline: form.hero_tagline,
-      hero_title: form.hero_title, hero_description: form.hero_description,
-      theme_color: form.theme_color, avatar_url: form.avatar_url,
-      background_video_url: form.background_video_url,
-      instagram_url: form.instagram_url, spotify_url: form.spotify_url,
-      soundcloud_url: form.soundcloud_url, tiktok_url: form.tiktok_url,
-      youtube_url: form.youtube_url, beatport_url: form.beatport_url,
-      x_url: form.x_url, facebook_url: form.facebook_url,
-      booking_email: form.booking_email,
-      parcours_images: form.parcours_images,
-      settings: { ...settings, font_family: form.font_family }
+      username: form.username, bio: form.bio, hero_tagline: form.hero_tagline, hero_title: form.hero_title, hero_description: form.hero_description, theme_color: form.theme_color, avatar_url: form.avatar_url, background_video_url: form.background_video_url, instagram_url: form.instagram_url, spotify_url: form.spotify_url, soundcloud_url: form.soundcloud_url, tiktok_url: form.tiktok_url, youtube_url: form.youtube_url, beatport_url: form.beatport_url, x_url: form.x_url, facebook_url: form.facebook_url, booking_email: form.booking_email, parcours_images: form.parcours_images, settings: { ...settings, font_family: form.font_family }
     }).eq('id', user.id);
-    
-    if (error) setMessage("Erreur : " + error.message);
-    else setMessage("Profil et modules mis à jour avec succès ! ✅");
+    if (error) setMessage("Erreur : " + error.message); else setMessage("Profil mis à jour ! ✅");
     setSaving(false);
   };
 
   const handleSaveLink = async () => {
-    if (!user || !linkForm.title) {
-      alert("Le titre est obligatoire.");
-      return;
-    }
-    if (!linkForm.audio_url && !linkForm.embed_code && !linkForm.purchase_url) {
-      alert("Renseigne au moins un lien (MP3, Beatport) ou un code d'intégration.");
-      return;
-    }
-
+    if (!user || !linkForm.title || (!linkForm.audio_url && !linkForm.embed_code && !linkForm.purchase_url)) return alert("Champs obligatoires manquants.");
     setSaving(true);
     try {
-      let finalAudioUrl = '';
-      let finalPurchaseUrl = linkForm.purchase_url;
-
-      if (linkForm.audio_url) {
-        if (linkForm.audio_url.endsWith('.mp3') || linkForm.audio_url.includes('catbox') || linkForm.audio_url.includes('.wav')) {
-          finalAudioUrl = linkForm.audio_url;
-        } else {
-          finalPurchaseUrl = linkForm.audio_url;
-        }
-      }
-      
-      if (!finalAudioUrl && finalPurchaseUrl) {
-         if (finalPurchaseUrl.endsWith('.mp3') || finalPurchaseUrl.includes('catbox')) {
-             finalAudioUrl = finalPurchaseUrl;
-             finalPurchaseUrl = '';
-         }
-      }
-
-      const { data, error } = await supabase.from('tracks').insert({
-        user_id: user.id,
-        title: linkForm.title,
-        artist: linkForm.artist || form.username || 'Artiste',
-        genre: linkForm.genre || 'Inconnu',
-        purchase_url: finalPurchaseUrl || null,
-        cover_url: linkForm.cover_url || null,
-        embed_code: linkForm.embed_code || null,
-        audio_url: finalAudioUrl,
-        peaks: [], likes_count: 0, downloads: 0,
-      }).select().single();
-
+      let finalAudioUrl = ''; let finalPurchaseUrl = linkForm.purchase_url;
+      if (linkForm.audio_url) { if (linkForm.audio_url.endsWith('.mp3') || linkForm.audio_url.includes('catbox') || linkForm.audio_url.includes('.wav')) finalAudioUrl = linkForm.audio_url; else finalPurchaseUrl = linkForm.audio_url; }
+      if (!finalAudioUrl && finalPurchaseUrl) { if (finalPurchaseUrl.endsWith('.mp3') || finalPurchaseUrl.includes('catbox')) { finalAudioUrl = finalPurchaseUrl; finalPurchaseUrl = ''; } }
+      const { data, error } = await supabase.from('tracks').insert({ user_id: user.id, title: linkForm.title, artist: linkForm.artist || form.username || 'Artiste', genre: linkForm.genre || 'Inconnu', purchase_url: finalPurchaseUrl || null, cover_url: linkForm.cover_url || null, embed_code: linkForm.embed_code || null, audio_url: finalAudioUrl, in_radio: true, is_jingle: false, peaks: [], likes_count: 0, downloads: 0 }).select().single();
       if (error) throw error;
-      if (data) {
-        setMyTracks([data, ...myTracks]);
-        setShowLinkForm(false);
-        setLinkForm({ title: '', artist: '', genre: '', purchase_url: '', cover_url: '', embed_code: '', audio_url: '' });
-      }
-    } catch (err: any) {
-      alert("Erreur : " + err.message);
-    } finally { setSaving(false); }
+      if (data) { setMyTracks([data, ...myTracks]); setShowLinkForm(false); setLinkForm({ title: '', artist: '', genre: '', purchase_url: '', cover_url: '', embed_code: '', audio_url: '' }); }
+    } catch (err: any) { alert("Erreur : " + err.message); } finally { setSaving(false); }
   };
 
   const handleDeleteTrack = async (trackId: string) => {
@@ -542,27 +372,15 @@ export const SettingsPage: React.FC = () => {
   const startEditingTrack = (track: any) => {
     setEditingTrackId(track.id);
     setEditTrackForm({ 
-      title: track.title, genre: track.genre || '', bpm: track.bpm || 0,
-      purchase_url: track.purchase_url || '', embed_code: track.embed_code || '',
-      player_bg_color: track.player_bg_color || '#000000', player_bg_image_url: track.player_bg_image_url || '',
-      is_downloadable: track.is_downloadable !== false
+      title: track.title, genre: track.genre || '', bpm: track.bpm || 0, purchase_url: track.purchase_url || '', embed_code: track.embed_code || '', player_bg_color: track.player_bg_color || '#000000', player_bg_image_url: track.player_bg_image_url || '', is_downloadable: track.is_downloadable !== false
     });
   };
 
   const handleSaveTrackEdit = async (trackId: string) => {
     const { error } = await supabase.from('tracks').update({
-      title: editTrackForm.title, genre: editTrackForm.genre, bpm: Number(editTrackForm.bpm),
-      purchase_url: editTrackForm.purchase_url, embed_code: editTrackForm.embed_code,
-      player_bg_color: editTrackForm.player_bg_color, player_bg_image_url: editTrackForm.player_bg_image_url,
-      is_downloadable: editTrackForm.is_downloadable
+      title: editTrackForm.title, genre: editTrackForm.genre, bpm: Number(editTrackForm.bpm), purchase_url: editTrackForm.purchase_url, embed_code: editTrackForm.embed_code, player_bg_color: editTrackForm.player_bg_color, player_bg_image_url: editTrackForm.player_bg_image_url, is_downloadable: editTrackForm.is_downloadable
     }).eq('id', trackId);
-    
-    if (!error) {
-      setMyTracks(myTracks.map(t => t.id === trackId ? { ...t, ...editTrackForm } : t));
-      setEditingTrackId(null);
-    } else {
-      alert("Erreur de sauvegarde : " + error.message);
-    }
+    if (!error) { setMyTracks(myTracks.map(t => t.id === trackId ? { ...t, ...editTrackForm } : t)); setEditingTrackId(null); } else { alert("Erreur : " + error.message); }
   };
 
   if (loading) return <div style={{ padding: 40, color: colors.textMain, textAlign: 'center', background: colors.bg, minHeight: '100vh' }}>Chargement...</div>;
@@ -578,9 +396,7 @@ export const SettingsPage: React.FC = () => {
             <div style={{ fontSize: 26, fontWeight: 900, color: '#00d9ff', marginBottom: 4 }}>30 € / an</div>
             <div style={{ fontSize: 14, color: colors.textMain, fontWeight: 600 }}>Abonnement annuel DropZone Premium</div>
           </div>
-          <div style={{ background: '#fff', borderRadius: 8, padding: '10px', display: 'inline-block', minWidth: '250px' }}>
-            <PayPalButton />
-          </div>
+          <div style={{ background: '#fff', borderRadius: 8, padding: '10px', display: 'inline-block', minWidth: '250px' }}><PayPalButton /></div>
         </div>
       </div>
     );
@@ -592,19 +408,18 @@ export const SettingsPage: React.FC = () => {
   const totalPages = Math.ceil(myTracks.length / tracksPerPage);
 
   return (
-    <div style={{ maxWidth: 800, margin: '0 auto', padding: '40px 20px', color: colors.textMain, fontFamily: 'Inter, sans-serif', background: colors.bg, minHeight: '100vh', transition: 'background 0.3s ease', position: 'relative' }}>
+    <div style={{ maxWidth: 1000, margin: '0 auto', padding: '40px 20px', color: colors.textMain, fontFamily: 'Inter, sans-serif', background: colors.bg, minHeight: '100vh', transition: 'background 0.3s ease', position: 'relative' }}>
       
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16, marginBottom: 10 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16, marginBottom: 20 }}>
         <div>
           <h1 style={{ fontSize: 32, fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
             Espace Artiste <span style={{ fontSize: 12, background: form.theme_color, color: '#000', padding: '4px 8px', borderRadius: 4 }}>PREMIUM</span>
           </h1>
-          <p style={{ color: colors.textMuted, marginTop: 10, margin: '10px 0 0 0' }}>Gère ton identité, ta musique, tes photos et les modules de ta page.</p>
+          <p style={{ color: colors.textMuted, marginTop: 10, margin: '10px 0 0 0' }}>Gère ton identité, ta musique et tes photos.</p>
         </div>
-        <div style={{ display: 'flex', gap: 10 }}>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           <button onClick={() => setShowGuideModal(true)} style={{ padding: '10px 20px', background: 'transparent', color: form.theme_color, border: `1px solid ${form.theme_color}`, borderRadius: 8, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-            Guide
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Guide
           </button>
           {form.username && (
             <Link to={`/premium/${form.username}`} target="_blank" style={{ padding: '10px 20px', background: form.theme_color, color: '#000', borderRadius: 8, fontWeight: 700, textDecoration: 'none' }}>Voir ma page ↗</Link>
@@ -616,7 +431,6 @@ export const SettingsPage: React.FC = () => {
         <a href="#dashboard" style={{ padding: '8px 16px', background: colors.inputBg, borderRadius: 20, textDecoration: 'none', color: colors.textMain, fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap' }}>📊 Dashboard</a>
         <a href="#modules" style={{ padding: '8px 16px', background: colors.inputBg, borderRadius: 20, textDecoration: 'none', color: colors.textMain, fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap' }}>🎛️ Modules</a>
         <a href="#musique" style={{ padding: '8px 16px', background: colors.inputBg, borderRadius: 20, textDecoration: 'none', color: colors.textMain, fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap' }}>🎵 Musique</a>
-        <a href="#shorts" style={{ padding: '8px 16px', background: colors.inputBg, borderRadius: 20, textDecoration: 'none', color: colors.textMain, fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap' }}>🎬 Shorts</a>
         <a href="#galerie" style={{ padding: '8px 16px', background: colors.inputBg, borderRadius: 20, textDecoration: 'none', color: colors.textMain, fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap' }}>📸 Galerie</a>
         <a href="#parametres" style={{ padding: '8px 16px', background: colors.inputBg, borderRadius: 20, textDecoration: 'none', color: colors.textMain, fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap' }}>⚙️ Paramètres</a>
       </div>
@@ -627,38 +441,41 @@ export const SettingsPage: React.FC = () => {
         <PremiumStats profile={{ id: user?.id, theme_color: form.theme_color }} tracks={myTracks} embedded />
       </div>
 
+      {/* ✅ CARTE DE REDIRECTION VERS LE RADIO MANAGER */}
+      <div style={{ background: 'linear-gradient(135deg, rgba(255,51,102,0.1), rgba(124,92,255,0.1))', padding: 32, borderRadius: 16, border: '1px solid rgba(255,51,102,0.3)', marginBottom: 32, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 20 }}>
+        <div>
+          <h2 style={{ fontSize: 24, color: colors.textMain, margin: '0 0 8px 0', display: 'flex', alignItems: 'center', gap: 10 }}>
+            📻 Radio Manager
+          </h2>
+          <p style={{ color: colors.textMuted, fontSize: 14, margin: 0, maxWidth: 500 }}>
+            Gère ta programmation, ajoute des jingles, active tes sons et lance ton direct audio depuis ton propre studio dédié.
+          </p>
+        </div>
+        <Link to="/radio-manager" style={{ background: 'linear-gradient(135deg, #ff3366, #7c5cff)', color: '#fff', padding: '14px 28px', borderRadius: 30, fontWeight: 800, fontSize: 15, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 8, boxShadow: '0 8px 20px rgba(255,51,102,0.4)', transition: 'transform 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'} onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}>
+          Accéder au Studio Radio ↗
+        </Link>
+      </div>
+
+      {/* SECTION SHORTS */}
       <div id="shorts" style={{ background: colors.panelBg, padding: 24, borderRadius: 12, border: `1px solid ${colors.border}`, marginBottom: 24, scrollMarginTop: 80 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 10 }}>
           <h2 style={{ fontSize: 18, color: colors.textMain, margin: 0 }}>🎬 Mes Shorts Vidéos ({myShorts.length})</h2>
-          
           <div style={{ display: 'flex', gap: 10 }}>
-            <button onClick={() => setShowShortLinkInput(!showShortLinkInput)} style={{ background: 'transparent', color: '#00d9ff', border: '1px solid #00d9ff', padding: '8px 16px', borderRadius: 6, fontWeight: 800, cursor: 'pointer' }}>
-              {showShortLinkInput ? 'Annuler' : '+ Importer via un lien'}
-            </button>
+            <button onClick={() => setShowShortLinkInput(!showShortLinkInput)} style={{ background: 'transparent', color: '#00d9ff', border: '1px solid #00d9ff', padding: '8px 16px', borderRadius: 6, fontWeight: 800, cursor: 'pointer' }}>{showShortLinkInput ? 'Annuler' : '+ Importer via un lien'}</button>
             <label style={{ background: colors.primaryBg, color: colors.primaryText, padding: '8px 16px', borderRadius: 6, fontWeight: 800, cursor: uploadingShort ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
               {uploadingShort ? 'Upload...' : '+ Uploader un MP4'}
               <input type="file" accept="video/mp4,video/webm" onChange={handleShortUpload} disabled={uploadingShort} style={{ display: 'none' }} />
             </label>
           </div>
         </div>
-
         {showShortLinkInput && (
           <div style={{ background: colors.inputBg, padding: 16, borderRadius: 8, border: `1px solid ${colors.borderLight}`, marginBottom: 20, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            <input 
-              type="url" 
-              placeholder="Colle le lien (YouTube Shorts, TikTok, .mp4...)" 
-              value={shortLinkInput} 
-              onChange={e => setShortLinkInput(e.target.value)} 
-              style={{ flex: 1, minWidth: 200, padding: 10, background: colors.panelBg, border: `1px solid ${colors.border}`, color: colors.textMain, borderRadius: 6 }} 
-            />
-            <button onClick={handleAddShortByLink} style={{ padding: '10px 20px', background: '#00d9ff', color: '#000', border: 'none', borderRadius: 6, fontWeight: 'bold', cursor: 'pointer' }}>
-              Ajouter
-            </button>
+            <input type="url" placeholder="Colle le lien (YouTube Shorts, TikTok, .mp4...)" value={shortLinkInput} onChange={e => setShortLinkInput(e.target.value)} style={{ flex: 1, minWidth: 200, padding: 10, background: colors.panelBg, border: `1px solid ${colors.border}`, color: colors.textMain, borderRadius: 6 }} />
+            <button onClick={handleAddShortByLink} style={{ padding: '10px 20px', background: '#00d9ff', color: '#000', border: 'none', borderRadius: 6, fontWeight: 'bold', cursor: 'pointer' }}>Ajouter</button>
           </div>
         )}
-
         {myShorts.length === 0 ? (
-          <p style={{ color: colors.textMuted, fontSize: 14 }}>Aucune vidéo pour le moment. Uploadez un MP4 ou collez un lien YouTube/TikTok.</p>
+          <p style={{ color: colors.textMuted, fontSize: 14 }}>Aucune vidéo pour le moment.</p>
         ) : (
           <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 10 }}>
             {myShorts.map(short => (
@@ -666,13 +483,7 @@ export const SettingsPage: React.FC = () => {
                 {short.video_url.match(/\.(mp4|webm)$/i) ? (
                   <video src={short.video_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 ) : (
-                  <iframe 
-                    src={getEmbedUrl(short.video_url)} 
-                    style={{ width: '100%', height: '100%', border: 'none' }} 
-                    allow="autoplay; encrypted-media; fullscreen; picture-in-picture" 
-                    sandbox="allow-scripts allow-same-origin allow-presentation allow-popups"
-                    allowFullScreen
-                  />
+                  <iframe src={getEmbedUrl(short.video_url)} style={{ width: '100%', height: '100%', border: 'none' }} allow="autoplay; encrypted-media; fullscreen; picture-in-picture" sandbox="allow-scripts allow-same-origin allow-presentation allow-popups" allowFullScreen />
                 )}
                 <button onClick={() => handleDeleteShort(short.id)} style={{ position: 'absolute', top: 4, right: 4, background: 'rgba(255,0,0,0.8)', color: '#fff', border: 'none', borderRadius: '50%', width: 24, height: 24, cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10 }}>X</button>
               </div>
@@ -681,9 +492,9 @@ export const SettingsPage: React.FC = () => {
         )}
       </div>
 
+      {/* SECTION MODULES */}
       <div id="modules" style={{ background: colors.panelBg, padding: 24, borderRadius: 12, border: `1px solid ${colors.border}`, marginBottom: 24, scrollMarginTop: 80 }}>
         <h2 style={{ fontSize: 18, color: colors.textMain, margin: '0 0 20px 0' }}>🎛️ Modules de la page Premium</h2>
-        
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
             <div style={{ flex: 1, minWidth: 200 }}>
@@ -699,7 +510,6 @@ export const SettingsPage: React.FC = () => {
               <input type="text" value={settings.releases_title} onChange={(e) => setSettings({...settings, releases_title: e.target.value})} style={{ width: '100%', padding: 10, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, color: colors.textMain }} />
             </div>
           </div>
-
           <div style={{ marginTop: 12, padding: 16, background: colors.inputBg, borderRadius: 8, border: `1px solid ${colors.border}`, display: 'flex', flexDirection: 'column', gap: 12 }}>
             <h3 style={{ fontSize: 14, color: colors.textMain, margin: 0 }}>Contenu du Parcours</h3>
             <div>
@@ -723,7 +533,6 @@ export const SettingsPage: React.FC = () => {
               <input type="text" value={settings.parcours_card_title || ''} onChange={(e) => setSettings({...settings, parcours_card_title: e.target.value})} style={{ width: '100%', padding: 10, background: colors.panelBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, color: colors.textMain }} />
             </div>
           </div>
-
           <div style={{ marginTop: 12 }}>
             <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Afficher / Masquer les sections :</label>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
@@ -741,7 +550,6 @@ export const SettingsPage: React.FC = () => {
               ))}
             </div>
           </div>
-
           <div style={{ marginTop: 24, paddingTop: 24, borderTop: `1px solid ${colors.border}` }}>
             <h3 style={{ fontSize: 16, color: colors.textMain, marginBottom: 16 }}>Contenu des Prestations (Liste)</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -762,19 +570,15 @@ export const SettingsPage: React.FC = () => {
         </div>
       </div>
 
+      {/* SECTION MA MUSIQUE */}
       <div id="musique" style={{ background: colors.panelBg, padding: 24, borderRadius: 12, border: `1px solid ${colors.border}`, marginBottom: 24, scrollMarginTop: 80 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 10 }}>
           <h2 style={{ fontSize: 18, color: colors.textMain, margin: 0 }}>Ma Musique ({myTracks.length})</h2>
           <div style={{ display: 'flex', gap: 10 }}>
-            <button onClick={() => setShowLinkForm(!showLinkForm)} style={{ background: 'transparent', color: '#00d9ff', border: '1px solid #00d9ff', padding: '8px 16px', borderRadius: 6, fontWeight: 800, cursor: 'pointer' }}>
-              {showLinkForm ? 'Annuler' : '+ Ajouter via un lien'}
-            </button>
-            <button onClick={() => setShowUploadModal(true)} style={{ background: colors.primaryBg, color: colors.primaryText, padding: '8px 16px', borderRadius: 6, fontWeight: 800, border: 'none', cursor: 'pointer' }}>
-              + Uploader un MP3
-            </button>
+            <button onClick={() => setShowLinkForm(!showLinkForm)} style={{ background: 'transparent', color: '#00d9ff', border: '1px solid #00d9ff', padding: '8px 16px', borderRadius: 6, fontWeight: 800, cursor: 'pointer' }}>{showLinkForm ? 'Annuler' : '+ Ajouter via un lien'}</button>
+            <button onClick={() => setShowUploadModal(true)} style={{ background: colors.primaryBg, color: colors.primaryText, padding: '8px 16px', borderRadius: 6, fontWeight: 800, border: 'none', cursor: 'pointer' }}>+ Uploader un MP3</button>
           </div>
         </div>
-
         {showLinkForm && (
           <div style={{ background: colors.inputBg, padding: 20, borderRadius: 8, border: `1px solid ${colors.borderLight}`, marginBottom: 20, display: 'flex', flexDirection: 'column', gap: 12 }}>
             <h3 style={{ margin: 0, fontSize: 14, color: colors.textMain }}>Ajouter une sortie (Lien audio ou Embed)</h3>
@@ -787,12 +591,9 @@ export const SettingsPage: React.FC = () => {
             <input type="url" placeholder="Lien d'achat / Beatport (Optionnel)" value={linkForm.purchase_url} onChange={e => setLinkForm({...linkForm, purchase_url: e.target.value})} style={{ padding: 10, background: colors.panelBg, border: `1px solid ${colors.borderLight}`, color: colors.textMain, borderRadius: 4 }} />
             <input type="url" placeholder="Lien de l'image de la cover (optionnel)" value={linkForm.cover_url} onChange={e => setLinkForm({...linkForm, cover_url: e.target.value})} style={{ padding: 10, background: colors.panelBg, border: `1px solid ${colors.borderLight}`, color: colors.textMain, borderRadius: 4 }} />
             <textarea placeholder="Code d'intégration (Beatport, Audio.com, Traxsource...)" value={linkForm.embed_code} onChange={e => setLinkForm({...linkForm, embed_code: e.target.value})} rows={3} style={{ padding: 10, background: colors.panelBg, border: `1px solid ${colors.borderLight}`, color: colors.textMain, borderRadius: 4, fontFamily: 'monospace', fontSize: 11 }} />
-            <button onClick={handleSaveLink} disabled={saving} style={{ padding: '10px', background: '#00d9ff', color: '#000', border: 'none', borderRadius: 4, fontWeight: 'bold', cursor: saving ? 'wait' : 'pointer' }}>
-              {saving ? 'Enregistrement...' : 'Ajouter ce son'}
-            </button>
+            <button onClick={handleSaveLink} disabled={saving} style={{ padding: '10px', background: '#00d9ff', color: '#000', border: 'none', borderRadius: 4, fontWeight: 'bold', cursor: saving ? 'wait' : 'pointer' }}>{saving ? 'Enregistrement...' : 'Ajouter ce son'}</button>
           </div>
         )}
-
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {myTracks.length === 0 ? (
             <p style={{ color: colors.textMuted, fontSize: 14 }}>Aucun son pour le moment.</p>
@@ -808,12 +609,10 @@ export const SettingsPage: React.FC = () => {
                     </div>
                     <input type="url" value={editTrackForm.purchase_url} onChange={e => setEditTrackForm({...editTrackForm, purchase_url: e.target.value})} style={{ width: '100%', padding: 8, background: colors.panelBg, border: `1px solid ${colors.borderLight}`, color: colors.textMain, borderRadius: 4 }} placeholder="Lien d'achat" />
                     <textarea value={editTrackForm.embed_code} onChange={e => setEditTrackForm({...editTrackForm, embed_code: e.target.value})} rows={2} style={{ width: '100%', padding: 8, background: colors.panelBg, border: `1px solid ${colors.borderLight}`, color: colors.textMain, borderRadius: 4, fontFamily: 'monospace', fontSize: 11 }} placeholder="Code iframe (Beatport, Audio.com...)" />
-                    
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 4, padding: '8px 12px', background: colors.panelBg, borderRadius: 6, border: `1px solid ${colors.borderLight}` }}>
                       <input type="checkbox" id={`dl-${track.id}`} checked={editTrackForm.is_downloadable} onChange={(e) => setEditTrackForm({...editTrackForm, is_downloadable: e.target.checked})} style={{ width: 16, height: 16, accentColor: form.theme_color, cursor: 'pointer' }} />
                       <label htmlFor={`dl-${track.id}`} style={{ fontSize: 12, color: colors.textMain, cursor: 'pointer', fontWeight: 600 }}>Autoriser le téléchargement gratuit</label>
                     </div>
-
                     <div style={{ padding: 12, background: colors.panelBg, borderRadius: 8, border: `1px dashed ${colors.borderLight}`, marginTop: 4 }}>
                       <p style={{ margin: '0 0 10px 0', fontSize: 12, color: colors.textLight, fontWeight: 'bold' }}>Personnalisation visuelle du Player (Optionnel)</p>
                       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
@@ -836,7 +635,6 @@ export const SettingsPage: React.FC = () => {
                         </div>
                       )}
                     </div>
-
                     <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
                       <button onClick={() => handleSaveTrackEdit(track.id)} style={{ background: form.theme_color, color: '#000', border: 'none', padding: '8px 12px', borderRadius: 4, cursor: 'pointer', fontWeight: 'bold' }}>Enregistrer</button>
                       <button onClick={() => setEditingTrackId(null)} style={{ background: 'transparent', color: colors.textMuted, border: `1px solid ${colors.border}`, padding: '8px 12px', borderRadius: 4, cursor: 'pointer' }}>Annuler</button>
@@ -845,11 +643,14 @@ export const SettingsPage: React.FC = () => {
                 ) : (
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <div style={{ width: 40, height: 40, background: track.cover_url ? `url(${track.cover_url}) center/cover` : colors.border, borderRadius: 4 }} />
+                      <div style={{ width: 40, height: 40, background: track.is_jingle ? '#ff3366' : (track.cover_url ? `url(${track.cover_url}) center/cover` : colors.border), borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 18 }}>
+                        {track.is_jingle ? '🎙️' : ''}
+                      </div>
                       <div>
                         <div style={{ fontSize: 14, fontWeight: 'bold', color: colors.textMain, display: 'flex', alignItems: 'center', gap: 8 }}>
                           {track.title}
                           {track.player_bg_image_url && <span style={{ fontSize: 9, background: 'rgba(0,217,255,0.2)', color: '#00d9ff', padding: '2px 6px', borderRadius: 4 }}>FOND PERSO</span>}
+                          {track.is_jingle && <span style={{ fontSize: 9, background: 'rgba(255,51,102,0.2)', color: '#ff3366', padding: '2px 6px', borderRadius: 4 }}>JINGLE</span>}
                           {track.is_downloadable === false ? <span style={{ fontSize: 9, background: 'rgba(255,51,102,0.15)', color: '#ff3366', padding: '2px 6px', borderRadius: 4 }}>SANS DL</span> : <span style={{ fontSize: 9, background: 'rgba(16,185,129,0.15)', color: '#10b981', padding: '2px 6px', borderRadius: 4 }}>TÉLÉCHARGEABLE</span>}
                           {track.purchase_url && <span style={{ fontSize: 9, background: 'rgba(251,191,36,0.15)', color: '#fbbf24', padding: '2px 6px', borderRadius: 4 }}>PAYANT</span>}
                         </div>
@@ -866,7 +667,6 @@ export const SettingsPage: React.FC = () => {
             ))
           )}
         </div>
-
         {totalPages > 1 && (
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 16, marginTop: 24, paddingTop: 16, borderTop: `1px solid ${colors.border}` }}>
             <button onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1} style={{ padding: '8px 16px', background: currentPage === 1 ? colors.inputBg : colors.panelBg, border: `1px solid ${colors.border}`, color: currentPage === 1 ? colors.textMuted : colors.textMain, borderRadius: 6, fontSize: 12, fontWeight: 700, cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}>← Précédent</button>
@@ -921,8 +721,6 @@ export const SettingsPage: React.FC = () => {
       </div>
 
       <form id="parametres" onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: 24, scrollMarginTop: 80 }}>
-        
-        {/* IDENTITÉ */}
         <div style={{ background: colors.panelBg, padding: 24, borderRadius: 12, border: `1px solid ${colors.border}` }}>
           <h2 style={{ fontSize: 18, marginBottom: 20, color: colors.textMain }}>Identité & Thème</h2>
           <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
@@ -938,7 +736,6 @@ export const SettingsPage: React.FC = () => {
               </div>
             </div>
           </div>
-
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 20 }}>
             <label style={{ fontSize: 13, color: colors.textLight }}>Typographie (Police d'écriture)</label>
             <select value={form.font_family} onChange={(e) => setForm({ ...form, font_family: e.target.value })} style={{ padding: 12, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, color: colors.textMain, fontFamily: form.font_family }}>
@@ -952,7 +749,6 @@ export const SettingsPage: React.FC = () => {
               <option value="Space Grotesk, sans-serif">Space Grotesk (Techno)</option>
             </select>
           </div>
-
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 20 }}>
             <label style={{ fontSize: 13, color: colors.textLight }}>Image de profil (Avatar)</label>
             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
@@ -960,7 +756,6 @@ export const SettingsPage: React.FC = () => {
               <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploadingImage} style={{ flex: 1, padding: 10, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, color: colors.textMain }} />
             </div>
           </div>
-          
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 20 }}>
             <label style={{ fontSize: 13, color: colors.textLight }}>Vidéo de fond (MP4)</label>
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
@@ -979,37 +774,16 @@ export const SettingsPage: React.FC = () => {
           </div>
         </div>
 
-        {/* ✅ NOUVELLE SECTION : INTÉGRATION SPOTIFY */}
         <div style={{ background: colors.panelBg, padding: 24, borderRadius: 12, border: `1px solid ${colors.border}` }}>
           <h2 style={{ fontSize: 18, marginBottom: 20, color: colors.textMain, display: 'flex', alignItems: 'center', gap: 8 }}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="#1DB954"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.24 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
             Intégration Spotify
           </h2>
-          <p style={{ fontSize: 13, color: colors.textMuted, marginBottom: 16 }}>
-            Ajoutez le lien de votre profil Spotify pour afficher un lecteur officiel directement sur votre page Premium.
-          </p>
+          <p style={{ fontSize: 13, color: colors.textMuted, marginBottom: 16 }}>Ajoutez le lien de votre profil Spotify pour afficher un lecteur officiel directement sur votre page Premium.</p>
           <div>
-            <label style={{ display: 'block', fontSize: 13, color: colors.textLight, marginBottom: 8 }}>
-              Lien de votre artiste, album ou playlist Spotify
-            </label>
-            <input 
-              type="url" 
-              placeholder="https://open.spotify.com/artist/..." 
-              value={form.spotify_url} 
-              onChange={(e) => setForm({ ...form, spotify_url: e.target.value })} 
-              style={{ 
-                width: '100%', 
-                padding: 12, 
-                background: colors.inputBg, 
-                border: `1px solid ${colors.borderLight}`, 
-                borderRadius: 8, 
-                color: colors.textMain,
-                boxSizing: 'border-box'
-              }} 
-            />
-            <span style={{ fontSize: 11, color: colors.textMuted, marginTop: 8, display: 'block' }}>
-              Exemple : https://open.spotify.com/artist/4zRPcTUuUYL9VLqBxDoE5S
-            </span>
+            <label style={{ display: 'block', fontSize: 13, color: colors.textLight, marginBottom: 8 }}>Lien de votre artiste, album ou playlist Spotify</label>
+            <input type="url" placeholder="https://open.spotify.com/artist/..." value={form.spotify_url} onChange={(e) => setForm({ ...form, spotify_url: e.target.value })} style={{ width: '100%', padding: 12, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, color: colors.textMain, boxSizing: 'border-box' }} />
+            <span style={{ fontSize: 11, color: colors.textMuted, marginTop: 8, display: 'block' }}>Exemple : https://open.spotify.com/artist/4zRPcTUuUYL9VLqBxDoE5S</span>
           </div>
         </div>
 
@@ -1049,53 +823,32 @@ export const SettingsPage: React.FC = () => {
         </button>
       </form>
 
-      {/* ... LE RESTE DU FICHIER (MODALES) INCHANGÉ ... */}
       {showGuideModal && createPortal(
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }} onClick={() => setShowGuideModal(false)}>
           <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 32, width: '100%', maxWidth: 600, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }} onClick={(e) => e.stopPropagation()}>
-            
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-              <h2 style={{ margin: 0, fontSize: 24, fontWeight: 900, color: colors.textMain, display: 'flex', alignItems: 'center', gap: 10 }}>
-                📖 Guide de la Page Premium
-              </h2>
+              <h2 style={{ margin: 0, fontSize: 24, fontWeight: 900, color: colors.textMain, display: 'flex', alignItems: 'center', gap: 10 }}>📖 Guide de la Page Premium</h2>
               <button onClick={() => setShowGuideModal(false)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, fontSize: 24, cursor: 'pointer' }}>✕</button>
             </div>
-
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20, color: colors.textMain }}>
-              
               <div style={{ padding: 16, background: colors.inputBg, borderRadius: 8, borderLeft: `4px solid ${form.theme_color}` }}>
                 <h3 style={{ margin: '0 0 8px', fontSize: 16 }}>🎨 1. Identité Visuelle</h3>
-                <p style={{ margin: 0, fontSize: 14, color: colors.textMuted, lineHeight: 1.5 }}>
-                  Personnalise ton univers ! Change ta <strong>couleur de thème</strong>, ta <strong>typographie</strong>, ajoute un <strong>avatar</strong> et une <strong>vidéo de fond</strong> dans la section "Identité & Thème" tout en bas.
-                </p>
+                <p style={{ margin: 0, fontSize: 14, color: colors.textMuted, lineHeight: 1.5 }}>Personnalise ton univers ! Change ta <strong>couleur de thème</strong>, ta <strong>typographie</strong>, ajoute un <strong>avatar</strong> et une <strong>vidéo de fond</strong> dans la section "Identité & Thème".</p>
               </div>
-
               <div style={{ padding: 16, background: colors.inputBg, borderRadius: 8, borderLeft: `4px solid ${form.theme_color}` }}>
                 <h3 style={{ margin: '0 0 8px', fontSize: 16 }}>🎵 2. Uploader tes Sons</h3>
-                <p style={{ margin: 0, fontSize: 14, color: colors.textMuted, lineHeight: 1.5 }}>
-                  Dans la section "Ma Musique", clique sur <strong>+ Uploader un MP3</strong>. Le système lira automatiquement les tags ID3 (Titre, Artiste, BPM, Cover) si le fichier les contient.
-                </p>
+                <p style={{ margin: 0, fontSize: 14, color: colors.textMuted, lineHeight: 1.5 }}>Dans la section "Ma Musique", clique sur <strong>+ Uploader un MP3</strong>. Le système lira automatiquement les tags ID3.</p>
               </div>
-
-              <div style={{ padding: 16, background: colors.inputBg, borderRadius: 8, borderLeft: `4px solid ${form.theme_color}` }}>
-                <h3 style={{ margin: '0 0 8px', fontSize: 16 }}>🎬 3. Tes Shorts Vidéos</h3>
-                <p style={{ margin: 0, fontSize: 14, color: colors.textMuted, lineHeight: 1.5 }}>
-                  Ajoute des vidéos verticales (format 9:16) dans la section <strong>Shorts Vidéos</strong>. Tu peux uploader un MP4 ou coller un lien YouTube/TikTok.
-                </p>
+              <div style={{ padding: 16, background: colors.inputBg, borderRadius: 8, borderLeft: `4px solid #ff3366` }}>
+                <h3 style={{ margin: '0 0 8px', fontSize: 16 }}>📻 3. Ta Webradio (Exclusivité Premium)</h3>
+                <p style={{ margin: 0, fontSize: 14, color: colors.textMuted, lineHeight: 1.5 }}>Gère ta programmation et tes jingles dans le <strong>Radio Manager</strong> dédié. Un bouton "Écouter la Radio" apparaît sur ta page publique.</p>
               </div>
-
-              <div style={{ padding: 16, background: colors.inputBg, borderRadius: 8, borderLeft: `4px solid ${form.theme_color}` }}>
-                <h3 style={{ margin: '0 0 8px', fontSize: 16 }}>🖼️ 4. Galerie & Affiches</h3>
-                <p style={{ margin: 0, fontSize: 14, color: colors.textMuted, lineHeight: 1.5 }}>
-                  Ajoute des photos de tes lives dans la section <strong>Ma Galerie Photos</strong>. Tu peux aussi ajouter des affiches d'événements qui défileront sur ta page.
-                </p>
+              <div style={{ padding: 16, background: colors.inputBg, borderRadius: 8, borderLeft: `4px solid #ff3366` }}>
+                <h3 style={{ margin: '0 0 8px', fontSize: 16 }}>🔴 4. Passer en Direct Audio</h3>
+                <p style={{ margin: 0, fontSize: 14, color: colors.textMuted, lineHeight: 1.5 }}>Utilise un logiciel de streaming (Mixlr, Butt, OBS...) pour générer un lien de flux audio. Colle ce lien dans le <strong>Radio Manager</strong> et clique sur "Passer en Direct".</p>
               </div>
-
             </div>
-
-            <button onClick={() => setShowGuideModal(false)} style={{ marginTop: 24, width: '100%', padding: 14, background: form.theme_color, color: '#000', border: 'none', borderRadius: 8, fontWeight: 800, fontSize: 14, cursor: 'pointer' }}>
-              J'ai compris, c'est parti ! 🚀
-            </button>
+            <button onClick={() => setShowGuideModal(false)} style={{ marginTop: 24, width: '100%', padding: 14, background: form.theme_color, color: '#000', border: 'none', borderRadius: 8, fontWeight: 800, fontSize: 14, cursor: 'pointer' }}>J'ai compris, c'est parti ! 🚀</button>
           </div>
         </div>,
         document.body
@@ -1108,21 +861,18 @@ export const SettingsPage: React.FC = () => {
               <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: colors.textMain }}>Uploader un son</h2>
               <button onClick={() => setShowUploadModal(false)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, fontSize: 20, cursor: 'pointer' }}>✕</button>
             </div>
-
             <form onSubmit={handleUploadSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              
               <div>
                 <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6 }}>Fichier Audio (MP3, WAV) *</label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 12, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, cursor: 'pointer', transition: 'all 0.2s' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 12, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, cursor: 'pointer' }}>
                   <span style={{ background: form.theme_color, color: '#000', padding: '6px 12px', borderRadius: 6, fontSize: 12, fontWeight: 800 }}>📁 Choisir</span>
                   <span style={{ fontSize: 13, color: colors.textMain, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{audioFile ? audioFile.name : 'Aucun fichier choisi'}</span>
                   <input type="file" accept="audio/*" onChange={handleAudioFileChange} required style={{ display: 'none' }} />
                 </label>
               </div>
-              
               <div>
                 <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6 }}>Image de couverture (Optionnel)</label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 12, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, cursor: 'pointer', transition: 'all 0.2s' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 12, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, cursor: 'pointer' }}>
                   <span style={{ background: form.theme_color, color: '#000', padding: '6px 12px', borderRadius: 6, fontSize: 12, fontWeight: 800 }}>📁 Choisir</span>
                   <span style={{ fontSize: 13, color: colors.textMain, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{coverFile ? coverFile.name : 'Aucun fichier choisi'}</span>
                   <input type="file" accept="image/*" onChange={(e) => setCoverFile(e.target.files?.[0] || null)} style={{ display: 'none' }} />
@@ -1134,7 +884,6 @@ export const SettingsPage: React.FC = () => {
                   </div>
                 )}
               </div>
-
               <div style={{ display: 'flex', gap: 12 }}>
                 <div style={{ flex: 1 }}>
                   <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6 }}>Titre *</label>
@@ -1145,7 +894,6 @@ export const SettingsPage: React.FC = () => {
                   <input type="text" value={uploadForm.artist} onChange={e => setUploadForm({...uploadForm, artist: e.target.value})} required style={{ width: '100%', padding: 10, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, color: colors.textMain }} />
                 </div>
               </div>
-              
               <div style={{ display: 'flex', gap: 12 }}>
                 <div style={{ flex: 1 }}>
                   <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6 }}>Genre</label>
@@ -1160,7 +908,6 @@ export const SettingsPage: React.FC = () => {
                   <input type="text" value={uploadForm.song_key} onChange={e => setUploadForm({...uploadForm, song_key: e.target.value})} placeholder="Am" style={{ width: '100%', padding: 10, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, color: colors.textMain }} />
                 </div>
               </div>
-
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <div>
                   <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6 }}>Lien d'achat (Beatport, etc.)</label>
@@ -1171,14 +918,12 @@ export const SettingsPage: React.FC = () => {
                   <textarea value={uploadForm.embed_code} onChange={e => setUploadForm({...uploadForm, embed_code: e.target.value})} placeholder="<iframe src='...'></iframe>" rows={2} style={{ width: '100%', padding: 10, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, color: colors.textMain, fontFamily: 'monospace', fontSize: 11 }} />
                 </div>
               </div>
-
               <div style={{ padding: 16, background: colors.inputBg, borderRadius: 8, border: `1px solid ${colors.borderLight}`, marginTop: 4 }}>
                 <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
                   <input type="checkbox" checked={uploadForm.is_downloadable} onChange={e => setUploadForm({...uploadForm, is_downloadable: e.target.checked})} style={{ width: 18, height: 18, accentColor: form.theme_color, cursor: 'pointer' }} />
                   <span style={{ fontSize: 14, fontWeight: 600, color: colors.textMain }}>Autoriser le téléchargement gratuit de ce son</span>
                 </label>
               </div>
-
               <div style={{ padding: 12, background: colors.inputBg, borderRadius: 8, border: `1px dashed ${colors.borderLight}`, marginTop: 4 }}>
                 <p style={{ margin: '0 0 10px 0', fontSize: 12, color: colors.textLight, fontWeight: 'bold' }}>Personnalisation visuelle du Player (Optionnel)</p>
                 <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
@@ -1201,7 +946,6 @@ export const SettingsPage: React.FC = () => {
                   </div>
                 )}
               </div>
-
               <button type="submit" disabled={uploading} style={{ marginTop: 12, padding: 14, background: form.theme_color, color: '#000', border: 'none', borderRadius: 8, fontWeight: 800, fontSize: 14, cursor: uploading ? 'wait' : 'pointer' }}>
                 {uploading ? 'Upload en cours...' : 'Publier le son'}
               </button>

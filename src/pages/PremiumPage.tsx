@@ -289,7 +289,6 @@ export const PremiumPage: React.FC = () => {
   const defaultShareImage = '/og-image.jpg';
   let shareImage = defaultShareImage;
   if (profile.avatar_url) {
-    // Si l'image ne commence pas par http, on ajoute le domaine (très important pour les réseaux sociaux)
     shareImage = profile.avatar_url.startsWith('http') 
       ? profile.avatar_url 
       : `${window.location.origin}${profile.avatar_url}`;
@@ -323,7 +322,6 @@ export const PremiumPage: React.FC = () => {
           .desktop-nav-links { display: none !important; }
         }
         @keyframes float { 0% { transform: translateY(0px) scale(1); } 50% { transform: translateY(-20px) scale(1.05); } 100% { transform: translateY(0px) scale(1); } }
-        
         @keyframes bounce { 
           0%, 20%, 50%, 80%, 100% { transform: translateY(0) translateX(-50%); } 
           40% { transform: translateY(-15px) translateX(-50%); } 
@@ -334,6 +332,7 @@ export const PremiumPage: React.FC = () => {
           50% { text-shadow: 0 0 30px ${themeColor}80, 0 0 60px ${themeColor}40; }
           100% { text-shadow: 0 0 20px ${themeColor}40, 0 0 40px ${themeColor}20; }
         }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
       `}</style>
 
       <div style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none', overflow: 'hidden' }}>
@@ -341,7 +340,6 @@ export const PremiumPage: React.FC = () => {
         <div style={{ position: 'absolute', bottom: '10%', left: '-10%', width: '40vw', height: '40vw', borderRadius: '50%', background: themeColor, filter: 'blur(100px)', opacity: 0.1, animation: 'float 12s ease-in-out infinite reverse' }} />
       </div>
 
-      {/* ✅ BALISES META CORRIGÉES POUR LE PARTAGE */}
       <Helmet>
         <title>{profile.username} — Artiste DropZone</title>
         <meta property="og:title" content={`${profile.username} — Artiste DropZone`} />
@@ -350,7 +348,6 @@ export const PremiumPage: React.FC = () => {
         <meta property="og:type" content="profile" />
         <meta property="og:image" content={shareImage} />
         
-        {/* Balises Twitter (très utilisées par WhatsApp/Mobile) */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={`${profile.username} — Artiste DropZone`} />
         <meta name="twitter:description" content={heroDesc} />
@@ -361,7 +358,6 @@ export const PremiumPage: React.FC = () => {
       <BookingModal isOpen={showBookingModal} onClose={() => setShowBookingModal(false)} profile={profile} isDark={isDark} colors={colors} themeColor={themeColor} />
       {isOwner && <UploadModal isOpen={showUploadModal} onClose={() => setShowUploadModal(false)} user={user} isDark={isDark} colors={colors} themeColor={themeColor} onUploadSuccess={(newTrack) => setTracks([newTrack, ...tracks])} />}
 
-      {/* MENU MOBILE */}
       {isMobile && mobileMenuOpen && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.95)', backdropFilter: 'blur(20px)', zIndex: 99999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 32 }}>
           <button onClick={() => setMobileMenuOpen(false)} style={{ position: 'absolute', top: 24, right: 24, background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer' }}>
@@ -375,7 +371,6 @@ export const PremiumPage: React.FC = () => {
         </div>
       )}
 
-      {/* NAVIGATION */}
       <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, height: isMobile ? 60 : 72, background: colors.navBg, backdropFilter: 'blur(24px)', zIndex: 1000, borderBottom: `1px solid ${colors.cardBorder}`, transition: 'background 0.3s ease', display: 'flex', flexDirection: 'column' }}>
         <div style={{ maxWidth: 1400, margin: '0 auto', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: isMobile ? '0 12px' : '0 24px', gap: isMobile ? 8 : 32 }}>
           
@@ -405,7 +400,6 @@ export const PremiumPage: React.FC = () => {
               </button>
             )}
             
-            {/* ✅ BOUTON PARTAGER */}
             <button onClick={handleShare} title="Partager cette page" style={{ width: 36, height: 36, borderRadius: '50%', background: 'transparent', color: colors.textMain, border: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = themeColor} onMouseLeave={(e) => e.currentTarget.style.color = colors.textMain}>
               {Icons.share}
             </button>
@@ -425,7 +419,6 @@ export const PremiumPage: React.FC = () => {
         </div>
       </nav>
 
-      {/* HERO */}
       <section style={{ position: 'relative', minHeight: isMobile ? '90vh' : '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', background: colors.bg, paddingTop: isMobile ? 80 : 100 }}>
         
         <div style={{ position: 'absolute', inset: 0, opacity: 0.1, backgroundImage: `linear-gradient(${themeColor} 1px, transparent 1px), linear-gradient(90deg, ${themeColor} 1px, transparent 1px)`, backgroundSize: '60px 60px', maskImage: 'radial-gradient(circle at center, black 30%, transparent 80%)', WebkitMaskImage: 'radial-gradient(circle at center, black 30%, transparent 80%)', zIndex: 0 }} />
@@ -457,7 +450,7 @@ export const PremiumPage: React.FC = () => {
             {heroDesc}
           </p>
           
-          <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap', flexDirection: isMobile ? 'column' : 'row' }}>
+          <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap', flexDirection: isMobile ? 'column' : 'row', alignItems: 'center' }}>
             {ArrowButton ? (
               <>
                 <ArrowButton label="Écouter les tracks" color={themeColor} href="#releases" icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>} />
@@ -468,6 +461,24 @@ export const PremiumPage: React.FC = () => {
                 <a href="#releases" style={{ background: themeColor, border: `1px solid ${themeColor}`, color: '#000', padding: '16px 32px', fontSize: 14, borderRadius: 8, fontWeight: 800, textDecoration: 'none', boxShadow: `0 8px 20px ${themeColor}40` }}>ÉCOUTER</a>
                 <button onClick={handleShare} style={{ background: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)', border: `1px solid ${colors.border}`, color: colors.textMain, padding: '16px 32px', borderRadius: 8, fontSize: 14, fontWeight: 800, cursor: 'pointer', backdropFilter: 'blur(10px)' }}>PARTAGER</button>
               </>
+            )}
+
+            {/* ✅ BOUTON RADIO (Uniquement si le profil est premium) */}
+            {profile?.is_premium && (
+              <Link 
+                to={`/radio/${profile.username}`} 
+                style={{ 
+                  display: 'flex', alignItems: 'center', gap: 8, 
+                  padding: isMobile ? '10px 20px' : '16px 32px', 
+                  background: 'linear-gradient(135deg, #ff3366, #7c5cff)', 
+                  color: '#fff', borderRadius: 8, fontSize: 14, fontWeight: 800, 
+                  textDecoration: 'none', boxShadow: '0 8px 20px rgba(255, 51, 102, 0.4)',
+                  border: 'none', cursor: 'pointer', backdropFilter: 'blur(10px)'
+                }}
+              >
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#fff', animation: 'pulse 1.5s infinite' }} />
+                ÉCOUTER LA RADIO
+              </Link>
             )}
 
             {user && !isOwner && (
@@ -485,7 +496,6 @@ export const PremiumPage: React.FC = () => {
 
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '40px 16px' : '100px 24px', position: 'relative', zIndex: 10 }}>
         
-        {/* SECTION BIO */}
         {showDuo && (
           <section id="duo" style={{ marginBottom: isMobile ? 40 : 120 }}>
             <div className="section-subtitle">{settings.duo_title || 'Bio'}</div>
@@ -520,7 +530,6 @@ export const PremiumPage: React.FC = () => {
           </section>
         )}
 
-        {/* SECTION DATES */}
         {events.length > 0 && (
           <section id="dates" style={{ marginBottom: isMobile ? 40 : 120, paddingTop: isMobile ? 40 : 80, borderTop: `1px solid ${colors.border}` }}>
             <div className="section-subtitle">Agenda</div>
@@ -552,7 +561,6 @@ export const PremiumPage: React.FC = () => {
           </section>
         )}
 
-        {/* SECTION SHORTS VIDÉOS */}
         {shorts.length > 0 && (
           <section id="shorts" style={{ marginBottom: isMobile ? 40 : 120, paddingTop: isMobile ? 40 : 80, borderTop: `1px solid ${colors.border}` }}>
             <div className="section-subtitle">Shorts Vidéos</div>
@@ -603,7 +611,6 @@ export const PremiumPage: React.FC = () => {
           </section>
         )}
 
-        {/* SECTION PRESTATIONS */}
         {showPrestations && (
           <section id="prestations" style={{ marginBottom: isMobile ? 40 : 120, paddingTop: isMobile ? 40 : 80, borderTop: `1px solid ${colors.border}` }}>
             <div className="section-subtitle">{settings.prestations_title || 'Parcours'}</div>
@@ -642,7 +649,6 @@ export const PremiumPage: React.FC = () => {
           </section>
         )}
 
-        {/* SECTION GALERIE */}
         {gallery && gallery.length > 0 && (
           <section id="gallery" style={{ marginBottom: isMobile ? 40 : 120, paddingTop: isMobile ? 40 : 80, borderTop: `1px solid ${colors.border}` }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: isMobile ? 20 : 40, flexDirection: isMobile ? 'column' : 'row', gap: 16 }}>
@@ -661,7 +667,6 @@ export const PremiumPage: React.FC = () => {
           </section>
         )}
 
-        {/* SECTION MUSIQUE (Utilise ReleaseCard) */}
         {showReleases && (
           <section id="releases" style={{ paddingTop: isMobile ? 40 : 80, borderTop: `1px solid ${colors.border}` }}>
             <div className="section-subtitle">Écouter</div>
@@ -677,7 +682,6 @@ export const PremiumPage: React.FC = () => {
               )}
             </div>
 
-            {/* ✅ LECTEUR SPOTIFY HARMONISÉ ICI */}
             {profile.spotify_url && (
               <div style={{
                 background: colors.cardBg,
@@ -748,7 +752,6 @@ export const PremiumPage: React.FC = () => {
         </div>
       )}
 
-      {/* FOOTER */}
       <footer style={{ borderTop: `1px solid ${colors.border}`, padding: '40px 24px', marginTop: 'auto', textAlign: 'center', background: colors.panelBg, backdropFilter: 'blur(20px)', position: 'relative', zIndex: 10 }}>
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10, marginBottom: 16 }}>
           <span style={{ fontSize: 20, fontWeight: 900, color: colors.textMain, letterSpacing: '-0.5px' }}>DropZone<span style={{ color: themeColor }}>.dj</span></span>
@@ -769,7 +772,6 @@ export const PremiumPage: React.FC = () => {
       {currentTrack && GlobalPlayer && <GlobalPlayer currentTrack={currentTrack} isPlaying={isPlaying} onTogglePlay={togglePlay} onStop={stop} />}
       <ScrollButtons />
 
-      {/* ✅ MODALE PLEIN ÉCRAN POUR LES SHORTS */}
       {activeShort && createPortal(
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.95)', backdropFilter: 'blur(10px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => setActiveShort(null)}>
           <button onClick={() => setActiveShort(null)} style={{ position: 'absolute', top: 24, right: 24, background: 'transparent', border: 'none', color: '#fff', fontSize: 32, cursor: 'pointer', zIndex: 10 }}>✕</button>

@@ -29,6 +29,8 @@ const Icons = {
   trophy: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path></svg>,
   logout: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>,
   close: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>,
+  // ✅ NOUVELLE ICÔNE : Radio / Micro
+  radio: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>,
 };
 
 const NAV_ITEMS = [
@@ -42,6 +44,10 @@ const NAV_ITEMS = [
   { path: '/live', label: 'Live DJ', icon: Icons.live },
   { path: '/genres', label: 'Genres', icon: Icons.genres },
   { path: '/artists', label: 'Artistes', icon: Icons.artists },
+  
+  // ✅ NOUVEAU LIEN DANS LE MENU
+  { path: '/radio-manager', label: 'Studio Radio', icon: Icons.radio },
+  
   { path: '/tools', label: 'Outils DJ', icon: Icons.tools },
   { path: '/help', label: 'Guide', icon: Icons.help },
   { path: '/settings', label: 'Réglages', icon: Icons.settings },
@@ -181,7 +187,6 @@ export const MainLayout: React.FC = () => {
           })}
         </nav>
 
-        {/* ✅ LE PANNEAU DU MENU MOBILE EST MAINTENANT ICI */}
         {mobileMenuOpen && (
           <div style={{
             position: 'fixed', inset: 0, zIndex: 9999, background: colors.bg,
@@ -189,7 +194,6 @@ export const MainLayout: React.FC = () => {
           }}>
             <style>{`@keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }`}</style>
             
-            {/* Header du menu */}
             <div style={{ padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid ${colors.border}` }}>
               <span style={{ fontWeight: 800, fontSize: '1.2rem', color: colors.textMain }}>Menu</span>
               <button onClick={() => setMobileMenuOpen(false)} style={{ background: 'transparent', border: 'none', color: colors.textMain, cursor: 'pointer', padding: 8 }}>
@@ -197,10 +201,12 @@ export const MainLayout: React.FC = () => {
               </button>
             </div>
 
-            {/* Liens du menu */}
             <div style={{ flex: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: 4 }}>
               {NAV_ITEMS.map(item => {
                 const isActive = item.exact ? location.pathname === item.path : location.pathname.startsWith(item.path);
+                // ✅ On cache le lien Studio Radio si pas premium (mais on laisse le PremiumGuard faire le tri à l'entrée)
+                if (item.path === '/radio-manager' && !(profile as any)?.is_premium) return null;
+
                 return (
                   <NavLink key={item.path} to={item.path} onClick={() => setMobileMenuOpen(false)} style={{
                     display: 'flex', alignItems: 'center', gap: 16, padding: '16px', borderRadius: 12,
@@ -209,12 +215,12 @@ export const MainLayout: React.FC = () => {
                   }}>
                     <span style={{ display: 'flex', color: isActive ? '#00d9ff' : colors.textMuted }}>{item.icon}</span>
                     {item.label}
+                    {item.path === '/radio-manager' && <span style={{ fontSize: 9, background: '#ff3366', color: '#fff', padding: '2px 6px', borderRadius: 4, marginLeft: 'auto', fontWeight: 800 }}>LIVE</span>}
                   </NavLink>
                 );
               })}
             </div>
 
-            {/* Boutons Auth & Theme en bas du menu */}
             <div style={{ padding: '20px', borderTop: `1px solid ${colors.border}`, display: 'flex', flexDirection: 'column', gap: 12 }}>
               <button onClick={() => { toggleTheme(); setMobileMenuOpen(false); }} style={{ width: '100%', padding: '14px', background: colors.hoverBg, color: colors.textMain, border: 'none', borderRadius: 8, fontWeight: 700, fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
                 {isDark ? Icons.sun : Icons.moon} {isDark ? 'Mode Clair' : 'Mode Sombre'}
@@ -249,13 +255,18 @@ export const MainLayout: React.FC = () => {
         <nav style={{ flex: 1, padding: '16px 12px', display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
           {NAV_ITEMS.map(item => {
             const isActive = item.exact ? location.pathname === item.path : location.pathname.startsWith(item.path);
+            
+            // ✅ On cache le lien Studio Radio si pas premium
+            if (item.path === '/radio-manager' && !(profile as any)?.is_premium) return null;
+
             return (
               <NavLink key={item.path} to={item.path} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: `1px solid ${colors.border}`, textDecoration: 'none', color: isActive ? '#00d9ff' : colors.textMuted, background: isActive ? colors.activeBg : 'transparent', fontWeight: isActive ? 700 : 500, fontSize: '0.9rem', borderLeft: isActive ? '2px solid #00d9ff' : '2px solid transparent', transition: 'all 0.2s' }}
                 onMouseEnter={(e) => { if (!isActive) { e.currentTarget.style.background = colors.hoverBg; e.currentTarget.style.color = colors.textMain; } }}
                 onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = colors.textMuted; } }}
               >
                 <span style={{ display: 'flex' }}>{item.icon}</span>
-                {item.label}
+                <span style={{ flex: 1 }}>{item.label}</span>
+                {item.path === '/radio-manager' && <span style={{ fontSize: 9, background: '#ff3366', color: '#fff', padding: '2px 6px', borderRadius: 4, fontWeight: 800 }}>LIVE</span>}
               </NavLink>
             );
           })}

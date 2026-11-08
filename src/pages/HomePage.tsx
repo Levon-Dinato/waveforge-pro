@@ -177,7 +177,8 @@ export const HomePage = () => {
 
       <EventsTicker />
 
-      <div style={{ maxWidth: 1200, margin: '0 auto', width: '100%', padding: isMobile ? '0 12px' : '0 24px', display: 'flex', flexDirection: 'column', gap: isMobile ? 24 : 48, paddingTop: 24, paddingBottom: isMobile ? 40 : 80 }}>
+      {/* ✅ CORRECTION DU WARNING : on utilise paddingLeft/Right au lieu de padding global */}
+      <div style={{ maxWidth: 1200, margin: '0 auto', width: '100%', paddingLeft: isMobile ? 12 : 24, paddingRight: isMobile ? 12 : 24, display: 'flex', flexDirection: 'column', gap: isMobile ? 24 : 48, paddingTop: 24, paddingBottom: isMobile ? 40 : 80 }}>
 
         {/* 1. HERO */}
         <div style={{ position: 'relative', borderRadius: isMobile ? 16 : 24, overflow: 'hidden', border: `1px solid ${colors.border}`, width: '100%', height: isMobile ? 420 : 540, background: isDark ? '#000' : '#e5e7eb', boxShadow: '0 20px 40px rgba(0,0,0,0.1)' }}>
@@ -247,7 +248,7 @@ export const HomePage = () => {
         </div>
 
         {/* 3. TRACK À LA UNE */}
-        {featured && (
+        {featured ? (
           <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, overflow: 'hidden', height: isMobile ? 'auto' : 320, position: 'relative' }}>
             <div style={{ width: isMobile ? '100%' : 320, height: isMobile ? 200 : '100%', background: featured.cover_url ? `url(${featured.cover_url}) center/cover` : colors.textDark, position: 'relative', flexShrink: 0 }}>
               <div style={{ position: 'absolute', top: 16, left: 16, background: '#ff3366', color: '#fff', padding: '4px 12px', borderRadius: 30, fontSize: 10, fontWeight: 900, letterSpacing: '1px', zIndex: 2, display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -270,6 +271,8 @@ export const HomePage = () => {
               </div>
             </div>
           </div>
+        ) : (
+          <div style={{ padding: 40, textAlign: 'center', color: colors.textMuted, background: colors.panelBg, borderRadius: 16, border: `1px solid ${colors.border}` }}>Aucun son à la une pour le moment.</div>
         )}
 
         {/* 4. GRILLE PRINCIPALE + TOP 10 */}
@@ -281,10 +284,18 @@ export const HomePage = () => {
                 Tout voir {Icons.arrowRight}
               </Link>
             </div>
-            <TrackGrid tracks={newReleases as any} onPlay={(t) => handlePlayTrack(t as any)} />
+            
+            {/* ✅ SÉCURITÉ ICI : On n'affiche TrackGrid que s'il y a des sons */}
+            {newReleases.length > 0 ? (
+              <TrackGrid tracks={newReleases as any} onPlay={(t) => handlePlayTrack(t as any)} />
+            ) : (
+              <div style={{ padding: 40, textAlign: 'center', color: colors.textMuted, background: colors.panelBg, borderRadius: 16, border: `1px solid ${colors.border}` }}>
+                Aucune nouvelle sortie pour le moment.
+              </div>
+            )}
           </div>
 
-          {!isMobile && (
+          {!isMobile && top10.length > 0 && (
             <aside style={{ width: 320, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 24 }}>
               <div style={{ background: colors.panelBg, borderRadius: 16, border: `1px solid ${colors.border}`, padding: 24 }}>
                 <h3 style={{ fontSize: 14, fontWeight: 800, color: colors.textMain, margin: '0 0 20px 0', letterSpacing: '1px', textTransform: 'uppercase' }}>Top 10 Chart</h3>
@@ -351,38 +362,40 @@ export const HomePage = () => {
           </section>
         )}
 
-        {/* ✅ NOUVELLE SECTION : RADIOS EN DIRECT */}
-        <section>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 20 }}>
-            <div>
-              <div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: '#ff3366', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#ff3366', animation: 'pulse 1.5s infinite' }} />
-                En Direct
-              </div>
-              <h2 style={{ fontSize: isMobile ? 20 : 28, fontWeight: 900, color: colors.textMain, margin: 0, letterSpacing: '-0.5px' }}>Radios de la communauté</h2>
-            </div>
-            <Link to="/radios" style={{ fontSize: 12, color: colors.textMuted, textDecoration: 'none', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
-              Voir toutes les radios {Icons.arrowRight}
-            </Link>
-          </div>
-          
-          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 16 }}>
-            {artists.slice(0, 3).map((artist) => (
-              <Link key={artist.id} to={`/radio/${artist.username}`} style={{ display: 'flex', alignItems: 'center', gap: 16, background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 16, textDecoration: 'none', transition: 'all 0.2s' }}
-                onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#ff3366'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.transform = 'translateY(0)'; }}
-              >
-                <div style={{ width: 60, height: 60, borderRadius: '50%', background: artist.avatar_url ? `url(${artist.avatar_url}) center/cover` : colors.textDark, flexShrink: 0, border: '2px solid rgba(255, 51, 102, 0.3)' }} />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 15, fontWeight: 800, color: colors.textMain, marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{artist.username}</div>
-                  <div style={{ fontSize: 12, color: '#ff3366', fontWeight: 600 }}>Écouter la radio →</div>
+        {/* 7. RADIOS EN DIRECT */}
+        {artists.length > 0 && (
+          <section>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 20 }}>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: '#ff3366', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#ff3366', animation: 'pulse 1.5s infinite' }} />
+                  En Direct
                 </div>
+                <h2 style={{ fontSize: isMobile ? 20 : 28, fontWeight: 900, color: colors.textMain, margin: 0, letterSpacing: '-0.5px' }}>Radios de la communauté</h2>
+              </div>
+              <Link to="/radios" style={{ fontSize: 12, color: colors.textMuted, textDecoration: 'none', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+                Voir toutes les radios {Icons.arrowRight}
               </Link>
-            ))}
-          </div>
-        </section>
+            </div>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 16 }}>
+              {artists.slice(0, 3).map((artist) => (
+                <Link key={artist.id} to={`/radio/${artist.username}`} style={{ display: 'flex', alignItems: 'center', gap: 16, background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 16, textDecoration: 'none', transition: 'all 0.2s' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#ff3366'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.transform = 'translateY(0)'; }}
+                >
+                  <div style={{ width: 60, height: 60, borderRadius: '50%', background: artist.avatar_url ? `url(${artist.avatar_url}) center/cover` : colors.textDark, flexShrink: 0, border: '2px solid rgba(255, 51, 102, 0.3)' }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 15, fontWeight: 800, color: colors.textMain, marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{artist.username}</div>
+                    <div style={{ fontSize: 12, color: '#ff3366', fontWeight: 600 }}>Écouter la radio →</div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
 
-        {/* 7. COMMENT ÇA MARCHE */}
+        {/* 8. COMMENT ÇA MARCHE */}
         <section>
           <div style={{ textAlign: 'center', marginBottom: isMobile ? 24 : 40 }}>
             <div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: colors.accent, marginBottom: 6 }}>Simple & rapide</div>
@@ -402,7 +415,7 @@ export const HomePage = () => {
           </div>
         </section>
 
-        {/* 8. CTA FINALE */}
+        {/* 9. CTA FINALE */}
         <section style={{
           background: isDark
             ? `linear-gradient(135deg, ${colors.accent}15, transparent 60%), ${colors.panelBg}`
@@ -431,12 +444,12 @@ export const HomePage = () => {
           </div>
         </section>
 
-        {/* 9. SECTION SERVICES ARTISTES */}
+        {/* 10. SECTION SERVICES ARTISTES */}
         <ArtistPromoSection />
 
       </div>
 
-      {/* 10. FOOTER */}
+      {/* 11. FOOTER */}
       <footer style={{ background: colors.footerBg, borderTop: `1px solid ${colors.border}`, marginTop: 'auto' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', width: '100%', padding: isMobile ? '40px 16px 24px' : '60px 24px 32px' }}>
 
@@ -530,7 +543,7 @@ export const HomePage = () => {
         </div>
       </footer>
 
-      {/* ✅ ANIMATION POUR LE POINT ROUGE */}
+      {/* Animation pour le point rouge */}
       <style>{`@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }`}</style>
     </div>
   );

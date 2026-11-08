@@ -24,15 +24,12 @@ const VideoPage = lazy(() => import('./pages/VideoPage').then((m) => ({ default:
 const CDJPage = lazy(() => import('./pages/CDJPage').then((m) => ({ default: m.CDJPage })));
 const HelpPage = lazy(() => import('./pages/HelpPage').then((m) => ({ default: m.HelpPage })));
 const SettingsPage = lazy(() => import('./pages/SettingsPage').then((m) => ({ default: m.SettingsPage })));
+
+// ✅ NOUVEL IMPORT : Radio Manager
+const RadioManagerPage = lazy(() => import('./pages/RadioManagerPage'));
 const NouveautesPage = lazy(() => import('./pages/NouveautesPage').then((m) => ({ default: m.NouveautesPage })));
 const AuthPage = lazy(() => import('./pages/AuthPage').then((m) => ({ default: m.AuthPage })));
-
-// ✅ IMPORT DU CALLBACK OAUTH
 const AuthCallback = lazy(() => import('./pages/AuthCallback').then((m) => ({ default: m.AuthCallback })));
-
-// ✅ NOUVEL IMPORT : Page Radio
-const RadioPage = lazy(() => import('./pages/RadioPage').then((m) => ({ default: m.RadioPage })));
-
 const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage').then((m) => ({ default: m.ResetPasswordPage })));
 const ProfilePage = lazy(() => import('./pages/ProfilePage').then((m) => ({ default: m.ProfilePage })));
 const GenresPage = lazy(() => import('./pages/GenresPage').then((m) => ({ default: m.GenresPage })));
@@ -52,6 +49,8 @@ const SmartLinkPage = lazy(() => import('./pages/SmartLinkPage').then((m) => ({ 
 const MyPlaylistsPage = lazy(() => import('./pages/MyPlaylistsPage').then((m) => ({ default: m.MyPlaylistsPage })));
 const DiscoverPage = lazy(() => import('./pages/DiscoverPage').then((m) => ({ default: m.DiscoverPage })));
 const ChartsPage = lazy(() => import('./pages/ChartsPage').then((m) => ({ default: m.ChartsPage })));
+const RadiosPage = lazy(() => import('./pages/RadiosPage').then((m) => ({ default: m.RadiosPage })));
+const RadioPage = lazy(() => import('./pages/RadioPage').then((m) => ({ default: m.RadioPage })));
 
 const PageLoader = () => (
   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', flexDirection: 'column', gap: 16 }}>
@@ -70,18 +69,11 @@ function AnimatedRoutes() {
         
         {/* ✅ PAGES PUBLIQUES */}
         <Route path="/auth" element={<AuthPage />} />
-        
-        {/* ✅ ROUTE DE CALLBACK OAUTH */}
         <Route path="/auth/callback" element={<AuthCallback />} />
-
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/levon-dinato" element={<LevonDinatoPage />} />
         <Route path="/premium/:username" element={<PremiumPage />} />
-        
-        {/* ✅ NOUVELLE ROUTE RADIO */}
         <Route path="/radio/:username" element={<RadioPage />} />
-        
-        {/* ✅ ROUTE SMART LINK (Publique) */}
         <Route path="/link/:slug" element={<SmartLinkPage />} />
 
         {/* ✅ LAYOUT PRINCIPAL */}
@@ -91,9 +83,7 @@ function AnimatedRoutes() {
           <Route path="feed" element={<PageTransition><FeedPage /></PageTransition>} />
           <Route path="nouveautes" element={<PageTransition><NouveautesPage /></PageTransition>} />
           <Route path="discover" element={<PageTransition><DiscoverPage /></PageTransition>} />
-          
           <Route path="charts" element={<PageTransition><ChartsPage /></PageTransition>} />
-          
           <Route path="events" element={<PageTransition><EventsPage /></PageTransition>} />
           <Route path="live" element={<PageTransition><LivePage /></PageTransition>} />
           <Route path="genres" element={<PageTransition><GenresPage /></PageTransition>} />
@@ -102,10 +92,14 @@ function AnimatedRoutes() {
           <Route path="profil/:id" element={<PageTransition><ProfilePage /></PageTransition>} />
           <Route path="search" element={<PageTransition><SearchPage /></PageTransition>} />
           <Route path="track/:id" element={<PageTransition><TrackPage /></PageTransition>} />
-          
           <Route path="mes-playlists" element={<PageTransition><MyPlaylistsPage /></PageTransition>} />
+          <Route path="radios" element={<PageTransition><RadiosPage /></PageTransition>} />
 
           <Route path="tools" element={<PageTransition><PremiumGuard><ToolsPage /></PremiumGuard></PageTransition>} />
+          
+          {/* ✅ NOUVELLE ROUTE : Radio Manager */}
+          <Route path="radio-manager" element={<PageTransition><PremiumGuard><RadioManagerPage /></PremiumGuard></PageTransition>} />
+
           <Route path="settings" element={<PageTransition><PremiumGuard><SettingsPage /></PremiumGuard></PageTransition>} />
           <Route path="ia-videos" element={<PageTransition><PremiumGuard><DropZoneVideosPage /></PremiumGuard></PageTransition>} />
           <Route path="studio" element={<PageTransition><PremiumGuard><StudioPage /></PremiumGuard></PageTransition>} />

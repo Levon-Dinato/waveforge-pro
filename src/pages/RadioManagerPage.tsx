@@ -36,7 +36,7 @@ export const RadioManagerPage: React.FC = () => {
   
   const [radioBgUrl, setRadioBgUrl] = useState('');
   const [radioBgType, setRadioBgType] = useState('animated');
-  const [radioBgOpacity, setRadioBgOpacity] = useState(0.6); // ✅ Nouvel état
+  const [radioBgOpacity, setRadioBgOpacity] = useState(0.6);
   const [uploadingBg, setUploadingBg] = useState(false);
 
   const colors = {
@@ -59,7 +59,7 @@ export const RadioManagerPage: React.FC = () => {
         setProfileUsername(profileData.username || '');
         setRadioBgUrl(profileData.radio_bg_url || '');
         setRadioBgType(profileData.radio_bg_type || 'animated');
-        setRadioBgOpacity(profileData.radio_bg_opacity ?? 0.6); // ✅ Récupération
+        setRadioBgOpacity(profileData.radio_bg_opacity ?? 0.6);
       }
 
       const { data: tracksData } = await supabase.from('tracks').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
@@ -163,7 +163,7 @@ export const RadioManagerPage: React.FC = () => {
     const { error } = await supabase.from('profiles').update({
       radio_bg_url: radioBgUrl,
       radio_bg_type: radioBgType,
-      radio_bg_opacity: radioBgOpacity // ✅ Sauvegarde de l'opacité
+      radio_bg_opacity: radioBgOpacity
     }).eq('id', user.id);
     setSaving(false);
     if (!error) alert("Fond d'écran mis à jour ! ✅");
@@ -188,13 +188,38 @@ export const RadioManagerPage: React.FC = () => {
   return (
     <div style={{ maxWidth: 1200, margin: '0 auto', padding: '40px 20px', color: colors.textMain, fontFamily: 'Inter, sans-serif', background: colors.bg, minHeight: '100vh' }}>
       
-      <div style={{ marginBottom: 32 }}>
-        <button onClick={() => navigate('/settings')} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 600, marginBottom: 16, padding: 0 }}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Retour aux réglages
-        </button>
-        <h1 style={{ fontSize: 36, fontWeight: 900, margin: 0, display: 'flex', alignItems: 'center', gap: 12 }}>
-          📻 Radio Manager <span style={{ fontSize: 12, background: '#ff3366', color: '#fff', padding: '4px 10px', borderRadius: 6, letterSpacing: '1px' }}>PREMIUM</span>
-        </h1>
+      {/* ✅ HEADER AVEC LE NOUVEAU BOUTON D'ÉCOUTE */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16, marginBottom: 32 }}>
+        <div>
+          <button onClick={() => navigate('/settings')} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 600, marginBottom: 16, padding: 0 }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Retour aux réglages
+          </button>
+          <h1 style={{ fontSize: 36, fontWeight: 900, margin: 0, display: 'flex', alignItems: 'center', gap: 12 }}>
+            📻 Radio Manager <span style={{ fontSize: 12, background: '#ff3366', color: '#fff', padding: '4px 10px', borderRadius: 6, letterSpacing: '1px' }}>PREMIUM</span>
+          </h1>
+        </div>
+
+        {/* ✅ BOUTON POUR ALLER ÉCOUTER SA PROPRE RADIO */}
+        {profileUsername && (
+          <a 
+            href={`/radio/${profileUsername}`} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            style={{ 
+              display: 'flex', alignItems: 'center', gap: 8, 
+              padding: '12px 24px', 
+              background: 'linear-gradient(135deg, #ff3366, #7c5cff)', 
+              color: '#fff', borderRadius: 30, fontWeight: 800, fontSize: 14, 
+              textDecoration: 'none', boxShadow: '0 8px 20px rgba(255, 51, 102, 0.4)',
+              transition: 'transform 0.2s'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+            onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+          >
+            <span style={{ fontSize: 18 }}>🎧</span>
+            Écouter ma Radio
+          </a>
+        )}
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
@@ -213,6 +238,7 @@ export const RadioManagerPage: React.FC = () => {
           </div>
         </div>
 
+        {/* TABLEAU DE GESTION (Identique à avant) */}
         <div style={{ background: colors.panelBg, borderRadius: 16, border: `1px solid ${colors.border}`, overflow: 'hidden' }}>
           
           <div style={{ padding: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16, borderBottom: `1px solid ${colors.border}` }}>
@@ -260,16 +286,9 @@ export const RadioManagerPage: React.FC = () => {
                       <input type="url" placeholder="Coller un lien direct (https://...)" value={radioBgUrl} onChange={(e) => setRadioBgUrl(e.target.value)} style={{ flex: 1, minWidth: 200, padding: 12, background: colors.panelBg, border: `1px solid ${colors.border}`, color: colors.textMain, borderRadius: 8 }} />
                     </div>
 
-                    {/* ✅ NOUVEAU : CURSEUR D'OPACITÉ */}
                     <div style={{ marginTop: 24 }}>
                       <label style={{ display: 'block', marginBottom: 8, fontWeight: 600 }}>Opacité du fond : {Math.round(radioBgOpacity * 100)}%</label>
-                      <input 
-                        type="range" 
-                        min="0" max="1" step="0.05" 
-                        value={radioBgOpacity} 
-                        onChange={(e) => setRadioBgOpacity(Number(e.target.value))} 
-                        style={{ width: '100%', accentColor: '#ff3366', cursor: 'pointer' }} 
-                      />
+                      <input type="range" min="0" max="1" step="0.05" value={radioBgOpacity} onChange={(e) => setRadioBgOpacity(Number(e.target.value))} style={{ width: '100%', accentColor: '#ff3366', cursor: 'pointer' }} />
                     </div>
 
                     {radioBgUrl && (
@@ -361,6 +380,7 @@ export const RadioManagerPage: React.FC = () => {
         </div>
       </div>
 
+      {/* MODALES (Jingle & Programme) */}
       {showJingleModal && createPortal(
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ background: colors.panelBg, padding: 32, borderRadius: 16, width: '100%', maxWidth: 400 }}>

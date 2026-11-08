@@ -29,8 +29,10 @@ const Icons = {
   trophy: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path></svg>,
   logout: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>,
   close: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>,
-  // ✅ NOUVELLE ICÔNE : Radio / Micro
+  // ✅ ICÔNE RADIO (Micro) pour le Studio
   radio: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>,
+  // ✅ NOUVELLE ICÔNE : Liste des radios
+  radioList: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15V6"></path><path d="M18.5 18a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"></path><path d="M12 12H3"></path><path d="M16 6H3"></path><path d="M12 18H3"></path></svg>,
 };
 
 const NAV_ITEMS = [
@@ -45,7 +47,8 @@ const NAV_ITEMS = [
   { path: '/genres', label: 'Genres', icon: Icons.genres },
   { path: '/artists', label: 'Artistes', icon: Icons.artists },
   
-  // ✅ NOUVEAU LIEN DANS LE MENU
+  // ✅ AJOUT DES LIENS RADIO
+  { path: '/radios', label: 'Toutes les Radios', icon: Icons.radioList },
   { path: '/radio-manager', label: 'Studio Radio', icon: Icons.radio },
   
   { path: '/tools', label: 'Outils DJ', icon: Icons.tools },
@@ -204,7 +207,7 @@ export const MainLayout: React.FC = () => {
             <div style={{ flex: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: 4 }}>
               {NAV_ITEMS.map(item => {
                 const isActive = item.exact ? location.pathname === item.path : location.pathname.startsWith(item.path);
-                // ✅ On cache le lien Studio Radio si pas premium (mais on laisse le PremiumGuard faire le tri à l'entrée)
+                // ✅ On cache le lien Studio Radio si pas premium
                 if (item.path === '/radio-manager' && !(profile as any)?.is_premium) return null;
 
                 return (

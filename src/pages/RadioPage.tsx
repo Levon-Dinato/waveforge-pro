@@ -8,6 +8,7 @@ import { useIsMobile } from '../hooks/useIsMobile';
 import { useAuth } from '../contexts/AuthContext';
 import { useRadio } from '../contexts/RadioContext';
 
+// ✅ EXPORT NOMMÉ ICI (pour correspondre à App.tsx)
 export const RadioPage: React.FC = () => {
   const { username } = useParams<{ username: string }>();
   const isMobile = useIsMobile(768);
@@ -16,7 +17,6 @@ export const RadioPage: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // ✅ UTILISATION DU CONTEXTE RADIO
   const {
     tracks, currentIndex, currentTrack, isPlaying, progress, duration,
     isLive, liveUrl, startRadio, togglePlay, playNext, playPrev, seek
@@ -53,7 +53,6 @@ export const RadioPage: React.FC = () => {
     accentGradient: 'linear-gradient(135deg, #ff3366, #7c5cff)',
   };
 
-  // --- CHARGEMENT DES DONNÉES ---
   useEffect(() => {
     if (!username) return;
     
@@ -108,7 +107,6 @@ export const RadioPage: React.FC = () => {
             }
           }
 
-          // ✅ REALTIME CHAT (Avec typage explicite pour TS)
           channel = supabase.channel(`radio_${profileData.id}`, {
             config: { presence: { key: user?.id || Math.random().toString() } },
           });
@@ -152,12 +150,10 @@ export const RadioPage: React.FC = () => {
     return () => { 
       if (channel) supabase.removeChannel(channel); 
     };
-  }, [username]); // ✅ Retiré user pour éviter les re-renders infinis
+  }, [username]);
 
-  // Scroll auto du chat
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
-  // Mettre à jour le compteur de likes quand le son change
   useEffect(() => {
     if (currentTrack) {
       setLikeCount(currentTrack.likes_count || 0);
@@ -205,7 +201,6 @@ export const RadioPage: React.FC = () => {
     });
   };
 
-  // --- UI ---
   const size = isMobile ? 260 : 320;
   const strokeWidth = 4;
   const radius = (size - strokeWidth) / 2;

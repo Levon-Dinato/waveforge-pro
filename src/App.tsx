@@ -6,7 +6,7 @@ import { HelmetProvider } from 'react-helmet-async';
 import { AudioEngineProvider } from './contexts/AudioEngineContext';
 import { AuthProvider } from './contexts/AuthContext';
 import { PlayerProvider } from './contexts/PlayerContext';
-import { RadioProvider } from './contexts/RadioContext'; // ✅ Import du Context Radio
+import { RadioProvider } from './contexts/RadioContext'; // ✅ Ajout du RadioProvider
 import { ToastProvider } from './components/ui/Toast';
 import { WindowsProvider } from './components/WindowsManager';
 import { MainLayout } from './layouts/MainLayout';
@@ -15,7 +15,7 @@ import { PageTransition } from './components/PageTransition';
 import { PremiumGuard } from './components/PremiumGuard';
 import './styles.css';
 
-// ✅ IMPORTS LAZY (TOUS BIEN PRÉSENTS)
+// ✅ IMPORTS LAZY (Vérifie bien les noms)
 const HomePage = lazy(() => import('./pages/HomePage').then((m) => ({ default: m.HomePage })));
 const StudioPage = lazy(() => import('./pages/StudioPage').then((m) => ({ default: m.StudioPage })));
 const StemsPage = lazy(() => import('./pages/StemsPage').then((m) => ({ default: m.StemsPage })));
@@ -28,12 +28,9 @@ const HelpPage = lazy(() => import('./pages/HelpPage').then((m) => ({ default: m
 const SettingsPage = lazy(() => import('./pages/SettingsPage').then((m) => ({ default: m.SettingsPage })));
 const RadioManagerPage = lazy(() => import('./pages/RadioManagerPage').then((m) => ({ default: m.RadioManagerPage })));
 const NouveautesPage = lazy(() => import('./pages/NouveautesPage').then((m) => ({ default: m.NouveautesPage })));
-
-// ✅ AUTH PAGES (C'est ce qui manquait !)
 const AuthPage = lazy(() => import('./pages/AuthPage').then((m) => ({ default: m.AuthPage })));
 const AuthCallback = lazy(() => import('./pages/AuthCallback').then((m) => ({ default: m.AuthCallback })));
 const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage').then((m) => ({ default: m.ResetPasswordPage })));
-
 const ProfilePage = lazy(() => import('./pages/ProfilePage').then((m) => ({ default: m.ProfilePage })));
 const GenresPage = lazy(() => import('./pages/GenresPage').then((m) => ({ default: m.GenresPage })));
 const ArtistsPage = lazy(() => import('./pages/ArtistsPage').then((m) => ({ default: m.ArtistsPage })));
@@ -53,6 +50,8 @@ const MyPlaylistsPage = lazy(() => import('./pages/MyPlaylistsPage').then((m) =>
 const DiscoverPage = lazy(() => import('./pages/DiscoverPage').then((m) => ({ default: m.DiscoverPage })));
 const ChartsPage = lazy(() => import('./pages/ChartsPage').then((m) => ({ default: m.ChartsPage })));
 const RadiosPage = lazy(() => import('./pages/RadiosPage').then((m) => ({ default: m.RadiosPage })));
+
+// ✅ C'EST CETTE LIGNE QUI POSE PROBLÈME SI LE FICHIER A UNE ERREUR
 const RadioPage = lazy(() => import('./pages/RadioPage').then((m) => ({ default: m.RadioPage })));
 
 const PageLoader = () => (
@@ -125,7 +124,6 @@ export default function App() {
       <ToastProvider>
         <AuthProvider>
           <PlayerProvider>
-            {/* ✅ RADIO PROVIDER AJOUTÉ ICI */}
             <RadioProvider>
               <AudioEngineProvider>
                 <BrowserRouter>

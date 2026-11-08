@@ -26,7 +26,7 @@ const HelpPage = lazy(() => import('./pages/HelpPage').then((m) => ({ default: m
 const SettingsPage = lazy(() => import('./pages/SettingsPage').then((m) => ({ default: m.SettingsPage })));
 
 // ✅ NOUVEL IMPORT : Radio Manager
-const RadioManagerPage = lazy(() => import('./pages/RadioManagerPage'));
+const RadioManagerPage = lazy(() => import('./pages/RadioManagerPage').then((m) => ({ default: m.RadioManagerPage })));
 const NouveautesPage = lazy(() => import('./pages/NouveautesPage').then((m) => ({ default: m.NouveautesPage })));
 const AuthPage = lazy(() => import('./pages/AuthPage').then((m) => ({ default: m.AuthPage })));
 const AuthCallback = lazy(() => import('./pages/AuthCallback').then((m) => ({ default: m.AuthCallback })));

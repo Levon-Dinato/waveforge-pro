@@ -6,7 +6,7 @@ import { supabase } from '../lib/supabase';
 import { useTheme } from '../contexts/ThemeContext';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { useAuth } from '../contexts/AuthContext';
-import { useRadio } from '../contexts/RadioContext'; // ✅ IMPORT DU CONTEXTE
+import { useRadio } from '../contexts/RadioContext';
 
 export const RadioPage: React.FC = () => {
   const { username } = useParams<{ username: string }>();
@@ -41,7 +41,6 @@ export const RadioPage: React.FC = () => {
   const [newMessage, setNewMessage] = useState('');
   const chatEndRef = React.useRef<HTMLDivElement>(null);
   
-  // États pour l'installation rapide (QR Code)
   const [showQrModal, setShowQrModal] = useState(false);
 
   const colors = {
@@ -57,92 +56,103 @@ export const RadioPage: React.FC = () => {
   // --- CHARGEMENT DES DONNÉES ---
   useEffect(() => {
     if (!username) return;
+    
+    let channel: any = null;
 
     const initRadio = async () => {
       setLoading(true);
 
-      const { data: profileData } = await supabase.from('profiles').select('*').eq('username', username).single();
-      
-      if (profileData) {
-        setProfile(profileData);
-        setCustomBgUrl(profileData.radio_bg_url || '');
-        setCustomBgType(profileData.radio_bg_type || 'animated');
-        setCustomBgOpacity(profileData.radio_bg_opacity ?? 0.6);
-
-        if (user) {
-          const { data: myProfile } = await supabase.from('profiles').select('username, avatar_url').eq('id', user.id).single();
-          setUserProfile(myProfile);
-        }
-
-        const now = new Date();
-        const currentTime = now.toTimeString().split(' ')[0];
-        const { data: schedules } = await supabase.from('radio_schedules')
-          .select('*, playlists(id, name)')
-          .eq('user_id', profileData.id)
-          .lte('start_time', currentTime)
-          .gte('end_time', currentTime);
-
-        let tracksToPlay: any[] = [];
-        if (schedules && schedules.length > 0) {
-          setActiveSchedule(schedules[0].title);
-          const { data: pt } = await supabase.from('playlist_tracks')
-            .select('track_id, order, tracks(*)')
-            .eq('playlist_id', schedules[0].playlists.id)
-            .order('order');
-          if (pt && pt.length > 0) tracksToPlay = pt.map(item => item.tracks).filter(Boolean);
-        } else {
-          setActiveSchedule(null);
-          const { data: tracksData } = await supabase.from('tracks').select('*').eq('user_id', profileData.id).eq('in_radio', true).order('created_at', { ascending: false });
-          if (tracksData) tracksToPlay = [...tracksData].sort(() => Math.random() - 0.5);
-        }
-
-        // ✅ ON LANCE LA RADIO VIA LE CONTEXTE
-        startRadio(tracksToPlay, profileData.is_live || false, profileData.live_url || '');
+      try {
+        const { data: profileData } = await supabase.from('profiles').select('*').eq('username', username).single();
         
-        if (tracksToPlay.length > 0) {
-          setLikeCount(tracksToPlay[currentIndex]?.likes_count || 0);
-          
+        if (profileData) {
+          setProfile(profileData);
+          setCustomBgUrl(profileData.radio_bg_url || '');
+          setCustomBgType(profileData.radio_bg_type || 'animated');
+          setCustomBgOpacity(profileData.radio_bg_opacity ?? 0.6);
+
           if (user) {
-            const trackIdToCheck = tracksToPlay[currentIndex]?.id;
-            if (trackIdToCheck) {
-              const { data: like } = await supabase.from('likes').select('id').eq('user_id', user.id).eq('track_id', trackIdToCheck).maybeSingle();
+            const { data: myProfile } = await supabase.from('profiles').select('username, avatar_url').eq('id', user.id).single();
+            setUserProfile(myProfile);
+          }
+
+          const now = new Date();
+          const currentTime = now.toTimeString().split(' ')[0];
+          const { data: schedules } = await supabase.from('radio_schedules')
+            .select('*, playlists(id, name)')
+            .eq('user_id', profileData.id)
+            .lte('start_time', currentTime)
+            .gte('end_time', currentTime);
+
+          let tracksToPlay: any[] = [];
+          if (schedules && schedules.length > 0) {
+            setActiveSchedule(schedules[0].title);
+            const { data: pt } = await supabase.from('playlist_tracks')
+              .select('track_id, order, tracks(*)')
+              .eq('playlist_id', schedules[0].playlists.id)
+              .order('order');
+            if (pt && pt.length > 0) tracksToPlay = pt.map(item => item.tracks).filter(Boolean);
+          } else {
+            setActiveSchedule(null);
+            const { data: tracksData } = await supabase.from('tracks').select('*').eq('user_id', profileData.id).eq('in_radio', true).order('created_at', { ascending: false });
+            if (tracksData) tracksToPlay = [...tracksData].sort(() => Math.random() - 0.5);
+          }
+
+          startRadio(tracksToPlay, profileData.is_live || false, profileData.live_url || '');
+          
+          if (tracksToPlay.length > 0) {
+            setLikeCount(tracksToPlay[0]?.likes_count || 0);
+            if (user) {
+              const { data: like } = await supabase.from('likes').select('id').eq('user_id', user.id).eq('track_id', tracksToPlay[0].id).maybeSingle();
               setIsLiked(!!like);
             }
           }
-        }
 
-        // Realtime Chat
-        const channel = supabase.channel(`radio_${profileData.id}`, {
-          config: { presence: { key: user?.id || Math.random().toString() } },
-        });
-
-        channel
-          .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'radio_messages', filter: `radio_owner_id=eq.${profileData.id}` }, (payload) => {
-            setMessages((prev) => [...prev, payload.new]);
-          })
-          .on('presence', { event: 'sync' }, () => {
-            const state = channel.presenceState();
-            let count = 0;
-            Object.keys(state).forEach((key) => { count += state[key].length; });
-            setListeners(Math.max(1, count));
-          })
-          .subscribe(async (status) => {
-            if (status === 'SUBSCRIBED') {
-              await channel.track({ online_at: new Date().toISOString() });
-            }
+          // ✅ REALTIME CHAT (Avec typage explicite pour TS)
+          channel = supabase.channel(`radio_${profileData.id}`, {
+            config: { presence: { key: user?.id || Math.random().toString() } },
           });
 
-        const { data: oldMessages } = await supabase.from('radio_messages').select('*').eq('radio_owner_id', profileData.id).order('created_at', { ascending: true }).limit(50);
-        if (oldMessages) setMessages(oldMessages);
+          channel
+            .on(
+              'postgres_changes', 
+              { event: 'INSERT', schema: 'public', table: 'radio_messages', filter: `radio_owner_id=eq.${profileData.id}` }, 
+              (payload: any) => {
+                setMessages((prev) => [...prev, payload.new]);
+              }
+            )
+            .on(
+              'presence', 
+              { event: 'sync' }, 
+              () => {
+                const state = channel.presenceState();
+                let count = 0;
+                Object.keys(state).forEach((key) => { count += state[key].length; });
+                setListeners(Math.max(1, count));
+              }
+            )
+            .subscribe(async (status: string) => {
+              if (status === 'SUBSCRIBED') {
+                await channel.track({ online_at: new Date().toISOString() });
+              }
+            });
 
-        // Nettoyage
-        return () => { supabase.removeChannel(channel); };
+          const { data: oldMessages } = await supabase.from('radio_messages').select('*').eq('radio_owner_id', profileData.id).order('created_at', { ascending: true }).limit(50);
+          if (oldMessages) setMessages(oldMessages);
+        }
+      } catch (error) {
+        console.error("Erreur de chargement :", error);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     initRadio();
-  }, [username, user]); // On ne met pas currentIndex ici pour ne pas recharger à chaque changement de son
+
+    return () => { 
+      if (channel) supabase.removeChannel(channel); 
+    };
+  }, [username]); // ✅ Retiré user pour éviter les re-renders infinis
 
   // Scroll auto du chat
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
@@ -151,7 +161,6 @@ export const RadioPage: React.FC = () => {
   useEffect(() => {
     if (currentTrack) {
       setLikeCount(currentTrack.likes_count || 0);
-      // Vérifier si l'utilisateur a liké ce son
       if (user) {
         supabase.from('likes').select('id').eq('user_id', user.id).eq('track_id', currentTrack.id).maybeSingle()
           .then(({ data }) => setIsLiked(!!data));

@@ -1,6 +1,6 @@
 // src/pages/RadioPage.tsx
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom'; // ✅ Ajout de Link
 import { createPortal } from 'react-dom';
 import { Helmet } from 'react-helmet-async';
 import { supabase } from '../lib/supabase';
@@ -340,7 +340,7 @@ export const RadioPage: React.FC = () => {
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
         </button>
         <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-          {/* ✅ Badge LIVE totalement dynamique (plus de rouge fixe) */}
+          {/* Badge LIVE dynamique */}
           <div style={{ 
             display: 'flex', alignItems: 'center', gap: 8, 
             background: isLive ? `linear-gradient(135deg, ${visualizerColor}, ${visualizerColor}80)` : (activeSchedule ? `linear-gradient(135deg, ${visualizerColor}, ${visualizerColor}80)` : 'rgba(255,255,255,0.1)'), 
@@ -351,6 +351,26 @@ export const RadioPage: React.FC = () => {
             <span style={{ width: 8, height: 8, borderRadius: '50%', background: isLive || activeSchedule ? iconColor : '#fff', animation: 'pulse 1.5s infinite' }} />
             <span style={{ fontSize: 12, fontWeight: 900, color: isLive || activeSchedule ? iconColor : '#fff', letterSpacing: '1px' }}>{isLive ? 'LIVE' : activeSchedule ? `PROG: ${activeSchedule}` : 'EN DIRECT'}</span>
           </div>
+
+          {/* ✅ NOUVEAU : Bouton Connexion / Espace Artiste */}
+          {user ? (
+            <Link 
+              to="/settings" 
+              style={{ background: colors.glass, border: `1px solid ${colors.border}`, borderRadius: 30, padding: '8px 16px', display: 'flex', alignItems: 'center', gap: 8, color: colors.textMain, cursor: 'pointer', backdropFilter: 'blur(10px)', textDecoration: 'none', fontSize: 13, fontWeight: 700 }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+              Espace Artiste
+            </Link>
+          ) : (
+            <Link 
+              to="/auth" 
+              style={{ background: colors.glass, border: `1px solid ${colors.border}`, borderRadius: 30, padding: '8px 16px', display: 'flex', alignItems: 'center', gap: 8, color: colors.textMain, cursor: 'pointer', backdropFilter: 'blur(10px)', textDecoration: 'none', fontSize: 13, fontWeight: 700 }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
+              Connexion
+            </Link>
+          )}
+
           <button onClick={() => setShowQrModal(true)} style={{ background: colors.glass, border: `1px solid ${colors.border}`, borderRadius: '50%', width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.textMain, cursor: 'pointer', backdropFilter: 'blur(10px)' }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
           </button>
@@ -406,7 +426,6 @@ export const RadioPage: React.FC = () => {
                 })}
               </div>
 
-              {/* ✅ BARRE DE PROGRESSION 100% DYNAMIQUE (Le violet a disparu) */}
               <svg width={size + 40} height={size + 40} style={{ position: 'absolute', transform: 'rotate(-90deg)', zIndex: 3 }}>
                 <defs>
                   <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="100%">

@@ -24,8 +24,6 @@ const VideoPage = lazy(() => import('./pages/VideoPage').then((m) => ({ default:
 const CDJPage = lazy(() => import('./pages/CDJPage').then((m) => ({ default: m.CDJPage })));
 const HelpPage = lazy(() => import('./pages/HelpPage').then((m) => ({ default: m.HelpPage })));
 const SettingsPage = lazy(() => import('./pages/SettingsPage').then((m) => ({ default: m.SettingsPage })));
-
-// ✅ NOUVEL IMPORT : Radio Manager
 const RadioManagerPage = lazy(() => import('./pages/RadioManagerPage').then((m) => ({ default: m.RadioManagerPage })));
 const NouveautesPage = lazy(() => import('./pages/NouveautesPage').then((m) => ({ default: m.NouveautesPage })));
 const AuthPage = lazy(() => import('./pages/AuthPage').then((m) => ({ default: m.AuthPage })));
@@ -52,6 +50,9 @@ const ChartsPage = lazy(() => import('./pages/ChartsPage').then((m) => ({ defaul
 const RadiosPage = lazy(() => import('./pages/RadiosPage').then((m) => ({ default: m.RadiosPage })));
 const RadioPage = lazy(() => import('./pages/RadioPage').then((m) => ({ default: m.RadioPage })));
 
+// ✅ NOUVEL IMPORT : Page de redirection de l'app Radio
+const RadioRedirectPage = lazy(() => import('./pages/RadioRedirectPage').then((m) => ({ default: m.RadioRedirectPage })));
+
 const PageLoader = () => (
   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', flexDirection: 'column', gap: 16 }}>
     <div style={{ width: 40, height: 40, border: '3px solid rgba(0, 217, 255, 0.2)', borderTop: '3px solid #00d9ff', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
@@ -75,6 +76,9 @@ function AnimatedRoutes() {
         <Route path="/premium/:username" element={<PremiumPage />} />
         <Route path="/radio/:username" element={<RadioPage />} />
         <Route path="/link/:slug" element={<SmartLinkPage />} />
+        
+        {/* ✅ ROUTE DE REDIRECTION PWA RADIO */}
+        <Route path="/radio-redirect" element={<RadioRedirectPage />} />
 
         {/* ✅ LAYOUT PRINCIPAL */}
         <Route path="/" element={<MainLayout />}>
@@ -97,7 +101,6 @@ function AnimatedRoutes() {
 
           <Route path="tools" element={<PageTransition><PremiumGuard><ToolsPage /></PremiumGuard></PageTransition>} />
           
-          {/* ✅ NOUVELLE ROUTE : Radio Manager */}
           <Route path="radio-manager" element={<PageTransition><PremiumGuard><RadioManagerPage /></PremiumGuard></PageTransition>} />
 
           <Route path="settings" element={<PageTransition><PremiumGuard><SettingsPage /></PremiumGuard></PageTransition>} />

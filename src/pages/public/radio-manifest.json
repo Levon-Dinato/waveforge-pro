@@ -1,0 +1,21 @@
+{
+  "name": "DropZone Radio",
+  "short_name": "Radio",
+  "description": "Écoutez les meilleures webradios de DJs indépendants sur DropZone.",
+  "start_url": "/radio-redirect",
+  "display": "standalone",
+  "background_color": "#05050a",
+  "theme_color": "#ff3366",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

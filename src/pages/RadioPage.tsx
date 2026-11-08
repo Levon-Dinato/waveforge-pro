@@ -60,6 +60,29 @@ export const RadioPage: React.FC = () => {
     accentGradient: 'linear-gradient(135deg, #ff3366, #7c5cff)',
   };
 
+  // ✅ LOGIQUE DU MANIFEST PWA ET SAUVEGARDE RADIO
+  useEffect(() => {
+    if (username) {
+      // 1. On sauvegarde la radio en cours dans le localStorage
+      localStorage.setItem('last_radio_username', username);
+
+      // 2. On change le manifest pour pointer vers la radio
+      const manifestLink = document.querySelector('link[rel="manifest"]');
+      if (manifestLink) {
+        manifestLink.setAttribute('href', '/radio-manifest.json');
+      }
+    }
+
+    return () => {
+      // Quand on quitte la page, on remet le manifest original du site
+      const manifestLink = document.querySelector('link[rel="manifest"]');
+      if (manifestLink) {
+        // ✅ CORRECTION ICI : On remet /manifest.json (comme dans ton index.html)
+        manifestLink.setAttribute('href', '/manifest.json'); 
+      }
+    };
+  }, [username]);
+
   // --- LOGIQUE D'INSTALLATION PWA ---
   useEffect(() => {
     const handler = (e: any) => {
@@ -129,7 +152,7 @@ export const RadioPage: React.FC = () => {
         setTracks(tracksToPlay);
         
         if (tracksToPlay.length > 0) {
-          let activeIndex = 0; // ✅ Variable locale pour le bon index
+          let activeIndex = 0; 
 
           const savedState = sessionStorage.getItem(`radio_${profileData.id}`);
           if (savedState) {
@@ -161,7 +184,6 @@ export const RadioPage: React.FC = () => {
             setLikeCount(tracksToPlay[0].likes_count || 0);
           }
 
-          // ✅ VÉRIFICATION DU LIKE AVEC LE BON INDEX
           if (user) {
             const trackIdToCheck = tracksToPlay[activeIndex]?.id;
             if (trackIdToCheck) {
@@ -333,7 +355,6 @@ export const RadioPage: React.FC = () => {
   return (
     <div style={{ background: colors.bg, minHeight: '100vh', color: colors.textMain, fontFamily: 'Inter, sans-serif', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: isMobile ? '20px' : '40px' }}>
       
-      {/* FOND ANIMÉ / IMAGE / VIDEO */}
       <style>{`
         @keyframes aurora1 { 0% { transform: translate(0, 0) scale(1); } 50% { transform: translate(50px, -50px) scale(1.1); } 100% { transform: translate(0, 0) scale(1); } }
         @keyframes aurora2 { 0% { transform: translate(0, 0) scale(1); } 50% { transform: translate(-50px, 50px) scale(1.1); } 100% { transform: translate(0, 0) scale(1); } }
@@ -358,7 +379,6 @@ export const RadioPage: React.FC = () => {
         <div className="grid-overlay" />
       </div>
 
-      {/* HEADER */}
       <div style={{ width: '100%', maxWidth: 1000, display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 2, marginBottom: 20 }}>
         <button onClick={() => navigate(-1)} style={{ background: 'transparent', border: 'none', color: colors.textMain, cursor: 'pointer' }}>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
@@ -380,10 +400,8 @@ export const RadioPage: React.FC = () => {
         </div>
       </div>
 
-      {/* LAYOUT PRINCIPAL */}
       <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 40, width: '100%', maxWidth: 1000, zIndex: 2, alignItems: 'center' }}>
         
-        {/* PLAYER */}
         <div style={{ flex: 1, width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           
           {isLive ? (
@@ -465,7 +483,6 @@ export const RadioPage: React.FC = () => {
 
         </div>
 
-        {/* CHAT */}
         <div style={{ flex: 1, width: '100%', maxWidth: 400, background: colors.panelBg, backdropFilter: 'blur(30px)', border: `1px solid ${colors.border}`, borderRadius: 24, display: 'flex', flexDirection: 'column', height: 500, boxShadow: '0 20px 40px rgba(0,0,0,0.2)' }}>
           <div style={{ padding: '16px 20px', borderBottom: `1px solid ${colors.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h3 style={{ margin: 0, fontSize: 13, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>💬 Live Chat</h3>
@@ -503,7 +520,6 @@ export const RadioPage: React.FC = () => {
         </div>
       )}
 
-      {/* MODAL INSTALLATION iOS */}
       {showIosInstallModal && createPortal(
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 99999, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', padding: 20 }} onClick={() => setShowIosInstallModal(false)}>
           <div style={{ background: colors.panelBg, borderRadius: '24px 24px 0 0', padding: 32, width: '100%', maxWidth: 500, color: colors.textMain }} onClick={(e) => e.stopPropagation()}>

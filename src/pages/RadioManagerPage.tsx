@@ -12,7 +12,6 @@ export const RadioManagerPage: React.FC = () => {
   const isDark = theme === 'dark';
   const navigate = useNavigate();
 
-  // ✅ SYNCHRONISATION DES ONGLETS VIA L'URL
   const [searchParams, setSearchParams] = useSearchParams();
   const radioTab = (searchParams.get('tab') || 'musics') as 'musics' | 'jingles' | 'schedules' | 'appearance';
   const setRadioTab = (tab: 'musics' | 'jingles' | 'schedules' | 'appearance') => {
@@ -30,11 +29,7 @@ export const RadioManagerPage: React.FC = () => {
   const [uploading, setUploading] = useState(false);
   
   const [jingleForm, setJingleForm] = useState({ title: '', audioFile: null as File | null });
-  
-  // ✅ AJOUT DES JOURS DANS LE FORMULAIRE DE PROGRAMMATION
   const [scheduleForm, setScheduleForm] = useState({ title: '', start_time: '08:00', end_time: '10:00', playlist_id: '', days: [] as string[] });
-
-  // ✅ AJOUT DES STATES POUR L'UPLOAD RAPIDE ET LE LECTEUR
   const [uploadForm, setUploadForm] = useState({ title: '', artist: '', genre: '' });
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [previewTrack, setPreviewTrack] = useState<any>(null);
@@ -47,7 +42,6 @@ export const RadioManagerPage: React.FC = () => {
   const [liveUrl, setLiveUrl] = useState('');
   const [profileUsername, setProfileUsername] = useState('');
   
-  // États Personnalisation
   const [radioBgUrl, setRadioBgUrl] = useState('');
   const [radioBgType, setRadioBgType] = useState('animated');
   const [radioBgOpacity, setRadioBgOpacity] = useState(0.6);
@@ -56,6 +50,8 @@ export const RadioManagerPage: React.FC = () => {
   const [radioLogoUrl, setRadioLogoUrl] = useState('');
   const [radioInstructions, setRadioInstructions] = useState('');
   const [uploadingLogo, setUploadingLogo] = useState(false);
+
+  const [radioVisualizerColor, setRadioVisualizerColor] = useState('#ff3366');
 
   const colors = {
     bg: isDark ? '#09090b' : '#f8fafc',
@@ -83,6 +79,7 @@ export const RadioManagerPage: React.FC = () => {
         setRadioBgOpacity(profileData.radio_bg_opacity ?? 0.6);
         setRadioLogoUrl(profileData.radio_custom_logo_url || '');
         setRadioInstructions(profileData.radio_instructions || '');
+        setRadioVisualizerColor(profileData.radio_visualizer_color || '#ff3366');
       }
 
       const { data: tracksData } = await supabase.from('tracks').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
@@ -119,7 +116,6 @@ export const RadioManagerPage: React.FC = () => {
     setMyTracks(myTracks.filter(t => t.id !== trackId));
   };
 
-  // ✅ NOUVELLE FONCTION : UPLOAD DIRECT DEPUIS LE RADIO MANAGER
   const handleRadioUpload = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !audioFile || !uploadForm.title) return alert("Titre et fichier audio obligatoires.");
@@ -132,25 +128,14 @@ export const RadioManagerPage: React.FC = () => {
       const { data: urlData } = supabase.storage.from(AUDIO_BUCKET).getPublicUrl(name);
 
       const { data, error } = await supabase.from('tracks').insert({
-        user_id: user.id, 
-        title: uploadForm.title, 
-        artist: uploadForm.artist || profileUsername, 
-        genre: uploadForm.genre || 'Inconnu', 
-        audio_url: urlData.publicUrl, 
-        in_radio: true, is_jingle: false, peaks: [], duration: 0, likes_count: 0, downloads: 0
+        user_id: user.id, title: uploadForm.title, artist: uploadForm.artist || profileUsername, genre: uploadForm.genre || 'Inconnu', audio_url: urlData.publicUrl, in_radio: true, is_jingle: false, peaks: [], duration: 0, likes_count: 0, downloads: 0
       }).select().single();
 
       if (error) throw error;
       if (data) setMyTracks([data, ...myTracks]);
-      
-      setAudioFile(null);
-      setUploadForm({ title: '', artist: '', genre: '' });
+      setAudioFile(null); setUploadForm({ title: '', artist: '', genre: '' });
       alert("Son ajouté à la radio ! 🎵");
-    } catch (err: any) {
-      alert("Erreur : " + err.message);
-    } finally {
-      setUploading(false);
-    }
+    } catch (err: any) { alert("Erreur : " + err.message); } finally { setUploading(false); }
   };
 
   const handleJingleUpload = async (e: React.FormEvent) => {
@@ -179,18 +164,12 @@ export const RadioManagerPage: React.FC = () => {
     setUploading(true);
     try {
       const { data, error } = await supabase.from('radio_schedules').insert({
-        user_id: user.id, 
-        title: scheduleForm.title, 
-        start_time: scheduleForm.start_time, 
-        end_time: scheduleForm.end_time, 
-        playlist_id: scheduleForm.playlist_id,
-        days: scheduleForm.days // ✅ ENREGISTREMENT DES JOURS
+        user_id: user.id, title: scheduleForm.title, start_time: scheduleForm.start_time, end_time: scheduleForm.end_time, playlist_id: scheduleForm.playlist_id, days: scheduleForm.days
       }).select('*, playlists(name)').single();
       
       if (error) throw error;
       if (data) setSchedules([...schedules, data].sort((a,b) => a.start_time.localeCompare(b.start_time)));
-      setShowScheduleModal(false); 
-      setScheduleForm({ title: '', start_time: '08:00', end_time: '10:00', playlist_id: '', days: [] });
+      setShowScheduleModal(false); setScheduleForm({ title: '', start_time: '08:00', end_time: '10:00', playlist_id: '', days: [] });
     } catch (err: any) { alert("Erreur : " + err.message); } finally { setUploading(false); }
   };
 
@@ -211,14 +190,8 @@ export const RadioManagerPage: React.FC = () => {
       const { error } = await supabase.storage.from('media').upload(name, file);
       if (error) throw error;
       const { data } = supabase.storage.from('media').getPublicUrl(name);
-      
-      setRadioBgUrl(data.publicUrl);
-      setRadioBgType(isVideo ? 'video' : 'image');
-    } catch (err: any) {
-      alert("Erreur d'upload : " + err.message);
-    } finally {
-      setUploadingBg(false);
-    }
+      setRadioBgUrl(data.publicUrl); setRadioBgType(isVideo ? 'video' : 'image');
+    } catch (err: any) { alert("Erreur d'upload : " + err.message); } finally { setUploadingBg(false); }
   };
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -232,25 +205,30 @@ export const RadioManagerPage: React.FC = () => {
       if (error) throw error;
       const { data } = supabase.storage.from('media').getPublicUrl(name);
       setRadioLogoUrl(data.publicUrl);
-    } catch (err: any) {
-      alert("Erreur d'upload du logo : " + err.message);
-    } finally {
-      setUploadingLogo(false);
-    }
+    } catch (err: any) { alert("Erreur d'upload du logo : " + err.message); } finally { setUploadingLogo(false); }
   };
 
   const handleSaveBackground = async () => {
     if (!user) return;
     setSaving(true);
+    
     const { error } = await supabase.from('profiles').update({
       radio_bg_url: radioBgUrl,
       radio_bg_type: radioBgType,
       radio_bg_opacity: radioBgOpacity,
       radio_custom_logo_url: radioLogoUrl,
-      radio_instructions: radioInstructions
+      radio_instructions: radioInstructions,
+      radio_visualizer_color: radioVisualizerColor
     }).eq('id', user.id);
+    
     setSaving(false);
-    if (!error) alert("Apparence de la radio mise à jour ! ✅");
+    
+    if (error) {
+      console.error("Erreur Supabase lors de la sauvegarde :", error);
+      alert("Erreur lors de la sauvegarde : " + error.message);
+    } else {
+      alert("Apparence de la radio mise à jour ! ✅");
+    }
   };
 
   const filteredRadioTracks = useMemo(() => {
@@ -294,41 +272,29 @@ export const RadioManagerPage: React.FC = () => {
         .dropzone:hover { border-color: ${colors.textMuted}; }
       `}</style>
 
-      {/* HEADER */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16, marginBottom: 24 }}>
         <div>
           <button onClick={() => navigate('/settings')} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 500, marginBottom: 8, padding: 0 }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Retour à l'Espace Artiste
           </button>
-          <h1 style={{ fontSize: 24, fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
-            📻 Radio Manager
-          </h1>
+          <h1 style={{ fontSize: 24, fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: 10 }}>📻 Radio Manager</h1>
         </div>
-
         {profileUsername && (
           <div style={{ display: 'flex', gap: 12 }}>
-            <a href={`/radio/${profileUsername}`} target="_blank" rel="noopener noreferrer" className="dash-btn dash-btn-secondary" style={{ textDecoration: 'none' }}>
-              Écouter la Radio ↗
-            </a>
+            <a href={`/radio/${profileUsername}`} target="_blank" rel="noopener noreferrer" className="dash-btn dash-btn-secondary" style={{ textDecoration: 'none' }}>Écouter la Radio ↗</a>
             <button className="dash-btn dash-btn-primary" onClick={() => setShowJingleModal(true)}>+ Jingle</button>
           </div>
         )}
       </div>
 
-      {/* BLOC LIVE */}
       <div className="dash-card" style={{ padding: 20, marginBottom: 24, display: 'flex', gap: 20, alignItems: 'center', flexWrap: 'wrap', borderLeft: isLive ? `3px solid ${colors.danger}` : `3px solid ${colors.border}` }}>
         <div style={{ flex: 1, minWidth: 250 }}>
-          <h2 style={{ margin: '0 0 8px 0', fontSize: 14, fontWeight: 600 }}>
-            {isLive ? '🔴 Direct en cours' : 'Direct Audio'}
-          </h2>
+          <h2 style={{ margin: '0 0 8px 0', fontSize: 14, fontWeight: 600 }}>{isLive ? '🔴 Direct en cours' : 'Direct Audio'}</h2>
           <input type="text" placeholder="Lien du flux (Mixlr, Icecast...)" value={liveUrl} onChange={(e) => setLiveUrl(e.target.value)} disabled={isLive} className="dash-input" />
         </div>
-        <button onClick={toggleLiveStatus} disabled={saving} className={`dash-btn ${isLive ? 'dash-btn-danger' : 'dash-btn-primary'}`}>
-          {isLive ? 'Arrêter' : 'Passer en Direct'}
-        </button>
+        <button onClick={toggleLiveStatus} disabled={saving} className={`dash-btn ${isLive ? 'dash-btn-danger' : 'dash-btn-primary'}`}>{isLive ? 'Arrêter' : 'Passer en Direct'}</button>
       </div>
 
-      {/* NAVIGATION TABS */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 24, borderBottom: `1px solid ${colors.border}`, paddingBottom: 12 }}>
         <button onClick={() => setRadioTab('musics')} className={`dash-tab ${radioTab === 'musics' ? 'active' : ''}`}>Mes musiques</button>
         <button onClick={() => setRadioTab('jingles')} className={`dash-tab ${radioTab === 'jingles' ? 'active' : ''}`}>Jingles</button>
@@ -336,7 +302,6 @@ export const RadioManagerPage: React.FC = () => {
         <button onClick={() => setRadioTab('appearance')} className={`dash-tab ${radioTab === 'appearance' ? 'active' : ''}`}>Apparence</button>
       </div>
 
-      {/* CONTENU PRINCIPAL */}
       {radioTab === 'appearance' ? (
         <div className="dash-card" style={{ padding: 32, maxWidth: 800 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
@@ -367,6 +332,26 @@ export const RadioManagerPage: React.FC = () => {
             </div>
 
             <div>
+              <h3 style={{ margin: '0 0 12px 0', fontSize: 14, fontWeight: 600 }}>Couleur de l'égaliseur</h3>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <input 
+                  type="color" 
+                  value={radioVisualizerColor} 
+                  onChange={(e) => setRadioVisualizerColor(e.target.value)} 
+                  style={{ width: 50, height: 50, padding: 0, background: 'transparent', border: 'none', cursor: 'pointer', borderRadius: 8 }} 
+                />
+                <input 
+                  type="text" 
+                  value={radioVisualizerColor} 
+                  onChange={(e) => setRadioVisualizerColor(e.target.value)} 
+                  className="dash-input" 
+                  style={{ flex: 1, fontFamily: 'monospace' }} 
+                />
+              </div>
+              <p style={{ fontSize: 12, color: colors.textMuted, marginTop: 8 }}>Cette couleur sera appliquée sur les barres autour du vinyle et sur les boutons de la page publique.</p>
+            </div>
+
+            <div>
               <h3 style={{ margin: '0 0 12px 0', fontSize: 14, fontWeight: 600 }}>Fond d'écran</h3>
               <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
                 <button onClick={() => setRadioBgType('animated')} className={`dash-tab ${radioBgType === 'animated' ? 'active' : ''}`} style={{ flex: 1 }}>Animé</button>
@@ -389,7 +374,7 @@ export const RadioManagerPage: React.FC = () => {
                         <span>Opacité</span>
                         <span>{Math.round(radioBgOpacity * 100)}%</span>
                       </div>
-                      <input type="range" min="0" max="1" step="0.05" value={radioBgOpacity} onChange={(e) => setRadioBgOpacity(Number(e.target.value))} style={{ width: '100%', accentColor: colors.accent }} />
+                      <input type="range" min="0" max="1" step="0.05" value={radioBgOpacity} onChange={(e) => setRadioBgOpacity(Number(e.target.value))} style={{ width: '100%', accentColor: radioVisualizerColor }} />
                     </div>
                   )}
                 </div>
@@ -446,22 +431,17 @@ export const RadioManagerPage: React.FC = () => {
       ) : (
         <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start' }}>
           
-          {/* COLONNE 1 : UPLOAD & FILTRES */}
           <div style={{ width: 280, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 24 }}>
-            
-            {/* ✅ NOUVEAU FORMULAIRE D'UPLOAD FONCTIONNEL */}
             <div className="dash-card" style={{ padding: 20 }}>
               <h3 style={{ fontSize: 14, fontWeight: 600, margin: '0 0 16px 0' }}>Ajouter un son</h3>
               <form onSubmit={handleRadioUpload} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <input type="text" placeholder="Titre *" value={uploadForm.title} onChange={e => setUploadForm({...uploadForm, title: e.target.value})} required className="dash-input" style={{ fontSize: 12, padding: '8px' }} />
                 <input type="text" placeholder="Artiste" value={uploadForm.artist} onChange={e => setUploadForm({...uploadForm, artist: e.target.value})} className="dash-input" style={{ fontSize: 12, padding: '8px' }} />
                 <input type="text" placeholder="Genre (ex: House)" value={uploadForm.genre} onChange={e => setUploadForm({...uploadForm, genre: e.target.value})} className="dash-input" style={{ fontSize: 12, padding: '8px' }} />
-                
                 <label className="dropzone" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, height: 80 }}>
                   <span style={{ fontSize: 11, fontWeight: 500, color: colors.textMuted }}>{audioFile ? audioFile.name : 'Choisir un MP3 *'}</span>
                   <input type="file" accept="audio/*" required onChange={(e) => setAudioFile(e.target.files?.[0] || null)} style={{ display: 'none' }} />
                 </label>
-                
                 <button type="submit" disabled={uploading} className="dash-btn dash-btn-primary" style={{ width: '100%', marginTop: 4 }}>
                   {uploading ? 'Upload...' : 'Ajouter à la radio'}
                 </button>
@@ -469,9 +449,7 @@ export const RadioManagerPage: React.FC = () => {
             </div>
 
             <div className="dash-card" style={{ padding: 20 }}>
-              <h3 style={{ fontSize: 14, fontWeight: 600, margin: '0 0 12px 0', display: 'flex', justifyContent: 'space-between' }}>
-                Catégories
-              </h3>
+              <h3 style={{ fontSize: 14, fontWeight: 600, margin: '0 0 12px 0', display: 'flex', justifyContent: 'space-between' }}>Catégories</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: colors.inputBg, borderRadius: 4, fontSize: 13, fontWeight: 600 }}>
                   <span>Toutes</span>
@@ -481,9 +459,7 @@ export const RadioManagerPage: React.FC = () => {
             </div>
           </div>
 
-          {/* COLONNE 2 : TABLEAU */}
           <div className="dash-card" style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
-            
             <div style={{ padding: '16px 20px', borderBottom: `1px solid ${colors.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ position: 'relative', width: '100%', maxWidth: 400 }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={colors.textMuted} strokeWidth="2" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }}><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
@@ -508,7 +484,6 @@ export const RadioManagerPage: React.FC = () => {
                   {currentTracks.map(track => (
                     <tr key={track.id}>
                       <td>
-                        {/* ✅ BOUTON PLAY FONCTIONNEL */}
                         <button onClick={() => setPreviewTrack(track)} style={{ width: 24, height: 24, borderRadius: '50%', background: colors.inputBg, border: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
                           <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
                         </button>
@@ -520,9 +495,7 @@ export const RadioManagerPage: React.FC = () => {
                         </div>
                       </td>
                       <td style={{ color: colors.textMuted }}>{track.artist}</td>
-                      <td>
-                        <span style={{ fontSize: 11, background: colors.inputBg, padding: '2px 8px', borderRadius: 4, border: `1px solid ${colors.border}` }}>{track.genre || 'Inconnu'}</span>
-                      </td>
+                      <td><span style={{ fontSize: 11, background: colors.inputBg, padding: '2px 8px', borderRadius: 4, border: `1px solid ${colors.border}` }}>{track.genre || 'Inconnu'}</span></td>
                       <td>
                         <button onClick={() => toggleRadioStatus(track.id, track.in_radio)} style={{ width: 36, height: 20, borderRadius: 10, background: track.in_radio ? colors.success : colors.border, border: 'none', cursor: 'pointer', position: 'relative' }}>
                           <div style={{ width: 14, height: 14, borderRadius: '50%', background: '#fff', position: 'absolute', top: 3, left: track.in_radio ? 19 : 3 }} />
@@ -552,7 +525,6 @@ export const RadioManagerPage: React.FC = () => {
         </div>
       )}
 
-      {/* ✅ LECTEUR AUDIO FLOTTANT */}
       {previewTrack && (
         <div style={{ position: 'fixed', bottom: 20, right: 20, background: colors.panelBg, padding: 16, borderRadius: 12, border: `1px solid ${colors.accent}`, boxShadow: '0 10px 30px rgba(0,0,0,0.5)', zIndex: 999, display: 'flex', alignItems: 'center', gap: 16 }}>
           <div>
@@ -564,7 +536,6 @@ export const RadioManagerPage: React.FC = () => {
         </div>
       )}
 
-      {/* MODALES */}
       {showJingleModal && createPortal(
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div className="dash-card" style={{ padding: 24, width: '100%', maxWidth: 400 }}>
@@ -596,7 +567,6 @@ export const RadioManagerPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* ✅ SELECTION DES JOURS */}
               <div>
                 <label style={{ color: colors.textMuted, fontSize: 12, marginBottom: 4, display: 'block' }}>Jours de diffusion</label>
                 <div style={{ display: 'flex', gap: 4 }}>

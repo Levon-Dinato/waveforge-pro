@@ -1,5 +1,5 @@
 // src/pages/RadioPage.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import { Helmet } from 'react-helmet-async';
@@ -57,6 +57,8 @@ export const RadioPage: React.FC = () => {
 
   useEffect(() => {
     if (!username) return;
+    
+    // ✅ FIX POUR L'ERREUR SUPABASE REALTIME
     let isMounted = true;
     let channel: any = null;
 
@@ -65,84 +67,84 @@ export const RadioPage: React.FC = () => {
       try {
         const { data: profileData } = await supabase.from('profiles').select('*').eq('username', username).single();
         
-        if (!isMounted || !profileData) return;
-
-        setProfile(profileData);
-        setCustomBgUrl(profileData.radio_bg_url || '');
-        setCustomBgType(profileData.radio_bg_type || 'animated');
-        setCustomBgOpacity(profileData.radio_bg_opacity ?? 0.6);
-        setCustomLogo(profileData.radio_custom_logo_url || '');
-        setInstructions(profileData.radio_instructions || '');
-
-        if (user) {
-          const { data: myProfile } = await supabase.from('profiles').select('username, avatar_url').eq('id', user.id).single();
-          if (isMounted) setUserProfile(myProfile);
-        }
-
-        const now = new Date();
-        const currentTime = now.toTimeString().split(' ')[0];
-        const currentDay = now.getDay() === 0 ? '7' : now.getDay().toString();
-
-        const { data: schedules } = await supabase.from('radio_schedules')
-          .select('*, playlists(id, name)')
-          .eq('user_id', profileData.id)
-          .lte('start_time', currentTime)
-          .gte('end_time', currentTime)
-          .contains('days', [currentDay]);
-
         if (!isMounted) return;
 
-        let tracksToPlay: any[] = [];
-        if (schedules && schedules.length > 0) {
-          setActiveSchedule(schedules[0].title);
-          const { data: pt } = await supabase.from('playlist_tracks')
-            .select('track_id, order, tracks(*)')
-            .eq('playlist_id', schedules[0].playlists.id)
-            .order('order');
-          if (pt && pt.length > 0) tracksToPlay = pt.map(item => item.tracks).filter(Boolean);
-        } else {
-          setActiveSchedule(null);
-          const { data: tracksData } = await supabase.from('tracks').select('*').eq('user_id', profileData.id).eq('in_radio', true).order('created_at', { ascending: false });
-          if (tracksData) tracksToPlay = [...tracksData].sort(() => Math.random() - 0.5);
-        }
+        if (profileData) {
+          setProfile(profileData);
+          setCustomBgUrl(profileData.radio_bg_url || '');
+          setCustomBgType(profileData.radio_bg_type || 'animated');
+          setCustomBgOpacity(profileData.radio_bg_opacity ?? 0.6);
+          setCustomLogo(profileData.radio_custom_logo_url || '');
+          setInstructions(profileData.radio_instructions || '');
 
-        startRadio(tracksToPlay, profileData.is_live || false, profileData.live_url || '');
-        
-        if (tracksToPlay.length > 0) {
-          setLikeCount(tracksToPlay[0]?.likes_count || 0);
           if (user) {
-            const { data: like } = await supabase.from('likes').select('id').eq('user_id', user.id).eq('track_id', tracksToPlay[0].id).maybeSingle();
-            if (isMounted) setIsLiked(!!like);
+            const { data: myProfile } = await supabase.from('profiles').select('username, avatar_url').eq('id', user.id).single();
+            if (isMounted) setUserProfile(myProfile);
           }
-        }
 
-        if (!isMounted) return;
+          const now = new Date();
+          const currentTime = now.toTimeString().split(' ')[0];
+          const currentDay = now.getDay() === 0 ? '7' : now.getDay().toString();
 
-        // ✅ Correction de l'erreur Realtime Supabase
-        channel = supabase.channel(`radio_${profileData.id}_${Date.now()}`, {
-          config: { presence: { key: user?.id || Math.random().toString() } },
-        });
+          const { data: schedules } = await supabase.from('radio_schedules')
+            .select('*, playlists(id, name)')
+            .eq('user_id', profileData.id)
+            .lte('start_time', currentTime)
+            .gte('end_time', currentTime)
+            .contains('days', [currentDay]);
 
-        channel
-          .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'radio_messages', filter: `radio_owner_id=eq.${profileData.id}` }, (payload: any) => {
-            setMessages((prev) => [...prev, payload.new]);
-          })
-          .on('presence', { event: 'sync' }, () => {
-            if (!channel) return;
-            const state = channel.presenceState();
-            let count = 0;
-            Object.keys(state).forEach((key) => { count += state[key].length; });
-            setListeners(Math.max(1, count));
-          })
-          .subscribe(async (status: string) => {
-            if (status === 'SUBSCRIBED' && isMounted && channel) {
-              await channel.track({ online_at: new Date().toISOString() });
+          if (!isMounted) return;
+
+          let tracksToPlay: any[] = [];
+          if (schedules && schedules.length > 0) {
+            setActiveSchedule(schedules[0].title);
+            const { data: pt } = await supabase.from('playlist_tracks')
+              .select('track_id, order, tracks(*)')
+              .eq('playlist_id', schedules[0].playlists.id)
+              .order('order');
+            if (pt && pt.length > 0) tracksToPlay = pt.map(item => item.tracks).filter(Boolean);
+          } else {
+            setActiveSchedule(null);
+            const { data: tracksData } = await supabase.from('tracks').select('*').eq('user_id', profileData.id).eq('in_radio', true).order('created_at', { ascending: false });
+            if (tracksData) tracksToPlay = [...tracksData].sort(() => Math.random() - 0.5);
+          }
+
+          startRadio(tracksToPlay, profileData.is_live || false, profileData.live_url || '');
+          
+          if (tracksToPlay.length > 0) {
+            setLikeCount(tracksToPlay[0]?.likes_count || 0);
+            if (user) {
+              const { data: like } = await supabase.from('likes').select('id').eq('user_id', user.id).eq('track_id', tracksToPlay[0].id).maybeSingle();
+              if (isMounted) setIsLiked(!!like);
             }
+          }
+
+          if (!isMounted) return;
+
+          // Création du canal avec un ID unique pour éviter le conflit StrictMode
+          channel = supabase.channel(`radio_${profileData.id}_${Date.now()}`, {
+            config: { presence: { key: user?.id || Math.random().toString() } },
           });
 
-        const { data: oldMessages } = await supabase.from('radio_messages').select('*').eq('radio_owner_id', profileData.id).order('created_at', { ascending: true }).limit(50);
-        if (isMounted && oldMessages) setMessages(oldMessages);
-        
+          channel
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'radio_messages', filter: `radio_owner_id=eq.${profileData.id}` }, (payload: any) => {
+              setMessages((prev) => [...prev, payload.new]);
+            })
+            .on('presence', { event: 'sync' }, () => {
+              const state = channel.presenceState();
+              let count = 0;
+              Object.keys(state).forEach((key) => { count += state[key].length; });
+              setListeners(Math.max(1, count));
+            })
+            .subscribe(async (status: string) => {
+              if (status === 'SUBSCRIBED') {
+                await channel.track({ online_at: new Date().toISOString() });
+              }
+            });
+
+          const { data: oldMessages } = await supabase.from('radio_messages').select('*').eq('radio_owner_id', profileData.id).order('created_at', { ascending: true }).limit(50);
+          if (isMounted && oldMessages) setMessages(oldMessages);
+        }
       } catch (error) {
         console.error("Erreur de chargement :", error);
       } finally {
@@ -226,8 +228,8 @@ export const RadioPage: React.FC = () => {
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = duration > 0 ? circumference - (progress / duration) * circumference : circumference;
   
-  // ✅ 64 barres autour du vinyle
-  const totalBars = 64; 
+  // ✅ Génération des barres de l'égaliseur circulaire
+  const totalBars = 72; 
   const visualizerBars = Array.from({ length: totalBars }).map((_, i) => i);
 
   if (loading) return <div style={{ color: colors.textMain, background: colors.bg, height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 800 }}>Connexion à la fréquence... 📻</div>;
@@ -251,10 +253,10 @@ export const RadioPage: React.FC = () => {
         @keyframes pulseGlow { 0% { box-shadow: 0 0 40px rgba(255,51,102,0.3); } 50% { box-shadow: 0 0 80px rgba(255,51,102,0.7); } 100% { box-shadow: 0 0 40px rgba(255,51,102,0.3); } }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
         
-        /* ✅ ANIMATION CORRIGÉE */
+        /* ✅ ANIMATION DES BARRES */
         @keyframes beatCircle {
-          0% { transform: scaleY(0.1); opacity: 0.4; }
-          100% { transform: scaleY(1); opacity: 1; }
+          0% { transform: scaleY(0.2); opacity: 0.5; }
+          100% { transform: scaleY(1.5); opacity: 1; }
         }
 
         .animated-bg { position: absolute; inset: 0; z-index: 0; overflow: hidden; background: ${colors.bg}; }
@@ -271,16 +273,16 @@ export const RadioPage: React.FC = () => {
         .vinyl-label { position: absolute; width: 50px; height: 50px; border-radius: 50%; background: ${colors.bg}; border: 3px solid rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; z-index: 2; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
         .vinyl-hole { width: 8px; height: 8px; border-radius: 50%; background: #fff; box-shadow: 0 0 10px #fff; }
 
-        /* ✅ VISUALISEUR CIRCULAIRE (GÉOMÉTRIE CORRIGÉE) */
+        /* ✅ VISUALISEUR CIRCULAIRE CORRIGÉ */
         .circular-visualizer { 
           position: absolute; 
-          width: ${size}px; 
-          height: ${size}px; 
+          width: ${size + 80}px; 
+          height: ${size + 80}px; 
           top: 50%;
           left: 50%;
           transform: translate(-50%, -50%);
           pointer-events: none; 
-          z-index: 1; /* Derrière le vinyle */
+          z-index: 1; /* Derrière le vinyle pour que les barres sortent de sous le disque */
         }
         
         .visualizer-bar-wrapper {
@@ -288,17 +290,20 @@ export const RadioPage: React.FC = () => {
           left: 50%;
           top: 50%;
           width: 6px;
-          height: 45px; /* Hauteur de la barre */
+          height: ${size / 2}px; /* S'étend du centre vers le bord du vinyle */
           margin-left: -3px;
-          margin-top: -22.5px; /* Centre le wrapper */
-          transform-origin: center center;
+          margin-top: -${size / 2}px; /* Remonte le wrapper pour que le bas soit au centre */
+          transform-origin: bottom center;
         }
         
         .visualizer-bar {
+          position: absolute;
+          bottom: 0; /* Commence au centre du vinyle */
+          left: 0;
           width: 100%;
-          height: 100%;
+          height: 30px; /* Hauteur de la barre qui dépasse */
           background: ${colors.accentGradient};
-          border-radius: 4px;
+          border-radius: 6px;
           transform-origin: bottom center; /* L'animation part du bas (bord du vinyle) */
           box-shadow: 0 0 12px rgba(255,51,102,0.8);
           animation: beatCircle 0.5s ease-in-out infinite alternate;
@@ -381,23 +386,24 @@ export const RadioPage: React.FC = () => {
               {/* AURA LUMINEUSE */}
               <div style={{ position: 'absolute', width: size + 40, height: size + 40, borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,51,102,0.3) 0%, transparent 60%)', filter: 'blur(30px)', animation: isPlaying ? 'pulseGlow 2s infinite' : 'none' }} />
               
-              {/* ✅ LE VISUALISEUR CIRCULAIRE (GÉOMÉTRIE FIXÉE) */}
+              {/* ✅ LE VISUALISEUR CIRCULAIRE CORRIGÉ */}
               <div className="circular-visualizer">
                 {visualizerBars.map((_, i) => {
                   const angle = (i * 360) / totalBars;
+                  const randomDuration = 0.4 + Math.random() * 0.4;
+                  const randomDelay = Math.random() * 0.3;
+                  
                   return (
                     <div 
                       key={i} 
                       className="visualizer-bar-wrapper" 
-                      style={{ 
-                        transform: `rotate(${angle}deg) translateY(-${size / 2}px)` // Décale la barre sur le bord du vinyle
-                      }}
+                      style={{ transform: `rotate(${angle}deg)` }}
                     >
                       <div 
                         className="visualizer-bar" 
                         style={{ 
-                          animationDuration: `${0.4 + Math.random() * 0.4}s`,
-                          animationDelay: `-${Math.random() * 0.5}s`,
+                          animationDuration: `${randomDuration}s`,
+                          animationDelay: `-${randomDelay}s`,
                         }} 
                       />
                     </div>

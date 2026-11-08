@@ -2,13 +2,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
+import { Helmet } from 'react-helmet-async';
 import { supabase } from '../lib/supabase';
 import { useTheme } from '../contexts/ThemeContext';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { useAuth } from '../contexts/AuthContext';
 import { useRadio } from '../contexts/RadioContext';
 
-// ✅ EXPORT NOMMÉ ICI (pour correspondre à App.tsx)
 export const RadioPage: React.FC = () => {
   const { username } = useParams<{ username: string }>();
   const isMobile = useIsMobile(768);
@@ -17,6 +17,7 @@ export const RadioPage: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
+  // ✅ Utilisation du contexte radio pour l'audio
   const {
     tracks, currentIndex, currentTrack, isPlaying, progress, duration,
     isLive, liveUrl, startRadio, togglePlay, playNext, playPrev, seek
@@ -30,17 +31,18 @@ export const RadioPage: React.FC = () => {
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
   const [showToast, setShowToast] = useState(false);
-
   const [listeners, setListeners] = useState(1);
 
+  // États Personnalisation
   const [customBgUrl, setCustomBgUrl] = useState('');
   const [customBgType, setCustomBgType] = useState('animated');
   const [customBgOpacity, setCustomBgOpacity] = useState(0.6);
+  const [customLogo, setCustomLogo] = useState('');
+  const [instructions, setInstructions] = useState('');
 
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const chatEndRef = React.useRef<HTMLDivElement>(null);
-  
   const [showQrModal, setShowQrModal] = useState(false);
 
   const colors = {
@@ -55,12 +57,10 @@ export const RadioPage: React.FC = () => {
 
   useEffect(() => {
     if (!username) return;
-    
     let channel: any = null;
 
     const initRadio = async () => {
       setLoading(true);
-
       try {
         const { data: profileData } = await supabase.from('profiles').select('*').eq('username', username).single();
         
@@ -69,6 +69,8 @@ export const RadioPage: React.FC = () => {
           setCustomBgUrl(profileData.radio_bg_url || '');
           setCustomBgType(profileData.radio_bg_type || 'animated');
           setCustomBgOpacity(profileData.radio_bg_opacity ?? 0.6);
+          setCustomLogo(profileData.radio_custom_logo_url || '');
+          setInstructions(profileData.radio_instructions || '');
 
           if (user) {
             const { data: myProfile } = await supabase.from('profiles').select('username, avatar_url').eq('id', user.id).single();
@@ -112,23 +114,15 @@ export const RadioPage: React.FC = () => {
           });
 
           channel
-            .on(
-              'postgres_changes', 
-              { event: 'INSERT', schema: 'public', table: 'radio_messages', filter: `radio_owner_id=eq.${profileData.id}` }, 
-              (payload: any) => {
-                setMessages((prev) => [...prev, payload.new]);
-              }
-            )
-            .on(
-              'presence', 
-              { event: 'sync' }, 
-              () => {
-                const state = channel.presenceState();
-                let count = 0;
-                Object.keys(state).forEach((key) => { count += state[key].length; });
-                setListeners(Math.max(1, count));
-              }
-            )
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'radio_messages', filter: `radio_owner_id=eq.${profileData.id}` }, (payload: any) => {
+              setMessages((prev) => [...prev, payload.new]);
+            })
+            .on('presence', { event: 'sync' }, () => {
+              const state = channel.presenceState();
+              let count = 0;
+              Object.keys(state).forEach((key) => { count += state[key].length; });
+              setListeners(Math.max(1, count));
+            })
             .subscribe(async (status: string) => {
               if (status === 'SUBSCRIBED') {
                 await channel.track({ online_at: new Date().toISOString() });
@@ -147,9 +141,7 @@ export const RadioPage: React.FC = () => {
 
     initRadio();
 
-    return () => { 
-      if (channel) supabase.removeChannel(channel); 
-    };
+    return () => { if (channel) supabase.removeChannel(channel); };
   }, [username]);
 
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
@@ -174,12 +166,8 @@ export const RadioPage: React.FC = () => {
     const newStatus = !isLiked;
     setIsLiked(newStatus);
     setLikeCount(prev => newStatus ? prev + 1 : prev - 1);
-
-    if (newStatus) {
-      await supabase.from('likes').insert({ user_id: user.id, track_id: currentTrack.id });
-    } else {
-      await supabase.from('likes').delete().eq('user_id', user.id).eq('track_id', currentTrack.id);
-    }
+    if (newStatus) await supabase.from('likes').insert({ user_id: user.id, track_id: currentTrack.id });
+    else await supabase.from('likes').delete().eq('user_id', user.id).eq('track_id', currentTrack.id);
   };
 
   const handleShare = () => {
@@ -211,18 +199,28 @@ export const RadioPage: React.FC = () => {
   if (loading) return <div style={{ color: colors.textMain, background: colors.bg, height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Connexion...</div>;
   if (!profile) return <div style={{ color: colors.textMain, background: colors.bg, height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>DJ introuvable.</div>;
 
-  const coverImage = currentTrack?.cover_url || profile.avatar_url || '';
+  const displayImage = customLogo || currentTrack?.cover_url || profile.avatar_url || '';
   const currentUrl = window.location.href;
 
   return (
     <div style={{ background: colors.bg, minHeight: '100vh', color: colors.textMain, fontFamily: 'Inter, sans-serif', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: isMobile ? '20px' : '40px' }}>
       
+      <Helmet>
+        <title>Radio {profile.username} — DropZone DJ</title>
+        <meta property="og:title" content={`Écoute Radio ${profile.username} en direct sur DropZone DJ`} />
+        <meta property="og:description" content="Ta radio, ta musique, ton univers. Écoute les meilleurs DJs en direct." />
+        <meta property="og:image" content={`${window.location.origin}/radio-og.jpg`} />
+        <meta property="og:url" content={window.location.href} />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:image" content={`${window.location.origin}/radio-og.jpg`} />
+      </Helmet>
+
       <style>{`
         @keyframes aurora1 { 0% { transform: translate(0, 0) scale(1); } 50% { transform: translate(50px, -50px) scale(1.1); } 100% { transform: translate(0, 0) scale(1); } }
         @keyframes aurora2 { 0% { transform: translate(0, 0) scale(1); } 50% { transform: translate(-50px, 50px) scale(1.1); } 100% { transform: translate(0, 0) scale(1); } }
         .animated-bg { position: absolute; inset: 0; z-index: 0; overflow: hidden; background: ${isDark ? '#05050a' : '#f5f5f7'}; }
         .aurora-blob { position: absolute; width: 60vw; height: 60vw; border-radius: 50%; filter: blur(100px); opacity: ${isDark ? '0.4' : '0.2'}; }
-        .blob1 { background: ${coverImage ? `url(${coverImage}) center/cover` : '#ff3366'}; top: -10%; left: -10%; animation: aurora1 15s ease-in-out infinite; }
+        .blob1 { background: ${displayImage ? `url(${displayImage}) center/cover` : '#ff3366'}; top: -10%; left: -10%; animation: aurora1 15s ease-in-out infinite; }
         .blob2 { background: #7c5cff; bottom: -10%; right: -10%; animation: aurora2 18s ease-in-out infinite; }
         .grid-overlay { position: absolute; inset: 0; z-index: 1; background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px); background-size: 40px 40px; mask-image: radial-gradient(circle at center, black 40%, transparent 80%); }
       `}</style>
@@ -233,10 +231,7 @@ export const RadioPage: React.FC = () => {
         ) : customBgType === 'image' && customBgUrl ? (
           <div style={{ position: 'absolute', inset: 0, background: `url(${customBgUrl}) center/cover`, opacity: customBgOpacity }} />
         ) : (
-          <>
-            <div className="aurora-blob blob1" />
-            <div className="aurora-blob blob2" />
-          </>
+          <div style={{ position: 'absolute', inset: 0, background: `url('/radio-banner.jpg') center/cover`, opacity: isDark ? 0.3 : 0.15 }} />
         )}
         <div className="grid-overlay" />
       </div>
@@ -285,7 +280,7 @@ export const RadioPage: React.FC = () => {
                 <circle cx={size / 2} cy={size / 2} r={radius} stroke="url(#progressGradient)" strokeWidth={strokeWidth} fill="none" strokeDasharray={circumference} strokeDashoffset={strokeDashoffset} strokeLinecap="round" style={{ transition: 'stroke-dashoffset 0.1s linear' }} />
               </svg>
               <input type="range" min={0} max={duration || 100} value={progress} onChange={(e) => seek(Number(e.target.value))} style={{ position: 'absolute', width: size, height: size, opacity: 0, cursor: 'pointer', zIndex: 10, transform: 'rotate(-90deg)' }} />
-              <div style={{ width: size - 30, height: size - 30, borderRadius: '50%', background: coverImage ? `url(${coverImage}) center/cover` : colors.border, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }}>
+              <div style={{ width: size - 30, height: size - 30, borderRadius: '50%', background: displayImage ? `url(${displayImage}) center/cover` : colors.border, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 20px 40px rgba(0,0,0,0.5)', border: customLogo ? '2px solid rgba(0, 217, 255, 0.3)' : 'none' }}>
                 <div style={{ width: 50, height: 50, borderRadius: '50%', background: '#05050a', border: '2px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <div style={{ width: 10, height: 10, borderRadius: '50%', background: colors.border }} />
                 </div>
@@ -342,6 +337,13 @@ export const RadioPage: React.FC = () => {
               {!isLive && <button onClick={playNext} style={{ background: 'transparent', border: 'none', color: colors.textMain, cursor: 'pointer' }}><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" strokeWidth="2"></line></svg></button>}
             </div>
           </div>
+
+          {instructions && (
+            <div style={{ marginTop: 30, padding: '16px 20px', background: 'rgba(0, 0, 0, 0.4)', borderRadius: 12, border: `1px solid ${colors.border}`, width: '100%', maxWidth: 400, textAlign: 'center', fontSize: 14, color: colors.textMain, backdropFilter: 'blur(10px)', lineHeight: 1.5 }}>
+              <span style={{ fontSize: 20, display: 'block', marginBottom: 8 }}>📢</span>
+              {instructions}
+            </div>
+          )}
 
         </div>
 

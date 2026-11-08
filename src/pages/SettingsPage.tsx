@@ -1,5 +1,5 @@
 // src/pages/SettingsPage.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import { parseBlob } from 'music-metadata-browser';
@@ -92,15 +92,15 @@ export const SettingsPage: React.FC = () => {
     releases_title: 'Dernières Sorties',
     parcours_title: 'Un parcours visible, des événements qui parlent.',
     parcours_subtitle: "L'écosystème du DJ indépendant.",
-    parcours_description: "DropZone n'est pas juste une page web, c'est votre QG numérique. Un espace centralisé où votre musique, votre identité visuelle et vos outils de production se rencontrent. Conçu pour les artistes de la nuit, le site évolue constamment pour vous offrir la vitrine et les fonctionnalités que vous méritez, sans les contraintes des grosses plateformes.",
+    parcours_description: "DropZone n'est pas juste une page web, c'est votre QG numérique...",
     parcours_card_tag: 'POURQUOI NOUS REJOINDRE',
     parcours_card_title: 'La plateforme qui propulse votre son.',
     show_duo: true, show_prestations: true, show_releases: true, show_sidebar_top: true, show_sidebar_dates: true,
     prestations: [
-      { title: 'Studio & Outils intégrés', desc: 'Mastering, séparation de stems, générateur... Des outils pro directement dans votre navigateur, sans installation.' },
-      { title: 'Visibilité & Partage', desc: 'Un feed dynamique pour dénicher de nouveaux sons, et des pages artistes uniques pour montrer votre univers.' },
-      { title: 'Communauté & Connexion', desc: 'Échangez avec d\'autres producteurs, partagez vos coups de cœur et construisez votre réseau.' },
-      { title: 'Liberté Créative', desc: 'Un espace pensé pour vous. Uploadez vos tracks, personnalisez votre page, et gardez le contrôle total sur votre art.' },
+      { title: 'Studio & Outils intégrés', desc: 'Mastering, séparation de stems...' },
+      { title: 'Visibilité & Partage', desc: 'Un feed dynamique...' },
+      { title: 'Communauté & Connexion', desc: 'Échangez avec d\'autres producteurs...' },
+      { title: 'Liberté Créative', desc: 'Un espace pensé pour vous...' },
     ]
   });
 
@@ -415,7 +415,7 @@ export const SettingsPage: React.FC = () => {
           <h1 style={{ fontSize: 32, fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
             Espace Artiste <span style={{ fontSize: 12, background: form.theme_color, color: '#000', padding: '4px 8px', borderRadius: 4 }}>PREMIUM</span>
           </h1>
-          <p style={{ color: colors.textMuted, marginTop: 10, margin: '10px 0 0 0' }}>Gère ton identité, ta musique et tes photos.</p>
+          <p style={{ color: colors.textMuted, marginTop: 10, margin: '10px 0 0 0' }}>Gère ton identité, ta musique, tes photos et ta radio.</p>
         </div>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           <button onClick={() => setShowGuideModal(true)} style={{ padding: '10px 20px', background: 'transparent', color: form.theme_color, border: `1px solid ${form.theme_color}`, borderRadius: 8, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -455,7 +455,6 @@ export const SettingsPage: React.FC = () => {
           Accéder au Studio Radio ↗
         </Link>
       </div>
-
       {/* SECTION SHORTS */}
       <div id="shorts" style={{ background: colors.panelBg, padding: 24, borderRadius: 12, border: `1px solid ${colors.border}`, marginBottom: 24, scrollMarginTop: 80 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 10 }}>

@@ -6,7 +6,7 @@ import { HelmetProvider } from 'react-helmet-async';
 import { AudioEngineProvider } from './contexts/AudioEngineContext';
 import { AuthProvider } from './contexts/AuthContext';
 import { PlayerProvider } from './contexts/PlayerContext';
-import { RadioProvider } from './contexts/RadioContext'; // ✅ Ajout du RadioProvider
+import { RadioProvider } from './contexts/RadioContext';
 import { ToastProvider } from './components/ui/Toast';
 import { WindowsProvider } from './components/WindowsManager';
 import { MainLayout } from './layouts/MainLayout';
@@ -15,7 +15,6 @@ import { PageTransition } from './components/PageTransition';
 import { PremiumGuard } from './components/PremiumGuard';
 import './styles.css';
 
-// ✅ IMPORTS LAZY (Vérifie bien les noms)
 const HomePage = lazy(() => import('./pages/HomePage').then((m) => ({ default: m.HomePage })));
 const StudioPage = lazy(() => import('./pages/StudioPage').then((m) => ({ default: m.StudioPage })));
 const StemsPage = lazy(() => import('./pages/StemsPage').then((m) => ({ default: m.StemsPage })));
@@ -49,10 +48,10 @@ const SmartLinkPage = lazy(() => import('./pages/SmartLinkPage').then((m) => ({ 
 const MyPlaylistsPage = lazy(() => import('./pages/MyPlaylistsPage').then((m) => ({ default: m.MyPlaylistsPage })));
 const DiscoverPage = lazy(() => import('./pages/DiscoverPage').then((m) => ({ default: m.DiscoverPage })));
 const ChartsPage = lazy(() => import('./pages/ChartsPage').then((m) => ({ default: m.ChartsPage })));
-const RadiosPage = lazy(() => import('./pages/RadiosPage').then((m) => ({ default: m.RadiosPage })));
 
-// ✅ C'EST CETTE LIGNE QUI POSE PROBLÈME SI LE FICHIER A UNE ERREUR
+// ✅ ON UTILISE LE NOUVEAU FICHIER RADIOLISTPAGE POUR LE TEST
 const RadioPage = lazy(() => import('./pages/RadioPage').then((m) => ({ default: m.RadioPage })));
+const RadiosPage = lazy(() => import('./pages/RadioListPage').then((m) => ({ default: m.RadioListPage })));
 
 const PageLoader = () => (
   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', flexDirection: 'column', gap: 16 }}>
@@ -69,7 +68,6 @@ function AnimatedRoutes() {
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
         
-        {/* ✅ PAGES PUBLIQUES */}
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
@@ -78,7 +76,6 @@ function AnimatedRoutes() {
         <Route path="/radio/:username" element={<RadioPage />} />
         <Route path="/link/:slug" element={<SmartLinkPage />} />
 
-        {/* ✅ LAYOUT PRINCIPAL */}
         <Route path="/" element={<MainLayout />}>
           
           <Route index element={<PageTransition><HomePage /></PageTransition>} />
@@ -95,6 +92,7 @@ function AnimatedRoutes() {
           <Route path="search" element={<PageTransition><SearchPage /></PageTransition>} />
           <Route path="track/:id" element={<PageTransition><TrackPage /></PageTransition>} />
           <Route path="mes-playlists" element={<PageTransition><MyPlaylistsPage /></PageTransition>} />
+          
           <Route path="radios" element={<PageTransition><RadiosPage /></PageTransition>} />
 
           <Route path="tools" element={<PageTransition><PremiumGuard><ToolsPage /></PremiumGuard></PageTransition>} />

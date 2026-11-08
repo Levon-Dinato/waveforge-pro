@@ -28,25 +28,33 @@ export const RadioManagerPage: React.FC = () => {
   const [radioSearch, setRadioSearch] = useState('');
   const [radioTab, setRadioTab] = useState<'musics' | 'jingles' | 'schedules' | 'settings'>('musics');
   const [radioPage, setRadioPage] = useState(1);
-  const itemsPerPageRadio = 8;
+  const itemsPerPageRadio = 10;
 
   const [isLive, setIsLive] = useState(false);
   const [liveUrl, setLiveUrl] = useState('');
   const [profileUsername, setProfileUsername] = useState('');
   
+  // États Personnalisation
   const [radioBgUrl, setRadioBgUrl] = useState('');
   const [radioBgType, setRadioBgType] = useState('animated');
   const [radioBgOpacity, setRadioBgOpacity] = useState(0.6);
   const [uploadingBg, setUploadingBg] = useState(false);
 
+  const [radioLogoUrl, setRadioLogoUrl] = useState('');
+  const [radioInstructions, setRadioInstructions] = useState('');
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+
   const colors = {
-    bg: isDark ? '#05050a' : '#f5f5f7',
-    panelBg: isDark ? '#121212' : '#ffffff',
-    inputBg: isDark ? '#1f1f1f' : '#f3f4f6', 
-    border: isDark ? '#333333' : '#e5e7eb', 
-    textMain: isDark ? '#ffffff' : '#1a1a1a',
-    textMuted: isDark ? '#a1a1aa' : '#666666',
-    accent: '#ff3366',
+    bg: isDark ? '#09090b' : '#f8fafc',
+    sidebarBg: isDark ? '#121212' : '#ffffff',
+    panelBg: isDark ? '#18181b' : '#ffffff',
+    inputBg: isDark ? '#09090b' : '#f1f5f9',
+    border: isDark ? '#27272a' : '#e2e8f0',
+    textMain: isDark ? '#f8fafc' : '#0f172a',
+    textMuted: isDark ? '#a1a1aa' : '#64748b',
+    accent: '#00d9ff',
+    danger: '#ef4444',
+    success: '#10b981',
   };
 
   useEffect(() => {
@@ -60,6 +68,8 @@ export const RadioManagerPage: React.FC = () => {
         setRadioBgUrl(profileData.radio_bg_url || '');
         setRadioBgType(profileData.radio_bg_type || 'animated');
         setRadioBgOpacity(profileData.radio_bg_opacity ?? 0.6);
+        setRadioLogoUrl(profileData.radio_custom_logo_url || '');
+        setRadioInstructions(profileData.radio_instructions || '');
       }
 
       const { data: tracksData } = await supabase.from('tracks').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
@@ -157,16 +167,36 @@ export const RadioManagerPage: React.FC = () => {
     }
   };
 
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    setUploadingLogo(true);
+    try {
+      const ext = file.name.split('.').pop();
+      const name = `${user.id}/radio-logo-${Date.now()}.${ext}`;
+      const { error } = await supabase.storage.from('media').upload(name, file);
+      if (error) throw error;
+      const { data } = supabase.storage.from('media').getPublicUrl(name);
+      setRadioLogoUrl(data.publicUrl);
+    } catch (err: any) {
+      alert("Erreur d'upload du logo : " + err.message);
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
+
   const handleSaveBackground = async () => {
     if (!user) return;
     setSaving(true);
     const { error } = await supabase.from('profiles').update({
       radio_bg_url: radioBgUrl,
       radio_bg_type: radioBgType,
-      radio_bg_opacity: radioBgOpacity
+      radio_bg_opacity: radioBgOpacity,
+      radio_custom_logo_url: radioLogoUrl,
+      radio_instructions: radioInstructions
     }).eq('id', user.id);
     setSaving(false);
-    if (!error) alert("Fond d'écran mis à jour ! ✅");
+    if (!error) alert("Apparence de la radio mise à jour ! ✅");
   };
 
   const filteredRadioTracks = useMemo(() => {
@@ -186,238 +216,330 @@ export const RadioManagerPage: React.FC = () => {
   if (loading) return <div style={{ padding: 40, color: colors.textMain, textAlign: 'center', background: colors.bg, minHeight: '100vh' }}>Chargement...</div>;
 
   return (
-    <div style={{ maxWidth: 1200, margin: '0 auto', padding: '40px 20px', color: colors.textMain, fontFamily: 'Inter, sans-serif', background: colors.bg, minHeight: '100vh' }}>
+    <div style={{ maxWidth: 1400, margin: '0 auto', padding: '40px 24px', color: colors.textMain, fontFamily: 'Inter, sans-serif', background: colors.bg, minHeight: '100vh' }}>
       
-      {/* ✅ HEADER AVEC LE NOUVEAU BOUTON D'ÉCOUTE */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16, marginBottom: 32 }}>
+      <style>{`
+        .dash-card { background: ${colors.panelBg}; border: 1px solid ${colors.border}; border-radius: 8px; }
+        .dash-input { width: 100%; background: ${colors.inputBg}; border: 1px solid ${colors.border}; border-radius: 6px; padding: 10px 12px; color: ${colors.textMain}; font-size: 14px; outline: none; transition: border-color 0.2s; }
+        .dash-input:focus { border-color: ${colors.accent}; }
+        .dash-btn { padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.2s; border: 1px solid transparent; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+        .dash-btn-primary { background: ${colors.textMain}; color: ${colors.bg}; }
+        .dash-btn-primary:hover { opacity: 0.8; }
+        .dash-btn-secondary { background: transparent; color: ${colors.textMain}; border: 1px solid ${colors.border}; }
+        .dash-btn-secondary:hover { background: ${colors.inputBg}; }
+        .dash-btn-danger { background: transparent; color: ${colors.danger}; border: 1px solid ${colors.danger}; }
+        .dash-btn-danger:hover { background: rgba(239, 68, 68, 0.1); }
+        .dash-tab { padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid transparent; transition: all 0.2s; color: ${colors.textMuted}; background: transparent; }
+        .dash-tab:hover { color: ${colors.textMain}; }
+        .dash-tab.active { background: ${colors.inputBg}; color: ${colors.textMain}; border-color: ${colors.border}; }
+        .dash-table { width: 100%; border-collapse: collapse; text-align: left; }
+        .dash-table th { padding: 12px 16px; font-size: 11px; font-weight: 600; text-transform: uppercase; color: ${colors.textMuted}; border-bottom: 1px solid ${colors.border}; letter-spacing: 0.5px; }
+        .dash-table td { padding: 12px 16px; border-bottom: 1px solid ${colors.border}; font-size: 14px; }
+        .dash-table tr:hover { background: rgba(255,255,255,0.02); }
+        .dropzone { border: 1px dashed ${colors.border}; border-radius: 8px; padding: 24px; text-align: center; cursor: pointer; transition: all 0.2s; background: ${colors.inputBg}; }
+        .dropzone:hover { border-color: ${colors.textMuted}; }
+      `}</style>
+
+      {/* HEADER */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16, marginBottom: 24 }}>
         <div>
-          <button onClick={() => navigate('/settings')} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 600, marginBottom: 16, padding: 0 }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Retour aux réglages
+          {/* ✅ BOUTON RETOUR VERS LES RÉGLAGES */}
+          <button onClick={() => navigate('/settings')} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 500, marginBottom: 8, padding: 0 }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Retour aux réglages
           </button>
-          <h1 style={{ fontSize: 36, fontWeight: 900, margin: 0, display: 'flex', alignItems: 'center', gap: 12 }}>
-            📻 Radio Manager <span style={{ fontSize: 12, background: '#ff3366', color: '#fff', padding: '4px 10px', borderRadius: 6, letterSpacing: '1px' }}>PREMIUM</span>
+          <h1 style={{ fontSize: 24, fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
+            📻 Radio Manager
           </h1>
         </div>
 
-        {/* ✅ BOUTON POUR ALLER ÉCOUTER SA PROPRE RADIO */}
         {profileUsername && (
-          <a 
-            href={`/radio/${profileUsername}`} 
-            target="_blank" 
-            rel="noopener noreferrer"
-            style={{ 
-              display: 'flex', alignItems: 'center', gap: 8, 
-              padding: '12px 24px', 
-              background: 'linear-gradient(135deg, #ff3366, #7c5cff)', 
-              color: '#fff', borderRadius: 30, fontWeight: 800, fontSize: 14, 
-              textDecoration: 'none', boxShadow: '0 8px 20px rgba(255, 51, 102, 0.4)',
-              transition: 'transform 0.2s'
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-            onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-          >
-            <span style={{ fontSize: 18 }}>🎧</span>
-            Écouter ma Radio
-          </a>
+          <div style={{ display: 'flex', gap: 12 }}>
+            <a href={`/radio/${profileUsername}`} target="_blank" rel="noopener noreferrer" className="dash-btn dash-btn-secondary" style={{ textDecoration: 'none' }}>
+              Écouter la Radio ↗
+            </a>
+            <button className="dash-btn dash-btn-primary" onClick={() => setShowJingleModal(true)}>+ Uploader</button>
+          </div>
         )}
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-        
-        <div style={{ background: isLive ? 'rgba(255,51,102,0.05)' : colors.panelBg, padding: 32, borderRadius: 16, border: `1px solid ${isLive ? '#ff3366' : colors.border}` }}>
-          <div style={{ display: 'flex', gap: 24, alignItems: 'center', flexWrap: 'wrap' }}>
-            <div style={{ flex: 1, minWidth: 300 }}>
-              <h2 style={{ margin: '0 0 12px 0', fontSize: 20, color: isLive ? '#ff3366' : colors.textMain }}>
-                {isLive ? '🔴 TU ES EN DIRECT' : '⚫ Direct Audio'}
-              </h2>
-              <input type="text" placeholder="Lien de ton flux (Mixlr, Icecast...)" value={liveUrl} onChange={(e) => setLiveUrl(e.target.value)} disabled={isLive} style={{ width: '100%', padding: 14, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain }} />
-            </div>
-            <button onClick={toggleLiveStatus} disabled={saving} style={{ padding: '16px 32px', background: isLive ? '#ff3366' : '#10b981', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 800, cursor: 'pointer' }}>
-              {isLive ? 'Arrêter le Direct' : 'Passer en Direct'}
-            </button>
-          </div>
+      {/* BLOC LIVE */}
+      <div className="dash-card" style={{ padding: 20, marginBottom: 24, display: 'flex', gap: 20, alignItems: 'center', flexWrap: 'wrap', borderLeft: isLive ? `3px solid ${colors.danger}` : `3px solid ${colors.border}` }}>
+        <div style={{ flex: 1, minWidth: 250 }}>
+          <h2 style={{ margin: '0 0 8px 0', fontSize: 14, fontWeight: 600 }}>
+            {isLive ? '🔴 Direct en cours' : 'Direct Audio'}
+          </h2>
+          <input type="text" placeholder="Lien du flux (Mixlr, Icecast...)" value={liveUrl} onChange={(e) => setLiveUrl(e.target.value)} disabled={isLive} className="dash-input" />
         </div>
+        <button onClick={toggleLiveStatus} disabled={saving} className={`dash-btn ${isLive ? 'dash-btn-danger' : 'dash-btn-primary'}`}>
+          {isLive ? 'Arrêter' : 'Passer en Direct'}
+        </button>
+      </div>
 
-        {/* TABLEAU DE GESTION (Identique à avant) */}
-        <div style={{ background: colors.panelBg, borderRadius: 16, border: `1px solid ${colors.border}`, overflow: 'hidden' }}>
-          
-          <div style={{ padding: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16, borderBottom: `1px solid ${colors.border}` }}>
-            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-              <button onClick={() => setRadioTab('musics')} style={{ padding: '10px 20px', borderRadius: 8, fontWeight: 700, cursor: 'pointer', background: radioTab === 'musics' ? '#ff3366' : 'transparent', color: radioTab === 'musics' ? '#fff' : colors.textMuted, border: `1px solid ${radioTab === 'musics' ? '#ff3366' : colors.border}` }}>Musiques</button>
-              <button onClick={() => setRadioTab('jingles')} style={{ padding: '10px 20px', borderRadius: 8, fontWeight: 700, cursor: 'pointer', background: radioTab === 'jingles' ? '#ff3366' : 'transparent', color: radioTab === 'jingles' ? '#fff' : colors.textMuted, border: `1px solid ${radioTab === 'jingles' ? '#ff3366' : colors.border}` }}>Jingles</button>
-              <button onClick={() => setRadioTab('schedules')} style={{ padding: '10px 20px', borderRadius: 8, fontWeight: 700, cursor: 'pointer', background: radioTab === 'schedules' ? '#ff3366' : 'transparent', color: radioTab === 'schedules' ? '#fff' : colors.textMuted, border: `1px solid ${radioTab === 'schedules' ? '#ff3366' : colors.border}` }}>Programmation</button>
-              <button onClick={() => setRadioTab('settings')} style={{ padding: '10px 20px', borderRadius: 8, fontWeight: 700, cursor: 'pointer', background: radioTab === 'settings' ? '#ff3366' : 'transparent', color: radioTab === 'settings' ? '#fff' : colors.textMuted, border: `1px solid ${radioTab === 'settings' ? '#ff3366' : colors.border}` }}>Apparence</button>
-            </div>
+      {/* NAVIGATION TABS */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 24, borderBottom: `1px solid ${colors.border}`, paddingBottom: 12 }}>
+        <button onClick={() => setRadioTab('musics')} className={`dash-tab ${radioTab === 'musics' ? 'active' : ''}`}>Mes musiques</button>
+        <button onClick={() => setRadioTab('jingles')} className={`dash-tab ${radioTab === 'jingles' ? 'active' : ''}`}>Jingles</button>
+        <button onClick={() => setRadioTab('schedules')} className={`dash-tab ${radioTab === 'schedules' ? 'active' : ''}`}>Programmation</button>
+        <button onClick={() => setRadioTab('settings')} className={`dash-tab ${radioTab === 'settings' ? 'active' : ''}`}>Apparence</button>
+      </div>
+
+      {/* CONTENU PRINCIPAL */}
+      {radioTab === 'settings' ? (
+        <div className="dash-card" style={{ padding: 32, maxWidth: 800 }}>
+          <h2 style={{ margin: '0 0 24px 0', fontSize: 18 }}>Personnalisation</h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
             
-            {radioTab !== 'schedules' && radioTab !== 'settings' && (
-              <div style={{ display: 'flex', gap: 12, flex: 1, justifyContent: 'flex-end' }}>
-                <input type="text" placeholder="Rechercher..." value={radioSearch} onChange={(e) => setRadioSearch(e.target.value)} style={{ padding: '10px 16px', borderRadius: 8, background: colors.inputBg, border: `1px solid ${colors.border}`, color: colors.textMain, maxWidth: 250 }} />
-                <button onClick={() => setShowJingleModal(true)} style={{ background: 'linear-gradient(135deg, #ff3366, #7c5cff)', color: '#fff', padding: '10px 20px', borderRadius: 8, fontWeight: 800, border: 'none', cursor: 'pointer' }}>+ Jingle</button>
-              </div>
-            )}
-            {radioTab === 'schedules' && (
-              <button onClick={() => setShowScheduleModal(true)} style={{ background: 'linear-gradient(135deg, #10b981, #059669)', color: '#fff', padding: '10px 20px', borderRadius: 8, fontWeight: 800, border: 'none', cursor: 'pointer' }}>+ Nouveau Programme</button>
-            )}
-          </div>
-
-          {radioTab === 'settings' ? (
-            <div style={{ padding: 32 }}>
-              <h3 style={{ margin: '0 0 24px 0', fontSize: 20 }}>🎨 Fond d'écran de la Radio</h3>
-              
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 600 }}>
-                <div>
-                  <label style={{ display: 'block', marginBottom: 8, fontWeight: 600 }}>Choisir le type de fond</label>
-                  <select value={radioBgType} onChange={(e) => setRadioBgType(e.target.value)} style={{ width: '100%', padding: 12, background: colors.inputBg, border: `1px solid ${colors.border}`, color: colors.textMain, borderRadius: 8 }}>
-                    <option value="animated">✨ Animé (Défaut Aurora)</option>
-                    <option value="image">🖼️ Image Fixe</option>
-                    <option value="video">🎥 Vidéo en boucle</option>
-                  </select>
-                </div>
-
-                {radioBgType !== 'animated' && (
-                  <div style={{ padding: 24, background: colors.inputBg, borderRadius: 12, border: `1px dashed ${colors.border}` }}>
-                    <label style={{ display: 'block', marginBottom: 12, fontWeight: 600 }}>Fichier (Image ou Vidéo)</label>
-                    <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
-                      <label style={{ background: '#00d9ff', color: '#000', padding: '10px 20px', borderRadius: 8, cursor: uploadingBg ? 'wait' : 'pointer', fontWeight: 800 }}>
-                        {uploadingBg ? 'Upload...' : '📁 Choisir un fichier'}
-                        <input type="file" accept={radioBgType === 'video' ? 'video/*' : 'image/*'} onChange={handleBgUpload} disabled={uploadingBg} style={{ display: 'none' }} />
-                      </label>
-                      <span style={{ color: colors.textMuted, fontSize: 14 }}>ou</span>
-                      <input type="url" placeholder="Coller un lien direct (https://...)" value={radioBgUrl} onChange={(e) => setRadioBgUrl(e.target.value)} style={{ flex: 1, minWidth: 200, padding: 12, background: colors.panelBg, border: `1px solid ${colors.border}`, color: colors.textMain, borderRadius: 8 }} />
-                    </div>
-
-                    <div style={{ marginTop: 24 }}>
-                      <label style={{ display: 'block', marginBottom: 8, fontWeight: 600 }}>Opacité du fond : {Math.round(radioBgOpacity * 100)}%</label>
-                      <input type="range" min="0" max="1" step="0.05" value={radioBgOpacity} onChange={(e) => setRadioBgOpacity(Number(e.target.value))} style={{ width: '100%', accentColor: '#ff3366', cursor: 'pointer' }} />
-                    </div>
-
-                    {radioBgUrl && (
-                      <div style={{ marginTop: 20, position: 'relative', height: 200, borderRadius: 8, overflow: 'hidden', border: `1px solid ${colors.border}` }}>
-                        {radioBgType === 'video' ? (
-                          <video src={radioBgUrl} autoPlay loop muted playsInline style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: radioBgOpacity }} />
-                        ) : (
-                          <img src={radioBgUrl} alt="Aperçu" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: radioBgOpacity }} />
-                        )}
-                        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
-                          <span style={{ color: '#fff', fontWeight: 900, fontSize: 24, textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>Aperçu de la lisibilité</span>
-                        </div>
-                      </div>
-                    )}
+            <div>
+              <h3 style={{ margin: '0 0 12px 0', fontSize: 14, fontWeight: 600 }}>Logo de la radio</h3>
+              <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+                <label className="dropzone" style={{ flex: 1 }}>
+                  <div style={{ fontSize: 14, fontWeight: 500, color: colors.textMuted }}>{uploadingLogo ? 'Upload...' : 'Choisir une image'}</div>
+                  <input type="file" accept="image/*" onChange={handleLogoUpload} disabled={uploadingLogo} style={{ display: 'none' }} />
+                </label>
+                {radioLogoUrl && (
+                  <div style={{ position: 'relative', width: 80, height: 80, borderRadius: 6, overflow: 'hidden', border: `1px solid ${colors.border}` }}>
+                    <img src={radioLogoUrl} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <button onClick={() => setRadioLogoUrl('')} style={{ position: 'absolute', top: 2, right: 2, background: 'rgba(0,0,0,0.7)', color: 'white', border: 'none', borderRadius: 4, width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 10 }}>✕</button>
                   </div>
                 )}
-
-                <button onClick={handleSaveBackground} disabled={saving} style={{ padding: 16, background: '#ff3366', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 800, fontSize: 16, cursor: saving ? 'wait' : 'pointer' }}>
-                  {saving ? 'Enregistrement...' : 'Enregistrer l\'apparence'}
-                </button>
               </div>
             </div>
-          ) : radioTab !== 'schedules' ? (
+
+            <div>
+              <h3 style={{ margin: '0 0 12px 0', fontSize: 14, fontWeight: 600 }}>Instructions / Message</h3>
+              <textarea placeholder="Bienvenue sur ma radio..." value={radioInstructions} onChange={(e) => setRadioInstructions(e.target.value)} rows={3} className="dash-input" style={{ resize: 'vertical' }} />
+            </div>
+
+            <div>
+              <h3 style={{ margin: '0 0 12px 0', fontSize: 14, fontWeight: 600 }}>Fond d'écran</h3>
+              <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+                <button onClick={() => setRadioBgType('animated')} className={`dash-tab ${radioBgType === 'animated' ? 'active' : ''}`} style={{ flex: 1 }}>Animé</button>
+                <button onClick={() => setRadioBgType('image')} className={`dash-tab ${radioBgType === 'image' ? 'active' : ''}`} style={{ flex: 1 }}>Image</button>
+                <button onClick={() => setRadioBgType('video')} className={`dash-tab ${radioBgType === 'video' ? 'active' : ''}`} style={{ flex: 1 }}>Vidéo</button>
+              </div>
+              
+              {radioBgType !== 'animated' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  <div style={{ display: 'flex', gap: 12 }}>
+                    <label className="dropzone" style={{ flex: 1 }}>
+                      <div style={{ fontSize: 13, fontWeight: 500, color: colors.textMuted }}>{uploadingBg ? 'Upload...' : 'Choisir un fichier'}</div>
+                      <input type="file" accept={radioBgType === 'video' ? 'video/*' : 'image/*'} onChange={handleBgUpload} disabled={uploadingBg} style={{ display: 'none' }} />
+                    </label>
+                    <input type="url" placeholder="Ou lien direct..." value={radioBgUrl} onChange={(e) => setRadioBgUrl(e.target.value)} className="dash-input" style={{ flex: 2 }} />
+                  </div>
+                  {radioBgUrl && (
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: 13, fontWeight: 500 }}>
+                        <span>Opacité</span>
+                        <span>{Math.round(radioBgOpacity * 100)}%</span>
+                      </div>
+                      <input type="range" min="0" max="1" step="0.05" value={radioBgOpacity} onChange={(e) => setRadioBgOpacity(Number(e.target.value))} style={{ width: '100%', accentColor: colors.accent }} />
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div style={{ marginTop: 16, display: 'flex', justifyContent: 'flex-end' }}>
+              <button onClick={handleSaveBackground} disabled={saving} className="dash-btn dash-btn-primary">
+                {saving ? 'Enregistrement...' : 'Enregistrer les modifications'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : radioTab === 'schedules' ? (
+        <div className="dash-card" style={{ overflow: 'hidden' }}>
+          <div style={{ padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid ${colors.border}` }}>
+            <h2 style={{ margin: 0, fontSize: 16 }}>Programmation</h2>
+            <button onClick={() => setShowScheduleModal(true)} className="dash-btn dash-btn-primary">+ Nouveau Programme</button>
+          </div>
+          <table className="dash-table">
+            <thead>
+              <tr>
+                <th>Nom</th>
+                <th>Horaires</th>
+                <th>Playlist</th>
+                <th style={{ textAlign: 'right' }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {schedules.length === 0 ? (
+                <tr><td colSpan={4} style={{ padding: 40, textAlign: 'center', color: colors.textMuted }}>Aucun programme défini.</td></tr>
+              ) : (
+                schedules.map(s => (
+                  <tr key={s.id}>
+                    <td style={{ fontWeight: 600 }}>{s.title}</td>
+                    <td style={{ color: colors.textMuted }}>{s.start_time.slice(0, 5)} - {s.end_time.slice(0, 5)}</td>
+                    <td>{s.playlists?.name || '-'}</td>
+                    <td style={{ textAlign: 'right' }}>
+                      <button onClick={() => handleDeleteSchedule(s.id)} className="dash-btn dash-btn-danger" style={{ padding: '4px 8px', fontSize: 12 }}>Suppr.</button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start' }}>
+          
+          {/* COLONNE 1 : UPLOAD & FILTRES */}
+          <div style={{ width: 260, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 24 }}>
+            
+            <div className="dash-card" style={{ padding: 20 }}>
+              <h3 style={{ fontSize: 14, fontWeight: 600, margin: '0 0 16px 0' }}>Uploader</h3>
+              <label className="dropzone" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, height: 120 }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={colors.textMuted} strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg>
+                <span style={{ fontSize: 12, fontWeight: 500, color: colors.textMuted }}>Glissez vos MP3</span>
+                <input type="file" accept="audio/*" onChange={(e) => { /* Logique d'upload ici si besoin */ }} style={{ display: 'none' }} />
+              </label>
+              <div style={{ marginTop: 12 }}>
+                <select className="dash-input" style={{ fontSize: 12, padding: '8px' }}>
+                  <option>Non classé</option>
+                </select>
+              </div>
+              <button className="dash-btn dash-btn-primary" style={{ width: '100%', marginTop: 12 }}>
+                Uploader
+              </button>
+            </div>
+
+            <div className="dash-card" style={{ padding: 20 }}>
+              <h3 style={{ fontSize: 14, fontWeight: 600, margin: '0 0 12px 0', display: 'flex', justifyContent: 'space-between' }}>
+                Catégories
+                <span style={{ fontSize: 16, cursor: 'pointer' }}>+</span>
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: colors.inputBg, borderRadius: 4, fontSize: 13, fontWeight: 600 }}>
+                  <span>Toutes</span>
+                  <span style={{ color: colors.textMuted }}>{filteredRadioTracks.length}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', fontSize: 13, color: colors.textMuted, cursor: 'pointer' }}>
+                  <span>Pop</span>
+                  <span>11</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', fontSize: 13, color: colors.textMuted, cursor: 'pointer' }}>
+                  <span>Electro</span>
+                  <span>3</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', fontSize: 13, color: colors.textMuted, cursor: 'pointer' }}>
+                  <span>Hip-Hop</span>
+                  <span>0</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* COLONNE 2 : TABLEAU */}
+          <div className="dash-card" style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+            
+            <div style={{ padding: '16px 20px', borderBottom: `1px solid ${colors.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ position: 'relative', width: '100%', maxWidth: 400 }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={colors.textMuted} strokeWidth="2" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }}><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" placeholder="Rechercher un titre, artiste..." value={radioSearch} onChange={(e) => setRadioSearch(e.target.value)} className="dash-input" style={{ paddingLeft: 36 }} />
+              </div>
+              <span style={{ fontSize: 12, color: colors.textMuted, fontWeight: 500 }}>{filteredRadioTracks.length} morceau(x)</span>
+            </div>
+
             <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <table className="dash-table">
                 <thead>
-                  <tr style={{ borderBottom: `1px solid ${colors.border}`, textAlign: 'left' }}>
-                    <th style={{ padding: '16px 24px', color: colors.textMuted }}>Titre</th>
-                    <th style={{ padding: '16px 24px', color: colors.textMuted }}>Type</th>
-                    <th style={{ padding: '16px 24px', color: colors.textMuted, textAlign: 'center' }}>Dans la radio</th>
-                    <th style={{ padding: '16px 24px', color: colors.textMuted, textAlign: 'right' }}>Actions</th>
+                  <tr>
+                    <th style={{ width: 40 }}></th>
+                    <th>Titre</th>
+                    <th>Artiste</th>
+                    <th>Genre</th>
+                    <th>Dans la radio</th>
+                    <th style={{ textAlign: 'right' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {currentTracks.map(track => (
-                    <tr key={track.id} style={{ borderBottom: `1px solid ${colors.border}` }}>
-                      <td style={{ padding: '16px 24px', fontWeight: 700 }}>{track.title}</td>
-                      <td style={{ padding: '16px 24px' }}><span style={{ fontSize: 10, background: track.is_jingle ? '#ff3366' : '#00d9ff', color: '#000', padding: '2px 8px', borderRadius: 4 }}>{track.is_jingle ? 'JINGLE' : 'MUSIQUE'}</span></td>
-                      <td style={{ padding: '16px 24px', textAlign: 'center' }}>
-                        <button onClick={() => toggleRadioStatus(track.id, track.in_radio)} style={{ width: 44, height: 24, borderRadius: 12, background: track.in_radio ? '#10b981' : colors.border, border: 'none', cursor: 'pointer', position: 'relative' }}>
-                          <div style={{ width: 18, height: 18, borderRadius: '50%', background: '#fff', position: 'absolute', top: 3, left: track.in_radio ? 23 : 3 }} />
+                    <tr key={track.id}>
+                      <td>
+                        <button style={{ width: 24, height: 24, borderRadius: '50%', background: colors.inputBg, border: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
                         </button>
                       </td>
-                      <td style={{ padding: '16px 24px', textAlign: 'right' }}>
-                        <button onClick={() => handleDeleteTrack(track.id)} style={{ background: 'transparent', color: '#ff3366', border: '1px solid #ff3366', padding: '6px 12px', borderRadius: 6, cursor: 'pointer' }}>Suppr.</button>
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                          <div style={{ width: 36, height: 36, borderRadius: 4, background: track.cover_url ? `url(${track.cover_url}) center/cover` : colors.inputBg, flexShrink: 0 }} />
+                          <div style={{ fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 200 }}>{track.title}</div>
+                        </div>
+                      </td>
+                      <td style={{ color: colors.textMuted }}>{track.artist}</td>
+                      <td>
+                        <span style={{ fontSize: 11, background: colors.inputBg, padding: '2px 8px', borderRadius: 4, border: `1px solid ${colors.border}` }}>{track.genre || 'Inconnu'}</span>
+                      </td>
+                      <td>
+                        <button onClick={() => toggleRadioStatus(track.id, track.in_radio)} style={{ width: 36, height: 20, borderRadius: 10, background: track.in_radio ? colors.success : colors.border, border: 'none', cursor: 'pointer', position: 'relative' }}>
+                          <div style={{ width: 14, height: 14, borderRadius: '50%', background: '#fff', position: 'absolute', top: 3, left: track.in_radio ? 19 : 3 }} />
+                        </button>
+                      </td>
+                      <td style={{ textAlign: 'right' }}>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+                          <button style={{ background: 'transparent', border: `1px solid ${colors.border}`, borderRadius: 4, width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: colors.textMuted }}>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                          </button>
+                          <button onClick={() => handleDeleteTrack(track.id)} style={{ background: 'transparent', border: `1px solid ${colors.border}`, borderRadius: 4, width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: colors.danger }}>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-              {totalPages > 1 && (
-                <div style={{ display: 'flex', justifyContent: 'center', gap: 16, padding: 20 }}>
-                  <button onClick={() => setRadioPage(p => Math.max(1, p - 1))} disabled={radioPage === 1}>← Précédent</button>
-                  <span>Page {radioPage} / {totalPages}</span>
-                  <button onClick={() => setRadioPage(p => Math.min(totalPages, p + 1))} disabled={radioPage === totalPages}>Suivant →</button>
-                </div>
-              )}
             </div>
-          ) : (
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr style={{ borderBottom: `1px solid ${colors.border}`, textAlign: 'left' }}>
-                    <th style={{ padding: '16px 24px', color: colors.textMuted }}>Nom du programme</th>
-                    <th style={{ padding: '16px 24px', color: colors.textMuted }}>Horaires</th>
-                    <th style={{ padding: '16px 24px', color: colors.textMuted }}>Playlist associée</th>
-                    <th style={{ padding: '16px 24px', color: colors.textMuted, textAlign: 'right' }}>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {schedules.length === 0 ? (
-                    <tr><td colSpan={4} style={{ padding: 40, textAlign: 'center', color: colors.textMuted }}>Aucun programme défini.</td></tr>
-                  ) : (
-                    schedules.map(s => (
-                      <tr key={s.id} style={{ borderBottom: `1px solid ${colors.border}` }}>
-                        <td style={{ padding: '16px 24px', fontWeight: 700 }}>{s.title}</td>
-                        <td style={{ padding: '16px 24px' }}>{s.start_time.slice(0, 5)} - {s.end_time.slice(0, 5)}</td>
-                        <td style={{ padding: '16px 24px', color: '#00d9ff' }}>{s.playlists?.name || 'Playlist inconnue'}</td>
-                        <td style={{ padding: '16px 24px', textAlign: 'right' }}>
-                          <button onClick={() => handleDeleteSchedule(s.id)} style={{ background: 'transparent', color: '#ff3366', border: '1px solid #ff3366', padding: '6px 12px', borderRadius: 6, cursor: 'pointer' }}>Suppr.</button>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      </div>
 
-      {/* MODALES (Jingle & Programme) */}
+            {totalPages > 1 && (
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 16, padding: 16, borderTop: `1px solid ${colors.border}` }}>
+                <button onClick={() => setRadioPage(p => Math.max(1, p - 1))} disabled={radioPage === 1} className="dash-btn dash-btn-secondary" style={{ padding: '4px 12px' }}>←</button>
+                <span style={{ fontSize: 12, color: colors.textMuted }}>Page {radioPage} / {totalPages}</span>
+                <button onClick={() => setRadioPage(p => Math.min(totalPages, p + 1))} disabled={radioPage === totalPages} className="dash-btn dash-btn-secondary" style={{ padding: '4px 12px' }}>→</button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* MODALES */}
       {showJingleModal && createPortal(
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: colors.panelBg, padding: 32, borderRadius: 16, width: '100%', maxWidth: 400 }}>
-            <h2 style={{ color: '#ff3366', marginTop: 0 }}>🎙️ Ajouter un Jingle</h2>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="dash-card" style={{ padding: 24, width: '100%', maxWidth: 400 }}>
+            <h2 style={{ color: colors.textMain, marginTop: 0, fontSize: 18 }}>Ajouter un Jingle</h2>
             <form onSubmit={handleJingleUpload} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <input type="file" accept="audio/*" required onChange={(e) => setJingleForm({...jingleForm, audioFile: e.target.files?.[0] || null})} style={{ color: colors.textMain }} />
-              <input type="text" placeholder="Nom du jingle" value={jingleForm.title} onChange={e => setJingleForm({...jingleForm, title: e.target.value})} required style={{ padding: 12, background: colors.inputBg, border: `1px solid ${colors.border}`, color: colors.textMain, borderRadius: 8 }} />
-              <button type="submit" disabled={uploading} style={{ padding: 14, background: '#ff3366', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 800, cursor: 'pointer' }}>Ajouter</button>
+              <input type="file" accept="audio/*" required onChange={(e) => setJingleForm({...jingleForm, audioFile: e.target.files?.[0] || null})} className="dash-input" />
+              <input type="text" placeholder="Nom du jingle" value={jingleForm.title} onChange={e => setJingleForm({...jingleForm, title: e.target.value})} required className="dash-input" />
+              <button type="submit" disabled={uploading} className="dash-btn dash-btn-primary">Ajouter</button>
             </form>
           </div>
         </div>, document.body
       )}
 
       {showScheduleModal && createPortal(
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: colors.panelBg, padding: 32, borderRadius: 16, width: '100%', maxWidth: 500 }}>
-            <h2 style={{ color: '#10b981', marginTop: 0 }}>📅 Nouveau Programme</h2>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="dash-card" style={{ padding: 24, width: '100%', maxWidth: 500 }}>
+            <h2 style={{ color: colors.textMain, marginTop: 0, fontSize: 18 }}>Nouveau Programme</h2>
             <form onSubmit={handleAddSchedule} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <input type="text" placeholder="Nom (ex: Morning Show)" value={scheduleForm.title} onChange={e => setScheduleForm({...scheduleForm, title: e.target.value})} required style={{ padding: 12, background: colors.inputBg, border: `1px solid ${colors.border}`, color: colors.textMain, borderRadius: 8 }} />
+              <input type="text" placeholder="Nom (ex: Morning Show)" value={scheduleForm.title} onChange={e => setScheduleForm({...scheduleForm, title: e.target.value})} required className="dash-input" />
               <div style={{ display: 'flex', gap: 12 }}>
                 <div style={{ flex: 1 }}>
-                  <label style={{ color: colors.textMuted, fontSize: 12 }}>Heure de début</label>
-                  <input type="time" value={scheduleForm.start_time} onChange={e => setScheduleForm({...scheduleForm, start_time: e.target.value})} required style={{ width: '100%', padding: 12, background: colors.inputBg, border: `1px solid ${colors.border}`, color: colors.textMain, borderRadius: 8 }} />
+                  <label style={{ color: colors.textMuted, fontSize: 12, marginBottom: 4, display: 'block' }}>Début</label>
+                  <input type="time" value={scheduleForm.start_time} onChange={e => setScheduleForm({...scheduleForm, start_time: e.target.value})} required className="dash-input" />
                 </div>
                 <div style={{ flex: 1 }}>
-                  <label style={{ color: colors.textMuted, fontSize: 12 }}>Heure de fin</label>
-                  <input type="time" value={scheduleForm.end_time} onChange={e => setScheduleForm({...scheduleForm, end_time: e.target.value})} required style={{ width: '100%', padding: 12, background: colors.inputBg, border: `1px solid ${colors.border}`, color: colors.textMain, borderRadius: 8 }} />
+                  <label style={{ color: colors.textMuted, fontSize: 12, marginBottom: 4, display: 'block' }}>Fin</label>
+                  <input type="time" value={scheduleForm.end_time} onChange={e => setScheduleForm({...scheduleForm, end_time: e.target.value})} required className="dash-input" />
                 </div>
               </div>
               <div>
-                <label style={{ color: colors.textMuted, fontSize: 12 }}>Playlist à diffuser</label>
-                <select value={scheduleForm.playlist_id} onChange={e => setScheduleForm({...scheduleForm, playlist_id: e.target.value})} required style={{ width: '100%', padding: 12, background: colors.inputBg, border: `1px solid ${colors.border}`, color: colors.textMain, borderRadius: 8 }}>
-                  <option value="">Sélectionner une playlist...</option>
+                <label style={{ color: colors.textMuted, fontSize: 12, marginBottom: 4, display: 'block' }}>Playlist</label>
+                <select value={scheduleForm.playlist_id} onChange={e => setScheduleForm({...scheduleForm, playlist_id: e.target.value})} required className="dash-input">
+                  <option value="">Sélectionner...</option>
                   {myPlaylists.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                 </select>
               </div>
-              <button type="submit" disabled={uploading} style={{ padding: 14, background: '#10b981', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 800, cursor: 'pointer' }}>Créer le programme</button>
+              <button type="submit" disabled={uploading} className="dash-btn dash-btn-primary">Créer</button>
             </form>
           </div>
         </div>, document.body

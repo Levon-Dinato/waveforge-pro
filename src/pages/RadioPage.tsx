@@ -35,7 +35,6 @@ export const RadioPage: React.FC = () => {
   const [liveUrl, setLiveUrl] = useState('');
   const [listeners, setListeners] = useState(1);
 
-  // ✅ NOUVEAUX ÉTATS : Fond d'écran
   const [customBgUrl, setCustomBgUrl] = useState('');
   const [customBgType, setCustomBgType] = useState('animated');
 
@@ -43,6 +42,10 @@ export const RadioPage: React.FC = () => {
   const [newMessage, setNewMessage] = useState('');
   const chatEndRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const channelRef = useRef<any>(null);
+  
+  // ✅ REF pour tracker si c'est le premier chargement
+  const isInitialMount = useRef(true);
 
   const colors = {
     bg: isDark ? '#0a0a0e' : '#f5f5f7',
@@ -54,10 +57,10 @@ export const RadioPage: React.FC = () => {
     accentGradient: 'linear-gradient(135deg, #ff3366, #7c5cff)',
   };
 
+  // ✅ CHARGEMENT UNIQUEMENT AU MONTAGE (dépend de username)
   useEffect(() => {
     if (!username) return;
-    let channel: any;
-
+    
     const initRadio = async () => {
       setLoading(true);
 
@@ -67,11 +70,10 @@ export const RadioPage: React.FC = () => {
         setProfile(profileData);
         setIsLive(profileData.is_live || false);
         setLiveUrl(profileData.live_url || '');
-        
-        // ✅ CHARGEMENT DU FOND D'ÉCRAN CUSTOM
         setCustomBgUrl(profileData.radio_bg_url || '');
         setCustomBgType(profileData.radio_bg_type || 'animated');
 
+        // Récupérer le profil de l'utilisateur connecté séparément
         if (user) {
           const { data: myProfile } = await supabase.from('profiles').select('username, avatar_url').eq('id', user.id).single();
           setUserProfile(myProfile);
@@ -100,15 +102,51 @@ export const RadioPage: React.FC = () => {
         }
 
         setTracks(tracksToPlay);
+        
         if (tracksToPlay.length > 0) {
-          setLikeCount(tracksToPlay[0].likes_count || 0);
+          // ✅ RESTAURER LA POSITION SI ELLE EXISTE
+          const savedState = sessionStorage.getItem(`radio_${profileData.id}`);
+          if (savedState) {
+            try {
+              const state = JSON.parse(savedState);
+              const savedIndex = tracksToPlay.findIndex(t => t.id === state.trackId);
+              if (savedIndex !== -1) {
+                setCurrentIndex(savedIndex);
+                setProgress(state.progress || 0);
+                setLikeCount(tracksToPlay[savedIndex].likes_count || 0);
+                
+                // Restaurer le temps après que l'audio soit prêt
+                setTimeout(() => {
+                  if (audioRef.current) {
+                    audioRef.current.currentTime = state.progress || 0;
+                    if (state.isPlaying) {
+                      audioRef.current.play().catch(e => console.log('Autoplay bloqué:', e));
+                      setIsPlaying(true);
+                    }
+                  }
+                }, 500);
+              } else {
+                setLikeCount(tracksToPlay[0].likes_count || 0);
+              }
+            } catch (e) {
+              setLikeCount(tracksToPlay[0].likes_count || 0);
+            }
+          } else {
+            setLikeCount(tracksToPlay[0].likes_count || 0);
+          }
+
           if (user) {
-            const { data: like } = await supabase.from('likes').select('id').eq('user_id', user.id).eq('track_id', tracksToPlay[0].id).maybeSingle();
+            const { data: like } = await supabase.from('likes').select('id').eq('user_id', user.id).eq('track_id', tracksToPlay[currentIndex]?.id).maybeSingle();
             setIsLiked(!!like);
           }
         }
 
-        channel = supabase.channel(`radio_${profileData.id}`, {
+        // ✅ REALTIME CHAT (une seule fois)
+        if (channelRef.current) {
+          supabase.removeChannel(channelRef.current);
+        }
+
+        const channel = supabase.channel(`radio_${profileData.id}`, {
           config: { presence: { key: user?.id || Math.random().toString() } },
         });
 
@@ -128,6 +166,8 @@ export const RadioPage: React.FC = () => {
             }
           });
 
+        channelRef.current = channel;
+
         const { data: oldMessages } = await supabase
           .from('radio_messages')
           .select('*')
@@ -137,14 +177,33 @@ export const RadioPage: React.FC = () => {
         if (oldMessages) setMessages(oldMessages);
       }
       setLoading(false);
+      isInitialMount.current = false;
     };
 
     initRadio();
 
     return () => {
-      if (channel) supabase.removeChannel(channel);
+      if (channelRef.current) supabase.removeChannel(channelRef.current);
     };
-  }, [username, user]);
+  }, [username]); // ✅ UNIQUEMENT username, pas user
+
+  // ✅ SAUVEGARDER LA POSITION EN CONTINU
+  useEffect(() => {
+    if (!profile || tracks.length === 0 || isLive) return;
+    
+    const interval = setInterval(() => {
+      if (audioRef.current && tracks[currentIndex]) {
+        const state = {
+          trackId: tracks[currentIndex].id,
+          progress: audioRef.current.currentTime,
+          isPlaying: isPlaying
+        };
+        sessionStorage.setItem(`radio_${profile.id}`, JSON.stringify(state));
+      }
+    }, 2000); // Toutes les 2 secondes
+
+    return () => clearInterval(interval);
+  }, [profile, tracks, currentIndex, isPlaying, isLive]);
 
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
@@ -191,7 +250,9 @@ export const RadioPage: React.FC = () => {
   };
 
   useEffect(() => {
-    if (audioRef.current && isPlaying && tracks[currentIndex] && !isLive) audioRef.current.play().catch(e => console.error(e));
+    if (audioRef.current && isPlaying && tracks[currentIndex] && !isLive) {
+      audioRef.current.play().catch(e => console.error(e));
+    }
   }, [currentIndex, isLive]);
 
   const handleLike = async () => {
@@ -243,7 +304,6 @@ export const RadioPage: React.FC = () => {
   return (
     <div style={{ background: colors.bg, minHeight: '100vh', color: colors.textMain, fontFamily: 'Inter, sans-serif', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: isMobile ? '20px' : '40px' }}>
       
-      {/* ✅ GESTION DU FOND D'ÉCRAN (CUSTOM OU ANIMÉ) */}
       <style>{`
         @keyframes aurora1 { 0% { transform: translate(0, 0) scale(1); } 50% { transform: translate(50px, -50px) scale(1.1); } 100% { transform: translate(0, 0) scale(1); } }
         @keyframes aurora2 { 0% { transform: translate(0, 0) scale(1); } 50% { transform: translate(-50px, 50px) scale(1.1); } 100% { transform: translate(0, 0) scale(1); } }
@@ -268,7 +328,6 @@ export const RadioPage: React.FC = () => {
         <div className="grid-overlay" />
       </div>
 
-      {/* HEADER */}
       <div style={{ width: '100%', maxWidth: 1000, display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 2, marginBottom: 20 }}>
         <button onClick={() => navigate(-1)} style={{ background: 'transparent', border: 'none', color: colors.textMain, cursor: 'pointer' }}>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
@@ -284,10 +343,8 @@ export const RadioPage: React.FC = () => {
         </div>
       </div>
 
-      {/* LAYOUT (PLAYER + CHAT) */}
       <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 40, width: '100%', maxWidth: 1000, zIndex: 2, alignItems: 'center' }}>
         
-        {/* PLAYER */}
         <div style={{ flex: 1, width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           
           {isLive ? (
@@ -369,7 +426,6 @@ export const RadioPage: React.FC = () => {
 
         </div>
 
-        {/* CHAT */}
         <div style={{ flex: 1, width: '100%', maxWidth: 400, background: colors.panelBg, backdropFilter: 'blur(30px)', border: `1px solid ${colors.border}`, borderRadius: 24, display: 'flex', flexDirection: 'column', height: 500, boxShadow: '0 20px 40px rgba(0,0,0,0.2)' }}>
           <div style={{ padding: '16px 20px', borderBottom: `1px solid ${colors.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h3 style={{ margin: 0, fontSize: 13, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>💬 Live Chat</h3>
@@ -407,7 +463,14 @@ export const RadioPage: React.FC = () => {
         </div>
       )}
 
-      <audio ref={audioRef} src={isLive ? liveUrl : (currentTrack?.audio_url || '')} onEnded={isLive ? undefined : playNext} onTimeUpdate={isLive ? undefined : handleTimeUpdate} autoPlay={isPlaying} />
+      <audio 
+        ref={audioRef} 
+        src={isLive ? liveUrl : (currentTrack?.audio_url || '')} 
+        onEnded={isLive ? undefined : playNext} 
+        onTimeUpdate={isLive ? undefined : handleTimeUpdate} 
+        autoPlay={isPlaying} 
+        preload="auto"
+      />
 
       <style>{`
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }

@@ -1,5 +1,6 @@
 // src/contexts/RadioContext.tsx
-import React, { createContext, useContext, useState, useRef, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useRef, useEffect } from 'react';
+import type { ReactNode } from 'react'; // ✅ Type importé séparément pour éviter les erreurs TS
 import { usePlayer } from './PlayerContext';
 
 export interface RadioContextType {

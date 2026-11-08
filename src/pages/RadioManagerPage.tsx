@@ -1,6 +1,6 @@
 // src/pages/RadioManagerPage.tsx
 import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom'; // ✅ Ajout de useSearchParams
 import { createPortal } from 'react-dom';
 import { supabase, AUDIO_BUCKET } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -11,6 +11,13 @@ export const RadioManagerPage: React.FC = () => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   const navigate = useNavigate();
+
+  // ✅ GESTION DES ONGLETS VIA L'URL
+  const [searchParams, setSearchParams] = useSearchParams();
+  const radioTab = (searchParams.get('tab') || 'musics') as 'musics' | 'jingles' | 'schedules' | 'appearance';
+  const setRadioTab = (tab: 'musics' | 'jingles' | 'schedules' | 'appearance') => {
+    setSearchParams({ tab });
+  };
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -26,7 +33,6 @@ export const RadioManagerPage: React.FC = () => {
   const [scheduleForm, setScheduleForm] = useState({ title: '', start_time: '08:00', end_time: '10:00', playlist_id: '' });
 
   const [radioSearch, setRadioSearch] = useState('');
-  const [radioTab, setRadioTab] = useState<'musics' | 'jingles' | 'schedules' | 'settings'>('musics');
   const [radioPage, setRadioPage] = useState(1);
   const itemsPerPageRadio = 10;
 
@@ -243,9 +249,9 @@ export const RadioManagerPage: React.FC = () => {
       {/* HEADER */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16, marginBottom: 24 }}>
         <div>
-          {/* ✅ BOUTON RETOUR VERS LES RÉGLAGES */}
+          {/* ✅ BOUTON RETOUR VERS L'ESPACE ARTISTE */}
           <button onClick={() => navigate('/settings')} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 500, marginBottom: 8, padding: 0 }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Retour aux réglages
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Retour à l'Espace Artiste
           </button>
           <h1 style={{ fontSize: 24, fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
             📻 Radio Manager
@@ -280,13 +286,16 @@ export const RadioManagerPage: React.FC = () => {
         <button onClick={() => setRadioTab('musics')} className={`dash-tab ${radioTab === 'musics' ? 'active' : ''}`}>Mes musiques</button>
         <button onClick={() => setRadioTab('jingles')} className={`dash-tab ${radioTab === 'jingles' ? 'active' : ''}`}>Jingles</button>
         <button onClick={() => setRadioTab('schedules')} className={`dash-tab ${radioTab === 'schedules' ? 'active' : ''}`}>Programmation</button>
-        <button onClick={() => setRadioTab('settings')} className={`dash-tab ${radioTab === 'settings' ? 'active' : ''}`}>Apparence</button>
+        <button onClick={() => setRadioTab('appearance')} className={`dash-tab ${radioTab === 'appearance' ? 'active' : ''}`}>Apparence</button>
       </div>
 
       {/* CONTENU PRINCIPAL */}
-      {radioTab === 'settings' ? (
+      {radioTab === 'appearance' ? (
         <div className="dash-card" style={{ padding: 32, maxWidth: 800 }}>
-          <h2 style={{ margin: '0 0 24px 0', fontSize: 18 }}>Personnalisation</h2>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+            <h2 style={{ margin: 0, fontSize: 18 }}>Personnalisation</h2>
+            <button onClick={() => setRadioTab('musics')} className="dash-btn dash-btn-secondary">← Retour aux musiques</button>
+          </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
             
             <div>
@@ -350,7 +359,10 @@ export const RadioManagerPage: React.FC = () => {
       ) : radioTab === 'schedules' ? (
         <div className="dash-card" style={{ overflow: 'hidden' }}>
           <div style={{ padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid ${colors.border}` }}>
-            <h2 style={{ margin: 0, fontSize: 16 }}>Programmation</h2>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+              <h2 style={{ margin: 0, fontSize: 16 }}>Programmation</h2>
+              <button onClick={() => setRadioTab('musics')} className="dash-btn dash-btn-secondary" style={{ padding: '4px 8px', fontSize: 12 }}>← Retour</button>
+            </div>
             <button onClick={() => setShowScheduleModal(true)} className="dash-btn dash-btn-primary">+ Nouveau Programme</button>
           </div>
           <table className="dash-table">

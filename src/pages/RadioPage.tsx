@@ -18,6 +18,7 @@ export const RadioPage: React.FC = () => {
   const navigate = useNavigate();
 
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [userProfile, setUserProfile] = useState<any>(null); // Profil de l'utilisateur connecté (pour le chat)
   const [tracks, setTracks] = useState<Track[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -32,11 +33,10 @@ export const RadioPage: React.FC = () => {
 
   const [isLive, setIsLive] = useState(false);
   const [liveUrl, setLiveUrl] = useState('');
+  const [listeners, setListeners] = useState(1);
 
-  const [messages, setMessages] = useState([
-    { id: 1, user: 'DJ_Marc', text: 'Gros son ! 🔥', avatar: 'https://i.pravatar.cc/150?u=1' },
-    { id: 2, user: 'Sophie', text: 'La radio tourne en boucle 😎', avatar: 'https://i.pravatar.cc/150?u=2' },
-  ]);
+  // Chat
+  const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const chatEndRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -51,11 +51,15 @@ export const RadioPage: React.FC = () => {
     accentGradient: 'linear-gradient(135deg, #ff3366, #7c5cff)',
   };
 
-  // ✅ LOGIQUE DE CHARGEMENT AVEC PROGRAMMATION HORAIRE
+  // ✅ 1. CHARGEMENT DES DONNÉES & CHAT REALTIME
   useEffect(() => {
-    const fetchRadioData = async () => {
-      if (!username) return;
+    if (!username) return;
+    let channel: any;
+
+    const initRadio = async () => {
       setLoading(true);
+
+      // Récupérer le profil du DJ
       const { data: profileData } = await supabase.from('profiles').select('*').eq('username', username).single();
       
       if (profileData) {
@@ -63,48 +67,87 @@ export const RadioPage: React.FC = () => {
         setIsLive(profileData.is_live || false);
         setLiveUrl(profileData.live_url || '');
 
-        // 1. Vérifier s'il y a un programme actif
+        // Récupérer le profil de l'utilisateur connecté (pour le chat)
+        if (user) {
+          const { data: myProfile } = await supabase.from('profiles').select('username, avatar_url').eq('id', user.id).single();
+          setUserProfile(myProfile);
+        }
+
+        // --- PROGRAMMATION HORAIRE ---
         const now = new Date();
-        const currentTime = now.toTimeString().split(' ')[0]; // "HH:MM:SS"
-        
+        const currentTime = now.toTimeString().split(' ')[0];
         const { data: schedules } = await supabase.from('radio_schedules')
           .select('*, playlists(id, name)')
           .eq('user_id', profileData.id)
           .lte('start_time', currentTime)
           .gte('end_time', currentTime);
 
+        let tracksToPlay: any[] = [];
         if (schedules && schedules.length > 0) {
-          // Il y a un programme actif !
-          const sched = schedules[0];
-          setActiveSchedule(sched.title);
-          
-          // Charger les tracks de la playlist associée
+          setActiveSchedule(schedules[0].title);
           const { data: pt } = await supabase.from('playlist_tracks')
             .select('track_id, order, tracks(*)')
-            .eq('playlist_id', sched.playlists.id)
+            .eq('playlist_id', schedules[0].playlists.id)
             .order('order');
-            
-          if (pt && pt.length > 0) {
-            setTracks(pt.map(item => item.tracks).filter(Boolean));
-            setLikeCount(pt[0]?.tracks?.likes_count || 0);
-            setLoading(false);
-            return;
+          if (pt && pt.length > 0) tracksToPlay = pt.map(item => item.tracks).filter(Boolean);
+        } else {
+          setActiveSchedule(null);
+          const { data: tracksData } = await supabase.from('tracks').select('*').eq('user_id', profileData.id).eq('in_radio', true).order('created_at', { ascending: false });
+          if (tracksData) tracksToPlay = [...tracksData].sort(() => Math.random() - 0.5);
+        }
+
+        setTracks(tracksToPlay);
+        if (tracksToPlay.length > 0) {
+          setLikeCount(tracksToPlay[0].likes_count || 0);
+          // Vérifier si l'utilisateur a déjà liké le premier son
+          if (user) {
+            const { data: like } = await supabase.from('likes').select('id').eq('user_id', user.id).eq('track_id', tracksToPlay[0].id).maybeSingle();
+            setIsLiked(!!like);
           }
         }
 
-        // 2. Sinon, chargement par défaut (les sons in_radio)
-        setActiveSchedule(null);
-        const { data: tracksData } = await supabase.from('tracks').select('*').eq('user_id', profileData.id).eq('in_radio', true).order('created_at', { ascending: false });
-        if (tracksData && tracksData.length > 0) {
-          const shuffled = [...tracksData].sort(() => Math.random() - 0.5);
-          setTracks(shuffled);
-          setLikeCount(shuffled[0].likes_count || 0);
-        }
+        // --- REALTIME CHAT & PRESENCE ---
+        channel = supabase.channel(`radio_${profileData.id}`, {
+          config: { presence: { key: user?.id || Math.random().toString() } },
+        });
+
+        channel
+          .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'radio_messages', filter: `radio_owner_id=eq.${profileData.id}` }, (payload) => {
+            setMessages((prev) => [...prev, payload.new]);
+          })
+          .on('presence', { event: 'sync' }, () => {
+            const state = channel.presenceState();
+            let count = 0;
+            Object.keys(state).forEach((key) => { count += state[key].length; });
+            setListeners(Math.max(1, count));
+          })
+          .subscribe(async (status) => {
+            if (status === 'SUBSCRIBED') {
+              await channel.track({ online_at: new Date().toISOString() });
+            }
+          });
+
+        // Charger les anciens messages
+        const { data: oldMessages } = await supabase
+          .from('radio_messages')
+          .select('*')
+          .eq('radio_owner_id', profileData.id)
+          .order('created_at', { ascending: true })
+          .limit(50);
+        if (oldMessages) setMessages(oldMessages);
       }
       setLoading(false);
     };
-    fetchRadioData();
-  }, [username]);
+
+    initRadio();
+
+    return () => {
+      if (channel) supabase.removeChannel(channel);
+    };
+  }, [username, user]);
+
+  // Scroll automatique du chat
+  useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
   // --- AUDIO LOGIC ---
   const togglePlay = () => {
@@ -153,18 +196,53 @@ export const RadioPage: React.FC = () => {
     if (audioRef.current && isPlaying && tracks[currentIndex] && !isLive) audioRef.current.play().catch(e => console.error(e));
   }, [currentIndex, isLive]);
 
-  const handleLike = () => { setIsLiked(!isLiked); setLikeCount(prev => isLiked ? prev - 1 : prev + 1); };
+  // --- ACTIONS (LIKE & CHAT) ---
+  const handleLike = async () => {
+    if (!user || !tracks[currentIndex] || isLive) {
+      if(!user) alert("Connecte-toi pour liker !");
+      return;
+    }
+    const trackId = tracks[currentIndex].id;
+    const newStatus = !isLiked;
+    setIsLiked(newStatus);
+    setLikeCount(prev => newStatus ? prev + 1 : prev - 1);
+
+    if (newStatus) {
+      await supabase.from('likes').insert({ user_id: user.id, track_id: trackId });
+      await supabase.rpc('increment_like_count', { track_id_param: trackId }); // Assure-toi d'avoir cette RPC
+    } else {
+      await supabase.from('likes').delete().eq('user_id', user.id).eq('track_id', trackId);
+      await supabase.rpc('decrement_like_count', { track_id_param: trackId });
+    }
+  };
+
   const handleShare = () => {
     if (navigator.share) navigator.share({ title: `Radio ${profile?.username}`, url: window.location.href }).catch(console.error);
     else { navigator.clipboard.writeText(window.location.href); setShowToast(true); setTimeout(() => setShowToast(false), 3000); }
   };
-  const handleSendMessage = (e: React.FormEvent) => {
-    e.preventDefault(); if (!newMessage.trim()) return;
-    setMessages([...messages, { id: Date.now(), user: user?.email?.split('@')[0] || 'Anonyme', text: newMessage, avatar: `https://i.pravatar.cc/150?u=${Date.now()}` }]);
-    setNewMessage('');
-  };
-  useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newMessage.trim() || !profile) return;
+    if (!user) {
+      alert("Connecte-toi pour participer au chat !");
+      navigate('/auth');
+      return;
+    }
+
+    const msgText = newMessage;
+    setNewMessage(''); // On vide l'input tout de suite
+
+    await supabase.from('radio_messages').insert({
+      radio_owner_id: profile.id,
+      user_id: user.id,
+      username: userProfile?.username || user.email?.split('@')[0] || 'Anonyme',
+      avatar_url: userProfile?.avatar_url || `https://ui-avatars.com/api/?name=${user.email?.split('@')[0]}&background=random`,
+      text: msgText
+    });
+  };
+
+  // --- UI ---
   const size = isMobile ? 260 : 320;
   const strokeWidth = 4;
   const radius = (size - strokeWidth) / 2;
@@ -181,26 +259,15 @@ export const RadioPage: React.FC = () => {
   return (
     <div style={{ background: colors.bg, minHeight: '100vh', color: colors.textMain, fontFamily: 'Inter, sans-serif', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: isMobile ? '20px' : '40px' }}>
       
-      {/* ✅ FOND D'ÉCRAN ANIMÉ "PRO" (Aurora + Grid) */}
+      {/* FOND ANIMÉ */}
       <style>{`
         @keyframes aurora1 { 0% { transform: translate(0, 0) scale(1); } 50% { transform: translate(50px, -50px) scale(1.1); } 100% { transform: translate(0, 0) scale(1); } }
         @keyframes aurora2 { 0% { transform: translate(0, 0) scale(1); } 50% { transform: translate(-50px, 50px) scale(1.1); } 100% { transform: translate(0, 0) scale(1); } }
-        .animated-bg {
-          position: absolute; inset: 0; z-index: 0; overflow: hidden;
-          background: ${isDark ? '#05050a' : '#f5f5f7'};
-        }
-        .aurora-blob {
-          position: absolute; width: 60vw; height: 60vw; border-radius: 50%;
-          filter: blur(100px); opacity: ${isDark ? '0.4' : '0.2'};
-        }
+        .animated-bg { position: absolute; inset: 0; z-index: 0; overflow: hidden; background: ${isDark ? '#05050a' : '#f5f5f7'}; }
+        .aurora-blob { position: absolute; width: 60vw; height: 60vw; border-radius: 50%; filter: blur(100px); opacity: ${isDark ? '0.4' : '0.2'}; }
         .blob1 { background: ${bgImage ? `url(${bgImage}) center/cover` : '#ff3366'}; top: -10%; left: -10%; animation: aurora1 15s ease-in-out infinite; }
         .blob2 { background: #7c5cff; bottom: -10%; right: -10%; animation: aurora2 18s ease-in-out infinite; }
-        .grid-overlay {
-          position: absolute; inset: 0; z-index: 1;
-          background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
-          background-size: 40px 40px;
-          mask-image: radial-gradient(circle at center, black 40%, transparent 80%);
-        }
+        .grid-overlay { position: absolute; inset: 0; z-index: 1; background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px); background-size: 40px 40px; mask-image: radial-gradient(circle at center, black 40%, transparent 80%); }
       `}</style>
 
       <div className="animated-bg">
@@ -278,7 +345,7 @@ export const RadioPage: React.FC = () => {
             <span style={{ color: colors.border }}>|</span>
             <div style={{ color: colors.textMuted, fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>
                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-               112 auditeurs
+               {listeners} auditeur{listeners > 1 ? 's' : ''}
              </div>
           </div>
 
@@ -312,24 +379,29 @@ export const RadioPage: React.FC = () => {
 
         {/* CHAT */}
         <div style={{ flex: 1, width: '100%', maxWidth: 400, background: colors.panelBg, backdropFilter: 'blur(30px)', border: `1px solid ${colors.border}`, borderRadius: 24, display: 'flex', flexDirection: 'column', height: 500, boxShadow: '0 20px 40px rgba(0,0,0,0.2)' }}>
-          <div style={{ padding: '16px 20px', borderBottom: `1px solid ${colors.border}` }}>
+          <div style={{ padding: '16px 20px', borderBottom: `1px solid ${colors.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h3 style={{ margin: 0, fontSize: 13, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>💬 Live Chat</h3>
+            <span style={{ fontSize: 10, background: 'rgba(0,217,255,0.1)', color: '#00d9ff', padding: '2px 8px', borderRadius: 10, fontWeight: 700 }}>REALTIME</span>
           </div>
           <div style={{ flex: 1, overflowY: 'auto', padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
-            {messages.map((msg) => (
-              <div key={msg.id} style={{ display: 'flex', gap: 10 }}>
-                <img src={msg.avatar} alt="avatar" style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover' }} />
-                <div>
-                  <span style={{ fontSize: 12, fontWeight: 800, color: colors.textMain }}>{msg.user}</span>
-                  <div style={{ fontSize: 13, color: colors.textMuted, marginTop: 2, lineHeight: 1.4 }}>{msg.text}</div>
+            {messages.length === 0 ? (
+              <div style={{ textAlign: 'center', color: colors.textMuted, fontSize: 13, marginTop: 20 }}>Sois le premier à dire bonjour ! 👋</div>
+            ) : (
+              messages.map((msg) => (
+                <div key={msg.id} style={{ display: 'flex', gap: 10 }}>
+                  <img src={msg.avatar_url || `https://ui-avatars.com/api/?name=${msg.username}&background=random`} alt="avatar" style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+                  <div>
+                    <span style={{ fontSize: 12, fontWeight: 800, color: msg.username === userProfile?.username ? '#ff3366' : colors.textMain }}>{msg.username}</span>
+                    <div style={{ fontSize: 13, color: colors.textMuted, marginTop: 2, lineHeight: 1.4, wordBreak: 'break-word' }}>{msg.text}</div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
             <div ref={chatEndRef} />
           </div>
           <form onSubmit={handleSendMessage} style={{ padding: 16, borderTop: `1px solid ${colors.border}`, display: 'flex', gap: 10 }}>
-            <input type="text" value={newMessage} onChange={(e) => setNewMessage(e.target.value)} placeholder="Dis quelque chose..." style={{ flex: 1, background: colors.bg, border: `1px solid ${colors.border}`, borderRadius: 20, padding: '10px 16px', color: colors.textMain, fontSize: 13, outline: 'none' }} />
-            <button type="submit" style={{ background: colors.accentGradient, color: '#fff', border: 'none', borderRadius: '50%', width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+            <input type="text" value={newMessage} onChange={(e) => setNewMessage(e.target.value)} placeholder={user ? "Dis quelque chose..." : "Connecte-toi pour discuter..."} disabled={!user} style={{ flex: 1, background: colors.bg, border: `1px solid ${colors.border}`, borderRadius: 20, padding: '10px 16px', color: colors.textMain, fontSize: 13, outline: 'none', opacity: user ? 1 : 0.5 }} />
+            <button type="submit" disabled={!user || !newMessage.trim()} style={{ background: colors.accentGradient, color: '#fff', border: 'none', borderRadius: '50%', width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: (user && newMessage.trim()) ? 'pointer' : 'not-allowed', opacity: (user && newMessage.trim()) ? 1 : 0.5 }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
             </button>
           </form>

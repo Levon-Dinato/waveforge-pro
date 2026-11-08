@@ -1,6 +1,7 @@
 // src/pages/RadioPage.tsx
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
+import { createPortal } from 'react-dom';
 import { supabase } from '../lib/supabase';
 import { useTheme } from '../contexts/ThemeContext';
 import { useIsMobile } from '../hooks/useIsMobile';
@@ -37,14 +38,17 @@ export const RadioPage: React.FC = () => {
 
   const [customBgUrl, setCustomBgUrl] = useState('');
   const [customBgType, setCustomBgType] = useState('animated');
-  const [customBgOpacity, setCustomBgOpacity] = useState(0.6); // ✅ Nouvel état
+  const [customBgOpacity, setCustomBgOpacity] = useState(0.6);
 
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const chatEndRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const channelRef = useRef<any>(null);
-  const isInitialMount = useRef(true);
+  
+  // États pour l'installation PWA
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [showIosInstallModal, setShowIosInstallModal] = useState(false);
 
   const colors = {
     bg: isDark ? '#0a0a0e' : '#f5f5f7',
@@ -56,9 +60,32 @@ export const RadioPage: React.FC = () => {
     accentGradient: 'linear-gradient(135deg, #ff3366, #7c5cff)',
   };
 
+  // --- LOGIQUE D'INSTALLATION PWA ---
+  useEffect(() => {
+    const handler = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        setDeferredPrompt(null);
+      }
+    } else {
+      setShowIosInstallModal(true);
+    }
+  };
+
+  // --- CHARGEMENT DES DONNÉES ---
   useEffect(() => {
     if (!username) return;
-    
+
     const initRadio = async () => {
       setLoading(true);
 
@@ -70,7 +97,7 @@ export const RadioPage: React.FC = () => {
         setLiveUrl(profileData.live_url || '');
         setCustomBgUrl(profileData.radio_bg_url || '');
         setCustomBgType(profileData.radio_bg_type || 'animated');
-        setCustomBgOpacity(profileData.radio_bg_opacity ?? 0.6); // ✅ Récupération de l'opacité
+        setCustomBgOpacity(profileData.radio_bg_opacity ?? 0.6);
 
         if (user) {
           const { data: myProfile } = await supabase.from('profiles').select('username, avatar_url').eq('id', user.id).single();
@@ -102,12 +129,15 @@ export const RadioPage: React.FC = () => {
         setTracks(tracksToPlay);
         
         if (tracksToPlay.length > 0) {
+          let activeIndex = 0; // ✅ Variable locale pour le bon index
+
           const savedState = sessionStorage.getItem(`radio_${profileData.id}`);
           if (savedState) {
             try {
               const state = JSON.parse(savedState);
               const savedIndex = tracksToPlay.findIndex(t => t.id === state.trackId);
               if (savedIndex !== -1) {
+                activeIndex = savedIndex;
                 setCurrentIndex(savedIndex);
                 setProgress(state.progress || 0);
                 setLikeCount(tracksToPlay[savedIndex].likes_count || 0);
@@ -131,15 +161,17 @@ export const RadioPage: React.FC = () => {
             setLikeCount(tracksToPlay[0].likes_count || 0);
           }
 
+          // ✅ VÉRIFICATION DU LIKE AVEC LE BON INDEX
           if (user) {
-            const { data: like } = await supabase.from('likes').select('id').eq('user_id', user.id).eq('track_id', tracksToPlay[currentIndex]?.id).maybeSingle();
-            setIsLiked(!!like);
+            const trackIdToCheck = tracksToPlay[activeIndex]?.id;
+            if (trackIdToCheck) {
+              const { data: like } = await supabase.from('likes').select('id').eq('user_id', user.id).eq('track_id', trackIdToCheck).maybeSingle();
+              setIsLiked(!!like);
+            }
           }
         }
 
-        if (channelRef.current) {
-          supabase.removeChannel(channelRef.current);
-        }
+        if (channelRef.current) supabase.removeChannel(channelRef.current);
 
         const channel = supabase.channel(`radio_${profileData.id}`, {
           config: { presence: { key: user?.id || Math.random().toString() } },
@@ -172,7 +204,6 @@ export const RadioPage: React.FC = () => {
         if (oldMessages) setMessages(oldMessages);
       }
       setLoading(false);
-      isInitialMount.current = false;
     };
 
     initRadio();
@@ -180,8 +211,9 @@ export const RadioPage: React.FC = () => {
     return () => {
       if (channelRef.current) supabase.removeChannel(channelRef.current);
     };
-  }, [username]);
+  }, [username, user]);
 
+  // --- SAUVEGARDE DE LA POSITION ---
   useEffect(() => {
     if (!profile || tracks.length === 0 || isLive) return;
     
@@ -201,6 +233,7 @@ export const RadioPage: React.FC = () => {
 
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
+  // --- CONTRÔLES AUDIO ---
   const togglePlay = () => {
     if (!audioRef.current) return;
     if (isPlaying) audioRef.current.pause();
@@ -249,6 +282,7 @@ export const RadioPage: React.FC = () => {
     }
   }, [currentIndex, isLive]);
 
+  // --- ACTIONS (LIKE & CHAT) ---
   const handleLike = async () => {
     if (!user || !tracks[currentIndex] || isLive) { if(!user) alert("Connecte-toi pour liker !"); return; }
     const trackId = tracks[currentIndex].id;
@@ -282,6 +316,7 @@ export const RadioPage: React.FC = () => {
     });
   };
 
+  // --- UI ---
   const size = isMobile ? 260 : 320;
   const strokeWidth = 4;
   const radius = (size - strokeWidth) / 2;
@@ -298,6 +333,7 @@ export const RadioPage: React.FC = () => {
   return (
     <div style={{ background: colors.bg, minHeight: '100vh', color: colors.textMain, fontFamily: 'Inter, sans-serif', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: isMobile ? '20px' : '40px' }}>
       
+      {/* FOND ANIMÉ / IMAGE / VIDEO */}
       <style>{`
         @keyframes aurora1 { 0% { transform: translate(0, 0) scale(1); } 50% { transform: translate(50px, -50px) scale(1.1); } 100% { transform: translate(0, 0) scale(1); } }
         @keyframes aurora2 { 0% { transform: translate(0, 0) scale(1); } 50% { transform: translate(-50px, 50px) scale(1.1); } 100% { transform: translate(0, 0) scale(1); } }
@@ -322,23 +358,32 @@ export const RadioPage: React.FC = () => {
         <div className="grid-overlay" />
       </div>
 
+      {/* HEADER */}
       <div style={{ width: '100%', maxWidth: 1000, display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 2, marginBottom: 20 }}>
         <button onClick={() => navigate(-1)} style={{ background: 'transparent', border: 'none', color: colors.textMain, cursor: 'pointer' }}>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
         </button>
-        <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+        
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: isLive ? '#ff3366' : (activeSchedule ? '#00d9ff' : 'rgba(255, 51, 102, 0.15)'), padding: '4px 12px', borderRadius: 20, border: `1px solid ${isLive ? '#ff3366' : (activeSchedule ? '#00d9ff' : 'rgba(255,51,102,0.3)')}` }}>
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#fff', animation: 'pulse 1.5s infinite' }} />
             <span style={{ fontSize: 10, fontWeight: 800, color: '#fff', letterSpacing: '1px' }}>{isLive ? 'LIVE' : activeSchedule ? `PROG: ${activeSchedule}` : 'EN DIRECT'}</span>
           </div>
+          
+          <button onClick={handleInstallClick} title="Installer l'application" style={{ background: 'transparent', border: 'none', color: colors.textMain, cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          </button>
+
           <button onClick={handleShare} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer' }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
           </button>
         </div>
       </div>
 
+      {/* LAYOUT PRINCIPAL */}
       <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 40, width: '100%', maxWidth: 1000, zIndex: 2, alignItems: 'center' }}>
         
+        {/* PLAYER */}
         <div style={{ flex: 1, width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           
           {isLive ? (
@@ -420,6 +465,7 @@ export const RadioPage: React.FC = () => {
 
         </div>
 
+        {/* CHAT */}
         <div style={{ flex: 1, width: '100%', maxWidth: 400, background: colors.panelBg, backdropFilter: 'blur(30px)', border: `1px solid ${colors.border}`, borderRadius: 24, display: 'flex', flexDirection: 'column', height: 500, boxShadow: '0 20px 40px rgba(0,0,0,0.2)' }}>
           <div style={{ padding: '16px 20px', borderBottom: `1px solid ${colors.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h3 style={{ margin: 0, fontSize: 13, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>💬 Live Chat</h3>
@@ -455,6 +501,42 @@ export const RadioPage: React.FC = () => {
         <div style={{ position: 'fixed', bottom: 30, left: '50%', transform: 'translateX(-50%)', background: colors.textMain, color: colors.bg, padding: '12px 24px', borderRadius: 30, fontWeight: 700, fontSize: 13, zIndex: 999 }}>
           ✅ Lien copié !
         </div>
+      )}
+
+      {/* MODAL INSTALLATION iOS */}
+      {showIosInstallModal && createPortal(
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 99999, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', padding: 20 }} onClick={() => setShowIosInstallModal(false)}>
+          <div style={{ background: colors.panelBg, borderRadius: '24px 24px 0 0', padding: 32, width: '100%', maxWidth: 500, color: colors.textMain }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <h2 style={{ margin: 0, fontSize: 20, fontWeight: 900 }}>📲 Installer l'App</h2>
+              <button onClick={() => setShowIosInstallModal(false)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, fontSize: 20, cursor: 'pointer' }}>✕</button>
+            </div>
+            
+            <p style={{ fontSize: 14, color: colors.textMuted, lineHeight: 1.5, marginBottom: 24 }}>
+              Sur iPhone/iPad, l'installation se fait manuellement en quelques secondes :
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: colors.bg, padding: 16, borderRadius: 12 }}>
+                <div style={{ width: 40, height: 40, borderRadius: 8, background: 'rgba(0,217,255,0.1)', color: '#00d9ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg></div>
+                <span style={{ fontSize: 14, fontWeight: 600 }}>1. Appuie sur le bouton <strong>Partager</strong> en bas</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: colors.bg, padding: 16, borderRadius: 12 }}>
+                <div style={{ width: 40, height: 40, borderRadius: 8, background: 'rgba(0,217,255,0.1)', color: '#00d9ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg></div>
+                <span style={{ fontSize: 14, fontWeight: 600 }}>2. Choisis <strong>Sur l'écran d'accueil</strong></span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: colors.bg, padding: 16, borderRadius: 12 }}>
+                <div style={{ width: 40, height: 40, borderRadius: 8, background: 'rgba(0,217,255,0.1)', color: '#00d9ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                <span style={{ fontSize: 14, fontWeight: 600 }}>3. Appuie sur <strong>Ajouter</strong></span>
+              </div>
+            </div>
+
+            <button onClick={() => setShowIosInstallModal(false)} style={{ marginTop: 24, width: '100%', padding: 16, background: '#ff3366', color: '#fff', border: 'none', borderRadius: 12, fontWeight: 800, fontSize: 16, cursor: 'pointer' }}>
+              J'ai compris !
+            </button>
+          </div>
+        </div>,
+        document.body
       )}
 
       <audio 

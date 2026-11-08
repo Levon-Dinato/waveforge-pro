@@ -27,8 +27,11 @@ const SettingsPage = lazy(() => import('./pages/SettingsPage').then((m) => ({ de
 const NouveautesPage = lazy(() => import('./pages/NouveautesPage').then((m) => ({ default: m.NouveautesPage })));
 const AuthPage = lazy(() => import('./pages/AuthPage').then((m) => ({ default: m.AuthPage })));
 
-// ✅ NOUVEL IMPORT : Page de Callback OAuth
+// ✅ IMPORT DU CALLBACK OAUTH
 const AuthCallback = lazy(() => import('./pages/AuthCallback').then((m) => ({ default: m.AuthCallback })));
+
+// ✅ NOUVEL IMPORT : Page Radio
+const RadioPage = lazy(() => import('./pages/RadioPage').then((m) => ({ default: m.RadioPage })));
 
 const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage').then((m) => ({ default: m.ResetPasswordPage })));
 const ProfilePage = lazy(() => import('./pages/ProfilePage').then((m) => ({ default: m.ProfilePage })));
@@ -74,6 +77,9 @@ function AnimatedRoutes() {
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/levon-dinato" element={<LevonDinatoPage />} />
         <Route path="/premium/:username" element={<PremiumPage />} />
+        
+        {/* ✅ NOUVELLE ROUTE RADIO */}
+        <Route path="/radio/:username" element={<RadioPage />} />
         
         {/* ✅ ROUTE SMART LINK (Publique) */}
         <Route path="/link/:slug" element={<SmartLinkPage />} />

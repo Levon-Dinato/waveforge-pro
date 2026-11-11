@@ -4,17 +4,18 @@ import { useParams, Link, useOutletContext } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useIsMobile } from '../../hooks/useIsMobile';
 import { ParticleCanvas } from '../../components/ParticleCanvas';
+import { useRadio } from '../../contexts/RadioContext';
 
 export const RadioHomePage: React.FC = () => {
   const { username } = useParams<{ username: string }>();
   const isMobile = useIsMobile(768);
+  const { isPlaying } = useRadio();
   
   const { 
-    profile, radioTracks, nowPlaying, listeners, colors, visualizerColor, 
-    socials, coverImage, totalLikes, SocialLink, recentTracks 
+    profile, radioTracks, nowPlaying, listeners, colors, visualizerColor, iconColor,
+    socials, coverImage, totalLikes, SocialLink, recentTracks, handlePlayRadio 
   } = useOutletContext<any>();
 
-  // Bandeau défilant ultra épuré
   const marqueeItems = [
     `${profile.username.toUpperCase()}`, 
     `EN COURS : ${nowPlaying?.title || 'LIVE RADIO'}`, 
@@ -25,9 +26,13 @@ export const RadioHomePage: React.FC = () => {
   ];
   const repeatedItems = [...marqueeItems, ...marqueeItems, ...marqueeItems, ...marqueeItems];
 
-  const IconMusic = (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
-  );
+  const vinylSize = 300; 
+  const totalBars = 140; 
+  const barHeight = 30; 
+  const offset = 2; 
+  
+  const visualizerBars = Array.from({ length: totalBars }).map((_, i) => i);
+  const dynamicGradient = `linear-gradient(to top, ${visualizerColor}20, ${visualizerColor})`;
 
   const IconUser = (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
@@ -39,12 +44,19 @@ export const RadioHomePage: React.FC = () => {
 
   return (
     <>
-      {/* HERO */}
+      <style>{`
+        @keyframes beatCircle {
+          0% { transform: scaleY(0.3); opacity: 0.5; }
+          100% { transform: scaleY(1.2); opacity: 1; }
+        }
+      `}</style>
+
       <section style={{ position: 'relative', padding: isMobile ? '60px 20px 40px' : '90px 40px 60px', overflow: 'hidden' }}>
         <ParticleCanvas accent={`${visualizerColor}cc`} accent2="rgba(124,92,255,0.6)" />
         
-        <div style={{ position: 'relative', zIndex: 3, maxWidth: 1300, margin: '0 auto', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1.2fr', gap: 40, alignItems: 'center' }}>
+        <div style={{ position: 'relative', zIndex: 3, maxWidth: 1300, margin: '0 auto', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1.3fr', gap: 40, alignItems: 'center' }}>
           
+          {/* COLONNE GAUCHE : Texte */}
           <div>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 18px', borderRadius: 30, fontSize: 11, fontWeight: 900, letterSpacing: '1.5px', textTransform: 'uppercase', color: visualizerColor, background: `${visualizerColor}12`, border: `1px solid ${visualizerColor}40`, marginBottom: 24 }}>
               <span style={{ width: 6, height: 6, borderRadius: '50%', background: visualizerColor, boxShadow: `0 0 10px ${visualizerColor}`, animation: 'pulseLive 2s infinite' }} /> En direct
@@ -58,16 +70,38 @@ export const RadioHomePage: React.FC = () => {
               </span>
             </h1>
             <p style={{ fontSize: isMobile ? 14 : 17, color: colors.textMuted, marginBottom: 32, lineHeight: 1.6 }}>{profile.radio_instructions || 'Écoutez la meilleure sélection musicale, en direct et sans interruption.'}</p>
-            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 40 }}>
-              <Link to={`/player/${username}`} target="_blank" className="rp-btn-3d" style={{ background: `linear-gradient(135deg, ${visualizerColor}, #7c5cff)`, color: '#fff', border: 'none', padding: '16px 32px', borderRadius: 12, fontSize: 14, fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> Écouter maintenant
-              </Link>
+            
+            {/* ✅ BOUTON PRINCIPAL HARMONISÉ */}
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 40, alignItems: 'center' }}>
+              <button 
+                onClick={handlePlayRadio} 
+                className="rp-btn-3d" 
+                style={{ 
+                  background: visualizerColor, 
+                  color: iconColor, 
+                  border: 'none', 
+                  padding: '16px 32px', 
+                  borderRadius: 12, 
+                  fontSize: 14, 
+                  fontWeight: 900, 
+                  letterSpacing: '1px', 
+                  textTransform: 'uppercase', 
+                  cursor: 'pointer', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: 10 
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> Écouter la radio
+              </button>
+              
               <div style={{ display: 'flex', gap: 8 }}>
                 <SocialLink url={socials.instagram} name="Instagram" icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>} />
                 <SocialLink url={socials.tiktok} name="TikTok" icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"></path></svg>} />
                 <SocialLink url={socials.spotify} name="Spotify" icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0z"/></svg>} />
               </div>
             </div>
+            
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20, borderTop: `1px solid ${colors.border}`, paddingTop: 28, maxWidth: 460 }}>
               {[{ n: listeners, l: 'Auditeurs' }, { n: radioTracks.length, l: 'Titres' }, { n: totalLikes, l: 'Likes' }].map((s, i) => (
                 <div key={i}>
@@ -78,19 +112,40 @@ export const RadioHomePage: React.FC = () => {
             </div>
           </div>
 
+          {/* COLONNE DROITE : Vinyle + Déjà joués */}
           {!isMobile && (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 30 }}>
-              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative' }}>
-                <div style={{ position: 'absolute', width: 360, height: 360, borderRadius: '50%', background: `radial-gradient(circle, ${visualizerColor}40 0%, transparent 65%)`, filter: 'blur(40px)' }} />
-                <div className="rp-vinyl-spin" style={{ width: 320, height: 320, borderRadius: '50%', background: '#000', boxShadow: `0 30px 80px rgba(0,0,0,0.8), inset 0 0 40px rgba(255,255,255,0.1), 0 0 60px ${visualizerColor}40`, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-                  <img src={nowPlaying?.cover_url || coverImage} alt="Cover" style={{ width: 260, height: 260, borderRadius: '50%', objectFit: 'cover', border: '4px solid rgba(255,255,255,0.1)' }} />
-                  <div style={{ position: 'absolute', width: 50, height: 50, borderRadius: '50%', background: '#05050a', border: '3px solid rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <div style={{ width: 10, height: 10, borderRadius: '50%', background: visualizerColor, boxShadow: `0 0 15px ${visualizerColor}` }} />
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 20 }}>
+              
+              <div style={{ flexShrink: 0, display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative', width: vinylSize + 60, height: vinylSize + 60 }}>
+                <div style={{ position: 'absolute', width: vinylSize + 40, height: vinylSize + 40, borderRadius: '50%', background: `radial-gradient(circle, ${visualizerColor}40 0%, transparent 65%)`, filter: 'blur(40px)' }} />
+                
+                <div style={{ position: 'absolute', width: vinylSize, height: vinylSize, top: '50%', left: '50%', transform: 'translate(-50%, -50%)', pointerEvents: 'none', zIndex: 3 }}>
+                  {visualizerBars.map((_, i) => {
+                    const angle = (i * 360) / totalBars;
+                    const distance = (vinylSize / 2) + offset;
+                    
+                    return (
+                      <div key={i} style={{ position: 'absolute', left: '50%', top: '50%', width: 2, height: barHeight, marginLeft: -1, marginTop: -(barHeight / 2), transformOrigin: 'center center', transform: `rotate(${angle}deg) translateY(-${distance}px)` }}>
+                        <div style={{ 
+                          width: '100%', height: '100%', background: dynamicGradient, borderRadius: 2, transformOrigin: 'bottom center', 
+                          boxShadow: `0 0 10px ${visualizerColor}`, animationName: 'beatCircle', animationDuration: `${0.3 + Math.random() * 0.4}s`, 
+                          animationDelay: `-${Math.random() * 0.5}s`, animationIterationCount: 'infinite', animationDirection: 'alternate', 
+                          animationTimingFunction: 'ease-in-out', animationPlayState: isPlaying ? 'running' : 'paused' 
+                        }} />
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="rp-vinyl-spin" style={{ width: vinylSize, height: vinylSize, borderRadius: '50%', background: '#000', boxShadow: `0 30px 80px rgba(0,0,0,0.8), inset 0 0 40px rgba(255,255,255,0.1), 0 0 60px ${visualizerColor}40`, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', zIndex: 4 }}>
+                  <img src={nowPlaying?.cover_url || coverImage} alt="Cover" style={{ width: '82%', height: '82%', borderRadius: '50%', objectFit: 'cover', border: '4px solid rgba(255,255,255,0.1)' }} />
+                  <div style={{ position: 'absolute', width: 40, height: 40, borderRadius: '50%', background: '#05050a', border: '3px solid rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: visualizerColor, boxShadow: `0 0 15px ${visualizerColor}` }} />
                   </div>
                 </div>
               </div>
 
-              <div className="rp-glass" style={{ width: 280, padding: '20px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div className="rp-glass" style={{ flexShrink: 0, width: 260, padding: '20px', display: 'flex', flexDirection: 'column', gap: 16 }}>
                 <div style={{ fontSize: 12, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1.5px', color: colors.textMuted, borderBottom: `1px solid ${colors.border}`, paddingBottom: 10 }}>
                   Déjà joués
                 </div>
@@ -108,6 +163,7 @@ export const RadioHomePage: React.FC = () => {
                   ))}
                 </div>
               </div>
+
             </div>
           )}
         </div>
@@ -124,10 +180,9 @@ export const RadioHomePage: React.FC = () => {
         </motion.div>
       </div>
 
-      {/* INFO CARDS */}
+      {/* CARTES INFOS */}
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '40px 20px 80px' : '60px 40px 80px', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 24, width: '100%', boxSizing: 'border-box' }}>
         
-        {/* NOW PLAYING */}
         <div className="rp-glass" style={{ padding: 24, background: `linear-gradient(145deg, ${visualizerColor}15, transparent 60%)`, border: `1px solid ${visualizerColor}30` }}>
           <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: '1.5px', textTransform: 'uppercase', color: visualizerColor, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#ef4444', animation: 'pulseLive 1.5s infinite' }} /> En cours
@@ -142,12 +197,11 @@ export const RadioHomePage: React.FC = () => {
               </div>
             </div>
           </div>
-          <Link to={`/player/${username}`} target="_blank" className="rp-btn-3d" style={{ display: 'block', textAlign: 'center', width: '100%', marginTop: 18, padding: '12px', background: visualizerColor, color: '#000', border: 'none', borderRadius: 10, fontWeight: 900, fontSize: 12, cursor: 'pointer', textDecoration: 'none' }}>
-            ▶ Ouvrir le Player
-          </Link>
+          <button onClick={handlePlayRadio} className="rp-btn-3d" style={{ display: 'block', width: '100%', textAlign: 'center', marginTop: 18, padding: '12px', background: visualizerColor, color: iconColor, border: 'none', borderRadius: 10, fontWeight: 900, fontSize: 12, cursor: 'pointer' }}>
+            ▶ Écouter la radio
+          </button>
         </div>
 
-        {/* À PROPOS (Avec icône minimaliste) */}
         <div className="rp-glass" style={{ padding: 24 }}>
           <div style={{ fontSize: 11, fontWeight: 900, letterSpacing: '1.5px', textTransform: 'uppercase', color: colors.textMain, marginBottom: 18, display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ color: visualizerColor }}>{IconUser}</span> À propos
@@ -164,7 +218,6 @@ export const RadioHomePage: React.FC = () => {
           </div>
         </div>
 
-        {/* PARTENAIRE (Avec icône minimaliste) */}
         <div className="rp-glass" style={{ padding: 24, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', border: `1px dashed ${colors.border}` }}>
           <div style={{ color: colors.textMuted, marginBottom: 12 }}>{IconHandshake}</div>
           <h3 style={{ fontSize: 14, fontWeight: 900, margin: '0 0 6px 0' }}>Espace Partenaire</h3>

@@ -18,8 +18,7 @@ export const RadioLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // ✅ Ajout de progress et duration
-  const { isLive, currentTrack, isPlaying, togglePlay, startRadio, isRadioActive, progress, duration } = useRadio();
+  const { isLive, currentTrack, isPlaying, togglePlay, startRadio, stopRadio, isRadioActive, progress, duration } = useRadio();
 
   const [profile, setProfile] = useState<any>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
@@ -105,7 +104,7 @@ export const RadioLayout: React.FC = () => {
           setTopTracks([...tracksData].sort((a: any, b: any) => (b.likes_count || 0) - (a.likes_count || 0)));
           setLatestReleases([...tracksData].sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
 
-          if (!isRadioActive) {
+          if (!isRadioActive && !currentTrack) {
             startRadio(tracksData, profileData.is_live || false, profileData.live_url || '', startIndex, t);
           }
         }
@@ -156,14 +155,21 @@ export const RadioLayout: React.FC = () => {
   const showToastMsg = (msg: string) => { setToastMsg(msg); setShowToast(true); setTimeout(() => setShowToast(false), 3000); };
 
   const handleOpenPlayer = () => {
-    if (!isRadioActive && radioTracks.length > 0) {
-      const idx = radioTracks.findIndex(t => t.id === nowPlaying?.id);
-      startRadio(radioTracks, profile?.is_live || false, profile?.live_url || '', idx >= 0 ? idx : 0);
-    }
     const isMobileDevice = /Mobi|Android/i.test(navigator.userAgent);
     const url = `/player/${username}`;
     if (isMobileDevice) navigate(url);
     else window.open(url, 'RadioPlayer', 'width=420,height=700,scrollbars=no,resizable=yes,status=no,location=no,toolbar=no,menubar=no');
+  };
+
+  // ✅ NOUVELLE FONCTION : Force le retour au flux principal de la radio
+  const handlePlayRadio = () => {
+    if (radioTracks.length > 0 && nowPlaying) {
+      const index = radioTracks.findIndex((t: any) => t.id === nowPlaying.id);
+      stopRadio();
+      startRadio(radioTracks, profile?.is_live || false, profile?.live_url || '', index >= 0 ? index : 0);
+    } else {
+      handleOpenPlayer(); // Fallback
+    }
   };
 
   const handleSendMessage = async (e: React.FormEvent) => {
@@ -211,14 +217,14 @@ export const RadioLayout: React.FC = () => {
     );
   };
 
+  // On passe handlePlayRadio au contexte
   const outletContext = {
     profile, userProfile, radioTracks, nowPlaying, topTracks, latestReleases, schedules, activeSchedule,
     listeners, colors, visualizerColor, iconColor, socials, coverImage, totalLikes, recentTracks,
-    handleOpenPlayer, handleSendMessage, messages, newMessage, setNewMessage, isChatOpen, setIsChatOpen, chatEndRef,
+    handleOpenPlayer, handlePlayRadio, handleSendMessage, messages, newMessage, setNewMessage, isChatOpen, setIsChatOpen, chatEndRef,
     SocialLink
   };
 
-  // Formatage du temps pour la barre de progression
   const formatTime = (time: number) => {
     if (isNaN(time)) return '00:00';
     return `${Math.floor(time / 60).toString().padStart(2, '0')}:${Math.floor(time % 60).toString().padStart(2, '0')}`;
@@ -342,10 +348,10 @@ export const RadioLayout: React.FC = () => {
           </AnimatePresence>
         </div>
 
-        {/* ✅ STICKY PLAYER AVEC BARRE DE PROGRESSION */}
+        {/* STICKY PLAYER */}
         <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 90, background: colors.glass, backdropFilter: 'blur(30px)', borderTop: `1px solid ${colors.border}`, boxShadow: '0 -10px 40px rgba(0,0,0,0.4)' }}>
           
-          {/* Barre de progression tout en haut du lecteur */}
+          {/* Barre de progression */}
           {!isLive && (
             <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'rgba(255,255,255,0.05)' }}>
               <div style={{ width: `${progressPercent}%`, height: '100%', background: visualizerColor, boxShadow: `0 0 10px ${visualizerColor}`, transition: 'width 1s linear' }} />
@@ -361,7 +367,6 @@ export const RadioLayout: React.FC = () => {
               </div>
             </div>
 
-            {/* Temps (uniquement si pas en live) */}
             {!isLive && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: colors.textMuted, fontWeight: 700, margin: '0 20px', fontFamily: 'monospace' }}>
                 <span>{formatTime(progress)}</span>
@@ -372,6 +377,12 @@ export const RadioLayout: React.FC = () => {
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: colors.textMuted, fontWeight: 700, background: 'rgba(255,255,255,0.05)', padding: '4px 10px', borderRadius: 20 }}><span style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981', animation: 'pulseLive 1.5s infinite' }} /> {listeners}</div>
+              
+              {/* ✅ BOUTON POUR REVENIR À LA RADIO */}
+              <button onClick={handlePlayRadio} title="Revenir à la radio en direct" style={{ background: 'rgba(255,255,255,0.05)', color: colors.textMain, border: `1px solid ${colors.border}`, width: 36, height: 36, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+              </button>
+
               <button onClick={() => { if (!isRadioActive && radioTracks.length > 0) { const idx = radioTracks.findIndex(t => t.id === nowPlaying?.id); startRadio(radioTracks, profile?.is_live || false, profile?.live_url || '', idx >= 0 ? idx : 0); } else { togglePlay(); } }} style={{ width: 44, height: 44, borderRadius: '50%', background: visualizerColor, color: iconColor, border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: `0 4px 15px ${visualizerColor}60` }}>
                 {isPlaying ? <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg> : <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: 3 }}><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>}
               </button>
@@ -380,7 +391,7 @@ export const RadioLayout: React.FC = () => {
           </div>
         </div>
 
-        {/* ... (Chat flottant) ... */}
+        {/* CHAT FLOTTANT */}
         <div style={{ position: 'fixed', bottom: 80, right: 24, zIndex: 999, display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
           <div className={`rp-glass rp-chat-window ${isChatOpen ? 'rp-chat-open' : 'rp-chat-closed'}`} style={{ width: 340, height: 440, marginBottom: 14, display: 'flex', flexDirection: 'column', borderRadius: 20, overflow: 'hidden', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
             <div style={{ padding: '14px 16px', borderBottom: `1px solid ${colors.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

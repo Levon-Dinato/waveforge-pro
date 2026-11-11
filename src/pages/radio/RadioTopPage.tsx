@@ -45,20 +45,21 @@ export const RadioTopPage: React.FC = () => {
     }
   };
 
-  // ✅ Nouvelle fonction pour lire le morceau en remplaçant la playlist
-  const playTrack = (track: any) => {
-    const index = topTracks.findIndex((t: any) => t.id === track.id);
+  // ✅ LECTURE INSTANTANÉE (Sans clignotement)
+  const playTrack = (e: React.MouseEvent, track: any) => {
+    e.preventDefault();
+    e.stopPropagation();
+
     const live = profile?.is_live || false;
     const liveUrl = profile?.live_url || '';
+    const index = topTracks.findIndex((t: any) => t.id === track.id);
 
     if (isRadioActive) {
       stopRadio();
-      setTimeout(() => {
-        startRadio(topTracks, live, liveUrl, index >= 0 ? index : 0);
-      }, 50);
-    } else {
-      startRadio(topTracks, live, liveUrl, index >= 0 ? index : 0);
     }
+    
+    // Lancement immédiat
+    startRadio(topTracks, live, liveUrl, index >= 0 ? index : 0);
   };
 
   const top3 = topTracks.slice(0, 3);
@@ -93,7 +94,6 @@ export const RadioTopPage: React.FC = () => {
         </div>
       ) : (
         <>
-          {/* PODIUM TOP 3 */}
           <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth < 768 ? '1fr' : 'repeat(3, 1fr)', gap: 24, marginBottom: 48, alignItems: 'end' }}>
             {top3.map((track: any, index: number) => {
               const order = [1, 0, 2][index]; 
@@ -126,9 +126,8 @@ export const RadioTopPage: React.FC = () => {
                     {order + 1}
                   </div>
 
-                  {/* ✅ POCHETTE CLIQUABLE POUR LIRE LE SON */}
                   <div 
-                    onClick={() => playTrack(item)}
+                    onClick={(e) => playTrack(e, item)}
                     style={{ 
                       width: '100%', aspectRatio: '1/1', borderRadius: 16, 
                       background: `url(${item.cover_url || 'https://via.placeholder.com/300'}) center/cover`, 
@@ -144,7 +143,6 @@ export const RadioTopPage: React.FC = () => {
                   <div style={{ textAlign: 'center' }}>
                     <h3 style={{ fontSize: 18, fontWeight: 900, margin: '0 0 4px 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.title}</h3>
                     <p style={{ fontSize: 13, color: colors.textMuted, margin: '0 0 16px 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.artist}</p>
-                    
                     <button 
                       onClick={(e) => handleLike(e, item.id, item.likes_count || 0)}
                       style={{ 
@@ -164,7 +162,6 @@ export const RadioTopPage: React.FC = () => {
             })}
           </div>
 
-          {/* LISTE RESTANTE */}
           {rest.length > 0 && (
             <div className="rp-glass" style={{ borderRadius: 24, overflow: 'hidden' }}>
               <div style={{ padding: '24px 32px', borderBottom: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -188,7 +185,7 @@ export const RadioTopPage: React.FC = () => {
                         transition: 'background 0.2s', cursor: 'pointer'
                       }}
                       className="hover-bg"
-                      onClick={() => playTrack(track)}
+                      onClick={(e) => playTrack(e, track)}
                       onMouseEnter={(e) => e.currentTarget.style.background = `${visualizerColor}08`}
                       onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                     >

@@ -47,24 +47,20 @@ export const RadioReleasesPage: React.FC = () => {
     }
   };
 
-  // ✅ FONCTION DE LECTURE
+  // ✅ LECTURE INSTANTANÉE (Sans clignotement)
   const playTrack = (e: React.MouseEvent, track: any) => {
     e.preventDefault();
-    e.stopPropagation(); // Empêche le clic de se propager
+    e.stopPropagation();
 
     const live = profile?.is_live || false;
     const liveUrl = profile?.live_url || '';
+    const index = latestReleases.findIndex((t: any) => t.id === track.id);
 
-    // 1. On arrête d'abord la radio en cours
     if (isRadioActive) {
       stopRadio();
     }
-
-    // 2. On lance le morceau après un petit délai
-    setTimeout(() => {
-      // On passe uniquement ce morceau pour être sûr qu'il soit joué
-      startRadio([track], live, liveUrl, 0);
-    }, 200);
+    
+    startRadio(latestReleases, live, liveUrl, index >= 0 ? index : 0);
   };
 
   const IconSparkles = (

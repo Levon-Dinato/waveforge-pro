@@ -1,7 +1,9 @@
 // src/components/RadioPlayer.tsx
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRadio } from '../contexts/RadioContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabase';
 
 interface RadioPlayerProps {
   profile: any;
@@ -14,6 +16,29 @@ export const RadioPlayer: React.FC<RadioPlayerProps> = ({ profile, visualizerCol
   const { currentTrack, isPlaying, progress, duration, togglePlay, playNext, playPrev, seek, isLive } = useRadio();
   const { theme } = useTheme();
   const isDark = theme === 'dark';
+  const { user } = useAuth();
+
+  const [isLiked, setIsLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
+
+  useEffect(() => {
+    if (currentTrack) {
+      setLikeCount(currentTrack.likes_count || 0);
+      if (user) {
+        supabase.from('likes').select('id').eq('user_id', user.id).eq('track_id', currentTrack.id).maybeSingle()
+          .then(({ data }) => setIsLiked(!!data));
+      }
+    }
+  }, [currentTrack, user]);
+
+  const handleLike = async () => {
+    if (!user || !currentTrack) return;
+    const newStatus = !isLiked;
+    setIsLiked(newStatus);
+    setLikeCount(prev => newStatus ? prev + 1 : prev - 1);
+    if (newStatus) await supabase.from('likes').insert({ user_id: user.id, track_id: currentTrack.id });
+    else await supabase.from('likes').delete().eq('user_id', user.id).eq('track_id', currentTrack.id);
+  };
 
   const size = isMobile ? 240 : 320;
   const strokeWidth = 6;
@@ -33,13 +58,13 @@ export const RadioPlayer: React.FC<RadioPlayerProps> = ({ profile, visualizerCol
   if (isLive) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
-        <div style={{ width: size, height: size, borderRadius: '50%', background: `linear-gradient(135deg, ${visualizerColor}, ${visualizerColor}80)`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', boxShadow: `0 0 80px ${visualizerColor}90`, animation: 'pulse 3s infinite' }}>
-          <div style={{ fontSize: 90 }}>🎙️</div>
-          <div style={{ fontSize: 18, fontWeight: 900, color: iconColor, letterSpacing: '3px', marginTop: 10 }}>LIVE</div>
+        <div style={{ width: size, height: size, borderRadius: '50%', background: `linear-gradient(135deg, ${visualizerColor}, ${visualizerColor}80)`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', boxShadow: `0 0 80px ${visualizerColor}90`, animation: 'pulseGlow 3s infinite' }}>
+          <div style={{ fontSize: 80 }}>🎙️</div>
+          <div style={{ fontSize: 16, fontWeight: 900, color: iconColor, letterSpacing: '3px', marginTop: 10 }}>LIVE</div>
         </div>
         <div style={{ textAlign: 'center' }}>
-          <h2 style={{ fontSize: 24, fontWeight: 900, margin: '0 0 8px 0' }}>Live Set</h2>
-          <p style={{ color: isDark ? '#888' : '#666', fontSize: 15 }}>{profile?.username} est en direct</p>
+          <h2 style={{ fontSize: 24, fontWeight: 900, margin: '0 0 8px 0', color: isDark ? '#fff' : '#000' }}>Live Set</h2>
+          <p style={{ color: '#888', fontSize: 15 }}>{profile?.username} est en direct</p>
         </div>
       </div>
     );
@@ -47,16 +72,29 @@ export const RadioPlayer: React.FC<RadioPlayerProps> = ({ profile, visualizerCol
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
-      <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 30, padding: 20 }}>
+      <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 30, padding: 10 }}>
         
-        <div style={{ position: 'absolute', width: size + 40, height: size + 40, borderRadius: '50%', background: `radial-gradient(circle, ${visualizerColor}40 0%, transparent 60%)`, filter: 'blur(30px)', animation: isPlaying ? 'pulseGlow 2s infinite' : 'none' }} />
+        <div style={{ position: 'absolute', width: size + 40, height: size + 40, borderRadius: '50%', background: `radial-gradient(circle, ${visualizerColor}40 0%, transparent 60%)`, filter: 'blur(30px)', animationName: 'pulseGlow', animationDuration: '2s', animationIterationCount: 'infinite', animationPlayState: isPlaying ? 'running' : 'paused' }} />
         
         <div className="circular-visualizer" style={{ position: 'absolute', width: size, height: size, top: '50%', left: '50%', transform: 'translate(-50%, -50%)', pointerEvents: 'none', zIndex: 3 }}>
           {visualizerBars.map((_, i) => {
             const angle = (i * 360) / totalBars;
             return (
-              <div key={i} className="visualizer-bar-wrapper" style={{ position: 'absolute', left: '50%', top: '50%', width: 2, height: 45, marginLeft: -3, marginTop: -22.5, transformOrigin: 'center center', transform: `rotate(${angle}deg) translateY(-${size / 2}px)` }}>
-                <div className="visualizer-bar" style={{ width: '100%', height: '100%', background: dynamicGradient, borderRadius: 4, transformOrigin: 'bottom center', boxShadow: `0 0 12px ${visualizerColor}90`, animation: `beatCircle ${0.4 + Math.random() * 0.4}s ease-in-out infinite alternate`, animationDelay: `-${Math.random() * 0.5}s`, animationPlayState: isPlaying ? 'running' : 'paused' }} />
+              <div key={i} className="visualizer-bar-wrapper" style={{ position: 'absolute', left: '50%', top: '50%', width: 2, height: 35, marginLeft: -3, marginTop: -17.5, transformOrigin: 'center center', transform: `rotate(${angle}deg) translateY(-${size / 2}px)` }}>
+                <div className="visualizer-bar" style={{ 
+                  width: '100%', height: '100%', 
+                  background: dynamicGradient, 
+                  borderRadius: 4, 
+                  transformOrigin: 'bottom center', 
+                  boxShadow: `0 0 12px ${visualizerColor}90`, 
+                  animationName: 'beatCircle', 
+                  animationDuration: `${0.4 + Math.random() * 0.4}s`, 
+                  animationDelay: `-${Math.random() * 0.5}s`, 
+                  animationIterationCount: 'infinite', 
+                  animationDirection: 'alternate', 
+                  animationTimingFunction: 'ease-in-out',
+                  animationPlayState: isPlaying ? 'running' : 'paused' 
+                }} />
               </div>
             );
           })}
@@ -74,33 +112,51 @@ export const RadioPlayer: React.FC<RadioPlayerProps> = ({ profile, visualizerCol
         <input type="range" min={0} max={duration || 100} value={progress} onChange={(e) => seek(Number(e.target.value))} style={{ position: 'absolute', width: size + 40, height: size + 40, opacity: 0, cursor: 'pointer', zIndex: 10, transform: 'rotate(-90deg)' }} />
         
         <div className="vinyl-container" style={{ position: 'relative', width: size, height: size, borderRadius: '50%', background: '#000', boxShadow: '0 20px 50px rgba(0,0,0,0.8), inset 0 0 20px rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 4 }}>
-          <img src={currentTrack?.cover_url || profile?.avatar_url || 'https://via.placeholder.com/300'} alt="Cover" className="vinyl-spin" style={{ width: size - 80, height: size - 80, borderRadius: '50%', objectFit: 'cover', animation: 'spin 4s linear infinite', animationPlayState: isPlaying ? 'running' : 'paused', border: '4px solid rgba(255,255,255,0.1)' }} />
+          <img 
+            src={currentTrack?.cover_url || profile?.avatar_url || 'https://via.placeholder.com/300'} 
+            alt="Cover" 
+            className="vinyl-spin" 
+            style={{ 
+              width: size - 60, height: size - 60, borderRadius: '50%', objectFit: 'cover', 
+              border: '4px solid rgba(255,255,255,0.1)',
+              animationName: 'spin',
+              animationDuration: '4s',
+              animationIterationCount: 'infinite',
+              animationTimingFunction: 'linear',
+              animationPlayState: isPlaying ? 'running' : 'paused' 
+            }} 
+          />
           <div className="vinyl-grooves" style={{ position: 'absolute', inset: 0, borderRadius: '50%', pointerEvents: 'none', background: 'repeating-radial-gradient(circle, transparent, transparent 2px, rgba(255,255,255,0.03) 3px, transparent 4px)' }} />
-          <div className="vinyl-label" style={{ position: 'absolute', width: 50, height: 50, borderRadius: '50%', background: isDark ? '#05050a' : '#fff', border: '3px solid rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2, boxShadow: 'inset 0 0 10px rgba(0,0,0,0.5)' }}>
-            <div className="vinyl-hole" style={{ width: 8, height: 8, borderRadius: '50%', background: '#fff', boxShadow: '0 0 10px #fff' }} />
+          <div className="vinyl-label" style={{ position: 'absolute', width: 40, height: 40, borderRadius: '50%', background: isDark ? '#05050a' : '#fff', border: '3px solid rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2, boxShadow: 'inset 0 0 10px rgba(0,0,0,0.5)' }}>
+            <div className="vinyl-hole" style={{ width: 6, height: 6, borderRadius: '50%', background: '#fff', boxShadow: '0 0 10px #fff' }} />
           </div>
         </div>
       </div>
 
       <div style={{ textAlign: 'center', marginBottom: 20, width: '100%' }}>
-        <h1 style={{ fontSize: 24, fontWeight: 900, margin: '0 0 8px 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        <h1 style={{ fontSize: 20, fontWeight: 900, margin: '0 0 6px 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: isDark ? '#fff' : '#000' }}>
           {currentTrack?.title || 'En attente'}
         </h1>
-        <p style={{ color: isDark ? '#888' : '#666', fontSize: 15, margin: 0, fontWeight: 600 }}>
+        <p style={{ color: '#888', fontSize: 14, margin: 0, fontWeight: 600 }}>
           {currentTrack?.artist || 'DropZone Radio'}
         </p>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, width: '100%', marginBottom: 20 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', maxWidth: 280, fontSize: 12, color: isDark ? '#888' : '#666', fontWeight: 800 }}>
+      <button onClick={handleLike} style={{ background: 'transparent', border: 'none', color: isLiked ? visualizerColor : (isDark ? '#888' : '#666'), cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, marginBottom: 20 }}>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill={isLiked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+        {likeCount}
+      </button>
+
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, width: '100%' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', maxWidth: 260, fontSize: 12, color: '#888', fontWeight: 800 }}>
           <span>{formatTime(progress)}</span>
           <span>{formatTime(duration)}</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 30 }}>
           <button onClick={playPrev} style={{ background: 'transparent', border: 'none', color: isDark ? '#fff' : '#000', cursor: 'pointer', opacity: 0.8 }}><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" strokeWidth="2"></line></svg></button>
           
-          <button onClick={togglePlay} style={{ width: 70, height: 70, borderRadius: '50%', background: visualizerColor, color: iconColor, border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: `0 15px 30px ${visualizerColor}60`, transition: 'all 0.2s', transform: isPlaying ? 'scale(1)' : 'scale(0.98)' }}>
-            {isPlaying ? <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg> : <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: 4 }}><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>}
+          <button onClick={togglePlay} style={{ width: 64, height: 64, borderRadius: '50%', background: visualizerColor, color: iconColor, border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: `0 10px 20px ${visualizerColor}60`, transition: 'all 0.2s', transform: isPlaying ? 'scale(1)' : 'scale(0.98)' }}>
+            {isPlaying ? <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg> : <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: 4 }}><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>}
           </button>
 
           <button onClick={playNext} style={{ background: 'transparent', border: 'none', color: isDark ? '#fff' : '#000', cursor: 'pointer', opacity: 0.8 }}><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" strokeWidth="2"></line></svg></button>

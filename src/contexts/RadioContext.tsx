@@ -37,7 +37,7 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [needsGesture, setNeedsGesture] = useState(false);
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const pendingSeekRef = useRef<number | null>(null); // ✅ Stocke la seconde où on doit aller
+  const pendingSeekRef = useRef<number | null>(null);
   const { stop: stopMainPlayer } = usePlayer();
 
   const currentTrack = tracks[currentIndex];
@@ -61,7 +61,6 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     setProgress(0);
     setNeedsGesture(false);
     
-    // ✅ On enregistre la seconde à laquelle on doit démarrer
     if (startTime !== undefined && startTime > 0) {
       pendingSeekRef.current = startTime;
     } else {
@@ -69,14 +68,26 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }
   };
 
+  // ✅ Tente de lancer le son et affiche l'overlay si bloqué
+  const tryPlay = () => {
+    if (!audioRef.current) return;
+    const playPromise = audioRef.current.play();
+    if (playPromise !== undefined) {
+      playPromise.catch((e) => {
+        // Si le navigateur bloque, on affiche l'overlay
+        if (e.name === 'NotAllowedError') {
+          setNeedsGesture(true);
+          setIsPlaying(false);
+        }
+      });
+    }
+  };
+
   const unlockAudio = () => {
     setNeedsGesture(false);
     setIsPlaying(true);
     if (audioRef.current) {
-      audioRef.current.play().catch(e => {
-         // Si ça bloque encore, on redemande l'interaction
-         if (e.name === 'NotAllowedError') setNeedsGesture(true);
-      });
+       audioRef.current.play().catch(e => console.error(e));
     }
   };
 
@@ -86,11 +97,11 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       audioRef.current.pause();
       setIsPlaying(false);
     } else {
+      setIsPlaying(true);
+      setNeedsGesture(false);
       audioRef.current.play().catch(e => {
          if (e.name === 'NotAllowedError') setNeedsGesture(true);
       });
-      setIsPlaying(true);
-      setNeedsGesture(false);
     }
   };
 
@@ -124,15 +135,7 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   useEffect(() => {
     if (audioRef.current) {
       if (isPlaying) {
-        const playPromise = audioRef.current.play();
-        if (playPromise !== undefined) {
-          playPromise.catch((e) => {
-            if (e.name === 'NotAllowedError') {
-              setNeedsGesture(true);
-              setIsPlaying(false);
-            }
-          });
-        }
+        tryPlay();
       } else {
         audioRef.current.pause();
       }
@@ -151,12 +154,13 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         src={isLive ? liveUrl : (currentTrack?.audio_url || '')}
         preload="auto"
         onLoadedMetadata={() => {
-          // ✅ Quand l'audio est prêt, on saute à la bonne seconde
           if (pendingSeekRef.current !== null && audioRef.current) {
             audioRef.current.currentTime = pendingSeekRef.current;
             setProgress(pendingSeekRef.current);
             pendingSeekRef.current = null;
           }
+          // On tente de jouer une fois que la métadonnée est chargée
+          if (isPlaying) tryPlay();
         }}
         onTimeUpdate={() => {
           if (audioRef.current) {

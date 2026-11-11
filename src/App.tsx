@@ -13,6 +13,7 @@ import { MainLayout } from './layouts/MainLayout';
 import { PrivateRoute } from './components/PrivateRoute';
 import { PageTransition } from './components/PageTransition';
 import { PremiumGuard } from './components/PremiumGuard';
+import { PlayerPage } from './pages/PlayerPage';
 import './styles.css';
 
 const HomePage = lazy(() => import('./pages/HomePage').then((m) => ({ default: m.HomePage })));
@@ -49,7 +50,6 @@ const MyPlaylistsPage = lazy(() => import('./pages/MyPlaylistsPage').then((m) =>
 const DiscoverPage = lazy(() => import('./pages/DiscoverPage').then((m) => ({ default: m.DiscoverPage })));
 const ChartsPage = lazy(() => import('./pages/ChartsPage').then((m) => ({ default: m.ChartsPage })));
 
-// ✅ ON UTILISE LE NOUVEAU FICHIER RADIOLISTPAGE POUR LE TEST
 const RadioPage = lazy(() => import('./pages/RadioPage').then((m) => ({ default: m.RadioPage })));
 const RadiosPage = lazy(() => import('./pages/RadioListPage').then((m) => ({ default: m.RadioListPage })));
 
@@ -75,6 +75,9 @@ function AnimatedRoutes() {
         <Route path="/premium/:username" element={<PremiumPage />} />
         <Route path="/radio/:username" element={<RadioPage />} />
         <Route path="/link/:slug" element={<SmartLinkPage />} />
+        
+        {/* ✅ LA ROUTE PLAYER EST MAINTENANT ISOLÉE ICI */}
+        <Route path="/player/:username" element={<PlayerPage />} />
 
         <Route path="/" element={<MainLayout />}>
           

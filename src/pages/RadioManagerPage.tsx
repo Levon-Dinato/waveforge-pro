@@ -42,6 +42,7 @@ export const RadioManagerPage: React.FC = () => {
   const [liveUrl, setLiveUrl] = useState('');
   const [profileUsername, setProfileUsername] = useState('');
   
+  // Réglages Page Web
   const [radioBgUrl, setRadioBgUrl] = useState('');
   const [radioBgType, setRadioBgType] = useState('animated');
   const [radioBgOpacity, setRadioBgOpacity] = useState(0.6);
@@ -52,6 +53,11 @@ export const RadioManagerPage: React.FC = () => {
   const [uploadingLogo, setUploadingLogo] = useState(false);
 
   const [radioVisualizerColor, setRadioVisualizerColor] = useState('#ff3366');
+
+  // Réglages Player Popup
+  const [playerBgType, setPlayerBgType] = useState('color');
+  const [playerBgValue, setPlayerBgValue] = useState('#05050a');
+  const [uploadingPlayerBg, setUploadingPlayerBg] = useState(false);
 
   const colors = {
     bg: isDark ? '#09090b' : '#f8fafc',
@@ -80,6 +86,9 @@ export const RadioManagerPage: React.FC = () => {
         setRadioLogoUrl(profileData.radio_custom_logo_url || '');
         setRadioInstructions(profileData.radio_instructions || '');
         setRadioVisualizerColor(profileData.radio_visualizer_color || '#ff3366');
+        
+        setPlayerBgType(profileData.player_bg_type || 'color');
+        setPlayerBgValue(profileData.player_bg_value || '#05050a');
       }
 
       const { data: tracksData } = await supabase.from('tracks').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
@@ -208,6 +217,22 @@ export const RadioManagerPage: React.FC = () => {
     } catch (err: any) { alert("Erreur d'upload du logo : " + err.message); } finally { setUploadingLogo(false); }
   };
 
+  const handlePlayerBgUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    setUploadingPlayerBg(true);
+    try {
+      const isVideo = file.type.includes('video');
+      const ext = file.name.split('.').pop();
+      const name = `${user.id}/player-bg-${Date.now()}.${ext}`;
+      const { error } = await supabase.storage.from('media').upload(name, file);
+      if (error) throw error;
+      const { data } = supabase.storage.from('media').getPublicUrl(name);
+      setPlayerBgValue(data.publicUrl); 
+      setPlayerBgType(isVideo ? 'video' : 'image');
+    } catch (err: any) { alert("Erreur d'upload : " + err.message); } finally { setUploadingPlayerBg(false); }
+  };
+
   const handleSaveBackground = async () => {
     if (!user) return;
     setSaving(true);
@@ -218,7 +243,9 @@ export const RadioManagerPage: React.FC = () => {
       radio_bg_opacity: radioBgOpacity,
       radio_custom_logo_url: radioLogoUrl,
       radio_instructions: radioInstructions,
-      radio_visualizer_color: radioVisualizerColor
+      radio_visualizer_color: radioVisualizerColor,
+      player_bg_type: playerBgType,
+      player_bg_value: playerBgValue
     }).eq('id', user.id);
     
     setSaving(false);
@@ -280,8 +307,22 @@ export const RadioManagerPage: React.FC = () => {
           <h1 style={{ fontSize: 24, fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: 10 }}>📻 Radio Manager</h1>
         </div>
         {profileUsername && (
-          <div style={{ display: 'flex', gap: 12 }}>
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             <a href={`/radio/${profileUsername}`} target="_blank" rel="noopener noreferrer" className="dash-btn dash-btn-secondary" style={{ textDecoration: 'none' }}>Écouter la Radio ↗</a>
+            
+            {/* ✅ NOUVEAU BOUTON M3U */}
+            <button 
+              onClick={() => {
+                const m3uUrl = `${window.location.origin}/radio/${profileUsername}/stream.m3u`;
+                navigator.clipboard.writeText(m3uUrl);
+                alert(`Lien radio copié !\n\n${m3uUrl}\n\nColle ce lien sur les annuaires radio, VLC ou iTunes.`);
+              }} 
+              className="dash-btn dash-btn-secondary" 
+              style={{ borderColor: '#00d9ff', color: '#00d9ff' }}
+            >
+              📻 Copier le lien Radio (M3U)
+            </button>
+
             <button className="dash-btn dash-btn-primary" onClick={() => setShowJingleModal(true)}>+ Jingle</button>
           </div>
         )}
@@ -352,7 +393,7 @@ export const RadioManagerPage: React.FC = () => {
             </div>
 
             <div>
-              <h3 style={{ margin: '0 0 12px 0', fontSize: 14, fontWeight: 600 }}>Fond d'écran</h3>
+              <h3 style={{ margin: '0 0 12px 0', fontSize: 14, fontWeight: 600 }}>Fond d'écran (Page Web)</h3>
               <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
                 <button onClick={() => setRadioBgType('animated')} className={`dash-tab ${radioBgType === 'animated' ? 'active' : ''}`} style={{ flex: 1 }}>Animé</button>
                 <button onClick={() => setRadioBgType('image')} className={`dash-tab ${radioBgType === 'image' ? 'active' : ''}`} style={{ flex: 1 }}>Image</button>
@@ -377,6 +418,34 @@ export const RadioManagerPage: React.FC = () => {
                       <input type="range" min="0" max="1" step="0.05" value={radioBgOpacity} onChange={(e) => setRadioBgOpacity(Number(e.target.value))} style={{ width: '100%', accentColor: radioVisualizerColor }} />
                     </div>
                   )}
+                </div>
+              )}
+            </div>
+
+            <div style={{ borderTop: `1px solid ${colors.border}`, paddingTop: 24 }}>
+              <h3 style={{ margin: '0 0 12px 0', fontSize: 14, fontWeight: 600 }}>Fond du Player Popup (Mobile/PC)</h3>
+              <p style={{ fontSize: 12, color: colors.textMuted, marginBottom: 16 }}>Choisis l'arrière-plan de la petite fenêtre du lecteur.</p>
+              
+              <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+                <button onClick={() => setPlayerBgType('color')} className={`dash-tab ${playerBgType === 'color' ? 'active' : ''}`} style={{ flex: 1 }}>Couleur</button>
+                <button onClick={() => setPlayerBgType('image')} className={`dash-tab ${playerBgType === 'image' ? 'active' : ''}`} style={{ flex: 1 }}>Image</button>
+                <button onClick={() => setPlayerBgType('video')} className={`dash-tab ${playerBgType === 'video' ? 'active' : ''}`} style={{ flex: 1 }}>Vidéo</button>
+              </div>
+
+              {playerBgType === 'color' ? (
+                <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                  <input type="color" value={playerBgValue} onChange={(e) => setPlayerBgValue(e.target.value)} style={{ width: 50, height: 50, padding: 0, background: 'transparent', border: 'none', cursor: 'pointer', borderRadius: 8 }} />
+                  <input type="text" value={playerBgValue} onChange={(e) => setPlayerBgValue(e.target.value)} className="dash-input" style={{ flex: 1, fontFamily: 'monospace' }} />
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <div style={{ display: 'flex', gap: 12 }}>
+                    <label className="dropzone" style={{ flex: 1 }}>
+                      <div style={{ fontSize: 13, fontWeight: 500, color: colors.textMuted }}>{uploadingPlayerBg ? 'Upload...' : 'Choisir un fichier'}</div>
+                      <input type="file" accept={playerBgType === 'video' ? 'video/*' : 'image/*'} onChange={handlePlayerBgUpload} disabled={uploadingPlayerBg} style={{ display: 'none' }} />
+                    </label>
+                    <input type="url" placeholder="Ou lien direct..." value={playerBgValue} onChange={(e) => setPlayerBgValue(e.target.value)} className="dash-input" style={{ flex: 2 }} />
+                  </div>
                 </div>
               )}
             </div>

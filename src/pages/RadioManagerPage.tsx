@@ -52,7 +52,7 @@ export const RadioManagerPage: React.FC = () => {
   // Réglages Page Web
   const [radioBgUrl, setRadioBgUrl] = useState('');
   const [radioBgType, setRadioBgType] = useState('animated');
-  const [radioBgOpacity, setRadioBgOpacity] = useState(0.6); // ✅ Slider restauré
+  const [radioBgOpacity, setRadioBgOpacity] = useState(0.6);
   const [uploadingBg, setUploadingBg] = useState(false);
 
   const [radioLogoUrl, setRadioLogoUrl] = useState('');
@@ -326,7 +326,7 @@ export const RadioManagerPage: React.FC = () => {
     const { error } = await supabase.from('profiles').update({
       radio_bg_url: radioBgUrl,
       radio_bg_type: radioBgType,
-      radio_bg_opacity: radioBgOpacity, // ✅ On sauvegarde l'opacité
+      radio_bg_opacity: radioBgOpacity,
       radio_custom_logo_url: radioLogoUrl,
       radio_instructions: radioInstructions,
       radio_visualizer_color: radioVisualizerColor,
@@ -424,7 +424,10 @@ export const RadioManagerPage: React.FC = () => {
         {profileUsername && (
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             <a href={`/radio/${profileUsername}`} target="_blank" rel="noopener noreferrer" className="dash-btn dash-btn-secondary" style={{ textDecoration: 'none' }}>Écouter la Radio ↗</a>
-            <button onClick={async () => {
+            
+            {/* ✅ BOUTON M3U */}
+            <button 
+              onClick={async () => {
                 if (!profileUsername) return;
                 try {
                   const { data: tracksData } = await supabase.from('tracks').select('title, artist, audio_url').eq('user_id', user?.id).eq('in_radio', true);
@@ -437,10 +440,12 @@ export const RadioManagerPage: React.FC = () => {
                   document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
                 } catch (err) { alert("Erreur M3U."); }
               }} 
-              className="dash-btn dash-btn-secondary" style={{ borderColor: '#00d9ff', color: '#00d9ff' }}
+              className="dash-btn dash-btn-secondary" 
+              style={{ borderColor: '#00d9ff', color: '#00d9ff' }}
             >
               📻 Télécharger le fichier M3U
             </button>
+
             <button className="dash-btn dash-btn-primary" onClick={() => setShowJingleModal(true)}>+ Jingle</button>
           </div>
         )}
@@ -548,7 +553,6 @@ export const RadioManagerPage: React.FC = () => {
               </div>
             </div>
 
-            {/* ✅ BLOC FOND D'ÉCRAN WEB RESTAURÉ (avec opacité et aperçu) */}
             <div>
               <h3 style={{ margin: '0 0 12px 0', fontSize: 14, fontWeight: 600 }}>Fond d'écran (Page Web)</h3>
               <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
@@ -556,7 +560,6 @@ export const RadioManagerPage: React.FC = () => {
                 <button onClick={() => setRadioBgType('image')} className={`dash-tab ${radioBgType === 'image' ? 'active' : ''}`} style={{ flex: 1 }}>Image</button>
                 <button onClick={() => setRadioBgType('video')} className={`dash-tab ${radioBgType === 'video' ? 'active' : ''}`} style={{ flex: 1 }}>Vidéo</button>
               </div>
-              
               {radioBgType !== 'animated' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                   <div style={{ display: 'flex', gap: 12 }}>
@@ -579,7 +582,6 @@ export const RadioManagerPage: React.FC = () => {
               )}
             </div>
 
-            {/* ✅ BLOC FOND PLAYER POPUP (avec aperçu) */}
             <div style={{ borderTop: `1px solid ${colors.border}`, paddingTop: 24 }}>
               <h3 style={{ margin: '0 0 12px 0', fontSize: 14, fontWeight: 600 }}>Fond du Player Popup</h3>
               <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>

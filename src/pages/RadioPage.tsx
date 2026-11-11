@@ -17,32 +17,33 @@ export const RadioPage: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // ✅ On récupère l'état actuel de la radio pour l'affichage
   const { isLive, activeSchedule } = useRadio(); 
 
   const [profile, setProfile] = useState<any>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-
-  // Données de la radio
+  
   const [nowPlaying, setNowPlaying] = useState<any>(null);
   const [topTracks, setTopTracks] = useState<any[]>([]);
   const [latestReleases, setLatestReleases] = useState<any[]>([]);
   const [schedules, setSchedules] = useState<any[]>([]);
-
-  // Chat & UI
+  const [recentTracks, setRecentTracks] = useState<any[]>([]);
+  
   const [listeners, setListeners] = useState(1);
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const chatEndRef = React.useRef<HTMLDivElement>(null);
-  
-  // Design & Modales
+  const [isChatOpen, setIsChatOpen] = useState(false);
+
+  const [activeSlide, setActiveSlide] = useState(0);
+
   const [customBgUrl, setCustomBgUrl] = useState('');
   const [customBgType, setCustomBgType] = useState('animated');
   const [customBgOpacity, setCustomBgOpacity] = useState(0.6);
   const [customLogo, setCustomLogo] = useState('');
   const [instructions, setInstructions] = useState('');
   const [visualizerColor, setVisualizerColor] = useState('#ff3366');
+  
   const [showQrModal, setShowQrModal] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMsg, setToastMsg] = useState('');
@@ -52,7 +53,6 @@ export const RadioPage: React.FC = () => {
     textMain: isDark ? '#ffffff' : '#1a1a1a',
     textMuted: isDark ? '#888888' : '#666666',
     border: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
-    panelBg: isDark ? 'rgba(20,20,25,0.6)' : 'rgba(255,255,255,0.8)',
     glass: isDark ? 'rgba(15,15,20,0.7)' : 'rgba(255,255,255,0.7)',
   };
 
@@ -64,9 +64,7 @@ export const RadioPage: React.FC = () => {
     const initPage = async () => {
       setLoading(true);
       try {
-        // 1. Récupération du profil
         const { data: profileData } = await supabase.from('profiles').select('*').eq('username', username).single();
-        
         if (!isMounted || !profileData) return;
 
         setProfile(profileData);
@@ -82,37 +80,32 @@ export const RadioPage: React.FC = () => {
           if (isMounted) setUserProfile(myProfile);
         }
 
-        // 2. Récupération des données de la radio (Top tracks, sorties, horaires)
         const { data: tracksData } = await supabase.from('tracks').select('*').eq('user_id', profileData.id).eq('in_radio', true);
-
+        
         if (tracksData) {
-          // Dernière sortie (pour le Now Playing)
           const sortedByDate = [...tracksData].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
           if (sortedByDate.length > 0) setNowPlaying(sortedByDate[0]);
-
-          // Dernières sorties (5 max)
-          setLatestReleases(sortedByDate.slice(0, 5));
-
-          // Top Tracks (Triés par likes)
+          
           const sortedByLikes = [...tracksData].sort((a, b) => (b.likes_count || 0) - (a.likes_count || 0));
           setTopTracks(sortedByLikes.slice(0, 5));
+          setLatestReleases(sortedByDate.slice(0, 4));
         }
 
-        // Programmation
+        const { data: historyData } = await supabase
+          .from('tracks')
+          .select('id, title, artist, cover_url, last_played_at')
+          .eq('user_id', profileData.id)
+          .not('last_played_at', 'is', null)
+          .order('last_played_at', { ascending: false })
+          .limit(5);
+        if (historyData) setRecentTracks(historyData);
+
         const { data: schedulesData } = await supabase.from('radio_schedules').select('*, playlists(name)').eq('user_id', profileData.id).order('start_time');
         if (schedulesData) setSchedules(schedulesData);
 
-        if (!isMounted) return;
-
-        // 3. Chat Realtime
-        channel = supabase.channel(`radio_${profileData.id}_${Date.now()}`, {
-          config: { presence: { key: user?.id || Math.random().toString() } },
-        });
-
+        channel = supabase.channel(`radio_${profileData.id}_${Date.now()}`, { config: { presence: { key: user?.id || Math.random().toString() } } });
         channel
-          .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'radio_messages', filter: `radio_owner_id=eq.${profileData.id}` }, (payload: any) => {
-            setMessages((prev) => [...prev, payload.new]);
-          })
+          .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'radio_messages', filter: `radio_owner_id=eq.${profileData.id}` }, (payload: any) => setMessages((prev) => [...prev, payload.new]))
           .on('presence', { event: 'sync' }, () => {
             if (!channel) return;
             const state = channel.presenceState();
@@ -120,61 +113,42 @@ export const RadioPage: React.FC = () => {
             Object.keys(state).forEach((key) => { count += state[key].length; });
             setListeners(Math.max(1, count));
           })
-          .subscribe(async (status: string) => {
-            if (status === 'SUBSCRIBED' && isMounted && channel) {
-              await channel.track({ online_at: new Date().toISOString() });
-            }
-          });
+          .subscribe(async (status: string) => { if (status === 'SUBSCRIBED' && isMounted && channel) await channel.track({ online_at: new Date().toISOString() }); });
 
         const { data: oldMessages } = await supabase.from('radio_messages').select('*').eq('radio_owner_id', profileData.id).order('created_at', { ascending: true }).limit(50);
         if (isMounted && oldMessages) setMessages(oldMessages);
         
-      } catch (error) {
-        console.error("Erreur de chargement :", error);
-      } finally {
-        if (isMounted) setLoading(false);
-      }
+      } catch (error) { console.error(error); } finally { if (isMounted) setLoading(false); }
     };
 
     initPage();
-
-    return () => { 
-      isMounted = false;
-      if (channel) {
-        channel.unsubscribe();
-        supabase.removeChannel(channel); 
-      }
-    };
+    return () => { isMounted = false; if (channel) { channel.unsubscribe(); supabase.removeChannel(channel); } };
   }, [username, user]);
 
-  useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setActiveSlide((prev) => (prev + 1) % 3);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
 
-  const showToastMsg = (msg: string) => {
-    setToastMsg(msg);
-    setShowToast(true);
-    setTimeout(() => setShowToast(false), 3000);
-  };
+  useEffect(() => { 
+    if (isChatOpen) chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); 
+  }, [messages, isChatOpen]);
 
-  const handleShare = () => {
-    if (navigator.share) navigator.share({ title: `Radio ${profile?.username}`, url: window.location.href }).catch(console.error);
-    else { navigator.clipboard.writeText(window.location.href); showToastMsg("Lien copié ! ✅"); }
-  };
+  const showToastMsg = (msg: string) => { setToastMsg(msg); setShowToast(true); setTimeout(() => setShowToast(false), 3000); };
 
   const handleOpenPlayer = () => {
     const isMobileDevice = /Mobi|Android/i.test(navigator.userAgent);
     const playerUrl = `/player/${username}`;
-    
-    if (isMobileDevice) {
-      navigate(playerUrl);
-    } else {
-      window.open(playerUrl, 'RadioPlayer', 'width=420,height=700,scrollbars=no,resizable=yes,status=no,location=no,toolbar=no,menubar=no');
-    }
+    if (isMobileDevice) navigate(playerUrl);
+    else window.open(playerUrl, 'RadioPlayer', 'width=420,height=700,scrollbars=no,resizable=yes,status=no,location=no,toolbar=no,menubar=no');
   };
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim() || !profile) return;
-    if (!user) { showToastMsg("Connecte-toi pour participer au chat !"); navigate('/auth'); return; }
+    if (!user) { showToastMsg("Connecte-toi pour discuter !"); navigate('/auth'); return; }
     const msgText = newMessage;
     setNewMessage('');
     await supabase.from('radio_messages').insert({
@@ -190,6 +164,19 @@ export const RadioPage: React.FC = () => {
     setMessages(prev => prev.filter(m => m.id !== messageId));
   };
 
+  const timeAgo = (dateString: string) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+    if (diffInSeconds < 60) return "À l'instant";
+    const diffInMinutes = Math.floor(diffInSeconds / 60);
+    if (diffInMinutes < 60) return `Il y a ${diffInMinutes} min`;
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) return `Il y a ${diffInHours} h`;
+    return date.toLocaleDateString();
+  };
+
   const hex = visualizerColor.replace('#', '');
   const r = parseInt(hex.substr(0, 2), 16);
   const g = parseInt(hex.substr(2, 2), 16);
@@ -197,37 +184,46 @@ export const RadioPage: React.FC = () => {
   const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
   const iconColor = yiq >= 128 ? '#000000' : '#ffffff';
 
-  if (loading) return <div style={{ color: colors.textMain, background: colors.bg, height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 800 }}>Connexion à la fréquence... 📻</div>;
+  if (loading) return <div style={{ color: colors.textMain, background: colors.bg, height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Chargement...</div>;
   if (!profile) return <div style={{ color: colors.textMain, background: colors.bg, height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>DJ introuvable.</div>;
 
   const coverImage = customLogo || profile.avatar_url || '';
 
+  const slides = [
+    { title: "Le son de " + profile.username, subtitle: instructions || "Écoutez la meilleure sélection musicale.", image: coverImage },
+    { title: "Top Tracks", subtitle: "Découvrez les sons les plus likés de la semaine.", image: topTracks[0]?.cover_url || coverImage },
+    { title: "Nouveautés", subtitle: "Les dernières sorties à ne pas manquer.", image: latestReleases[0]?.cover_url || coverImage }
+  ];
+
   return (
-    <div style={{ background: colors.bg, minHeight: '100vh', color: colors.textMain, fontFamily: 'Inter, sans-serif', position: 'relative', overflowX: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+    <div style={{ background: colors.bg, minHeight: '100vh', color: colors.textMain, fontFamily: 'Inter, sans-serif', position: 'relative', display: 'flex', flexDirection: 'column' }}>
       
       <Helmet>
         <title>Radio {profile.username} — DropZone DJ</title>
         <meta property="og:title" content={`Écoute Radio ${profile.username} en direct sur DropZone DJ`} />
-        <meta property="og:description" content="Ta radio, ta musique, ton univers." />
         <meta property="og:image" content={coverImage} />
       </Helmet>
 
       <style>{`
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-        .animated-bg { position: absolute; inset: 0; z-index: 0; overflow: hidden; background: ${colors.bg}; }
-        .aurora-blob { position: absolute; width: 60vw; height: 60vw; border-radius: 50%; filter: blur(100px); opacity: ${isDark ? '0.4' : '0.2'}; }
-        .blob1 { background: ${coverImage ? `url(${coverImage}) center/cover` : visualizerColor}; top: -10%; left: -10%; animation: pulse 10s ease-in-out infinite; }
-        .blob2 { background: #7c5cff; bottom: -10%; right: -10%; animation: pulse 15s ease-in-out infinite reverse; }
-        .glass-panel { background: ${colors.glass}; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid ${colors.border}; box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: ${colors.border}; border-radius: 10px; }
-        .section-title { font-size: 24px; font-weight: 900; letter-spacing: -0.5px; margin-bottom: 20px; display: flex; alignItems: center; gap: 10px; }
+        .animated-bg { position: fixed; inset: 0; z-index: 0; overflow: hidden; background: ${colors.bg}; }
+        .aurora-blob { position: absolute; width: 60vw; height: 60vw; border-radius: 50%; filter: blur(120px); opacity: ${isDark ? '0.4' : '0.2'}; }
+        .blob1 { background: ${coverImage ? `url(${coverImage}) center/cover` : visualizerColor}; top: -20%; left: -10%; animation: pulse 10s ease-in-out infinite; }
+        .blob2 { background: #7c5cff; bottom: -20%; right: -10%; animation: pulse 15s ease-in-out infinite reverse; }
+        .glass-panel { background: ${colors.glass}; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid ${colors.border}; box-shadow: 0 10px 30px rgba(0,0,0,0.2); border-radius: 20px; }
         .card-hover { transition: transform 0.2s, background 0.2s; cursor: pointer; }
-        .card-hover:hover { transform: translateY(-4px); background: rgba(255,255,255,0.05); }
+        .card-hover:hover { transform: translateY(-2px); background: rgba(255,255,255,0.05); }
+        
+        .footer-link { color: ${colors.textMuted}; text-decoration: none; font-size: 13px; transition: color 0.2s; display: inline-block; margin-bottom: 8px; }
+        .footer-link:hover { color: ${visualizerColor}; }
+        .footer-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; font-weight: 800; color: ${colors.textMain}; margin-bottom: 16px; }
+
+        .chat-window { transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); transform-origin: bottom right; }
+        .chat-closed { transform: scale(0.8); opacity: 0; pointer-events: none; }
+        .chat-open { transform: scale(1); opacity: 1; pointer-events: auto; }
       `}</style>
 
-      {/* BACKGROUND ANIMÉ */}
+      {/* FOND ANIMÉ */}
       <div className="animated-bg">
         {customBgType === 'video' && customBgUrl ? (
           <video src={customBgUrl} autoPlay loop muted playsInline style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0, opacity: customBgOpacity }} />
@@ -239,157 +235,155 @@ export const RadioPage: React.FC = () => {
             <div className="aurora-blob blob2" />
           </>
         )}
-        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)', backgroundSize: '40px 40px', maskImage: 'radial-gradient(circle at center, black 40%, transparent 80%)' }} />
+        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px)', backgroundSize: '40px 40px', maskImage: 'radial-gradient(circle at center, black 40%, transparent 80%)' }} />
       </div>
 
-      {/* NAV BAR */}
-      <div style={{ width: '100%', maxWidth: 1400, padding: '20px 40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 10, boxSizing: 'border-box' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <img src={coverImage || 'https://via.placeholder.com/100'} alt="Logo" style={{ width: 50, height: 50, borderRadius: '50%', objectFit: 'cover', border: `2px solid ${visualizerColor}` }} />
+      {/* HEADER FIXE */}
+      <div style={{ position: 'sticky', top: 0, zIndex: 100, width: '100%', padding: '12px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: isDark ? 'rgba(5,5,10,0.85)' : 'rgba(245,245,247,0.85)', backdropFilter: 'blur(20px)', borderBottom: `1px solid ${colors.border}`, boxSizing: 'border-box' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <img src={coverImage || 'https://via.placeholder.com/100'} alt="Logo" style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', border: `2px solid ${visualizerColor}` }} />
           <div>
-            <h1 style={{ fontSize: 24, fontWeight: 900, margin: 0, letterSpacing: '-1px' }}>{profile.username}</h1>
-            <p style={{ fontSize: 12, color: colors.textMuted, margin: 0, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px' }}>DropZone DJ Radio</p>
+            <h1 style={{ fontSize: 16, fontWeight: 800, margin: 0, letterSpacing: '-0.3px' }}>{profile.username}</h1>
+            <p style={{ fontSize: 10, color: colors.textMuted, margin: 0, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>DropZone DJ</p>
           </div>
         </div>
         
         <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-          {user ? (
-            <Link to="/settings" style={{ background: colors.glass, border: `1px solid ${colors.border}`, borderRadius: 30, padding: '10px 20px', display: 'flex', alignItems: 'center', gap: 8, color: colors.textMain, textDecoration: 'none', fontSize: 13, fontWeight: 700 }}>
-              Espace Artiste
-            </Link>
-          ) : (
-            <Link to="/auth" style={{ background: colors.glass, border: `1px solid ${colors.border}`, borderRadius: 30, padding: '10px 20px', display: 'flex', alignItems: 'center', gap: 8, color: colors.textMain, textDecoration: 'none', fontSize: 13, fontWeight: 700 }}>
-              Connexion
-            </Link>
-          )}
-          <button onClick={handleShare} style={{ background: colors.glass, border: `1px solid ${colors.border}`, borderRadius: '50%', width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.textMain, cursor: 'pointer' }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: isLive ? '#ef4444' : 'rgba(255,255,255,0.05)', padding: '6px 12px', borderRadius: 20, border: isLive ? 'none' : `1px solid ${colors.border}` }}>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#fff', animation: 'pulse 1s infinite' }} />
+            <span style={{ fontSize: 10, fontWeight: 900, color: isLive ? '#fff' : colors.textMain, letterSpacing: '0.5px' }}>{isLive ? 'ON AIR' : 'RADIO AUTO'}</span>
+          </div>
+          <button onClick={handleOpenPlayer} style={{ background: visualizerColor, color: iconColor, border: 'none', padding: '8px 20px', borderRadius: 20, fontSize: 12, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, boxShadow: `0 4px 10px ${visualizerColor}40` }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            ÉCOUTER
           </button>
         </div>
       </div>
 
-      {/* HERO SECTION */}
-      <div style={{ width: '100%', maxWidth: 1400, padding: '60px 40px', display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: 'center', justifyContent: 'space-between', gap: 40, zIndex: 10, boxSizing: 'border-box' }}>
-        
-        <div style={{ flex: 1 }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.1)', padding: '6px 16px', borderRadius: 20, marginBottom: 20, border: `1px solid ${colors.border}` }}>
-            <span style={{ width: 8, height: 8, borderRadius: '50%', background: isLive ? visualizerColor : '#ff3366', animation: 'pulse 1.5s infinite' }} />
-            <span style={{ fontSize: 12, fontWeight: 800, color: colors.textMain, textTransform: 'uppercase', letterSpacing: '1px' }}>
-              {isLive ? '🔴 En Direct' : '🎵 Radio Auto'}
-            </span>
-          </div>
-          <h1 style={{ fontSize: isMobile ? 48 : 72, fontWeight: 900, lineHeight: 1.1, margin: '0 0 20px 0', letterSpacing: '-2px' }}>
-            Écoute la radio<br/>
-            <span style={{ color: visualizerColor }}>{profile.username}</span>
-          </h1>
-          <p style={{ fontSize: 18, color: colors.textMuted, maxWidth: 500, lineHeight: 1.6, marginBottom: 30 }}>
-            {instructions || "La meilleure sélection musicale, des mixes exclusifs et l'ambiance DropZone DJ. Rejoins la communauté et écoute en direct."}
-          </p>
+      {/* ✅ SLIDER PLEINE LARGEUR (Hors conteneur max-width pour prendre tout l'espace) */}
+      <div style={{ width: '100%', padding: '24px', boxSizing: 'border-box', zIndex: 10 }}>
+        <div className="glass-panel" style={{ position: 'relative', width: '100%', height: isMobile ? 300 : 400, overflow: 'hidden', display: 'flex', alignItems: 'center', borderRadius: 24 }}>
           
-          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-            <button onClick={handleOpenPlayer} style={{ background: visualizerColor, color: iconColor, border: 'none', padding: '18px 36px', borderRadius: 40, fontSize: 18, fontWeight: 900, cursor: 'pointer', boxShadow: `0 10px 30px ${visualizerColor}60`, display: 'flex', alignItems: 'center', gap: 12, transition: 'transform 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'} onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-              Écouter le Direct
-            </button>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: colors.glass, padding: '0 24px', borderRadius: 40, border: `1px solid ${colors.border}` }}>
-              <span style={{ fontSize: 24, fontWeight: 900 }}>{listeners}</span>
-              <span style={{ fontSize: 14, color: colors.textMuted, fontWeight: 600 }}>Auditeurs<br/>connectés</span>
-            </div>
-          </div>
-        </div>
+          <button onClick={() => setActiveSlide(prev => (prev - 1 + 3) % 3)} style={{ position: 'absolute', left: 24, zIndex: 20, background: 'rgba(0,0,0,0.5)', border: 'none', color: '#fff', width: 40, height: 40, borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(10px)' }}>←</button>
+          <button onClick={() => setActiveSlide(prev => (prev + 1) % 3)} style={{ position: 'absolute', right: 24, zIndex: 20, background: 'rgba(0,0,0,0.5)', border: 'none', color: '#fff', width: 40, height: 40, borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(10px)' }}>→</button>
 
-        {/* VISUEL DE DROITE (Pochette / Vinyle statique) */}
-        <div style={{ flex: 1, display: 'flex', justifyContent: 'center', position: 'relative' }}>
-          <div style={{ width: isMobile ? 280 : 400, height: isMobile ? 280 : 400, borderRadius: '50%', background: 'url(' + (nowPlaying?.cover_url || coverImage || 'https://via.placeholder.com/400') + ') center/cover', boxShadow: `0 20px 60px ${visualizerColor}40`, border: `4px solid ${colors.border}`, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div style={{ width: isMobile ? 60 : 80, height: isMobile ? 60 : 80, borderRadius: '50%', background: colors.bg, border: `4px solid ${colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'inset 0 0 20px rgba(0,0,0,0.5)' }}>
-              <div style={{ width: 12, height: 12, borderRadius: '50%', background: visualizerColor, boxShadow: `0 0 10px ${visualizerColor}` }} />
+          {slides.map((slide, index) => (
+            <div key={index} style={{ 
+              position: 'absolute', inset: 0, 
+              opacity: activeSlide === index ? 1 : 0, 
+              transition: 'opacity 0.6s ease-in-out',
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: isMobile ? '30px' : '60px',
+              background: `url(${slide.image}) center/cover`,
+              zIndex: activeSlide === index ? 10 : 0
+            }}>
+              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 100%)', zIndex: 1 }} />
+              
+              <div style={{ position: 'relative', zIndex: 2, maxWidth: '60%' }}>
+                <h2 style={{ fontSize: isMobile ? 32 : 48, fontWeight: 900, color: '#fff', margin: '0 0 12px 0', lineHeight: 1.1 }}>{slide.title}</h2>
+                <p style={{ fontSize: isMobile ? 14 : 18, color: '#ccc', margin: '0 0 24px 0' }}>{slide.subtitle}</p>
+                <button onClick={handleOpenPlayer} style={{ background: visualizerColor, color: iconColor, border: 'none', padding: '12px 28px', borderRadius: 30, fontSize: 14, fontWeight: 800, cursor: 'pointer', boxShadow: `0 8px 20px ${visualizerColor}50` }}>Écouter maintenant</button>
+              </div>
+
+              {index === 0 && (
+                <div style={{ position: 'relative', zIndex: 2, display: isMobile ? 'none' : 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ width: 240, height: 240, borderRadius: '50%', background: `url(${nowPlaying?.cover_url || coverImage}) center/cover`, border: `4px solid rgba(255,255,255,0.2)`, boxShadow: '0 30px 60px rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ width: 50, height: 50, borderRadius: '50%', background: '#000', border: '3px solid rgba(255,255,255,0.2)' }} />
+                  </div>
+                </div>
+              )}
             </div>
-            {/* Petite étiquette "Now Playing" */}
-            <div style={{ position: 'absolute', bottom: -20, background: colors.panelBg, backdropFilter: 'blur(10px)', padding: '10px 20px', borderRadius: 30, border: `1px solid ${colors.border}`, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '90%' }}>
-              <span style={{ fontSize: 12, color: visualizerColor, fontWeight: 800 }}>EN COURS : </span>
-              <span style={{ fontSize: 14, fontWeight: 700 }}>{nowPlaying?.title || 'Chargement...'}</span>
-            </div>
+          ))}
+
+          <div style={{ position: 'absolute', bottom: 24, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 8, zIndex: 20 }}>
+            {[0, 1, 2].map(idx => (
+              <button key={idx} onClick={() => setActiveSlide(idx)} style={{ width: activeSlide === idx ? 32 : 8, height: 8, borderRadius: 4, background: activeSlide === idx ? visualizerColor : 'rgba(255,255,255,0.3)', border: 'none', cursor: 'pointer', transition: 'all 0.3s' }} />
+            ))}
           </div>
         </div>
       </div>
 
-      {/* CONTENU PRINCIPAL (GRILLE) */}
-      <div style={{ width: '100%', maxWidth: 1400, padding: '0 40px 60px 40px', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '2fr 1fr', gap: 40, zIndex: 10, boxSizing: 'border-box' }}>
+      {/* ✅ CONTENU PRINCIPAL (Grille plus large) */}
+      <div style={{ width: '100%', maxWidth: 1400, margin: '0 auto', padding: '24px 24px 60px 24px', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 380px', gap: 32, zIndex: 10, boxSizing: 'border-box' }}>
         
-        {/* COLONNE GAUCHE (Top Tracks & Nouveautés) */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 40 }}>
+        {/* COLONNE GAUCHE (Top Tracks + Latest Releases) */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
           
           {/* TOP TRACKS */}
-          <div>
-            <div className="section-title">
-              <span style={{ color: visualizerColor }}>🏆</span> Top Tracks de la Radio
+          <div className="glass-panel" style={{ padding: 24 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <h2 style={{ fontSize: 20, fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}><span style={{ color: visualizerColor }}>🏆</span> Top Tracks</h2>
+              <span style={{ fontSize: 12, color: colors.textMuted }}>Les plus likés</span>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {topTracks.length === 0 ? (
-                <div style={{ color: colors.textMuted, fontStyle: 'italic' }}>Pas encore de sons likés.</div>
-              ) : (
-                topTracks.map((track, index) => (
-                  <div key={track.id} className="card-hover" style={{ display: 'flex', alignItems: 'center', gap: 16, padding: 12, borderRadius: 12, background: colors.glass, border: `1px solid ${colors.border}` }}>
-                    <div style={{ fontSize: 24, fontWeight: 900, color: index === 0 ? visualizerColor : colors.textMuted, width: 30, textAlign: 'center' }}>{index + 1}</div>
-                    <div style={{ width: 50, height: 50, borderRadius: 8, background: `url(${track.cover_url || 'https://via.placeholder.com/50'}) center/cover` }} />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 15, fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.title}</div>
-                      <div style={{ fontSize: 13, color: colors.textMuted }}>{track.artist}</div>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: visualizerColor, fontWeight: 700 }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
-                      {track.likes_count || 0}
-                    </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {topTracks.map((track, index) => (
+                <div key={track.id} className="card-hover" style={{ display: 'flex', alignItems: 'center', gap: 16, padding: 12, borderRadius: 12, background: 'rgba(255,255,255,0.02)', border: `1px solid ${colors.border}` }}>
+                  <div style={{ fontSize: 18, fontWeight: 800, color: index === 0 ? visualizerColor : colors.textMuted, width: 30, textAlign: 'center' }}>{index + 1}</div>
+                  <div style={{ width: 56, height: 56, borderRadius: 8, background: `url(${track.cover_url || 'https://via.placeholder.com/56'}) center/cover`, flexShrink: 0 }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 16, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.title}</div>
+                    <div style={{ fontSize: 13, color: colors.textMuted, marginTop: 2 }}>{track.artist}</div>
                   </div>
-                ))
-              )}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: visualizerColor, fontWeight: 700 }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                    {track.likes_count || 0}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 
-          {/* NOUVEAUTÉS */}
-          <div>
-            <div className="section-title">
-              <span style={{ color: visualizerColor }}>✨</span> Dernières Sorties
+          {/* DERNIÈRES SORTIES */}
+          <div className="glass-panel" style={{ padding: 24 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <h2 style={{ fontSize: 20, fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}><span style={{ color: visualizerColor }}>✨</span> Dernières Sorties</h2>
+              <span style={{ fontSize: 12, color: colors.textMuted }}>Nouveautés</span>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 16 }}>
-              {latestReleases.length === 0 ? (
-                <div style={{ color: colors.textMuted, fontStyle: 'italic' }}>Aucune nouveauté.</div>
-              ) : (
-                latestReleases.map((track) => (
-                  <div key={track.id} className="card-hover" style={{ display: 'flex', flexDirection: 'column', gap: 12, background: colors.glass, padding: 16, borderRadius: 16, border: `1px solid ${colors.border}` }}>
-                    <div style={{ width: '100%', aspectRatio: '1', borderRadius: 12, background: `url(${track.cover_url || 'https://via.placeholder.com/150'}) center/cover`, boxShadow: '0 10px 20px rgba(0,0,0,0.2)' }} />
-                    <div>
-                      <div style={{ fontSize: 14, fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.title}</div>
-                      <div style={{ fontSize: 12, color: colors.textMuted }}>{track.artist}</div>
-                    </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 20 }}>
+              {latestReleases.map((track) => (
+                <div key={track.id} className="card-hover" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <div style={{ width: '100%', aspectRatio: '1', borderRadius: 12, background: `url(${track.cover_url || 'https://via.placeholder.com/180'}) center/cover`, boxShadow: '0 8px 20px rgba(0,0,0,0.3)' }} />
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.title}</div>
+                    <div style={{ fontSize: 12, color: colors.textMuted, marginTop: 2 }}>{track.artist}</div>
                   </div>
-                ))
-              )}
+                </div>
+              ))}
             </div>
           </div>
-
         </div>
 
-        {/* COLONNE DROITE (Programmation & Chat) */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 40 }}>
+        {/* COLONNE DROITE (Infos, Programme, Pub) */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
           
-          {/* PROGRAMMATION */}
-          <div style={{ background: colors.glass, padding: 24, borderRadius: 24, border: `1px solid ${colors.border}` }}>
-            <h3 style={{ fontSize: 18, fontWeight: 900, margin: '0 0 20px 0', display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ color: visualizerColor }}>📅</span> Programme
-            </h3>
+          {/* À PROPOS */}
+          <div className="glass-panel" style={{ padding: 24 }}>
+            <h3 style={{ fontSize: 18, fontWeight: 800, margin: '0 0 20px 0', display: 'flex', alignItems: 'center', gap: 8 }}><span style={{ color: visualizerColor }}>ℹ️</span> À propos</h3>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16 }}>
+              <img src={coverImage || 'https://via.placeholder.com/100'} alt="Avatar" style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover', border: `3px solid ${colors.border}` }} />
+              <div>
+                <div style={{ fontSize: 16, fontWeight: 800 }}>{profile.username}</div>
+                <div style={{ fontSize: 12, color: colors.textMuted }}>DJ / Producteur</div>
+              </div>
+            </div>
+            <p style={{ fontSize: 13, color: colors.textMuted, lineHeight: 1.6, margin: 0 }}>
+              {profile.bio ? (profile.bio.length > 120 ? profile.bio.substring(0, 120) + '...' : profile.bio) : "Bienvenue sur ma radio ! Je mixe les meilleurs sons pour vous accompagner 24h/24."}
+            </p>
+          </div>
+
+          {/* PROGRAMME */}
+          <div className="glass-panel" style={{ padding: 24 }}>
+            <h3 style={{ fontSize: 18, fontWeight: 800, margin: '0 0 20px 0', display: 'flex', alignItems: 'center', gap: 8 }}><span style={{ color: visualizerColor }}>📅</span> Programme</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               {schedules.length === 0 ? (
-                <div style={{ color: colors.textMuted, fontSize: 14, fontStyle: 'italic' }}>Programmation à venir...</div>
+                <div style={{ fontSize: 13, color: colors.textMuted, fontStyle: 'italic' }}>Programmation à venir...</div>
               ) : (
                 schedules.map(schedule => (
                   <div key={schedule.id} style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
-                    <div style={{ fontSize: 13, fontWeight: 800, color: visualizerColor, background: 'rgba(255,255,255,0.05)', padding: '4px 8px', borderRadius: 6, whiteSpace: 'nowrap' }}>
-                      {schedule.start_time.slice(0, 5)}
-                    </div>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: visualizerColor, background: 'rgba(255,255,255,0.05)', padding: '4px 8px', borderRadius: 6, whiteSpace: 'nowrap' }}>{schedule.start_time.slice(0, 5)}</div>
                     <div>
-                      <div style={{ fontSize: 15, fontWeight: 800 }}>{schedule.title}</div>
-                      <div style={{ fontSize: 12, color: colors.textMuted }}>{schedule.playlists?.name || 'Mix'}</div>
+                      <div style={{ fontSize: 14, fontWeight: 700 }}>{schedule.title}</div>
+                      <div style={{ fontSize: 12, color: colors.textMuted, marginTop: 2 }}>{schedule.playlists?.name || 'Mix'}</div>
                     </div>
                   </div>
                 ))
@@ -397,49 +391,120 @@ export const RadioPage: React.FC = () => {
             </div>
           </div>
 
-          {/* CHAT */}
-          <div style={{ background: colors.glass, borderRadius: 24, border: `1px solid ${colors.border}`, display: 'flex', flexDirection: 'column', height: 400 }}>
-            <div style={{ padding: '16px 20px', borderBottom: `1px solid ${colors.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ margin: 0, fontSize: 14, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px', display: 'flex', alignItems: 'center', gap: 8 }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={visualizerColor} strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                Live Chat
-              </h3>
-              <span style={{ fontSize: 10, background: 'rgba(0,217,255,0.15)', color: '#00d9ff', padding: '2px 8px', borderRadius: 10, fontWeight: 800 }}>LIVE</span>
-            </div>
-            
-            <div style={{ flex: 1, overflowY: 'auto', padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
-              {messages.length === 0 ? (
-                <div style={{ textAlign: 'center', color: colors.textMuted, fontSize: 13, marginTop: 20, fontStyle: 'italic' }}>Sois le premier à dire bonjour !</div>
-              ) : (
-                messages.map((msg) => (
-                  <div key={msg.id} style={{ display: 'flex', gap: 10, position: 'relative' }}>
-                    <img src={msg.avatar_url || `https://ui-avatars.com/api/?name=${msg.username}&background=random`} alt="avatar" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
-                    <div style={{ paddingRight: 15 }}>
-                      <span style={{ fontSize: 12, fontWeight: 800, color: msg.username === userProfile?.username ? visualizerColor : colors.textMain }}>{msg.username}</span>
-                      <div style={{ fontSize: 13, color: colors.textMuted, marginTop: 2, lineHeight: 1.4, wordBreak: 'break-word' }}>{msg.text}</div>
-                    </div>
-                    {(user?.id === msg.user_id || user?.id === profile.id) && (
-                      <button onClick={() => handleDeleteMessage(msg.id)} style={{ position: 'absolute', right: 0, top: 0, background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', fontSize: 12, opacity: 0.5 }} onMouseEnter={(e) => e.currentTarget.style.color = visualizerColor} onMouseLeave={(e) => e.currentTarget.style.color = colors.textMuted}>✕</button>
-                    )}
-                  </div>
-                ))
-              )}
-              <div ref={chatEndRef} />
-            </div>
-
-            <form onSubmit={handleSendMessage} style={{ padding: 16, borderTop: `1px solid ${colors.border}`, display: 'flex', gap: 10 }}>
-              <input type="text" value={newMessage} onChange={(e) => setNewMessage(e.target.value)} placeholder={user ? "Ton message..." : "Connexion requise"} disabled={!user} style={{ flex: 1, background: 'rgba(0,0,0,0.2)', border: `1px solid ${colors.border}`, borderRadius: 20, padding: '10px 14px', color: colors.textMain, fontSize: 13, outline: 'none', opacity: user ? 1 : 0.5 }} />
-              <button type="submit" disabled={!user || !newMessage.trim()} style={{ background: visualizerColor, color: iconColor, border: 'none', borderRadius: '50%', width: 38, height: 38, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: (user && newMessage.trim()) ? 'pointer' : 'not-allowed', opacity: (user && newMessage.trim()) ? 1 : 0.5 }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
-              </button>
-            </form>
+          {/* ESPACE PARTENAIRE */}
+          <div className="glass-panel" style={{ padding: 24, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', background: isDark ? 'linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01))' : 'linear-gradient(135deg, rgba(0,0,0,0.05), rgba(0,0,0,0.01))', border: `1px dashed ${colors.border}` }}>
+            <div style={{ fontSize: 32, marginBottom: 12 }}>🤝</div>
+            <h3 style={{ fontSize: 16, fontWeight: 800, margin: '0 0 8px 0' }}>Espace Partenaire</h3>
+            <p style={{ fontSize: 12, color: colors.textMuted, margin: '0 0 16px 0' }}>Votre publicité ici, vue par {listeners} auditeurs.</p>
+            <a href="#" style={{ fontSize: 13, fontWeight: 700, color: visualizerColor, textDecoration: 'none', background: 'rgba(0, 217, 255, 0.1)', padding: '10px 20px', borderRadius: 8 }}>Devenir sponsor</a>
           </div>
 
         </div>
-
       </div>
 
-      {/* MODALS */}
+      {/* CHAT WIDGET FLOTTANT */}
+      <div style={{ position: 'fixed', bottom: isMobile ? 80 : 30, right: 30, zIndex: 999, display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+        <div className={`glass-panel chat-window ${isChatOpen ? 'chat-open' : 'chat-closed'}`} style={{ width: 340, height: 450, marginBottom: 16, display: 'flex', flexDirection: 'column', background: colors.glass, backdropFilter: 'blur(30px)', borderRadius: 20, overflow: 'hidden', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
+          <div style={{ padding: '14px 16px', borderBottom: `1px solid ${colors.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(0,0,0,0.1)' }}>
+            <h3 style={{ margin: 0, fontSize: 12, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px', display: 'flex', alignItems: 'center', gap: 6 }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={visualizerColor} strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg> Live Chat</h3>
+            <button onClick={() => setIsChatOpen(false)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', fontSize: 16 }}>✕</button>
+          </div>
+          
+          <div style={{ flex: 1, overflowY: 'auto', padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {messages.map((msg) => (
+              <div key={msg.id} style={{ display: 'flex', gap: 8, position: 'relative' }}>
+                <img src={msg.avatar_url || `https://ui-avatars.com/api/?name=${msg.username}&background=random`} alt="avatar" style={{ width: 24, height: 24, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+                <div style={{ paddingRight: 15 }}>
+                  <span style={{ fontSize: 11, fontWeight: 800, color: msg.username === userProfile?.username ? visualizerColor : colors.textMain }}>{msg.username}</span>
+                  <div style={{ fontSize: 12, color: colors.textMuted, marginTop: 1, lineHeight: 1.3, wordBreak: 'break-word' }}>{msg.text}</div>
+                </div>
+                {(user?.id === msg.user_id || user?.id === profile.id) && (
+                  <button onClick={() => handleDeleteMessage(msg.id)} style={{ position: 'absolute', right: 0, top: 0, background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', fontSize: 10, opacity: 0.5 }}>✕</button>
+                )}
+              </div>
+            ))}
+            <div ref={chatEndRef} />
+          </div>
+          
+          <form onSubmit={handleSendMessage} style={{ padding: 12, borderTop: `1px solid ${colors.border}`, display: 'flex', gap: 8, background: 'rgba(0,0,0,0.1)' }}>
+            <input type="text" value={newMessage} onChange={(e) => setNewMessage(e.target.value)} placeholder={user ? "Ton message..." : "Connexion requise"} disabled={!user} style={{ flex: 1, background: 'rgba(0,0,0,0.2)', border: `1px solid ${colors.border}`, borderRadius: 20, padding: '8px 12px', color: colors.textMain, fontSize: 12, outline: 'none', opacity: user ? 1 : 0.5 }} />
+            <button type="submit" disabled={!user || !newMessage.trim()} style={{ background: visualizerColor, color: iconColor, border: 'none', borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: (user && newMessage.trim()) ? 'pointer' : 'not-allowed', opacity: (user && newMessage.trim()) ? 1 : 0.5 }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+            </button>
+          </form>
+        </div>
+
+        <button onClick={() => setIsChatOpen(!isChatOpen)} style={{ width: 56, height: 56, borderRadius: '50%', background: visualizerColor, color: iconColor, border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: `0 10px 30px ${visualizerColor}60`, transition: 'transform 0.2s', transform: isChatOpen ? 'scale(0.9)' : 'scale(1)' }}>
+          {isChatOpen ? (
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          ) : (
+            <div style={{ position: 'relative' }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+              <span style={{ position: 'absolute', top: -6, right: -6, width: 10, height: 10, background: '#ff3366', borderRadius: '50%', border: `2px solid ${colors.bg}` }} />
+            </div>
+          )}
+        </button>
+      </div>
+
+      {/* FOOTER */}
+      <footer style={{ marginTop: 'auto', width: '100%', background: isDark ? 'rgba(10,10,15,0.95)' : 'rgba(255,255,255,0.95)', backdropFilter: 'blur(20px)', borderTop: `1px solid ${colors.border}`, padding: '40px 32px 20px 32px', zIndex: 10, boxSizing: 'border-box' }}>
+        <div style={{ maxWidth: 1400, margin: '0 auto', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, 1fr)', gap: 32 }}>
+          
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+              <img src={coverImage || 'https://via.placeholder.com/100'} alt="Logo" style={{ width: 32, height: 32, borderRadius: '50%', border: `2px solid ${visualizerColor}` }} />
+              <h2 style={{ fontSize: 16, fontWeight: 800, margin: 0 }}>{profile.username}</h2>
+            </div>
+            <p style={{ fontSize: 12, color: colors.textMuted, lineHeight: 1.5, marginBottom: 16 }}>La radio officielle de {profile.username}, propulsée par DropZone DJ.</p>
+            <div style={{ fontSize: 11, color: colors.textMuted }}>© {new Date().getFullYear()} {profile.username}.</div>
+          </div>
+
+          <div>
+            <h3 className="footer-title">🎵 Derniers morceaux joués</h3>
+            {recentTracks.length === 0 ? (
+              <p style={{ fontSize: 12, color: colors.textMuted, fontStyle: 'italic' }}>Aucun historique.</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {recentTracks.map(track => (
+                  <div key={track.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ width: 28, height: 28, borderRadius: 4, background: `url(${track.cover_url || 'https://via.placeholder.com/28'}) center/cover`, flexShrink: 0 }} />
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.title}</div>
+                      <div style={{ fontSize: 10, color: colors.textMuted }}>{track.artist}</div>
+                    </div>
+                    <div style={{ fontSize: 9, color: visualizerColor, fontWeight: 700, whiteSpace: 'nowrap' }}>{timeAgo(track.last_played_at)}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div>
+            <h3 className="footer-title">🔗 Liens Rapides</h3>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <Link to={`/radio/${username}`} className="footer-link">Écouter la radio</Link>
+              <a href={`/premium/${username}`} className="footer-link">Page Premium</a>
+              {user ? (
+                <Link to="/settings" className="footer-link">Mon Espace Artiste</Link>
+              ) : (
+                <Link to="/auth" className="footer-link">Connexion / Inscription</Link>
+              )}
+              <a href="https://dropzone-dj.vercel.app" target="_blank" rel="noreferrer" className="footer-link">Découvrir DropZone DJ</a>
+            </div>
+          </div>
+
+          <div>
+            <h3 className="footer-title">📱 Suivez-nous</h3>
+            <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
+              <a href="#" style={{ background: 'rgba(255,255,255,0.05)', width: 32, height: 32, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.textMain, border: `1px solid ${colors.border}` }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg></a>
+              <a href="#" style={{ background: 'rgba(255,255,255,0.05)', width: 32, height: 32, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.textMain, border: `1px solid ${colors.border}` }}><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"></path></svg></a>
+              <a href="#" style={{ background: 'rgba(255,255,255,0.05)', width: 32, height: 32, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.textMain, border: `1px solid ${colors.border}` }}><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg></a>
+            </div>
+            <p style={{ fontSize: 11, color: colors.textMuted, lineHeight: 1.4 }}>Contact : booking@dropzone.dj</p>
+          </div>
+        </div>
+      </footer>
+
       {showToast && (
         <div style={{ position: 'fixed', bottom: 30, left: '50%', transform: 'translateX(-50%)', background: colors.textMain, color: colors.bg, padding: '12px 24px', borderRadius: 30, fontWeight: 800, fontSize: 14, zIndex: 999, boxShadow: '0 10px 20px rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', gap: 8 }}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
@@ -455,9 +520,7 @@ export const RadioPage: React.FC = () => {
             <div style={{ background: '#fff', padding: 20, borderRadius: 20, display: 'inline-block', marginBottom: 30, boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }}>
               <img src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(window.location.href)}`} alt="QR Code Radio" style={{ width: 220, height: 220, display: 'block' }} />
             </div>
-            <button onClick={() => setShowQrModal(false)} style={{ marginTop: 20, width: '100%', padding: 16, background: visualizerColor, color: iconColor, border: 'none', borderRadius: 16, fontWeight: 900, fontSize: 16, cursor: 'pointer', boxShadow: `0 10px 20px ${visualizerColor}50` }}>
-              Fermer
-            </button>
+            <button onClick={() => setShowQrModal(false)} style={{ marginTop: 20, width: '100%', padding: 16, background: visualizerColor, color: iconColor, border: 'none', borderRadius: 16, fontWeight: 900, fontSize: 16, cursor: 'pointer', boxShadow: `0 10px 20px ${visualizerColor}50` }}>Fermer</button>
           </div>
         </div>,
         document.body

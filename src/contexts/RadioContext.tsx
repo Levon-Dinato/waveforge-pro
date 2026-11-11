@@ -1,5 +1,5 @@
 // src/contexts/RadioContext.tsx
-import React, { createContext, useContext, useState, useRef, useEffect } from 'react';
+import React, { createContext, useContext, useState, useRef, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import { usePlayer } from './PlayerContext';
 
@@ -38,19 +38,21 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const pendingSeekRef = useRef<number | null>(null);
+  const isActiveRef = useRef(false); // ✅ Pour éviter de relancer la radio en boucle
   const { stop: stopMainPlayer } = usePlayer();
 
   const currentTrack = tracks[currentIndex];
 
-  const startRadio = (newTracks: any[], live: boolean, url: string, startIndex: number = 0, startTime?: number) => {
-    if (isRadioActive && newTracks.length > 0 && tracks.length > 0 && newTracks[0].user_id === tracks[0].user_id) {
+  const startRadio = useCallback((newTracks: any[], live: boolean, url: string, startIndex: number = 0, startTime?: number) => {
+    if (isActiveRef.current) {
       if (live !== isLive || url !== liveUrl) {
         setIsLive(live);
         setLiveUrl(url);
       }
-      return;
+      return; // ✅ Si la radio tourne déjà, on ne fait rien (évite la boucle)
     }
 
+    isActiveRef.current = true;
     stopMainPlayer();
     setTracks(newTracks);
     setCurrentIndex(startIndex);
@@ -66,32 +68,19 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     } else {
       pendingSeekRef.current = null;
     }
-  };
+  }, [isLive, liveUrl, stopMainPlayer]);
 
-  // ✅ Tente de lancer le son et affiche l'overlay si bloqué
-  const tryPlay = () => {
-    if (!audioRef.current) return;
-    const playPromise = audioRef.current.play();
-    if (playPromise !== undefined) {
-      playPromise.catch((e) => {
-        // Si le navigateur bloque, on affiche l'overlay
-        if (e.name === 'NotAllowedError') {
-          setNeedsGesture(true);
-          setIsPlaying(false);
-        }
-      });
-    }
-  };
-
-  const unlockAudio = () => {
+  const unlockAudio = useCallback(() => {
     setNeedsGesture(false);
     setIsPlaying(true);
     if (audioRef.current) {
-       audioRef.current.play().catch(e => console.error(e));
+       audioRef.current.play().catch(e => {
+         if (e.name === 'NotAllowedError') setNeedsGesture(true);
+       });
     }
-  };
+  }, []);
 
-  const togglePlay = () => {
+  const togglePlay = useCallback(() => {
     if (!audioRef.current) return;
     if (isPlaying) {
       audioRef.current.pause();
@@ -103,26 +92,27 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
          if (e.name === 'NotAllowedError') setNeedsGesture(true);
       });
     }
-  };
+  }, [isPlaying]);
 
-  const playNext = () => {
+  const playNext = useCallback(() => {
     if (isLive || tracks.length === 0) return;
     setCurrentIndex((prev) => (prev + 1) % tracks.length);
-  };
+  }, [isLive, tracks.length]);
 
-  const playPrev = () => {
+  const playPrev = useCallback(() => {
     if (isLive || tracks.length === 0) return;
     setCurrentIndex((prev) => (prev - 1 + tracks.length) % tracks.length);
-  };
+  }, [isLive, tracks.length]);
 
-  const seek = (time: number) => {
+  const seek = useCallback((time: number) => {
     if (audioRef.current && !isLive) {
       audioRef.current.currentTime = time;
       setProgress(time);
     }
-  };
+  }, [isLive]);
 
-  const stopRadio = () => {
+  const stopRadio = useCallback(() => {
+    isActiveRef.current = false;
     setIsPlaying(false);
     setIsRadioActive(false);
     setNeedsGesture(false);
@@ -130,12 +120,20 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (audioRef.current) {
       if (isPlaying) {
-        tryPlay();
+        const playPromise = audioRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise.catch((e) => {
+            if (e.name === 'NotAllowedError') {
+              setNeedsGesture(true);
+              setIsPlaying(false);
+            }
+          });
+        }
       } else {
         audioRef.current.pause();
       }
@@ -159,8 +157,14 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             setProgress(pendingSeekRef.current);
             pendingSeekRef.current = null;
           }
-          // On tente de jouer une fois que la métadonnée est chargée
-          if (isPlaying) tryPlay();
+          if (isPlaying && audioRef.current) {
+            audioRef.current.play().catch(e => {
+               if (e.name === 'NotAllowedError') {
+                  setNeedsGesture(true);
+                  setIsPlaying(false);
+               }
+            });
+          }
         }}
         onTimeUpdate={() => {
           if (audioRef.current) {

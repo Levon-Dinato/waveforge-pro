@@ -18,7 +18,7 @@ export const RadioLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const { isLive, currentTrack, isPlaying, togglePlay, startRadio, stopRadio, isRadioActive, progress, duration } = useRadio();
+  const { isLive, currentTrack, isPlaying, togglePlay, startRadio, isRadioActive, progress, duration, updateRadioSettings } = useRadio();
 
   const [profile, setProfile] = useState<any>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
@@ -50,15 +50,19 @@ export const RadioLayout: React.FC = () => {
 
   const [isWiping, setIsWiping] = useState(false);
 
+  // ✅ Ref pour éviter de relancer le fetch plusieurs fois
+  const hasFetchedRef = useRef(false);
+  const isRadioStartedRef = useRef(false);
+
   const colors = {
     bg: isDark ? '#05050a' : '#f5f5f7', textMain: isDark ? '#ffffff' : '#1a1a1a', textMuted: isDark ? '#888888' : '#666666',
     border: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)', glass: isDark ? 'rgba(15,15,20,0.7)' : 'rgba(255,255,255,0.7)', card: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)',
   };
 
+  // ✅ EFFET 1 : Chargement des données (Se lance UNIQUEMENT si le username change)
   useEffect(() => {
-    if (!username) return;
+    if (!username || hasFetchedRef.current) return;
     let isMounted = true;
-    let channel: any = null;
 
     const initPage = async () => {
       setLoading(true);
@@ -73,6 +77,12 @@ export const RadioLayout: React.FC = () => {
         setCustomBgAnimation(profileData.radio_bg_animation || 'aurora');
         setCustomLogo(profileData.radio_custom_logo_url || '');
         setVisualizerColor(profileData.radio_visualizer_color || '#ff3366');
+
+        // ✅ Charge les paramètres du crossfade
+        updateRadioSettings(
+          profileData.radio_crossfade_enabled || false,
+          profileData.radio_crossfade_duration || 3
+        );
 
         setSocials({
           instagram: profileData.instagram_url, spotify: profileData.spotify_url, soundcloud: profileData.soundcloud_url,
@@ -104,7 +114,9 @@ export const RadioLayout: React.FC = () => {
           setTopTracks([...tracksData].sort((a: any, b: any) => (b.likes_count || 0) - (a.likes_count || 0)));
           setLatestReleases([...tracksData].sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
 
-          if (!isRadioActive && !currentTrack) {
+          // ✅ Démarre la radio uniquement si elle n'est pas déjà lancée
+          if (!isRadioStartedRef.current && !isRadioActive) {
+            isRadioStartedRef.current = true;
             startRadio(tracksData, profileData.is_live || false, profileData.live_url || '', startIndex, t);
           }
         }
@@ -121,29 +133,48 @@ export const RadioLayout: React.FC = () => {
           const active = schedulesData.find((s: any) => s.start_time <= ct && s.end_time >= ct && (s.days?.length === 0 || s.days?.includes(cd)));
           if (active) setActiveSchedule(active.title);
         }
-
-        channel = supabase.channel(`radio_${profileData.id}_${Date.now()}`, { config: { presence: { key: user?.id || Math.random().toString() } } });
-        channel
-          .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'radio_messages', filter: `radio_owner_id=eq.${profileData.id}` }, (payload: any) => setMessages(prev => [...prev, payload.new]))
-          .on('presence', { event: 'sync' }, () => {
-            if (!channel) return;
-            const state = channel.presenceState();
-            let c = 0;
-            Object.keys(state).forEach(k => { c += state[k].length; });
-            setListeners(Math.max(1, c));
-          })
-          .subscribe(async (status: string) => { if (status === 'SUBSCRIBED' && isMounted && channel) await channel.track({ online_at: new Date().toISOString() }); });
-
-        const { data: oldMessages } = await supabase.from('radio_messages').select('*').eq('radio_owner_id', profileData.id).order('created_at', { ascending: true }).limit(50);
-        if (isMounted && oldMessages) setMessages(oldMessages);
+        
+        hasFetchedRef.current = true;
       } catch (e) { console.error(e); }
       finally { if (isMounted) setLoading(false); }
     };
 
     initPage();
-    return () => { isMounted = false; if (channel) { channel.unsubscribe(); supabase.removeChannel(channel); } };
-  }, [username, user, isRadioActive, startRadio]);
+    return () => { isMounted = false; };
+  }, [username]); // ✅ Uniquement username (pas de relance au retour d'onglet)
 
+  // ✅ EFFET 2 : WebSocket pour le chat (Isolé)
+  useEffect(() => {
+    if (!profile?.id) return;
+    let isMounted = true;
+
+    const channel = supabase.channel(`radio_${profile.id}_${Date.now()}`, { config: { presence: { key: user?.id || Math.random().toString() } } });
+    
+    channel
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'radio_messages', filter: `radio_owner_id=eq.${profile.id}` }, (payload: any) => setMessages(prev => [...prev, payload.new]))
+      .on('presence', { event: 'sync' }, () => {
+        if (!channel) return;
+        const state = channel.presenceState();
+        let c = 0;
+        Object.keys(state).forEach(k => { c += state[k].length; });
+        setListeners(Math.max(1, c));
+      })
+      .subscribe(async (status: string) => { if (status === 'SUBSCRIBED' && isMounted && channel) await channel.track({ online_at: new Date().toISOString() }); });
+
+    const fetchMessages = async () => {
+      const { data } = await supabase.from('radio_messages').select('*').eq('radio_owner_id', profile.id).order('created_at', { ascending: true }).limit(50);
+      if (isMounted && data) setMessages(data);
+    };
+    fetchMessages();
+
+    return () => { 
+      isMounted = false; 
+      channel.unsubscribe(); 
+      supabase.removeChannel(channel); 
+    };
+  }, [profile?.id, user?.id]);
+
+  // ✅ EFFET 3 : Wipe Transition
   useEffect(() => {
     setIsWiping(true);
     const timer = setTimeout(() => setIsWiping(false), 800);
@@ -161,14 +192,12 @@ export const RadioLayout: React.FC = () => {
     else window.open(url, 'RadioPlayer', 'width=420,height=700,scrollbars=no,resizable=yes,status=no,location=no,toolbar=no,menubar=no');
   };
 
-  // ✅ NOUVELLE FONCTION : Force le retour au flux principal de la radio
   const handlePlayRadio = () => {
     if (radioTracks.length > 0 && nowPlaying) {
       const index = radioTracks.findIndex((t: any) => t.id === nowPlaying.id);
-      stopRadio();
       startRadio(radioTracks, profile?.is_live || false, profile?.live_url || '', index >= 0 ? index : 0);
     } else {
-      handleOpenPlayer(); // Fallback
+      handleOpenPlayer();
     }
   };
 
@@ -217,7 +246,6 @@ export const RadioLayout: React.FC = () => {
     );
   };
 
-  // On passe handlePlayRadio au contexte
   const outletContext = {
     profile, userProfile, radioTracks, nowPlaying, topTracks, latestReleases, schedules, activeSchedule,
     listeners, colors, visualizerColor, iconColor, socials, coverImage, totalLikes, recentTracks,
@@ -348,10 +376,7 @@ export const RadioLayout: React.FC = () => {
           </AnimatePresence>
         </div>
 
-        {/* STICKY PLAYER */}
         <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 90, background: colors.glass, backdropFilter: 'blur(30px)', borderTop: `1px solid ${colors.border}`, boxShadow: '0 -10px 40px rgba(0,0,0,0.4)' }}>
-          
-          {/* Barre de progression */}
           {!isLive && (
             <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'rgba(255,255,255,0.05)' }}>
               <div style={{ width: `${progressPercent}%`, height: '100%', background: visualizerColor, boxShadow: `0 0 10px ${visualizerColor}`, transition: 'width 1s linear' }} />
@@ -378,7 +403,6 @@ export const RadioLayout: React.FC = () => {
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: colors.textMuted, fontWeight: 700, background: 'rgba(255,255,255,0.05)', padding: '4px 10px', borderRadius: 20 }}><span style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981', animation: 'pulseLive 1.5s infinite' }} /> {listeners}</div>
               
-              {/* ✅ BOUTON POUR REVENIR À LA RADIO */}
               <button onClick={handlePlayRadio} title="Revenir à la radio en direct" style={{ background: 'rgba(255,255,255,0.05)', color: colors.textMain, border: `1px solid ${colors.border}`, width: 36, height: 36, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
               </button>
@@ -391,7 +415,6 @@ export const RadioLayout: React.FC = () => {
           </div>
         </div>
 
-        {/* CHAT FLOTTANT */}
         <div style={{ position: 'fixed', bottom: 80, right: 24, zIndex: 999, display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
           <div className={`rp-glass rp-chat-window ${isChatOpen ? 'rp-chat-open' : 'rp-chat-closed'}`} style={{ width: 340, height: 440, marginBottom: 14, display: 'flex', flexDirection: 'column', borderRadius: 20, overflow: 'hidden', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
             <div style={{ padding: '14px 16px', borderBottom: `1px solid ${colors.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

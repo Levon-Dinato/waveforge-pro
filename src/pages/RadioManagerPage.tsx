@@ -65,13 +65,16 @@ export const RadioManagerPage: React.FC = () => {
   // Réglages Player Popup
   const [playerBgType, setPlayerBgType] = useState('color');
   const [playerBgValue, setPlayerBgValue] = useState('#05050a');
-  const [playerBgAnimation, setPlayerBgAnimation] = useState('aurora'); // ✅ NOUVEAU
+  const [playerBgAnimation, setPlayerBgAnimation] = useState('aurora');
   const [uploadingPlayerBg, setUploadingPlayerBg] = useState(false);
 
-  // Réglages Règles
+  // ✅ NOUVEAUX RÉGLAGES : Règles & Crossfade
   const [noRepeatEnabled, setNoRepeatEnabled] = useState(false);
   const [noRepeatMinutes, setNoRepeatMinutes] = useState(60);
   const [jingleInterval, setJingleInterval] = useState(30);
+  
+  const [crossfadeEnabled, setCrossfadeEnabled] = useState(false);
+  const [crossfadeDuration, setCrossfadeDuration] = useState(3); // En secondes
 
   const colors = {
     bg: isDark ? '#09090b' : '#f8fafc',
@@ -104,11 +107,15 @@ export const RadioManagerPage: React.FC = () => {
         
         setPlayerBgType(profileData.player_bg_type || 'color');
         setPlayerBgValue(profileData.player_bg_value || '#05050a');
-        setPlayerBgAnimation(profileData.player_bg_animation || 'aurora'); // ✅ Chargement
+        setPlayerBgAnimation(profileData.player_bg_animation || 'aurora');
 
         setNoRepeatEnabled(profileData.radio_no_repeat_enabled || false);
         setNoRepeatMinutes(profileData.radio_no_repeat_minutes ?? 60);
         setJingleInterval(profileData.jingle_interval_minutes ?? 30);
+        
+        // ✅ Chargement du Crossfade
+        setCrossfadeEnabled(profileData.radio_crossfade_enabled || false);
+        setCrossfadeDuration(profileData.radio_crossfade_duration ?? 3);
       }
 
       const { data: tracksData } = await supabase.from('tracks').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
@@ -337,7 +344,7 @@ export const RadioManagerPage: React.FC = () => {
       radio_visualizer_color: radioVisualizerColor,
       player_bg_type: playerBgType,
       player_bg_value: playerBgValue,
-      player_bg_animation: playerBgAnimation // ✅ Sauvegarde
+      player_bg_animation: playerBgAnimation
     }).eq('id', user.id);
     setSaving(false);
     if (error) { alert("Erreur lors de la sauvegarde : " + error.message); } 
@@ -350,7 +357,10 @@ export const RadioManagerPage: React.FC = () => {
     const { error } = await supabase.from('profiles').update({
       radio_no_repeat_enabled: noRepeatEnabled,
       radio_no_repeat_minutes: noRepeatMinutes,
-      jingle_interval_minutes: jingleInterval
+      jingle_interval_minutes: jingleInterval,
+      // ✅ SAUVEGARDE DU CROSSFADE
+      radio_crossfade_enabled: crossfadeEnabled,
+      radio_crossfade_duration: crossfadeDuration
     }).eq('id', user.id);
     setSaving(false);
     if (error) { alert("Erreur : " + error.message); }
@@ -473,6 +483,40 @@ export const RadioManagerPage: React.FC = () => {
           </div>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+            
+            {/* ✅ NOUVELLE SECTION : CROSSFADE / FONDU */}
+            <div style={{ padding: 20, background: colors.inputBg, borderRadius: 12, border: `1px solid ${colors.border}` }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+                <div>
+                  <h3 style={{ margin: '0 0 4px 0', fontSize: 15, fontWeight: 700 }}>🎚️ Crossfade (Fondu enchaîné)</h3>
+                  <p style={{ margin: 0, fontSize: 13, color: colors.textMuted, maxWidth: 500 }}>Réduit le blanc entre les morceaux en faisant se chevaucher la fin d'un titre et le début du suivant.</p>
+                </div>
+                <label style={{ position: 'relative', display: 'inline-block', width: 50, height: 26, cursor: 'pointer' }}>
+                  <input type="checkbox" checked={crossfadeEnabled} onChange={(e) => setCrossfadeEnabled(e.target.checked)} style={{ opacity: 0, width: 0, height: 0 }} />
+                  <span style={{ position: 'absolute', inset: 0, background: crossfadeEnabled ? colors.accent : colors.border, borderRadius: 13, transition: '0.2s' }}>
+                    <span style={{ position: 'absolute', height: 20, width: 20, left: crossfadeEnabled ? 26 : 3, bottom: 3, background: 'white', borderRadius: '50%', transition: '0.2s' }} />
+                  </span>
+                </label>
+              </div>
+              {crossfadeEnabled && (
+                <div style={{ marginTop: 20, paddingTop: 20, borderTop: `1px solid ${colors.border}` }}>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>Durée de la fondu :</label>
+                  <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                    <input 
+                      type="range" 
+                      min="1" 
+                      max="10" 
+                      step="1" 
+                      value={crossfadeDuration} 
+                      onChange={(e) => setCrossfadeDuration(Number(e.target.value))} 
+                      style={{ flex: 1, accentColor: colors.accent }} 
+                    />
+                    <span style={{ fontSize: 16, fontWeight: 800, width: 40, textAlign: 'right' }}>{crossfadeDuration}s</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
             <div style={{ padding: 20, background: colors.inputBg, borderRadius: 12, border: `1px solid ${colors.border}` }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
                 <div>
@@ -602,7 +646,7 @@ export const RadioManagerPage: React.FC = () => {
               )}
             </div>
 
-            {/* FOND PLAYER POPUP - MISE À JOUR */}
+            {/* FOND PLAYER POPUP */}
             <div style={{ borderTop: `1px solid ${colors.border}`, paddingTop: 24 }}>
               <h3 style={{ margin: '0 0 12px 0', fontSize: 14, fontWeight: 600 }}>Fond du Player Popup</h3>
               <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
@@ -612,7 +656,6 @@ export const RadioManagerPage: React.FC = () => {
                 <button onClick={() => setPlayerBgType('video')} className={`dash-tab ${playerBgType === 'video' ? 'active' : ''}`} style={{ flex: 1 }}>Vidéo</button>
               </div>
 
-              {/* ✅ NOUVEAU : Choix de l'animation pour le Player */}
               {playerBgType === 'animated' && (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 16 }}>
                   {[

@@ -17,7 +17,7 @@ export const RadioPage: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const { isLive, activeSchedule } = useRadio(); 
+  const { isLive } = useRadio(); 
 
   const [profile, setProfile] = useState<any>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
@@ -28,6 +28,8 @@ export const RadioPage: React.FC = () => {
   const [latestReleases, setLatestReleases] = useState<any[]>([]);
   const [schedules, setSchedules] = useState<any[]>([]);
   const [recentTracks, setRecentTracks] = useState<any[]>([]);
+  
+  const [activeSchedule, setActiveSchedule] = useState<string | null>(null);
   
   const [listeners, setListeners] = useState(1);
   const [messages, setMessages] = useState<any[]>([]);
@@ -80,7 +82,6 @@ export const RadioPage: React.FC = () => {
           if (isMounted) setUserProfile(myProfile);
         }
 
-        // ✅ Récupération des tracks ordonnées par date de création
         const { data: tracksData } = await supabase
           .from('tracks')
           .select('*')
@@ -89,19 +90,30 @@ export const RadioPage: React.FC = () => {
           .order('created_at', { ascending: true });
         
         if (tracksData && tracksData.length > 0) {
-          // ✅ SYNCHRONISATION TEMPORELLE : Calcul de l'index en fonction de l'heure actuelle
-          // On estime qu'un son dure 4 minutes en moyenne.
-          const SLOT_DURATION = 4 * 60 * 1000; 
+          // ✅ MÊME CALCUL QUE LE PLAYER
+          const RADIO_EPOCH = new Date('2024-01-01T00:00:00Z').getTime(); 
           const now = Date.now();
-          const startIndex = Math.floor(now / SLOT_DURATION) % tracksData.length;
+          const elapsedSeconds = Math.floor((now - RADIO_EPOCH) / 1000);
+          
+          const durations = tracksData.map(t => (t.duration && t.duration > 0) ? t.duration : 240);
+          const totalDuration = durations.reduce((acc, d) => acc + d, 0);
+          
+          let timeToPlay = elapsedSeconds % totalDuration;
+          let startIndex = 0;
+          
+          for (let i = 0; i < tracksData.length; i++) {
+            if (timeToPlay < durations[i]) {
+              startIndex = i;
+              break;
+            }
+            timeToPlay -= durations[i];
+          }
           
           setNowPlaying(tracksData[startIndex]);
 
-          // Top Tracks (indépendant de la synchro)
           const sortedByLikes = [...tracksData].sort((a, b) => (b.likes_count || 0) - (a.likes_count || 0));
           setTopTracks(sortedByLikes.slice(0, 5));
 
-          // Dernières sorties (indépendant de la synchro)
           const sortedByDate = [...tracksData].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
           setLatestReleases(sortedByDate.slice(0, 4));
         }
@@ -116,9 +128,21 @@ export const RadioPage: React.FC = () => {
         if (historyData) setRecentTracks(historyData);
 
         const { data: schedulesData } = await supabase.from('radio_schedules').select('*, playlists(name)').eq('user_id', profileData.id).order('start_time');
-        if (schedulesData) setSchedules(schedulesData);
+        if (schedulesData) {
+          setSchedules(schedulesData);
+          
+          const now = new Date();
+          const currentTime = now.toTimeString().split(' ')[0];
+          const currentDay = now.getDay() === 0 ? '7' : now.getDay().toString();
+          
+          const active = schedulesData.find(s => 
+            s.start_time <= currentTime && s.end_time >= currentTime && 
+            (s.days?.length === 0 || s.days?.includes(currentDay))
+          );
+          
+          if (active) setActiveSchedule(active.title);
+        }
 
-        // Realtime Chat
         channel = supabase.channel(`radio_${profileData.id}_${Date.now()}`, { config: { presence: { key: user?.id || Math.random().toString() } } });
         channel
           .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'radio_messages', filter: `radio_owner_id=eq.${profileData.id}` }, (payload: any) => setMessages((prev) => [...prev, payload.new]))
@@ -239,7 +263,6 @@ export const RadioPage: React.FC = () => {
         .chat-open { transform: scale(1); opacity: 1; pointer-events: auto; }
       `}</style>
 
-      {/* FOND ANIMÉ */}
       <div className="animated-bg">
         {customBgType === 'video' && customBgUrl ? (
           <video src={customBgUrl} autoPlay loop muted playsInline style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0, opacity: customBgOpacity }} />
@@ -254,7 +277,6 @@ export const RadioPage: React.FC = () => {
         <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px)', backgroundSize: '40px 40px', maskImage: 'radial-gradient(circle at center, black 40%, transparent 80%)' }} />
       </div>
 
-      {/* HEADER FIXE */}
       <div style={{ position: 'sticky', top: 0, zIndex: 100, width: '100%', padding: '12px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: isDark ? 'rgba(5,5,10,0.85)' : 'rgba(245,245,247,0.85)', backdropFilter: 'blur(20px)', borderBottom: `1px solid ${colors.border}`, boxSizing: 'border-box' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <img src={coverImage || 'https://via.placeholder.com/100'} alt="Logo" style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', border: `2px solid ${visualizerColor}` }} />
@@ -267,7 +289,9 @@ export const RadioPage: React.FC = () => {
         <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: isLive ? '#ef4444' : 'rgba(255,255,255,0.05)', padding: '6px 12px', borderRadius: 20, border: isLive ? 'none' : `1px solid ${colors.border}` }}>
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#fff', animation: 'pulse 1s infinite' }} />
-            <span style={{ fontSize: 10, fontWeight: 900, color: isLive ? '#fff' : colors.textMain, letterSpacing: '0.5px' }}>{isLive ? 'ON AIR' : 'RADIO AUTO'}</span>
+            <span style={{ fontSize: 10, fontWeight: 900, color: isLive ? '#fff' : colors.textMain, letterSpacing: '0.5px' }}>
+              {isLive ? 'ON AIR' : activeSchedule ? `PROG: ${activeSchedule}` : 'RADIO AUTO'}
+            </span>
           </div>
           <button onClick={handleOpenPlayer} style={{ background: visualizerColor, color: iconColor, border: 'none', padding: '8px 20px', borderRadius: 20, fontSize: 12, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, boxShadow: `0 4px 10px ${visualizerColor}40` }}>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
@@ -276,7 +300,6 @@ export const RadioPage: React.FC = () => {
         </div>
       </div>
 
-      {/* SLIDER PLEINE LARGEUR */}
       <div style={{ width: '100%', padding: '24px', boxSizing: 'border-box', zIndex: 10 }}>
         <div className="glass-panel" style={{ position: 'relative', width: '100%', height: isMobile ? 300 : 400, overflow: 'hidden', display: 'flex', alignItems: 'center', borderRadius: 24 }}>
           
@@ -319,13 +342,9 @@ export const RadioPage: React.FC = () => {
         </div>
       </div>
 
-      {/* CONTENU PRINCIPAL */}
       <div style={{ width: '100%', maxWidth: 1400, margin: '0 auto', padding: '24px 24px 60px 24px', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 380px', gap: 32, zIndex: 10, boxSizing: 'border-box' }}>
         
-        {/* COLONNE GAUCHE */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
-          
-          {/* TOP TRACKS */}
           <div className="glass-panel" style={{ padding: 24 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
               <h2 style={{ fontSize: 20, fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}><span style={{ color: visualizerColor }}>🏆</span> Top Tracks</h2>
@@ -349,7 +368,6 @@ export const RadioPage: React.FC = () => {
             </div>
           </div>
 
-          {/* DERNIÈRES SORTIES */}
           <div className="glass-panel" style={{ padding: 24 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
               <h2 style={{ fontSize: 20, fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}><span style={{ color: visualizerColor }}>✨</span> Dernières Sorties</h2>
@@ -369,10 +387,7 @@ export const RadioPage: React.FC = () => {
           </div>
         </div>
 
-        {/* COLONNE DROITE */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
-          
-          {/* À PROPOS */}
           <div className="glass-panel" style={{ padding: 24 }}>
             <h3 style={{ fontSize: 18, fontWeight: 800, margin: '0 0 20px 0', display: 'flex', alignItems: 'center', gap: 8 }}><span style={{ color: visualizerColor }}>ℹ️</span> À propos</h3>
             <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16 }}>
@@ -387,7 +402,6 @@ export const RadioPage: React.FC = () => {
             </p>
           </div>
 
-          {/* PROGRAMME */}
           <div className="glass-panel" style={{ padding: 24 }}>
             <h3 style={{ fontSize: 18, fontWeight: 800, margin: '0 0 20px 0', display: 'flex', alignItems: 'center', gap: 8 }}><span style={{ color: visualizerColor }}>📅</span> Programme</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -407,18 +421,15 @@ export const RadioPage: React.FC = () => {
             </div>
           </div>
 
-          {/* ESPACE PARTENAIRE */}
           <div className="glass-panel" style={{ padding: 24, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', background: isDark ? 'linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01))' : 'linear-gradient(135deg, rgba(0,0,0,0.05), rgba(0,0,0,0.01))', border: `1px dashed ${colors.border}` }}>
             <div style={{ fontSize: 32, marginBottom: 12 }}>🤝</div>
             <h3 style={{ fontSize: 16, fontWeight: 800, margin: '0 0 8px 0' }}>Espace Partenaire</h3>
             <p style={{ fontSize: 12, color: colors.textMuted, margin: '0 0 16px 0' }}>Votre publicité ici, vue par {listeners} auditeurs.</p>
             <a href="#" style={{ fontSize: 13, fontWeight: 700, color: visualizerColor, textDecoration: 'none', background: 'rgba(0, 217, 255, 0.1)', padding: '10px 20px', borderRadius: 8 }}>Devenir sponsor</a>
           </div>
-
         </div>
       </div>
 
-      {/* CHAT WIDGET FLOTTANT */}
       <div style={{ position: 'fixed', bottom: isMobile ? 80 : 30, right: 30, zIndex: 999, display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
         <div className={`glass-panel chat-window ${isChatOpen ? 'chat-open' : 'chat-closed'}`} style={{ width: 340, height: 450, marginBottom: 16, display: 'flex', flexDirection: 'column', background: colors.glass, backdropFilter: 'blur(30px)', borderRadius: 20, overflow: 'hidden', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
           <div style={{ padding: '14px 16px', borderBottom: `1px solid ${colors.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(0,0,0,0.1)' }}>
@@ -462,10 +473,8 @@ export const RadioPage: React.FC = () => {
         </button>
       </div>
 
-      {/* FOOTER */}
       <footer style={{ marginTop: 'auto', width: '100%', background: isDark ? 'rgba(10,10,15,0.95)' : 'rgba(255,255,255,0.95)', backdropFilter: 'blur(20px)', borderTop: `1px solid ${colors.border}`, padding: '40px 32px 20px 32px', zIndex: 10, boxSizing: 'border-box' }}>
         <div style={{ maxWidth: 1400, margin: '0 auto', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, 1fr)', gap: 32 }}>
-          
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
               <img src={coverImage || 'https://via.placeholder.com/100'} alt="Logo" style={{ width: 32, height: 32, borderRadius: '50%', border: `2px solid ${visualizerColor}` }} />
@@ -474,7 +483,6 @@ export const RadioPage: React.FC = () => {
             <p style={{ fontSize: 12, color: colors.textMuted, lineHeight: 1.5, marginBottom: 16 }}>La radio officielle de {profile.username}, propulsée par DropZone DJ.</p>
             <div style={{ fontSize: 11, color: colors.textMuted }}>© {new Date().getFullYear()} {profile.username}.</div>
           </div>
-
           <div>
             <h3 className="footer-title">🎵 Derniers morceaux joués</h3>
             {recentTracks.length === 0 ? (
@@ -494,7 +502,6 @@ export const RadioPage: React.FC = () => {
               </div>
             )}
           </div>
-
           <div>
             <h3 className="footer-title">🔗 Liens Rapides</h3>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -508,7 +515,6 @@ export const RadioPage: React.FC = () => {
               <a href="https://dropzone-dj.vercel.app" target="_blank" rel="noreferrer" className="footer-link">Découvrir DropZone DJ</a>
             </div>
           </div>
-
           <div>
             <h3 className="footer-title">📱 Suivez-nous</h3>
             <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>

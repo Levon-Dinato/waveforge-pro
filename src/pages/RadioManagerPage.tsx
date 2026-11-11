@@ -49,7 +49,6 @@ export const RadioManagerPage: React.FC = () => {
   const [liveUrl, setLiveUrl] = useState('');
   const [profileUsername, setProfileUsername] = useState('');
   
-  // Réglages Page Web
   const [radioBgUrl, setRadioBgUrl] = useState('');
   const [radioBgType, setRadioBgType] = useState('animated');
   const [radioBgOpacity, setRadioBgOpacity] = useState(0.6);
@@ -61,12 +60,10 @@ export const RadioManagerPage: React.FC = () => {
 
   const [radioVisualizerColor, setRadioVisualizerColor] = useState('#ff3366');
 
-  // Réglages Player Popup
   const [playerBgType, setPlayerBgType] = useState('color');
   const [playerBgValue, setPlayerBgValue] = useState('#05050a');
   const [uploadingPlayerBg, setUploadingPlayerBg] = useState(false);
 
-  // Réglages Règles
   const [noRepeatEnabled, setNoRepeatEnabled] = useState(false);
   const [noRepeatMinutes, setNoRepeatMinutes] = useState(60);
   const [jingleInterval, setJingleInterval] = useState(30);
@@ -425,15 +422,43 @@ export const RadioManagerPage: React.FC = () => {
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             <a href={`/radio/${profileUsername}`} target="_blank" rel="noopener noreferrer" className="dash-btn dash-btn-secondary" style={{ textDecoration: 'none' }}>Écouter la Radio ↗</a>
             
-            {/* ✅ BOUTON M3U */}
+            {/* ✅ BOUTON M3U SYNCHRONISÉ */}
             <button 
               onClick={async () => {
                 if (!profileUsername) return;
                 try {
-                  const { data: tracksData } = await supabase.from('tracks').select('title, artist, audio_url').eq('user_id', user?.id).eq('in_radio', true);
-                  if (!tracksData || tracksData.length === 0) { alert("Aucune musique à diffuser."); return; }
+                  const { data: tracksData } = await supabase
+                    .from('tracks')
+                    .select('title, artist, audio_url, duration')
+                    .eq('user_id', user?.id)
+                    .eq('in_radio', true)
+                    .order('created_at', { ascending: true });
+                    
+                  if (!tracksData || tracksData.length === 0) { alert("Aucune musique."); return; }
+
+                  const RADIO_EPOCH = new Date('2024-01-01T00:00:00Z').getTime(); 
+                  const elapsedSeconds = Math.floor((Date.now() - RADIO_EPOCH) / 1000);
+                  const durations = tracksData.map(t => (t.duration && t.duration > 0) ? t.duration : 240);
+                  const totalDuration = durations.reduce((acc, d) => acc + d, 0);
+                  
+                  let timeToPlay = elapsedSeconds % totalDuration;
+                  let startIndex = 0;
+                  
+                  for (let i = 0; i < tracksData.length; i++) {
+                    if (timeToPlay < durations[i]) { startIndex = i; break; }
+                    timeToPlay -= durations[i];
+                  }
+
+                  const orderedTracks = [
+                    ...tracksData.slice(startIndex),
+                    ...tracksData.slice(0, startIndex)
+                  ];
+
                   let m3uContent = "#EXTM3U\r\n"; 
-                  tracksData.forEach(track => { m3uContent += `#EXTINF:-1,${track.artist} - ${track.title}\r\n${track.audio_url}\r\n`; });
+                  orderedTracks.forEach(track => { 
+                    m3uContent += `#EXTINF:-1,${track.artist} - ${track.title}\r\n${track.audio_url}\r\n`; 
+                  });
+                  
                   const blob = new Blob([m3uContent], { type: 'audio/x-mpegurl;charset=utf-8' });
                   const url = URL.createObjectURL(blob);
                   const a = document.createElement('a'); a.href = url; a.download = `${profileUsername}-radio.m3u`;

@@ -18,7 +18,10 @@ export const RadioLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const { isLive, currentTrack, isPlaying, togglePlay, startRadio, isRadioActive, progress, duration, updateRadioSettings } = useRadio();
+  const { 
+    isLive, currentTrack, isPlaying, togglePlay, startRadio, isRadioActive, 
+    progress, duration, updateRadioSettings 
+  } = useRadio();
 
   const [profile, setProfile] = useState<any>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
@@ -50,7 +53,7 @@ export const RadioLayout: React.FC = () => {
 
   const [isWiping, setIsWiping] = useState(false);
 
-  // ✅ Ref pour éviter de relancer le fetch plusieurs fois
+  // ✅ Refs pour éviter les re-rendus inutiles et les coupures
   const hasFetchedRef = useRef(false);
   const isRadioStartedRef = useRef(false);
 
@@ -59,7 +62,7 @@ export const RadioLayout: React.FC = () => {
     border: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)', glass: isDark ? 'rgba(15,15,20,0.7)' : 'rgba(255,255,255,0.7)', card: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)',
   };
 
-  // ✅ EFFET 1 : Chargement des données (Se lance UNIQUEMENT si le username change)
+  // ✅ EFFET 1 : Chargement des données (Se lance UNIQUEMENT à l'arrivée sur la page)
   useEffect(() => {
     if (!username || hasFetchedRef.current) return;
     let isMounted = true;
@@ -141,9 +144,9 @@ export const RadioLayout: React.FC = () => {
 
     initPage();
     return () => { isMounted = false; };
-  }, [username]); // ✅ Uniquement username (pas de relance au retour d'onglet)
+  }, [username]); // ✅ Uniquement username
 
-  // ✅ EFFET 2 : WebSocket pour le chat (Isolé)
+  // ✅ EFFET 2 : WebSocket pour le chat
   useEffect(() => {
     if (!profile?.id) return;
     let isMounted = true;
@@ -185,7 +188,13 @@ export const RadioLayout: React.FC = () => {
 
   const showToastMsg = (msg: string) => { setToastMsg(msg); setShowToast(true); setTimeout(() => setShowToast(false), 3000); };
 
+  // ✅ L'OUVERTURE DU PLAYER STICKY / POPUP AVEC MISE EN PAUSE
   const handleOpenPlayer = () => {
+    // On met en pause le son de la page principale pour éviter le doublon
+    if (isPlaying) {
+      togglePlay();
+    }
+
     const isMobileDevice = /Mobi|Android/i.test(navigator.userAgent);
     const url = `/player/${username}`;
     if (isMobileDevice) navigate(url);

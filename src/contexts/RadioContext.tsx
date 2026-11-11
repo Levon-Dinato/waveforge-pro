@@ -14,7 +14,7 @@ export interface RadioContextType {
   liveUrl: string;
   isRadioActive: boolean;
   needsGesture: boolean;
-  startRadio: (newTracks: any[], live: boolean, url: string, startIndex?: number) => void;
+  startRadio: (newTracks: any[], live: boolean, url: string, startIndex?: number, startTime?: number) => void;
   togglePlay: () => void;
   playNext: () => void;
   playPrev: () => void;
@@ -37,11 +37,12 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [needsGesture, setNeedsGesture] = useState(false);
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const pendingSeekRef = useRef<number | null>(null); // ✅ Stocke la seconde où on doit aller
   const { stop: stopMainPlayer } = usePlayer();
 
   const currentTrack = tracks[currentIndex];
 
-  const startRadio = (newTracks: any[], live: boolean, url: string, startIndex: number = 0) => {
+  const startRadio = (newTracks: any[], live: boolean, url: string, startIndex: number = 0, startTime?: number) => {
     if (isRadioActive && newTracks.length > 0 && tracks.length > 0 && newTracks[0].user_id === tracks[0].user_id) {
       if (live !== isLive || url !== liveUrl) {
         setIsLive(live);
@@ -59,13 +60,23 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     setIsPlaying(true);
     setProgress(0);
     setNeedsGesture(false);
+    
+    // ✅ On enregistre la seconde à laquelle on doit démarrer
+    if (startTime !== undefined && startTime > 0) {
+      pendingSeekRef.current = startTime;
+    } else {
+      pendingSeekRef.current = null;
+    }
   };
 
   const unlockAudio = () => {
     setNeedsGesture(false);
     setIsPlaying(true);
     if (audioRef.current) {
-      audioRef.current.play().catch(e => console.error('Erreur unlock:', e));
+      audioRef.current.play().catch(e => {
+         // Si ça bloque encore, on redemande l'interaction
+         if (e.name === 'NotAllowedError') setNeedsGesture(true);
+      });
     }
   };
 
@@ -75,7 +86,9 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       audioRef.current.pause();
       setIsPlaying(false);
     } else {
-      audioRef.current.play().catch(e => console.error(e));
+      audioRef.current.play().catch(e => {
+         if (e.name === 'NotAllowedError') setNeedsGesture(true);
+      });
       setIsPlaying(true);
       setNeedsGesture(false);
     }
@@ -136,6 +149,15 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       <audio
         ref={audioRef}
         src={isLive ? liveUrl : (currentTrack?.audio_url || '')}
+        preload="auto"
+        onLoadedMetadata={() => {
+          // ✅ Quand l'audio est prêt, on saute à la bonne seconde
+          if (pendingSeekRef.current !== null && audioRef.current) {
+            audioRef.current.currentTime = pendingSeekRef.current;
+            setProgress(pendingSeekRef.current);
+            pendingSeekRef.current = null;
+          }
+        }}
         onTimeUpdate={() => {
           if (audioRef.current) {
             setProgress(audioRef.current.currentTime);

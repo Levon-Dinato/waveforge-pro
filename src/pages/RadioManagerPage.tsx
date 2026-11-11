@@ -310,17 +310,42 @@ export const RadioManagerPage: React.FC = () => {
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             <a href={`/radio/${profileUsername}`} target="_blank" rel="noopener noreferrer" className="dash-btn dash-btn-secondary" style={{ textDecoration: 'none' }}>Écouter la Radio ↗</a>
             
-            {/* ✅ NOUVEAU BOUTON M3U */}
+            {/* ✅ NOUVEAU BOUTON : Générer et Télécharger le fichier M3U */}
             <button 
-              onClick={() => {
-                const m3uUrl = `${window.location.origin}/radio/${profileUsername}/stream.m3u`;
-                navigator.clipboard.writeText(m3uUrl);
-                alert(`Lien radio copié !\n\n${m3uUrl}\n\nColle ce lien sur les annuaires radio, VLC ou iTunes.`);
+              onClick={async () => {
+                if (!profileUsername) return;
+                try {
+                  const { data: tracksData } = await supabase.from('tracks').select('title, artist, audio_url').eq('user_id', user?.id).eq('in_radio', true);
+                  
+                  if (!tracksData || tracksData.length === 0) {
+                    alert("Aucune musique à diffuser dans la radio actuellement.");
+                    return;
+                  }
+
+                  let m3uContent = "#EXTM3U\n";
+                  tracksData.forEach(track => {
+                    m3uContent += `#EXTINF:-1,${track.artist} - ${track.title}\n`;
+                    m3uContent += `${track.audio_url}\n`;
+                  });
+
+                  const blob = new Blob([m3uContent], { type: 'audio/x-mpegurl' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `${profileUsername}-radio.m3u`;
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                  URL.revokeObjectURL(url);
+                  
+                } catch (err) {
+                  alert("Erreur lors de la génération du fichier M3U.");
+                }
               }} 
               className="dash-btn dash-btn-secondary" 
               style={{ borderColor: '#00d9ff', color: '#00d9ff' }}
             >
-              📻 Copier le lien Radio (M3U)
+              📻 Télécharger le fichier M3U
             </button>
 
             <button className="dash-btn dash-btn-primary" onClick={() => setShowJingleModal(true)}>+ Jingle</button>

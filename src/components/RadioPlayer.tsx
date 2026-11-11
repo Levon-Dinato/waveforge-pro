@@ -13,7 +13,7 @@ interface RadioPlayerProps {
 }
 
 export const RadioPlayer: React.FC<RadioPlayerProps> = ({ profile, visualizerColor, iconColor, isMobile }) => {
-  const { currentTrack, isPlaying, progress, duration, togglePlay, playNext, playPrev, seek, isLive } = useRadio();
+  const { currentTrack, isPlaying, progress, duration, togglePlay, seek, isLive } = useRadio();
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   const { user } = useAuth();
@@ -66,6 +66,9 @@ export const RadioPlayer: React.FC<RadioPlayerProps> = ({ profile, visualizerCol
           <h2 style={{ fontSize: 24, fontWeight: 900, margin: '0 0 8px 0', color: isDark ? '#fff' : '#000' }}>Live Set</h2>
           <p style={{ color: '#888', fontSize: 15 }}>{profile?.username} est en direct</p>
         </div>
+        <button onClick={togglePlay} style={{ width: 64, height: 64, borderRadius: '50%', background: visualizerColor, color: iconColor, border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: `0 10px 20px ${visualizerColor}60` }}>
+            {isPlaying ? <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg> : <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: 4 }}><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>}
+        </button>
       </div>
     );
   }
@@ -107,9 +110,11 @@ export const RadioPlayer: React.FC<RadioPlayerProps> = ({ profile, visualizerCol
               <stop offset="100%" stopColor={visualizerColor} stopOpacity={0.4} />
             </linearGradient>
           </defs>
-          <circle cx={(size + 40) / 2} cy={(size + 40) / 2} r={radius + 20} stroke="url(#progressGradient)" strokeWidth={3} fill="none" strokeDasharray={circumference + 100} strokeDashoffset={strokeDashoffset} strokeLinecap="round" style={{ transition: 'stroke-dashoffset 0.1s linear', filter: `drop-shadow(0 0 10px ${visualizerColor}90)` }} />
+          <circle cx={(size + 40) / 2} cy={(size + 40) / 2} r={radius + 20} stroke="url(#progressGradient)" strokeWidth={3} fill="none" strokeDasharray={circumference + 100} strokeDashoffset={strokeDashoffset} strokeLinecap="round" style={{ transition: 'stroke-dashoffset 1s linear', filter: `drop-shadow(0 0 10px ${visualizerColor}90)` }} />
         </svg>
-        <input type="range" min={0} max={duration || 100} value={progress} onChange={(e) => seek(Number(e.target.value))} style={{ position: 'absolute', width: size + 40, height: size + 40, opacity: 0, cursor: 'pointer', zIndex: 10, transform: 'rotate(-90deg)' }} />
+        
+        {/* ✅ SUPPRESSION DU SLIDER CLIQUE (On le remplace par une div invisible pour bloquer les clics) */}
+        <div style={{ position: 'absolute', width: size + 40, height: size + 40, zIndex: 10, cursor: 'default' }} />
         
         <div className="vinyl-container" style={{ position: 'relative', width: size, height: size, borderRadius: '50%', background: '#000', boxShadow: '0 20px 50px rgba(0,0,0,0.8), inset 0 0 20px rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 4 }}>
           <img 
@@ -152,14 +157,12 @@ export const RadioPlayer: React.FC<RadioPlayerProps> = ({ profile, visualizerCol
           <span>{formatTime(progress)}</span>
           <span>{formatTime(duration)}</span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 30 }}>
-          <button onClick={playPrev} style={{ background: 'transparent', border: 'none', color: isDark ? '#fff' : '#000', cursor: 'pointer', opacity: 0.8 }}><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" strokeWidth="2"></line></svg></button>
-          
+        
+        {/* ✅ SUPPRESSION DES BOUTONS PRECEDENT / SUIVANT */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 30 }}>
           <button onClick={togglePlay} style={{ width: 64, height: 64, borderRadius: '50%', background: visualizerColor, color: iconColor, border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: `0 10px 20px ${visualizerColor}60`, transition: 'all 0.2s', transform: isPlaying ? 'scale(1)' : 'scale(0.98)' }}>
             {isPlaying ? <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg> : <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: 4 }}><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>}
           </button>
-
-          <button onClick={playNext} style={{ background: 'transparent', border: 'none', color: isDark ? '#fff' : '#000', cursor: 'pointer', opacity: 0.8 }}><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" strokeWidth="2"></line></svg></button>
         </div>
       </div>
     </div>

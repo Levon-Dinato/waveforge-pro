@@ -26,7 +26,7 @@
       "destination": "/api/og?username=:username"
     },
     { 
-      "source": "/radio/:username/stream", 
+      "source": "/radio/:username/stream.m3u", 
       "destination": "/api/stream-m3u?username=:username" 
     },
     { "source": "/(.*)", "destination": "/index.html" }

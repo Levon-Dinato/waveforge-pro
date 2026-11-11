@@ -53,6 +53,7 @@ export const RadioManagerPage: React.FC = () => {
   const [radioBgUrl, setRadioBgUrl] = useState('');
   const [radioBgType, setRadioBgType] = useState('animated');
   const [radioBgOpacity, setRadioBgOpacity] = useState(0.6);
+  const [radioBgAnimation, setRadioBgAnimation] = useState('aurora');
   const [uploadingBg, setUploadingBg] = useState(false);
 
   const [radioLogoUrl, setRadioLogoUrl] = useState('');
@@ -64,6 +65,7 @@ export const RadioManagerPage: React.FC = () => {
   // Réglages Player Popup
   const [playerBgType, setPlayerBgType] = useState('color');
   const [playerBgValue, setPlayerBgValue] = useState('#05050a');
+  const [playerBgAnimation, setPlayerBgAnimation] = useState('aurora'); // ✅ NOUVEAU
   const [uploadingPlayerBg, setUploadingPlayerBg] = useState(false);
 
   // Réglages Règles
@@ -95,12 +97,14 @@ export const RadioManagerPage: React.FC = () => {
         setRadioBgUrl(profileData.radio_bg_url || '');
         setRadioBgType(profileData.radio_bg_type || 'animated');
         setRadioBgOpacity(profileData.radio_bg_opacity ?? 0.6);
+        setRadioBgAnimation(profileData.radio_bg_animation || 'aurora');
         setRadioLogoUrl(profileData.radio_custom_logo_url || '');
         setRadioInstructions(profileData.radio_instructions || '');
         setRadioVisualizerColor(profileData.radio_visualizer_color || '#ff3366');
         
         setPlayerBgType(profileData.player_bg_type || 'color');
         setPlayerBgValue(profileData.player_bg_value || '#05050a');
+        setPlayerBgAnimation(profileData.player_bg_animation || 'aurora'); // ✅ Chargement
 
         setNoRepeatEnabled(profileData.radio_no_repeat_enabled || false);
         setNoRepeatMinutes(profileData.radio_no_repeat_minutes ?? 60);
@@ -327,11 +331,13 @@ export const RadioManagerPage: React.FC = () => {
       radio_bg_url: radioBgUrl,
       radio_bg_type: radioBgType,
       radio_bg_opacity: radioBgOpacity,
+      radio_bg_animation: radioBgAnimation,
       radio_custom_logo_url: radioLogoUrl,
       radio_instructions: radioInstructions,
       radio_visualizer_color: radioVisualizerColor,
       player_bg_type: playerBgType,
-      player_bg_value: playerBgValue
+      player_bg_value: playerBgValue,
+      player_bg_animation: playerBgAnimation // ✅ Sauvegarde
     }).eq('id', user.id);
     setSaving(false);
     if (error) { alert("Erreur lors de la sauvegarde : " + error.message); } 
@@ -425,7 +431,6 @@ export const RadioManagerPage: React.FC = () => {
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             <a href={`/radio/${profileUsername}`} target="_blank" rel="noopener noreferrer" className="dash-btn dash-btn-secondary" style={{ textDecoration: 'none' }}>Écouter la Radio ↗</a>
             
-            {/* ✅ BOUTON M3U DYNAMIQUE */}
             <button 
               onClick={() => {
                 if (!profileUsername) return;
@@ -546,6 +551,7 @@ export const RadioManagerPage: React.FC = () => {
               </div>
             </div>
 
+            {/* FOND PAGE WEB */}
             <div>
               <h3 style={{ margin: '0 0 12px 0', fontSize: 14, fontWeight: 600 }}>Fond d'écran (Page Web)</h3>
               <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
@@ -553,6 +559,27 @@ export const RadioManagerPage: React.FC = () => {
                 <button onClick={() => setRadioBgType('image')} className={`dash-tab ${radioBgType === 'image' ? 'active' : ''}`} style={{ flex: 1 }}>Image</button>
                 <button onClick={() => setRadioBgType('video')} className={`dash-tab ${radioBgType === 'video' ? 'active' : ''}`} style={{ flex: 1 }}>Vidéo</button>
               </div>
+
+              {radioBgType === 'animated' && (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 16 }}>
+                  {[
+                    { id: 'aurora', label: '✨ Aurora' },
+                    { id: 'grid', label: '🕹️ Grille' },
+                    { id: 'waves', label: '🌊 Vagues' },
+                    { id: 'stars', label: '⭐ Étoiles' }
+                  ].map(anim => (
+                    <button
+                      key={anim.id}
+                      onClick={() => setRadioBgAnimation(anim.id)}
+                      className={`dash-tab ${radioBgAnimation === anim.id ? 'active' : ''}`}
+                      style={{ fontSize: 11, padding: '8px 4px' }}
+                    >
+                      {anim.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+              
               {radioBgType !== 'animated' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                   <div style={{ display: 'flex', gap: 12 }}>
@@ -575,19 +602,45 @@ export const RadioManagerPage: React.FC = () => {
               )}
             </div>
 
+            {/* FOND PLAYER POPUP - MISE À JOUR */}
             <div style={{ borderTop: `1px solid ${colors.border}`, paddingTop: 24 }}>
               <h3 style={{ margin: '0 0 12px 0', fontSize: 14, fontWeight: 600 }}>Fond du Player Popup</h3>
               <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
                 <button onClick={() => setPlayerBgType('color')} className={`dash-tab ${playerBgType === 'color' ? 'active' : ''}`} style={{ flex: 1 }}>Couleur</button>
+                <button onClick={() => setPlayerBgType('animated')} className={`dash-tab ${playerBgType === 'animated' ? 'active' : ''}`} style={{ flex: 1 }}>Animé</button>
                 <button onClick={() => setPlayerBgType('image')} className={`dash-tab ${playerBgType === 'image' ? 'active' : ''}`} style={{ flex: 1 }}>Image</button>
                 <button onClick={() => setPlayerBgType('video')} className={`dash-tab ${playerBgType === 'video' ? 'active' : ''}`} style={{ flex: 1 }}>Vidéo</button>
               </div>
-              {playerBgType === 'color' ? (
+
+              {/* ✅ NOUVEAU : Choix de l'animation pour le Player */}
+              {playerBgType === 'animated' && (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 16 }}>
+                  {[
+                    { id: 'aurora', label: '✨ Aurora' },
+                    { id: 'grid', label: '🕹️ Grille' },
+                    { id: 'waves', label: '🌊 Vagues' },
+                    { id: 'stars', label: '⭐ Étoiles' }
+                  ].map(anim => (
+                    <button
+                      key={anim.id}
+                      onClick={() => setPlayerBgAnimation(anim.id)}
+                      className={`dash-tab ${playerBgAnimation === anim.id ? 'active' : ''}`}
+                      style={{ fontSize: 11, padding: '8px 4px' }}
+                    >
+                      {anim.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {playerBgType === 'color' && (
                 <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                   <input type="color" value={playerBgValue} onChange={(e) => setPlayerBgValue(e.target.value)} style={{ width: 50, height: 50, padding: 0, background: 'transparent', border: 'none', cursor: 'pointer', borderRadius: 8 }} />
                   <input type="text" value={playerBgValue} onChange={(e) => setPlayerBgValue(e.target.value)} className="dash-input" style={{ flex: 1, fontFamily: 'monospace' }} />
                 </div>
-              ) : (
+              )}
+
+              {(playerBgType === 'image' || playerBgType === 'video') && (
                 <div style={{ display: 'flex', gap: 12 }}>
                   <label className="dropzone" style={{ flex: 1 }}>
                     <div style={{ fontSize: 13, fontWeight: 500, color: colors.textMuted }}>{uploadingPlayerBg ? 'Upload...' : 'Choisir un fichier'}</div>

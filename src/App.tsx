@@ -14,6 +14,18 @@ import { PrivateRoute } from './components/PrivateRoute';
 import { PageTransition } from './components/PageTransition';
 import { PremiumGuard } from './components/PremiumGuard';
 import { PlayerPage } from './pages/PlayerPage';
+
+// ✅ NOUVEAUX EFFETS GLOBAUX
+import { CustomCursor } from './components/CustomCursor';
+import { AmbientBackground } from './components/AmbientBackground';
+
+// ✅ NOUVELLE ARCHITECTURE RADIO
+import { RadioLayout } from './layouts/RadioLayout';
+import { RadioHomePage } from './pages/radio/RadioHomePage';
+import { RadioTopPage } from './pages/radio/RadioTopPage';
+import { RadioReleasesPage } from './pages/radio/RadioReleasesPage';
+import { RadioProgramPage } from './pages/radio/RadioProgramPage';
+
 import './styles.css';
 
 const HomePage = lazy(() => import('./pages/HomePage').then((m) => ({ default: m.HomePage })));
@@ -50,7 +62,7 @@ const MyPlaylistsPage = lazy(() => import('./pages/MyPlaylistsPage').then((m) =>
 const DiscoverPage = lazy(() => import('./pages/DiscoverPage').then((m) => ({ default: m.DiscoverPage })));
 const ChartsPage = lazy(() => import('./pages/ChartsPage').then((m) => ({ default: m.ChartsPage })));
 
-const RadioPage = lazy(() => import('./pages/RadioPage').then((m) => ({ default: m.RadioPage })));
+// ✅ SUPPRESSION DE L'ANCIEN RadioPage (remplacé par RadioLayout)
 const RadiosPage = lazy(() => import('./pages/RadioListPage').then((m) => ({ default: m.RadioListPage })));
 
 const PageLoader = () => (
@@ -73,11 +85,18 @@ function AnimatedRoutes() {
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/levon-dinato" element={<LevonDinatoPage />} />
         <Route path="/premium/:username" element={<PremiumPage />} />
-        <Route path="/radio/:username" element={<RadioPage />} />
         <Route path="/link/:slug" element={<SmartLinkPage />} />
         
-        {/* ✅ LA ROUTE PLAYER EST MAINTENANT ISOLÉE ICI */}
+        {/* ✅ LA ROUTE PLAYER EST ISOLÉE ICI */}
         <Route path="/player/:username" element={<PlayerPage />} />
+
+        {/* ✅ NOUVELLES ROUTES RADIO IMBRIQUÉES (Remplace l'ancienne route RadioPage) */}
+        <Route path="/radio/:username" element={<RadioLayout />}>
+          <Route index element={<RadioHomePage />} />
+          <Route path="top" element={<RadioTopPage />} />
+          <Route path="nouveautes" element={<RadioReleasesPage />} />
+          <Route path="programme" element={<RadioProgramPage />} />
+        </Route>
 
         <Route path="/" element={<MainLayout />}>
           
@@ -129,6 +148,11 @@ export default function App() {
               <AudioEngineProvider>
                 <BrowserRouter>
                   <WindowsProvider>
+                    
+                    {/* ✅ EFFETS GLOBAUX (Curseur + Orbes lumineux) */}
+                    <CustomCursor />
+                    <AmbientBackground />
+
                     <Suspense fallback={<PageLoader />}>
                       <AnimatedRoutes />
                     </Suspense>

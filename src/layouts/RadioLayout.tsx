@@ -29,6 +29,7 @@ export const RadioLayout: React.FC = () => {
   const [topTracks, setTopTracks] = useState<any[]>([]);
   const [latestReleases, setLatestReleases] = useState<any[]>([]);
   const [schedules, setSchedules] = useState<any[]>([]);
+  const [recentTracks, setRecentTracks] = useState<any[]>([]); // ✅ AJOUTÉ
   const [activeSchedule, setActiveSchedule] = useState<string | null>(null);
 
   const [listeners, setListeners] = useState(1);
@@ -47,7 +48,6 @@ export const RadioLayout: React.FC = () => {
   const [showToast, setShowToast] = useState(false);
   const [toastMsg, setToastMsg] = useState('');
 
-  // ✅ État pour l'effet Wipe
   const [isWiping, setIsWiping] = useState(false);
 
   const colors = {
@@ -109,6 +109,13 @@ export const RadioLayout: React.FC = () => {
           }
         }
 
+        // ✅ RÉCUPÉRATION DE L'HISTORIQUE (Déjà joués)
+        const { data: historyData } = await supabase
+          .from('tracks').select('id, title, artist, cover_url, last_played_at')
+          .eq('user_id', profileData.id).not('last_played_at', 'is', null)
+          .order('last_played_at', { ascending: false }).limit(5);
+        if (historyData) setRecentTracks(historyData);
+
         const { data: schedulesData } = await supabase.from('radio_schedules').select('*, playlists(name)').eq('user_id', profileData.id).order('start_time');
         if (schedulesData) {
           setSchedules(schedulesData);
@@ -141,7 +148,6 @@ export const RadioLayout: React.FC = () => {
     return () => { isMounted = false; if (channel) { channel.unsubscribe(); supabase.removeChannel(channel); } };
   }, [username, user, isRadioActive, startRadio]);
 
-  // ✅ Déclenche l'effet Wipe à chaque changement de page
   useEffect(() => {
     setIsWiping(true);
     const timer = setTimeout(() => setIsWiping(false), 800);
@@ -210,7 +216,7 @@ export const RadioLayout: React.FC = () => {
 
   const outletContext = {
     profile, userProfile, radioTracks, nowPlaying, topTracks, latestReleases, schedules, activeSchedule,
-    listeners, colors, visualizerColor, iconColor, socials, coverImage, totalLikes,
+    listeners, colors, visualizerColor, iconColor, socials, coverImage, totalLikes, recentTracks,
     handleOpenPlayer, handleSendMessage, messages, newMessage, setNewMessage, isChatOpen, setIsChatOpen, chatEndRef,
     SocialLink
   };
@@ -259,7 +265,6 @@ export const RadioLayout: React.FC = () => {
         .nav-link.active { color: ${visualizerColor}; }
         .nav-link.active::after { content: ''; position: absolute; bottom: 0; left: 20px; right: 20px; height: 2px; background: ${visualizerColor}; box-shadow: 0 0 10px ${visualizerColor}; border-radius: 2px; }
 
-        /* ✅ ANIMATION DU WIPE (Levon & Dinato) */
         @keyframes slideWipeAnim {
           0% { transform: translateX(100%); }
           40% { transform: translateX(0); }
@@ -289,7 +294,6 @@ export const RadioLayout: React.FC = () => {
         }
       `}</style>
 
-      {/* ✅ LE FOND ANIMÉ RESTE FIXE ICI (Il ne change pas lors de la navigation) */}
       <div style={{ position: 'fixed', inset: 0, zIndex: 0, overflow: 'hidden', pointerEvents: 'none' }}>
         {customBgType === 'video' && customBgUrl ? (
           <video src={customBgUrl} autoPlay loop muted playsInline style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0, opacity: customBgOpacity }} />
@@ -342,7 +346,6 @@ export const RadioLayout: React.FC = () => {
           </div>
         </header>
 
-        {/* ✅ CONTENU ANIMÉ (Avec Fade pour laisser place au Wipe) */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative' }}>
           <AnimatePresence mode="wait">
             <motion.div
@@ -400,19 +403,10 @@ export const RadioLayout: React.FC = () => {
             {isChatOpen ? <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> : <div style={{ position: 'relative' }}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg><span style={{ position: 'absolute', top: -6, right: -6, width: 10, height: 10, background: '#ff3366', borderRadius: '50%', border: `2px solid ${colors.bg}` }} /></div>}
           </button>
         </div>
-
-        <footer style={{ marginTop: 'auto', width: '100%', background: isDark ? 'rgba(10,10,15,0.9)' : 'rgba(255,255,255,0.9)', backdropFilter: 'blur(20px)', borderTop: `1px solid ${colors.border}`, padding: '32px 24px 20px', boxSizing: 'border-box' }}>
-          <div style={{ maxWidth: 1400, margin: '0 auto', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16, fontSize: 12, color: colors.textMuted }}>
-            <div>© {new Date().getFullYear()} {profile.username} — Propulsé par DropZone DJ</div>
-            <div style={{ display: 'flex', gap: 20 }}>
-              <Link to={`/premium/${username}`} style={{ color: colors.textMuted, textDecoration: 'none' }}>Page Premium</Link>
-              {user ? <Link to="/settings" style={{ color: colors.textMuted, textDecoration: 'none' }}>Mon espace</Link> : <Link to="/auth" style={{ color: colors.textMuted, textDecoration: 'none' }}>Connexion</Link>}
-            </div>
-          </div>
-        </footer>
+        
+        {/* ✅ LE FOOTER A ÉTÉ SUPPRIMÉ ICI */}
       </div>
 
-      {/* ✅ L'OVERLAY DU WIPE (Le trait de transition) */}
       {isWiping && (
         <div className="wipe-overlay">
           <span>DROPZONE DJ</span>

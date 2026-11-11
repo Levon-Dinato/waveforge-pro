@@ -177,7 +177,6 @@ export const HomePage = () => {
 
       <EventsTicker />
 
-      {/* ✅ CORRECTION DU WARNING : on utilise paddingLeft/Right au lieu de padding global */}
       <div style={{ maxWidth: 1200, margin: '0 auto', width: '100%', paddingLeft: isMobile ? 12 : 24, paddingRight: isMobile ? 12 : 24, display: 'flex', flexDirection: 'column', gap: isMobile ? 24 : 48, paddingTop: 24, paddingBottom: isMobile ? 40 : 80 }}>
 
         {/* 1. HERO */}
@@ -285,7 +284,6 @@ export const HomePage = () => {
               </Link>
             </div>
             
-            {/* ✅ SÉCURITÉ ICI : On n'affiche TrackGrid que s'il y a des sons */}
             {newReleases.length > 0 ? (
               <TrackGrid tracks={newReleases as any} onPlay={(t) => handlePlayTrack(t as any)} />
             ) : (

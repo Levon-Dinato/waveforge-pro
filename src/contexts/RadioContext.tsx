@@ -13,12 +13,14 @@ export interface RadioContextType {
   isLive: boolean;
   liveUrl: string;
   isRadioActive: boolean;
+  needsGesture: boolean;
   startRadio: (newTracks: any[], live: boolean, url: string, startIndex?: number) => void;
   togglePlay: () => void;
   playNext: () => void;
   playPrev: () => void;
   seek: (time: number) => void;
   stopRadio: () => void;
+  unlockAudio: () => void;
 }
 
 const RadioContext = createContext<RadioContextType | undefined>(undefined);
@@ -32,6 +34,7 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [isLive, setIsLive] = useState(false);
   const [liveUrl, setLiveUrl] = useState('');
   const [isRadioActive, setIsRadioActive] = useState(false);
+  const [needsGesture, setNeedsGesture] = useState(false);
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const { stop: stopMainPlayer } = usePlayer();
@@ -55,6 +58,15 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     setIsRadioActive(true);
     setIsPlaying(true);
     setProgress(0);
+    setNeedsGesture(false);
+  };
+
+  const unlockAudio = () => {
+    setNeedsGesture(false);
+    setIsPlaying(true);
+    if (audioRef.current) {
+      audioRef.current.play().catch(e => console.error('Erreur unlock:', e));
+    }
   };
 
   const togglePlay = () => {
@@ -65,6 +77,7 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     } else {
       audioRef.current.play().catch(e => console.error(e));
       setIsPlaying(true);
+      setNeedsGesture(false);
     }
   };
 
@@ -88,6 +101,7 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const stopRadio = () => {
     setIsPlaying(false);
     setIsRadioActive(false);
+    setNeedsGesture(false);
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
@@ -97,17 +111,26 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   useEffect(() => {
     if (audioRef.current) {
       if (isPlaying) {
-        audioRef.current.play().catch(e => console.error("Autoplay bloqué:", e));
+        const playPromise = audioRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise.catch((e) => {
+            if (e.name === 'NotAllowedError') {
+              setNeedsGesture(true);
+              setIsPlaying(false);
+            }
+          });
+        }
       } else {
         audioRef.current.pause();
       }
     }
-  }, [isPlaying, currentIndex, isLive, tracks]);
+  }, [isPlaying, currentIndex, isLive, tracks, currentTrack?.audio_url]);
 
   return (
     <RadioContext.Provider value={{
       tracks, currentIndex, currentTrack, isPlaying, progress, duration,
-      isLive, liveUrl, isRadioActive, startRadio, togglePlay, playNext, playPrev, seek, stopRadio
+      isLive, liveUrl, isRadioActive, needsGesture,
+      startRadio, togglePlay, playNext, playPrev, seek, stopRadio, unlockAudio
     }}>
       {children}
       <audio

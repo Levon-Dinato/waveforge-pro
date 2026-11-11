@@ -8,7 +8,7 @@ import { useTheme } from '../contexts/ThemeContext';
 
 export const PlayerPage: React.FC = () => {
   const { username } = useParams<{ username: string }>();
-  const { startRadio, stopAll, currentTrack } = useRadio();
+  const { startRadio, stopAll, currentTrack, seek } = useRadio();
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   
@@ -18,7 +18,6 @@ export const PlayerPage: React.FC = () => {
   const [playerBgValue, setPlayerBgValue] = useState('#05050a');
   const [loading, setLoading] = useState(true);
 
-  // ✅ Mise à jour du last_played_at
   useEffect(() => {
     if (currentTrack) {
       supabase.from('tracks').update({ last_played_at: new Date().toISOString() }).eq('id', currentTrack.id).then();
@@ -34,12 +33,46 @@ export const PlayerPage: React.FC = () => {
         setPlayerBgType(data.player_bg_type || 'color');
         setPlayerBgValue(data.player_bg_value || '#05050a');
         
-        // ✅ On récupère les sons dans un ordre FIXE (par date de création)
-        const { data: tracksData } = await supabase.from('tracks').select('*').eq('user_id', data.id).eq('in_radio', true).order('created_at', { ascending: true });
+        // ✅ On récupère TOUS les morceaux (ordonnés de manière fixe)
+        const { data: tracksData } = await supabase
+          .from('tracks')
+          .select('*')
+          .eq('user_id', data.id)
+          .eq('in_radio', true)
+          .order('created_at', { ascending: true });
         
-        if (tracksData) {
-          // On lance la radio avec l'index 0 (ou celui du localStorage si on veut être plus fin)
-          startRadio(tracksData, data.is_live || false, data.live_url || '');
+        if (tracksData && tracksData.length > 0) {
+          // ✅ CALCUL DE LA POSITION EXACTE
+          const epochStart = new Date(data.radio_epoch_start || Date.now()).getTime();
+          const now = Date.now();
+          const elapsedMs = now - epochStart;
+          
+          // Calcul du temps total de la playlist
+          let totalDurationMs = 0;
+          const durations = tracksData.map(t => (t.duration || 240) * 1000); // Si pas de durée, on met 4 min
+          const playlistDurationMs = durations.reduce((acc, d) => acc + d, 0);
+
+          // On se place à l'endroit où on en est dans la boucle
+          let timeToPlay = elapsedMs % playlistDurationMs;
+          
+          let startIndex = 0;
+          let timeInTrack = 0;
+          
+          for (let i = 0; i < tracksData.length; i++) {
+            if (timeToPlay < durations[i]) {
+              startIndex = i;
+              timeInTrack = timeToPlay;
+              break;
+            }
+            timeToPlay -= durations[i];
+          }
+
+          startRadio(tracksData, data.is_live || false, data.live_url || '', startIndex);
+          
+          // ✅ On avance la musique à la bonne seconde (avec un petit délai pour laisser le temps de charger)
+          setTimeout(() => {
+            seek(timeInTrack / 1000); 
+          }, 1000);
         }
       }
       setLoading(false);
@@ -49,7 +82,7 @@ export const PlayerPage: React.FC = () => {
     return () => {
       if (stopAll) stopAll();
     };
-  }, [username, startRadio, stopAll]);
+  }, [username, startRadio, stopAll, seek]);
 
   const hex = visualizerColor.replace('#', '');
   const r = parseInt(hex.substr(0, 2), 16);

@@ -1,5 +1,6 @@
 // src/contexts/RadioContext.tsx
-import React, { createContext, useContext, useState, useRef, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useRef, useEffect } from 'react';
+import type { ReactNode } from 'react';
 import { usePlayer } from './PlayerContext';
 
 export interface RadioContextType {
@@ -37,24 +38,9 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   const currentTrack = tracks[currentIndex];
 
-  // ✅ Au chargement, on regarde si une radio était déjà en cours
-  useEffect(() => {
-    const savedState = localStorage.getItem('radio_state');
-    if (savedState) {
-      try {
-        const { index, trackList } = JSON.parse(savedState);
-        if (trackList && trackList.length > 0) {
-          setTracks(trackList);
-          setCurrentIndex(index);
-          setIsRadioActive(true);
-        }
-      } catch (e) {}
-    }
-  }, []);
-
-  const startRadio = (newTracks: any[], live: boolean, url: string, startIndex?: number) => {
+  const startRadio = (newTracks: any[], live: boolean, url: string, startIndex: number = 0) => {
     // Si c'est déjà la même radio qui joue, on ne reset pas
-    if (isRadioActive && newTracks.length > 0 && tracks.length > 0 && newTracks[0]?.user_id === tracks[0]?.user_id) {
+    if (isRadioActive && newTracks.length > 0 && tracks.length > 0 && newTracks[0].user_id === tracks[0].user_id) {
       if (live !== isLive || url !== liveUrl) {
         setIsLive(live);
         setLiveUrl(url);
@@ -63,20 +49,13 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }
 
     stopMainPlayer();
-    
-    // ✅ On calcule l'index de départ (soit on le fournit, soit on prend le début)
-    const index = startIndex !== undefined ? startIndex : 0;
-    
     setTracks(newTracks);
-    setCurrentIndex(index);
+    setCurrentIndex(startIndex);
     setIsLive(live);
     setLiveUrl(url);
     setIsRadioActive(true);
     setIsPlaying(true);
     setProgress(0);
-
-    // Sauvegarde pour le rechargement
-    localStorage.setItem('radio_state', JSON.stringify({ index, trackList: newTracks }));
   };
 
   const togglePlay = () => {
@@ -92,17 +71,12 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   const playNext = () => {
     if (isLive || tracks.length === 0) return;
-    const nextIndex = (currentIndex + 1) % tracks.length;
-    setCurrentIndex(nextIndex);
-    // Mise à jour du localStorage à chaque changement
-    localStorage.setItem('radio_state', JSON.stringify({ index: nextIndex, trackList: tracks }));
+    setCurrentIndex((prev) => (prev + 1) % tracks.length);
   };
 
   const playPrev = () => {
     if (isLive || tracks.length === 0) return;
-    const prevIndex = (currentIndex - 1 + tracks.length) % tracks.length;
-    setCurrentIndex(prevIndex);
-    localStorage.setItem('radio_state', JSON.stringify({ index: prevIndex, trackList: tracks }));
+    setCurrentIndex((prev) => (prev - 1 + tracks.length) % tracks.length);
   };
 
   const seek = (time: number) => {
@@ -119,7 +93,6 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
     }
-    localStorage.removeItem('radio_state');
   };
 
   useEffect(() => {

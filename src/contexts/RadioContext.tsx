@@ -1,6 +1,5 @@
 // src/contexts/RadioContext.tsx
-import React, { createContext, useContext, useState, useRef, useEffect } from 'react';
-import type { ReactNode } from 'react'; // ✅ Type importé séparément pour éviter les erreurs TS
+import React, { createContext, useContext, useState, useRef, useEffect, ReactNode } from 'react';
 import { usePlayer } from './PlayerContext';
 
 export interface RadioContextType {
@@ -13,7 +12,7 @@ export interface RadioContextType {
   isLive: boolean;
   liveUrl: string;
   isRadioActive: boolean;
-  startRadio: (newTracks: any[], live: boolean, url: string) => void;
+  startRadio: (newTracks: any[], live: boolean, url: string, startIndex?: number) => void;
   togglePlay: () => void;
   playNext: () => void;
   playPrev: () => void;
@@ -34,13 +33,28 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [isRadioActive, setIsRadioActive] = useState(false);
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const { stop: stopMainPlayer } = usePlayer(); // Pour couper le lecteur principal si besoin
+  const { stop: stopMainPlayer } = usePlayer();
 
   const currentTrack = tracks[currentIndex];
 
-  const startRadio = (newTracks: any[], live: boolean, url: string) => {
+  // ✅ Au chargement, on regarde si une radio était déjà en cours
+  useEffect(() => {
+    const savedState = localStorage.getItem('radio_state');
+    if (savedState) {
+      try {
+        const { index, trackList } = JSON.parse(savedState);
+        if (trackList && trackList.length > 0) {
+          setTracks(trackList);
+          setCurrentIndex(index);
+          setIsRadioActive(true);
+        }
+      } catch (e) {}
+    }
+  }, []);
+
+  const startRadio = (newTracks: any[], live: boolean, url: string, startIndex?: number) => {
     // Si c'est déjà la même radio qui joue, on ne reset pas
-    if (isRadioActive && newTracks.length > 0 && tracks.length > 0 && newTracks[0].user_id === tracks[0].user_id) {
+    if (isRadioActive && newTracks.length > 0 && tracks.length > 0 && newTracks[0]?.user_id === tracks[0]?.user_id) {
       if (live !== isLive || url !== liveUrl) {
         setIsLive(live);
         setLiveUrl(url);
@@ -48,14 +62,21 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       return;
     }
 
-    stopMainPlayer(); // On coupe la musique principale si elle jouait
+    stopMainPlayer();
+    
+    // ✅ On calcule l'index de départ (soit on le fournit, soit on prend le début)
+    const index = startIndex !== undefined ? startIndex : 0;
+    
     setTracks(newTracks);
-    setCurrentIndex(0);
+    setCurrentIndex(index);
     setIsLive(live);
     setLiveUrl(url);
     setIsRadioActive(true);
     setIsPlaying(true);
     setProgress(0);
+
+    // Sauvegarde pour le rechargement
+    localStorage.setItem('radio_state', JSON.stringify({ index, trackList: newTracks }));
   };
 
   const togglePlay = () => {
@@ -71,12 +92,17 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   const playNext = () => {
     if (isLive || tracks.length === 0) return;
-    setCurrentIndex((prev) => (prev + 1) % tracks.length);
+    const nextIndex = (currentIndex + 1) % tracks.length;
+    setCurrentIndex(nextIndex);
+    // Mise à jour du localStorage à chaque changement
+    localStorage.setItem('radio_state', JSON.stringify({ index: nextIndex, trackList: tracks }));
   };
 
   const playPrev = () => {
     if (isLive || tracks.length === 0) return;
-    setCurrentIndex((prev) => (prev - 1 + tracks.length) % tracks.length);
+    const prevIndex = (currentIndex - 1 + tracks.length) % tracks.length;
+    setCurrentIndex(prevIndex);
+    localStorage.setItem('radio_state', JSON.stringify({ index: prevIndex, trackList: tracks }));
   };
 
   const seek = (time: number) => {
@@ -93,9 +119,9 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
     }
+    localStorage.removeItem('radio_state');
   };
 
-  // Gestion automatique de la lecture quand l'index change
   useEffect(() => {
     if (audioRef.current) {
       if (isPlaying) {

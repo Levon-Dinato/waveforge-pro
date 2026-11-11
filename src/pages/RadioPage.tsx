@@ -80,14 +80,29 @@ export const RadioPage: React.FC = () => {
           if (isMounted) setUserProfile(myProfile);
         }
 
-        const { data: tracksData } = await supabase.from('tracks').select('*').eq('user_id', profileData.id).eq('in_radio', true);
+        // ✅ Récupération des tracks ordonnées par date de création
+        const { data: tracksData } = await supabase
+          .from('tracks')
+          .select('*')
+          .eq('user_id', profileData.id)
+          .eq('in_radio', true)
+          .order('created_at', { ascending: true });
         
-        if (tracksData) {
-          const sortedByDate = [...tracksData].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-          if (sortedByDate.length > 0) setNowPlaying(sortedByDate[0]);
+        if (tracksData && tracksData.length > 0) {
+          // ✅ SYNCHRONISATION TEMPORELLE : Calcul de l'index en fonction de l'heure actuelle
+          // On estime qu'un son dure 4 minutes en moyenne.
+          const SLOT_DURATION = 4 * 60 * 1000; 
+          const now = Date.now();
+          const startIndex = Math.floor(now / SLOT_DURATION) % tracksData.length;
           
+          setNowPlaying(tracksData[startIndex]);
+
+          // Top Tracks (indépendant de la synchro)
           const sortedByLikes = [...tracksData].sort((a, b) => (b.likes_count || 0) - (a.likes_count || 0));
           setTopTracks(sortedByLikes.slice(0, 5));
+
+          // Dernières sorties (indépendant de la synchro)
+          const sortedByDate = [...tracksData].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
           setLatestReleases(sortedByDate.slice(0, 4));
         }
 
@@ -103,6 +118,7 @@ export const RadioPage: React.FC = () => {
         const { data: schedulesData } = await supabase.from('radio_schedules').select('*, playlists(name)').eq('user_id', profileData.id).order('start_time');
         if (schedulesData) setSchedules(schedulesData);
 
+        // Realtime Chat
         channel = supabase.channel(`radio_${profileData.id}_${Date.now()}`, { config: { presence: { key: user?.id || Math.random().toString() } } });
         channel
           .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'radio_messages', filter: `radio_owner_id=eq.${profileData.id}` }, (payload: any) => setMessages((prev) => [...prev, payload.new]))
@@ -260,7 +276,7 @@ export const RadioPage: React.FC = () => {
         </div>
       </div>
 
-      {/* ✅ SLIDER PLEINE LARGEUR (Hors conteneur max-width pour prendre tout l'espace) */}
+      {/* SLIDER PLEINE LARGEUR */}
       <div style={{ width: '100%', padding: '24px', boxSizing: 'border-box', zIndex: 10 }}>
         <div className="glass-panel" style={{ position: 'relative', width: '100%', height: isMobile ? 300 : 400, overflow: 'hidden', display: 'flex', alignItems: 'center', borderRadius: 24 }}>
           
@@ -303,10 +319,10 @@ export const RadioPage: React.FC = () => {
         </div>
       </div>
 
-      {/* ✅ CONTENU PRINCIPAL (Grille plus large) */}
+      {/* CONTENU PRINCIPAL */}
       <div style={{ width: '100%', maxWidth: 1400, margin: '0 auto', padding: '24px 24px 60px 24px', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 380px', gap: 32, zIndex: 10, boxSizing: 'border-box' }}>
         
-        {/* COLONNE GAUCHE (Top Tracks + Latest Releases) */}
+        {/* COLONNE GAUCHE */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
           
           {/* TOP TRACKS */}
@@ -353,7 +369,7 @@ export const RadioPage: React.FC = () => {
           </div>
         </div>
 
-        {/* COLONNE DROITE (Infos, Programme, Pub) */}
+        {/* COLONNE DROITE */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
           
           {/* À PROPOS */}

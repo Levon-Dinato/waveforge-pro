@@ -52,4 +52,18 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['essentia.js'],
   },
+  // ✅ NOUVEAU : Configuration du Build pour réduire la taille du fichier JS
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'ui-vendor': ['framer-motion', 'react-helmet-async'],
+          'audio-vendor': ['music-metadata-browser'],
+          'supabase-vendor': ['@supabase/supabase-js'],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 1000, // ✅ On augmente la limite pour éviter l'avertissement
+  },
 });

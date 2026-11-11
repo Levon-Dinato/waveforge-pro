@@ -18,9 +18,10 @@ export const RadioLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // ✅ On récupère aussi la fonction seek
   const { 
     isLive, currentTrack, isPlaying, togglePlay, startRadio, isRadioActive, 
-    progress, duration, updateRadioSettings 
+    progress, duration, updateRadioSettings, stopRadio, seek
   } = useRadio();
 
   const [profile, setProfile] = useState<any>(null);
@@ -53,7 +54,6 @@ export const RadioLayout: React.FC = () => {
 
   const [isWiping, setIsWiping] = useState(false);
 
-  // ✅ Refs pour éviter les re-rendus inutiles et les coupures
   const hasFetchedRef = useRef(false);
   const isRadioStartedRef = useRef(false);
 
@@ -62,7 +62,6 @@ export const RadioLayout: React.FC = () => {
     border: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)', glass: isDark ? 'rgba(15,15,20,0.7)' : 'rgba(255,255,255,0.7)', card: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)',
   };
 
-  // ✅ EFFET 1 : Chargement des données (Se lance UNIQUEMENT à l'arrivée sur la page)
   useEffect(() => {
     if (!username || hasFetchedRef.current) return;
     let isMounted = true;
@@ -81,7 +80,6 @@ export const RadioLayout: React.FC = () => {
         setCustomLogo(profileData.radio_custom_logo_url || '');
         setVisualizerColor(profileData.radio_visualizer_color || '#ff3366');
 
-        // ✅ Charge les paramètres du crossfade
         updateRadioSettings(
           profileData.radio_crossfade_enabled || false,
           profileData.radio_crossfade_duration || 3
@@ -117,7 +115,6 @@ export const RadioLayout: React.FC = () => {
           setTopTracks([...tracksData].sort((a: any, b: any) => (b.likes_count || 0) - (a.likes_count || 0)));
           setLatestReleases([...tracksData].sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
 
-          // ✅ Démarre la radio uniquement si elle n'est pas déjà lancée
           if (!isRadioStartedRef.current && !isRadioActive) {
             isRadioStartedRef.current = true;
             startRadio(tracksData, profileData.is_live || false, profileData.live_url || '', startIndex, t);
@@ -144,9 +141,8 @@ export const RadioLayout: React.FC = () => {
 
     initPage();
     return () => { isMounted = false; };
-  }, [username]); // ✅ Uniquement username
+  }, [username]);
 
-  // ✅ EFFET 2 : WebSocket pour le chat
   useEffect(() => {
     if (!profile?.id) return;
     let isMounted = true;
@@ -177,7 +173,6 @@ export const RadioLayout: React.FC = () => {
     };
   }, [profile?.id, user?.id]);
 
-  // ✅ EFFET 3 : Wipe Transition
   useEffect(() => {
     setIsWiping(true);
     const timer = setTimeout(() => setIsWiping(false), 800);
@@ -188,13 +183,8 @@ export const RadioLayout: React.FC = () => {
 
   const showToastMsg = (msg: string) => { setToastMsg(msg); setShowToast(true); setTimeout(() => setShowToast(false), 3000); };
 
-  // ✅ L'OUVERTURE DU PLAYER STICKY / POPUP AVEC MISE EN PAUSE
   const handleOpenPlayer = () => {
-    // On met en pause le son de la page principale pour éviter le doublon
-    if (isPlaying) {
-      togglePlay();
-    }
-
+    if (isPlaying) togglePlay();
     const isMobileDevice = /Mobi|Android/i.test(navigator.userAgent);
     const url = `/player/${username}`;
     if (isMobileDevice) navigate(url);
@@ -202,11 +192,61 @@ export const RadioLayout: React.FC = () => {
   };
 
   const handlePlayRadio = () => {
-    if (radioTracks.length > 0 && nowPlaying) {
-      const index = radioTracks.findIndex((t: any) => t.id === nowPlaying.id);
-      startRadio(radioTracks, profile?.is_live || false, profile?.live_url || '', index >= 0 ? index : 0);
+    if (radioTracks.length === 0) return;
+
+    if (profile?.is_live) {
+      stopRadio();
+      startRadio(radioTracks, true, profile.live_url || '', 0);
     } else {
-      handleOpenPlayer();
+      const RADIO_EPOCH = new Date('2024-01-01T00:00:00Z').getTime();
+      const elapsed = Math.floor((Date.now() - RADIO_EPOCH) / 1000);
+      const durations = radioTracks.map((t: any) => (t.duration && t.duration > 0) ? t.duration : 240);
+      const total = durations.reduce((a: any, d: any) => a + d, 0);
+      let t = elapsed % total;
+      let startIndex = 0;
+      for (let i = 0; i < radioTracks.length; i++) {
+        if (t < durations[i]) { startIndex = i; break; }
+        t -= durations[i];
+      }
+      stopRadio();
+      startRadio(radioTracks, false, '', startIndex, t);
+    }
+  };
+
+  // ✅ LOGIQUE DU BOUTON PLAY/PAUSE
+  const handleTogglePlay = () => {
+    if (isPlaying) {
+      togglePlay();
+    } else {
+      if (profile?.is_live) {
+        if (!isRadioActive) {
+          startRadio(radioTracks, true, profile.live_url || '', 0);
+        } else {
+          togglePlay();
+        }
+      } else {
+        // Recalcul du direct
+        const RADIO_EPOCH = new Date('2024-01-01T00:00:00Z').getTime();
+        const elapsed = Math.floor((Date.now() - RADIO_EPOCH) / 1000);
+        const durations = radioTracks.map((t: any) => (t.duration && t.duration > 0) ? t.duration : 240);
+        const total = durations.reduce((a: any, d: any) => a + d, 0);
+        let t = elapsed % total;
+        let startIndex = 0;
+        for (let i = 0; i < radioTracks.length; i++) {
+          if (t < durations[i]) { startIndex = i; break; }
+          t -= durations[i];
+        }
+
+        if (startIndex === currentTrack?.id || (radioTracks[startIndex]?.id === currentTrack?.id && isRadioActive)) {
+          // Même morceau, on se recale juste dans le temps
+          seek(t);
+          togglePlay();
+        } else {
+          // Morceau différent, on relance le flux
+          stopRadio();
+          startRadio(radioTracks, false, '', startIndex, t);
+        }
+      }
     }
   };
 
@@ -258,7 +298,7 @@ export const RadioLayout: React.FC = () => {
   const outletContext = {
     profile, userProfile, radioTracks, nowPlaying, topTracks, latestReleases, schedules, activeSchedule,
     listeners, colors, visualizerColor, iconColor, socials, coverImage, totalLikes, recentTracks,
-    handleOpenPlayer, handlePlayRadio, handleSendMessage, messages, newMessage, setNewMessage, isChatOpen, setIsChatOpen, chatEndRef,
+    handleOpenPlayer, handlePlayRadio, handleTogglePlay, handleSendMessage, messages, newMessage, setNewMessage, isChatOpen, setIsChatOpen, chatEndRef,
     SocialLink
   };
 
@@ -416,7 +456,8 @@ export const RadioLayout: React.FC = () => {
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
               </button>
 
-              <button onClick={() => { if (!isRadioActive && radioTracks.length > 0) { const idx = radioTracks.findIndex(t => t.id === nowPlaying?.id); startRadio(radioTracks, profile?.is_live || false, profile?.live_url || '', idx >= 0 ? idx : 0); } else { togglePlay(); } }} style={{ width: 44, height: 44, borderRadius: '50%', background: visualizerColor, color: iconColor, border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: `0 4px 15px ${visualizerColor}60` }}>
+              {/* ✅ BOUTON PLAY/PAUSE AVEC LA LOGIQUE DE RECALAGE */}
+              <button onClick={handleTogglePlay} style={{ width: 44, height: 44, borderRadius: '50%', background: visualizerColor, color: iconColor, border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: `0 4px 15px ${visualizerColor}60` }}>
                 {isPlaying ? <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg> : <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: 3 }}><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>}
               </button>
               <button onClick={handleOpenPlayer} style={{ background: 'rgba(255,255,255,0.08)', color: colors.textMain, border: `1px solid ${colors.border}`, padding: '8px 16px', borderRadius: 20, fontSize: 12, fontWeight: 800, cursor: 'pointer', display: isMobile ? 'none' : 'flex', alignItems: 'center', gap: 6 }}>Player ↗</button>

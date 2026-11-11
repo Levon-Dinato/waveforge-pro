@@ -14,27 +14,37 @@ export const RadioHomePage: React.FC = () => {
     socials, coverImage, totalLikes, SocialLink, recentTracks 
   } = useOutletContext<any>();
 
-  // Liste des informations pour le bandeau défilant
+  // Bandeau défilant ultra épuré
   const marqueeItems = [
-    `📻 ${profile.username}`, 
-    `🎧 ${nowPlaying?.title || 'Live Radio'}`, 
-    `❤️ ${totalLikes} likes`,
-    `🎙️ En Direct`, 
-    `👥 ${listeners} auditeurs`, 
-    `🎵 ${radioTracks.length} tracks`
+    `${profile.username.toUpperCase()}`, 
+    `EN COURS : ${nowPlaying?.title || 'LIVE RADIO'}`, 
+    `${totalLikes} LIKES`,
+    `EN DIRECT`, 
+    `${listeners} AUDITEURS`, 
+    `${radioTracks.length} TRACKS`
   ];
-  // On duplique la liste pour que le défilement soit infini (sans coupure)
   const repeatedItems = [...marqueeItems, ...marqueeItems, ...marqueeItems, ...marqueeItems];
+
+  const IconMusic = (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+  );
+
+  const IconUser = (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+  );
+
+  const IconHandshake = (
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16 16v1a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2m5.66 0H14a2 2 0 0 1 2 2v3.34"></path><path d="M8 15.66 10.34 18a2 2 0 0 0 2.83 0l1.41-1.41a2 2 0 0 0 0-2.83L12 11.17a2 2 0 0 0-2.83 0L8 12.34"></path></svg>
+  );
 
   return (
     <>
-      {/* ===================== HERO ===================== */}
+      {/* HERO */}
       <section style={{ position: 'relative', padding: isMobile ? '60px 20px 40px' : '90px 40px 60px', overflow: 'hidden' }}>
         <ParticleCanvas accent={`${visualizerColor}cc`} accent2="rgba(124,92,255,0.6)" />
         
         <div style={{ position: 'relative', zIndex: 3, maxWidth: 1300, margin: '0 auto', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1.2fr', gap: 40, alignItems: 'center' }}>
           
-          {/* COLONNE GAUCHE : Texte */}
           <div>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 18px', borderRadius: 30, fontSize: 11, fontWeight: 900, letterSpacing: '1.5px', textTransform: 'uppercase', color: visualizerColor, background: `${visualizerColor}12`, border: `1px solid ${visualizerColor}40`, marginBottom: 24 }}>
               <span style={{ width: 6, height: 6, borderRadius: '50%', background: visualizerColor, boxShadow: `0 0 10px ${visualizerColor}`, animation: 'pulseLive 2s infinite' }} /> En direct
@@ -68,11 +78,8 @@ export const RadioHomePage: React.FC = () => {
             </div>
           </div>
 
-          {/* COLONNE DROITE : Vinyle + Déjà joués */}
           {!isMobile && (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 30 }}>
-              
-              {/* Le Vinyle */}
               <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative' }}>
                 <div style={{ position: 'absolute', width: 360, height: 360, borderRadius: '50%', background: `radial-gradient(circle, ${visualizerColor}40 0%, transparent 65%)`, filter: 'blur(40px)' }} />
                 <div className="rp-vinyl-spin" style={{ width: 320, height: 320, borderRadius: '50%', background: '#000', boxShadow: `0 30px 80px rgba(0,0,0,0.8), inset 0 0 40px rgba(255,255,255,0.1), 0 0 60px ${visualizerColor}40`, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
@@ -83,7 +90,6 @@ export const RadioHomePage: React.FC = () => {
                 </div>
               </div>
 
-              {/* La liste "Déjà joués" */}
               <div className="rp-glass" style={{ width: 280, padding: '20px', display: 'flex', flexDirection: 'column', gap: 16 }}>
                 <div style={{ fontSize: 12, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1.5px', color: colors.textMuted, borderBottom: `1px solid ${colors.border}`, paddingBottom: 10 }}>
                   Déjà joués
@@ -102,28 +108,23 @@ export const RadioHomePage: React.FC = () => {
                   ))}
                 </div>
               </div>
-
             </div>
           )}
         </div>
       </section>
 
-      {/* ===================== MARQUEE ANIMÉ (Framer Motion) ===================== */}
+      {/* MARQUEE */}
       <div style={{ borderTop: `1px solid ${colors.border}`, borderBottom: `1px solid ${colors.border}`, padding: '18px 0', overflow: 'hidden', background: `${visualizerColor}05`, position: 'relative', zIndex: 2 }}>
-        <motion.div
-          style={{ display: 'flex', gap: 60, width: 'max-content' }}
-          animate={{ x: ['0%', '-50%'] }}
-          transition={{ repeat: Infinity, duration: 30, ease: 'linear' }}
-        >
+        <motion.div style={{ display: 'flex', gap: 60, width: 'max-content' }} animate={{ x: ['0%', '-50%'] }} transition={{ repeat: Infinity, duration: 30, ease: 'linear' }}>
           {repeatedItems.map((t, i) => (
             <span key={i} style={{ fontFamily: '"Space Grotesk", Inter, sans-serif', fontSize: 14, fontWeight: 700, color: colors.textMuted, letterSpacing: '2px', textTransform: 'uppercase', display: 'inline-flex', alignItems: 'center', gap: 60 }}>
-              {t} <span style={{ color: visualizerColor }}>★</span>
+              {t} <span style={{ color: visualizerColor, fontSize: 10 }}>●</span>
             </span>
           ))}
         </motion.div>
       </div>
 
-      {/* ===================== INFO CARDS (Now Playing / À propos / Partenaire) ===================== */}
+      {/* INFO CARDS */}
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '40px 20px 80px' : '60px 40px 80px', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 24, width: '100%', boxSizing: 'border-box' }}>
         
         {/* NOW PLAYING */}
@@ -146,9 +147,11 @@ export const RadioHomePage: React.FC = () => {
           </Link>
         </div>
 
-        {/* À PROPOS */}
+        {/* À PROPOS (Avec icône minimaliste) */}
         <div className="rp-glass" style={{ padding: 24 }}>
-          <div style={{ fontSize: 11, fontWeight: 900, letterSpacing: '1.5px', textTransform: 'uppercase', color: colors.textMain, marginBottom: 18, display: 'flex', alignItems: 'center', gap: 8 }}><span style={{ width: 6, height: 6, borderRadius: '50%', background: visualizerColor }} /> À propos</div>
+          <div style={{ fontSize: 11, fontWeight: 900, letterSpacing: '1.5px', textTransform: 'uppercase', color: colors.textMain, marginBottom: 18, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ color: visualizerColor }}>{IconUser}</span> À propos
+          </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 14 }}>
             <img src={coverImage || 'https://via.placeholder.com/100'} alt="Avatar" style={{ width: 56, height: 56, borderRadius: 14, objectFit: 'cover', border: `2px solid ${visualizerColor}40` }} />
             <div><div style={{ fontSize: 16, fontWeight: 900 }}>{profile.username}</div><div style={{ fontSize: 11, color: colors.textMuted }}>DJ / Producteur</div></div>
@@ -161,9 +164,9 @@ export const RadioHomePage: React.FC = () => {
           </div>
         </div>
 
-        {/* PARTENAIRE */}
+        {/* PARTENAIRE (Avec icône minimaliste) */}
         <div className="rp-glass" style={{ padding: 24, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', border: `1px dashed ${colors.border}` }}>
-          <div style={{ fontSize: 32, marginBottom: 10 }}>🤝</div>
+          <div style={{ color: colors.textMuted, marginBottom: 12 }}>{IconHandshake}</div>
           <h3 style={{ fontSize: 14, fontWeight: 900, margin: '0 0 6px 0' }}>Espace Partenaire</h3>
           <p style={{ fontSize: 11, color: colors.textMuted, margin: '0 0 14px 0' }}>Ta pub vue par {listeners} auditeur{listeners > 1 ? 's' : ''}</p>
           <a href="#" style={{ display: 'inline-block', fontSize: 12, fontWeight: 800, color: visualizerColor, textDecoration: 'none', background: `${visualizerColor}15`, padding: '8px 16px', borderRadius: 8 }}>Devenir sponsor</a>

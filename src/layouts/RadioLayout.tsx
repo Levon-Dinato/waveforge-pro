@@ -18,7 +18,8 @@ export const RadioLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const { isLive, currentTrack, isPlaying, togglePlay, startRadio, isRadioActive } = useRadio();
+  // ✅ Ajout de progress et duration
+  const { isLive, currentTrack, isPlaying, togglePlay, startRadio, isRadioActive, progress, duration } = useRadio();
 
   const [profile, setProfile] = useState<any>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
@@ -29,7 +30,7 @@ export const RadioLayout: React.FC = () => {
   const [topTracks, setTopTracks] = useState<any[]>([]);
   const [latestReleases, setLatestReleases] = useState<any[]>([]);
   const [schedules, setSchedules] = useState<any[]>([]);
-  const [recentTracks, setRecentTracks] = useState<any[]>([]); // ✅ AJOUTÉ
+  const [recentTracks, setRecentTracks] = useState<any[]>([]);
   const [activeSchedule, setActiveSchedule] = useState<string | null>(null);
 
   const [listeners, setListeners] = useState(1);
@@ -109,11 +110,7 @@ export const RadioLayout: React.FC = () => {
           }
         }
 
-        // ✅ RÉCUPÉRATION DE L'HISTORIQUE (Déjà joués)
-        const { data: historyData } = await supabase
-          .from('tracks').select('id, title, artist, cover_url, last_played_at')
-          .eq('user_id', profileData.id).not('last_played_at', 'is', null)
-          .order('last_played_at', { ascending: false }).limit(5);
+        const { data: historyData } = await supabase.from('tracks').select('id, title, artist, cover_url, last_played_at').eq('user_id', profileData.id).not('last_played_at', 'is', null).order('last_played_at', { ascending: false }).limit(5);
         if (historyData) setRecentTracks(historyData);
 
         const { data: schedulesData } = await supabase.from('radio_schedules').select('*, playlists(name)').eq('user_id', profileData.id).order('start_time');
@@ -221,6 +218,13 @@ export const RadioLayout: React.FC = () => {
     SocialLink
   };
 
+  // Formatage du temps pour la barre de progression
+  const formatTime = (time: number) => {
+    if (isNaN(time)) return '00:00';
+    return `${Math.floor(time / 60).toString().padStart(2, '0')}:${Math.floor(time % 60).toString().padStart(2, '0')}`;
+  };
+  const progressPercent = duration > 0 ? (progress / duration) * 100 : 0;
+
   return (
     <div style={{ background: colors.bg, minHeight: '100vh', color: colors.textMain, fontFamily: 'Inter, sans-serif', position: 'relative', display: 'flex', flexDirection: 'column', paddingBottom: 100 }}>
       <Helmet>
@@ -265,33 +269,10 @@ export const RadioLayout: React.FC = () => {
         .nav-link.active { color: ${visualizerColor}; }
         .nav-link.active::after { content: ''; position: absolute; bottom: 0; left: 20px; right: 20px; height: 2px; background: ${visualizerColor}; box-shadow: 0 0 10px ${visualizerColor}; border-radius: 2px; }
 
-        @keyframes slideWipeAnim {
-          0% { transform: translateX(100%); }
-          40% { transform: translateX(0); }
-          60% { transform: translateX(0); }
-          100% { transform: translateX(-100%); }
-        }
-        @keyframes wipeLogoIn {
-          0% { opacity: 0; transform: scale(0.9); }
-          40% { opacity: 1; transform: scale(1); }
-          60% { opacity: 1; transform: scale(1); }
-          100% { opacity: 0; transform: scale(1.05); }
-        }
-        .wipe-overlay {
-          position: fixed; inset: 0; z-index: 999999; 
-          background: #05050a; border-left: 4px solid ${visualizerColor};
-          display: flex; justify-content: center; align-items: center;
-          box-shadow: -10px 0 60px ${visualizerColor}80;
-          transform: translateX(100%);
-          animation: slideWipeAnim 0.8s cubic-bezier(0.77, 0, 0.175, 1) forwards;
-          pointer-events: none;
-        }
-        .wipe-overlay span {
-          color: ${visualizerColor}; font-family: 'Space Grotesk', sans-serif; font-size: 1.8rem; font-weight: 700;
-          letter-spacing: 6px; opacity: 0; transform: scale(0.9); transition: all 0.3s;
-          text-shadow: 0 0 30px ${visualizerColor};
-          animation: wipeLogoIn 0.8s ease-out;
-        }
+        @keyframes slideWipeAnim { 0% { transform: translateX(100%); } 40% { transform: translateX(0); } 60% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
+        @keyframes wipeLogoIn { 0% { opacity: 0; transform: scale(0.9); } 40% { opacity: 1; transform: scale(1); } 60% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(1.05); } }
+        .wipe-overlay { position: fixed; inset: 0; z-index: 999999; background: #05050a; border-left: 4px solid ${visualizerColor}; display: flex; justify-content: center; align-items: center; box-shadow: -10px 0 60px ${visualizerColor}80; transform: translateX(100%); animation: slideWipeAnim 0.8s cubic-bezier(0.77, 0, 0.175, 1) forwards; pointer-events: none; }
+        .wipe-overlay span { color: ${visualizerColor}; font-family: 'Space Grotesk', sans-serif; font-size: 1.8rem; font-weight: 700; letter-spacing: 6px; opacity: 0; transform: scale(0.9); transition: all 0.3s; text-shadow: 0 0 30px ${visualizerColor}; animation: wipeLogoIn 0.8s ease-out; }
       `}</style>
 
       <div style={{ position: 'fixed', inset: 0, zIndex: 0, overflow: 'hidden', pointerEvents: 'none' }}>
@@ -361,23 +342,45 @@ export const RadioLayout: React.FC = () => {
           </AnimatePresence>
         </div>
 
-        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 90, background: colors.glass, backdropFilter: 'blur(30px)', borderTop: `1px solid ${colors.border}`, padding: '12px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 -10px 40px rgba(0,0,0,0.4)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14, minWidth: 0, flex: 1 }}>
-            <div style={{ width: 42, height: 42, borderRadius: 10, background: `url(${currentTrack?.cover_url || nowPlaying?.cover_url || coverImage}) center/cover`, border: `1px solid ${colors.border}`, flexShrink: 0 }} />
-            <div style={{ minWidth: 0, flex: 1 }}>
-              <div style={{ fontSize: 13, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{currentTrack?.title || nowPlaying?.title || 'En attente'} {isLive && <span style={{ fontSize: 9, background: '#ef4444', color: '#fff', padding: '2px 6px', borderRadius: 4 }}>LIVE</span>}</div>
-              <div style={{ fontSize: 11, color: colors.textMuted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{currentTrack?.artist || nowPlaying?.artist || 'DropZone Radio'}</div>
+        {/* ✅ STICKY PLAYER AVEC BARRE DE PROGRESSION */}
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 90, background: colors.glass, backdropFilter: 'blur(30px)', borderTop: `1px solid ${colors.border}`, boxShadow: '0 -10px 40px rgba(0,0,0,0.4)' }}>
+          
+          {/* Barre de progression tout en haut du lecteur */}
+          {!isLive && (
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'rgba(255,255,255,0.05)' }}>
+              <div style={{ width: `${progressPercent}%`, height: '100%', background: visualizerColor, boxShadow: `0 0 10px ${visualizerColor}`, transition: 'width 1s linear' }} />
             </div>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: colors.textMuted, fontWeight: 700, background: 'rgba(255,255,255,0.05)', padding: '4px 10px', borderRadius: 20 }}><span style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981', animation: 'pulseLive 1.5s infinite' }} /> {listeners}</div>
-            <button onClick={() => { if (!isRadioActive && radioTracks.length > 0) { const idx = radioTracks.findIndex(t => t.id === nowPlaying?.id); startRadio(radioTracks, profile?.is_live || false, profile?.live_url || '', idx >= 0 ? idx : 0); } else { togglePlay(); } }} style={{ width: 44, height: 44, borderRadius: '50%', background: visualizerColor, color: iconColor, border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: `0 4px 15px ${visualizerColor}60` }}>
-              {isPlaying ? <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg> : <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: 3 }}><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>}
-            </button>
-            <button onClick={handleOpenPlayer} style={{ background: 'rgba(255,255,255,0.08)', color: colors.textMain, border: `1px solid ${colors.border}`, padding: '8px 16px', borderRadius: 20, fontSize: 12, fontWeight: 800, cursor: 'pointer', display: isMobile ? 'none' : 'flex', alignItems: 'center', gap: 6 }}>Player ↗</button>
+          )}
+
+          <div style={{ padding: '12px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, minWidth: 0, flex: 1 }}>
+              <div style={{ width: 42, height: 42, borderRadius: 10, background: `url(${currentTrack?.cover_url || nowPlaying?.cover_url || coverImage}) center/cover`, border: `1px solid ${colors.border}`, flexShrink: 0 }} />
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <div style={{ fontSize: 13, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{currentTrack?.title || nowPlaying?.title || 'En attente'} {isLive && <span style={{ fontSize: 9, background: '#ef4444', color: '#fff', padding: '2px 6px', borderRadius: 4 }}>LIVE</span>}</div>
+                <div style={{ fontSize: 11, color: colors.textMuted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{currentTrack?.artist || nowPlaying?.artist || 'DropZone Radio'}</div>
+              </div>
+            </div>
+
+            {/* Temps (uniquement si pas en live) */}
+            {!isLive && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: colors.textMuted, fontWeight: 700, margin: '0 20px', fontFamily: 'monospace' }}>
+                <span>{formatTime(progress)}</span>
+                <span style={{ opacity: 0.5 }}>/</span>
+                <span>{formatTime(duration)}</span>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: colors.textMuted, fontWeight: 700, background: 'rgba(255,255,255,0.05)', padding: '4px 10px', borderRadius: 20 }}><span style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981', animation: 'pulseLive 1.5s infinite' }} /> {listeners}</div>
+              <button onClick={() => { if (!isRadioActive && radioTracks.length > 0) { const idx = radioTracks.findIndex(t => t.id === nowPlaying?.id); startRadio(radioTracks, profile?.is_live || false, profile?.live_url || '', idx >= 0 ? idx : 0); } else { togglePlay(); } }} style={{ width: 44, height: 44, borderRadius: '50%', background: visualizerColor, color: iconColor, border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: `0 4px 15px ${visualizerColor}60` }}>
+                {isPlaying ? <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg> : <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: 3 }}><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>}
+              </button>
+              <button onClick={handleOpenPlayer} style={{ background: 'rgba(255,255,255,0.08)', color: colors.textMain, border: `1px solid ${colors.border}`, padding: '8px 16px', borderRadius: 20, fontSize: 12, fontWeight: 800, cursor: 'pointer', display: isMobile ? 'none' : 'flex', alignItems: 'center', gap: 6 }}>Player ↗</button>
+            </div>
           </div>
         </div>
 
+        {/* ... (Chat flottant) ... */}
         <div style={{ position: 'fixed', bottom: 80, right: 24, zIndex: 999, display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
           <div className={`rp-glass rp-chat-window ${isChatOpen ? 'rp-chat-open' : 'rp-chat-closed'}`} style={{ width: 340, height: 440, marginBottom: 14, display: 'flex', flexDirection: 'column', borderRadius: 20, overflow: 'hidden', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
             <div style={{ padding: '14px 16px', borderBottom: `1px solid ${colors.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -403,18 +406,12 @@ export const RadioLayout: React.FC = () => {
             {isChatOpen ? <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> : <div style={{ position: 'relative' }}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg><span style={{ position: 'absolute', top: -6, right: -6, width: 10, height: 10, background: '#ff3366', borderRadius: '50%', border: `2px solid ${colors.bg}` }} /></div>}
           </button>
         </div>
-        
-        {/* ✅ LE FOOTER A ÉTÉ SUPPRIMÉ ICI */}
       </div>
 
       {isWiping && (
         <div className="wipe-overlay">
           <span>DROPZONE DJ</span>
         </div>
-      )}
-
-      {showToast && (
-        <div style={{ position: 'fixed', bottom: 100, left: '50%', transform: 'translateX(-50%)', background: colors.textMain, color: colors.bg, padding: '12px 24px', borderRadius: 30, fontWeight: 800, fontSize: 13, zIndex: 999, boxShadow: '0 10px 30px rgba(0,0,0,0.4)' }}>{toastMsg}</div>
       )}
     </div>
   );

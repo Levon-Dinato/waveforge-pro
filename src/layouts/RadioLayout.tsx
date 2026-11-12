@@ -18,7 +18,6 @@ export const RadioLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // ✅ On récupère aussi la fonction seek
   const { 
     isLive, currentTrack, isPlaying, togglePlay, startRadio, isRadioActive, 
     progress, duration, updateRadioSettings, stopRadio, seek
@@ -54,7 +53,6 @@ export const RadioLayout: React.FC = () => {
 
   const [isWiping, setIsWiping] = useState(false);
 
-  const hasFetchedRef = useRef(false);
   const isRadioStartedRef = useRef(false);
 
   const colors = {
@@ -63,14 +61,26 @@ export const RadioLayout: React.FC = () => {
   };
 
   useEffect(() => {
-    if (!username || hasFetchedRef.current) return;
+    if (!username) return;
+
     let isMounted = true;
+    setLoading(true);
+    stopRadio(); 
+    isRadioStartedRef.current = false;
 
     const initPage = async () => {
-      setLoading(true);
       try {
-        const { data: profileData } = await supabase.from('profiles').select('*').eq('username', username).single();
-        if (!isMounted || !profileData) return;
+        const { data: profileData, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .ilike('username', username)
+          .single();
+
+        if (error || !profileData) {
+          console.error("DJ introuvable ou erreur :", error);
+          if (isMounted) setLoading(false);
+          return;
+        }
 
         setProfile(profileData);
         setCustomBgUrl(profileData.radio_bg_url || '');
@@ -133,15 +143,16 @@ export const RadioLayout: React.FC = () => {
           const active = schedulesData.find((s: any) => s.start_time <= ct && s.end_time >= ct && (s.days?.length === 0 || s.days?.includes(cd)));
           if (active) setActiveSchedule(active.title);
         }
-        
-        hasFetchedRef.current = true;
-      } catch (e) { console.error(e); }
-      finally { if (isMounted) setLoading(false); }
+      } catch (e) { 
+        console.error(e); 
+      } finally { 
+        if (isMounted) setLoading(false);
+      }
     };
 
     initPage();
     return () => { isMounted = false; };
-  }, [username]);
+  }, [username, stopRadio]);
 
   useEffect(() => {
     if (!profile?.id) return;
@@ -184,7 +195,7 @@ export const RadioLayout: React.FC = () => {
   const showToastMsg = (msg: string) => { setToastMsg(msg); setShowToast(true); setTimeout(() => setShowToast(false), 3000); };
 
   const handleOpenPlayer = () => {
-    if (isPlaying) togglePlay();
+    if (isPlaying) togglePlay(); 
     const isMobileDevice = /Mobi|Android/i.test(navigator.userAgent);
     const url = `/player/${username}`;
     if (isMobileDevice) navigate(url);
@@ -213,7 +224,6 @@ export const RadioLayout: React.FC = () => {
     }
   };
 
-  // ✅ LOGIQUE DU BOUTON PLAY/PAUSE
   const handleTogglePlay = () => {
     if (isPlaying) {
       togglePlay();
@@ -225,7 +235,6 @@ export const RadioLayout: React.FC = () => {
           togglePlay();
         }
       } else {
-        // Recalcul du direct
         const RADIO_EPOCH = new Date('2024-01-01T00:00:00Z').getTime();
         const elapsed = Math.floor((Date.now() - RADIO_EPOCH) / 1000);
         const durations = radioTracks.map((t: any) => (t.duration && t.duration > 0) ? t.duration : 240);
@@ -238,11 +247,9 @@ export const RadioLayout: React.FC = () => {
         }
 
         if (startIndex === currentTrack?.id || (radioTracks[startIndex]?.id === currentTrack?.id && isRadioActive)) {
-          // Même morceau, on se recale juste dans le temps
           seek(t);
           togglePlay();
         } else {
-          // Morceau différent, on relance le flux
           stopRadio();
           startRadio(radioTracks, false, '', startIndex, t);
         }
@@ -354,8 +361,25 @@ export const RadioLayout: React.FC = () => {
 
         @keyframes slideWipeAnim { 0% { transform: translateX(100%); } 40% { transform: translateX(0); } 60% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
         @keyframes wipeLogoIn { 0% { opacity: 0; transform: scale(0.9); } 40% { opacity: 1; transform: scale(1); } 60% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(1.05); } }
-        .wipe-overlay { position: fixed; inset: 0; z-index: 999999; background: #05050a; border-left: 4px solid ${visualizerColor}; display: flex; justify-content: center; align-items: center; box-shadow: -10px 0 60px ${visualizerColor}80; transform: translateX(100%); animation: slideWipeAnim 0.8s cubic-bezier(0.77, 0, 0.175, 1) forwards; pointer-events: none; }
-        .wipe-overlay span { color: ${visualizerColor}; font-family: 'Space Grotesk', sans-serif; font-size: 1.8rem; font-weight: 700; letter-spacing: 6px; opacity: 0; transform: scale(0.9); transition: all 0.3s; text-shadow: 0 0 30px ${visualizerColor}; animation: wipeLogoIn 0.8s ease-out; }
+        
+        /* ✅ EFFET WIPE INVERSÉ */
+        .wipe-overlay { 
+          position: fixed; inset: 0; z-index: 999999; 
+          background: ${isDark ? '#111111' : '#ffffff'}; 
+          border-left: 4px solid ${isDark ? '#ffffff' : '#000000'}; 
+          display: flex; justify-content: center; align-items: center; 
+          box-shadow: -10px 0 60px ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}; 
+          transform: translateX(100%); 
+          animation: slideWipeAnim 0.8s cubic-bezier(0.77, 0, 0.175, 1) forwards; 
+          pointer-events: none; 
+        }
+        .wipe-overlay span { 
+          color: ${isDark ? '#ffffff' : '#000000'}; 
+          font-family: 'Space Grotesk', sans-serif; font-size: 1.8rem; font-weight: 700; 
+          letter-spacing: 6px; opacity: 0; transform: scale(0.9); transition: all 0.3s; 
+          text-shadow: 0 0 30px ${isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'}; 
+          animation: wipeLogoIn 0.8s ease-out; 
+        }
       `}</style>
 
       <div style={{ position: 'fixed', inset: 0, zIndex: 0, overflow: 'hidden', pointerEvents: 'none' }}>
@@ -456,7 +480,6 @@ export const RadioLayout: React.FC = () => {
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
               </button>
 
-              {/* ✅ BOUTON PLAY/PAUSE AVEC LA LOGIQUE DE RECALAGE */}
               <button onClick={handleTogglePlay} style={{ width: 44, height: 44, borderRadius: '50%', background: visualizerColor, color: iconColor, border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: `0 4px 15px ${visualizerColor}60` }}>
                 {isPlaying ? <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg> : <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: 3 }}><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>}
               </button>

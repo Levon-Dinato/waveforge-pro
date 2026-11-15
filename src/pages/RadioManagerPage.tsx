@@ -160,7 +160,6 @@ export const RadioManagerPage: React.FC = () => {
     const total = filesArray.length;
     let successCount = 0;
 
-    // ✅ On vérifie sur quel onglet on est pour adapter l'upload
     const isJingleMode = radioTab === 'jingles';
 
     for (let i = 0; i < filesArray.length; i++) {
@@ -170,17 +169,34 @@ export const RadioManagerPage: React.FC = () => {
       try {
         let title = file.name.replace(/\.[^/.]+$/, '');
         let artist = profileUsername;
-        let genre = isJingleMode ? 'Jingle' : 'Inconnu'; // Force le genre Jingle
+        let genre = isJingleMode ? 'Jingle' : 'Inconnu';
+        let coverUrl: string | null = null;
 
-        // On ne lit pas les métadonnées si c'est un Jingle pour garder le nom du fichier
-        if (!isJingleMode) {
-          try {
-            const metadata = await parseBlob(file, { skipCovers: true });
-            const common = metadata.common;
-            if (common.title) title = common.title;
-            if (common.artist) artist = common.artist;
-            if (common.genre && common.genre[0]) genre = common.genre[0];
-          } catch (err) {}
+        try {
+          const metadata = await parseBlob(file, { skipCovers: false });
+          const common = metadata.common;
+
+          if (common.title && !isJingleMode) title = common.title;
+          if (common.artist && !isJingleMode) artist = common.artist;
+          if (common.genre && common.genre[0] && !isJingleMode) genre = common.genre[0];
+
+          if (common.picture && common.picture.length > 0) {
+            const pic = common.picture[0];
+            const mimeType = pic.format || 'image/jpeg';
+            const byteArray = new Uint8Array(pic.data);
+            const blob = new Blob([byteArray], { type: mimeType });
+            
+            const imgExt = mimeType.split('/')[1] || 'jpg';
+            const imgName = `${user.id}/covers/${Date.now()}-${i}.${imgExt}`;
+
+            const { error: imgErr } = await supabase.storage.from(AUDIO_BUCKET).upload(imgName, blob);
+            if (!imgErr) {
+              const { data: imgData } = supabase.storage.from(AUDIO_BUCKET).getPublicUrl(imgName);
+              coverUrl = imgData.publicUrl;
+            }
+          }
+        } catch (err) {
+           console.warn("Pas de métadonnées ou d'image trouvée.");
         }
 
         const ext = file.name.split('.').pop();
@@ -189,15 +205,15 @@ export const RadioManagerPage: React.FC = () => {
         if (upErr) throw upErr;
         const { data: urlData } = supabase.storage.from(AUDIO_BUCKET).getPublicUrl(name);
 
-        // ✅ Insertion avec is_jingle dynamique
         const { data: newTrack, error: dbErr } = await supabase.from('tracks').insert({
           user_id: user.id, 
           title, 
           artist, 
           genre, 
           audio_url: urlData.publicUrl, 
+          cover_url: coverUrl,
           in_radio: true, 
-          is_jingle: isJingleMode, // <-- LA CORRECTION EST ICI
+          is_jingle: isJingleMode,
           peaks: [], 
           duration: 0, 
           likes_count: 0, 
@@ -206,7 +222,6 @@ export const RadioManagerPage: React.FC = () => {
 
         if (dbErr) throw dbErr;
 
-        // Pas d'ajout à une playlist si c'est un jingle
         if (newTrack && uploadPlaylistId && !isJingleMode) {
           const { count } = await supabase.from('playlist_tracks').select('*', { count: 'exact', head: true }).eq('playlist_id', uploadPlaylistId);
           await supabase.from('playlist_tracks').insert({ playlist_id: uploadPlaylistId, track_id: newTrack.id, order: (count || 0) + 1 });
@@ -270,7 +285,7 @@ export const RadioManagerPage: React.FC = () => {
       const name = `${user.id}/jingle-${Date.now()}.${ext}`;
       const { error: upErr } = await supabase.storage.from(AUDIO_BUCKET).upload(name, jingleForm.audioFile);
       if (upErr) throw upErr;
-      const { data: urlData } = await supabase.storage.from(AUDIO_BUCKET).getPublicUrl(name);
+      const { data: urlData } = supabase.storage.from(AUDIO_BUCKET).getPublicUrl(name);
 
       const { data, error } = await supabase.from('tracks').insert({
         user_id: user.id, title: jingleForm.title, artist: profileUsername || 'Jingle', genre: 'Jingle', audio_url: urlData.publicUrl, is_jingle: true, in_radio: true, peaks: [], duration: 0, likes_count: 0, downloads: 0
@@ -812,7 +827,19 @@ export const RadioManagerPage: React.FC = () => {
                     <tr key={track.id} className={selectedTracks.includes(track.id) ? 'selected' : ''}>
                       <td><input type="checkbox" checked={selectedTracks.includes(track.id)} onChange={() => toggleSelectTrack(track.id)} style={{ cursor: 'pointer', accentColor: colors.accent }} /></td>
                       <td><button onClick={() => setPreviewTrack(track)} style={{ width: 24, height: 24, borderRadius: '50%', background: colors.inputBg, border: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg></button></td>
-                      <td><div style={{ display: 'flex', alignItems: 'center', gap: 12 }}><div style={{ width: 36, height: 36, borderRadius: 4, background: track.cover_url ? `url(${track.cover_url}) center/cover` : colors.inputBg, flexShrink: 0 }} /><div style={{ fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 200 }}>{track.title}</div></div></td>
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                          {/* ✅ AFFICHAGE DE L'IMAGE OU D'UNE ICÔNE PAR DÉFAUT */}
+                          <div style={{ 
+                            width: 36, height: 36, borderRadius: 4, flexShrink: 0,
+                            background: track.cover_url ? `url(${track.cover_url}) center/cover` : colors.inputBg,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16
+                          }}>
+                            {!track.cover_url && (radioTab === 'jingles' ? '🎙️' : '🎵')}
+                          </div>
+                          <div style={{ fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 200 }}>{track.title}</div>
+                        </div>
+                      </td>
                       <td style={{ color: colors.textMuted }}>{track.artist}</td>
                       <td><span style={{ fontSize: 11, background: colors.inputBg, padding: '2px 8px', borderRadius: 4, border: `1px solid ${colors.border}` }}>{track.genre || 'Inconnu'}</span></td>
                       <td><button onClick={() => toggleRadioStatus(track.id, track.in_radio)} style={{ width: 36, height: 20, borderRadius: 10, background: track.in_radio ? colors.success : colors.border, border: 'none', cursor: 'pointer', position: 'relative' }}><div style={{ width: 14, height: 14, borderRadius: '50%', background: '#fff', position: 'absolute', top: 3, left: track.in_radio ? 19 : 3, transition: 'left 0.2s' }} /></button></td>

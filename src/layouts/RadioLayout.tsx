@@ -56,7 +56,6 @@ export const RadioLayout: React.FC = () => {
   const isRadioStartedRef = useRef(false);
   const prevUsernameRef = useRef<string | undefined>(username);
 
-  // State pour le menu de partage
   const [showShareMenu, setShowShareMenu] = useState(false);
   const shareMenuRef = useRef<HTMLDivElement>(null);
 
@@ -65,11 +64,9 @@ export const RadioLayout: React.FC = () => {
     border: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)', glass: isDark ? 'rgba(15,15,20,0.7)' : 'rgba(255,255,255,0.7)', panelBg: isDark ? '#18181b' : '#ffffff',
   };
 
-  // ✅ NOUVEAU SLOGAN
   const slogan = "Play the Beat. Feel the Sound. Live the Experience.";
   const shareText = `${slogan} - Écoute la radio de ${profile?.username || 'DropZone DJ'} !`;
 
-  // Fermer le menu de partage si on clique ailleurs
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (shareMenuRef.current && !shareMenuRef.current.contains(event.target as Node)) {
@@ -131,28 +128,66 @@ export const RadioLayout: React.FC = () => {
           if (isMounted) setUserProfile(myProfile);
         }
 
-        const { data: tracksData } = await supabase.from('tracks').select('*').eq('user_id', profileData.id).eq('in_radio', true).eq('is_jingle', false).order('created_at', { ascending: true });
+        // ✅ NOUVEAU : On récupère séparément les musiques et les jingles
+        const { data: musicTracks } = await supabase
+          .from('tracks')
+          .select('*')
+          .eq('user_id', profileData.id)
+          .eq('in_radio', true)
+          .eq('is_jingle', false)
+          .order('created_at', { ascending: true });
 
-        if (tracksData && tracksData.length > 0) {
+        const { data: jingles } = await supabase
+          .from('tracks')
+          .select('*')
+          .eq('user_id', profileData.id)
+          .eq('in_radio', true)
+          .eq('is_jingle', true);
+
+        if (musicTracks && musicTracks.length > 0) {
+          // ✅ MÉLANGE INTELLIGENT (MUSIQUE + JINGLES)
+          const mixedTracks: any[] = [];
+          let accumulatedTime = 0;
+          // On récupère l'intervalle défini dans le manager (par défaut 30 min)
+          const intervalSeconds = (profileData.jingle_interval_minutes || 30) * 60; 
+          let nextJingleTime = intervalSeconds;
+          let jingleIdx = 0;
+
+          for (let i = 0; i < musicTracks.length; i++) {
+            const track = musicTracks[i];
+            mixedTracks.push(track);
+            accumulatedTime += (track.duration && track.duration > 0) ? track.duration : 240; // Durée par défaut 4min si inconnue
+
+            // Si on a atteint le temps imparti ET qu'on a des jingles disponibles, on en insère un
+            if (accumulatedTime >= nextJingleTime && jingles && jingles.length > 0) {
+              mixedTracks.push(jingles[jingleIdx]);
+              jingleIdx = (jingleIdx + 1) % jingles.length; // On tourne en boucle sur les jingles
+              nextJingleTime += intervalSeconds; // On planifie le prochain jingle
+            }
+          }
+
+          // On calcule la position actuelle en fonction de la playlist MIXÉE
           const RADIO_EPOCH = new Date('2024-01-01T00:00:00Z').getTime();
           const elapsed = Math.floor((Date.now() - RADIO_EPOCH) / 1000);
-          const durations = tracksData.map((t: any) => (t.duration && t.duration > 0) ? t.duration : 240);
+          const durations = mixedTracks.map((t: any) => (t.duration && t.duration > 0) ? t.duration : 240);
           const total = durations.reduce((a: any, d: any) => a + d, 0);
           let t = elapsed % total;
           let startIndex = 0;
-          for (let i = 0; i < tracksData.length; i++) {
+          for (let i = 0; i < mixedTracks.length; i++) {
             if (t < durations[i]) { startIndex = i; break; }
             t -= durations[i];
           }
           
-          setRadioTracks(tracksData);
-          setNowPlaying(tracksData[startIndex]);
-          setTopTracks([...tracksData].sort((a: any, b: any) => (b.likes_count || 0) - (a.likes_count || 0)));
-          setLatestReleases([...tracksData].sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
+          setRadioTracks(mixedTracks);
+          setNowPlaying(mixedTracks[startIndex]);
+          
+          // Pour le Top Tracks, on ne garde que les musiques (pas les jingles)
+          setTopTracks([...musicTracks].sort((a: any, b: any) => (b.likes_count || 0) - (a.likes_count || 0)));
+          setLatestReleases([...musicTracks].sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
 
           if (!isRadioStartedRef.current && !isRadioActive) {
             isRadioStartedRef.current = true;
-            startRadio(tracksData, profileData.is_live || false, profileData.live_url || '', startIndex, t);
+            startRadio(mixedTracks, profileData.is_live || false, profileData.live_url || '', startIndex, t);
           }
         }
 
@@ -433,7 +468,6 @@ export const RadioLayout: React.FC = () => {
           animation: wipeLogoIn 0.8s ease-out; 
         }
 
-        /* ✅ STYLES POUR LE MENU DE PARTAGE */
         .share-menu {
           position: absolute;
           top: 100%;
@@ -502,10 +536,8 @@ export const RadioLayout: React.FC = () => {
         <header style={{ position: 'sticky', top: 0, zIndex: 100, background: isDark ? 'rgba(5,5,10,0.85)' : 'rgba(245,245,247,0.85)', backdropFilter: 'blur(20px)', borderBottom: `1px solid ${colors.border}` }}>
           <div style={{ padding: '14px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             
-            {/* ✅ GAUCHE : Bouton Retour au site + Logo de la Radio */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
               
-              {/* ✅ SOLUTION 1 : Bouton Retour qui coupe la radio */}
               <button 
                 onClick={() => { stopRadio(); navigate('/'); }}
                 title="Retour au site principal"
@@ -520,7 +552,6 @@ export const RadioLayout: React.FC = () => {
                 <span style={{ display: isMobile ? 'none' : 'inline' }}>Retour au site</span>
               </button>
 
-              {/* Logo Radio */}
               <Link to={`/radio/${username}`} style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none', color: colors.textMain }}>
                 <img src={coverImage || 'https://via.placeholder.com/100'} alt="Logo" style={{ width: 38, height: 38, borderRadius: '50%', objectFit: 'cover', border: `2px solid ${visualizerColor}`, boxShadow: `0 0 20px ${visualizerColor}50` }} />
                 <div>
@@ -532,7 +563,6 @@ export const RadioLayout: React.FC = () => {
 
             <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
               
-              {/* ✅ BOUTON DE PARTAGE AVEC LE MENU DÉROULANT */}
               <div style={{ position: 'relative' }} ref={shareMenuRef}>
                 <button 
                   onClick={() => setShowShareMenu(!showShareMenu)} 

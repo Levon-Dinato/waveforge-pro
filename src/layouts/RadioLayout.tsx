@@ -11,7 +11,7 @@ import { useRadio } from '../contexts/RadioContext';
 
 export const RadioLayout: React.FC = () => {
   const { username } = useParams<{ username: string }>();
-  const isMobile = useIsMobile(768); // ✅ Hook de détection mobile
+  const isMobile = useIsMobile(768);
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   const { user } = useAuth();
@@ -23,9 +23,21 @@ export const RadioLayout: React.FC = () => {
     progress, duration, updateRadioSettings, stopRadio, seek
   } = useRadio();
 
-  const [profile, setProfile] = useState<any>(null);
+  // ✅ LECTURE DU PROFIL EN CACHE POUR ÉVITER LE CHARGEMENT
+  const [profile, setProfile] = useState<any>(() => {
+    const cached = sessionStorage.getItem(`radio_profile_${username}`);
+    return cached ? JSON.parse(cached) : null;
+  });
+  
   const [userProfile, setUserProfile] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  // ✅ On n'affiche le chargement que si on n'a pas de profil en cache
+  const [loading, setLoading] = useState(!profile);
+
+  // ✅ Ref pour accéder à isRadioActive sans le mettre dans les dépendances du useEffect
+  const isRadioActiveRef = useRef(isRadioActive);
+  useEffect(() => {
+    isRadioActiveRef.current = isRadioActive;
+  }, [isRadioActive]);
 
   const [radioTracks, setRadioTracks] = useState<any[]>([]);
   const [nowPlaying, setNowPlaying] = useState<any>(null);
@@ -41,12 +53,30 @@ export const RadioLayout: React.FC = () => {
   const chatEndRef = useRef<HTMLDivElement>(null);
   const [isChatOpen, setIsChatOpen] = useState(false);
 
-  const [customBgUrl, setCustomBgUrl] = useState('');
-  const [customBgType, setCustomBgType] = useState('animated');
-  const [customBgOpacity, setCustomBgOpacity] = useState(0.6);
-  const [customBgAnimation, setCustomBgAnimation] = useState('aurora');
-  const [customLogo, setCustomLogo] = useState('');
-  const [visualizerColor, setVisualizerColor] = useState('#ff3366');
+  const [customBgUrl, setCustomBgUrl] = useState(() => {
+    const cached = sessionStorage.getItem(`radio_profile_${username}`);
+    return cached ? JSON.parse(cached).radio_bg_url || '' : '';
+  });
+  const [customBgType, setCustomBgType] = useState(() => {
+    const cached = sessionStorage.getItem(`radio_profile_${username}`);
+    return cached ? JSON.parse(cached).radio_bg_type || 'animated' : 'animated';
+  });
+  const [customBgOpacity, setCustomBgOpacity] = useState(() => {
+    const cached = sessionStorage.getItem(`radio_profile_${username}`);
+    return cached ? JSON.parse(cached).radio_bg_opacity ?? 0.6 : 0.6;
+  });
+  const [customBgAnimation, setCustomBgAnimation] = useState(() => {
+    const cached = sessionStorage.getItem(`radio_profile_${username}`);
+    return cached ? JSON.parse(cached).radio_bg_animation || 'aurora' : 'aurora';
+  });
+  const [customLogo, setCustomLogo] = useState(() => {
+    const cached = sessionStorage.getItem(`radio_profile_${username}`);
+    return cached ? JSON.parse(cached).radio_custom_logo_url || '' : '';
+  });
+  const [visualizerColor, setVisualizerColor] = useState(() => {
+    const cached = sessionStorage.getItem(`radio_profile_${username}`);
+    return cached ? JSON.parse(cached).radio_visualizer_color || '#ff3366' : '#ff3366';
+  });
   const [socials, setSocials] = useState<any>({});
   const [showToast, setShowToast] = useState(false);
   const [toastMsg, setToastMsg] = useState('');
@@ -94,7 +124,8 @@ export const RadioLayout: React.FC = () => {
     if (!username) return;
 
     let isMounted = true;
-    setLoading(true);
+    // On ne remet loading à true QUE si on n'a pas de profil
+    if (!profile) setLoading(true);
     
     if (prevUsernameRef.current && prevUsernameRef.current !== username) {
       stopRadio(); 
@@ -115,6 +146,9 @@ export const RadioLayout: React.FC = () => {
           if (isMounted) setLoading(false);
           return;
         }
+
+        // ✅ Sauvegarde du profil dans le sessionStorage
+        sessionStorage.setItem(`radio_profile_${username}`, JSON.stringify(profileData));
 
         setProfile(profileData);
         setCustomBgUrl(profileData.radio_bg_url || '');
@@ -196,7 +230,8 @@ export const RadioLayout: React.FC = () => {
           setTopTracks([...musicTracks].sort((a: any, b: any) => (b.likes_count || 0) - (a.likes_count || 0)));
           setLatestReleases([...musicTracks].sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
 
-          if (!isRadioStartedRef.current && !isRadioActive) {
+          // ✅ On vérifie isRadioActiveRef.current au lieu de isRadioActive
+          if (!isRadioStartedRef.current && !isRadioActiveRef.current) {
             isRadioStartedRef.current = true;
             startRadio(mixedTracks, profileData.is_live || false, profileData.live_url || '', startIndex, t);
           }
@@ -210,10 +245,7 @@ export const RadioLayout: React.FC = () => {
           setSchedules(schedulesData);
           const now = new Date();
           const ct = now.toTimeString().split(' ')[0];
-          
-          // ✅ CORRECTION ICI : Retrait des guillemets autour du 0
-          const cd = now.getDay() === 0 ? '7' : now.getDay().toString(); 
-          
+          const cd = now.getDay() === 0 ? '7' : now.getDay().toString();
           const active = schedulesData.find((s: any) => s.start_time <= ct && s.end_time >= ct && (s.days?.length === 0 || s.days?.includes(cd)));
           if (active) setActiveSchedule(active.title);
         }
@@ -226,7 +258,7 @@ export const RadioLayout: React.FC = () => {
 
     initPage();
     return () => { isMounted = false; };
-  }, [username, startRadio, updateRadioSettings, isRadioActive, stopRadio, user]);
+  }, [username, user]); // ✅ On retire isRadioActive, startRadio, etc.
 
   // ✅ EFFET 2 : WebSocket Chat
   useEffect(() => {

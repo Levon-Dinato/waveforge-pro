@@ -408,7 +408,6 @@ export const RadioLayout: React.FC = () => {
   const totalLikes = topTracks.reduce((a, t) => a + (t.likes_count || 0), 0);
   const isOwner = user && user.id === profile.id;
   const currentUrl = window.location.href;
-  // ✅ On n'utilise plus nowPlaying, uniquement currentTrack
   const currentCover = currentTrack?.cover_url || coverImage;
 
   const SocialLink = ({ url, icon, name }: { url: string; icon: React.ReactNode; name: string }) => {
@@ -708,7 +707,8 @@ export const RadioLayout: React.FC = () => {
           <div style={{ padding: '12px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 14, minWidth: 0, flex: 1 }}>
               
-              <div style={{ 
+              {/* ✅ AJOUT DE LA KEY POUR FORCER LA MISE À JOUR DE L'IMAGE */}
+              <div key={currentTrack?.id || 'cover'} style={{ 
                 width: 42, height: 42, borderRadius: 10, 
                 background: currentCover ? `url(${currentCover}) center/cover` : `linear-gradient(135deg, ${visualizerColor}, #7c5cff)`, 
                 border: `1px solid ${colors.border}`, flexShrink: 0,

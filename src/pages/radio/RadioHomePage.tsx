@@ -9,16 +9,19 @@ import { useRadio } from '../../contexts/RadioContext';
 export const RadioHomePage: React.FC = () => {
   const { username } = useParams<{ username: string }>();
   const isMobile = useIsMobile(768);
-  const { isPlaying } = useRadio();
+  
+  // ✅ ON RÉCUPÈRE CURRENTTRACK ICI POUR LA MISE À JOUR EN TEMPS RÉEL
+  const { isPlaying, currentTrack } = useRadio();
   
   const { 
-    profile, radioTracks, nowPlaying, listeners, colors, visualizerColor, iconColor,
+    profile, radioTracks, listeners, colors, visualizerColor, iconColor,
     socials, coverImage, totalLikes, SocialLink, recentTracks, handlePlayRadio 
   } = useOutletContext<any>();
 
+  // ✅ ON UTILISE CURRENTTRACK POUR LE MARQUEE
   const marqueeItems = [
     `${profile.username.toUpperCase()}`, 
-    `EN COURS : ${nowPlaying?.title || 'LIVE RADIO'}`, 
+    `EN COURS : ${currentTrack?.title || 'LIVE RADIO'}`, 
     `${totalLikes} LIKES`,
     `EN DIRECT`, 
     `${listeners} AUDITEURS`, 
@@ -138,7 +141,13 @@ export const RadioHomePage: React.FC = () => {
                 </div>
 
                 <div className="rp-vinyl-spin" style={{ width: vinylSize, height: vinylSize, borderRadius: '50%', background: '#000', boxShadow: `0 30px 80px rgba(0,0,0,0.8), inset 0 0 40px rgba(255,255,255,0.1), 0 0 60px ${visualizerColor}40`, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', zIndex: 4 }}>
-                  <img src={nowPlaying?.cover_url || coverImage} alt="Cover" style={{ width: '82%', height: '82%', borderRadius: '50%', objectFit: 'cover', border: '4px solid rgba(255,255,255,0.1)' }} />
+                  {/* ✅ IMAGE DU VINYLE AVEC KEY POUR FORCER LA MISE À JOUR */}
+                  <img 
+                    key={currentTrack?.id || 'vinyl-cover'}
+                    src={currentTrack?.cover_url || coverImage} 
+                    alt="Cover" 
+                    style={{ width: '82%', height: '82%', borderRadius: '50%', objectFit: 'cover', border: '4px solid rgba(255,255,255,0.1)' }} 
+                  />
                   <div style={{ position: 'absolute', width: 40, height: 40, borderRadius: '50%', background: '#05050a', border: '3px solid rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <div style={{ width: 8, height: 8, borderRadius: '50%', background: visualizerColor, boxShadow: `0 0 15px ${visualizerColor}` }} />
                   </div>
@@ -188,10 +197,16 @@ export const RadioHomePage: React.FC = () => {
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#ef4444', animation: 'pulseLive 1.5s infinite' }} /> En cours
           </div>
           <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
-            <img src={nowPlaying?.cover_url || coverImage} alt="Now playing" style={{ width: 72, height: 72, borderRadius: 12, objectFit: 'cover', border: `2px solid ${visualizerColor}40` }} />
+            {/* ✅ IMAGE DE LA CARTE INFOS AVEC KEY */}
+            <img 
+              key={currentTrack?.id || 'card-cover'}
+              src={currentTrack?.cover_url || coverImage} 
+              alt="Now playing" 
+              style={{ width: 72, height: 72, borderRadius: 12, objectFit: 'cover', border: `2px solid ${visualizerColor}40` }} 
+            />
             <div style={{ minWidth: 0, flex: 1 }}>
-              <div style={{ fontSize: 15, fontWeight: 900, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{nowPlaying?.title || 'En attente'}</div>
-              <div style={{ fontSize: 12, color: colors.textMuted, marginTop: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{nowPlaying?.artist || 'DropZone Radio'}</div>
+              <div style={{ fontSize: 15, fontWeight: 900, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{currentTrack?.title || 'En attente'}</div>
+              <div style={{ fontSize: 12, color: colors.textMuted, marginTop: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{currentTrack?.artist || 'DropZone Radio'}</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 8, fontSize: 11, color: colors.textMuted, fontWeight: 700 }}>
                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981' }} /> {listeners} auditeur{listeners > 1 ? 's' : ''}
               </div>

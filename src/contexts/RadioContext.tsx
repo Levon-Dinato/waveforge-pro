@@ -68,12 +68,6 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   const currentTrack = tracks[currentIndex];
 
-  // ✅ FORCE LA MISE À JOUR DU CONTEXTE QUAND LA PISTE CHANGE
-  useEffect(() => {
-    // Ce useEffect est vide, il sert juste à déclencher un re-rendu du Provider
-    // quand currentIndex change, pour que les consommateurs aient le bon currentTrack.
-  }, [currentIndex]);
-
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === SYNC_KEY && e.newValue) {
@@ -110,16 +104,19 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const currentAudio = activePlayerRef.current === 'A' ? audioARef.current : audioBRef.current;
     const currentProgress = currentAudio ? currentAudio.currentTime : progress;
 
-    localStorage.setItem(SYNC_KEY, JSON.stringify({
-      isRadioActive: true,
-      isLive,
-      liveUrl,
-      tracks, 
-      currentIndex,
-      isPlaying,
-      progress: currentProgress,
-      ...customData
-    }));
+    // ✅ ON NE SAUVEGARDE QUE SI L'AUDIO EST BIEN AVANCÉ (évite de sauvegarder 0)
+    if (currentProgress > 0 || customData.hasOwnProperty('progress')) {
+      localStorage.setItem(SYNC_KEY, JSON.stringify({
+        isRadioActive: true,
+        isLive,
+        liveUrl,
+        tracks, 
+        currentIndex,
+        isPlaying,
+        progress: currentProgress,
+        ...customData
+      }));
+    }
   }, [isRadioActive, isLive, liveUrl, tracks, currentIndex, isPlaying, progress]);
 
   useEffect(() => {
@@ -194,7 +191,7 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     if (!crossfadeEnabled || !isPlaying || nextTrack.is_jingle || currentTrack?.is_jingle) {
       isCrossfadingRef.current = false;
       setCurrentIndex(nextIndex);
-      saveStateToLocalStorage({ currentIndex: nextIndex, progress: 0 });
+      setTimeout(() => saveStateToLocalStorage({ currentIndex: nextIndex, progress: 0 }), 50);
       return;
     }
 
@@ -292,6 +289,7 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }
 
     const onCanPlay = () => {
+      // ✅ ON FORCE LE SAUT SEULEMENT QUAND LE FICHIER EST PRÊT
       if (pendingSeekRef.current !== null && pendingSeekRef.current > 0) {
         currentAudio.currentTime = pendingSeekRef.current;
         setProgress(pendingSeekRef.current);
@@ -319,8 +317,9 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       startRadio, updateRadioSettings, togglePlay, playNext, playPrev, seek, stopRadio, unlockAudio
     }}>
       {children}
-      <audio ref={audioARef} preload="auto" onTimeUpdate={handleTimeUpdate} onEnded={isLive ? undefined : playNext} crossOrigin="anonymous" />
-      <audio ref={audioBRef} preload="auto" onTimeUpdate={() => { if (activePlayerRef.current === 'B') { setProgress(audioBRef.current?.currentTime || 0); setDuration(audioBRef.current?.duration || 0); } }} onEnded={() => { if (activePlayerRef.current === 'B') playNext(); }} crossOrigin="anonymous" />
+      {/* ✅ AJOUT DE LA CLÉ POUR FORCER LE CHANGEMENT D'ÉTAT AUDIO */}
+      <audio key={`audio-A-${currentTrack?.id || 'empty'}`} ref={audioARef} preload="auto" onTimeUpdate={handleTimeUpdate} onEnded={isLive ? undefined : playNext} crossOrigin="anonymous" />
+      <audio key={`audio-B-${currentTrack?.id || 'empty'}`} ref={audioBRef} preload="auto" onTimeUpdate={() => { if (activePlayerRef.current === 'B') { setProgress(audioBRef.current?.currentTime || 0); setDuration(audioBRef.current?.duration || 0); } }} onEnded={() => { if (activePlayerRef.current === 'B') playNext(); }} crossOrigin="anonymous" />
     </RadioContext.Provider>
   );
 };

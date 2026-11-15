@@ -68,7 +68,7 @@ export const RadioManagerPage: React.FC = () => {
   const [playerBgAnimation, setPlayerBgAnimation] = useState('aurora');
   const [uploadingPlayerBg, setUploadingPlayerBg] = useState(false);
 
-  // ✅ NOUVEAUX RÉGLAGES : Règles & Crossfade
+  // ✅ RÉGLAGES : Règles & Crossfade
   const [noRepeatEnabled, setNoRepeatEnabled] = useState(false);
   const [noRepeatMinutes, setNoRepeatMinutes] = useState(60);
   const [jingleInterval, setJingleInterval] = useState(30);
@@ -358,7 +358,6 @@ export const RadioManagerPage: React.FC = () => {
       radio_no_repeat_enabled: noRepeatEnabled,
       radio_no_repeat_minutes: noRepeatMinutes,
       jingle_interval_minutes: jingleInterval,
-      // ✅ SAUVEGARDE DU CROSSFADE
       radio_crossfade_enabled: crossfadeEnabled,
       radio_crossfade_duration: crossfadeDuration
     }).eq('id', user.id);
@@ -484,7 +483,7 @@ export const RadioManagerPage: React.FC = () => {
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
             
-            {/* ✅ NOUVELLE SECTION : CROSSFADE / FONDU */}
+            {/* SECTION : CROSSFADE / FONDU */}
             <div style={{ padding: 20, background: colors.inputBg, borderRadius: 12, border: `1px solid ${colors.border}` }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
                 <div>

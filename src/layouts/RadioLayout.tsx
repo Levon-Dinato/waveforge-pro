@@ -54,6 +54,8 @@ export const RadioLayout: React.FC = () => {
   const [isWiping, setIsWiping] = useState(false);
 
   const isRadioStartedRef = useRef(false);
+  // ✅ NOUVEAU : On garde en mémoire le DJ actuel pour ne couper la radio que si on change de DJ
+  const prevUsernameRef = useRef<string | undefined>(username);
 
   const colors = {
     bg: isDark ? '#05050a' : '#f5f5f7', textMain: isDark ? '#ffffff' : '#1a1a1a', textMuted: isDark ? '#888888' : '#666666',
@@ -66,8 +68,13 @@ export const RadioLayout: React.FC = () => {
 
     let isMounted = true;
     setLoading(true);
-    stopRadio(); 
-    isRadioStartedRef.current = false;
+    
+    // ✅ FIX : On ne coupe la radio QUE si on change de DJ (ex: de /radio/dj1 à /radio/dj2)
+    if (prevUsernameRef.current && prevUsernameRef.current !== username) {
+      stopRadio(); 
+      isRadioStartedRef.current = false;
+      prevUsernameRef.current = username;
+    }
 
     const initPage = async () => {
       try {
@@ -126,6 +133,7 @@ export const RadioLayout: React.FC = () => {
           setTopTracks([...tracksData].sort((a: any, b: any) => (b.likes_count || 0) - (a.likes_count || 0)));
           setLatestReleases([...tracksData].sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
 
+          // ✅ On démarre la radio uniquement si elle n'est pas déjà en cours
           if (!isRadioStartedRef.current && !isRadioActive) {
             isRadioStartedRef.current = true;
             startRadio(tracksData, profileData.is_live || false, profileData.live_url || '', startIndex, t);
@@ -153,7 +161,7 @@ export const RadioLayout: React.FC = () => {
 
     initPage();
     return () => { isMounted = false; };
-  }, [username, stopRadio]);
+  }, [username, startRadio, updateRadioSettings, isRadioActive, stopRadio, user]);
 
   // ✅ EFFET 2 : WebSocket Chat
   useEffect(() => {
@@ -288,7 +296,7 @@ export const RadioLayout: React.FC = () => {
   if (loading) return <div style={{ color: colors.textMain, background: colors.bg, height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Chargement...</div>;
   if (!profile) return <div style={{ color: colors.textMain, background: colors.bg, height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>DJ introuvable.</div>;
 
-  // ✅ NOUVEAU : BLOCAGE DE SÉCURITÉ SI LE DJ N'EST PAS PREMIUM
+  // ✅ BLOCAGE DE SÉCURITÉ SI LE DJ N'EST PAS PREMIUM
   if (!profile.is_premium) {
     return (
       <div style={{ background: colors.bg, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, fontFamily: 'Inter, sans-serif' }}>

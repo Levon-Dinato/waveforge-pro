@@ -56,34 +56,16 @@ export const RadioLayout: React.FC = () => {
   const isRadioStartedRef = useRef(false);
   const prevUsernameRef = useRef<string | undefined>(username);
 
-  // ✅ NOUVEAUX STATES POUR LE MENU DE PARTAGE
-  const [shareImage, setShareImage] = useState<File | null>(null);
+  // State pour le menu de partage
   const [showShareMenu, setShowShareMenu] = useState(false);
   const shareMenuRef = useRef<HTMLDivElement>(null);
 
   const colors = {
     bg: isDark ? '#05050a' : '#f5f5f7', textMain: isDark ? '#ffffff' : '#1a1a1a', textMuted: isDark ? '#888888' : '#666666',
-    border: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)', glass: isDark ? 'rgba(15,15,20,0.7)' : 'rgba(255,255,255,0.7)', card: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)',
+    border: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)', glass: isDark ? 'rgba(15,15,20,0.7)' : 'rgba(255,255,255,0.7)', panelBg: isDark ? '#18181b' : '#ffffff',
   };
 
-  // Préchargement de l'image (utile pour le partage natif sur mobile)
-  useEffect(() => {
-    const loadImage = async () => {
-      try {
-        const response = await fetch('/dropzone-share.png');
-        if (response.ok) {
-          const blob = await response.blob();
-          const file = new File([blob], 'dropzone-share.png', { type: blob.type });
-          setShareImage(file);
-        }
-      } catch (err) {
-        console.warn("Image de partage non trouvée.");
-      }
-    };
-    loadImage();
-  }, []);
-
-  // ✅ EFFET : Fermer le menu de partage si on clique ailleurs
+  // Fermer le menu de partage si on clique ailleurs
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (shareMenuRef.current && !shareMenuRef.current.contains(event.target as Node)) {
@@ -352,6 +334,7 @@ export const RadioLayout: React.FC = () => {
   const coverImage = customLogo || profile.avatar_url || '';
   const totalLikes = topTracks.reduce((a, t) => a + (t.likes_count || 0), 0);
   const isOwner = user && user.id === profile.id;
+  const currentUrl = window.location.href;
 
   const SocialLink = ({ url, icon, name }: { url: string; icon: React.ReactNode; name: string }) => {
     if (!url) return null;
@@ -378,7 +361,6 @@ export const RadioLayout: React.FC = () => {
     return `${Math.floor(time / 60).toString().padStart(2, '0')}:${Math.floor(time % 60).toString().padStart(2, '0')}`;
   };
   const progressPercent = duration > 0 ? (progress / duration) * 100 : 0;
-  const currentUrl = window.location.href;
 
   return (
     <div style={{ background: colors.bg, minHeight: '100vh', color: colors.textMain, fontFamily: 'Inter, sans-serif', position: 'relative', display: 'flex', flexDirection: 'column', paddingBottom: 100 }}>
@@ -445,22 +427,23 @@ export const RadioLayout: React.FC = () => {
           animation: wipeLogoIn 0.8s ease-out; 
         }
 
-        /* ✅ STYLES POUR LE MENU DE PARTAGE */
+        /* ✅ STYLES POUR LE MENU DE PARTAGE (CORRIGÉ) */
         .share-menu {
           position: absolute;
           top: 100%;
           right: 0;
           margin-top: 8px;
-          background: ${colors.panelBg};
+          background-color: ${isDark ? '#1a1a1a' : '#ffffff'}; /* Couleur solide opaque */
           border: 1px solid ${colors.border};
           border-radius: 12px;
           padding: 8px;
           min-width: 200px;
-          box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-          z-index: 9999;
+          box-shadow: 0 10px 30px rgba(0,0,0,0.8); /* Ombre plus forte pour détacher le menu */
+          z-index: 99999; /* S'assurer qu'il passe au-dessus de tout */
           display: flex;
           flex-direction: column;
           gap: 4px;
+          backdrop-filter: blur(10px); /* Ajout d'un flou de sécurité */
         }
         .share-menu-header {
           font-size: 10px;
@@ -488,7 +471,7 @@ export const RadioLayout: React.FC = () => {
           text-align: left;
         }
         .share-menu-item:hover {
-          background: rgba(255,255,255,0.05);
+          background: rgba(255,255,255,0.1);
         }
       `}</style>
 
@@ -512,13 +495,35 @@ export const RadioLayout: React.FC = () => {
       <div className="rp-noise" style={{ position: 'relative', zIndex: 2, display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
         <header style={{ position: 'sticky', top: 0, zIndex: 100, background: isDark ? 'rgba(5,5,10,0.85)' : 'rgba(245,245,247,0.85)', backdropFilter: 'blur(20px)', borderBottom: `1px solid ${colors.border}` }}>
           <div style={{ padding: '14px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Link to={`/radio/${username}`} style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none', color: colors.textMain }}>
-              <img src={coverImage || 'https://via.placeholder.com/100'} alt="Logo" style={{ width: 38, height: 38, borderRadius: '50%', objectFit: 'cover', border: `2px solid ${visualizerColor}`, boxShadow: `0 0 20px ${visualizerColor}50` }} />
-              <div>
-                <h1 style={{ fontSize: 16, fontWeight: 900, margin: 0, letterSpacing: '-0.3px' }}>{profile.username}</h1>
-                <p style={{ fontSize: 10, color: colors.textMuted, margin: 0, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>DropZone DJ · Radio</p>
-              </div>
-            </Link>
+            
+            {/* ✅ GAUCHE : Bouton Retour au site + Logo de la Radio */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+              
+              {/* Bouton Retour au site */}
+              <Link 
+                to="/" 
+                title="Retour au site principal"
+                style={{ display: 'flex', alignItems: 'center', gap: 8, color: colors.textMain, textDecoration: 'none', fontSize: 13, fontWeight: 700, padding: '8px 14px', borderRadius: 10, background: 'rgba(255,255,255,0.05)', border: `1px solid ${colors.border}`, transition: 'all 0.2s' }} 
+                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'} 
+                onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                  <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+                <span style={{ display: isMobile ? 'none' : 'inline' }}>Retour au site</span>
+              </Link>
+
+              {/* Logo Radio */}
+              <Link to={`/radio/${username}`} style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none', color: colors.textMain }}>
+                <img src={coverImage || 'https://via.placeholder.com/100'} alt="Logo" style={{ width: 38, height: 38, borderRadius: '50%', objectFit: 'cover', border: `2px solid ${visualizerColor}`, boxShadow: `0 0 20px ${visualizerColor}50` }} />
+                <div>
+                  <h1 style={{ fontSize: 16, fontWeight: 900, margin: 0, letterSpacing: '-0.3px' }}>{profile.username}</h1>
+                  <p style={{ fontSize: 10, color: colors.textMuted, margin: 0, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>DropZone DJ · Radio</p>
+                </div>
+              </Link>
+            </div>
+
             <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
               
               {/* ✅ BOUTON DE PARTAGE AVEC LE MENU DÉROULANT */}

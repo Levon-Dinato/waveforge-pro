@@ -54,7 +54,6 @@ export const RadioLayout: React.FC = () => {
   const [isWiping, setIsWiping] = useState(false);
 
   const isRadioStartedRef = useRef(false);
-  // ✅ NOUVEAU : On garde en mémoire le DJ actuel pour ne couper la radio que si on change de DJ
   const prevUsernameRef = useRef<string | undefined>(username);
 
   const colors = {
@@ -69,7 +68,7 @@ export const RadioLayout: React.FC = () => {
     let isMounted = true;
     setLoading(true);
     
-    // ✅ FIX : On ne coupe la radio QUE si on change de DJ (ex: de /radio/dj1 à /radio/dj2)
+    // On ne coupe la radio QUE si on change de DJ
     if (prevUsernameRef.current && prevUsernameRef.current !== username) {
       stopRadio(); 
       isRadioStartedRef.current = false;
@@ -133,7 +132,6 @@ export const RadioLayout: React.FC = () => {
           setTopTracks([...tracksData].sort((a: any, b: any) => (b.likes_count || 0) - (a.likes_count || 0)));
           setLatestReleases([...tracksData].sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
 
-          // ✅ On démarre la radio uniquement si elle n'est pas déjà en cours
           if (!isRadioStartedRef.current && !isRadioActive) {
             isRadioStartedRef.current = true;
             startRadio(tracksData, profileData.is_live || false, profileData.live_url || '', startIndex, t);
@@ -204,6 +202,47 @@ export const RadioLayout: React.FC = () => {
   useEffect(() => { if (isChatOpen) chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, isChatOpen]);
 
   const showToastMsg = (msg: string) => { setToastMsg(msg); setShowToast(true); setTimeout(() => setShowToast(false), 3000); };
+
+  // ✅ NOUVELLE FONCTION DE PARTAGE AVEC L'IMAGE
+  const handleShare = async () => {
+    const shareData: ShareData = {
+      title: `Radio ${profile?.username} — DropZone DJ`,
+      text: `Écoute la radio de ${profile?.username} sur DropZone DJ !`,
+      url: window.location.href,
+    };
+
+    try {
+      // On essaie de récupérer l'image dans le dossier public
+      const response = await fetch('/dropzone-share.png');
+      if (!response.ok) throw new Error('Image non trouvée');
+      
+      const blob = await response.blob();
+      const file = new File([blob], 'dropzone-share.png', { type: blob.type });
+
+      // Si le navigateur supporte le partage de fichiers (mobile)
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        shareData.files = [file];
+        await navigator.share(shareData);
+      } else {
+        // Fallback pour PC : Téléchargement de l'image + copie du lien
+        await navigator.clipboard.writeText(window.location.href);
+        
+        const link = document.createElement('a');
+        link.href = '/dropzone-share.png';
+        link.download = 'dropzone-radio.png';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        showToastMsg("Lien copié & Image téléchargée ! ✅");
+      }
+    } catch (err) {
+      console.error("Erreur de partage:", err);
+      // Fallback basique
+      navigator.clipboard.writeText(window.location.href);
+      showToastMsg("Lien de la radio copié ! ✅");
+    }
+  };
 
   const handleOpenPlayer = () => {
     if (isPlaying) togglePlay(); 
@@ -296,7 +335,6 @@ export const RadioLayout: React.FC = () => {
   if (loading) return <div style={{ color: colors.textMain, background: colors.bg, height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Chargement...</div>;
   if (!profile) return <div style={{ color: colors.textMain, background: colors.bg, height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>DJ introuvable.</div>;
 
-  // ✅ BLOCAGE DE SÉCURITÉ SI LE DJ N'EST PAS PREMIUM
   if (!profile.is_premium) {
     return (
       <div style={{ background: colors.bg, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, fontFamily: 'Inter, sans-serif' }}>
@@ -391,7 +429,6 @@ export const RadioLayout: React.FC = () => {
         @keyframes slideWipeAnim { 0% { transform: translateX(100%); } 40% { transform: translateX(0); } 60% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
         @keyframes wipeLogoIn { 0% { opacity: 0; transform: scale(0.9); } 40% { opacity: 1; transform: scale(1); } 60% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(1.05); } }
         
-        /* ✅ EFFET WIPE ADAPTÉ AU THÈME */
         .wipe-overlay { 
           position: fixed; inset: 0; z-index: 999999; 
           background: ${isDark ? '#111111' : '#ffffff'}; 
@@ -439,6 +476,22 @@ export const RadioLayout: React.FC = () => {
               </div>
             </Link>
             <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+              
+              {/* ✅ BOUTON PARTAGER */}
+              <button 
+                onClick={handleShare} 
+                title="Partager la radio"
+                style={{ background: 'rgba(255,255,255,0.05)', border: `1px solid ${colors.border}`, color: colors.textMain, width: 38, height: 38, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="18" cy="5" r="3"></circle>
+                  <circle cx="6" cy="12" r="3"></circle>
+                  <circle cx="18" cy="19" r="3"></circle>
+                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                  <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                </svg>
+              </button>
+
               {isOwner && (
                 <Link to="/radio-manager" className="rp-btn-3d" style={{ background: 'rgba(255,255,255,0.08)', color: colors.textMain, border: `1px solid ${colors.border}`, padding: '10px 16px', borderRadius: 12, fontSize: 12, fontWeight: 800, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
                   ⚙️ Gérer

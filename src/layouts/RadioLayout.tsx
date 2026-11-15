@@ -370,7 +370,6 @@ export const RadioLayout: React.FC = () => {
     <div style={{ background: colors.bg, minHeight: '100vh', color: colors.textMain, fontFamily: 'Inter, sans-serif', position: 'relative', display: 'flex', flexDirection: 'column', paddingBottom: 100 }}>
       <Helmet>
         <title>Radio {profile.username} — DropZone DJ</title>
-        {/* ✅ MISE À JOUR DES BALISES OPEN GRAPH POUR LE PARTAGE */}
         <meta property="og:title" content={`Radio ${profile.username} — DropZone DJ`} />
         <meta property="og:description" content={slogan} />
         <meta name="twitter:description" content={slogan} />
@@ -434,23 +433,23 @@ export const RadioLayout: React.FC = () => {
           animation: wipeLogoIn 0.8s ease-out; 
         }
 
-        /* ✅ STYLES POUR LE MENU DE PARTAGE (CORRIGÉ) */
+        /* ✅ STYLES POUR LE MENU DE PARTAGE */
         .share-menu {
           position: absolute;
           top: 100%;
           right: 0;
           margin-top: 8px;
-          background-color: ${isDark ? '#1a1a1a' : '#ffffff'}; /* Couleur solide opaque */
+          background-color: ${isDark ? '#1a1a1a' : '#ffffff'};
           border: 1px solid ${colors.border};
           border-radius: 12px;
           padding: 8px;
           min-width: 200px;
-          box-shadow: 0 10px 30px rgba(0,0,0,0.8); /* Ombre plus forte pour détacher le menu */
-          z-index: 99999; /* S'assurer qu'il passe au-dessus de tout */
+          box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+          z-index: 99999;
           display: flex;
           flex-direction: column;
           gap: 4px;
-          backdrop-filter: blur(10px); /* Ajout d'un flou de sécurité */
+          backdrop-filter: blur(10px);
         }
         .share-menu-header {
           font-size: 10px;
@@ -506,11 +505,11 @@ export const RadioLayout: React.FC = () => {
             {/* ✅ GAUCHE : Bouton Retour au site + Logo de la Radio */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
               
-              {/* Bouton Retour au site */}
-              <Link 
-                to="/" 
+              {/* ✅ SOLUTION 1 : Bouton Retour qui coupe la radio */}
+              <button 
+                onClick={() => { stopRadio(); navigate('/'); }}
                 title="Retour au site principal"
-                style={{ display: 'flex', alignItems: 'center', gap: 8, color: colors.textMain, textDecoration: 'none', fontSize: 13, fontWeight: 700, padding: '8px 14px', borderRadius: 10, background: 'rgba(255,255,255,0.05)', border: `1px solid ${colors.border}`, transition: 'all 0.2s' }} 
+                style={{ display: 'flex', alignItems: 'center', gap: 8, color: colors.textMain, textDecoration: 'none', fontSize: 13, fontWeight: 700, padding: '8px 14px', borderRadius: 10, background: 'rgba(255,255,255,0.05)', border: `1px solid ${colors.border}`, transition: 'all 0.2s', cursor: 'pointer' }} 
                 onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'} 
                 onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
               >
@@ -519,7 +518,7 @@ export const RadioLayout: React.FC = () => {
                   <polyline points="9 22 9 12 15 12 15 22"></polyline>
                 </svg>
                 <span style={{ display: isMobile ? 'none' : 'inline' }}>Retour au site</span>
-              </Link>
+              </button>
 
               {/* Logo Radio */}
               <Link to={`/radio/${username}`} style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none', color: colors.textMain }}>

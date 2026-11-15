@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
-  base: './', // ✅ CRUCIAL : Force les chemins relatifs pour éviter les erreurs MIME
+  // ✅ ON A SUPPRIMÉ "base: './'" (c'est ça qui cassait les sous-pages)
   plugins: [
     react(),
     VitePWA({
@@ -42,9 +42,9 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,jpg,jpeg,mp3}'],
         maximumFileSizeToCacheInBytes: 20 * 1024 * 1024,
-        cleanupOutdatedCaches: true, // ✅ Supprime les anciens caches corrompus
-        clientsClaim: true,          // ✅ Prend le contrôle immédiatement
-        skipWaiting: true            // ✅ Force l'activation de la nouvelle version
+        cleanupOutdatedCaches: true, 
+        clientsClaim: true,          
+        skipWaiting: true            
       }
     })
   ],

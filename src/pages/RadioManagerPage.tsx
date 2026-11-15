@@ -113,7 +113,6 @@ export const RadioManagerPage: React.FC = () => {
         setNoRepeatMinutes(profileData.radio_no_repeat_minutes ?? 60);
         setJingleInterval(profileData.jingle_interval_minutes ?? 30);
         
-        // ✅ Chargement du Crossfade
         setCrossfadeEnabled(profileData.radio_crossfade_enabled || false);
         setCrossfadeDuration(profileData.radio_crossfade_duration ?? 3);
       }
@@ -161,6 +160,9 @@ export const RadioManagerPage: React.FC = () => {
     const total = filesArray.length;
     let successCount = 0;
 
+    // ✅ On vérifie sur quel onglet on est pour adapter l'upload
+    const isJingleMode = radioTab === 'jingles';
+
     for (let i = 0; i < filesArray.length; i++) {
       const file = filesArray[i];
       if (!file.type.includes('audio')) continue;
@@ -168,15 +170,18 @@ export const RadioManagerPage: React.FC = () => {
       try {
         let title = file.name.replace(/\.[^/.]+$/, '');
         let artist = profileUsername;
-        let genre = 'Inconnu';
+        let genre = isJingleMode ? 'Jingle' : 'Inconnu'; // Force le genre Jingle
 
-        try {
-          const metadata = await parseBlob(file, { skipCovers: true });
-          const common = metadata.common;
-          if (common.title) title = common.title;
-          if (common.artist) artist = common.artist;
-          if (common.genre && common.genre[0]) genre = common.genre[0];
-        } catch (err) {}
+        // On ne lit pas les métadonnées si c'est un Jingle pour garder le nom du fichier
+        if (!isJingleMode) {
+          try {
+            const metadata = await parseBlob(file, { skipCovers: true });
+            const common = metadata.common;
+            if (common.title) title = common.title;
+            if (common.artist) artist = common.artist;
+            if (common.genre && common.genre[0]) genre = common.genre[0];
+          } catch (err) {}
+        }
 
         const ext = file.name.split('.').pop();
         const name = `${user.id}/radio-${Date.now()}-${i}.${ext}`;
@@ -184,13 +189,25 @@ export const RadioManagerPage: React.FC = () => {
         if (upErr) throw upErr;
         const { data: urlData } = supabase.storage.from(AUDIO_BUCKET).getPublicUrl(name);
 
+        // ✅ Insertion avec is_jingle dynamique
         const { data: newTrack, error: dbErr } = await supabase.from('tracks').insert({
-          user_id: user.id, title, artist, genre, audio_url: urlData.publicUrl, in_radio: true, is_jingle: false, peaks: [], duration: 0, likes_count: 0, downloads: 0
+          user_id: user.id, 
+          title, 
+          artist, 
+          genre, 
+          audio_url: urlData.publicUrl, 
+          in_radio: true, 
+          is_jingle: isJingleMode, // <-- LA CORRECTION EST ICI
+          peaks: [], 
+          duration: 0, 
+          likes_count: 0, 
+          downloads: 0
         }).select().single();
 
         if (dbErr) throw dbErr;
 
-        if (newTrack && uploadPlaylistId) {
+        // Pas d'ajout à une playlist si c'est un jingle
+        if (newTrack && uploadPlaylistId && !isJingleMode) {
           const { count } = await supabase.from('playlist_tracks').select('*', { count: 'exact', head: true }).eq('playlist_id', uploadPlaylistId);
           await supabase.from('playlist_tracks').insert({ playlist_id: uploadPlaylistId, track_id: newTrack.id, order: (count || 0) + 1 });
         }
@@ -207,7 +224,7 @@ export const RadioManagerPage: React.FC = () => {
     setUploading(false);
     setUploadProgress(0);
     e.target.value = '';
-    if (successCount > 0) alert(`${successCount} son(s) ajouté(s) à la radio ! 🎵`);
+    if (successCount > 0) alert(`${successCount} ${isJingleMode ? 'jingle(s)' : 'son(s)'} ajouté(s) ! 🎵`);
   };
 
   const toggleSelectAll = () => {
@@ -235,7 +252,7 @@ export const RadioManagerPage: React.FC = () => {
 
   const bulkDelete = async () => {
     if (selectedTracks.length === 0) return;
-    if (!window.confirm(`Supprimer ${selectedTracks.length} son(s) ?`)) return;
+    if (!window.confirm(`Supprimer ${selectedTracks.length} élément(s) ?`)) return;
     setSaving(true);
     const { error } = await supabase.from('tracks').delete().in('id', selectedTracks);
     if (!error) {
@@ -253,14 +270,17 @@ export const RadioManagerPage: React.FC = () => {
       const name = `${user.id}/jingle-${Date.now()}.${ext}`;
       const { error: upErr } = await supabase.storage.from(AUDIO_BUCKET).upload(name, jingleForm.audioFile);
       if (upErr) throw upErr;
-      const { data: urlData } = supabase.storage.from(AUDIO_BUCKET).getPublicUrl(name);
+      const { data: urlData } = await supabase.storage.from(AUDIO_BUCKET).getPublicUrl(name);
 
       const { data, error } = await supabase.from('tracks').insert({
         user_id: user.id, title: jingleForm.title, artist: profileUsername || 'Jingle', genre: 'Jingle', audio_url: urlData.publicUrl, is_jingle: true, in_radio: true, peaks: [], duration: 0, likes_count: 0, downloads: 0
       }).select().single();
 
       if (error) throw error;
-      if (data) setMyTracks([data, ...myTracks]);
+      if (data) {
+        setMyTracks([data, ...myTracks]);
+        setRadioTab('jingles');
+      }
       setShowJingleModal(false); setJingleForm({ title: '', audioFile: null });
     } catch (err: any) { alert("Erreur : " + err.message); } finally { setUploading(false); }
   };
@@ -730,36 +750,48 @@ export const RadioManagerPage: React.FC = () => {
           
           <div style={{ width: 300, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 24 }}>
             <div className="dash-card" style={{ padding: 20 }}>
-              <h3 style={{ fontSize: 14, fontWeight: 600, margin: '0 0 16px 0' }}>📥 Importer des sons</h3>
+              {/* ✅ TITRE DYNAMIQUE */}
+              <h3 style={{ fontSize: 14, fontWeight: 600, margin: '0 0 16px 0' }}>
+                {radioTab === 'jingles' ? '📥 Importer des Jingles' : '📥 Importer des sons'}
+              </h3>
+              
               <label className="dropzone" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, height: 120, cursor: uploading ? 'wait' : 'pointer' }}>
                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={colors.textMuted} strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
                 <span style={{ fontSize: 13, fontWeight: 500, color: colors.textMuted }}>{uploading ? 'Import...' : 'Cliquer ou glisser des fichiers'}</span>
                 <input type="file" accept="audio/*" multiple onChange={handleBulkUpload} disabled={uploading} style={{ display: 'none' }} />
               </label>
+              
               {uploading && uploadProgress > 0 && (
                 <div style={{ marginTop: 12 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: colors.textMuted, marginBottom: 4 }}><span>Upload...</span><span>{uploadProgress}%</span></div>
                   <div style={{ width: '100%', height: 6, background: colors.inputBg, borderRadius: 3, overflow: 'hidden' }}><div style={{ width: `${uploadProgress}%`, height: '100%', background: colors.accent, transition: 'width 0.2s' }} /></div>
                 </div>
               )}
-              <div style={{ marginTop: 16 }}>
-                <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6, fontWeight: 600 }}>Playlist de destination</label>
-                <select value={uploadPlaylistId} onChange={(e) => setUploadPlaylistId(e.target.value)} className="dash-input" style={{ fontSize: 12, padding: '8px' }}>
-                  <option value="">Non classé</option>
-                  {myPlaylists.map(p => <option key={p.id} value={p.id}>📁 {p.name}</option>)}
-                </select>
-              </div>
+
+              {/* ✅ ON CACHE LA PLAYLIST SI ON EST SUR LES JINGLES */}
+              {radioTab !== 'jingles' && (
+                <div style={{ marginTop: 16 }}>
+                  <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6, fontWeight: 600 }}>Playlist de destination</label>
+                  <select value={uploadPlaylistId} onChange={(e) => setUploadPlaylistId(e.target.value)} className="dash-input" style={{ fontSize: 12, padding: '8px' }}>
+                    <option value="">Non classé</option>
+                    {myPlaylists.map(p => <option key={p.id} value={p.id}>📁 {p.name}</option>)}
+                  </select>
+                </div>
+              )}
             </div>
 
-            <div className="dash-card" style={{ padding: 20 }}>
-              <h3 style={{ fontSize: 14, fontWeight: 600, margin: '0 0 12px 0' }}>Catégories</h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 300, overflowY: 'auto' }}>
-                <button onClick={() => setFilterGenre('all')} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: filterGenre === 'all' ? colors.inputBg : 'transparent', border: 'none', borderRadius: 4, fontSize: 13, fontWeight: filterGenre === 'all' ? 700 : 500, color: colors.textMain, cursor: 'pointer' }}><span>Toutes</span><span style={{ color: colors.textMuted }}>{myTracks.filter(t => !t.is_jingle).length}</span></button>
-                {availableGenres.map(genre => (
-                  <button key={genre} onClick={() => setFilterGenre(genre)} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: filterGenre === genre ? colors.inputBg : 'transparent', border: 'none', borderRadius: 4, fontSize: 13, fontWeight: filterGenre === genre ? 700 : 500, color: colors.textMain, cursor: 'pointer' }}><span>{genre}</span><span style={{ color: colors.textMuted }}>{myTracks.filter(t => !t.is_jingle && t.genre === genre).length}</span></button>
-                ))}
+            {/* ✅ ON CACHE LES CATÉGORIES SI ON EST SUR LES JINGLES */}
+            {radioTab !== 'jingles' && (
+              <div className="dash-card" style={{ padding: 20 }}>
+                <h3 style={{ fontSize: 14, fontWeight: 600, margin: '0 0 12px 0' }}>Catégories</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 300, overflowY: 'auto' }}>
+                  <button onClick={() => setFilterGenre('all')} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: filterGenre === 'all' ? colors.inputBg : 'transparent', border: 'none', borderRadius: 4, fontSize: 13, fontWeight: filterGenre === 'all' ? 700 : 500, color: colors.textMain, cursor: 'pointer' }}><span>Toutes</span><span style={{ color: colors.textMuted }}>{myTracks.filter(t => !t.is_jingle).length}</span></button>
+                  {availableGenres.map(genre => (
+                    <button key={genre} onClick={() => setFilterGenre(genre)} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: filterGenre === genre ? colors.inputBg : 'transparent', border: 'none', borderRadius: 4, fontSize: 13, fontWeight: filterGenre === genre ? 700 : 500, color: colors.textMain, cursor: 'pointer' }}><span>{genre}</span><span style={{ color: colors.textMuted }}>{myTracks.filter(t => !t.is_jingle && t.genre === genre).length}</span></button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           <div className="dash-card" style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
@@ -770,7 +802,7 @@ export const RadioManagerPage: React.FC = () => {
               </div>
               <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value as any)} className="dash-input" style={{ width: 'auto', minWidth: 140, fontSize: 12 }}><option value="all">Tous</option><option value="in_radio">✅ Dans la radio</option><option value="off_radio">⏸️ Hors radio</option></select>
               <select value={sortBy} onChange={(e) => setSortBy(e.target.value as any)} className="dash-input" style={{ width: 'auto', minWidth: 140, fontSize: 12 }}><option value="date">📅 Récents</option><option value="title">🔤 Titre</option><option value="artist">🎤 Artiste</option><option value="bpm">🥁 BPM</option></select>
-              <span style={{ fontSize: 12, color: colors.textMuted, fontWeight: 500 }}>{filteredRadioTracks.length} son(s)</span>
+              <span style={{ fontSize: 12, color: colors.textMuted, fontWeight: 500 }}>{filteredRadioTracks.length} élément(s)</span>
             </div>
             <div style={{ overflowX: 'auto' }}>
               <table className="dash-table">
@@ -789,7 +821,7 @@ export const RadioManagerPage: React.FC = () => {
                   ))}
                 </tbody>
               </table>
-              {currentTracks.length === 0 && <div style={{ padding: 60, textAlign: 'center', color: colors.textMuted }}><div style={{ fontSize: 40, marginBottom: 12 }}>🎵</div><p>Aucun son trouvé.</p></div>}
+              {currentTracks.length === 0 && <div style={{ padding: 60, textAlign: 'center', color: colors.textMuted }}><div style={{ fontSize: 40, marginBottom: 12 }}>🎵</div><p>Aucun élément trouvé.</p></div>}
             </div>
             {totalPages > 1 && (
               <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 16, padding: 16, borderTop: `1px solid ${colors.border}` }}>

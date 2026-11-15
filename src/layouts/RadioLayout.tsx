@@ -67,7 +67,7 @@ export const RadioLayout: React.FC = () => {
   const slogan = "Play the Beat. Feel the Sound. Live the Experience.";
   const shareText = `${slogan} - Écoute la radio de ${profile?.username || 'DropZone DJ'} !`;
 
-  // ✅ DÉSACTIVER LE CLIC DROIT (NOUVEAU)
+  // ✅ DÉSACTIVER LE CLIC DROIT
   useEffect(() => {
     const handleContextMenu = (e: MouseEvent) => {
       e.preventDefault();
@@ -78,6 +78,7 @@ export const RadioLayout: React.FC = () => {
     };
   }, []);
 
+  // Fermer le menu de partage au clic extérieur
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (shareMenuRef.current && !shareMenuRef.current.contains(event.target as Node)) {
@@ -139,6 +140,7 @@ export const RadioLayout: React.FC = () => {
           if (isMounted) setUserProfile(myProfile);
         }
 
+        // Charger les musiques
         const { data: musicTracks } = await supabase
           .from('tracks')
           .select('*')
@@ -147,6 +149,7 @@ export const RadioLayout: React.FC = () => {
           .eq('is_jingle', false)
           .order('created_at', { ascending: true });
 
+        // Charger les jingles
         const { data: jingles } = await supabase
           .from('tracks')
           .select('*')
@@ -164,7 +167,10 @@ export const RadioLayout: React.FC = () => {
           for (let i = 0; i < musicTracks.length; i++) {
             const track = musicTracks[i];
             mixedTracks.push(track);
-            accumulatedTime += (track.duration && track.duration > 0) ? track.duration : 240;
+            
+            // ✅ CORRECTION CRUCIALE : 15s par défaut pour un jingle, 240s pour une musique
+            const defaultDuration = track.is_jingle ? 15 : 240;
+            accumulatedTime += (track.duration && track.duration > 0) ? track.duration : defaultDuration;
 
             if (accumulatedTime >= nextJingleTime && jingles && jingles.length > 0) {
               mixedTracks.push(jingles[jingleIdx]);
@@ -173,9 +179,11 @@ export const RadioLayout: React.FC = () => {
             }
           }
 
+          // Calcul du temps pour reprendre la radio au bon endroit
           const RADIO_EPOCH = new Date('2024-01-01T00:00:00Z').getTime();
           const elapsed = Math.floor((Date.now() - RADIO_EPOCH) / 1000);
-          const durations = mixedTracks.map((t: any) => (t.duration && t.duration > 0) ? t.duration : 240);
+          
+          const durations = mixedTracks.map((t: any) => (t.duration && t.duration > 0) ? t.duration : (t.is_jingle ? 15 : 240));
           const total = durations.reduce((a: any, d: any) => a + d, 0);
           
           let t = elapsed % total;
@@ -286,7 +294,7 @@ export const RadioLayout: React.FC = () => {
     } else {
       const RADIO_EPOCH = new Date('2024-01-01T00:00:00Z').getTime();
       const elapsed = Math.floor((Date.now() - RADIO_EPOCH) / 1000);
-      const durations = radioTracks.map((t: any) => (t.duration && t.duration > 0) ? t.duration : 240);
+      const durations = radioTracks.map((t: any) => (t.duration && t.duration > 0) ? t.duration : (t.is_jingle ? 15 : 240));
       const total = durations.reduce((a: any, d: any) => a + d, 0);
       let t = elapsed % total;
       let startIndex = 0;
@@ -312,7 +320,7 @@ export const RadioLayout: React.FC = () => {
       } else {
         const RADIO_EPOCH = new Date('2024-01-01T00:00:00Z').getTime();
         const elapsed = Math.floor((Date.now() - RADIO_EPOCH) / 1000);
-        const durations = radioTracks.map((t: any) => (t.duration && t.duration > 0) ? t.duration : 240);
+        const durations = radioTracks.map((t: any) => (t.duration && t.duration > 0) ? t.duration : (t.is_jingle ? 15 : 240));
         const total = durations.reduce((a: any, d: any) => a + d, 0);
         let t = elapsed % total;
         let startIndex = 0;
@@ -381,6 +389,7 @@ export const RadioLayout: React.FC = () => {
   const totalLikes = topTracks.reduce((a, t) => a + (t.likes_count || 0), 0);
   const isOwner = user && user.id === profile.id;
   const currentUrl = window.location.href;
+  const currentCover = currentTrack?.cover_url || nowPlaying?.cover_url || coverImage;
 
   const SocialLink = ({ url, icon, name }: { url: string; icon: React.ReactNode; name: string }) => {
     if (!url) return null;
@@ -407,8 +416,6 @@ export const RadioLayout: React.FC = () => {
     return `${Math.floor(time / 60).toString().padStart(2, '0')}:${Math.floor(time % 60).toString().padStart(2, '0')}`;
   };
   const progressPercent = duration > 0 ? (progress / duration) * 100 : 0;
-
-  const currentCover = currentTrack?.cover_url || nowPlaying?.cover_url || coverImage;
 
   return (
     <div style={{ background: colors.bg, minHeight: '100vh', color: colors.textMain, fontFamily: 'Inter, sans-serif', position: 'relative', display: 'flex', flexDirection: 'column', paddingBottom: 100 }}>

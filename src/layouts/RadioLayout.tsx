@@ -23,24 +23,20 @@ export const RadioLayout: React.FC = () => {
     progress, duration, updateRadioSettings, stopRadio, seek
   } = useRadio();
 
-  // ✅ LECTURE DU PROFIL EN CACHE POUR ÉVITER LE CHARGEMENT
   const [profile, setProfile] = useState<any>(() => {
     const cached = sessionStorage.getItem(`radio_profile_${username}`);
     return cached ? JSON.parse(cached) : null;
   });
   
   const [userProfile, setUserProfile] = useState<any>(null);
-  // ✅ On n'affiche le chargement que si on n'a pas de profil en cache
   const [loading, setLoading] = useState(!profile);
 
-  // ✅ Ref pour accéder à isRadioActive sans le mettre dans les dépendances du useEffect
   const isRadioActiveRef = useRef(isRadioActive);
   useEffect(() => {
     isRadioActiveRef.current = isRadioActive;
   }, [isRadioActive]);
 
   const [radioTracks, setRadioTracks] = useState<any[]>([]);
-  const [nowPlaying, setNowPlaying] = useState<any>(null);
   const [topTracks, setTopTracks] = useState<any[]>([]);
   const [latestReleases, setLatestReleases] = useState<any[]>([]);
   const [schedules, setSchedules] = useState<any[]>([]);
@@ -97,7 +93,6 @@ export const RadioLayout: React.FC = () => {
   const slogan = "Play the Beat. Feel the Sound. Live the Experience.";
   const shareText = `${slogan} - Écoute la radio de ${profile?.username || 'DropZone DJ'} !`;
 
-  // ✅ DÉSACTIVER LE CLIC DROIT
   useEffect(() => {
     const handleContextMenu = (e: MouseEvent) => {
       e.preventDefault();
@@ -108,7 +103,6 @@ export const RadioLayout: React.FC = () => {
     };
   }, []);
 
-  // Fermer le menu de partage au clic extérieur
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (shareMenuRef.current && !shareMenuRef.current.contains(event.target as Node)) {
@@ -119,12 +113,10 @@ export const RadioLayout: React.FC = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // ✅ EFFET 1 : Chargement des données et calcul de la playlist continue
   useEffect(() => {
     if (!username) return;
 
     let isMounted = true;
-    // On ne remet loading à true QUE si on n'a pas de profil
     if (!profile) setLoading(true);
     
     if (prevUsernameRef.current && prevUsernameRef.current !== username) {
@@ -147,7 +139,6 @@ export const RadioLayout: React.FC = () => {
           return;
         }
 
-        // ✅ Sauvegarde du profil dans le sessionStorage
         sessionStorage.setItem(`radio_profile_${username}`, JSON.stringify(profileData));
 
         setProfile(profileData);
@@ -225,12 +216,10 @@ export const RadioLayout: React.FC = () => {
           }
           
           setRadioTracks(mixedTracks);
-          setNowPlaying(mixedTracks[startIndex]);
           
           setTopTracks([...musicTracks].sort((a: any, b: any) => (b.likes_count || 0) - (a.likes_count || 0)));
           setLatestReleases([...musicTracks].sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
 
-          // ✅ On vérifie isRadioActiveRef.current au lieu de isRadioActive
           if (!isRadioStartedRef.current && !isRadioActiveRef.current) {
             isRadioStartedRef.current = true;
             startRadio(mixedTracks, profileData.is_live || false, profileData.live_url || '', startIndex, t);
@@ -258,9 +247,8 @@ export const RadioLayout: React.FC = () => {
 
     initPage();
     return () => { isMounted = false; };
-  }, [username, user]); // ✅ On retire isRadioActive, startRadio, etc.
+  }, [username, user]);
 
-  // ✅ EFFET 2 : WebSocket Chat
   useEffect(() => {
     if (!profile?.id) return;
     let isMounted = true;
@@ -291,7 +279,6 @@ export const RadioLayout: React.FC = () => {
     };
   }, [profile?.id, user?.id]);
 
-  // ✅ EFFET 3 : Wipe Transition
   useEffect(() => {
     setIsWiping(true);
     const timer = setTimeout(() => setIsWiping(false), 800);
@@ -421,7 +408,8 @@ export const RadioLayout: React.FC = () => {
   const totalLikes = topTracks.reduce((a, t) => a + (t.likes_count || 0), 0);
   const isOwner = user && user.id === profile.id;
   const currentUrl = window.location.href;
-  const currentCover = currentTrack?.cover_url || nowPlaying?.cover_url || coverImage;
+  // ✅ On n'utilise plus nowPlaying, uniquement currentTrack
+  const currentCover = currentTrack?.cover_url || coverImage;
 
   const SocialLink = ({ url, icon, name }: { url: string; icon: React.ReactNode; name: string }) => {
     if (!url) return null;
@@ -437,7 +425,7 @@ export const RadioLayout: React.FC = () => {
   };
 
   const outletContext = {
-    profile, userProfile, radioTracks, nowPlaying, topTracks, latestReleases, schedules, activeSchedule,
+    profile, userProfile, radioTracks, topTracks, latestReleases, schedules, activeSchedule,
     listeners, colors, visualizerColor, iconColor, socials, coverImage, totalLikes, recentTracks,
     handleOpenPlayer, handlePlayRadio, handleTogglePlay, handleSendMessage, messages, newMessage, setNewMessage, isChatOpen, setIsChatOpen, chatEndRef,
     SocialLink
@@ -730,8 +718,8 @@ export const RadioLayout: React.FC = () => {
               </div>
 
               <div style={{ minWidth: 0, flex: 1 }}>
-                <div style={{ fontSize: 13, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{currentTrack?.title || nowPlaying?.title || 'En attente'} {isLive && <span style={{ fontSize: 9, background: '#ef4444', color: '#fff', padding: '2px 6px', borderRadius: 4 }}>LIVE</span>}</div>
-                <div style={{ fontSize: 11, color: colors.textMuted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{currentTrack?.artist || nowPlaying?.artist || 'DropZone Radio'}</div>
+                <div style={{ fontSize: 13, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{currentTrack?.title || 'En attente'} {isLive && <span style={{ fontSize: 9, background: '#ef4444', color: '#fff', padding: '2px 6px', borderRadius: 4 }}>LIVE</span>}</div>
+                <div style={{ fontSize: 11, color: colors.textMuted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{currentTrack?.artist || 'DropZone Radio'}</div>
               </div>
             </div>
 

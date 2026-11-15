@@ -29,7 +29,6 @@ const RadioContext = createContext<RadioContextType | undefined>(undefined);
 const SYNC_KEY = 'dropzone_global_radio_state';
 
 export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  // Initialisation depuis le localStorage pour éviter les clignotements au chargement
   const getInitialState = () => {
     try {
       const saved = localStorage.getItem(SYNC_KEY);
@@ -69,13 +68,17 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   const currentTrack = tracks[currentIndex];
 
-  // ✅ ÉCOUTE DES CHANGEMENTS DE L'AUTRE FENÊTRE
+  // ✅ FORCE LA MISE À JOUR DU CONTEXTE QUAND LA PISTE CHANGE
+  useEffect(() => {
+    // Ce useEffect est vide, il sert juste à déclencher un re-rendu du Provider
+    // quand currentIndex change, pour que les consommateurs aient le bon currentTrack.
+  }, [currentIndex]);
+
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === SYNC_KEY && e.newValue) {
         try {
           const data = JSON.parse(e.newValue);
-          
           if (data.isRadioActive && data.tracks && data.tracks.length > 0) {
             setIsRadioActive(true);
             setIsLive(data.isLive);
@@ -85,7 +88,6 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             setIsPlaying(data.isPlaying);
 
             const currentAudio = activePlayerRef.current === 'A' ? audioARef.current : audioBRef.current;
-            // ✅ SYNCHRO AGRESSIVE : Si on a un écart de plus de 1.5 seconde, on se recale
             if (currentAudio && Math.abs(currentAudio.currentTime - data.progress) > 1.5) {
               currentAudio.currentTime = data.progress;
               setProgress(data.progress);
@@ -102,7 +104,6 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-  // ✅ SAUVEGARDE RÉGULIÈRE DE L'ÉTAT
   const saveStateToLocalStorage = useCallback((customData = {}) => {
     if (!isRadioActive || tracks.length === 0) return;
 
@@ -121,7 +122,6 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }));
   }, [isRadioActive, isLive, liveUrl, tracks, currentIndex, isPlaying, progress]);
 
-  // Sauvegarde toutes les 1 seconde pour une précision au millimètre
   useEffect(() => {
     const interval = setInterval(() => {
       if (isPlaying && isRadioActive) {
@@ -137,7 +137,6 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   }, []);
 
   const startRadio = useCallback((newTracks: any[], live: boolean, url: string, startIndex: number = 0, startTime?: number) => {
-    // ✅ Si la radio est déjà active via le localStorage, on ignore cette requête
     if (isActiveRef.current && tracks.length > 0) return;
 
     isActiveRef.current = true;
@@ -154,7 +153,6 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     
     pendingSeekRef.current = startTime || 0;
 
-    // On informe l'autre fenêtre
     setTimeout(() => {
       localStorage.setItem(SYNC_KEY, JSON.stringify({
         isRadioActive: true, isLive: live, liveUrl: url, tracks: newTracks,

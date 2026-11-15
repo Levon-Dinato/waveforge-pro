@@ -7,16 +7,23 @@ import { useAuth } from '../contexts/AuthContext';
 import { RadioPlayer } from '../components/RadioPlayer';
 import { useTheme } from '../contexts/ThemeContext';
 
+// ✅ Calcul avec gestion des jingles (15s par défaut)
 const calculateRadioState = (tracks: any[]) => {
   if (!tracks || tracks.length === 0) return { index: 0, timeInSeconds: 0 };
   const RADIO_EPOCH = new Date('2024-01-01T00:00:00Z').getTime();
   const now = Date.now();
   const elapsedSeconds = Math.floor((now - RADIO_EPOCH) / 1000);
-  const durations = tracks.map(t => (t.duration && t.duration > 0) ? t.duration : 240);
+  
+  const durations = tracks.map(t => {
+    if (t.duration && t.duration > 0) return t.duration;
+    return t.is_jingle ? 15 : 240;
+  });
+  
   const totalDuration = durations.reduce((acc, d) => acc + d, 0);
   let timeToPlay = elapsedSeconds % totalDuration;
   let index = 0;
   let timeInSeconds = 0;
+  
   for (let i = 0; i < tracks.length; i++) {
     if (timeToPlay < durations[i]) { index = i; timeInSeconds = timeToPlay; break; }
     timeToPlay -= durations[i];
@@ -26,7 +33,8 @@ const calculateRadioState = (tracks: any[]) => {
 
 export const PlayerPage: React.FC = () => {
   const { username } = useParams<{ username: string }>();
-  const { startRadio, stopRadio, currentTrack, needsGesture, unlockAudio } = useRadio();
+  // ✅ On récupère isRadioActive pour ne pas écraser la playlist si elle tourne déjà
+  const { startRadio, currentTrack, needsGesture, unlockAudio, isRadioActive } = useRadio();
   const { theme } = useTheme();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -70,11 +78,38 @@ export const PlayerPage: React.FC = () => {
         if (isMounted) setUserProfile(myProfile);
       }
 
-      const { data: tracksData } = await supabase
-        .from('tracks').select('*').eq('user_id', data.id).eq('in_radio', true).order('created_at', { ascending: true });
-      if (tracksData && tracksData.length > 0) {
-        const { index, timeInSeconds } = calculateRadioState(tracksData);
-        startRadio(tracksData, data.is_live || false, data.live_url || '', index, timeInSeconds);
+      // ✅ ON NE FAIT LE START QUE SI LA RADIO N'EST PAS DÉJÀ ACTIVE
+      if (!isRadioActive) {
+        const { data: musicTracks } = await supabase
+          .from('tracks').select('*').eq('user_id', data.id).eq('in_radio', true).eq('is_jingle', false).order('created_at', { ascending: true });
+        
+        const { data: jingles } = await supabase
+          .from('tracks').select('*').eq('user_id', data.id).eq('in_radio', true).eq('is_jingle', true);
+
+        if (musicTracks && musicTracks.length > 0) {
+          const mixedTracks: any[] = [];
+          let accumulatedTime = 0;
+          const intervalSeconds = (data.jingle_interval_minutes || 30) * 60;
+          let nextJingleTime = intervalSeconds;
+          let jingleIdx = 0;
+
+          for (let i = 0; i < musicTracks.length; i++) {
+            const track = musicTracks[i];
+            mixedTracks.push(track);
+            
+            const defaultDuration = track.is_jingle ? 15 : 240;
+            accumulatedTime += (track.duration && track.duration > 0) ? track.duration : defaultDuration;
+
+            if (accumulatedTime >= nextJingleTime && jingles && jingles.length > 0) {
+              mixedTracks.push(jingles[jingleIdx]);
+              jingleIdx = (jingleIdx + 1) % jingles.length;
+              nextJingleTime += intervalSeconds;
+            }
+          }
+
+          const { index, timeInSeconds } = calculateRadioState(mixedTracks);
+          startRadio(mixedTracks, data.is_live || false, data.live_url || '', index, timeInSeconds);
+        }
       }
 
       const { data: historyData } = await supabase
@@ -103,10 +138,9 @@ export const PlayerPage: React.FC = () => {
     return () => { 
       isMounted = false; 
       if (channel) { channel.unsubscribe(); supabase.removeChannel(channel); }
-      if (stopRadio) stopRadio(); 
+      // ✅ ON SUPPRIME LE stopRadio() ICI pour ne pas couper la radio du site quand on ferme le popup
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [username]);
+  }, [username, isRadioActive, startRadio, user]);
 
   useEffect(() => {
     if (activeTab === 'chat') {
@@ -160,9 +194,8 @@ export const PlayerPage: React.FC = () => {
         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)' }} />
       </div>
 
-      <button onClick={() => { if (stopRadio) stopRadio(); window.close(); }} style={{ position: 'absolute', top: 12, right: 12, background: 'rgba(0,0,0,0.4)', border: `1px solid rgba(255,255,255,0.2)`, borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', cursor: 'pointer', zIndex: 100, backdropFilter: 'blur(10px)' }}>✕</button>
+      <button onClick={() => window.close()} style={{ position: 'absolute', top: 12, right: 12, background: 'rgba(0,0,0,0.4)', border: `1px solid rgba(255,255,255,0.2)`, borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', cursor: 'pointer', zIndex: 100, backdropFilter: 'blur(10px)' }}>✕</button>
 
-      {/* ✅ EN-TÊTE SIMPLIFIÉ (plus de doublon) */}
       <div style={{ textAlign: 'center', marginBottom: 10, zIndex: 1 }}>
         <h2 style={{ color: '#fff', margin: 0, fontSize: 18, fontWeight: 900, textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
           {profile?.username}

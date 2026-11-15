@@ -29,14 +29,30 @@ const RadioContext = createContext<RadioContextType | undefined>(undefined);
 const SYNC_KEY = 'dropzone_global_radio_state';
 
 export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [tracks, setTracks] = useState<any[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [progress, setProgress] = useState(0);
+  // Initialisation depuis le localStorage pour éviter les clignotements au chargement
+  const getInitialState = () => {
+    try {
+      const saved = localStorage.getItem(SYNC_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.isRadioActive && parsed.tracks && parsed.tracks.length > 0) {
+          return parsed;
+        }
+      }
+    } catch (e) {}
+    return null;
+  };
+
+  const initialState = getInitialState();
+
+  const [tracks, setTracks] = useState<any[]>(initialState?.tracks || []);
+  const [currentIndex, setCurrentIndex] = useState(initialState?.currentIndex || 0);
+  const [isPlaying, setIsPlaying] = useState(initialState?.isPlaying || false);
+  const [progress, setProgress] = useState(initialState?.progress || 0);
   const [duration, setDuration] = useState(0);
-  const [isLive, setIsLive] = useState(false);
-  const [liveUrl, setLiveUrl] = useState('');
-  const [isRadioActive, setIsRadioActive] = useState(false);
+  const [isLive, setIsLive] = useState(initialState?.isLive || false);
+  const [liveUrl, setLiveUrl] = useState(initialState?.liveUrl || '');
+  const [isRadioActive, setIsRadioActive] = useState(initialState?.isRadioActive || false);
   const [needsGesture, setNeedsGesture] = useState(false);
   
   const [crossfadeEnabled, setCrossfadeEnabled] = useState(false);
@@ -47,86 +63,73 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const audioBRef = useRef<HTMLAudioElement | null>(null);
   const activePlayerRef = useRef<'A' | 'B'>('A');
 
-  const pendingSeekRef = useRef<number | null>(null);
-  const isActiveRef = useRef(false); 
+  const pendingSeekRef = useRef<number | null>(initialState?.progress || null);
+  const isActiveRef = useRef(initialState?.isRadioActive || false); 
   const { stop: stopMainPlayer } = usePlayer();
 
   const currentTrack = tracks[currentIndex];
 
-  // 1. ÉCOUTE DES CHANGEMENTS FAITS PAR L'AUTRE ONGLET
+  // ✅ ÉCOUTE DES CHANGEMENTS DE L'AUTRE FENÊTRE
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === SYNC_KEY && e.newValue) {
         try {
           const data = JSON.parse(e.newValue);
           
-          // Si l'autre onglet a une radio active et qu'on n'est pas le "chef" actuel
           if (data.isRadioActive && data.tracks && data.tracks.length > 0) {
             setIsRadioActive(true);
             setIsLive(data.isLive);
             setLiveUrl(data.liveUrl);
-            
-            // On synchronise la playlist si on ne l'a pas (ex: nouveau popup)
-            if (tracks.length === 0) {
-              setTracks(data.tracks);
-            }
-            
-            if (data.currentIndex !== currentIndex) setCurrentIndex(data.currentIndex);
-            if (data.isPlaying !== isPlaying) setIsPlaying(data.isPlaying);
+            setTracks(data.tracks);
+            setCurrentIndex(data.currentIndex);
+            setIsPlaying(data.isPlaying);
 
-            // On recale le temps si le décalage est supérieur à 3 secondes
             const currentAudio = activePlayerRef.current === 'A' ? audioARef.current : audioBRef.current;
-            if (currentAudio && Math.abs(currentAudio.currentTime - data.progress) > 3) {
+            // ✅ SYNCHRO AGRESSIVE : Si on a un écart de plus de 1.5 seconde, on se recale
+            if (currentAudio && Math.abs(currentAudio.currentTime - data.progress) > 1.5) {
               currentAudio.currentTime = data.progress;
               setProgress(data.progress);
             }
-          } else if (!data.isRadioActive && isRadioActive) {
-             // L'autre onglet a arrêté la radio
+          } else if (!data.isRadioActive) {
              setIsPlaying(false);
              setIsRadioActive(false);
           }
-        } catch (err) {
-          console.error("Erreur de lecture du localStorage", err);
-        }
+        } catch (err) {}
       }
     };
 
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
-  }, [tracks.length, currentIndex, isPlaying, isRadioActive]);
+  }, []);
 
-  // 2. FONCTION POUR SAUVEGARDER NOTRE ÉTAT POUR L'AUTRE ONGLET
+  // ✅ SAUVEGARDE RÉGULIÈRE DE L'ÉTAT
   const saveStateToLocalStorage = useCallback((customData = {}) => {
     if (!isRadioActive || tracks.length === 0) return;
 
     const currentAudio = activePlayerRef.current === 'A' ? audioARef.current : audioBRef.current;
     const currentProgress = currentAudio ? currentAudio.currentTime : progress;
 
-    // On sauvegarde la playlist entière pour que le popup l'ait aussi (avec les jingles inclus)
-    const stateToSave = {
+    localStorage.setItem(SYNC_KEY, JSON.stringify({
       isRadioActive: true,
       isLive,
       liveUrl,
-      tracks,
+      tracks, 
       currentIndex,
       isPlaying,
       progress: currentProgress,
       ...customData
-    };
-    localStorage.setItem(SYNC_KEY, JSON.stringify(stateToSave));
+    }));
   }, [isRadioActive, isLive, liveUrl, tracks, currentIndex, isPlaying, progress]);
 
-  // 3. ENVOI RÉGULIER DE NOTRE ÉTAT (Toutes les 2 secondes)
+  // Sauvegarde toutes les 1 seconde pour une précision au millimètre
   useEffect(() => {
     const interval = setInterval(() => {
       if (isPlaying && isRadioActive) {
         saveStateToLocalStorage();
       }
-    }, 2000);
+    }, 1000); 
     return () => clearInterval(interval);
   }, [isPlaying, isRadioActive, saveStateToLocalStorage]);
-
-  // --- LE RESTE DES FONCTIONS ---
 
   const updateRadioSettings = useCallback((enabled: boolean, dur: number) => {
     setCrossfadeEnabled(enabled);
@@ -134,7 +137,8 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   }, []);
 
   const startRadio = useCallback((newTracks: any[], live: boolean, url: string, startIndex: number = 0, startTime?: number) => {
-    if (isActiveRef.current && tracks.length > 0) return; // Si on est déjà le chef
+    // ✅ Si la radio est déjà active via le localStorage, on ignore cette requête
+    if (isActiveRef.current && tracks.length > 0) return;
 
     isActiveRef.current = true;
     stopMainPlayer();
@@ -148,13 +152,9 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     setNeedsGesture(false);
     isCrossfadingRef.current = false;
     
-    if (startTime !== undefined && startTime > 0) {
-      pendingSeekRef.current = startTime;
-    } else {
-      pendingSeekRef.current = 0;
-    }
+    pendingSeekRef.current = startTime || 0;
 
-    // On sauvegarde immédiatement pour prévenir l'autre fenêtre
+    // On informe l'autre fenêtre
     setTimeout(() => {
       localStorage.setItem(SYNC_KEY, JSON.stringify({
         isRadioActive: true, isLive: live, liveUrl: url, tracks: newTracks,
@@ -193,7 +193,6 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const nextTrack = tracks[nextIndex];
     if (!nextTrack) return;
 
-    // ✅ Gestion des jingles (pas de crossfade)
     if (!crossfadeEnabled || !isPlaying || nextTrack.is_jingle || currentTrack?.is_jingle) {
       isCrossfadingRef.current = false;
       setCurrentIndex(nextIndex);

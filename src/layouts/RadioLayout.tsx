@@ -128,7 +128,6 @@ export const RadioLayout: React.FC = () => {
           if (isMounted) setUserProfile(myProfile);
         }
 
-        // ✅ NOUVEAU : On récupère séparément les musiques et les jingles
         const { data: musicTracks } = await supabase
           .from('tracks')
           .select('*')
@@ -145,10 +144,8 @@ export const RadioLayout: React.FC = () => {
           .eq('is_jingle', true);
 
         if (musicTracks && musicTracks.length > 0) {
-          // ✅ MÉLANGE INTELLIGENT (MUSIQUE + JINGLES)
           const mixedTracks: any[] = [];
           let accumulatedTime = 0;
-          // On récupère l'intervalle défini dans le manager (par défaut 30 min)
           const intervalSeconds = (profileData.jingle_interval_minutes || 30) * 60; 
           let nextJingleTime = intervalSeconds;
           let jingleIdx = 0;
@@ -156,17 +153,18 @@ export const RadioLayout: React.FC = () => {
           for (let i = 0; i < musicTracks.length; i++) {
             const track = musicTracks[i];
             mixedTracks.push(track);
-            accumulatedTime += (track.duration && track.duration > 0) ? track.duration : 240; // Durée par défaut 4min si inconnue
+            accumulatedTime += (track.duration && track.duration > 0) ? track.duration : 240;
 
-            // Si on a atteint le temps imparti ET qu'on a des jingles disponibles, on en insère un
             if (accumulatedTime >= nextJingleTime && jingles && jingles.length > 0) {
               mixedTracks.push(jingles[jingleIdx]);
-              jingleIdx = (jingleIdx + 1) % jingles.length; // On tourne en boucle sur les jingles
-              nextJingleTime += intervalSeconds; // On planifie le prochain jingle
+              jingleIdx = (jingleIdx + 1) % jingles.length;
+              nextJingleTime += intervalSeconds;
             }
           }
 
-          // On calcule la position actuelle en fonction de la playlist MIXÉE
+          // ✅ LOG DE SÉCURITÉ POUR VOIR LA PLAYLIST DANS LA CONSOLE
+          console.log("Playlist générée (Musiques + Jingles) :", mixedTracks);
+
           const RADIO_EPOCH = new Date('2024-01-01T00:00:00Z').getTime();
           const elapsed = Math.floor((Date.now() - RADIO_EPOCH) / 1000);
           const durations = mixedTracks.map((t: any) => (t.duration && t.duration > 0) ? t.duration : 240);
@@ -181,7 +179,6 @@ export const RadioLayout: React.FC = () => {
           setRadioTracks(mixedTracks);
           setNowPlaying(mixedTracks[startIndex]);
           
-          // Pour le Top Tracks, on ne garde que les musiques (pas les jingles)
           setTopTracks([...musicTracks].sort((a: any, b: any) => (b.likes_count || 0) - (a.likes_count || 0)));
           setLatestReleases([...musicTracks].sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
 

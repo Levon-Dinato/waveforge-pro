@@ -120,8 +120,8 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const nextTrack = tracks[nextIndex];
     if (!nextTrack) return;
 
-    // Si le crossfade est désactivé ou que c'est le premier lancement
-    if (!crossfadeEnabled || !isPlaying) {
+    // ✅ CORRECTION : Si la piste suivante est un jingle, on ne fait JAMAIS de crossfade
+    if (!crossfadeEnabled || !isPlaying || nextTrack.is_jingle) {
       setCurrentIndex(nextIndex);
       return;
     }
@@ -149,25 +149,20 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       const elapsed = time - startTime;
       const progressFade = Math.min(1, elapsed / durationMs);
 
-      // Baisse le son de l'ancienne piste
       if (currentAudio) currentAudio.volume = 1 - progressFade;
-      // Monte le son de la nouvelle piste
       if (nextAudio) nextAudio.volume = progressFade;
 
       if (progressFade < 1) {
         requestAnimationFrame(animateFade);
       } else {
-        // Fin du fondu : on arrête la piste précédente et on valide le changement
         currentAudio.pause();
         currentAudio.currentTime = 0;
-        currentAudio.volume = 1; // Reset pour la prochaine fois
+        currentAudio.volume = 1;
         nextAudio.volume = 1;
         
-        // On inverse le lecteur actif (A devient B, B devient A)
         activePlayerRef.current = activePlayerRef.current === 'A' ? 'B' : 'A';
         isCrossfadingRef.current = false;
         
-        // Mise à jour de l'index React
         setCurrentIndex(nextIndex);
       }
     };
@@ -206,7 +201,7 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     activePlayerRef.current = 'A';
   }, []);
 
-  // ✅ Déclencheur automatique de fin de piste (avec anticipation pour le crossfade)
+  // ✅ Déclencheur automatique de fin de piste
   const handleTimeUpdate = () => {
     const currentAudio = activePlayerRef.current === 'A' ? audioARef.current : audioBRef.current;
     if (!currentAudio) return;
@@ -214,8 +209,8 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     setProgress(currentAudio.currentTime);
     setDuration(currentAudio.duration || 0);
 
-    // Si le crossfade est activé et qu'on approche de la fin
-    if (crossfadeEnabled && !isCrossfadingRef.current && currentAudio.duration > 0) {
+    // ✅ CORRECTION : On ne déclenche le crossfade QUE si la piste actuelle n'est PAS un jingle
+    if (crossfadeEnabled && !isCrossfadingRef.current && currentAudio.duration > 0 && !currentTrack?.is_jingle) {
       const timeLeft = currentAudio.duration - currentAudio.currentTime;
       if (timeLeft <= crossfadeDuration) {
         const nextIndex = (currentIndex + 1) % tracks.length;
@@ -270,14 +265,12 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         ref={audioBRef}
         preload="auto"
         onTimeUpdate={() => {
-          // On ne met à jour l'UI que si c'est le lecteur actif
           if (activePlayerRef.current === 'B') {
             setProgress(audioBRef.current?.currentTime || 0);
             setDuration(audioBRef.current?.duration || 0);
           }
         }}
         onEnded={() => {
-          // La piste B est devenue la piste principale après le fondu
           if (activePlayerRef.current === 'B') playNext();
         }}
         crossOrigin="anonymous"

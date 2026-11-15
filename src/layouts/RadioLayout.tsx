@@ -56,10 +56,30 @@ export const RadioLayout: React.FC = () => {
   const isRadioStartedRef = useRef(false);
   const prevUsernameRef = useRef<string | undefined>(username);
 
+  // ✅ NOUVEAU : State pour stocker l'image de partage préchargée
+  const [shareImage, setShareImage] = useState<File | null>(null);
+
   const colors = {
     bg: isDark ? '#05050a' : '#f5f5f7', textMain: isDark ? '#ffffff' : '#1a1a1a', textMuted: isDark ? '#888888' : '#666666',
     border: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)', glass: isDark ? 'rgba(15,15,20,0.7)' : 'rgba(255,255,255,0.7)', card: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)',
   };
+
+  // ✅ NOUVEL EFFET : Préchargement de l'image pour le partage
+  useEffect(() => {
+    const loadImage = async () => {
+      try {
+        const response = await fetch('/dropzone-share.png');
+        if (response.ok) {
+          const blob = await response.blob();
+          const file = new File([blob], 'dropzone-share.png', { type: blob.type });
+          setShareImage(file);
+        }
+      } catch (err) {
+        console.warn("Image de partage non trouvée dans le dossier public.");
+      }
+    };
+    loadImage();
+  }, []);
 
   // ✅ EFFET 1 : Chargement des données
   useEffect(() => {
@@ -68,7 +88,6 @@ export const RadioLayout: React.FC = () => {
     let isMounted = true;
     setLoading(true);
     
-    // On ne coupe la radio QUE si on change de DJ
     if (prevUsernameRef.current && prevUsernameRef.current !== username) {
       stopRadio(); 
       isRadioStartedRef.current = false;
@@ -203,7 +222,7 @@ export const RadioLayout: React.FC = () => {
 
   const showToastMsg = (msg: string) => { setToastMsg(msg); setShowToast(true); setTimeout(() => setShowToast(false), 3000); };
 
-  // ✅ FONCTION DE PARTAGE COMPLÈTE (MOBILE + PC)
+  // ✅ FONCTION DE PARTAGE CORRIGÉE (SANS AWAIT AVANT)
   const handleShare = async () => {
     const shareData: ShareData = {
       title: `Radio ${profile?.username} — DropZone DJ`,
@@ -212,37 +231,23 @@ export const RadioLayout: React.FC = () => {
     };
 
     try {
-      // On récupère l'image depuis le dossier public
-      const imageUrl = `${window.location.origin}/dropzone-share.png`;
-      const response = await fetch(imageUrl);
-      
-      if (!response.ok) throw new Error("Image introuvable");
-      
-      const blob = await response.blob();
-      const file = new File([blob], 'dropzone-share.png', { type: blob.type });
-
-      // Test si le navigateur supporte le partage de fichiers (Généralement Mobile)
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        shareData.files = [file];
+      // Si on a l'image préchargée ET que le navigateur supporte le partage de fichiers
+      if (shareImage && navigator.canShare && navigator.canShare({ files: [shareImage] })) {
+        shareData.files = [shareImage];
         await navigator.share(shareData);
       } else {
-        // Fallback pour PC : Téléchargement de l'image + copie du lien
+        // Fallback : on copie le lien
         await navigator.clipboard.writeText(window.location.href);
-        
-        const link = document.createElement('a');
-        link.href = imageUrl;
-        link.download = 'DropZone-Radio.png';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-
-        alert("Ton navigateur PC ne permet pas le partage direct. Le lien de la radio a été copié et l'image a été téléchargée ! ✅");
+        alert("Lien de la radio copié ! ✅");
       }
     } catch (err) {
       console.error("Erreur de partage:", err);
-      // Si l'image plante, on copie juste le lien
-      await navigator.clipboard.writeText(window.location.href);
-      alert("Lien de la radio copié ! (L'image de partage n'a pas pu être chargée).");
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        alert("Lien copié ! (Le partage direct n'est pas supporté sur cet appareil).");
+      } catch (clipErr) {
+        alert("Impossible de copier le lien. Tu peux le copier manuellement depuis la barre d'adresse.");
+      }
     }
   };
 

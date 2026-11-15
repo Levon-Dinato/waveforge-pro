@@ -58,13 +58,7 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   }, []);
 
   const startRadio = useCallback((newTracks: any[], live: boolean, url: string, startIndex: number = 0, startTime?: number) => {
-    if (isActiveRef.current) {
-      if (live !== isLive || url !== liveUrl) {
-        setIsLive(live);
-        setLiveUrl(url);
-      }
-      return;
-    }
+    if (isActiveRef.current) return; // Protection contre les doubles appels
 
     isActiveRef.current = true;
     stopMainPlayer();
@@ -74,26 +68,23 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     setLiveUrl(url);
     setIsRadioActive(true);
     setIsPlaying(true);
-    setProgress(0);
+    setProgress(startTime || 0);
     setNeedsGesture(false);
     isCrossfadingRef.current = false;
     
+    // On stocke le temps cible pour l'appliquer une fois le fichier chargé
     if (startTime !== undefined && startTime > 0) {
       pendingSeekRef.current = startTime;
     } else {
-      pendingSeekRef.current = null;
+      pendingSeekRef.current = 0;
     }
-  }, [isLive, liveUrl, stopMainPlayer]);
+  }, [stopMainPlayer]);
 
   const unlockAudio = useCallback(() => {
     setNeedsGesture(false);
     setIsPlaying(true);
     const currentAudio = activePlayerRef.current === 'A' ? audioARef.current : audioBRef.current;
-    if (currentAudio) {
-       currentAudio.play().catch(e => {
-         if (e.name === 'NotAllowedError') setNeedsGesture(true);
-       });
-    }
+    if (currentAudio) currentAudio.play().catch(() => setNeedsGesture(true));
   }, []);
 
   const togglePlay = useCallback(() => {
@@ -105,19 +96,16 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     } else {
       setIsPlaying(true);
       setNeedsGesture(false);
-      currentAudio.play().catch(e => {
-         if (e.name === 'NotAllowedError') setNeedsGesture(true);
-      });
+      currentAudio.play().catch(() => setNeedsGesture(true));
     }
   }, [isPlaying]);
 
   const transitionToTrack = useCallback((nextIndex: number) => {
     if (isLive || tracks.length === 0) return;
-    
     const nextTrack = tracks[nextIndex];
     if (!nextTrack) return;
 
-    // ✅ Si c'est un jingle ou si on quitte un jingle, on force le passage direct (sans crossfade)
+    // ✅ Si c'est un jingle, PAS de crossfade (passage brutal)
     if (!crossfadeEnabled || !isPlaying || nextTrack.is_jingle || currentTrack?.is_jingle) {
       isCrossfadingRef.current = false;
       setCurrentIndex(nextIndex);
@@ -128,10 +116,7 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const currentAudio = activePlayerRef.current === 'A' ? audioARef.current : audioBRef.current;
     const nextAudio = activePlayerRef.current === 'A' ? audioBRef.current : audioARef.current;
     
-    if (!currentAudio || !nextAudio) {
-      setCurrentIndex(nextIndex);
-      return;
-    }
+    if (!currentAudio || !nextAudio) { setCurrentIndex(nextIndex); return; }
 
     nextAudio.src = nextTrack.audio_url;
     nextAudio.volume = 0;
@@ -143,7 +128,6 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const animateFade = (time: number) => {
       const elapsed = time - startTime;
       const progressFade = Math.min(1, elapsed / durationMs);
-
       if (currentAudio) currentAudio.volume = 1 - progressFade;
       if (nextAudio) nextAudio.volume = progressFade;
 
@@ -154,13 +138,11 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         currentAudio.currentTime = 0;
         currentAudio.volume = 1;
         nextAudio.volume = 1;
-        
         activePlayerRef.current = activePlayerRef.current === 'A' ? 'B' : 'A';
         isCrossfadingRef.current = false;
         setCurrentIndex(nextIndex);
       }
     };
-    
     requestAnimationFrame(animateFade);
   }, [crossfadeEnabled, crossfadeDuration, isLive, isPlaying, tracks, currentTrack?.is_jingle]);
 
@@ -198,7 +180,6 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const handleTimeUpdate = () => {
     const currentAudio = activePlayerRef.current === 'A' ? audioARef.current : audioBRef.current;
     if (!currentAudio) return;
-
     setProgress(currentAudio.currentTime);
     setDuration(currentAudio.duration || 0);
 
@@ -211,30 +192,43 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }
   };
 
-  // ✅ CHANGEMENT DE SOURCE ULTRA-STABLE (Applique le pendingSeek au bon moment)
+  // ✅ GESTION DU CHARGEMENT ET DU SAUT TEMPOREL (LE PLUS IMPORTANT)
   useEffect(() => {
     const currentAudio = activePlayerRef.current === 'A' ? audioARef.current : audioBRef.current;
-    if (!currentAudio) return;
+    if (!currentAudio || !currentTrack) return;
 
-    const desiredSrc = isLive ? liveUrl : (currentTrack?.audio_url || '');
-    
-    // On ne recharge que si la source a changé
-    if (currentAudio.src !== desiredSrc && desiredSrc !== '') {
+    const desiredSrc = isLive ? liveUrl : currentTrack.audio_url;
+    if (!desiredSrc) return;
+
+    if (currentAudio.src !== desiredSrc) {
       currentAudio.src = desiredSrc;
       currentAudio.load();
     }
 
-    if (isPlaying) {
-      currentAudio.play().catch((e) => {
-        if (e.name === 'NotAllowedError') {
-          setNeedsGesture(true);
-          setIsPlaying(false);
-        }
-      });
-    } else {
-      currentAudio.pause();
-    }
-  }, [isPlaying, currentIndex, isLive, currentTrack?.audio_url, liveUrl]);
+    // On attend que le fichier soit prêt pour appliquer le seek
+    const onCanPlay = () => {
+      if (pendingSeekRef.current !== null && pendingSeekRef.current > 0) {
+        currentAudio.currentTime = pendingSeekRef.current;
+        setProgress(pendingSeekRef.current);
+        pendingSeekRef.current = null;
+      }
+      if (isPlaying) {
+        currentAudio.play().catch((e) => {
+          if (e.name === 'NotAllowedError') {
+            setNeedsGesture(true);
+            setIsPlaying(false);
+          }
+        });
+      }
+      currentAudio.removeEventListener('canplay', onCanPlay);
+    };
+
+    currentAudio.addEventListener('canplay', onCanPlay);
+
+    return () => {
+      currentAudio.removeEventListener('canplay', onCanPlay);
+    };
+  }, [currentTrack, isLive, liveUrl, isPlaying]);
 
   return (
     <RadioContext.Provider value={{
@@ -247,13 +241,6 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       <audio
         ref={audioARef}
         preload="auto"
-        onLoadedMetadata={() => {
-          if (activePlayerRef.current === 'A' && pendingSeekRef.current !== null && audioARef.current) {
-            audioARef.current.currentTime = pendingSeekRef.current;
-            setProgress(pendingSeekRef.current);
-            pendingSeekRef.current = null; // On vide après application
-          }
-        }}
         onTimeUpdate={handleTimeUpdate}
         onEnded={isLive ? undefined : playNext}
         crossOrigin="anonymous"
@@ -262,13 +249,6 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       <audio
         ref={audioBRef}
         preload="auto"
-        onLoadedMetadata={() => {
-           if (activePlayerRef.current === 'B' && pendingSeekRef.current !== null && audioBRef.current) {
-            audioBRef.current.currentTime = pendingSeekRef.current;
-            setProgress(pendingSeekRef.current);
-            pendingSeekRef.current = null;
-          }
-        }}
         onTimeUpdate={() => {
           if (activePlayerRef.current === 'B') {
             setProgress(audioBRef.current?.currentTime || 0);

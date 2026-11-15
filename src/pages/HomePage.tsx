@@ -76,11 +76,30 @@ export const HomePage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const { data: tracksData } = await supabase.from('tracks').select('*').order('created_at', { ascending: false }).limit(30);
-        if (tracksData) setTracks(tracksData as ExtendedTrack[]);
-
-        const { data: profilesData } = await supabase.from('profiles').select('id, username, avatar_url').limit(12);
-        if (profilesData) setArtists(profilesData as Artist[]);
+        // ✅ ÉTAPE 1 : Récupérer uniquement les profils Premium
+        const { data: profilesData } = await supabase
+          .from('profiles')
+          .select('id, username, avatar_url')
+          .eq('is_premium', true) // On ne garde que les premium
+          .limit(12);
+          
+        if (profilesData) {
+          setArtists(profilesData as Artist[]);
+          
+          const premiumIds = profilesData.map(p => p.id);
+          
+          // ✅ ÉTAPE 2 : Récupérer les sons UNIQUEMENT de ces profils Premium
+          if (premiumIds.length > 0) {
+            const { data: tracksData } = await supabase
+              .from('tracks')
+              .select('*')
+              .in('user_id', premiumIds) // Filtre par les IDs des premiums
+              .order('created_at', { ascending: false })
+              .limit(30);
+              
+            if (tracksData) setTracks(tracksData as ExtendedTrack[]);
+          }
+        }
       } catch (err) {
         console.error('Erreur chargement:', err);
       } finally {

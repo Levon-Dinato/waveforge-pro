@@ -60,6 +60,7 @@ export const RadioLayout: React.FC = () => {
     border: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)', glass: isDark ? 'rgba(15,15,20,0.7)' : 'rgba(255,255,255,0.7)', card: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)',
   };
 
+  // ✅ EFFET 1 : Chargement des données
   useEffect(() => {
     if (!username) return;
 
@@ -146,7 +147,7 @@ export const RadioLayout: React.FC = () => {
       } catch (e) { 
         console.error(e); 
       } finally { 
-        if (isMounted) setLoading(false);
+        if (isMounted) setLoading(false); 
       }
     };
 
@@ -154,6 +155,7 @@ export const RadioLayout: React.FC = () => {
     return () => { isMounted = false; };
   }, [username, stopRadio]);
 
+  // ✅ EFFET 2 : WebSocket Chat
   useEffect(() => {
     if (!profile?.id) return;
     let isMounted = true;
@@ -184,6 +186,7 @@ export const RadioLayout: React.FC = () => {
     };
   }, [profile?.id, user?.id]);
 
+  // ✅ EFFET 3 : Wipe Transition
   useEffect(() => {
     setIsWiping(true);
     const timer = setTimeout(() => setIsWiping(false), 800);
@@ -285,6 +288,24 @@ export const RadioLayout: React.FC = () => {
   if (loading) return <div style={{ color: colors.textMain, background: colors.bg, height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Chargement...</div>;
   if (!profile) return <div style={{ color: colors.textMain, background: colors.bg, height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>DJ introuvable.</div>;
 
+  // ✅ NOUVEAU : BLOCAGE DE SÉCURITÉ SI LE DJ N'EST PAS PREMIUM
+  if (!profile.is_premium) {
+    return (
+      <div style={{ background: colors.bg, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, fontFamily: 'Inter, sans-serif' }}>
+        <div className="rp-glass" style={{ maxWidth: 500, padding: 40, textAlign: 'center', borderRadius: 24, border: `1px solid ${colors.border}` }}>
+          <div style={{ fontSize: 48, marginBottom: 20 }}>🔒</div>
+          <h1 style={{ fontSize: 24, fontWeight: 900, margin: '0 0 16px 0', color: colors.textMain }}>Radio désactivée</h1>
+          <p style={{ fontSize: 15, color: colors.textMuted, margin: '0 0 24px 0', lineHeight: 1.6 }}>
+            Ce DJ n'a pas activé son abonnement Premium. Sa radio n'est donc pas accessible pour le moment.
+          </p>
+          <button onClick={() => navigate('/auth')} className="rp-btn-3d" style={{ background: visualizerColor, color: iconColor, border: 'none', padding: '12px 24px', borderRadius: 12, fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>
+            Devenir Premium pour 30€/an
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   const coverImage = customLogo || profile.avatar_url || '';
   const totalLikes = topTracks.reduce((a, t) => a + (t.likes_count || 0), 0);
   const isOwner = user && user.id === profile.id;
@@ -362,7 +383,7 @@ export const RadioLayout: React.FC = () => {
         @keyframes slideWipeAnim { 0% { transform: translateX(100%); } 40% { transform: translateX(0); } 60% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
         @keyframes wipeLogoIn { 0% { opacity: 0; transform: scale(0.9); } 40% { opacity: 1; transform: scale(1); } 60% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(1.05); } }
         
-        /* ✅ EFFET WIPE INVERSÉ */
+        /* ✅ EFFET WIPE ADAPTÉ AU THÈME */
         .wipe-overlay { 
           position: fixed; inset: 0; z-index: 999999; 
           background: ${isDark ? '#111111' : '#ffffff'}; 

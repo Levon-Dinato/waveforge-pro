@@ -67,6 +67,17 @@ export const RadioLayout: React.FC = () => {
   const slogan = "Play the Beat. Feel the Sound. Live the Experience.";
   const shareText = `${slogan} - Écoute la radio de ${profile?.username || 'DropZone DJ'} !`;
 
+  // ✅ DÉSACTIVER LE CLIC DROIT (NOUVEAU)
+  useEffect(() => {
+    const handleContextMenu = (e: MouseEvent) => {
+      e.preventDefault();
+    };
+    document.addEventListener('contextmenu', handleContextMenu);
+    return () => {
+      document.removeEventListener('contextmenu', handleContextMenu);
+    };
+  }, []);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (shareMenuRef.current && !shareMenuRef.current.contains(event.target as Node)) {
@@ -77,7 +88,7 @@ export const RadioLayout: React.FC = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // ✅ EFFET 1 : Chargement des données
+  // ✅ EFFET 1 : Chargement des données et calcul de la playlist continue
   useEffect(() => {
     if (!username) return;
 
@@ -146,17 +157,13 @@ export const RadioLayout: React.FC = () => {
         if (musicTracks && musicTracks.length > 0) {
           const mixedTracks: any[] = [];
           let accumulatedTime = 0;
-          
-          // ✅ ON REMET LE VRAI RÉGLAGE (par défaut 30 min si non configuré)
           const intervalSeconds = (profileData.jingle_interval_minutes || 30) * 60; 
-          
           let nextJingleTime = intervalSeconds;
           let jingleIdx = 0;
 
           for (let i = 0; i < musicTracks.length; i++) {
             const track = musicTracks[i];
             mixedTracks.push(track);
-            // Si la durée est inconnue (0), on estime à 4 minutes (240s)
             accumulatedTime += (track.duration && track.duration > 0) ? track.duration : 240;
 
             if (accumulatedTime >= nextJingleTime && jingles && jingles.length > 0) {
@@ -170,8 +177,10 @@ export const RadioLayout: React.FC = () => {
           const elapsed = Math.floor((Date.now() - RADIO_EPOCH) / 1000);
           const durations = mixedTracks.map((t: any) => (t.duration && t.duration > 0) ? t.duration : 240);
           const total = durations.reduce((a: any, d: any) => a + d, 0);
+          
           let t = elapsed % total;
           let startIndex = 0;
+          
           for (let i = 0; i < mixedTracks.length; i++) {
             if (t < durations[i]) { startIndex = i; break; }
             t -= durations[i];
@@ -399,6 +408,8 @@ export const RadioLayout: React.FC = () => {
   };
   const progressPercent = duration > 0 ? (progress / duration) * 100 : 0;
 
+  const currentCover = currentTrack?.cover_url || nowPlaying?.cover_url || coverImage;
+
   return (
     <div style={{ background: colors.bg, minHeight: '100vh', color: colors.textMain, fontFamily: 'Inter, sans-serif', position: 'relative', display: 'flex', flexDirection: 'column', paddingBottom: 100 }}>
       <Helmet>
@@ -406,7 +417,7 @@ export const RadioLayout: React.FC = () => {
         <meta property="og:title" content={`Radio ${profile.username} — DropZone DJ`} />
         <meta property="og:description" content={slogan} />
         <meta name="twitter:description" content={slogan} />
-        <meta property="og:image" content={coverImage} />
+        <meta property="og:image" content={coverImage || 'https://via.placeholder.com/500'} />
       </Helmet>
 
       <style>{`
@@ -551,7 +562,13 @@ export const RadioLayout: React.FC = () => {
               </button>
 
               <Link to={`/radio/${username}`} style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none', color: colors.textMain }}>
-                <img src={coverImage || 'https://via.placeholder.com/100'} alt="Logo" style={{ width: 38, height: 38, borderRadius: '50%', objectFit: 'cover', border: `2px solid ${visualizerColor}`, boxShadow: `0 0 20px ${visualizerColor}50` }} />
+                {coverImage ? (
+                  <img src={coverImage} alt="Logo" style={{ width: 38, height: 38, borderRadius: '50%', objectFit: 'cover', border: `2px solid ${visualizerColor}`, boxShadow: `0 0 20px ${visualizerColor}50` }} />
+                ) : (
+                  <div style={{ width: 38, height: 38, borderRadius: '50%', background: visualizerColor, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 900, border: `2px solid ${visualizerColor}` }}>
+                    {profile.username.substring(0, 1).toUpperCase()}
+                  </div>
+                )}
                 <div>
                   <h1 style={{ fontSize: 16, fontWeight: 900, margin: 0, letterSpacing: '-0.3px' }}>{profile.username}</h1>
                   <p style={{ fontSize: 10, color: colors.textMuted, margin: 0, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>DropZone DJ · Radio</p>
@@ -663,7 +680,16 @@ export const RadioLayout: React.FC = () => {
 
           <div style={{ padding: '12px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 14, minWidth: 0, flex: 1 }}>
-              <div style={{ width: 42, height: 42, borderRadius: 10, background: `url(${currentTrack?.cover_url || nowPlaying?.cover_url || coverImage}) center/cover`, border: `1px solid ${colors.border}`, flexShrink: 0 }} />
+              
+              <div style={{ 
+                width: 42, height: 42, borderRadius: 10, 
+                background: currentCover ? `url(${currentCover}) center/cover` : `linear-gradient(135deg, ${visualizerColor}, #7c5cff)`, 
+                border: `1px solid ${colors.border}`, flexShrink: 0,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, color: '#fff'
+              }}>
+                {!currentCover && '🎵'}
+              </div>
+
               <div style={{ minWidth: 0, flex: 1 }}>
                 <div style={{ fontSize: 13, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{currentTrack?.title || nowPlaying?.title || 'En attente'} {isLive && <span style={{ fontSize: 9, background: '#ef4444', color: '#fff', padding: '2px 6px', borderRadius: 4 }}>LIVE</span>}</div>
                 <div style={{ fontSize: 11, color: colors.textMuted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{currentTrack?.artist || nowPlaying?.artist || 'DropZone Radio'}</div>

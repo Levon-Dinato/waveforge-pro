@@ -39,10 +39,9 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   
   // ✅ Paramètres du Crossfade
   const [crossfadeEnabled, setCrossfadeEnabled] = useState(false);
-  const [crossfadeDuration, setCrossfadeDuration] = useState(3); // en secondes
+  const [crossfadeDuration, setCrossfadeDuration] = useState(3);
   const isCrossfadingRef = useRef(false);
 
-  // ✅ Double lecteur audio pour le fondu
   const audioARef = useRef<HTMLAudioElement | null>(null);
   const audioBRef = useRef<HTMLAudioElement | null>(null);
   const activePlayerRef = useRef<'A' | 'B'>('A');
@@ -53,7 +52,6 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   const currentTrack = tracks[currentIndex];
 
-  // ✅ Fonction appelée par le RadioLayout pour injecter les réglages
   const updateRadioSettings = useCallback((enabled: boolean, dur: number) => {
     setCrossfadeEnabled(enabled);
     setCrossfadeDuration(dur);
@@ -113,20 +111,19 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }
   }, [isPlaying]);
 
-  // ✅ Fonction de transition avec Crossfade
   const transitionToTrack = useCallback((nextIndex: number) => {
     if (isLive || tracks.length === 0) return;
     
     const nextTrack = tracks[nextIndex];
     if (!nextTrack) return;
 
-    // ✅ CORRECTION : Si la piste suivante est un jingle, on ne fait JAMAIS de crossfade
-    if (!crossfadeEnabled || !isPlaying || nextTrack.is_jingle) {
+    // ✅ Si c'est un jingle ou si on quitte un jingle, on force le passage direct (sans crossfade)
+    if (!crossfadeEnabled || !isPlaying || nextTrack.is_jingle || currentTrack?.is_jingle) {
+      isCrossfadingRef.current = false;
       setCurrentIndex(nextIndex);
       return;
     }
 
-    // Déclenchement du fondu
     isCrossfadingRef.current = true;
     const currentAudio = activePlayerRef.current === 'A' ? audioARef.current : audioBRef.current;
     const nextAudio = activePlayerRef.current === 'A' ? audioBRef.current : audioARef.current;
@@ -136,12 +133,10 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       return;
     }
 
-    // Configuration de la piste suivante
     nextAudio.src = nextTrack.audio_url;
     nextAudio.volume = 0;
     nextAudio.play().catch(console.error);
 
-    // Animation du volume (Fade In / Fade Out)
     const startTime = performance.now();
     const durationMs = crossfadeDuration * 1000;
 
@@ -162,13 +157,12 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         
         activePlayerRef.current = activePlayerRef.current === 'A' ? 'B' : 'A';
         isCrossfadingRef.current = false;
-        
         setCurrentIndex(nextIndex);
       }
     };
     
     requestAnimationFrame(animateFade);
-  }, [crossfadeEnabled, crossfadeDuration, isLive, isPlaying, tracks]);
+  }, [crossfadeEnabled, crossfadeDuration, isLive, isPlaying, tracks, currentTrack?.is_jingle]);
 
   const playNext = useCallback(() => {
     if (isLive || tracks.length === 0) return;
@@ -201,7 +195,6 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     activePlayerRef.current = 'A';
   }, []);
 
-  // ✅ Déclencheur automatique de fin de piste
   const handleTimeUpdate = () => {
     const currentAudio = activePlayerRef.current === 'A' ? audioARef.current : audioBRef.current;
     if (!currentAudio) return;
@@ -209,7 +202,6 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     setProgress(currentAudio.currentTime);
     setDuration(currentAudio.duration || 0);
 
-    // ✅ CORRECTION : On ne déclenche le crossfade QUE si la piste actuelle n'est PAS un jingle
     if (crossfadeEnabled && !isCrossfadingRef.current && currentAudio.duration > 0 && !currentTrack?.is_jingle) {
       const timeLeft = currentAudio.duration - currentAudio.currentTime;
       if (timeLeft <= crossfadeDuration) {
@@ -219,21 +211,30 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }
   };
 
+  // ✅ CHANGEMENT DE SOURCE ULTRA-STABLE (Applique le pendingSeek au bon moment)
   useEffect(() => {
     const currentAudio = activePlayerRef.current === 'A' ? audioARef.current : audioBRef.current;
-    if (currentAudio && !isCrossfadingRef.current) {
-      if (isPlaying) {
-        currentAudio.play().catch((e) => {
-          if (e.name === 'NotAllowedError') {
-            setNeedsGesture(true);
-            setIsPlaying(false);
-          }
-        });
-      } else {
-        currentAudio.pause();
-      }
+    if (!currentAudio) return;
+
+    const desiredSrc = isLive ? liveUrl : (currentTrack?.audio_url || '');
+    
+    // On ne recharge que si la source a changé
+    if (currentAudio.src !== desiredSrc && desiredSrc !== '') {
+      currentAudio.src = desiredSrc;
+      currentAudio.load();
     }
-  }, [isPlaying, currentIndex, isLive, tracks, currentTrack?.audio_url]);
+
+    if (isPlaying) {
+      currentAudio.play().catch((e) => {
+        if (e.name === 'NotAllowedError') {
+          setNeedsGesture(true);
+          setIsPlaying(false);
+        }
+      });
+    } else {
+      currentAudio.pause();
+    }
+  }, [isPlaying, currentIndex, isLive, currentTrack?.audio_url, liveUrl]);
 
   return (
     <RadioContext.Provider value={{
@@ -243,16 +244,14 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }}>
       {children}
       
-      {/* ✅ PISTE A */}
       <audio
         ref={audioARef}
-        src={activePlayerRef.current === 'A' ? (isLive ? liveUrl : (currentTrack?.audio_url || '')) : undefined}
         preload="auto"
         onLoadedMetadata={() => {
           if (activePlayerRef.current === 'A' && pendingSeekRef.current !== null && audioARef.current) {
             audioARef.current.currentTime = pendingSeekRef.current;
             setProgress(pendingSeekRef.current);
-            pendingSeekRef.current = null;
+            pendingSeekRef.current = null; // On vide après application
           }
         }}
         onTimeUpdate={handleTimeUpdate}
@@ -260,10 +259,16 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         crossOrigin="anonymous"
       />
 
-      {/* ✅ PISTE B (Cachée, utilisée uniquement pour le crossfade) */}
       <audio
         ref={audioBRef}
         preload="auto"
+        onLoadedMetadata={() => {
+           if (activePlayerRef.current === 'B' && pendingSeekRef.current !== null && audioBRef.current) {
+            audioBRef.current.currentTime = pendingSeekRef.current;
+            setProgress(pendingSeekRef.current);
+            pendingSeekRef.current = null;
+          }
+        }}
         onTimeUpdate={() => {
           if (activePlayerRef.current === 'B') {
             setProgress(audioBRef.current?.currentTime || 0);

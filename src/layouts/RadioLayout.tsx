@@ -203,7 +203,7 @@ export const RadioLayout: React.FC = () => {
 
   const showToastMsg = (msg: string) => { setToastMsg(msg); setShowToast(true); setTimeout(() => setShowToast(false), 3000); };
 
-  // ✅ NOUVELLE FONCTION DE PARTAGE AVEC L'IMAGE
+  // ✅ FONCTION DE PARTAGE COMPLÈTE (MOBILE + PC)
   const handleShare = async () => {
     const shareData: ShareData = {
       title: `Radio ${profile?.username} — DropZone DJ`,
@@ -212,14 +212,16 @@ export const RadioLayout: React.FC = () => {
     };
 
     try {
-      // On essaie de récupérer l'image dans le dossier public
-      const response = await fetch('/dropzone-share.png');
-      if (!response.ok) throw new Error('Image non trouvée');
+      // On récupère l'image depuis le dossier public
+      const imageUrl = `${window.location.origin}/dropzone-share.png`;
+      const response = await fetch(imageUrl);
+      
+      if (!response.ok) throw new Error("Image introuvable");
       
       const blob = await response.blob();
       const file = new File([blob], 'dropzone-share.png', { type: blob.type });
 
-      // Si le navigateur supporte le partage de fichiers (mobile)
+      // Test si le navigateur supporte le partage de fichiers (Généralement Mobile)
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         shareData.files = [file];
         await navigator.share(shareData);
@@ -228,19 +230,19 @@ export const RadioLayout: React.FC = () => {
         await navigator.clipboard.writeText(window.location.href);
         
         const link = document.createElement('a');
-        link.href = '/dropzone-share.png';
-        link.download = 'dropzone-radio.png';
+        link.href = imageUrl;
+        link.download = 'DropZone-Radio.png';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
 
-        showToastMsg("Lien copié & Image téléchargée ! ✅");
+        alert("Ton navigateur PC ne permet pas le partage direct. Le lien de la radio a été copié et l'image a été téléchargée ! ✅");
       }
     } catch (err) {
       console.error("Erreur de partage:", err);
-      // Fallback basique
-      navigator.clipboard.writeText(window.location.href);
-      showToastMsg("Lien de la radio copié ! ✅");
+      // Si l'image plante, on copie juste le lien
+      await navigator.clipboard.writeText(window.location.href);
+      alert("Lien de la radio copié ! (L'image de partage n'a pas pu être chargée).");
     }
   };
 

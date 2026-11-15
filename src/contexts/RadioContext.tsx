@@ -26,8 +26,6 @@ export interface RadioContextType {
 
 const RadioContext = createContext<RadioContextType | undefined>(undefined);
 
-const SYNC_KEY = 'dropzone_radio_sync_state';
-
 export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [tracks, setTracks] = useState<any[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -50,54 +48,8 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const pendingSeekRef = useRef<number | null>(null);
   const isActiveRef = useRef(false); 
   const { stop: stopMainPlayer } = usePlayer();
-  
-  // Ref pour éviter de déclencher des boucles infinies
-  const stateRef = useRef({ isPlaying, currentIndex, progress, isRadioActive });
-  useEffect(() => {
-    stateRef.current = { isPlaying, currentIndex, progress, isRadioActive };
-  }, [isPlaying, currentIndex, progress, isRadioActive]);
 
   const currentTrack = tracks[currentIndex];
-
-  // ✅ SYNCHRONISATION ENTRE LES ONGLETS VIA LOCALSTORAGE
-  useEffect(() => {
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === SYNC_KEY && e.newValue) {
-        try {
-          const data = JSON.parse(e.newValue);
-          // On applique les changements uniquement si l'état a bougé
-          if (data.isPlaying !== undefined && data.isPlaying !== stateRef.current.isPlaying) {
-            setIsPlaying(data.isPlaying);
-          }
-          if (data.currentIndex !== undefined && data.currentIndex !== stateRef.current.currentIndex) {
-            setCurrentIndex(data.currentIndex);
-          }
-          
-          // On recale le temps seulement si le décalage est supérieur à 3 secondes
-          const currentAudio = activePlayerRef.current === 'A' ? audioARef.current : audioBRef.current;
-          if (currentAudio && data.progress !== undefined && Math.abs(currentAudio.currentTime - data.progress) > 3) {
-            currentAudio.currentTime = data.progress;
-            setProgress(data.progress);
-          }
-        } catch (err) {}
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
-
-  // Fonction pour partager l'état
-  const syncStateToOtherTabs = useCallback((force = false) => {
-    if (!isRadioActive) return;
-    const data = {
-      isPlaying: stateRef.current.isPlaying,
-      currentIndex: stateRef.current.currentIndex,
-      progress: stateRef.current.progress,
-      timestamp: Date.now()
-    };
-    localStorage.setItem(SYNC_KEY, JSON.stringify(data));
-  }, [isRadioActive]);
 
   const updateRadioSettings = useCallback((enabled: boolean, dur: number) => {
     setCrossfadeEnabled(enabled);
@@ -124,18 +76,14 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     } else {
       pendingSeekRef.current = 0;
     }
-
-    // Partager l'état initial
-    setTimeout(() => syncStateToOtherTabs(true), 1000);
-  }, [stopMainPlayer, syncStateToOtherTabs]);
+  }, [stopMainPlayer]);
 
   const unlockAudio = useCallback(() => {
     setNeedsGesture(false);
     setIsPlaying(true);
     const currentAudio = activePlayerRef.current === 'A' ? audioARef.current : audioBRef.current;
     if (currentAudio) currentAudio.play().catch(() => setNeedsGesture(true));
-    syncStateToOtherTabs(true);
-  }, [syncStateToOtherTabs]);
+  }, []);
 
   const togglePlay = useCallback(() => {
     const currentAudio = activePlayerRef.current === 'A' ? audioARef.current : audioBRef.current;
@@ -150,19 +98,17 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       setNeedsGesture(false);
       currentAudio.play().catch(() => setNeedsGesture(true));
     }
-    syncStateToOtherTabs(true);
-  }, [isPlaying, syncStateToOtherTabs]);
+  }, [isPlaying]);
 
   const transitionToTrack = useCallback((nextIndex: number) => {
     if (isLive || tracks.length === 0) return;
     const nextTrack = tracks[nextIndex];
     if (!nextTrack) return;
 
-    // ✅ GESTION DES JINGLES : On passe direct sans fondu
+    // ✅ Si c'est un jingle ou qu'on vient d'un jingle, passage direct (pas de crossfade)
     if (!crossfadeEnabled || !isPlaying || nextTrack.is_jingle || currentTrack?.is_jingle) {
       isCrossfadingRef.current = false;
       setCurrentIndex(nextIndex);
-      syncStateToOtherTabs(true);
       return;
     }
 
@@ -195,11 +141,10 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         activePlayerRef.current = activePlayerRef.current === 'A' ? 'B' : 'A';
         isCrossfadingRef.current = false;
         setCurrentIndex(nextIndex);
-        syncStateToOtherTabs(true);
       }
     };
     requestAnimationFrame(animateFade);
-  }, [crossfadeEnabled, crossfadeDuration, isLive, isPlaying, tracks, currentTrack?.is_jingle, syncStateToOtherTabs]);
+  }, [crossfadeEnabled, crossfadeDuration, isLive, isPlaying, tracks, currentTrack?.is_jingle]);
 
   const playNext = useCallback(() => {
     if (isLive || tracks.length === 0) return;
@@ -218,9 +163,8 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     if (currentAudio && !isLive) {
       currentAudio.currentTime = time;
       setProgress(time);
-      syncStateToOtherTabs(true);
     }
-  }, [isLive, syncStateToOtherTabs]);
+  }, [isLive]);
 
   const stopRadio = useCallback(() => {
     isActiveRef.current = false;
@@ -231,18 +175,7 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     if (audioARef.current) { audioARef.current.pause(); audioARef.current.currentTime = 0; }
     if (audioBRef.current) { audioBRef.current.pause(); audioBRef.current.currentTime = 0; }
     activePlayerRef.current = 'A';
-    localStorage.removeItem(SYNC_KEY);
   }, []);
-
-  // Envoi régulier de l'état (toutes les 4 secondes) pour garder la synchro
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (stateRef.current.isPlaying && stateRef.current.isRadioActive) {
-        syncStateToOtherTabs();
-      }
-    }, 4000);
-    return () => clearInterval(interval);
-  }, [syncStateToOtherTabs]);
 
   const handleTimeUpdate = () => {
     const currentAudio = activePlayerRef.current === 'A' ? audioARef.current : audioBRef.current;

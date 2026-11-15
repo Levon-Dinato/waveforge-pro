@@ -49,13 +49,18 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const isActiveRef = useRef(false); 
   const { stop: stopMainPlayer } = usePlayer();
 
-  // ✅ SYNCHRONISATION ENTRE LES FENÊTRES
+  // ✅ Ref pour la synchronisation sans déclencher de re-render
+  const syncStateRef = useRef({ isPlaying, currentIndex, progress });
+  useEffect(() => {
+    syncStateRef.current = { isPlaying, currentIndex, progress };
+  }, [isPlaying, currentIndex, progress]);
+
   const broadcastChannel = useRef<BroadcastChannel | null>(null);
   const isReceivingSync = useRef(false);
 
   const currentTrack = tracks[currentIndex];
 
-  // Initialisation du canal de communication
+  // ✅ INITIALISATION DU CANAL UNE SEULE FOIS (Correction du crash)
   useEffect(() => {
     broadcastChannel.current = new BroadcastChannel('dropzone_radio_sync');
     
@@ -64,13 +69,15 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       if (data.type === 'SYNC_STATE' && !isReceivingSync.current) {
         isReceivingSync.current = true;
         
-        // Mise à jour de l'état local sans déclencher un nouvel envoi
-        if (data.isPlaying !== isPlaying) setIsPlaying(data.isPlaying);
-        if (data.currentIndex !== currentIndex) setCurrentIndex(data.currentIndex);
+        if (data.isPlaying !== undefined && data.isPlaying !== syncStateRef.current.isPlaying) {
+          setIsPlaying(data.isPlaying);
+        }
+        if (data.currentIndex !== undefined && data.currentIndex !== syncStateRef.current.currentIndex) {
+          setCurrentIndex(data.currentIndex);
+        }
         
-        // Synchronisation du temps (si le décalage est supérieur à 2 secondes)
         const currentAudio = activePlayerRef.current === 'A' ? audioARef.current : audioBRef.current;
-        if (currentAudio && Math.abs(currentAudio.currentTime - data.progress) > 2) {
+        if (currentAudio && data.progress !== undefined && Math.abs(currentAudio.currentTime - data.progress) > 2) {
           currentAudio.currentTime = data.progress;
           setProgress(data.progress);
         }
@@ -82,18 +89,18 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     return () => {
       broadcastChannel.current?.close();
     };
-  }, [isPlaying, currentIndex, progress]);
+  }, []); // Dépendances vides = initialisation unique
 
-  // Fonction pour envoyer l'état aux autres fenêtres
   const broadcastState = useCallback((state: { isPlaying?: boolean, currentIndex?: number, progress?: number }) => {
-    if (isReceivingSync.current) return; // On n'envoie pas si on vient de recevoir
-    broadcastChannel.current?.postMessage({
+    if (isReceivingSync.current || !broadcastChannel.current) return;
+    
+    broadcastChannel.current.postMessage({
       type: 'SYNC_STATE',
-      isPlaying: state.isPlaying !== undefined ? state.isPlaying : isPlaying,
-      currentIndex: state.currentIndex !== undefined ? state.currentIndex : currentIndex,
-      progress: state.progress !== undefined ? state.progress : progress
+      isPlaying: state.isPlaying !== undefined ? state.isPlaying : syncStateRef.current.isPlaying,
+      currentIndex: state.currentIndex !== undefined ? state.currentIndex : syncStateRef.current.currentIndex,
+      progress: state.progress !== undefined ? state.progress : syncStateRef.current.progress
     });
-  }, [isPlaying, currentIndex, progress]);
+  }, []);
 
   const updateRadioSettings = useCallback((enabled: boolean, dur: number) => {
     setCrossfadeEnabled(enabled);
@@ -121,7 +128,6 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       pendingSeekRef.current = 0;
     }
 
-    // On informe l'autre fenêtre qu'on a démarré
     setTimeout(() => broadcastState({ isPlaying: true, currentIndex: startIndex, progress: startTime || 0 }), 500);
   }, [stopMainPlayer, broadcastState]);
 
@@ -146,8 +152,6 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       setNeedsGesture(false);
       currentAudio.play().catch(() => setNeedsGesture(true));
     }
-    
-    // On informe l'autre fenêtre
     broadcastState({ isPlaying: newPlayingState });
   }, [isPlaying, broadcastState]);
 
@@ -156,6 +160,7 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const nextTrack = tracks[nextIndex];
     if (!nextTrack) return;
 
+    // Si c'est un jingle ou qu'on vient d'un jingle, on force le passage direct
     if (!crossfadeEnabled || !isPlaying || nextTrack.is_jingle || currentTrack?.is_jingle) {
       isCrossfadingRef.current = false;
       setCurrentIndex(nextIndex);
@@ -231,15 +236,15 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     broadcastState({ isPlaying: false });
   }, [broadcastState]);
 
-  // Envoi régulier de l'état (toutes les 3 secondes) pour garder la synchro
+  // Envoi régulier du temps (toutes les 3s) - Utilise syncStateRef pour ne pas boucler
   useEffect(() => {
     const interval = setInterval(() => {
-      if (isPlaying && isRadioActive) {
-        broadcastState({ progress });
+      if (syncStateRef.current.isPlaying && isRadioActive) {
+        broadcastState({ progress: syncStateRef.current.progress });
       }
     }, 3000);
     return () => clearInterval(interval);
-  }, [isPlaying, isRadioActive, progress, broadcastState]);
+  }, [isRadioActive, broadcastState]);
 
   const handleTimeUpdate = () => {
     const currentAudio = activePlayerRef.current === 'A' ? audioARef.current : audioBRef.current;

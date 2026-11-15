@@ -37,7 +37,6 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [isRadioActive, setIsRadioActive] = useState(false);
   const [needsGesture, setNeedsGesture] = useState(false);
   
-  // ✅ Paramètres du Crossfade
   const [crossfadeEnabled, setCrossfadeEnabled] = useState(false);
   const [crossfadeDuration, setCrossfadeDuration] = useState(3);
   const isCrossfadingRef = useRef(false);
@@ -50,7 +49,51 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const isActiveRef = useRef(false); 
   const { stop: stopMainPlayer } = usePlayer();
 
+  // ✅ SYNCHRONISATION ENTRE LES FENÊTRES
+  const broadcastChannel = useRef<BroadcastChannel | null>(null);
+  const isReceivingSync = useRef(false);
+
   const currentTrack = tracks[currentIndex];
+
+  // Initialisation du canal de communication
+  useEffect(() => {
+    broadcastChannel.current = new BroadcastChannel('dropzone_radio_sync');
+    
+    broadcastChannel.current.onmessage = (event) => {
+      const data = event.data;
+      if (data.type === 'SYNC_STATE' && !isReceivingSync.current) {
+        isReceivingSync.current = true;
+        
+        // Mise à jour de l'état local sans déclencher un nouvel envoi
+        if (data.isPlaying !== isPlaying) setIsPlaying(data.isPlaying);
+        if (data.currentIndex !== currentIndex) setCurrentIndex(data.currentIndex);
+        
+        // Synchronisation du temps (si le décalage est supérieur à 2 secondes)
+        const currentAudio = activePlayerRef.current === 'A' ? audioARef.current : audioBRef.current;
+        if (currentAudio && Math.abs(currentAudio.currentTime - data.progress) > 2) {
+          currentAudio.currentTime = data.progress;
+          setProgress(data.progress);
+        }
+        
+        setTimeout(() => { isReceivingSync.current = false; }, 100);
+      }
+    };
+
+    return () => {
+      broadcastChannel.current?.close();
+    };
+  }, [isPlaying, currentIndex, progress]);
+
+  // Fonction pour envoyer l'état aux autres fenêtres
+  const broadcastState = useCallback((state: { isPlaying?: boolean, currentIndex?: number, progress?: number }) => {
+    if (isReceivingSync.current) return; // On n'envoie pas si on vient de recevoir
+    broadcastChannel.current?.postMessage({
+      type: 'SYNC_STATE',
+      isPlaying: state.isPlaying !== undefined ? state.isPlaying : isPlaying,
+      currentIndex: state.currentIndex !== undefined ? state.currentIndex : currentIndex,
+      progress: state.progress !== undefined ? state.progress : progress
+    });
+  }, [isPlaying, currentIndex, progress]);
 
   const updateRadioSettings = useCallback((enabled: boolean, dur: number) => {
     setCrossfadeEnabled(enabled);
@@ -58,7 +101,7 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   }, []);
 
   const startRadio = useCallback((newTracks: any[], live: boolean, url: string, startIndex: number = 0, startTime?: number) => {
-    if (isActiveRef.current) return; // Protection contre les doubles appels
+    if (isActiveRef.current) return;
 
     isActiveRef.current = true;
     stopMainPlayer();
@@ -72,43 +115,51 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     setNeedsGesture(false);
     isCrossfadingRef.current = false;
     
-    // On stocke le temps cible pour l'appliquer une fois le fichier chargé
     if (startTime !== undefined && startTime > 0) {
       pendingSeekRef.current = startTime;
     } else {
       pendingSeekRef.current = 0;
     }
-  }, [stopMainPlayer]);
+
+    // On informe l'autre fenêtre qu'on a démarré
+    setTimeout(() => broadcastState({ isPlaying: true, currentIndex: startIndex, progress: startTime || 0 }), 500);
+  }, [stopMainPlayer, broadcastState]);
 
   const unlockAudio = useCallback(() => {
     setNeedsGesture(false);
     setIsPlaying(true);
     const currentAudio = activePlayerRef.current === 'A' ? audioARef.current : audioBRef.current;
     if (currentAudio) currentAudio.play().catch(() => setNeedsGesture(true));
-  }, []);
+    broadcastState({ isPlaying: true });
+  }, [broadcastState]);
 
   const togglePlay = useCallback(() => {
     const currentAudio = activePlayerRef.current === 'A' ? audioARef.current : audioBRef.current;
     if (!currentAudio) return;
-    if (isPlaying) {
+    
+    const newPlayingState = !isPlaying;
+    setIsPlaying(newPlayingState);
+    
+    if (!newPlayingState) {
       currentAudio.pause();
-      setIsPlaying(false);
     } else {
-      setIsPlaying(true);
       setNeedsGesture(false);
       currentAudio.play().catch(() => setNeedsGesture(true));
     }
-  }, [isPlaying]);
+    
+    // On informe l'autre fenêtre
+    broadcastState({ isPlaying: newPlayingState });
+  }, [isPlaying, broadcastState]);
 
   const transitionToTrack = useCallback((nextIndex: number) => {
     if (isLive || tracks.length === 0) return;
     const nextTrack = tracks[nextIndex];
     if (!nextTrack) return;
 
-    // ✅ Si c'est un jingle, PAS de crossfade (passage brutal)
     if (!crossfadeEnabled || !isPlaying || nextTrack.is_jingle || currentTrack?.is_jingle) {
       isCrossfadingRef.current = false;
       setCurrentIndex(nextIndex);
+      broadcastState({ currentIndex: nextIndex, progress: 0 });
       return;
     }
 
@@ -141,10 +192,11 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         activePlayerRef.current = activePlayerRef.current === 'A' ? 'B' : 'A';
         isCrossfadingRef.current = false;
         setCurrentIndex(nextIndex);
+        broadcastState({ currentIndex: nextIndex, progress: 0 });
       }
     };
     requestAnimationFrame(animateFade);
-  }, [crossfadeEnabled, crossfadeDuration, isLive, isPlaying, tracks, currentTrack?.is_jingle]);
+  }, [crossfadeEnabled, crossfadeDuration, isLive, isPlaying, tracks, currentTrack?.is_jingle, broadcastState]);
 
   const playNext = useCallback(() => {
     if (isLive || tracks.length === 0) return;
@@ -163,8 +215,9 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     if (currentAudio && !isLive) {
       currentAudio.currentTime = time;
       setProgress(time);
+      broadcastState({ progress: time });
     }
-  }, [isLive]);
+  }, [isLive, broadcastState]);
 
   const stopRadio = useCallback(() => {
     isActiveRef.current = false;
@@ -175,7 +228,18 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     if (audioARef.current) { audioARef.current.pause(); audioARef.current.currentTime = 0; }
     if (audioBRef.current) { audioBRef.current.pause(); audioBRef.current.currentTime = 0; }
     activePlayerRef.current = 'A';
-  }, []);
+    broadcastState({ isPlaying: false });
+  }, [broadcastState]);
+
+  // Envoi régulier de l'état (toutes les 3 secondes) pour garder la synchro
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (isPlaying && isRadioActive) {
+        broadcastState({ progress });
+      }
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [isPlaying, isRadioActive, progress, broadcastState]);
 
   const handleTimeUpdate = () => {
     const currentAudio = activePlayerRef.current === 'A' ? audioARef.current : audioBRef.current;
@@ -192,7 +256,6 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }
   };
 
-  // ✅ GESTION DU CHARGEMENT ET DU SAUT TEMPOREL (LE PLUS IMPORTANT)
   useEffect(() => {
     const currentAudio = activePlayerRef.current === 'A' ? audioARef.current : audioBRef.current;
     if (!currentAudio || !currentTrack) return;
@@ -205,7 +268,6 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       currentAudio.load();
     }
 
-    // On attend que le fichier soit prêt pour appliquer le seek
     const onCanPlay = () => {
       if (pendingSeekRef.current !== null && pendingSeekRef.current > 0) {
         currentAudio.currentTime = pendingSeekRef.current;
@@ -238,28 +300,8 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }}>
       {children}
       
-      <audio
-        ref={audioARef}
-        preload="auto"
-        onTimeUpdate={handleTimeUpdate}
-        onEnded={isLive ? undefined : playNext}
-        crossOrigin="anonymous"
-      />
-
-      <audio
-        ref={audioBRef}
-        preload="auto"
-        onTimeUpdate={() => {
-          if (activePlayerRef.current === 'B') {
-            setProgress(audioBRef.current?.currentTime || 0);
-            setDuration(audioBRef.current?.duration || 0);
-          }
-        }}
-        onEnded={() => {
-          if (activePlayerRef.current === 'B') playNext();
-        }}
-        crossOrigin="anonymous"
-      />
+      <audio ref={audioARef} preload="auto" onTimeUpdate={handleTimeUpdate} onEnded={isLive ? undefined : playNext} crossOrigin="anonymous" />
+      <audio ref={audioBRef} preload="auto" onTimeUpdate={() => { if (activePlayerRef.current === 'B') { setProgress(audioBRef.current?.currentTime || 0); setDuration(audioBRef.current?.duration || 0); } }} onEnded={() => { if (activePlayerRef.current === 'B') playNext(); }} crossOrigin="anonymous" />
     </RadioContext.Provider>
   );
 };

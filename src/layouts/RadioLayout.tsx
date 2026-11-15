@@ -11,7 +11,7 @@ import { useRadio } from '../contexts/RadioContext';
 
 export const RadioLayout: React.FC = () => {
   const { username } = useParams<{ username: string }>();
-  const isMobile = useIsMobile(768);
+  const isMobile = useIsMobile(768); // ✅ Hook de détection mobile
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   const { user } = useAuth();
@@ -210,7 +210,10 @@ export const RadioLayout: React.FC = () => {
           setSchedules(schedulesData);
           const now = new Date();
           const ct = now.toTimeString().split(' ')[0];
-          const cd = now.getDay() === 0 ? '7' : now.getDay().toString();
+          
+          // ✅ CORRECTION ICI : Retrait des guillemets autour du 0
+          const cd = now.getDay() === 0 ? '7' : now.getDay().toString(); 
+          
           const active = schedulesData.find((s: any) => s.start_time <= ct && s.end_time >= ct && (s.days?.length === 0 || s.days?.includes(cd)));
           if (active) setActiveSchedule(active.title);
         }
@@ -273,12 +276,13 @@ export const RadioLayout: React.FC = () => {
     setShowShareMenu(false);
   };
 
-  // ✅ CORRECTION ICI : ON NE COUPE PLUS LA MUSIQUE
   const handleOpenPlayer = () => {
-    const isMobileDevice = /Mobi|Android/i.test(navigator.userAgent);
     const url = `/player/${username}`;
-    if (isMobileDevice) navigate(url);
-    else window.open(url, 'RadioPlayer', 'width=420,height=700,scrollbars=no,resizable=yes,status=no,location=no,toolbar=no,menubar=no');
+    if (isMobile) {
+      navigate(url);
+    } else {
+      window.open(url, 'RadioPlayer', 'width=420,height=700,scrollbars=no,resizable=yes,status=no,location=no,toolbar=no,menubar=no');
+    }
   };
 
   const handlePlayRadio = () => {

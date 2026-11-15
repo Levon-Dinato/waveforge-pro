@@ -7,33 +7,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { RadioPlayer } from '../components/RadioPlayer';
 import { useTheme } from '../contexts/ThemeContext';
 
-// ✅ Calcul avec gestion des jingles (15s par défaut)
-const calculateRadioState = (tracks: any[]) => {
-  if (!tracks || tracks.length === 0) return { index: 0, timeInSeconds: 0 };
-  const RADIO_EPOCH = new Date('2024-01-01T00:00:00Z').getTime();
-  const now = Date.now();
-  const elapsedSeconds = Math.floor((now - RADIO_EPOCH) / 1000);
-  
-  const durations = tracks.map(t => {
-    if (t.duration && t.duration > 0) return t.duration;
-    return t.is_jingle ? 15 : 240;
-  });
-  
-  const totalDuration = durations.reduce((acc, d) => acc + d, 0);
-  let timeToPlay = elapsedSeconds % totalDuration;
-  let index = 0;
-  let timeInSeconds = 0;
-  
-  for (let i = 0; i < tracks.length; i++) {
-    if (timeToPlay < durations[i]) { index = i; timeInSeconds = timeToPlay; break; }
-    timeToPlay -= durations[i];
-  }
-  return { index, timeInSeconds };
-};
-
 export const PlayerPage: React.FC = () => {
   const { username } = useParams<{ username: string }>();
-  // ✅ On récupère isRadioActive pour ne pas écraser la playlist si elle tourne déjà
   const { startRadio, currentTrack, needsGesture, unlockAudio, isRadioActive } = useRadio();
   const { theme } = useTheme();
   const { user } = useAuth();
@@ -107,8 +82,19 @@ export const PlayerPage: React.FC = () => {
             }
           }
 
-          const { index, timeInSeconds } = calculateRadioState(mixedTracks);
-          startRadio(mixedTracks, data.is_live || false, data.live_url || '', index, timeInSeconds);
+          const RADIO_EPOCH = new Date('2024-01-01T00:00:00Z').getTime();
+          const elapsed = Math.floor((Date.now() - RADIO_EPOCH) / 1000);
+          const durations = mixedTracks.map((t: any) => (t.duration && t.duration > 0) ? t.duration : (t.is_jingle ? 15 : 240));
+          const total = durations.reduce((a: any, d: any) => a + d, 0);
+          
+          let t = elapsed % total;
+          let startIndex = 0;
+          for (let i = 0; i < mixedTracks.length; i++) {
+            if (t < durations[i]) { startIndex = i; break; }
+            t -= durations[i];
+          }
+
+          startRadio(mixedTracks, data.is_live || false, data.live_url || '', startIndex, t);
         }
       }
 
@@ -138,7 +124,6 @@ export const PlayerPage: React.FC = () => {
     return () => { 
       isMounted = false; 
       if (channel) { channel.unsubscribe(); supabase.removeChannel(channel); }
-      // ✅ ON SUPPRIME LE stopRadio() ICI pour ne pas couper la radio du site quand on ferme le popup
     };
   }, [username, isRadioActive, startRadio, user]);
 
@@ -182,6 +167,15 @@ export const PlayerPage: React.FC = () => {
   const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
   const iconColor = yiq >= 128 ? '#000000' : '#ffffff';
 
+  // ✅ CORRECTION DU BOUTON FERMER
+  const handleClose = () => {
+    if (window.opener) {
+      window.close(); // Ferme le popup PC
+    } else {
+      navigate(-1); // Retourne à la page précédente sur mobile
+    }
+  };
+
   if (loading) return <div style={{ background: isDark ? '#05050a' : '#f5f5f7', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: isDark ? '#fff' : '#000' }}>Chargement...</div>;
 
   return (
@@ -194,7 +188,8 @@ export const PlayerPage: React.FC = () => {
         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)' }} />
       </div>
 
-      <button onClick={() => window.close()} style={{ position: 'absolute', top: 12, right: 12, background: 'rgba(0,0,0,0.4)', border: `1px solid rgba(255,255,255,0.2)`, borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', cursor: 'pointer', zIndex: 100, backdropFilter: 'blur(10px)' }}>✕</button>
+      {/* ✅ BOUTON FERMER CORRIGÉ */}
+      <button onClick={handleClose} style={{ position: 'absolute', top: 12, right: 12, background: 'rgba(0,0,0,0.4)', border: `1px solid rgba(255,255,255,0.2)`, borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', cursor: 'pointer', zIndex: 100, backdropFilter: 'blur(10px)' }}>✕</button>
 
       <div style={{ textAlign: 'center', marginBottom: 10, zIndex: 1 }}>
         <h2 style={{ color: '#fff', margin: 0, fontSize: 18, fontWeight: 900, textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>

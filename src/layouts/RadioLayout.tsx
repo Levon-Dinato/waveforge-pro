@@ -146,13 +146,17 @@ export const RadioLayout: React.FC = () => {
         if (musicTracks && musicTracks.length > 0) {
           const mixedTracks: any[] = [];
           let accumulatedTime = 0;
+          
+          // ✅ ON REMET LE VRAI RÉGLAGE (par défaut 30 min si non configuré)
           const intervalSeconds = (profileData.jingle_interval_minutes || 30) * 60; 
+          
           let nextJingleTime = intervalSeconds;
           let jingleIdx = 0;
 
           for (let i = 0; i < musicTracks.length; i++) {
             const track = musicTracks[i];
             mixedTracks.push(track);
+            // Si la durée est inconnue (0), on estime à 4 minutes (240s)
             accumulatedTime += (track.duration && track.duration > 0) ? track.duration : 240;
 
             if (accumulatedTime >= nextJingleTime && jingles && jingles.length > 0) {
@@ -161,9 +165,6 @@ export const RadioLayout: React.FC = () => {
               nextJingleTime += intervalSeconds;
             }
           }
-
-          // ✅ LOG DE SÉCURITÉ POUR VOIR LA PLAYLIST DANS LA CONSOLE
-          console.log("Playlist générée (Musiques + Jingles) :", mixedTracks);
 
           const RADIO_EPOCH = new Date('2024-01-01T00:00:00Z').getTime();
           const elapsed = Math.floor((Date.now() - RADIO_EPOCH) / 1000);

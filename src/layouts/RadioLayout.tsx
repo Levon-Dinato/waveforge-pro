@@ -140,7 +140,6 @@ export const RadioLayout: React.FC = () => {
           if (isMounted) setUserProfile(myProfile);
         }
 
-        // Charger les musiques
         const { data: musicTracks } = await supabase
           .from('tracks')
           .select('*')
@@ -149,7 +148,6 @@ export const RadioLayout: React.FC = () => {
           .eq('is_jingle', false)
           .order('created_at', { ascending: true });
 
-        // Charger les jingles
         const { data: jingles } = await supabase
           .from('tracks')
           .select('*')
@@ -168,7 +166,6 @@ export const RadioLayout: React.FC = () => {
             const track = musicTracks[i];
             mixedTracks.push(track);
             
-            // ✅ CORRECTION CRUCIALE : 15s par défaut pour un jingle, 240s pour une musique
             const defaultDuration = track.is_jingle ? 15 : 240;
             accumulatedTime += (track.duration && track.duration > 0) ? track.duration : defaultDuration;
 
@@ -179,7 +176,6 @@ export const RadioLayout: React.FC = () => {
             }
           }
 
-          // Calcul du temps pour reprendre la radio au bon endroit
           const RADIO_EPOCH = new Date('2024-01-01T00:00:00Z').getTime();
           const elapsed = Math.floor((Date.now() - RADIO_EPOCH) / 1000);
           
@@ -277,8 +273,8 @@ export const RadioLayout: React.FC = () => {
     setShowShareMenu(false);
   };
 
+  // ✅ CORRECTION ICI : ON NE COUPE PLUS LA MUSIQUE
   const handleOpenPlayer = () => {
-    if (isPlaying) togglePlay(); 
     const isMobileDevice = /Mobi|Android/i.test(navigator.userAgent);
     const url = `/player/${username}`;
     if (isMobileDevice) navigate(url);

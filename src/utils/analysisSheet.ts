@@ -1,6 +1,15 @@
 // src/utils/analysisSheet.ts
 
-import type { AnalysisResult } from './djAnalyzer';
+// Le module ./djAnalyzer n'existe pas encore. On déclare le type localement
+// pour que ce module d'export reste compilable (utilisé par le futur DJ Analyzer).
+interface AnalysisResult {
+  bpm: number;
+  key: string;
+  camelot: string;
+  duration: number;
+  vocalSections: { start: number; end: number }[];
+  autoCues: { name: string; position: number; color: string }[];
+}
 
 // ============================================================
 // TEXTE FORMATÉ À COPIER

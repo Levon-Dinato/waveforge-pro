@@ -57,6 +57,10 @@ const SmartLinkPage = lazy(() => import('./pages/SmartLinkPage').then((m) => ({ 
 const MyPlaylistsPage = lazy(() => import('./pages/MyPlaylistsPage').then((m) => ({ default: m.MyPlaylistsPage })));
 const DiscoverPage = lazy(() => import('./pages/DiscoverPage').then((m) => ({ default: m.DiscoverPage })));
 const ChartsPage = lazy(() => import('./pages/ChartsPage').then((m) => ({ default: m.ChartsPage })));
+const MentionsLegalesPage = lazy(() => import('./pages/MentionsLegalesPage').then((m) => ({ default: m.MentionsLegalesPage })));
+const CGUPage = lazy(() => import('./pages/CGUPage').then((m) => ({ default: m.CGUPage })));
+const ConfidentialitePage = lazy(() => import('./pages/ConfidentialitePage').then((m) => ({ default: m.ConfidentialitePage })));
+const ContactPage = lazy(() => import('./pages/ContactPage').then((m) => ({ default: m.ContactPage })));
 
 const RadiosPage = lazy(() => import('./pages/RadioListPage').then((m) => ({ default: m.RadioListPage })));
 
@@ -103,6 +107,11 @@ function AnimatedRoutes() {
           <Route path="genres" element={<PageTransition><GenresPage /></PageTransition>} />
           <Route path="artists" element={<PageTransition><ArtistsPage /></PageTransition>} />
           <Route path="help" element={<PageTransition><HelpPage /></PageTransition>} />
+          <Route path="mentions-legales" element={<PageTransition><MentionsLegalesPage /></PageTransition>} />
+          <Route path="cgu" element={<PageTransition><CGUPage /></PageTransition>} />
+          <Route path="confidentialite" element={<PageTransition><ConfidentialitePage /></PageTransition>} />
+          <Route path="contact" element={<PageTransition><ContactPage /></PageTransition>} />
+          <Route path="upload" element={<Navigate to="/settings" replace />} />
           <Route path="profil/:id" element={<PageTransition><ProfilePage /></PageTransition>} />
           <Route path="search" element={<PageTransition><SearchPage /></PageTransition>} />
           <Route path="track/:id" element={<PageTransition><TrackPage /></PageTransition>} />

@@ -4,11 +4,13 @@ import { supabase } from '../lib/supabase';
 import { TrackGrid } from '../components/TrackGrid';
 import type { Track } from '../components/TrackGrid';
 import { useTheme } from '../contexts/ThemeContext'; // ✅ IMPORT DU THEME
+import { usePlayer } from '../contexts/PlayerContext'; // ✅ LECTURE
 
 export const GenresPage: React.FC = () => {
 
   const { theme } = useTheme(); // ✅ RÉCUPÉRATION DU THÈME
   const isDark = theme === 'dark';
+  const { play } = usePlayer(); // ✅ LECTURE
 
   const [tracks, setTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(true);
@@ -57,6 +59,21 @@ export const GenresPage: React.FC = () => {
   const filteredTracks = selectedGenre
     ? tracks.filter((t: any) => t.genre === selectedGenre)
     : tracks;
+
+  // ✅ Lecture d'un morceau depuis la grille
+  const handlePlay = (track: Track) => {
+    play({
+      id: track.id,
+      title: track.title,
+      artist: track.artist,
+      audio_url: track.audio_url,
+      cover_url: track.cover_url,
+      user_id: track.user_id,
+      duration: track.duration,
+      bpm: track.bpm,
+      genre: track.genre,
+    });
+  };
 
   if (loading) {
     return (
@@ -172,7 +189,7 @@ export const GenresPage: React.FC = () => {
             Les morceaux les plus récents dans le style {selectedGenre}.
           </p>
 
-          <TrackGrid tracks={filteredTracks} />
+          <TrackGrid tracks={filteredTracks} onPlay={handlePlay} />
         </div>
       )}
 

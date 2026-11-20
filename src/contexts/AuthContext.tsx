@@ -16,6 +16,7 @@ export interface Profile {
   gear?: string | null;
   badges?: string[] | null;
   social_links?: Record<string, string> | null;
+  is_premium?: boolean | null;
   created_at?: string;
 }
 

@@ -189,11 +189,11 @@ function recommendPreset(
   const isSquashed = crestFactor < 8;     // très compressé
   const isDynamic = crestFactor > 14;
 
-  if (lufs > -10) return 'master';         // déjà masterisé loud
-  if (hasStrongBass && !isBright) return 'warm';
-  if (isBright && isDynamic) return 'open';
-  if (isSquashed) return 'balanced';
-  return 'balanced';
+  if (lufs > -10) return 'punch';         // déjà masterisé loud
+  if (hasStrongBass && !isBright) return 'cassette';
+  if (isBright && isDynamic) return 'spatial';
+  if (isSquashed) return 'natural';
+  return 'universal';
 }
 
 // ------------------------------------------------------------------

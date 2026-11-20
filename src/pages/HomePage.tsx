@@ -1,6 +1,7 @@
 // src/pages/HomePage.tsx
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { supabase } from '../lib/supabase';
 import { TrackGrid } from '../components/TrackGrid';
 import { useIsMobile } from '../hooks/useIsMobile';
@@ -194,6 +195,14 @@ export const HomePage = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', fontFamily: 'Inter, sans-serif', color: colors.textMain, width: '100%', maxWidth: '100%', overflowX: 'hidden', background: colors.bg, transition: 'background 0.3s ease, color 0.3s ease' }}>
+
+      <Helmet>
+        <title>DropZone DJ — La plateforme des DJs indépendants</title>
+        <meta name="description" content="Partage tes sons, découvre les dernières exclusivités et connecte-toi avec les meilleurs DJs. La plateforme gratuite des DJs indépendants." />
+        <meta property="og:title" content="DropZone DJ — La plateforme des DJs indépendants" />
+        <meta property="og:description" content="Partage tes sons et fais vibrer la nuit. La plateforme gratuite des DJs indépendants." />
+        <meta property="og:type" content="website" />
+      </Helmet>
 
       <EventsTicker />
 

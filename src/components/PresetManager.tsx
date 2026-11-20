@@ -39,7 +39,7 @@ export const PresetManager: React.FC<PresetManagerProps> = ({
     setPresets(list.sort((a, b) => b.createdAt - a.createdAt));
   };
 
-  const showToast = (msg: string, color = '#00ff88') => {
+  const showToast = (msg: string, color = '#b0b0b0') => {
     setToast({ msg, color });
     setTimeout(() => setToast(null), 3000);
   };
@@ -68,14 +68,14 @@ export const PresetManager: React.FC<PresetManagerProps> = ({
   const handleLoad = (preset: UserMasteringPreset) => {
     onLoadPreset(preset);
     setShowList(false);
-    showToast(`📂 Preset "${preset.name}" chargé`, '#00d9ff');
+    showToast(`📂 Preset "${preset.name}" chargé`, '#ffffff');
   };
 
   const handleDelete = async (id: string, name: string) => {
     if (!confirm(`Supprimer le preset "${name}" ?`)) return;
     await masteringPresets.delete(id);
     await loadPresets();
-    showToast('🗑️ Preset supprimé', '#ff3366');
+    showToast('🗑️ Preset supprimé', '#b0b0b0');
   };
 
   const handleExport = async () => {
@@ -87,7 +87,7 @@ export const PresetManager: React.FC<PresetManagerProps> = ({
     a.download = `waveforge-mastering-presets-${Date.now()}.json`;
     a.click();
     URL.revokeObjectURL(url);
-    showToast('📤 Presets exportés', '#ffd43b');
+    showToast('📤 Presets exportés', '#b0b0b0');
   };
 
   const handleImport = () => {
@@ -101,7 +101,7 @@ export const PresetManager: React.FC<PresetManagerProps> = ({
         const text = await file.text();
         const count = await masteringPresets.importFromJson(text);
         await loadPresets();
-        showToast(`📥 ${count} preset(s) importé(s)`, '#00ff88');
+        showToast(`📥 ${count} preset(s) importé(s)`, '#b0b0b0');
       } catch (err) {
         alert('Fichier invalide');
       }
@@ -126,10 +126,10 @@ export const PresetManager: React.FC<PresetManagerProps> = ({
             flex: 1,
             minWidth: 100,
             padding: '8px 12px',
-            background: showSaveDialog ? 'rgba(0, 255, 136, 0.15)' : 'var(--bg-1)',
-            border: `1px solid ${showSaveDialog ? '#00ff88' : 'var(--border)'}`,
+            background: showSaveDialog ? 'rgba(176, 176, 176, 0.15)' : 'var(--bg-1)',
+            border: `1px solid ${showSaveDialog ? '#b0b0b0' : 'var(--border)'}`,
             borderRadius: 6,
-            color: showSaveDialog ? '#00ff88' : '#ccc',
+            color: showSaveDialog ? '#b0b0b0' : '#ccc',
             fontSize: 10,
             fontWeight: 600,
             cursor: 'pointer',
@@ -145,10 +145,10 @@ export const PresetManager: React.FC<PresetManagerProps> = ({
             flex: 1,
             minWidth: 100,
             padding: '8px 12px',
-            background: showList ? 'rgba(0, 217, 255, 0.15)' : 'var(--bg-1)',
-            border: `1px solid ${showList ? '#00d9ff' : 'var(--border)'}`,
+            background: showList ? 'rgba(255, 255, 255, 0.15)' : 'var(--bg-1)',
+            border: `1px solid ${showList ? '#ffffff' : 'var(--border)'}`,
             borderRadius: 6,
-            color: showList ? '#00d9ff' : '#ccc',
+            color: showList ? '#ffffff' : '#ccc',
             fontSize: 10,
             fontWeight: 600,
             cursor: 'pointer',
@@ -166,7 +166,7 @@ export const PresetManager: React.FC<PresetManagerProps> = ({
             background: 'var(--bg-1)',
             border: '1px solid var(--border)',
             borderRadius: 6,
-            color: presets.length > 0 ? '#ffd43b' : '#444',
+            color: presets.length > 0 ? '#b0b0b0' : '#444',
             fontSize: 12,
             cursor: presets.length > 0 ? 'pointer' : 'not-allowed',
           }}
@@ -182,7 +182,7 @@ export const PresetManager: React.FC<PresetManagerProps> = ({
             background: 'var(--bg-1)',
             border: '1px solid var(--border)',
             borderRadius: 6,
-            color: '#ffd43b',
+            color: '#b0b0b0',
             fontSize: 12,
             cursor: 'pointer',
           }}
@@ -198,15 +198,15 @@ export const PresetManager: React.FC<PresetManagerProps> = ({
           style={{
             padding: 12,
             marginBottom: 12,
-            background: 'rgba(0, 255, 136, 0.05)',
-            border: '1px solid rgba(0, 255, 136, 0.3)',
+            background: 'rgba(176, 176, 176, 0.05)',
+            border: '1px solid rgba(176, 176, 176, 0.3)',
             borderRadius: 8,
           }}
         >
           <div
             style={{
               fontSize: 10,
-              color: '#00ff88',
+              color: '#b0b0b0',
               fontWeight: 700,
               letterSpacing: '1px',
               marginBottom: 8,
@@ -229,7 +229,7 @@ export const PresetManager: React.FC<PresetManagerProps> = ({
                 flex: 1,
                 padding: '8px 10px',
                 background: 'var(--bg-0)',
-                border: '1px solid #00ff88',
+                border: '1px solid #b0b0b0',
                 borderRadius: 4,
                 color: '#fff',
                 fontSize: 11,
@@ -241,7 +241,7 @@ export const PresetManager: React.FC<PresetManagerProps> = ({
               onClick={handleSave}
               style={{
                 padding: '8px 14px',
-                background: '#00ff88',
+                background: '#b0b0b0',
                 border: 'none',
                 borderRadius: 4,
                 color: '#000',
@@ -271,15 +271,15 @@ export const PresetManager: React.FC<PresetManagerProps> = ({
           style={{
             padding: 12,
             marginBottom: 12,
-            background: 'rgba(0, 217, 255, 0.05)',
-            border: '1px solid rgba(0, 217, 255, 0.3)',
+            background: 'rgba(255, 255, 255, 0.05)',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
             borderRadius: 8,
           }}
         >
           <div
             style={{
               fontSize: 10,
-              color: '#00d9ff',
+              color: '#ffffff',
               fontWeight: 700,
               letterSpacing: '1px',
               marginBottom: 8,
@@ -347,10 +347,10 @@ export const PresetManager: React.FC<PresetManagerProps> = ({
                     onClick={() => handleLoad(p)}
                     style={{
                       padding: '4px 10px',
-                      background: 'rgba(0, 217, 255, 0.1)',
-                      border: '1px solid #00d9ff',
+                      background: 'rgba(255, 255, 255, 0.1)',
+                      border: '1px solid #ffffff',
                       borderRadius: 4,
-                      color: '#00d9ff',
+                      color: '#ffffff',
                       fontSize: 10,
                       fontWeight: 600,
                       cursor: 'pointer',
@@ -363,9 +363,9 @@ export const PresetManager: React.FC<PresetManagerProps> = ({
                     style={{
                       padding: '4px 8px',
                       background: 'transparent',
-                      border: '1px solid rgba(255, 51, 102, 0.3)',
+                      border: '1px solid rgba(176, 176, 176, 0.3)',
                       borderRadius: 4,
-                      color: '#ff3366',
+                      color: '#b0b0b0',
                       fontSize: 10,
                       cursor: 'pointer',
                     }}

@@ -144,7 +144,7 @@ export const CDJPage: React.FC = () => {
   }, [user]);
 
   const detectSmartCuePoints = (peaks: number[], duration: number, bpm: number) => {
-    const colors = ['#00d9ff', '#10b981', '#f59e0b', '#ef4444', '#a855f7', '#f43f5e', '#8b5cf6', '#eab308'];
+    const colors = ['#ffffff', '#b0b0b0', '#b0b0b0', '#b0b0b0', '#b0b0b0', '#f43f5e', '#8b5cf6', '#eab308'];
 
     if (!bpm || bpm < 60) {
       return Array.from({ length: 8 }, (_, i) => ({
@@ -417,14 +417,14 @@ export const CDJPage: React.FC = () => {
             const isAvailable = availableKeys.has(key);
             const isActive = activeKeyFilter === key;
             return (
-              <div key={key} onClick={() => setActiveKeyFilter(isActive ? null : key)} style={{ position: 'absolute', width: 24, height: 24, top: '50%', left: '50%', marginTop: -12, marginLeft: -12, transform: `rotate(${angle}deg) translateY(-72px) rotate(-${angle}deg)`, background: isActive ? '#00d9ff' : (isAvailable ? colors.border : 'transparent'), border: `1px solid ${isActive ? '#00d9ff' : (isAvailable ? colors.borderLight : 'transparent')}`, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', fontWeight: 900, color: isActive ? '#000' : (isAvailable ? colors.textMain : colors.textDark), cursor: isAvailable ? 'pointer' : 'default', transition: 'all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1)', zIndex: 10, boxShadow: isActive ? '0 0 25px rgba(0, 217, 255, 1)' : 'none' }}>
+              <div key={key} onClick={() => setActiveKeyFilter(isActive ? null : key)} style={{ position: 'absolute', width: 24, height: 24, top: '50%', left: '50%', marginTop: -12, marginLeft: -12, transform: `rotate(${angle}deg) translateY(-72px) rotate(-${angle}deg)`, background: isActive ? '#ffffff' : (isAvailable ? colors.border : 'transparent'), border: `1px solid ${isActive ? '#ffffff' : (isAvailable ? colors.borderLight : 'transparent')}`, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', fontWeight: 900, color: isActive ? '#000' : (isAvailable ? colors.textMain : colors.textDark), cursor: isAvailable ? 'pointer' : 'default', transition: 'all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1)', zIndex: 10, boxShadow: isActive ? '0 0 25px rgba(255, 255, 255, 1)' : 'none' }}>
                 {key}
               </div>
             );
           })}
           <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 5 }}>
-            <div style={{ width: 70, height: 70, borderRadius: '50%', background: colors.wheelCenterBg, border: `1px solid ${colors.borderLight}`, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: isDark ? '0 0 30px rgba(0, 217, 255, 0.2), inset 0 0 20px rgba(0,0,0,0.8)' : '0 0 20px rgba(0, 217, 255, 0.1), inset 0 0 10px rgba(255,255,255,0.8)' }}>
-              <div style={{ width: 0, height: 0, borderTop: '10px solid transparent', borderBottom: '10px solid transparent', borderLeft: '16px solid #00d9ff', marginLeft: 6, filter: 'drop-shadow(0 0 6px #00d9ff)' }} />
+            <div style={{ width: 70, height: 70, borderRadius: '50%', background: colors.wheelCenterBg, border: `1px solid ${colors.borderLight}`, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: isDark ? '0 0 30px rgba(255, 255, 255, 0.2), inset 0 0 20px rgba(0,0,0,0.8)' : '0 0 20px rgba(255, 255, 255, 0.1), inset 0 0 10px rgba(255,255,255,0.8)' }}>
+              <div style={{ width: 0, height: 0, borderTop: '10px solid transparent', borderBottom: '10px solid transparent', borderLeft: '16px solid #ffffff', marginLeft: 6, filter: 'drop-shadow(0 0 6px #ffffff)' }} />
             </div>
           </div>
         </div>
@@ -441,7 +441,7 @@ export const CDJPage: React.FC = () => {
     return matchesSearch && matchesKey && matchesGenre;
   });
 
-  if (loading) return <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', background: colors.bg, color: '#00d9ff', fontFamily: 'monospace', fontSize: '0.8rem', letterSpacing: '2px' }}>INITIALISATION DU MOTEUR AUDIO...</div>;
+  if (loading) return <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', background: colors.bg, color: '#ffffff', fontFamily: 'monospace', fontSize: '0.8rem', letterSpacing: '2px' }}>INITIALISATION DU MOTEUR AUDIO...</div>;
 
   return (
     <div 
@@ -464,7 +464,7 @@ export const CDJPage: React.FC = () => {
       }}
     >
       <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 0, overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', top: '15%', left: '5%', width: '40vw', height: '40vw', background: isDark ? 'radial-gradient(circle, rgba(0, 217, 255, 0.08) 0%, transparent 60%)' : 'radial-gradient(circle, rgba(0, 217, 255, 0.1) 0%, transparent 60%)', transform: 'translate(-50%, -50%)', filter: 'blur(80px)' }} />
+        <div style={{ position: 'absolute', top: '15%', left: '5%', width: '40vw', height: '40vw', background: isDark ? 'radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, transparent 60%)' : 'radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 60%)', transform: 'translate(-50%, -50%)', filter: 'blur(80px)' }} />
         <div style={{ position: 'absolute', bottom: '5%', right: '5%', width: '35vw', height: '35vw', background: isDark ? 'radial-gradient(circle, rgba(160, 138, 255, 0.08) 0%, transparent 60%)' : 'radial-gradient(circle, rgba(160, 138, 255, 0.1) 0%, transparent 60%)', transform: 'translate(50%, 50%)', filter: 'blur(80px)' }} />
         <div style={{ position: 'absolute', top: mousePos.y, left: mousePos.x, width: 500, height: 500, background: isDark ? 'radial-gradient(circle, rgba(255,255,255,0.03) 0%, transparent 60%)' : 'radial-gradient(circle, rgba(0,0,0,0.02) 0%, transparent 60%)', transform: 'translate(-50%, -50%)', filter: 'blur(50px)', transition: 'top 0.1s ease-out, left 0.1s ease-out' }} />
       </div>
@@ -475,17 +475,17 @@ export const CDJPage: React.FC = () => {
         .nav-link-premium:hover { color: var(--text-main); }
         .sidebar-item { position: relative; display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; border-radius: 8px; cursor: pointer; color: var(--text-muted); font-weight: 600; font-size: 0.85rem; transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1); overflow: hidden; margin-bottom: 2px; }
         .sidebar-item:hover { background: var(--cue-pad-hover); color: var(--text-main); transform: translateX(6px); }
-        .sidebar-item::before { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); height: 0; width: 4px; background: #00d9ff; border-radius: 0 4px 4px 0; transition: height 0.2s ease; box-shadow: 0 0 15px #00d9ff; }
+        .sidebar-item::before { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); height: 0; width: 4px; background: #ffffff; border-radius: 0 4px 4px 0; transition: height 0.2s ease; box-shadow: 0 0 15px #ffffff; }
         .sidebar-item:hover::before { height: 50%; }
-        .sidebar-item.active { background: rgba(0, 217, 255, 0.08); color: var(--text-main); border: 1px solid rgba(0, 217, 255, 0.2); box-shadow: 0 4px 20px rgba(0, 217, 255, 0.05); }
-        .sidebar-item.active::before { height: 50%; background: #00d9ff; box-shadow: 0 0 15px #00d9ff; }
+        .sidebar-item.active { background: rgba(255, 255, 255, 0.08); color: var(--text-main); border: 1px solid rgba(255, 255, 255, 0.2); box-shadow: 0 4px 20px rgba(255, 255, 255, 0.05); }
+        .sidebar-item.active::before { height: 50%; background: #ffffff; box-shadow: 0 0 15px #ffffff; }
         .holo-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); position: relative; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
-        .holo-card:hover { background: var(--card-hover); border-color: rgba(0, 217, 255, 0.4); box-shadow: 0 10px 40px -10px rgba(0, 217, 255, 0.3), inset 0 0 20px rgba(0, 217, 255, 0.05); transform: translateY(-4px) scale(1.01); }
-        .holo-card.active { background: rgba(0, 217, 255, 0.05); border-color: rgba(0, 217, 255, 0.6); box-shadow: 0 0 30px rgba(0, 217, 255, 0.2), inset 0 0 20px rgba(0, 217, 255, 0.1); }
+        .holo-card:hover { background: var(--card-hover); border-color: rgba(255, 255, 255, 0.4); box-shadow: 0 10px 40px -10px rgba(255, 255, 255, 0.3), inset 0 0 20px rgba(255, 255, 255, 0.05); transform: translateY(-4px) scale(1.01); }
+        .holo-card.active { background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.6); box-shadow: 0 0 30px rgba(255, 255, 255, 0.2), inset 0 0 20px rgba(255, 255, 255, 0.1); }
         .cue-pad { background: linear-gradient(180deg, var(--cue-pad-bg) 0%, rgba(0,0,0,0.2) 100%); border: 1px solid var(--border); border-bottom: 3px solid rgba(0,0,0,0.4); border-radius: 10px; height: 50px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.1rem; cursor: pointer; transition: all 0.1s; position: relative; overflow: hidden; color: var(--cue-pad-text); box-shadow: inset 0 2px 5px rgba(255,255,255,0.02), 0 4px 10px rgba(0,0,0,0.3); }
         .cue-pad:hover { background: var(--cue-pad-hover); border-color: var(--border-light); color: var(--text-main); transform: translateY(-1px); box-shadow: inset 0 2px 5px rgba(255,255,255,0.05), 0 6px 15px rgba(0,0,0,0.4); }
         .cue-pad:active { transform: translateY(2px); border-bottom-width: 1px; box-shadow: inset 0 4px 10px rgba(0,0,0,0.5); }
-        .cue-pad.active { background: rgba(0, 217, 255, 0.1); border-color: rgba(0, 217, 255, 0.5); color: #fff; text-shadow: 0 0 10px rgba(0, 217, 255, 0.8); box-shadow: inset 0 0 20px rgba(0, 217, 255, 0.2), 0 0 15px rgba(0, 217, 255, 0.2); }
+        .cue-pad.active { background: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.5); color: #fff; text-shadow: 0 0 10px rgba(255, 255, 255, 0.8); box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.2), 0 0 15px rgba(255, 255, 255, 0.2); }
         .cue-pad .pad-color-indicator { position: absolute; bottom: 0; left: 0; right: 0; height: 4px; opacity: 0.9; box-shadow: 0 0 15px currentColor; }
         @keyframes pulse { 0% { opacity: 0.5; transform: scale(0.98); } 50% { opacity: 1; transform: scale(1.02); } 100% { opacity: 0.5; transform: scale(0.98); } }
         ::-webkit-scrollbar { width: 8px; height: 8px; }
@@ -503,17 +503,17 @@ export const CDJPage: React.FC = () => {
           </button>
           <div style={{ width: 1, height: 28, background: colors.borderLight }} />
           <h1 style={{ fontSize: '1.3rem', fontWeight: 900, margin: 0, color: colors.textMain, display: 'flex', alignItems: 'center', gap: 12, letterSpacing: '-0.5px' }}>
-            <span style={{ color: '#00d9ff', filter: 'drop-shadow(0 0 8px rgba(0,217,255,0.5))' }}>🎧</span> DJ PREP <span style={{ fontSize: '0.65rem', background: 'linear-gradient(135deg, #00d9ff, #a855f7)', color: '#000', padding: '4px 10px', borderRadius: 6, fontWeight: 900, letterSpacing: '1px', boxShadow: '0 0 20px rgba(0,217,255,0.3)' }}>PREMIUM</span>
+            <span style={{ color: '#ffffff', filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.5))' }}>🎧</span> DJ PREP <span style={{ fontSize: '0.65rem', background: 'linear-gradient(135deg, #ffffff, #b0b0b0)', color: '#000', padding: '4px 10px', borderRadius: 6, fontWeight: 900, letterSpacing: '1px', boxShadow: '0 0 20px rgba(255,255,255,0.3)' }}>PREMIUM</span>
           </h1>
         </div>
         <div style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
-          <button onClick={exportCuePoints} style={{ background: 'linear-gradient(135deg, rgba(0, 217, 255, 0.1), rgba(168, 85, 247, 0.1))', border: '1px solid rgba(0, 217, 255, 0.3)', color: '#00d9ff', padding: '10px 20px', borderRadius: 10, fontWeight: 800, fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, transition: 'all 0.2s', boxShadow: '0 4px 15px rgba(0,217,255,0.1)' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'linear-gradient(135deg, rgba(0, 217, 255, 0.2), rgba(168, 85, 247, 0.2))'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,217,255,0.3)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'linear-gradient(135deg, rgba(0, 217, 255, 0.1), rgba(168, 85, 247, 0.1))'; e.currentTarget.style.boxShadow = '0 4px 15px rgba(0,217,255,0.1)'; }}>
+          <button onClick={exportCuePoints} style={{ background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(168, 85, 247, 0.1))', border: '1px solid rgba(255, 255, 255, 0.3)', color: '#ffffff', padding: '10px 20px', borderRadius: 10, fontWeight: 800, fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, transition: 'all 0.2s', boxShadow: '0 4px 15px rgba(255,255,255,0.1)' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(168, 85, 247, 0.2))'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(255,255,255,0.3)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(168, 85, 247, 0.1))'; e.currentTarget.style.boxShadow = '0 4px 15px rgba(255,255,255,0.1)'; }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
             Fiche Cue Points
           </button>
           <div style={{ position: 'relative' }}>
             <svg style={{ position: 'absolute', left: 14, top: 12, color: colors.textMuted }} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-            <input type="text" placeholder="Rechercher un son, un artiste..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} style={{ width: 320, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, color: colors.textMain, padding: '12px 16px 12px 44px', borderRadius: 10, fontSize: '0.85rem', outline: 'none', transition: 'all 0.2s', boxShadow: 'inset 0 2px 5px rgba(0,0,0,0.2)' }} onFocus={(e) => { e.currentTarget.style.borderColor = '#00d9ff'; e.currentTarget.style.boxShadow = '0 0 20px rgba(0,217,255,0.2), inset 0 2px 5px rgba(0,0,0,0.2)'; }} onBlur={(e) => { e.currentTarget.style.borderColor = colors.borderLight; e.currentTarget.style.boxShadow = 'inset 0 2px 5px rgba(0,0,0,0.2)'; }} />
+            <input type="text" placeholder="Rechercher un son, un artiste..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} style={{ width: 320, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, color: colors.textMain, padding: '12px 16px 12px 44px', borderRadius: 10, fontSize: '0.85rem', outline: 'none', transition: 'all 0.2s', boxShadow: 'inset 0 2px 5px rgba(0,0,0,0.2)' }} onFocus={(e) => { e.currentTarget.style.borderColor = '#ffffff'; e.currentTarget.style.boxShadow = '0 0 20px rgba(255,255,255,0.2), inset 0 2px 5px rgba(0,0,0,0.2)'; }} onBlur={(e) => { e.currentTarget.style.borderColor = colors.borderLight; e.currentTarget.style.boxShadow = 'inset 0 2px 5px rgba(0,0,0,0.2)'; }} />
           </div>
         </div>
       </div>
@@ -524,7 +524,7 @@ export const CDJPage: React.FC = () => {
           <h2 style={{ fontSize: '0.7rem', fontWeight: 900, marginBottom: 24, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '3px', paddingLeft: 16 }}>Harmonic Filter</h2>
           {renderCamelotWheel()}
           {activeKeyFilter && (
-             <button onClick={() => setActiveKeyFilter(null)} style={{ background: 'transparent', border: `1px solid ${colors.borderLight}`, color: '#00d9ff', padding: '8px', borderRadius: 8, fontSize: '0.75rem', margin: '0 16px 24px 16px', cursor: 'pointer', boxShadow: '0 0 15px rgba(0,217,255,0.1)', fontWeight: 800 }}>Effacer le filtre ({activeKeyFilter})</button>
+             <button onClick={() => setActiveKeyFilter(null)} style={{ background: 'transparent', border: `1px solid ${colors.borderLight}`, color: '#ffffff', padding: '8px', borderRadius: 8, fontSize: '0.75rem', margin: '0 16px 24px 16px', cursor: 'pointer', boxShadow: '0 0 15px rgba(255,255,255,0.1)', fontWeight: 800 }}>Effacer le filtre ({activeKeyFilter})</button>
           )}
           <h2 style={{ fontSize: '0.7rem', fontWeight: 900, marginBottom: 16, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '3px', paddingLeft: 16, marginTop: 12 }}>Genres</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -549,12 +549,12 @@ export const CDJPage: React.FC = () => {
               
               {/* Play Button & Info */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 24, width: 340, flexShrink: 0 }}>
-                <div onClick={togglePlay} style={{ width: 64, height: 64, borderRadius: '50%', background: isPlaying ? '#00d9ff' : 'rgba(0, 217, 255, 0.1)', border: '2px solid #00d9ff', color: isPlaying ? '#000' : '#00d9ff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, boxShadow: isPlaying ? '0 0 40px rgba(0, 217, 255, 0.6)' : '0 0 20px rgba(0, 217, 255, 0.2)', transition: 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)' }} onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.05)'; }} onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}>
+                <div onClick={togglePlay} style={{ width: 64, height: 64, borderRadius: '50%', background: isPlaying ? '#ffffff' : 'rgba(255, 255, 255, 0.1)', border: '2px solid #ffffff', color: isPlaying ? '#000' : '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, boxShadow: isPlaying ? '0 0 40px rgba(255, 255, 255, 0.6)' : '0 0 20px rgba(255, 255, 255, 0.2)', transition: 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)' }} onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.05)'; }} onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}>
                   {isPlaying ? <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg> : <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" style={{marginLeft: 4}}><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <h1 style={{ fontSize: '1.4rem', fontWeight: 900, margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: colors.textMain, letterSpacing: '-0.5px' }}>{activeTrack?.title || 'Aucun morceau sélectionné'}</h1>
-                  <div style={{ fontSize: '0.9rem', color: '#00d9ff', marginTop: 4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: 700 }}>{activeTrack?.artist}</div>
+                  <div style={{ fontSize: '0.9rem', color: '#ffffff', marginTop: 4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: 700 }}>{activeTrack?.artist}</div>
                 </div>
               </div>
 
@@ -565,7 +565,7 @@ export const CDJPage: React.FC = () => {
               >
                 {!activeTrack?.waveform && analyzingId === activeTrack?.id && (
                   <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: isDark ? 'rgba(0,0,0,0.9)' : 'rgba(255,255,255,0.9)', zIndex: 20, backdropFilter: 'blur(10px)' }}>
-                    <span style={{ color: '#00d9ff', fontSize: '0.8rem', fontWeight: 900, animation: 'pulse 1.5s infinite', letterSpacing: '2px' }}>ANALYSE SPECTRALE EN COURS...</span>
+                    <span style={{ color: '#ffffff', fontSize: '0.8rem', fontWeight: 900, animation: 'pulse 1.5s infinite', letterSpacing: '2px' }}>ANALYSE SPECTRALE EN COURS...</span>
                   </div>
                 )}
                 
@@ -619,7 +619,7 @@ export const CDJPage: React.FC = () => {
               {/* Time & BPM */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexShrink: 0 }}>
                 <div style={{ fontSize: '1rem', color: colors.textMuted, fontFamily: 'monospace', fontWeight: 900, background: colors.inputBg, padding: '10px 16px', borderRadius: 8, border: `1px solid ${colors.border}`, letterSpacing: '1px', boxShadow: 'inset 0 2px 5px rgba(0,0,0,0.3)' }}>
-                  <span style={{ color: '#00d9ff', textShadow: '0 0 10px rgba(0,217,255,0.4)' }}>{formatDuration(currentTime)}</span> <span style={{ color: colors.textDark, margin: '0 6px' }}>/</span> {formatDuration(activeTrack?.duration || 0)}
+                  <span style={{ color: '#ffffff', textShadow: '0 0 10px rgba(255,255,255,0.4)' }}>{formatDuration(currentTime)}</span> <span style={{ color: colors.textDark, margin: '0 6px' }}>/</span> {formatDuration(activeTrack?.duration || 0)}
                 </div>
                 <div style={{ display: 'flex', gap: 12 }}>
                   <div style={{ background: 'rgba(244, 114, 182, 0.15)', color: '#f472b6', border: '1px solid rgba(244, 114, 182, 0.4)', padding: '10px 18px', borderRadius: 8, fontWeight: 900, fontSize: '0.9rem', boxShadow: '0 0 20px rgba(244,114,182,0.15)', fontFamily: 'monospace' }}>{activeTrack?.key}</div>
@@ -656,26 +656,26 @@ export const CDJPage: React.FC = () => {
                 const isCompatible = activeTrack && track.id !== activeTrack.id && compatibleKeys.includes(track.key);
                 const isActive = activeTrack?.id === track.id;
                 return (
-                  <div key={track.id} onClick={() => setActiveTrack(track)} className={`holo-card ${isActive ? 'active' : ''}`} style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 16, cursor: 'pointer', border: isCompatible ? '1px solid rgba(16, 185, 129, 0.6)' : undefined }}>
+                  <div key={track.id} onClick={() => setActiveTrack(track)} className={`holo-card ${isActive ? 'active' : ''}`} style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 16, cursor: 'pointer', border: isCompatible ? '1px solid rgba(176, 176, 176, 0.6)' : undefined }}>
                     
                     <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
                       <div style={{ width: 56, height: 56, background: colors.trackBg, borderRadius: 10, overflow: 'hidden', flexShrink: 0, border: `1px solid ${colors.borderLight}`, boxShadow: '0 4px 10px rgba(0,0,0,0.3)' }}>
                         {track.coverUrl ? <img src={track.coverUrl} alt="c" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{width:'100%',height:'100%',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'1.4rem', color: colors.textDark}}>🎵</div>}
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontWeight: 800, color: isActive ? '#00d9ff' : colors.textMain, fontSize: '1rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: 4 }}>{track.title}</div>
+                        <div style={{ fontWeight: 800, color: isActive ? '#ffffff' : colors.textMain, fontSize: '1rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: 4 }}>{track.title}</div>
                         <div style={{ color: colors.textMuted, fontSize: '0.85rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: 600 }}>{track.artist}</div>
                       </div>
                     </div>
 
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', paddingTop: 12, borderTop: `1px solid ${colors.border}` }}>
                       <div style={{ display: 'flex', gap: 10 }}>
-                        <div style={{ background: 'rgba(0, 217, 255, 0.1)', color: '#00d9ff', padding: '4px 10px', borderRadius: 6, fontSize: '0.75rem', fontWeight: 900, fontFamily: 'monospace' }}>{track.key}</div>
+                        <div style={{ background: 'rgba(255, 255, 255, 0.1)', color: '#ffffff', padding: '4px 10px', borderRadius: 6, fontSize: '0.75rem', fontWeight: 900, fontFamily: 'monospace' }}>{track.key}</div>
                         <div style={{ color: colors.textMuted, fontSize: '0.75rem', fontWeight: 800, display: 'flex', alignItems: 'center', fontFamily: 'monospace' }}>{track.bpm} BPM</div>
                       </div>
                       
                       {analyzingId === track.id ? (
-                        <span style={{ color: '#00d9ff', fontSize: '0.7rem', fontWeight: 900, animation: 'pulse 1.5s infinite', letterSpacing: '1px' }}>ANALYSE...</span>
+                        <span style={{ color: '#ffffff', fontSize: '0.7rem', fontWeight: 900, animation: 'pulse 1.5s infinite', letterSpacing: '1px' }}>ANALYSE...</span>
                       ) : track.cuePoints ? (
                         <div style={{ display: 'flex', gap: 4 }}>
                           {track.cuePoints.map((cue, i) => (
@@ -683,7 +683,7 @@ export const CDJPage: React.FC = () => {
                           ))}
                         </div>
                       ) : (
-                        <button onClick={(e) => { e.stopPropagation(); analyzeTrack(track); }} style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))', color: colors.textMain, border: `1px solid ${colors.borderLight}`, padding: '6px 14px', borderRadius: 6, fontSize: '0.75rem', fontWeight: 800, cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 5px rgba(0,0,0,0.2)' }} onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#00d9ff'; e.currentTarget.style.color = '#00d9ff'; e.currentTarget.style.boxShadow = '0 0 15px rgba(0,217,255,0.2)'; }} onMouseLeave={(e) => { e.currentTarget.style.borderColor = colors.borderLight; e.currentTarget.style.color = colors.textMain; e.currentTarget.style.boxShadow = '0 2px 5px rgba(0,0,0,0.2)'; }}>Analyser</button>
+                        <button onClick={(e) => { e.stopPropagation(); analyzeTrack(track); }} style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))', color: colors.textMain, border: `1px solid ${colors.borderLight}`, padding: '6px 14px', borderRadius: 6, fontSize: '0.75rem', fontWeight: 800, cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 5px rgba(0,0,0,0.2)' }} onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#ffffff'; e.currentTarget.style.color = '#ffffff'; e.currentTarget.style.boxShadow = '0 0 15px rgba(255,255,255,0.2)'; }} onMouseLeave={(e) => { e.currentTarget.style.borderColor = colors.borderLight; e.currentTarget.style.color = colors.textMain; e.currentTarget.style.boxShadow = '0 2px 5px rgba(0,0,0,0.2)'; }}>Analyser</button>
                       )}
                     </div>
                   </div>

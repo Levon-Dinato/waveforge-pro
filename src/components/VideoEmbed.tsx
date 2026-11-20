@@ -47,7 +47,7 @@ export const VideoEmbed: React.FC<VideoEmbedProps> = ({ url }) => {
         style={{
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
           width: '100%', aspectRatio: '16/9', background: '#1c1c1c',
-          border: '1px solid #2a2a2a', borderRadius: 8, color: '#00d9ff',
+          border: '1px solid #2a2a2a', borderRadius: 8, color: '#ffffff',
           textDecoration: 'none', fontSize: '1rem', fontWeight: 600, transition: 'all 0.15s ease',
         }}
       >

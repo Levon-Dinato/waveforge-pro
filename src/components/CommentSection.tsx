@@ -246,7 +246,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ trackId }) => {
                   height: 30,
                   borderRadius: '50%',
                   flexShrink: 0,
-                  background: 'linear-gradient(135deg, #00d9ff, #7c5cff)',
+                  background: 'linear-gradient(135deg, #ffffff, #b0b0b0)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -269,7 +269,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ trackId }) => {
                     to={`/profil/${c.user_id}`}
                     style={{
                       fontSize: '0.8rem',
-                      color: '#00d9ff',
+                      color: '#ffffff',
                       fontWeight: 700,
                       textDecoration: 'none',
                     }}
@@ -297,7 +297,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ trackId }) => {
                         style={{
                           background: 'transparent',
                           border: 'none',
-                          color: '#00d9ff',
+                          color: '#ffffff',
                           cursor: 'pointer',
                           fontSize: '0.75rem',
                           padding: 0,
@@ -319,7 +319,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ trackId }) => {
                           fontSize: '0.75rem',
                           padding: 0,
                         }}
-                        onMouseEnter={(e) => e.currentTarget.style.color = '#ff5c5c'}
+                        onMouseEnter={(e) => e.currentTarget.style.color = '#b0b0b0'}
                         onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255, 100, 100, 0.6)'}
                       >
                         ✕
@@ -341,7 +341,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ trackId }) => {
                         width: '100%',
                         padding: '6px 8px',
                         background: 'rgba(0,0,0,0.5)',
-                        border: '1px solid rgba(0, 217, 255, 0.4)',
+                        border: '1px solid rgba(255, 255, 255, 0.4)',
                         borderRadius: 4,
                         color: '#fff',
                         fontFamily: 'monospace',
@@ -370,7 +370,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ trackId }) => {
                         disabled={savingEdit || !editContent.trim()}
                         style={{
                           padding: '4px 10px',
-                          background: savingEdit ? '#444' : '#00d9ff',
+                          background: savingEdit ? '#444' : '#ffffff',
                           border: 'none',
                           color: '#000',
                           borderRadius: 4,
@@ -431,7 +431,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ trackId }) => {
             disabled={posting || !newComment.trim()}
             style={{
               padding: '8px 14px',
-              background: posting || !newComment.trim() ? '#444' : '#00d9ff',
+              background: posting || !newComment.trim() ? '#444' : '#ffffff',
               color: '#000',
               border: 'none',
               borderRadius: 6,
@@ -449,8 +449,8 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ trackId }) => {
           style={{
             marginTop: 12,
             padding: '10px 12px',
-            background: 'rgba(0, 217, 255, 0.06)',
-            border: '1px dashed rgba(0, 217, 255, 0.3)',
+            background: 'rgba(255, 255, 255, 0.06)',
+            border: '1px dashed rgba(255, 255, 255, 0.3)',
             borderRadius: 6,
             fontSize: '0.8rem',
             color: 'rgba(255,255,255,0.7)',
@@ -460,7 +460,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ trackId }) => {
           <Link
             to="/auth"
             style={{
-              color: '#00d9ff',
+              color: '#ffffff',
               fontWeight: 700,
               textDecoration: 'underline',
             }}

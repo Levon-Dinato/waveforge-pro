@@ -81,7 +81,7 @@ export const StemsPage: React.FC = () => {
       {/* HEADER */}
       <div>
         <h2 style={{ fontSize: isMobile ? 16 : 20, fontWeight: 700, margin: 0, marginBottom: 8 }}>
-          🎤 <span style={{ color: '#00ff88' }}>Séparation de Stems</span>
+          🎤 <span style={{ color: '#b0b0b0' }}>Séparation de Stems</span>
         </h2>
         <p style={{ color: '#888', fontSize: 11, margin: 0 }}>
           Isolation voix / instrumental avec Demucs IA (htdemucs_ft)
@@ -95,13 +95,13 @@ export const StemsPage: React.FC = () => {
           padding: 16,
           borderColor:
             demucsOnline === true
-              ? 'rgba(0, 255, 136, 0.3)'
+              ? 'rgba(176, 176, 176, 0.3)'
               : demucsOnline === false
-              ? 'rgba(255, 51, 102, 0.3)'
+              ? 'rgba(176, 176, 176, 0.3)'
               : 'var(--border)',
           background:
             demucsOnline === true
-              ? 'linear-gradient(135deg, rgba(0, 255, 136, 0.03), transparent)'
+              ? 'linear-gradient(135deg, rgba(176, 176, 176, 0.03), transparent)'
               : undefined,
         }}
       >
@@ -121,8 +121,8 @@ export const StemsPage: React.FC = () => {
                 height: 10,
                 borderRadius: '50%',
                 background:
-                  demucsOnline === true ? '#00ff88' : demucsOnline === false ? '#ff3366' : '#666',
-                boxShadow: demucsOnline === true ? '0 0 10px #00ff88' : 'none',
+                  demucsOnline === true ? '#b0b0b0' : demucsOnline === false ? '#b0b0b0' : '#666',
+                boxShadow: demucsOnline === true ? '0 0 10px #b0b0b0' : 'none',
               }}
             />
             <div>
@@ -134,7 +134,7 @@ export const StemsPage: React.FC = () => {
                 style={{
                   fontSize: 12,
                   color:
-                    demucsOnline === true ? '#00ff88' : demucsOnline === false ? '#ff3366' : '#888',
+                    demucsOnline === true ? '#b0b0b0' : demucsOnline === false ? '#b0b0b0' : '#888',
                   fontWeight: 600,
                 }}
               >
@@ -162,7 +162,7 @@ export const StemsPage: React.FC = () => {
             >
               {isProduction() ? (
                 <>
-                  <div style={{ color: '#ffd43b', marginBottom: 6, fontSize: 11 }}>
+                  <div style={{ color: '#b0b0b0', marginBottom: 6, fontSize: 11 }}>
                     ⚠️ Serveur local requis
                   </div>
                   <div style={{ color: '#888', fontSize: 10, lineHeight: 1.5 }}>
@@ -171,7 +171,7 @@ export const StemsPage: React.FC = () => {
                 </>
               ) : (
                 <>
-                  <div style={{ color: '#ff3366', marginBottom: 4 }}>⚠️ Lance le serveur Python :</div>
+                  <div style={{ color: '#b0b0b0', marginBottom: 4 }}>⚠️ Lance le serveur Python :</div>
                   <div>cd C:\Users\NATO\demucs-server</div>
                   <div>.\venv\Scripts\Activate.ps1</div>
                   <div>uvicorn server:app --reload --port 8000</div>
@@ -190,7 +190,7 @@ export const StemsPage: React.FC = () => {
             padding: isMobile ? 24 : 32,
             textAlign: 'center',
             borderStyle: 'dashed',
-            borderColor: 'rgba(0, 255, 136, 0.3)',
+            borderColor: 'rgba(176, 176, 176, 0.3)',
           }}
         >
           <div style={{ fontSize: isMobile ? 40 : 48, marginBottom: 12 }}>🎤</div>
@@ -237,8 +237,8 @@ export const StemsPage: React.FC = () => {
                   width: 40,
                   height: 40,
                   borderRadius: 8,
-                  background: 'rgba(0, 217, 255, 0.1)',
-                  border: '1px solid rgba(0, 217, 255, 0.3)',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  border: '1px solid rgba(255, 255, 255, 0.3)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -273,7 +273,7 @@ export const StemsPage: React.FC = () => {
             className="panel"
             style={{
               padding: isMobile ? 16 : 24,
-              borderColor: demucsOnline === true ? 'rgba(0, 255, 136, 0.3)' : 'var(--border)',
+              borderColor: demucsOnline === true ? 'rgba(176, 176, 176, 0.3)' : 'var(--border)',
               textAlign: 'center',
             }}
           >
@@ -305,7 +305,7 @@ export const StemsPage: React.FC = () => {
                 background:
                   isSeparating || demucsOnline !== true
                     ? 'var(--bg-2)'
-                    : 'linear-gradient(135deg, #00ff88, #00b866)',
+                    : 'linear-gradient(135deg, #b0b0b0, #00b866)',
                 color: isSeparating || demucsOnline !== true ? '#666' : '#000',
                 borderColor: 'transparent',
                 cursor: isSeparating || demucsOnline !== true ? 'not-allowed' : 'pointer',
@@ -333,14 +333,14 @@ export const StemsPage: React.FC = () => {
             className="panel fade-in"
             style={{
               padding: 20,
-              borderColor: 'rgba(0, 255, 136, 0.3)',
-              background: 'linear-gradient(135deg, rgba(0, 255, 136, 0.05), transparent)',
+              borderColor: 'rgba(176, 176, 176, 0.3)',
+              background: 'linear-gradient(135deg, rgba(176, 176, 176, 0.05), transparent)',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <div style={{ fontSize: 32 }}>🎉</div>
               <div>
-                <div style={{ fontSize: 15, fontWeight: 700, color: '#00ff88', marginBottom: 4 }}>
+                <div style={{ fontSize: 15, fontWeight: 700, color: '#b0b0b0', marginBottom: 4 }}>
                   Séparation terminée !
                 </div>
                 <div style={{ fontSize: 11, color: '#888' }}>
@@ -361,7 +361,7 @@ export const StemsPage: React.FC = () => {
               icon="🎤"
               name="VOIX"
               description="Piste vocale isolée"
-              color="#ff3366"
+              color="#b0b0b0"
               url={stems.vocals}
               onDownload={() => handleDownload(stems.vocals, 'vocals.wav')}
             />
@@ -369,7 +369,7 @@ export const StemsPage: React.FC = () => {
               icon="🎸"
               name="INSTRUMENTAL"
               description="Mix sans voix"
-              color="#00ff88"
+              color="#b0b0b0"
               url={stems.noVocals}
               onDownload={() => handleDownload(stems.noVocals, 'no_vocals.wav')}
             />
@@ -383,8 +383,8 @@ export const StemsPage: React.FC = () => {
               <StemPlayer
                 audioBuffer={engine.audioBuffer}
                 stems={[
-                  { id: 'vocals', name: 'VOIX', url: stems.vocals, color: '#ff3366', icon: '🎤' },
-                  { id: 'no_vocals', name: 'INSTRUMENTAL', url: stems.noVocals, color: '#00ff88', icon: '🎸' },
+                  { id: 'vocals', name: 'VOIX', url: stems.vocals, color: '#b0b0b0', icon: '🎤' },
+                  { id: 'no_vocals', name: 'INSTRUMENTAL', url: stems.noVocals, color: '#b0b0b0', icon: '🎸' },
                 ].filter((s) => s.url)}
               />
             </div>

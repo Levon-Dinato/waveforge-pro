@@ -45,7 +45,7 @@ export const TrackGrid: React.FC<TrackGridProps> = ({ tracks, onPlay }) => {
     cardBorder: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
     textMain: isDark ? '#ffffff' : '#1a1a1a',
     textMuted: isDark ? '#a1a1aa' : '#666666',
-    accent: '#00d9ff',
+    accent: '#ffffff',
     tagBg: isDark ? 'rgba(255,255,255,0.05)' : '#f3f4f6',
   };
 

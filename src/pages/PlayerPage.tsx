@@ -17,7 +17,7 @@ export const PlayerPage: React.FC = () => {
   
   const [profile, setProfile] = useState<any>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
-  const [visualizerColor, setVisualizerColor] = useState('#ff3366');
+  const [visualizerColor, setVisualizerColor] = useState('#b0b0b0');
   const [playerBgType, setPlayerBgType] = useState('color');
   const [playerBgValue, setPlayerBgValue] = useState('#05050a');
   const [loading, setLoading] = useState(true);
@@ -44,7 +44,7 @@ export const PlayerPage: React.FC = () => {
       if (!data) { setLoading(false); return; }
 
       setProfile(data);
-      setVisualizerColor(data.radio_visualizer_color || '#ff3366');
+      setVisualizerColor(data.radio_visualizer_color || '#b0b0b0');
       setPlayerBgType(data.player_bg_type || 'color');
       setPlayerBgValue(data.player_bg_value || '#05050a');
 

@@ -45,7 +45,7 @@ export const ArtistsPage: React.FC = () => {
     inputBg: isDark ? '#1a1a1a' : '#ffffff',
     inputBorder: isDark ? '#2a2a2a' : '#e5e7eb',
     cardBg: isDark ? '#181818' : '#ffffff',
-    premiumCardBg: isDark ? 'rgba(0, 217, 255, 0.03)' : 'rgba(0, 217, 255, 0.05)',
+    premiumCardBg: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(255, 255, 255, 0.05)',
     cardBorder: isDark ? '#2a2a2a' : '#e5e7eb',
     cardHoverBg: isDark ? '#1e1e1e' : '#f9fafb',
     cardHoverBorder: isDark ? '#3a3a3a' : '#d1d5db',
@@ -196,7 +196,7 @@ export const ArtistsPage: React.FC = () => {
           transform: translateY(-2px);
         }
         .artist-card:hover .artist-avatar { transform: scale(1.05); }
-        .artist-card:hover .artist-name { color: #00d9ff !important; }
+        .artist-card:hover .artist-name { color: #ffffff !important; }
 
         @keyframes dz-pulse {
           0%, 100% { opacity: .4 }
@@ -220,7 +220,7 @@ export const ArtistsPage: React.FC = () => {
             color: colors.textMain,
           }}
         >
-          Découvrir les <span style={{ color: '#00d9ff' }}>Artistes</span>
+          Découvrir les <span style={{ color: '#ffffff' }}>Artistes</span>
         </h1>
         <p style={{ color: colors.textMuted, marginTop: 8, fontSize: '0.9rem' }}>
           Les DJs et producteurs qui font vibrer DropZone.
@@ -243,7 +243,7 @@ export const ArtistsPage: React.FC = () => {
               outline: 'none',
               transition: 'border-color 0.2s',
             }}
-            onFocus={(e) => (e.target.style.borderColor = '#00d9ff')}
+            onFocus={(e) => (e.target.style.borderColor = '#ffffff')}
             onBlur={(e) => (e.target.style.borderColor = colors.inputBorder)}
           />
         </div>
@@ -356,7 +356,7 @@ export const ArtistsPage: React.FC = () => {
                           ? colors.premiumCardBg
                           : colors.cardBg,
                         border: isPremium
-                          ? '1px solid rgba(0, 217, 255, 0.4)'
+                          ? '1px solid rgba(255, 255, 255, 0.4)'
                           : `1px solid ${colors.cardBorder}`,
                         borderRadius: 12,
                         padding: '24px 16px',
@@ -382,10 +382,10 @@ export const ArtistsPage: React.FC = () => {
                           background: colors.avatarBg,
                           overflow: 'hidden',
                           border: isPremium
-                            ? '2px solid #00d9ff'
+                            ? '2px solid #ffffff'
                             : `2px solid ${colors.cardBorder}`,
                           boxShadow: isPremium
-                            ? '0 0 20px rgba(0, 217, 255, 0.2)'
+                            ? '0 0 20px rgba(255, 255, 255, 0.2)'
                             : '0 4px 12px rgba(0,0,0,0.1)',
                           transition: 'transform 0.2s ease',
                         }}
@@ -445,7 +445,7 @@ export const ArtistsPage: React.FC = () => {
                             <span
                               style={{
                                 background:
-                                  'linear-gradient(135deg, #00d9ff, #0077ff)',
+                                  'linear-gradient(135deg, #ffffff, #b0b0b0)',
                                 color: '#000',
                                 fontSize: '0.55rem',
                                 fontWeight: 900,
@@ -453,7 +453,7 @@ export const ArtistsPage: React.FC = () => {
                                 borderRadius: 4,
                                 marginLeft: 6,
                                 letterSpacing: 0.5,
-                                boxShadow: '0 0 10px rgba(0,217,255,0.3)',
+                                boxShadow: '0 0 10px rgba(255,255,255,0.3)',
                               }}
                             >
                               PREMIUM
@@ -483,15 +483,15 @@ export const ArtistsPage: React.FC = () => {
                           gap: 6,
                           padding: '5px 12px',
                           background: isPremium
-                            ? 'rgba(0, 217, 255, 0.15)'
-                            : 'rgba(0, 217, 255, 0.08)',
-                          color: '#00d9ff',
+                            ? 'rgba(255, 255, 255, 0.15)'
+                            : 'rgba(255, 255, 255, 0.08)',
+                          color: '#ffffff',
                           borderRadius: 20,
                           fontSize: 11,
                           fontWeight: 700,
                           border: isPremium
-                            ? '1px solid #00d9ff'
-                            : '1px solid rgba(0, 217, 255, 0.2)',
+                            ? '1px solid #ffffff'
+                            : '1px solid rgba(255, 255, 255, 0.2)',
                         }}
                       >
                         {isPremium
@@ -531,8 +531,8 @@ export const ArtistsPage: React.FC = () => {
                   }}
                   onMouseEnter={(e) => {
                     if (!loadingMore) {
-                      e.currentTarget.style.borderColor = '#00d9ff';
-                      e.currentTarget.style.color = '#00d9ff';
+                      e.currentTarget.style.borderColor = '#ffffff';
+                      e.currentTarget.style.color = '#ffffff';
                     }
                   }}
                   onMouseLeave={(e) => {

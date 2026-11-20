@@ -56,9 +56,9 @@ export const CustomCursor: React.FC = () => {
           position: fixed; top: 0; left: 0; pointer-events: none; z-index: 999999; border-radius: 50%;
           transform: translate(-50%, -50%); will-change: transform;
         }
-        .cursor-dot { width: 6px; height: 6px; background: #ff3366; box-shadow: 0 0 15px #ff3366, 0 0 30px #7c5cff; transition: opacity 0.2s; }
-        .cursor-ring { width: 40px; height: 40px; border: 1px solid rgba(255, 51, 102, 0.5); transition: width 0.25s, height 0.25s, border-color 0.25s; }
-        body.hovering .cursor-ring { width: 70px; height: 70px; border-color: #ff3366; background: rgba(255, 51, 102, 0.05); }
+        .cursor-dot { width: 6px; height: 6px; background: #b0b0b0; box-shadow: 0 0 15px #b0b0b0, 0 0 30px #b0b0b0; transition: opacity 0.2s; }
+        .cursor-ring { width: 40px; height: 40px; border: 1px solid rgba(176, 176, 176, 0.5); transition: width 0.25s, height 0.25s, border-color 0.25s; }
+        body.hovering .cursor-ring { width: 70px; height: 70px; border-color: #b0b0b0; background: rgba(176, 176, 176, 0.05); }
         @media (hover: none) { .cursor-dot, .cursor-ring { display: none; } body { cursor: auto; } }
         body { cursor: none; }
       `}</style>

@@ -109,7 +109,7 @@ export const NotificationsDropdown: React.FC = () => {
             width: 18,
             height: 18,
             borderRadius: '50%',
-            background: '#ff3366',
+            background: '#b0b0b0',
             color: '#fff',
             fontSize: 10,
             fontWeight: 800,
@@ -141,7 +141,7 @@ export const NotificationsDropdown: React.FC = () => {
           <div style={{ padding: '12px 16px', borderBottom: '1px solid #2a2a2a', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ fontSize: 13, fontWeight: 700 }}>Notifications</div>
             {unreadCount > 0 && (
-              <button onClick={markAllAsRead} style={{ background: 'none', border: 'none', color: '#00d9ff', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
+              <button onClick={markAllAsRead} style={{ background: 'none', border: 'none', color: '#ffffff', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
                 Tout marquer comme lu
               </button>
             )}
@@ -163,7 +163,7 @@ export const NotificationsDropdown: React.FC = () => {
                     borderBottom: '1px solid #2a2a2a',
                     textDecoration: 'none',
                     color: '#fff',
-                    background: n.is_read ? 'transparent' : 'rgba(0, 217, 255, 0.05)',
+                    background: n.is_read ? 'transparent' : 'rgba(255, 255, 255, 0.05)',
                   }}
                 >
                   <div style={{ fontSize: 12, lineHeight: 1.4 }}>{n.message}</div>

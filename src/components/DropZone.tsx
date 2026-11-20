@@ -27,8 +27,8 @@ export function DropZone({ onFile, isAnalyzing }: Props) {
       onDragLeave={() => setHover(false)}
       onDrop={handleDrop}
       style={{
-        border: `2px dashed ${hover ? '#7c5cff' : '#333'}`,
-        background: hover ? 'rgba(124,92,255,0.08)' : '#0e0e16',
+        border: `2px dashed ${hover ? '#b0b0b0' : '#333'}`,
+        background: hover ? 'rgba(176,176,176,0.08)' : '#0e0e16',
         borderRadius: 16,
         padding: '48px 24px',
         textAlign: 'center',
@@ -53,7 +53,7 @@ export function DropZone({ onFile, isAnalyzing }: Props) {
         </h2>
         <p style={{ color: '#888', margin: 0, fontSize: 14 }}>
           ou{' '}
-          <span style={{ color: '#7c5cff', textDecoration: 'underline' }}>
+          <span style={{ color: '#b0b0b0', textDecoration: 'underline' }}>
             parcourir
           </span>{' '}
           — wav, mp3, flac, ogg

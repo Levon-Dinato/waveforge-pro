@@ -56,9 +56,9 @@ export const ScrollToTop: React.FC = () => {
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.transform = 'translateY(-5px)';
-        e.currentTarget.style.background = '#00d9ff';
+        e.currentTarget.style.background = '#ffffff';
         e.currentTarget.style.color = '#000';
-        e.currentTarget.style.borderColor = '#00d9ff';
+        e.currentTarget.style.borderColor = '#ffffff';
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.transform = 'translateY(0)';

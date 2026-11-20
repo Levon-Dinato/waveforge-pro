@@ -67,7 +67,7 @@ const TimeDisplay = ({ getCurrentTime }: { getCurrentTime: () => number }) => {
     update();
     return () => cancelAnimationFrame(animId);
   }, [getCurrentTime]);
-  return <span ref={timeRef} style={{ fontFamily: 'monospace', fontWeight: 700, color: '#00d9ff' }}>00:00</span>;
+  return <span ref={timeRef} style={{ fontFamily: 'monospace', fontWeight: 700, color: '#ffffff' }}>00:00</span>;
 };
 
 const StereoMeter = ({ isPlaying }: { isPlaying: boolean }) => {
@@ -520,7 +520,7 @@ export const MixerPage: React.FC = () => {
   const renderDeck = (deck: 'A' | 'B') => {
     const isA = deck === 'A';
     const state = isA ? deckA : deckB;
-    const waveColor = isA ? '#00d9ff' : '#ff2a2a'; 
+    const waveColor = isA ? '#ffffff' : '#ff2a2a'; 
     const activeColor = '#00ff9d'; 
 
     if (isMobile) return null; // On ne gère pas le mobile ici pour l'instant
@@ -668,8 +668,8 @@ export const MixerPage: React.FC = () => {
                <div style={{ fontSize: 11, color: '#888', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{deckA.track?.artist || '---'} • {deckA.track?.genre || '---'}</div>
             </div>
             <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-               <div style={{ fontSize: 14, color: '#00d9ff', fontFamily: 'monospace', fontWeight: 800 }}>{deckA.track?.bpm ? deckA.track.bpm.toFixed(1) : '---'}</div>
-               <div style={{ fontSize: 14, color: '#00d9ff', fontFamily: 'monospace', fontWeight: 800 }}>{deckA.track?.song_key || '--'}</div>
+               <div style={{ fontSize: 14, color: '#ffffff', fontFamily: 'monospace', fontWeight: 800 }}>{deckA.track?.bpm ? deckA.track.bpm.toFixed(1) : '---'}</div>
+               <div style={{ fontSize: 14, color: '#ffffff', fontFamily: 'monospace', fontWeight: 800 }}>{deckA.track?.song_key || '--'}</div>
                <div style={{ fontSize: 14, color: '#fff', background: '#111', padding: '4px 10px', borderRadius: 4, fontFamily: 'monospace', border: '1px solid #333' }}><TimeDisplay getCurrentTime={getTimeA} /></div>
             </div>
          </div>
@@ -691,7 +691,7 @@ export const MixerPage: React.FC = () => {
       {/* --- WAVEFORMS --- */}
       <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', height: 90, flexShrink: 0, background: '#000', borderBottom: '1px solid #222' }}>
          <div style={{ flex: 1, borderRight: '1px solid #111', position: 'relative' }}>
-            <SeratoWaveform data={waveA} duration={deckA.track?.duration || 1} getCurrentTime={getTimeA} height={90} mode="zoom" onSeek={(newTime) => handleScratch(newTime, 'A')} onSeekEnd={() => handleSeekEnd('A')} cuePoints={deckA.cuePoints} cueColor="#00d9ff" />
+            <SeratoWaveform data={waveA} duration={deckA.track?.duration || 1} getCurrentTime={getTimeA} height={90} mode="zoom" onSeek={(newTime) => handleScratch(newTime, 'A')} onSeekEnd={() => handleSeekEnd('A')} cuePoints={deckA.cuePoints} cueColor="#ffffff" />
          </div>
          <div style={{ flex: 1 }}>
             <SeratoWaveform data={waveB} duration={deckB.track?.duration || 1} getCurrentTime={getTimeB} height={90} mode="zoom" onSeek={(newTime) => handleScratch(newTime, 'B')} onSeekEnd={() => handleSeekEnd('B')} cuePoints={deckB.cuePoints} cueColor="#ff2a2a" />
@@ -745,7 +745,7 @@ export const MixerPage: React.FC = () => {
       <div style={{ flex: 1, display: 'flex', background: '#0d0d0d', overflow: 'hidden', minHeight: 0, flexDirection: isMobile ? 'column' : 'row' }}>
         {!isMobile && (
           <div style={{ width: 200, background: '#111', borderRight: '1px solid #222', padding: '15px 0', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
-            <div style={{ padding: '10px 20px', fontSize: 12, color: '#fff', fontWeight: 800, background: '#1a1a1a', borderLeft: '3px solid #00d9ff', cursor: 'pointer', marginBottom: 5 }}>Discover</div>
+            <div style={{ padding: '10px 20px', fontSize: 12, color: '#fff', fontWeight: 800, background: '#1a1a1a', borderLeft: '3px solid #ffffff', cursor: 'pointer', marginBottom: 5 }}>Discover</div>
             <div style={{ padding: '10px 20px', fontSize: 12, color: '#888', cursor: 'pointer', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = '#1a1a1a'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>Genres</div>
             <div style={{ padding: '10px 20px', fontSize: 12, color: '#888', cursor: 'pointer', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = '#1a1a1a'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>My Beatport</div>
           </div>
@@ -788,7 +788,7 @@ export const MixerPage: React.FC = () => {
                       onMouseLeave={e => e.currentTarget.style.background = i % 2 === 0 ? '#0d0d0d' : '#111'}
                     >
                       <td style={{ padding: '8px 12px', textAlign: 'center' }}>
-                        <button onClick={() => loadTrack(track, 'A')} style={{ background: 'transparent', border: 'none', color: '#00d9ff', cursor: 'pointer', fontSize: 14 }}>▶</button>
+                        <button onClick={() => loadTrack(track, 'A')} style={{ background: 'transparent', border: 'none', color: '#ffffff', cursor: 'pointer', fontSize: 14 }}>▶</button>
                       </td>
                       <td style={{ padding: '8px 12px', color: '#555', fontFamily: 'monospace' }}>{i + 1}</td>
                       <td style={{ padding: '8px 12px', color: '#eee', fontWeight: 600 }}>

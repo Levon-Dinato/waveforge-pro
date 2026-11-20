@@ -15,7 +15,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
   src,
   title,
   subtitle,
-  color = '#00ff88',
+  color = '#b0b0b0',
   onDownload,
   compact = false,
 }) => {

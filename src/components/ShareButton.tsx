@@ -305,9 +305,9 @@ export const ShareButton: React.FC<ShareButtonProps> = ({
               gap: 12,
               width: '100%',
               padding: '10px 12px',
-              background: copied ? 'rgba(0, 255, 136, 0.1)' : 'transparent',
+              background: copied ? 'rgba(176, 176, 176, 0.1)' : 'transparent',
               border: 'none',
-              color: copied ? '#00ff88' : '#fff',
+              color: copied ? '#b0b0b0' : '#fff',
               cursor: 'pointer',
               fontSize: 13,
               textAlign: 'left',
@@ -322,8 +322,8 @@ export const ShareButton: React.FC<ShareButtonProps> = ({
                 width: 28,
                 height: 28,
                 borderRadius: 4,
-                background: copied ? '#00ff88' : '#121212',
-                color: copied ? '#000' : '#00ff88',
+                background: copied ? '#b0b0b0' : '#121212',
+                color: copied ? '#000' : '#b0b0b0',
                 flexShrink: 0,
               }}
             >

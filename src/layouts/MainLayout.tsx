@@ -75,7 +75,7 @@ export const MainLayout: React.FC = () => {
     textMuted: isDark ? '#888888' : '#666666',
     border: isDark ? '#222222' : '#e5e7eb',
     hoverBg: isDark ? '#121212' : '#f3f4f6',
-    activeBg: isDark ? 'rgba(0, 217, 255, 0.05)' : 'rgba(0, 217, 255, 0.1)',
+    activeBg: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.1)',
     mainBg: isDark ? '#0a0a0a' : '#f5f5f7',
     panelBg: isDark ? '#121212' : '#ffffff',
   };
@@ -134,16 +134,16 @@ export const MainLayout: React.FC = () => {
         <header style={{ position: 'sticky', top: 0, zIndex: 50, background: colors.bg, borderBottom: `1px solid ${colors.border}`, padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
             <img src="/icons/icon-192.png" alt="DropZone DJ" style={{ width: 32, height: 32, objectFit: 'contain', borderRadius: 8 }} />
-            <span style={{ fontWeight: 800, fontSize: '1rem', color: colors.textMain, letterSpacing: '-0.5px' }}>DROPZONE <span style={{ color: '#00d9ff' }}>DJ</span></span>
+            <span style={{ fontWeight: 800, fontSize: '1rem', color: colors.textMain, letterSpacing: '-0.5px' }}>DROPZONE <span style={{ color: '#ffffff' }}>DJ</span></span>
           </Link>
           
           <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
             {user ? (
-              <button onClick={handleAuthClick} style={{ background: 'transparent', border: 'none', color: '#ff5c5c', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+              <button onClick={handleAuthClick} style={{ background: 'transparent', border: 'none', color: '#b0b0b0', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
                 Déconnexion
               </button>
             ) : (
-              <button onClick={handleAuthClick} style={{ background: '#00d9ff', border: 'none', color: '#000', fontWeight: 700, fontSize: 13, padding: '6px 12px', borderRadius: 6, cursor: 'pointer' }}>
+              <button onClick={handleAuthClick} style={{ background: '#ffffff', border: 'none', color: '#000', fontWeight: 700, fontSize: 13, padding: '6px 12px', borderRadius: 6, cursor: 'pointer' }}>
                 Connexion
               </button>
             )}
@@ -153,7 +153,7 @@ export const MainLayout: React.FC = () => {
             </button>
 
             {user && (
-              <Link to={`/profil/${user.id}`} className="avatar-circle" style={{ width: 34, height: 34, overflow: 'hidden', background: colors.hoverBg, border: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#00d9ff', fontWeight: 700, fontSize: 13, textDecoration: 'none' }}>
+              <Link to={`/profil/${user.id}`} className="avatar-circle" style={{ width: 34, height: 34, overflow: 'hidden', background: colors.hoverBg, border: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ffffff', fontWeight: 700, fontSize: 13, textDecoration: 'none' }}>
                 {avatarUrl ? <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : displayName.charAt(0).toUpperCase()}
               </Link>
             )}
@@ -178,7 +178,7 @@ export const MainLayout: React.FC = () => {
             const isMenu = item.path === '#menu';
             const isActive = !isMenu && (item.exact ? location.pathname === item.path : location.pathname.startsWith(item.path));
             return (
-              <button key={item.path} onClick={() => isMenu ? setMobileMenuOpen(true) : navigate(item.path)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 12, background: 'transparent', border: 'none', color: isActive ? '#00d9ff' : colors.textMuted, cursor: 'pointer', minWidth: 60 }}>
+              <button key={item.path} onClick={() => isMenu ? setMobileMenuOpen(true) : navigate(item.path)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 12, background: 'transparent', border: 'none', color: isActive ? '#ffffff' : colors.textMuted, cursor: 'pointer', minWidth: 60 }}>
                 <div style={{ transform: isActive ? 'scale(1.1)' : 'scale(1)', transition: 'transform 0.1s' }}>{item.icon}</div>
                 <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.2px' }}>{item.label}</span>
               </button>
@@ -207,10 +207,10 @@ export const MainLayout: React.FC = () => {
                 return (
                   <NavLink key={item.path} to={item.path} onClick={() => setMobileMenuOpen(false)} style={{
                     display: 'flex', alignItems: 'center', gap: 16, padding: '16px', borderRadius: 12,
-                    textDecoration: 'none', color: isActive ? '#00d9ff' : colors.textMain,
+                    textDecoration: 'none', color: isActive ? '#ffffff' : colors.textMain,
                     background: isActive ? colors.activeBg : 'transparent', fontWeight: isActive ? 700 : 500,
                   }}>
-                    <span style={{ display: 'flex', color: isActive ? '#00d9ff' : colors.textMuted }}>{item.icon}</span>
+                    <span style={{ display: 'flex', color: isActive ? '#ffffff' : colors.textMuted }}>{item.icon}</span>
                     {item.label}
                   </NavLink>
                 );
@@ -223,8 +223,8 @@ export const MainLayout: React.FC = () => {
               </button>
               
               <button onClick={() => { handleAuthClick(); setMobileMenuOpen(false); }} style={{
-                width: '100%', padding: '14px', background: user ? 'rgba(255, 92, 92, 0.1)' : '#00d9ff',
-                color: user ? '#ff5c5c' : '#000', border: user ? '1px solid #ff5c5c' : 'none',
+                width: '100%', padding: '14px', background: user ? 'rgba(176, 176, 176, 0.1)' : '#ffffff',
+                color: user ? '#b0b0b0' : '#000', border: user ? '1px solid #b0b0b0' : 'none',
                 borderRadius: 8, fontWeight: 800, fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8
               }}>
                 {user ? <>{Icons.logout} Déconnexion</> : 'Se connecter'}
@@ -253,7 +253,7 @@ export const MainLayout: React.FC = () => {
             const isActive = item.exact ? location.pathname === item.path : location.pathname.startsWith(item.path);
 
             return (
-              <NavLink key={item.path} to={item.path} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: `1px solid ${colors.border}`, textDecoration: 'none', color: isActive ? '#00d9ff' : colors.textMuted, background: isActive ? colors.activeBg : 'transparent', fontWeight: isActive ? 700 : 500, fontSize: '0.9rem', borderLeft: isActive ? '2px solid #00d9ff' : '2px solid transparent', transition: 'all 0.2s' }}
+              <NavLink key={item.path} to={item.path} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: `1px solid ${colors.border}`, textDecoration: 'none', color: isActive ? '#ffffff' : colors.textMuted, background: isActive ? colors.activeBg : 'transparent', fontWeight: isActive ? 700 : 500, fontSize: '0.9rem', borderLeft: isActive ? '2px solid #ffffff' : '2px solid transparent', transition: 'all 0.2s' }}
                 onMouseEnter={(e) => { if (!isActive) { e.currentTarget.style.background = colors.hoverBg; e.currentTarget.style.color = colors.textMain; } }}
                 onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = colors.textMuted; } }}
               >
@@ -285,13 +285,13 @@ export const MainLayout: React.FC = () => {
             onClick={handleAuthClick}
             style={{
               width: '100%', padding: '10px',
-              background: user ? 'transparent' : '#00d9ff',
-              color: user ? '#ff5c5c' : '#000',
-              border: user ? '1px solid rgba(255, 92, 92, 0.5)' : 'none',
+              background: user ? 'transparent' : '#ffffff',
+              color: user ? '#b0b0b0' : '#000',
+              border: user ? '1px solid rgba(176, 176, 176, 0.5)' : 'none',
               borderRadius: '8px', fontWeight: 700, fontSize: '0.85rem',
               cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', transition: 'all 0.2s'
             }}
-            onMouseEnter={(e) => { if (user) e.currentTarget.style.background = 'rgba(255, 92, 92, 0.1)'; }}
+            onMouseEnter={(e) => { if (user) e.currentTarget.style.background = 'rgba(176, 176, 176, 0.1)'; }}
             onMouseLeave={(e) => { if (user) e.currentTarget.style.background = 'transparent'; }}
           >
             {user ? (
@@ -302,7 +302,7 @@ export const MainLayout: React.FC = () => {
           </button>
 
           <Link to={user ? `/profil/${user.id}` : '/auth'} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px', borderRadius: 8, textDecoration: 'none', color: colors.textMain, background: colors.hoverBg }} onMouseEnter={(e) => e.currentTarget.style.filter = 'brightness(0.95)'} onMouseLeave={(e) => e.currentTarget.style.filter = 'none'}>
-            <div style={{ width: 36, height: 36, borderRadius: '50%', background: colors.bg, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#00d9ff', fontWeight: 700, fontSize: 14, border: `1px solid ${colors.border}`, flexShrink: 0 }}>
+            <div style={{ width: 36, height: 36, borderRadius: '50%', background: colors.bg, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ffffff', fontWeight: 700, fontSize: 14, border: `1px solid ${colors.border}`, flexShrink: 0 }}>
               {avatarUrl ? <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (user ? displayName.charAt(0).toUpperCase() : '?')}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>

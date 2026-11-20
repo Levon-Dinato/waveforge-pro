@@ -58,7 +58,7 @@ export function VideoBackground({
             width: '100vw',
             height: '100vh',
             background:
-              'radial-gradient(circle at 20% 30%, rgba(124, 92, 255, 0.25) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(255, 92, 157, 0.2) 0%, transparent 55%), radial-gradient(circle at 50% 50%, #0a0a14 0%, #07070c 100%)',
+              'radial-gradient(circle at 20% 30%, rgba(176, 176, 176, 0.25) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(255, 92, 157, 0.2) 0%, transparent 55%), radial-gradient(circle at 50% 50%, #0a0a14 0%, #07070c 100%)',
             zIndex: 0,
           }}
         />

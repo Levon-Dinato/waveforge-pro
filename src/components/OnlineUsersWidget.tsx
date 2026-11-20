@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface OnlineUser {
   user_id: string;
@@ -12,8 +13,23 @@ interface OnlineUser {
 
 export const OnlineUsersWidget: React.FC = () => {
   const { user, username } = useAuth();
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
   const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const c = {
+    title: isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)',
+    textDim: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.5)',
+    textMain: isDark ? '#ffffff' : '#111111',
+    dot: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.25)',
+    accent: '#b0b0b0',
+    chipBg: isDark ? 'rgba(176,176,176,0.1)' : 'rgba(0,0,0,0.06)',
+    chipBorder: isDark ? 'rgba(176,176,176,0.3)' : 'rgba(0,0,0,0.2)',
+    hoverBg: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
+    meBg: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
+    meBorder: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.25)',
+  };
 
   useEffect(() => {
     if (!user) {
@@ -45,12 +61,10 @@ export const OnlineUsersWidget: React.FC = () => {
           });
         });
 
-        // Déduplique par user_id
         const unique = Array.from(
           new Map(users.map((u) => [u.user_id, u])).values()
         );
 
-        // Trie par pseudo alphabétique
         unique.sort((a, b) => a.username.localeCompare(b.username));
         setOnlineUsers(unique);
         setLoading(false);
@@ -71,14 +85,13 @@ export const OnlineUsersWidget: React.FC = () => {
     };
   }, [user?.id, username]);
 
-  // Si pas connecté → widget discret avec appel à se connecter
   if (!user) {
     return (
       <div
         style={{
           marginTop: 16,
           paddingTop: 16,
-          borderTop: '1px solid rgba(255,255,255,0.06)',
+          borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
         }}
       >
         <h3
@@ -88,7 +101,7 @@ export const OnlineUsersWidget: React.FC = () => {
             letterSpacing: '1px',
             padding: '0 0 10px',
             margin: 0,
-            color: 'rgba(255,255,255,0.7)',
+            color: c.title,
             display: 'flex',
             alignItems: 'center',
             gap: 6,
@@ -99,7 +112,7 @@ export const OnlineUsersWidget: React.FC = () => {
               width: 8,
               height: 8,
               borderRadius: '50%',
-              background: 'rgba(255,255,255,0.3)',
+              background: c.dot,
             }}
           />
           EN LIGNE
@@ -107,7 +120,7 @@ export const OnlineUsersWidget: React.FC = () => {
         <div
           style={{
             fontSize: '0.7rem',
-            color: 'rgba(255,255,255,0.4)',
+            color: c.textDim,
             padding: '8px 0',
             lineHeight: 1.5,
           }}
@@ -115,7 +128,7 @@ export const OnlineUsersWidget: React.FC = () => {
           <Link
             to="/auth"
             style={{
-              color: '#00d9ff',
+              color: c.textMain,
               textDecoration: 'none',
               fontWeight: 700,
             }}
@@ -133,10 +146,9 @@ export const OnlineUsersWidget: React.FC = () => {
       style={{
         marginTop: 16,
         paddingTop: 16,
-        borderTop: '1px solid rgba(255,255,255,0.06)',
+        borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
       }}
     >
-      {/* Header */}
       <h3
         style={{
           fontSize: '0.75rem',
@@ -144,7 +156,7 @@ export const OnlineUsersWidget: React.FC = () => {
           letterSpacing: '1px',
           padding: '0 0 10px',
           margin: 0,
-          color: 'rgba(255,255,255,0.7)',
+          color: c.title,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
@@ -157,8 +169,8 @@ export const OnlineUsersWidget: React.FC = () => {
               width: 8,
               height: 8,
               borderRadius: '50%',
-              background: '#00ff88',
-              boxShadow: '0 0 8px #00ff88',
+              background: c.accent,
+              boxShadow: `0 0 8px ${c.accent}`,
               display: 'inline-block',
             }}
           />
@@ -167,9 +179,9 @@ export const OnlineUsersWidget: React.FC = () => {
         <span
           style={{
             fontSize: '0.7rem',
-            color: '#00ff88',
-            background: 'rgba(0, 255, 136, 0.1)',
-            border: '1px solid rgba(0, 255, 136, 0.3)',
+            color: c.accent,
+            background: c.chipBg,
+            border: `1px solid ${c.chipBorder}`,
             padding: '1px 8px',
             borderRadius: 10,
             fontWeight: 800,
@@ -179,26 +191,12 @@ export const OnlineUsersWidget: React.FC = () => {
         </span>
       </h3>
 
-      {/* Liste des users */}
       {loading ? (
-        <div
-          style={{
-            fontSize: '0.72rem',
-            color: 'rgba(255,255,255,0.4)',
-            padding: '6px 0',
-          }}
-        >
+        <div style={{ fontSize: '0.72rem', color: c.textDim, padding: '6px 0' }}>
           Connexion...
         </div>
       ) : onlineUsers.length === 0 ? (
-        <div
-          style={{
-            fontSize: '0.72rem',
-            color: 'rgba(255,255,255,0.4)',
-            padding: '6px 0',
-            fontStyle: 'italic',
-          }}
-        >
+        <div style={{ fontSize: '0.72rem', color: c.textDim, padding: '6px 0', fontStyle: 'italic' }}>
           Tu es seul pour l'instant.
         </div>
       ) : (
@@ -226,31 +224,27 @@ export const OnlineUsersWidget: React.FC = () => {
                   padding: '5px 8px',
                   borderRadius: 6,
                   textDecoration: 'none',
-                  color: isMe ? '#00d9ff' : 'rgba(255,255,255,0.75)',
-                  background: isMe ? 'rgba(0, 217, 255, 0.08)' : 'transparent',
-                  border: isMe
-                    ? '1px solid rgba(0, 217, 255, 0.3)'
-                    : '1px solid transparent',
+                  color: isMe ? c.textMain : c.textMain,
+                  background: isMe ? c.meBg : 'transparent',
+                  border: isMe ? `1px solid ${c.meBorder}` : '1px solid transparent',
                   fontSize: '0.72rem',
                   fontWeight: isMe ? 700 : 500,
+                  opacity: isMe ? 1 : (isDark ? 0.75 : 0.85),
                   transition: 'all 0.15s',
                 }}
               >
-                {/* Petit avatar (point vert) */}
                 <div
                   style={{
                     width: 20,
                     height: 20,
                     borderRadius: '50%',
-                    background: isMe
-                      ? 'linear-gradient(135deg, #00d9ff, #7c5cff)'
-                      : 'linear-gradient(135deg, #00ff88, #00d9ff)',
+                    background: `linear-gradient(135deg, ${isDark ? '#ffffff' : '#111111'}, #b0b0b0)`,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     fontSize: 10,
                     flexShrink: 0,
-                    boxShadow: '0 0 8px rgba(0, 255, 136, 0.4)',
+                    boxShadow: '0 0 8px rgba(176, 176, 176, 0.4)',
                   }}
                 >
                   🎧
@@ -269,7 +263,7 @@ export const OnlineUsersWidget: React.FC = () => {
                     <span
                       style={{
                         fontSize: '0.6rem',
-                        color: 'rgba(0, 217, 255, 0.6)',
+                        color: c.textDim,
                         marginLeft: 4,
                       }}
                     >
@@ -278,14 +272,13 @@ export const OnlineUsersWidget: React.FC = () => {
                   )}
                 </span>
 
-                {/* Point vert pulsant */}
                 <span
                   style={{
                     width: 6,
                     height: 6,
                     borderRadius: '50%',
-                    background: '#00ff88',
-                    boxShadow: '0 0 6px #00ff88',
+                    background: c.accent,
+                    boxShadow: `0 0 6px ${c.accent}`,
                     flexShrink: 0,
                   }}
                 />
@@ -304,8 +297,8 @@ export const OnlineUsersWidget: React.FC = () => {
           animation: onlinePulse 2s ease-in-out infinite;
         }
         .online-user-item:hover {
-          background: rgba(0, 217, 255, 0.06) !important;
-          border-color: rgba(0, 217, 255, 0.2) !important;
+          background: ${isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.05)'} !important;
+          border-color: ${isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.15)'} !important;
         }
       `}</style>
     </div>

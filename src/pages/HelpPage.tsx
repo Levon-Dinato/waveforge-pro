@@ -47,10 +47,10 @@ export const HelpPage: React.FC = () => {
     textMain: isDark ? '#ffffff' : '#1a1a1a',
     textMuted: isDark ? '#a1a1aa' : '#666666',
     textLight: isDark ? '#d4d4d8' : '#444444',
-    activeBg: isDark ? 'rgba(0, 217, 255, 0.1)' : 'rgba(0, 217, 255, 0.05)',
-    activeBorder: isDark ? 'rgba(0, 217, 255, 0.4)' : 'rgba(0, 217, 255, 0.5)',
-    activeText: '#00d9ff',
-    accent: '#00d9ff',
+    activeBg: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.05)',
+    activeBorder: isDark ? 'rgba(255, 255, 255, 0.4)' : 'rgba(255, 255, 255, 0.5)',
+    activeText: '#ffffff',
+    accent: '#ffffff',
   };
 
   const scrollTo = (id: string) => {
@@ -341,11 +341,11 @@ const Step: React.FC<{ number: number; title: string; items: string[]; colors: T
 const Mistake: React.FC<{ problem: string; solution: string; colors: ThemeColors }> = ({ problem, solution, colors }) => (
   <div style={{ marginBottom: 16, padding: 20, background: colors.calloutBg, border: `1px solid ${colors.border}`, borderRadius: 12 }}>
     <div style={{ display: 'flex', gap: 12, marginBottom: 12, alignItems: 'flex-start' }}>
-      <span style={{ color: '#ff3366', fontWeight: 900, fontSize: 16, marginTop: 1 }}>✕</span>
+      <span style={{ color: '#b0b0b0', fontWeight: 900, fontSize: 16, marginTop: 1 }}>✕</span>
       <span style={{ fontSize: 15, color: colors.textMain, fontWeight: 700 }}>{problem}</span>
     </div>
     <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-      <span style={{ color: '#10b981', fontWeight: 900, fontSize: 16, marginTop: 1 }}>✓</span>
+      <span style={{ color: '#b0b0b0', fontWeight: 900, fontSize: 16, marginTop: 1 }}>✓</span>
       <span style={{ fontSize: 14, color: colors.textMuted, lineHeight: 1.6 }}>{solution}</span>
     </div>
   </div>

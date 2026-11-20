@@ -21,7 +21,7 @@ export const DesktopOnly: React.FC<{ children: React.ReactNode }> = ({ children 
         <p style={{ color: '#888', fontSize: '1rem', lineHeight: 1.6, maxWidth: 400, marginBottom: 32 }}>
           L'outil de préparation DJ nécessite un grand écran et une souris pour une expérience optimale. Veuillez vous connecter depuis un ordinateur.
         </p>
-        <button onClick={() => navigate('/')} style={{ background: '#00d9ff', color: '#000', padding: '12px 24px', borderRadius: 8, fontWeight: 800, border: 'none', cursor: 'pointer' }}>
+        <button onClick={() => navigate('/')} style={{ background: '#ffffff', color: '#000', padding: '12px 24px', borderRadius: 8, fontWeight: 800, border: 'none', cursor: 'pointer' }}>
           Retour au site
         </button>
       </div>

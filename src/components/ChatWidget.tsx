@@ -103,7 +103,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ receiverId, receiverName
       zIndex: 1000, overflow: 'hidden', fontFamily: 'sans-serif'
     }}>
       {/* Header */}
-      <div style={{ background: '#e50000', padding: '10px 15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ background: '#b0b0b0', padding: '10px 15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span style={{ fontWeight: 700, fontSize: '0.9rem', color: '#fff' }}>Chat avec {receiverName}</span>
         <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', fontSize: '1.2rem' }}>✕</button>
       </div>
@@ -116,7 +116,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ receiverId, receiverName
           return (
             <div key={msg.id} style={{
               alignSelf: isMine ? 'flex-end' : 'flex-start',
-              background: isMine ? '#e50000' : '#222',
+              background: isMine ? '#b0b0b0' : '#222',
               color: '#fff', padding: '8px 12px', borderRadius: 12,
               maxWidth: '80%', fontSize: '0.85rem', 
               borderBottomRightRadius: isMine ? 0 : 12, 
@@ -138,7 +138,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ receiverId, receiverName
           placeholder="Écrire un message..."
           style={{ flex: 1, background: '#222', border: 'none', borderRadius: 20, padding: '8px 15px', color: '#fff', outline: 'none' }}
         />
-        <button type="submit" style={{ background: '#e50000', border: 'none', borderRadius: '50%', width: 36, height: 36, color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>➤</button>
+        <button type="submit" style={{ background: '#b0b0b0', border: 'none', borderRadius: '50%', width: 36, height: 36, color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>➤</button>
       </form>
     </div>
   );

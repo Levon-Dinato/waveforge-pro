@@ -66,7 +66,7 @@ export const InstallButton: React.FC<InstallButtonProps> = ({ variant = 'sidebar
             marginBottom: 16,
             fontSize: 15,
             fontWeight: 700,
-            color: '#00d9ff',
+            color: '#ffffff',
             textAlign: 'center',
             letterSpacing: '0.5px',
           }}
@@ -86,7 +86,7 @@ export const InstallButton: React.FC<InstallButtonProps> = ({ variant = 'sidebar
           >
             <li>
               Ouvre le menu <strong style={{ color: '#fff' }}>Partager</strong> de Safari{' '}
-              <span style={{ color: '#00d9ff' }}>⎙</span>
+              <span style={{ color: '#ffffff' }}>⎙</span>
             </li>
             <li>
               Fais défiler et tape sur{' '}
@@ -151,7 +151,7 @@ export const InstallButton: React.FC<InstallButtonProps> = ({ variant = 'sidebar
             padding: '12px',
             border: 'none',
             borderRadius: 4,
-            background: '#00d9ff',
+            background: '#ffffff',
             color: '#000',
             fontWeight: 700,
             fontSize: 12,
@@ -229,7 +229,7 @@ export const InstallButton: React.FC<InstallButtonProps> = ({ variant = 'sidebar
               padding: '8px 14px',
               border: 'none',
               borderRadius: 4,
-              background: '#00d9ff',
+              background: '#ffffff',
               color: '#000',
               fontSize: 11,
               fontWeight: 700,
@@ -292,8 +292,8 @@ export const InstallButton: React.FC<InstallButtonProps> = ({ variant = 'sidebar
         }}
         onMouseEnter={(e) => {
           e.currentTarget.style.background = '#2a2a2a';
-          e.currentTarget.style.color = '#00d9ff';
-          e.currentTarget.style.borderColor = '#00d9ff';
+          e.currentTarget.style.color = '#ffffff';
+          e.currentTarget.style.borderColor = '#ffffff';
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.background = '#1c1c1c';

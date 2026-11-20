@@ -66,7 +66,7 @@ const RadiosPage = lazy(() => import('./pages/RadioListPage').then((m) => ({ def
 
 const PageLoader = () => (
   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', flexDirection: 'column', gap: 16 }}>
-    <div style={{ width: 40, height: 40, border: '3px solid rgba(0, 217, 255, 0.2)', borderTop: '3px solid #00d9ff', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+    <div style={{ width: 40, height: 40, border: '3px solid rgba(255, 255, 255, 0.2)', borderTop: '3px solid #ffffff', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
     <div style={{ fontSize: 11, color: '#666', letterSpacing: '2px', fontFamily: 'monospace' }}>CHARGEMENT...</div>
     <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
   </div>

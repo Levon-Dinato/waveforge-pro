@@ -8,7 +8,7 @@ interface CurveVisualizerProps {
   color?: string;
 }
 
-export const CurveVisualizer: React.FC<CurveVisualizerProps> = ({ analyser, isActive, height = 150, color = '#00d9ff' }) => {
+export const CurveVisualizer: React.FC<CurveVisualizerProps> = ({ analyser, isActive, height = 150, color = '#ffffff' }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number | null>(null);
   // On ajoute <ArrayBuffer> ici pour satisfaire TypeScript

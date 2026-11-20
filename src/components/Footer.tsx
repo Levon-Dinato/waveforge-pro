@@ -14,7 +14,7 @@ export const Footer: React.FC = () => {
     textMain: isDark ? '#ffffff' : '#1a1a1a',
     textMuted: isDark ? '#a1a1aa' : '#666666',
     heading: isDark ? '#ffffff' : '#1a1a1a',
-    accent: '#00d9ff',
+    accent: '#ffffff',
     chipBg: isDark ? '#14141c' : '#f4f4f5',
     chipBorder: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
   };
@@ -57,7 +57,7 @@ export const Footer: React.FC = () => {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
             <div style={{
               width: 36, height: 36, borderRadius: 8,
-              background: `linear-gradient(135deg, ${colors.accent} 0%, #7c5cff 100%)`,
+              background: `linear-gradient(135deg, ${colors.accent} 0%, #b0b0b0 100%)`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               color: '#000', fontWeight: 900, fontSize: 16,
             }}>
@@ -148,7 +148,7 @@ export const Footer: React.FC = () => {
       }}>
         <div>© {new Date().getFullYear()} DropZone DJ. Tous droits réservés.</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          Fait avec <span style={{ color: '#ff3366' }}>❤</span> pour les DJs.
+          Fait avec <span style={{ color: '#b0b0b0' }}>❤</span> pour les DJs.
         </div>
       </div>
     </footer>

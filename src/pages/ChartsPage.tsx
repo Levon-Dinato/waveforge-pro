@@ -34,7 +34,7 @@ const TrendBadge = ({ currentRank, previousRank, size = 'normal' }: { currentRan
   if (previousRank === null || previousRank === undefined) {
     return (
       <div style={{ 
-        width: boxSize, height: boxSize, background: '#00d9ff', color: '#000', 
+        width: boxSize, height: boxSize, background: '#ffffff', color: '#000', 
         display: 'flex', alignItems: 'center', justifyContent: 'center', 
         borderRadius: 4, fontSize: isSmall ? 9 : 10, fontWeight: 900 
       }}>
@@ -48,7 +48,7 @@ const TrendBadge = ({ currentRank, previousRank, size = 'normal' }: { currentRan
   if (diff > 0) {
     return (
       <div style={{ 
-        width: boxSize, height: boxSize, background: '#10b981', color: '#fff', 
+        width: boxSize, height: boxSize, background: '#b0b0b0', color: '#fff', 
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', 
         borderRadius: 4, fontSize: isSmall ? 10 : 12, fontWeight: 900, lineHeight: 1
       }}>
@@ -61,7 +61,7 @@ const TrendBadge = ({ currentRank, previousRank, size = 'normal' }: { currentRan
   if (diff < 0) {
     return (
       <div style={{ 
-        width: boxSize, height: boxSize, background: '#ef4444', color: '#fff', 
+        width: boxSize, height: boxSize, background: '#b0b0b0', color: '#fff', 
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', 
         borderRadius: 4, fontSize: isSmall ? 10 : 12, fontWeight: 900, lineHeight: 1
       }}>
@@ -73,7 +73,7 @@ const TrendBadge = ({ currentRank, previousRank, size = 'normal' }: { currentRan
 
   return (
     <div style={{ 
-      width: boxSize, height: boxSize, background: '#f59e0b', color: '#fff', 
+      width: boxSize, height: boxSize, background: '#b0b0b0', color: '#fff', 
       display: 'flex', alignItems: 'center', justifyContent: 'center', 
       borderRadius: 4, fontSize: isSmall ? 14 : 18, fontWeight: 900 
     }}>
@@ -99,8 +99,8 @@ export const ChartsPage: React.FC = () => {
     border: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
     textMain: isDark ? '#ffffff' : '#1a1a1a',
     textMuted: isDark ? 'rgba(255,255,255,0.5)' : '#666666',
-    accent: '#00d9ff',
-    gold: '#fbbf24',
+    accent: '#ffffff',
+    gold: '#b0b0b0',
     silver: '#9ca3af',
     bronze: '#b45309',
   };

@@ -19,9 +19,9 @@ export const MonoMakerPanel: React.FC<MonoMakerPanelProps> = ({
       style={{
         padding: 14,
         background: enabled
-          ? 'linear-gradient(135deg, rgba(0, 217, 255, 0.08), rgba(124, 92, 255, 0.05))'
+          ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(176, 176, 176, 0.05))'
           : 'rgba(0, 0, 0, 0.3)',
-        border: `1px solid ${enabled ? 'rgba(0, 217, 255, 0.4)' : '#1f1f1f'}`,
+        border: `1px solid ${enabled ? 'rgba(255, 255, 255, 0.4)' : '#1f1f1f'}`,
         borderRadius: 8,
         transition: 'all 0.2s',
       }}
@@ -41,14 +41,14 @@ export const MonoMakerPanel: React.FC<MonoMakerPanelProps> = ({
               height: 32,
               borderRadius: 8,
               background: enabled
-                ? 'linear-gradient(135deg, #00d9ff, #0088ff)'
+                ? 'linear-gradient(135deg, #ffffff, #b0b0b0)'
                 : 'rgba(255,255,255,0.05)',
               border: `1px solid ${enabled ? 'transparent' : '#333'}`,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               fontSize: 16,
-              boxShadow: enabled ? '0 0 12px rgba(0, 217, 255, 0.5)' : 'none',
+              boxShadow: enabled ? '0 0 12px rgba(255, 255, 255, 0.5)' : 'none',
               transition: 'all 0.2s',
             }}
           >
@@ -59,7 +59,7 @@ export const MonoMakerPanel: React.FC<MonoMakerPanelProps> = ({
               style={{
                 fontSize: 12,
                 fontWeight: 700,
-                color: enabled ? '#00d9ff' : '#888',
+                color: enabled ? '#ffffff' : '#888',
                 letterSpacing: '0.5px',
               }}
             >
@@ -79,12 +79,12 @@ export const MonoMakerPanel: React.FC<MonoMakerPanelProps> = ({
             borderRadius: 12,
             border: 'none',
             background: enabled
-              ? 'linear-gradient(135deg, #00d9ff, #0088ff)'
+              ? 'linear-gradient(135deg, #ffffff, #b0b0b0)'
               : '#2a2a2a',
             cursor: 'pointer',
             position: 'relative',
             transition: 'all 0.2s',
-            boxShadow: enabled ? '0 0 12px rgba(0, 217, 255, 0.4)' : 'none',
+            boxShadow: enabled ? '0 0 12px rgba(255, 255, 255, 0.4)' : 'none',
           }}
         >
           <div
@@ -115,7 +115,7 @@ export const MonoMakerPanel: React.FC<MonoMakerPanelProps> = ({
           <div style={{ fontSize: 10, color: '#666', letterSpacing: '0.5px' }}>
             FRÉQUENCE DE COUPURE
           </div>
-          <span className="mono" style={{ fontSize: 12, color: '#00d9ff', fontWeight: 700 }}>
+          <span className="mono" style={{ fontSize: 12, color: '#ffffff', fontWeight: 700 }}>
             {frequency} Hz
           </span>
         </div>
@@ -130,7 +130,7 @@ export const MonoMakerPanel: React.FC<MonoMakerPanelProps> = ({
           disabled={!enabled}
           style={{
             width: '100%',
-            accentColor: '#00d9ff',
+            accentColor: '#ffffff',
             cursor: enabled ? 'pointer' : 'not-allowed',
           }}
         />
@@ -159,7 +159,7 @@ export const MonoMakerPanel: React.FC<MonoMakerPanelProps> = ({
             lineHeight: 1.5,
           }}
         >
-          💡 <strong style={{ color: '#00d9ff' }}>Astuce pro :</strong> 100-120 Hz est idéal
+          💡 <strong style={{ color: '#ffffff' }}>Astuce pro :</strong> 100-120 Hz est idéal
           pour la plupart des morceaux.
         </div>
       </div>

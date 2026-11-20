@@ -128,7 +128,7 @@ export const LivePage = () => {
               textTransform: 'uppercase',
               marginBottom: 24,
             }}>
-              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#ff3366', animation: 'pulse 1.5s infinite' }} />
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#b0b0b0', animation: 'pulse 1.5s infinite' }} />
               En direct
             </div>
 
@@ -272,7 +272,7 @@ export const LivePage = () => {
         {/* Barre d'actions sous le lecteur */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 16, flexWrap: 'wrap', gap: 12 }}>
           <div style={{ fontSize: 12, color: colors.textMuted, display: 'flex', alignItems: 'center', gap: 8 }}>
-             <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#ff3366' }} />
+             <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#b0b0b0' }} />
              En direct sur DropZone
           </div>
           <div style={{ display: 'flex', gap: 16 }}>
@@ -293,7 +293,7 @@ export const LivePage = () => {
               rel="noopener noreferrer"
               style={{
                 fontSize: 12,
-                color: '#00d9ff',
+                color: '#ffffff',
                 textDecoration: 'none',
                 fontWeight: 500,
               }}

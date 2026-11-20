@@ -26,16 +26,16 @@ interface Preset {
 }
 
 const PRESETS: Preset[] = [
-  { id: 'lofi',      label: 'Lo-Fi',      prompt: 'lofi hip hop beat, chill, jazzy, warm piano, vinyl crackle', color: '#ffd43b', mode: 'instrumental' },
-  { id: 'trap',      label: 'Trap',       prompt: 'trap beat, dark, 808 bass, hi-hats, atmospheric',            color: '#ff3366', mode: 'instrumental' },
-  { id: 'house',     label: 'House',      prompt: 'deep house, groovy, piano chords, four on the floor, club',   color: '#00d9ff', mode: 'instrumental' },
-  { id: 'ambient',   label: 'Ambient',    prompt: 'ambient soundscape, calm, atmospheric, pad, cinematic',       color: '#7c5cff', mode: 'instrumental' },
-  { id: 'edm',       label: 'EDM',        prompt: 'edm, festival, big room, energetic, synth lead, drop',        color: '#ff5cf0', mode: 'instrumental' },
-  { id: 'jazz',      label: 'Jazz',       prompt: 'smooth jazz, saxophone, piano trio, lounge, relaxed',         color: '#00ff88', mode: 'instrumental' },
-  { id: 'synthwave', label: 'Synthwave',  prompt: 'synthwave, retro 80s, neon, drum machine, analog synth',      color: '#ec4899', mode: 'instrumental' },
-  { id: 'cinematic', label: 'Cinematic',  prompt: 'cinematic orchestral, epic, strings, brass, emotional',       color: '#f59e0b', mode: 'instrumental' },
+  { id: 'lofi',      label: 'Lo-Fi',      prompt: 'lofi hip hop beat, chill, jazzy, warm piano, vinyl crackle', color: '#b0b0b0', mode: 'instrumental' },
+  { id: 'trap',      label: 'Trap',       prompt: 'trap beat, dark, 808 bass, hi-hats, atmospheric',            color: '#b0b0b0', mode: 'instrumental' },
+  { id: 'house',     label: 'House',      prompt: 'deep house, groovy, piano chords, four on the floor, club',   color: '#ffffff', mode: 'instrumental' },
+  { id: 'ambient',   label: 'Ambient',    prompt: 'ambient soundscape, calm, atmospheric, pad, cinematic',       color: '#b0b0b0', mode: 'instrumental' },
+  { id: 'edm',       label: 'EDM',        prompt: 'edm, festival, big room, energetic, synth lead, drop',        color: '#b0b0b0', mode: 'instrumental' },
+  { id: 'jazz',      label: 'Jazz',       prompt: 'smooth jazz, saxophone, piano trio, lounge, relaxed',         color: '#b0b0b0', mode: 'instrumental' },
+  { id: 'synthwave', label: 'Synthwave',  prompt: 'synthwave, retro 80s, neon, drum machine, analog synth',      color: '#b0b0b0', mode: 'instrumental' },
+  { id: 'cinematic', label: 'Cinematic',  prompt: 'cinematic orchestral, epic, strings, brass, emotional',       color: '#b0b0b0', mode: 'instrumental' },
   { id: 'techno',    label: 'Techno',     prompt: 'techno, dark, industrial, driving kick, hypnotic',            color: '#06b6d4', mode: 'instrumental' },
-  { id: 'reggaeton', label: 'Reggaeton',  prompt: 'reggaeton, latin, dembow, catchy, dance',                     color: '#10b981', mode: 'instrumental' },
+  { id: 'reggaeton', label: 'Reggaeton',  prompt: 'reggaeton, latin, dembow, catchy, dance',                     color: '#b0b0b0', mode: 'instrumental' },
   { id: 'vocal-pop',  label: '🎤 Pop',   prompt: 'pop song with vocals, catchy chorus, emotional, radio hit',   color: '#ff1493', mode: 'vocal' },
   { id: 'vocal-rap',  label: '🎤 Rap',   prompt: 'hip hop rap with vocals, punchy delivery, deep beat',         color: '#ff4500', mode: 'vocal' },
   { id: 'vocal-soul', label: '🎤 Soul',  prompt: 'soulful R&B with vocals, warm chords, groove',               color: '#daa520', mode: 'vocal' },
@@ -332,7 +332,7 @@ export const MusicGenPage: React.FC = () => {
       {/* COLONNE GAUCHE : CRÉATION */}
       <GlassCard
         padding={0}
-        glow="#00ff88"
+        glow="#b0b0b0"
         style={{
           position: isMobile ? 'relative' : 'sticky',
           top: isMobile ? 'auto' : 20,
@@ -366,7 +366,7 @@ export const MusicGenPage: React.FC = () => {
               style={{
                 fontSize: 14,
                 fontWeight: 800,
-                background: 'linear-gradient(135deg, #00ff88, #00b866)',
+                background: 'linear-gradient(135deg, #b0b0b0, #00b866)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
@@ -383,22 +383,22 @@ export const MusicGenPage: React.FC = () => {
               gap: 6,
               padding: '4px 10px',
               background: isGenerating
-                ? 'rgba(0, 217, 255, 0.08)'
+                ? 'rgba(255, 255, 255, 0.08)'
                 : isOnline
-                ? 'rgba(0, 255, 136, 0.08)'
-                : 'rgba(255, 51, 102, 0.08)',
+                ? 'rgba(176, 176, 176, 0.08)'
+                : 'rgba(176, 176, 176, 0.08)',
               border: `1px solid ${
                 isGenerating
-                  ? 'rgba(0, 217, 255, 0.3)'
+                  ? 'rgba(255, 255, 255, 0.3)'
                   : isOnline
-                  ? 'rgba(0, 255, 136, 0.3)'
-                  : 'rgba(255, 51, 102, 0.3)'
+                  ? 'rgba(176, 176, 176, 0.3)'
+                  : 'rgba(176, 176, 176, 0.3)'
               }`,
               borderRadius: 8,
               fontSize: 9,
               fontWeight: 800,
               letterSpacing: '0.5px',
-              color: isGenerating ? '#00d9ff' : isOnline ? '#00ff88' : '#ff3366',
+              color: isGenerating ? '#ffffff' : isOnline ? '#b0b0b0' : '#b0b0b0',
             }}
           >
             <div
@@ -406,11 +406,11 @@ export const MusicGenPage: React.FC = () => {
                 width: 6,
                 height: 6,
                 borderRadius: '50%',
-                background: isGenerating ? '#00d9ff' : isOnline ? '#00ff88' : '#ff3366',
+                background: isGenerating ? '#ffffff' : isOnline ? '#b0b0b0' : '#b0b0b0',
                 boxShadow: isGenerating
-                  ? '0 0 8px #00d9ff'
+                  ? '0 0 8px #ffffff'
                   : isOnline
-                  ? '0 0 8px #00ff88'
+                  ? '0 0 8px #b0b0b0'
                   : 'none',
               }}
             />
@@ -424,16 +424,16 @@ export const MusicGenPage: React.FC = () => {
               style={{
                 padding: 12,
                 background: isProduction()
-                  ? 'rgba(255, 212, 59, 0.06)'
-                  : 'rgba(255, 51, 102, 0.06)',
+                  ? 'rgba(176, 176, 176, 0.06)'
+                  : 'rgba(176, 176, 176, 0.06)',
                 border: `1px solid ${
                   isProduction()
-                    ? 'rgba(255, 212, 59, 0.3)'
-                    : 'rgba(255, 51, 102, 0.3)'
+                    ? 'rgba(176, 176, 176, 0.3)'
+                    : 'rgba(176, 176, 176, 0.3)'
                 }`,
                 borderRadius: 10,
                 fontSize: 10,
-                color: isProduction() ? '#ffd43b' : '#ff3366',
+                color: isProduction() ? '#b0b0b0' : '#b0b0b0',
                 marginBottom: 16,
                 lineHeight: 1.6,
               }}
@@ -522,7 +522,7 @@ export const MusicGenPage: React.FC = () => {
                 <span
                   style={{
                     fontSize: 12,
-                    color: '#00ff88',
+                    color: '#b0b0b0',
                     fontWeight: 800,
                     fontFamily: 'monospace',
                   }}
@@ -542,13 +542,13 @@ export const MusicGenPage: React.FC = () => {
                     padding: '8px 4px',
                     background:
                       duration === d
-                        ? 'linear-gradient(135deg, rgba(0,255,136,0.2), rgba(0,184,102,0.05))'
+                        ? 'linear-gradient(135deg, rgba(176,176,176,0.2), rgba(0,184,102,0.05))'
                         : 'rgba(255,255,255,0.03)',
                     border: `1px solid ${
-                      duration === d ? '#00ff88' : 'rgba(255,255,255,0.08)'
+                      duration === d ? '#b0b0b0' : 'rgba(255,255,255,0.08)'
                     }`,
                     borderRadius: 8,
-                    color: duration === d ? '#00ff88' : 'rgba(255,255,255,0.6)',
+                    color: duration === d ? '#b0b0b0' : 'rgba(255,255,255,0.6)',
                     fontSize: 11,
                     fontWeight: 700,
                     cursor: isGenerating ? 'not-allowed' : 'pointer',
@@ -563,7 +563,7 @@ export const MusicGenPage: React.FC = () => {
               <div
                 style={{
                   fontSize: 9,
-                  color: 'rgba(255,212,59,0.7)',
+                  color: 'rgba(176,176,176,0.7)',
                   marginTop: 6,
                   fontStyle: 'italic',
                 }}
@@ -703,7 +703,7 @@ export const MusicGenPage: React.FC = () => {
                 <span
                   style={{
                     fontSize: 12,
-                    color: '#00d9ff',
+                    color: '#ffffff',
                     fontWeight: 800,
                     fontFamily: 'monospace',
                   }}
@@ -720,7 +720,7 @@ export const MusicGenPage: React.FC = () => {
               value={temperature}
               onChange={(e) => setTemperature(parseFloat(e.target.value))}
               disabled={isGenerating}
-              style={{ width: '100%', accentColor: '#00d9ff' }}
+              style={{ width: '100%', accentColor: '#ffffff' }}
             />
             <div
               style={{
@@ -741,8 +741,8 @@ export const MusicGenPage: React.FC = () => {
               style={{
                 marginTop: 16,
                 padding: 12,
-                background: 'rgba(0, 255, 136, 0.05)',
-                border: '1px solid rgba(0, 255, 136, 0.2)',
+                background: 'rgba(176, 176, 176, 0.05)',
+                border: '1px solid rgba(176, 176, 176, 0.2)',
                 borderRadius: 10,
               }}
             >
@@ -754,7 +754,7 @@ export const MusicGenPage: React.FC = () => {
                   marginBottom: 8,
                 }}
               >
-                <span style={{ color: '#00ff88', fontWeight: 700 }}>⏳ {status}</span>
+                <span style={{ color: '#b0b0b0', fontWeight: 700 }}>⏳ {status}</span>
                 <span
                   style={{
                     color: 'rgba(255,255,255,0.5)',
@@ -776,9 +776,9 @@ export const MusicGenPage: React.FC = () => {
                   style={{
                     height: '100%',
                     width: `${progress}%`,
-                    background: 'linear-gradient(90deg, #00ff88, #00b866)',
+                    background: 'linear-gradient(90deg, #b0b0b0, #00b866)',
                     transition: 'width 0.2s linear',
-                    boxShadow: '0 0 10px #00ff88',
+                    boxShadow: '0 0 10px #b0b0b0',
                   }}
                 />
               </div>
@@ -805,7 +805,7 @@ export const MusicGenPage: React.FC = () => {
                 background:
                   isGenerating || isOnline !== true
                     ? 'rgba(255,255,255,0.05)'
-                    : 'linear-gradient(135deg, #00ff88, #00b866)',
+                    : 'linear-gradient(135deg, #b0b0b0, #00b866)',
                 color: isGenerating || isOnline !== true ? 'rgba(255,255,255,0.4)' : '#000',
                 fontWeight: 800,
                 fontSize: 12,
@@ -814,7 +814,7 @@ export const MusicGenPage: React.FC = () => {
                 boxShadow:
                   isGenerating || isOnline !== true
                     ? 'none'
-                    : '0 6px 24px rgba(0, 255, 136, 0.4)',
+                    : '0 6px 24px rgba(176, 176, 176, 0.4)',
                 transition: 'all 0.2s',
               }}
             >
@@ -831,12 +831,12 @@ export const MusicGenPage: React.FC = () => {
                   padding: '14px 16px',
                   border: 'none',
                   borderRadius: 12,
-                  background: 'linear-gradient(135deg, #ff3366, #cc1144)',
+                  background: 'linear-gradient(135deg, #b0b0b0, #cc1144)',
                   color: '#fff',
                   fontSize: 12,
                   fontWeight: 800,
                   cursor: 'pointer',
-                  boxShadow: '0 6px 20px rgba(255, 51, 102, 0.4)',
+                  boxShadow: '0 6px 20px rgba(176, 176, 176, 0.4)',
                 }}
               >
                 ⏹
@@ -870,7 +870,7 @@ export const MusicGenPage: React.FC = () => {
               🎵{' '}
               <span
                 style={{
-                  background: 'linear-gradient(135deg, #00ff88, #00b866)',
+                  background: 'linear-gradient(135deg, #b0b0b0, #00b866)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   backgroundClip: 'text',
@@ -899,10 +899,10 @@ export const MusicGenPage: React.FC = () => {
               onClick={handleClearHistory}
               style={{
                 padding: '6px 12px',
-                background: 'rgba(255, 51, 102, 0.08)',
-                border: '1px solid rgba(255, 51, 102, 0.3)',
+                background: 'rgba(176, 176, 176, 0.08)',
+                border: '1px solid rgba(176, 176, 176, 0.3)',
                 borderRadius: 8,
-                color: '#ff3366',
+                color: '#b0b0b0',
                 fontSize: 10,
                 fontWeight: 700,
                 cursor: 'pointer',
@@ -969,10 +969,10 @@ export const MusicGenPage: React.FC = () => {
               onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
               style={{
                 padding: '8px 12px',
-                background: showFavoritesOnly ? 'rgba(255, 51, 102, 0.15)' : 'rgba(255,255,255,0.03)',
-                border: `1px solid ${showFavoritesOnly ? '#ff3366' : 'rgba(255,255,255,0.08)'}`,
+                background: showFavoritesOnly ? 'rgba(176, 176, 176, 0.15)' : 'rgba(255,255,255,0.03)',
+                border: `1px solid ${showFavoritesOnly ? '#b0b0b0' : 'rgba(255,255,255,0.08)'}`,
                 borderRadius: 8,
-                color: showFavoritesOnly ? '#ff3366' : 'rgba(255,255,255,0.7)',
+                color: showFavoritesOnly ? '#b0b0b0' : 'rgba(255,255,255,0.7)',
                 fontSize: 11,
                 fontWeight: 700,
                 cursor: 'pointer',
@@ -1043,9 +1043,9 @@ export const MusicGenPage: React.FC = () => {
                           width: '100%',
                           padding: '8px 12px',
                           background:
-                            sortBy === opt.value ? 'rgba(0, 255, 136, 0.1)' : 'transparent',
+                            sortBy === opt.value ? 'rgba(176, 176, 176, 0.1)' : 'transparent',
                           border: 'none',
-                          color: sortBy === opt.value ? '#00ff88' : 'rgba(255,255,255,0.7)',
+                          color: sortBy === opt.value ? '#b0b0b0' : 'rgba(255,255,255,0.7)',
                           fontSize: 11,
                           cursor: 'pointer',
                           textAlign: 'left',
@@ -1085,7 +1085,7 @@ export const MusicGenPage: React.FC = () => {
               }}
             >
               Choisis un style dans le panneau, décris ce que tu veux, puis clique sur{' '}
-              <strong style={{ color: '#00ff88' }}>GÉNÉRER</strong>.
+              <strong style={{ color: '#b0b0b0' }}>GÉNÉRER</strong>.
             </div>
           </GlassCard>
         )}
@@ -1093,7 +1093,7 @@ export const MusicGenPage: React.FC = () => {
         {history.length > 0 && filteredHistory.length === 0 && (
           <GlassCard padding={32} style={{ textAlign: 'center', borderStyle: 'dashed' }}>
             <div style={{ fontSize: 48, marginBottom: 12 }}>🔍</div>
-            <div style={{ fontSize: 13, color: '#ffd43b', fontWeight: 700, marginBottom: 6 }}>
+            <div style={{ fontSize: 13, color: '#b0b0b0', fontWeight: 700, marginBottom: 6 }}>
               Aucun résultat
             </div>
             <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 16 }}>
@@ -1108,10 +1108,10 @@ export const MusicGenPage: React.FC = () => {
               }}
               style={{
                 padding: '8px 16px',
-                background: 'rgba(0, 217, 255, 0.1)',
-                border: '1px solid rgba(0, 217, 255, 0.3)',
+                background: 'rgba(255, 255, 255, 0.1)',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
                 borderRadius: 8,
-                color: '#00d9ff',
+                color: '#ffffff',
                 fontSize: 11,
                 fontWeight: 700,
                 cursor: 'pointer',
@@ -1142,12 +1142,12 @@ export const MusicGenPage: React.FC = () => {
               <GlassCard
                 key={h.id}
                 padding={14}
-                glow={isMidiJustExtracted ? '#7c5cff' : isNewest ? '#00ff88' : undefined}
+                glow={isMidiJustExtracted ? '#b0b0b0' : isNewest ? '#b0b0b0' : undefined}
                 style={{
                   borderColor: isMidiJustExtracted
-                    ? 'rgba(124, 92, 255, 0.5)'
+                    ? 'rgba(176, 176, 176, 0.5)'
                     : isNewest && !isGenerating
-                    ? 'rgba(0, 255, 136, 0.3)'
+                    ? 'rgba(176, 176, 176, 0.3)'
                     : undefined,
                 }}
               >
@@ -1166,15 +1166,15 @@ export const MusicGenPage: React.FC = () => {
                       height: isMobile ? 32 : 36,
                       borderRadius: 10,
                       background: isMidiJustExtracted
-                        ? 'rgba(124, 92, 255, 0.15)'
+                        ? 'rgba(176, 176, 176, 0.15)'
                         : isNewest && !isGenerating
-                        ? 'rgba(0, 255, 136, 0.15)'
+                        ? 'rgba(176, 176, 176, 0.15)'
                         : 'rgba(255,255,255,0.04)',
                       border: `1px solid ${
                         isMidiJustExtracted
-                          ? 'rgba(124, 92, 255, 0.5)'
+                          ? 'rgba(176, 176, 176, 0.5)'
                           : isNewest && !isGenerating
-                          ? 'rgba(0, 255, 136, 0.4)'
+                          ? 'rgba(176, 176, 176, 0.4)'
                           : 'rgba(255,255,255,0.08)'
                       }`,
                       display: 'flex',
@@ -1183,9 +1183,9 @@ export const MusicGenPage: React.FC = () => {
                       fontSize: 16,
                       flexShrink: 0,
                       color: isMidiJustExtracted
-                        ? '#7c5cff'
+                        ? '#b0b0b0'
                         : isNewest && !isGenerating
-                        ? '#00ff88'
+                        ? '#b0b0b0'
                         : 'rgba(255,255,255,0.4)',
                       fontWeight: 800,
                     }}
@@ -1217,7 +1217,7 @@ export const MusicGenPage: React.FC = () => {
                             flex: 1,
                             padding: '4px 8px',
                             background: 'rgba(0,0,0,0.3)',
-                            border: '1px solid #00ff88',
+                            border: '1px solid #b0b0b0',
                             borderRadius: 6,
                             color: '#fff',
                             fontSize: isMobile ? 11 : 12,
@@ -1230,7 +1230,7 @@ export const MusicGenPage: React.FC = () => {
                           onClick={() => saveTitle(h.id)}
                           style={{
                             padding: '4px 8px',
-                            background: '#00ff88',
+                            background: '#b0b0b0',
                             border: 'none',
                             borderRadius: 6,
                             color: '#000',
@@ -1329,7 +1329,7 @@ export const MusicGenPage: React.FC = () => {
                         style={{
                           marginTop: 6,
                           fontSize: 10,
-                          color: '#7c5cff',
+                          color: '#b0b0b0',
                           fontWeight: 700,
                           display: 'flex',
                           alignItems: 'center',
@@ -1340,8 +1340,8 @@ export const MusicGenPage: React.FC = () => {
                           style={{
                             width: 10,
                             height: 10,
-                            border: '2px solid rgba(124, 92, 255, 0.3)',
-                            borderTop: '2px solid #7c5cff',
+                            border: '2px solid rgba(176, 176, 176, 0.3)',
+                            borderTop: '2px solid #b0b0b0',
                             borderRadius: '50%',
                             animation: 'spin 0.8s linear infinite',
                           }}
@@ -1355,7 +1355,7 @@ export const MusicGenPage: React.FC = () => {
                         style={{
                           marginTop: 6,
                           fontSize: 10,
-                          color: '#7c5cff',
+                          color: '#b0b0b0',
                           fontWeight: 700,
                         }}
                       >
@@ -1377,42 +1377,42 @@ export const MusicGenPage: React.FC = () => {
                       {
                         onClick: () => handleExtractMidi(h),
                         icon: isTranscribing ? '⏳' : '🎼',
-                        color: '#7c5cff',
+                        color: '#b0b0b0',
                         title: 'Extraire MIDI (Basic Pitch)',
                         disabled: isTranscribing || !!transcribingId,
                       },
                       {
                         onClick: () => handleTransfer(h, 'studio'),
                         icon: '🎹',
-                        color: '#00d9ff',
+                        color: '#ffffff',
                         title: 'Envoyer au Studio',
                         disabled: isTranscribing,
                       },
                       {
                         onClick: () => handleTransfer(h, 'mastering'),
                         icon: '🎚️',
-                        color: '#7c5cff',
+                        color: '#b0b0b0',
                         title: 'Envoyer au Mastering',
                         disabled: isTranscribing,
                       },
                       {
                         onClick: () => toggleFavorite(h.id),
                         icon: isFav ? '❤️' : '🤍',
-                        color: isFav ? '#ff3366' : 'rgba(255,255,255,0.5)',
+                        color: isFav ? '#b0b0b0' : 'rgba(255,255,255,0.5)',
                         title: isFav ? 'Retirer favori' : 'Ajouter favori',
                         disabled: isTranscribing,
                       },
                       {
                         onClick: () => handleDownload(h.audioUrl, `musicgen-${h.id}.wav`),
                         icon: '💾',
-                        color: '#00ff88',
+                        color: '#b0b0b0',
                         title: 'Télécharger WAV',
                         disabled: isTranscribing,
                       },
                       {
                         onClick: () => handleDelete(h.id),
                         icon: '✕',
-                        color: '#ff3366',
+                        color: '#b0b0b0',
                         title: 'Supprimer',
                         disabled: isTranscribing,
                       },
@@ -1444,7 +1444,7 @@ export const MusicGenPage: React.FC = () => {
                   </div>
                 </div>
 
-                <AudioPlayer src={h.audioUrl} color="#00ff88" compact />
+                <AudioPlayer src={h.audioUrl} color="#b0b0b0" compact />
               </GlassCard>
             );
           })}
@@ -1453,7 +1453,7 @@ export const MusicGenPage: React.FC = () => {
         {isGenerating && (
           <GlassCard
             padding={isMobile ? 16 : 20}
-            glow="#00d9ff"
+            glow="#ffffff"
             style={{
               marginTop: 12,
               textAlign: 'center',
@@ -1461,7 +1461,7 @@ export const MusicGenPage: React.FC = () => {
             }}
           >
             <div style={{ fontSize: 24, marginBottom: 8 }}>🎵</div>
-            <div style={{ fontSize: 12, color: '#00d9ff', fontWeight: 700 }}>
+            <div style={{ fontSize: 12, color: '#ffffff', fontWeight: 700 }}>
               Génération en cours... {Math.floor(progress)}%
             </div>
             <div

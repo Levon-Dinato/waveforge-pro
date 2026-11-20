@@ -39,8 +39,8 @@ export const LanguageSwitcher: React.FC = () => {
           alignItems: 'center',
           gap: 8,
           padding: '8px 14px',
-          background: 'rgba(0, 217, 255, 0.06)',
-          border: '1px solid rgba(0, 217, 255, 0.3)',
+          background: 'rgba(255, 255, 255, 0.06)',
+          border: '1px solid rgba(255, 255, 255, 0.3)',
           borderRadius: 8,
           color: '#fff',
           cursor: 'pointer',
@@ -50,12 +50,12 @@ export const LanguageSwitcher: React.FC = () => {
           transition: 'all 0.15s',
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.background = 'rgba(0, 217, 255, 0.12)';
-          e.currentTarget.style.borderColor = 'rgba(0, 217, 255, 0.5)';
+          e.currentTarget.style.background = 'rgba(255, 255, 255, 0.12)';
+          e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.5)';
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.background = 'rgba(0, 217, 255, 0.06)';
-          e.currentTarget.style.borderColor = 'rgba(0, 217, 255, 0.3)';
+          e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
+          e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
         }}
       >
         <span style={{ fontSize: 16 }}>{currentLang.flag}</span>
@@ -71,7 +71,7 @@ export const LanguageSwitcher: React.FC = () => {
             left: 0,
             marginBottom: 6,
             background: 'linear-gradient(135deg, rgba(15, 18, 28, 0.98), rgba(10, 12, 20, 0.99))',
-            border: '1px solid rgba(0, 217, 255, 0.35)',
+            border: '1px solid rgba(255, 255, 255, 0.35)',
             borderRadius: 10,
             padding: 6,
             minWidth: 160,
@@ -92,9 +92,9 @@ export const LanguageSwitcher: React.FC = () => {
                   gap: 10,
                   width: '100%',
                   padding: '10px 12px',
-                  background: isActive ? 'rgba(0, 217, 255, 0.12)' : 'transparent',
+                  background: isActive ? 'rgba(255, 255, 255, 0.12)' : 'transparent',
                   border: 'none',
-                  color: isActive ? '#00d9ff' : '#fff',
+                  color: isActive ? '#ffffff' : '#fff',
                   cursor: 'pointer',
                   fontFamily: 'monospace',
                   fontSize: 12,
@@ -111,7 +111,7 @@ export const LanguageSwitcher: React.FC = () => {
               >
                 <span style={{ fontSize: 16 }}>{lang.flag}</span>
                 <span style={{ flex: 1 }}>{lang.label}</span>
-                {isActive && <span style={{ color: '#00ff88', fontSize: 14 }}>✓</span>}
+                {isActive && <span style={{ color: '#b0b0b0', fontSize: 14 }}>✓</span>}
               </button>
             );
           })}

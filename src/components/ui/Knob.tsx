@@ -9,7 +9,7 @@ interface KnobProps {
   size?: number;
 }
 
-export const Knob: React.FC<KnobProps> = ({ value, onChange, label, color = '#00d9ff', size = 100 }) => {
+export const Knob: React.FC<KnobProps> = ({ value, onChange, label, color = '#ffffff', size = 100 }) => {
   const knobRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   

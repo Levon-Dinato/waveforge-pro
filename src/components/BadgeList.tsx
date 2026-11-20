@@ -9,31 +9,31 @@ const BADGE_CONFIG: Record<string, { label: string; icon: string; color: string;
   first_upload: { 
     label: 'Premier son', 
     icon: '🎵', 
-    color: '#00d9ff', 
+    color: '#ffffff', 
     description: 'A uploadé son premier morceau' 
   },
   producer: { 
     label: 'Producteur', 
     icon: '🎹', 
-    color: '#7c5cff', 
+    color: '#b0b0b0', 
     description: 'A uploadé 10 morceaux ou plus' 
   },
   popular: { 
     label: 'Populaire', 
     icon: '🔥', 
-    color: '#ff3366', 
+    color: '#b0b0b0', 
     description: 'A reçu 100 likes ou plus' 
   },
   live_dj: { 
     label: 'Live DJ', 
     icon: '🔴', 
-    color: '#ff3366', 
+    color: '#b0b0b0', 
     description: 'A diffusé un live' 
   },
   party_organizer: { 
     label: 'Organisateur', 
     icon: '📅', 
-    color: '#ffd43b', 
+    color: '#b0b0b0', 
     description: 'A créé un événement' 
   },
 };

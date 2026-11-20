@@ -53,9 +53,9 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             { bg: string; border: string; color: string }
           > = {
             success: {
-              bg: 'rgba(0, 255, 136, 0.1)',
-              border: 'rgba(0, 255, 136, 0.4)',
-              color: '#00ff88',
+              bg: 'rgba(176, 176, 176, 0.1)',
+              border: 'rgba(176, 176, 176, 0.4)',
+              color: '#b0b0b0',
             },
             error: {
               bg: 'rgba(255, 60, 60, 0.1)',
@@ -65,12 +65,12 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             warning: {
               bg: 'rgba(255, 200, 60, 0.1)',
               border: 'rgba(255, 200, 60, 0.4)',
-              color: '#ffd43b',
+              color: '#b0b0b0',
             },
             info: {
-              bg: 'rgba(0, 217, 255, 0.1)',
-              border: 'rgba(0, 217, 255, 0.4)',
-              color: '#00d9ff',
+              bg: 'rgba(255, 255, 255, 0.1)',
+              border: 'rgba(255, 255, 255, 0.4)',
+              color: '#ffffff',
             },
           };
           const c = colors[toast.type];

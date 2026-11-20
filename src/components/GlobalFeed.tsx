@@ -159,7 +159,7 @@ export const GlobalFeed: React.FC = () => {
               </div>
             )}
             {post.media_url && post.media_type === 'link' && (
-              <a href={post.media_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', padding: '8px 12px', background: '#121212', border: '1px solid #2a2a2a', borderRadius: 4, color: '#00d9ff', fontSize: '0.8rem', fontWeight: 600, textDecoration: 'none', marginBottom: 12 }}>
+              <a href={post.media_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', padding: '8px 12px', background: '#121212', border: '1px solid #2a2a2a', borderRadius: 4, color: '#ffffff', fontSize: '0.8rem', fontWeight: 600, textDecoration: 'none', marginBottom: 12 }}>
                 🔗 Voir le lien
               </a>
             )}
@@ -173,7 +173,7 @@ export const GlobalFeed: React.FC = () => {
             <div style={{ display: 'flex', alignItems: 'center', gap: 16, borderTop: '1px solid #2a2a2a', paddingTop: 12, marginTop: 8 }}>
               <button 
                 onClick={() => handleLike(post.id, !!isLiked)}
-                style={{ background: 'none', border: 'none', color: isLiked ? '#ff3366' : '#999', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
+                style={{ background: 'none', border: 'none', color: isLiked ? '#b0b0b0' : '#999', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
               >
                 {isLiked ? '❤️' : '🤍'} {likesCount} J'aime
               </button>
@@ -210,7 +210,7 @@ export const GlobalFeed: React.FC = () => {
                   onChange={(e) => setCommentText({ ...commentText, [post.id]: e.target.value })}
                   style={{ flex: 1, background: '#1c1c1c', border: '1px solid #2a2a2a', borderRadius: 20, padding: '6px 12px', color: '#fff', fontSize: '0.8rem', outline: 'none' }}
                 />
-                <button type="submit" style={{ background: 'transparent', border: 'none', color: commentText[post.id]?.trim() ? '#00d9ff' : '#444', fontSize: '0.8rem', fontWeight: 700, cursor: commentText[post.id]?.trim() ? 'pointer' : 'default' }}>
+                <button type="submit" style={{ background: 'transparent', border: 'none', color: commentText[post.id]?.trim() ? '#ffffff' : '#444', fontSize: '0.8rem', fontWeight: 700, cursor: commentText[post.id]?.trim() ? 'pointer' : 'default' }}>
                   Envoyer
                 </button>
               </form>

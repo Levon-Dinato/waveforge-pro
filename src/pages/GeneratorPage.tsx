@@ -15,11 +15,11 @@ interface StylePreset {
 }
 
 const STYLE_PRESETS: StylePreset[] = [
-  { id: 'pop', name: 'POP', icon: '🎤', description: 'Mélodies accrocheuses, accords simples', color: '#ff5cf0', bpmRange: '100-128' },
-  { id: 'trap', name: 'TRAP', icon: '🔥', description: '808, hi-hats roulés, mélodies sombres', color: '#ff3366', bpmRange: '130-150' },
-  { id: 'lofi', name: 'LO-FI', icon: '☕', description: 'Chill, jazzy, effets vintage', color: '#ffd43b', bpmRange: '70-90' },
-  { id: 'drill', name: 'DRILL', icon: '🌑', description: 'Sombre, mélodies glissantes, UK', color: '#7c5cff', bpmRange: '140-145' },
-  { id: 'house', name: 'HOUSE', icon: '🏠', description: '4/4, pianos, ambiance club', color: '#00d9ff', bpmRange: '120-128' },
+  { id: 'pop', name: 'POP', icon: '🎤', description: 'Mélodies accrocheuses, accords simples', color: '#b0b0b0', bpmRange: '100-128' },
+  { id: 'trap', name: 'TRAP', icon: '🔥', description: '808, hi-hats roulés, mélodies sombres', color: '#b0b0b0', bpmRange: '130-150' },
+  { id: 'lofi', name: 'LO-FI', icon: '☕', description: 'Chill, jazzy, effets vintage', color: '#b0b0b0', bpmRange: '70-90' },
+  { id: 'drill', name: 'DRILL', icon: '🌑', description: 'Sombre, mélodies glissantes, UK', color: '#b0b0b0', bpmRange: '140-145' },
+  { id: 'house', name: 'HOUSE', icon: '🏠', description: '4/4, pianos, ambiance club', color: '#ffffff', bpmRange: '120-128' },
 ];
 
 export const GeneratorPage: React.FC = () => {
@@ -42,7 +42,7 @@ export const GeneratorPage: React.FC = () => {
       {/* HEADER */}
       <div>
         <h2 style={{ fontSize: isMobile ? 16 : 20, fontWeight: 700, margin: 0, marginBottom: 8 }}>
-          🎼 <span style={{ color: '#ffd43b' }}>Générateur de Mélodies</span>
+          🎼 <span style={{ color: '#b0b0b0' }}>Générateur de Mélodies</span>
         </h2>
         <p style={{ color: '#888', fontSize: 11, margin: 0 }}>
           Création de mélodies par chaînes de Markov · 5 styles
@@ -54,8 +54,8 @@ export const GeneratorPage: React.FC = () => {
         className="panel"
         style={{
           padding: 16,
-          borderColor: hasAudio ? 'rgba(0, 217, 255, 0.2)' : 'var(--border)',
-          background: hasAudio ? 'linear-gradient(135deg, rgba(0, 217, 255, 0.03), transparent)' : undefined,
+          borderColor: hasAudio ? 'rgba(255, 255, 255, 0.2)' : 'var(--border)',
+          background: hasAudio ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.03), transparent)' : undefined,
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
@@ -64,8 +64,8 @@ export const GeneratorPage: React.FC = () => {
               width: 44,
               height: 44,
               borderRadius: 10,
-              background: 'rgba(0, 217, 255, 0.1)',
-              border: '1px solid rgba(0, 217, 255, 0.3)',
+              background: 'rgba(255, 255, 255, 0.1)',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -79,7 +79,7 @@ export const GeneratorPage: React.FC = () => {
             <div className="label-uppercase" style={{ fontSize: 9, color: '#666', marginBottom: 3 }}>
               BPM DE RÉFÉRENCE
             </div>
-            <div className="mono" style={{ fontSize: 18, fontWeight: 700, color: '#00d9ff' }}>
+            <div className="mono" style={{ fontSize: 18, fontWeight: 700, color: '#ffffff' }}>
               {bpm} BPM
             </div>
             {hasAudio && engine.fileName && (
@@ -96,7 +96,7 @@ export const GeneratorPage: React.FC = () => {
               style={{
                 textDecoration: 'none',
                 color: 'var(--cyan)',
-                borderColor: 'rgba(0, 217, 255, 0.3)',
+                borderColor: 'rgba(255, 255, 255, 0.3)',
                 fontSize: 11,
               }}
             >
@@ -164,21 +164,21 @@ export const GeneratorPage: React.FC = () => {
             icon="🎼"
             title="Chaînes de Markov"
             description="Le générateur utilise des probabilités de transition entre notes."
-            color="#ffd43b"
+            color="#b0b0b0"
           />
           <InfoStep
             number="2"
             icon="🎨"
             title="Contraintes musicales"
             description="Chaque style a ses gammes, intervalles, rythmes et accords."
-            color="#00d9ff"
+            color="#ffffff"
           />
           <InfoStep
             number="3"
             icon="🎹"
             title="Export MIDI"
             description="Exporte en MIDI pour l'ouvrir dans ton DAW préféré."
-            color="#7c5cff"
+            color="#b0b0b0"
           />
         </div>
       </div>

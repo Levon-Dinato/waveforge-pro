@@ -17,13 +17,13 @@ const SERVICES = [
     title: "Alertes de profil d'artiste",
     badge: "ULTIMATE",
     desc: "Détection automatique de toute modification non autorisée de vos publications sur Spotify et Apple.",
-    color: '#3b82f6', // Bleu
+    color: '#b0b0b0', // Bleu
   },
   {
     icon: Icons.link,
     title: "HyperFollow",
     desc: "Faites la promotion de vos sorties avec une page simple (et gratuite) pour promouvoir votre musique, vos vidéos et fournir des liens vers vos réseaux.",
-    color: '#ec4899', // Rose
+    color: '#b0b0b0', // Rose
   },
   {
     icon: Icons.globe,
@@ -36,7 +36,7 @@ const SERVICES = [
     icon: Icons.card,
     title: "Cartes Promo",
     desc: "Des images magnifiques et gratuites de vos illustrations. Partagez-les sur Instagram, X et partout ailleurs.",
-    color: '#3b82f6', // Bleu
+    color: '#b0b0b0', // Bleu
   },
   {
     icon: Icons.playlist,
@@ -48,7 +48,7 @@ const SERVICES = [
     icon: Icons.video,
     title: "Générateur de Canvas Spotify",
     desc: "Un moyen rapide et gratuit pour créer une vidéo 'Canvas' personnalisée sur Spotify. Choisissez parmi des milliers de clips.",
-    color: '#10b981', // Vert
+    color: '#b0b0b0', // Vert
   }
 ];
 
@@ -70,7 +70,7 @@ export const ArtistServices: React.FC = () => {
       
       {/* En-tête de la section */}
       <div style={{ textAlign: 'center', marginBottom: 50 }}>
-        <div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: '#00d9ff', marginBottom: 12 }}>
+        <div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: '#ffffff', marginBottom: 12 }}>
           Pour les Artistes
         </div>
         <h2 style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', fontWeight: 900, color: colors.textMain, letterSpacing: '-1px', margin: 0 }}>
@@ -119,7 +119,7 @@ export const ArtistServices: React.FC = () => {
               <div style={{
                 position: 'absolute',
                 top: 16,
-                background: service.badge === 'ULTIMATE' ? '#00d9ff' : '#fbbf24',
+                background: service.badge === 'ULTIMATE' ? '#ffffff' : '#b0b0b0',
                 color: '#000',
                 fontSize: 9,
                 fontWeight: 900,

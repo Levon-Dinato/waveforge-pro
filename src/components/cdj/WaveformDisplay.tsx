@@ -24,7 +24,7 @@ export const WaveformDisplay: React.FC<WaveformDisplayProps> = ({
   activeHotCue,
   loopStart,
   loopEnd,
-  color = '#00d9ff',
+  color = '#ffffff',
   height = 90,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -148,7 +148,7 @@ export const WaveformDisplay: React.FC<WaveformDisplayProps> = ({
       };
 
       drawBand(data.high, 4, H * 0.28, '#ff6b35');
-      drawBand(data.mid, H * 0.35, H * 0.62, '#ffd43b');
+      drawBand(data.mid, H * 0.35, H * 0.62, '#b0b0b0');
       drawBand(data.low, H * 0.68, H - 4, '#00a8ff');
     } else {
       ctx.fillStyle = '#333';
@@ -187,9 +187,9 @@ export const WaveformDisplay: React.FC<WaveformDisplayProps> = ({
     if (loopStart !== null && loopEnd !== null && duration > 0) {
       const x1 = (loopStart / duration) * zoomWidth - scrollOffset;
       const x2 = (loopEnd / duration) * zoomWidth - scrollOffset;
-      ctx.fillStyle = 'rgba(0, 217, 255, 0.12)';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
       ctx.fillRect(x1, 0, x2 - x1, H);
-      ctx.strokeStyle = '#00d9ff';
+      ctx.strokeStyle = '#ffffff';
       ctx.lineWidth = 1;
       ctx.setLineDash([3, 3]);
       ctx.strokeRect(x1, 0, x2 - x1, H);

@@ -233,7 +233,7 @@ export function StemPlayer({ stems, audioBuffer, onClose }: Props) {
               max={1.5}
               step={0.01}
               label="TEMPO"
-              color="#00d9ff"
+              color="#ffffff"
               defaultValue={1.0}
               size={54}
               onChange={setTempo}
@@ -246,7 +246,7 @@ export function StemPlayer({ stems, audioBuffer, onClose }: Props) {
               max={12}
               step={1}
               label="PITCH"
-              color="#ff3366"
+              color="#b0b0b0"
               defaultValue={0}
               size={54}
               bipolar
@@ -317,8 +317,8 @@ export function StemPlayer({ stems, audioBuffer, onClose }: Props) {
                     width: 28,
                     height: 28,
                     fontSize: 11,
-                    background: isMuted ? '#ff3366' : colors.btnBg, // ✅ DYNAMIQUE
-                    borderColor: isMuted ? '#ff3366' : colors.btnBorder, // ✅ DYNAMIQUE
+                    background: isMuted ? '#b0b0b0' : colors.btnBg, // ✅ DYNAMIQUE
+                    borderColor: isMuted ? '#b0b0b0' : colors.btnBorder, // ✅ DYNAMIQUE
                     color: isMuted ? '#fff' : colors.textMuted, // ✅ DYNAMIQUE
                   }}
                   title="Mute"

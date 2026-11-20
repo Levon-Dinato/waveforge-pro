@@ -26,39 +26,39 @@ export const DropZoneVideosPage: React.FC = () => {
         if (containerRef.current) {
           containerRef.current.innerHTML = `
             <div style="min-height: 100vh; background: #050a10; background-image: radial-gradient(circle at 50% 0%, #0a1f33 0%, #050a10 70%); display: flex; align-items: center; justify-content: center; font-family: 'Rajdhani', sans-serif; padding: 20px;">
-              <div style="background: rgba(10,18,26,0.8); backdrop-filter: blur(20px); border: 1px solid rgba(0,217,255,0.3); padding: 48px; border-radius: 16px; text-align: center; max-width: 600px; width: 100%; box-shadow: 0 20px 50px rgba(0,0,0,0.6), 0 0 40px rgba(0,217,255,0.1);">
+              <div style="background: rgba(10,18,26,0.8); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.3); padding: 48px; border-radius: 16px; text-align: center; max-width: 600px; width: 100%; box-shadow: 0 20px 50px rgba(0,0,0,0.6), 0 0 40px rgba(255,255,255,0.1);">
                 <div style="font-size: 60px; margin-bottom: 20px;">🔒</div>
-                <h2 style="color: #fff; font-size: 28px; margin-bottom: 16px; font-family: 'Orbitron', sans-serif; font-weight: 800;">Débloquez le pouvoir de <span style="color: #00d9ff;">l'IA</span></h2>
-                <p style="color: #8c9f98; font-size: 16px; margin-bottom: 32px; line-height: 1.6;">Transformez vos musiques en clips vidéo époustouflants. Cette fonctionnalité exclusive est réservée aux membres <b style="color: #fff;">DropZone Premium</b>.</p>
+                <h2 style="color: #fff; font-size: 28px; margin-bottom: 16px; font-family: 'Orbitron', sans-serif; font-weight: 800;">Débloquez le pouvoir de <span style="color: #ffffff;">l'IA</span></h2>
+                <p style="color: #b0b0b0; font-size: 16px; margin-bottom: 32px; line-height: 1.6;">Transformez vos musiques en clips vidéo époustouflants. Cette fonctionnalité exclusive est réservée aux membres <b style="color: #fff;">DropZone Premium</b>.</p>
                 
                 <div style="display: flex; flex-direction: column; gap: 16px; text-align: left; margin-bottom: 40px;">
                   <div style="display: flex; align-items: center; gap: 16px; background: rgba(255,255,255,0.03); padding: 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
                     <div style="font-size: 24px;">🎬</div>
                     <div>
                       <strong style="color: #fff; display: block; font-size: 15px; margin-bottom: 4px;">Génération de clips illimitée</strong>
-                      <span style="color: #8c9f98; font-size: 13px;">Créez des vidéos à partir de simples descriptions.</span>
+                      <span style="color: #b0b0b0; font-size: 13px;">Créez des vidéos à partir de simples descriptions.</span>
                     </div>
                   </div>
                   <div style="display: flex; align-items: center; gap: 16px; background: rgba(255,255,255,0.03); padding: 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
                     <div style="font-size: 24px;">🎨</div>
                     <div>
                       <strong style="color: #fff; display: block; font-size: 15px; margin-bottom: 4px;">Utilisez vos propres visages</strong>
-                      <span style="color: #8c9f98; font-size: 13px;">Importez des photos de référence pour personnaliser vos clips.</span>
+                      <span style="color: #b0b0b0; font-size: 13px;">Importez des photos de référence pour personnaliser vos clips.</span>
                     </div>
                   </div>
                   <div style="display: flex; align-items: center; gap: 16px; background: rgba(255,255,255,0.03); padding: 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
                     <div style="font-size: 24px;">⚡</div>
                     <div>
                       <strong style="color: #fff; display: block; font-size: 15px; margin-bottom: 4px;">Accès prioritaire</strong>
-                      <span style="color: #8c9f98; font-size: 13px;">Ne faites plus la queue derrière les utilisateurs gratuits.</span>
+                      <span style="color: #b0b0b0; font-size: 13px;">Ne faites plus la queue derrière les utilisateurs gratuits.</span>
                     </div>
                   </div>
                 </div>
                 
-                <a href="/settings" style="display: inline-flex; align-items: center; justify-content: center; gap: 12px; background: linear-gradient(90deg, #0077ff, #00d9ff); color: #000; padding: 18px 40px; border-radius: 8px; font-size: 16px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; text-decoration: none; box-shadow: 0 8px 20px rgba(0,217,255,0.3); transition: all 0.2s; border: none; cursor: pointer;">
+                <a href="/settings" style="display: inline-flex; align-items: center; justify-content: center; gap: 12px; background: linear-gradient(90deg, #b0b0b0, #ffffff); color: #000; padding: 18px 40px; border-radius: 8px; font-size: 16px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; text-decoration: none; box-shadow: 0 8px 20px rgba(255,255,255,0.3); transition: all 0.2s; border: none; cursor: pointer;">
                   Devenir Premium <span style="font-size: 20px;">→</span>
                 </a>
-                <p style="color: #8c9f98; font-size: 14px; margin-top: 20px;">À partir de <b style="color: #00d9ff; font-size: 18px;">30 € / an</b> — Moins de 2,50 € par mois.</p>
+                <p style="color: #b0b0b0; font-size: 14px; margin-top: 20px;">À partir de <b style="color: #ffffff; font-size: 18px;">30 € / an</b> — Moins de 2,50 € par mois.</p>
               </div>
             </div>
           `;
@@ -74,38 +74,38 @@ export const DropZoneVideosPage: React.FC = () => {
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap');
         
         .dz-videos-wrapper { background: #050a10; background-image: radial-gradient(circle at 50% 0%, #0a1f33 0%, #050a10 70%); min-height: 100vh; padding-bottom: 70px; position: relative; width: 100%; font-family: 'Rajdhani', system-ui, sans-serif; color: #fff; overflow-x: hidden; }
-        .dz-videos-wrapper::before { content: ""; position: fixed; inset: 0; z-index: 0; background-image: linear-gradient(rgba(0, 217, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 217, 255, 0.05) 1px, transparent 1px); background-size: 40px 40px; pointer-events: none; }
-        .dz-videos-wrapper header { position: relative; z-index: 10; background: rgba(5, 10, 16, 0.8); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(0, 217, 255, 0.2); padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; }
+        .dz-videos-wrapper::before { content: ""; position: fixed; inset: 0; z-index: 0; background-image: linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px); background-size: 40px 40px; pointer-events: none; }
+        .dz-videos-wrapper header { position: relative; z-index: 10; background: rgba(5, 10, 16, 0.8); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255, 255, 255, 0.2); padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; }
         .dz-videos-wrapper .logo { font: 800 22px 'Orbitron'; letter-spacing: .1em; color: #fff; display: flex; align-items: center; gap: 10px; }
-        .dz-videos-wrapper .logo b { color: #00d9ff; text-shadow: 0 0 10px rgba(0,217,255,0.5); }
+        .dz-videos-wrapper .logo b { color: #ffffff; text-shadow: 0 0 10px rgba(255,255,255,0.5); }
         .dz-videos-wrapper main { position: relative; z-index: 10; max-width: 1100px; margin: 0 auto; padding: 40px 20px; }
-        .dz-videos-wrapper .hero { background: rgba(10, 18, 26, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(0, 217, 255, 0.2); padding: 32px; margin-bottom: 24px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 20px rgba(0,217,255,0.05); position: relative; overflow: hidden; }
-        .dz-videos-wrapper .hero::after { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: linear-gradient(90deg, transparent, #00d9ff, transparent); opacity: 0.5; }
+        .dz-videos-wrapper .hero { background: rgba(10, 18, 26, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.2); padding: 32px; margin-bottom: 24px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 20px rgba(255,255,255,0.05); position: relative; overflow: hidden; }
+        .dz-videos-wrapper .hero::after { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: linear-gradient(90deg, transparent, #ffffff, transparent); opacity: 0.5; }
         .dz-videos-wrapper h2 { font: 600 26px 'Orbitron'; letter-spacing: .04em; margin: 8px 0 16px; color: #fff; }
-        .dz-videos-wrapper h2 b { color: #00d9ff; }
-        .dz-videos-wrapper p.sub { color: #8c9f98; margin-bottom: 20px; max-width: 780px; font-size: 1.1rem; }
-        .dz-videos-wrapper .guide { color: #8c9f98; font-size: 1rem; margin-bottom: 20px; }
-        .dz-videos-wrapper .lab { font: 11px 'Share Tech Mono', monospace; letter-spacing: .14em; text-transform: uppercase; color: #00d9ff; display: block; margin-bottom: 8px; }
-        .dz-videos-wrapper textarea { width: 100%; font: 14px 'Share Tech Mono', monospace; padding: 12px; border: 1px solid rgba(0, 217, 255, 0.2); background: rgba(0,0,0,0.3); color: #fff; outline: 0; border-radius: 6px; resize: vertical; min-height: 80px; transition: all 0.3s; }
-        .dz-videos-wrapper textarea:focus { border-color: #00d9ff; background: rgba(0, 217, 255, 0.05); box-shadow: 0 0 10px rgba(0,217,255,0.2); }
-        .dz-videos-wrapper button, .dz-videos-wrapper .btn { font: 600 12px 'Share Tech Mono', monospace; letter-spacing: .1em; text-transform: uppercase; padding: 12px 20px; border: 1px solid rgba(0, 217, 255, 0.4); background: rgba(0,0,0,0.4); color: #00d9ff; cursor: pointer; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; }
-        .dz-videos-wrapper button:hover:not(:disabled), .dz-videos-wrapper .btn:hover { background: rgba(0, 217, 255, 0.1); color: #fff; border-color: #00d9ff; box-shadow: 0 0 15px rgba(0, 217, 255, 0.3); }
+        .dz-videos-wrapper h2 b { color: #ffffff; }
+        .dz-videos-wrapper p.sub { color: #b0b0b0; margin-bottom: 20px; max-width: 780px; font-size: 1.1rem; }
+        .dz-videos-wrapper .guide { color: #b0b0b0; font-size: 1rem; margin-bottom: 20px; }
+        .dz-videos-wrapper .lab { font: 11px 'Share Tech Mono', monospace; letter-spacing: .14em; text-transform: uppercase; color: #ffffff; display: block; margin-bottom: 8px; }
+        .dz-videos-wrapper textarea { width: 100%; font: 14px 'Share Tech Mono', monospace; padding: 12px; border: 1px solid rgba(255, 255, 255, 0.2); background: rgba(0,0,0,0.3); color: #fff; outline: 0; border-radius: 6px; resize: vertical; min-height: 80px; transition: all 0.3s; }
+        .dz-videos-wrapper textarea:focus { border-color: #ffffff; background: rgba(255, 255, 255, 0.05); box-shadow: 0 0 10px rgba(255,255,255,0.2); }
+        .dz-videos-wrapper button, .dz-videos-wrapper .btn { font: 600 12px 'Share Tech Mono', monospace; letter-spacing: .1em; text-transform: uppercase; padding: 12px 20px; border: 1px solid rgba(255, 255, 255, 0.4); background: rgba(0,0,0,0.4); color: #ffffff; cursor: pointer; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; }
+        .dz-videos-wrapper button:hover:not(:disabled), .dz-videos-wrapper .btn:hover { background: rgba(255, 255, 255, 0.1); color: #fff; border-color: #ffffff; box-shadow: 0 0 15px rgba(255, 255, 255, 0.3); }
         .dz-videos-wrapper button:disabled { opacity: .35; cursor: not-allowed; }
-        .dz-videos-wrapper .big { background: linear-gradient(90deg, #0077ff, #00d9ff); border: none; color: #000; padding: 14px 32px; font-size: 14px; font-weight: 800; letter-spacing: .16em; box-shadow: 0 4px 15px rgba(0, 217, 255, 0.3); }
-        .dz-videos-wrapper .big:hover:not(:disabled) { background: linear-gradient(90deg, #00d9ff, #0077ff); box-shadow: 0 6px 20px rgba(0, 217, 255, 0.5); color: #000; }
+        .dz-videos-wrapper .big { background: linear-gradient(90deg, #b0b0b0, #ffffff); border: none; color: #000; padding: 14px 32px; font-size: 14px; font-weight: 800; letter-spacing: .16em; box-shadow: 0 4px 15px rgba(255, 255, 255, 0.3); }
+        .dz-videos-wrapper .big:hover:not(:disabled) { background: linear-gradient(90deg, #ffffff, #b0b0b0); box-shadow: 0 6px 20px rgba(255, 255, 255, 0.5); color: #000; }
         .dz-videos-wrapper .ft { display: flex; justify-content: space-between; gap: 10px; margin-top: 30px; flex-wrap: wrap; align-items: center; }
         .dz-videos-wrapper .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 16px; }
         .dz-videos-wrapper .cd { border: 1px solid rgba(255,255,255,0.1); background: rgba(10, 18, 26, 0.6); backdrop-filter: blur(10px); padding: 16px; border-radius: 8px; transition: transform 0.2s; }
-        .dz-videos-wrapper .cd:hover { border-color: rgba(0, 217, 255, 0.4); transform: translateY(-2px); }
+        .dz-videos-wrapper .cd:hover { border-color: rgba(255, 255, 255, 0.4); transform: translateY(-2px); }
         .dz-videos-wrapper .cd p { color: #fff; font-size: 1rem; margin-bottom: 8px; line-height: 1.4; }
-        .dz-videos-wrapper .cd .lab { color: #8c9f98; margin-bottom: 4px; }
+        .dz-videos-wrapper .cd .lab { color: #b0b0b0; margin-bottom: 4px; }
         .dz-videos-wrapper .tl { border: 1px solid rgba(255,255,255,0.1); background: rgba(10, 18, 26, 0.6); border-radius: 8px; overflow: hidden; transition: border-color 0.3s; }
-        .dz-videos-wrapper .tl:hover { border-color: #00d9ff; }
+        .dz-videos-wrapper .tl:hover { border-color: #ffffff; }
         .dz-videos-wrapper .th { position: relative; background: #000; overflow: hidden; aspect-ratio: 16/9; }
         .dz-videos-wrapper .th img, .dz-videos-wrapper .th video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.8; }
-        .dz-videos-wrapper .tg { position: absolute; top: 8px; left: 8px; z-index: 2; font: 11px 'Share Tech Mono', monospace; background: #00d9ff; color: #000; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
+        .dz-videos-wrapper .tg { position: absolute; top: 8px; left: 8px; z-index: 2; font: 11px 'Share Tech Mono', monospace; background: #ffffff; color: #000; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
         .dz-videos-wrapper .preview-row { display: flex; gap: 12px; margin-top: 12px; flex-wrap: wrap; }
-        .dz-videos-wrapper .preview-img { width: 70px; height: 70px; border-radius: 8px; object-fit: cover; border: 1px solid rgba(0,217,255,0.3); }
+        .dz-videos-wrapper .preview-img { width: 70px; height: 70px; border-radius: 8px; object-fit: cover; border: 1px solid rgba(255,255,255,0.3); }
         .dz-videos-wrapper .feed { margin: 10px 0; font-family: 'Share Tech Mono', monospace; max-height: 250px; overflow-y: auto; padding-right: 10px; background: rgba(0,0,0,0.2); border-radius: 6px; padding: 12px; }
         .dz-videos-wrapper .feed::-webkit-scrollbar { width: 8px; }
         .dz-videos-wrapper .feed::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
@@ -115,18 +115,18 @@ export const DropZoneVideosPage: React.FC = () => {
         .dz-videos-wrapper .fi.ok .fi-icon { color: #12b76a; }
         .dz-videos-wrapper .fi.er .fi-icon { color: #ff4444; }
         .dz-videos-wrapper .fi.wr .fi-icon { color: #ffbb00; }
-        .dz-videos-wrapper .fi.in .fi-icon { color: #00d9ff; }
+        .dz-videos-wrapper .fi.in .fi-icon { color: #ffffff; }
         .dz-videos-wrapper .fi .fi-text { flex: 1; line-height: 1.4; }
         .dz-videos-wrapper .fi .fi-time { font-size: 11px; color: #555; margin-left: auto; white-space: nowrap; }
         .dz-videos-wrapper .progress-bar { width: 100%; height: 6px; background: #111; border-radius: 3px; overflow: hidden; margin-top: 16px; border: 1px solid #222; }
-        .dz-videos-wrapper .progress-fill { height: 100%; background: linear-gradient(90deg, #0077ff, #00d9ff); transition: width 0.3s ease; }
+        .dz-videos-wrapper .progress-fill { height: 100%; background: linear-gradient(90deg, #b0b0b0, #ffffff); transition: width 0.3s ease; }
         .dz-videos-wrapper #pl { position: fixed; inset: 0; background: #000; z-index: 9999; display: none; align-items: center; justify-content: center; }
         .dz-videos-wrapper #pl.on { display: flex; }
         .dz-videos-wrapper #pv { max-width: 100vw; max-height: 100vh; position: absolute; transition: opacity 1s ease-in-out; opacity: 0; }
         .dz-videos-wrapper #pv.on { opacity: 1; }
         .dz-videos-wrapper #sub { position: absolute; left: 5%; right: 5%; bottom: 7%; text-align: center; color: #fff; font: 600 24px/1.3 'Rajdhani'; text-shadow: 0 2px 10px #000; z-index: 2; }
         .dz-videos-wrapper #pl button { position: absolute; top: 20px; right: 20px; z-index: 3; border-color: rgba(255,255,255,0.3); color: #fff; }
-        .dz-videos-wrapper #con { position: fixed; bottom: 0; left: 0; right: 0; background: #020202; border-top: 1px solid #00d9ff; color: #00d9ff; z-index: 1000; display: none; font-family: 'Share Tech Mono', monospace; }
+        .dz-videos-wrapper #con { position: fixed; bottom: 0; left: 0; right: 0; background: #020202; border-top: 1px solid #ffffff; color: #ffffff; z-index: 1000; display: none; font-family: 'Share Tech Mono', monospace; }
         .dz-videos-wrapper #con > div:first-child { display: flex; justify-content: space-between; padding: 8px 16px; border-bottom: 1px solid #1a1a1a; font-size: 12px; background: #0a0a0a; }
         .dz-videos-wrapper #con button { padding: 2px 8px; border: 1px solid #333; color: #fff; background: transparent; cursor: pointer; }
         .dz-videos-wrapper #lb { max-height: 250px; overflow-y: auto; padding: 16px; font-size: 12px; line-height: 1.6; }
@@ -137,7 +137,7 @@ export const DropZoneVideosPage: React.FC = () => {
       if (containerRef.current) {
         containerRef.current.innerHTML = `
           <div class="dz-videos-wrapper">
-            <header><div class="logo"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00d9ff" strokeWidth="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>DROPZONE <b>IA VIDEOS</b></div><div class="hb"><button data-a="con">Journal</button></div></header>
+            <header><div class="logo"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>DROPZONE <b>IA VIDEOS</b></div><div class="hb"><button data-a="con">Journal</button></div></header>
             <main id="main"></main>
             <div id="con"><div><span>JOURNAL TECHNIQUE</span><button data-a="con">✕</button></div><div id="lb"></div></div>
             <div id="toast"></div>
@@ -184,7 +184,7 @@ export const DropZoneVideosPage: React.FC = () => {
             b.appendChild(d);
             b.scrollTop=b.scrollHeight;
           }
-          function toast(m){const d=document.createElement('div');d.textContent=m;d.style.cssText='background:rgba(0,217,255,0.1);color:#00d9ff;border:1px solid #00d9ff;padding:10px 16px;border-radius:6px;font:14px Rajdhani;box-shadow:0 0 10px rgba(0,217,255,0.2);';$('#toast').appendChild(d);setTimeout(()=>d.remove(),4200)}
+          function toast(m){const d=document.createElement('div');d.textContent=m;d.style.cssText='background:rgba(255,255,255,0.1);color:#ffffff;border:1px solid #ffffff;padding:10px 16px;border-radius:6px;font:14px Rajdhani;box-shadow:0 0 10px rgba(255,255,255,0.2);';$('#toast').appendChild(d);setTimeout(()=>d.remove(),4200)}
 
           async function slot(kind){
             for(;;){

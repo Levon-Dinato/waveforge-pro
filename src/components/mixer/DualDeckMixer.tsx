@@ -11,8 +11,8 @@ import {
 // COULEURS
 // ============================================================
 const DECK_COLORS: Record<DeckId, string> = {
-  A: '#00d9ff',
-  B: '#00ff88',
+  A: '#ffffff',
+  B: '#b0b0b0',
 };
 
 // ============================================================
@@ -390,7 +390,7 @@ const VUMeter: React.FC<{
         const isActive = level >= threshold;
         const isRed = i >= segments - 2;
         const isYellow = i >= segments - 6 && i < segments - 2;
-        const color = isRed ? '#ff3366' : isYellow ? '#ffd43b' : '#00ff88';
+        const color = isRed ? '#b0b0b0' : isYellow ? '#b0b0b0' : '#b0b0b0';
         return (
           <div
             key={i}
@@ -511,7 +511,7 @@ const EQKnob: React.FC<{
         style={{
           fontSize: 8,
           fontFamily: 'monospace',
-          color: !isActive ? '#666' : value > 0 ? '#00ff88' : '#ff3366',
+          color: !isActive ? '#666' : value > 0 ? '#b0b0b0' : '#b0b0b0',
           minWidth: 20,
           textAlign: 'center',
         }}

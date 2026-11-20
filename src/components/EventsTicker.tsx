@@ -98,7 +98,7 @@ export const EventsTicker: React.FC = () => {
               }}
             >
               <div style={{
-                background: '#00d9ff',
+                background: '#ffffff',
                 color: '#000',
                 padding: '4px 10px',
                 borderRadius: 4,

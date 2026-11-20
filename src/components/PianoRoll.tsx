@@ -15,10 +15,10 @@ const MAX_MIDI = 108;
 const ROW_H = 6;
 
 const TRACK_COLORS: Record<string, string> = {
-  lead: '#7c5cff',
+  lead: '#b0b0b0',
   bass: '#4ade80',
   harmony: '#ff5c9d',
-  drums: '#f59e0b',
+  drums: '#b0b0b0',
 };
 
 export function PianoRoll({
@@ -57,7 +57,7 @@ export function PianoRoll({
         const isStrong = i % 4 === 0;
 
         ctx.strokeStyle = isBar
-          ? 'rgba(0, 217, 255, 0.15)'
+          ? 'rgba(255, 255, 255, 0.15)'
           : isStrong
           ? 'rgba(255, 255, 255, 0.05)'
           : 'rgba(255, 255, 255, 0.02)';
@@ -86,7 +86,7 @@ export function PianoRoll({
       const x = (n.start / duration) * W;
       const w = Math.max(2, (n.duration / duration) * W);
       const y = H - ((n.midi - MIN_MIDI) / (MAX_MIDI - MIN_MIDI)) * H;
-      const color = TRACK_COLORS[n.track ?? 'lead'] ?? '#7c5cff';
+      const color = TRACK_COLORS[n.track ?? 'lead'] ?? '#b0b0b0';
 
       ctx.shadowColor = color;
       ctx.shadowBlur = 6;

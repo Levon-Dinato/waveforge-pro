@@ -189,7 +189,7 @@ setSuggestedTags(suggestions);
       {/* Header */}
       <div style={{ marginBottom: '16px' }}>
         <h2 style={{ margin: 0, fontSize: '16px', fontWeight: 700, letterSpacing: '1px' }}>
-          WAVEFORGE <span style={{ color: '#ff5cf0' }}>REMIX AI</span>
+          WAVEFORGE <span style={{ color: '#b0b0b0' }}>REMIX AI</span>
         </h2>
         <div style={{ fontSize: '10px', color: '#444', marginTop: '2px', letterSpacing: '2px' }}>
           APPRENTISSAGE CONTINU · TREBLO API
@@ -199,7 +199,7 @@ setSuggestedTags(suggestions);
       {/* Clé API */}
       {showApiKeyInput && (
         <div style={{ marginBottom: '16px', padding: '12px', backgroundColor: '#1a1a1a', borderRadius: '6px', border: '1px solid #333' }}>
-          <div style={{ fontSize: '11px', color: '#ff5cf0', marginBottom: '8px' }}>
+          <div style={{ fontSize: '11px', color: '#b0b0b0', marginBottom: '8px' }}>
             🔑 CLÉ API TREBLO REQUISE
           </div>
           <div style={{ display: 'flex', gap: '8px' }}>
@@ -222,7 +222,7 @@ setSuggestedTags(suggestions);
               onClick={handleSaveApiKey}
               style={{
                 padding: '8px 16px',
-                backgroundColor: '#ff5cf0',
+                backgroundColor: '#b0b0b0',
                 border: 'none',
                 borderRadius: '4px',
                 color: '#000',
@@ -240,10 +240,10 @@ setSuggestedTags(suggestions);
       {/* Statistiques d'apprentissage */}
       {preferences && preferences.totalGenerations > 0 && (
         <div style={{ marginBottom: '16px', padding: '10px', backgroundColor: '#1a1a1a', borderRadius: '6px', display: 'flex', gap: '16px', fontSize: '10px' }}>
-          <span><span style={{ color: '#666' }}>REMIX :</span> <strong style={{ color: '#ff5cf0' }}>{preferences.totalGenerations}</strong></span>
+          <span><span style={{ color: '#666' }}>REMIX :</span> <strong style={{ color: '#b0b0b0' }}>{preferences.totalGenerations}</strong></span>
           <span><span style={{ color: '#666' }}>EXPORTS :</span> <strong style={{ color: '#51cf66' }}>{preferences.totalExports}</strong></span>
-          <span><span style={{ color: '#666' }}>NOTE MOY :</span> <strong style={{ color: '#ffd43b' }}>{preferences.avgRating.toFixed(1)}/5</strong></span>
-          <span><span style={{ color: '#666' }}>BPM PRÉF :</span> <strong style={{ color: '#00d9ff' }}>{preferences.preferredBPMRange.min}-{preferences.preferredBPMRange.max}</strong></span>
+          <span><span style={{ color: '#666' }}>NOTE MOY :</span> <strong style={{ color: '#b0b0b0' }}>{preferences.avgRating.toFixed(1)}/5</strong></span>
+          <span><span style={{ color: '#666' }}>BPM PRÉF :</span> <strong style={{ color: '#ffffff' }}>{preferences.preferredBPMRange.min}-{preferences.preferredBPMRange.max}</strong></span>
         </div>
       )}
 
@@ -261,9 +261,9 @@ setSuggestedTags(suggestions);
                 style={{
                   padding: '4px 10px',
                   borderRadius: '12px',
-                  border: styleTags.includes(tag) ? '1px solid #ff5cf0' : '1px solid #333',
-                  backgroundColor: styleTags.includes(tag) ? 'rgba(255, 92, 240, 0.15)' : '#1a1a1a',
-                  color: styleTags.includes(tag) ? '#ff5cf0' : '#888',
+                  border: styleTags.includes(tag) ? '1px solid #b0b0b0' : '1px solid #333',
+                  backgroundColor: styleTags.includes(tag) ? 'rgba(176, 176, 176, 0.15)' : '#1a1a1a',
+                  color: styleTags.includes(tag) ? '#b0b0b0' : '#888',
                   cursor: 'pointer',
                   fontSize: '11px',
                 }}
@@ -290,10 +290,10 @@ setSuggestedTags(suggestions);
             alignItems: 'center',
             gap: '6px',
             padding: '4px 10px',
-            backgroundColor: 'rgba(255, 92, 240, 0.2)',
-            border: '1px solid #ff5cf0',
+            backgroundColor: 'rgba(176, 176, 176, 0.2)',
+            border: '1px solid #b0b0b0',
             borderRadius: '14px',
-            color: '#ff5cf0',
+            color: '#b0b0b0',
             fontSize: '11px',
           }}
         >
@@ -376,7 +376,7 @@ setSuggestedTags(suggestions);
           style={{
             padding: '8px 12px',
             fontSize: '12px',
-            color: styleTags.includes(tag) ? '#ff5cf0' : '#ccc',
+            color: styleTags.includes(tag) ? '#b0b0b0' : '#ccc',
             cursor: 'pointer',
             borderBottom: '1px solid #222',
           }}
@@ -408,10 +408,10 @@ setSuggestedTags(suggestions);
                 onClick={() => toggleTag(tag)}
                 style={{
                   padding: '4px 10px',
-                  backgroundColor: 'rgba(255, 92, 240, 0.2)',
-                  border: '1px solid #ff5cf0',
+                  backgroundColor: 'rgba(176, 176, 176, 0.2)',
+                  border: '1px solid #b0b0b0',
                   borderRadius: '12px',
-                  color: '#ff5cf0',
+                  color: '#b0b0b0',
                   fontSize: '11px',
                   cursor: 'pointer',
                 }}
@@ -468,7 +468,7 @@ setSuggestedTags(suggestions);
             ? 'linear-gradient(135deg, #666, #444)'
             : !sourceAudioFile
             ? 'linear-gradient(135deg, #333, #222)'
-            : 'linear-gradient(135deg, #ff5cf0, #a020a0)',
+            : 'linear-gradient(135deg, #b0b0b0, #a020a0)',
           color: isGenerating || !sourceAudioFile ? '#888' : '#000',
           cursor: isGenerating ? 'wait' : !sourceAudioFile ? 'not-allowed' : 'pointer',
           fontWeight: 700,
@@ -492,7 +492,7 @@ setSuggestedTags(suggestions);
               left: 0,
               height: '3px',
               width: `${progress * 100}%`,
-              backgroundColor: '#ff5cf0',
+              backgroundColor: '#b0b0b0',
             }}
           />
         )}
@@ -501,7 +501,7 @@ setSuggestedTags(suggestions);
       {/* Résultat actuel */}
       {currentResult && (
         <div style={{ marginTop: '16px', padding: '12px', backgroundColor: '#1a1a1a', borderRadius: '6px' }}>
-          <div style={{ fontSize: '10px', color: '#ff5cf0', marginBottom: '8px' }}>
+          <div style={{ fontSize: '10px', color: '#b0b0b0', marginBottom: '8px' }}>
             🎧 DERNIER RÉSULTAT
           </div>
           <audio
@@ -523,9 +523,9 @@ setSuggestedTags(suggestions);
                   flex: 1,
                   padding: '8px',
                   borderRadius: '4px',
-                  border: currentResult.userRating >= r ? '1px solid #ffd43b' : '1px solid #333',
-                  backgroundColor: currentResult.userRating >= r ? 'rgba(255, 212, 59, 0.15)' : '#0d0d0d',
-                  color: currentResult.userRating >= r ? '#ffd43b' : '#666',
+                  border: currentResult.userRating >= r ? '1px solid #b0b0b0' : '1px solid #333',
+                  backgroundColor: currentResult.userRating >= r ? 'rgba(176, 176, 176, 0.15)' : '#0d0d0d',
+                  color: currentResult.userRating >= r ? '#b0b0b0' : '#666',
                   cursor: 'pointer',
                   fontSize: '14px',
                 }}
@@ -545,9 +545,9 @@ setSuggestedTags(suggestions);
                   flex: 1,
                   padding: '6px',
                   borderRadius: '4px',
-                  border: currentResult.userAction === action ? '1px solid #ff5cf0' : '1px solid #333',
-                  backgroundColor: currentResult.userAction === action ? 'rgba(255, 92, 240, 0.15)' : 'transparent',
-                  color: currentResult.userAction === action ? '#ff5cf0' : '#666',
+                  border: currentResult.userAction === action ? '1px solid #b0b0b0' : '1px solid #333',
+                  backgroundColor: currentResult.userAction === action ? 'rgba(176, 176, 176, 0.15)' : 'transparent',
+                  color: currentResult.userAction === action ? '#b0b0b0' : '#666',
                   cursor: 'pointer',
                   fontSize: '10px',
                   textTransform: 'uppercase',
@@ -589,7 +589,7 @@ setSuggestedTags(suggestions);
                 <span style={{ color: '#888', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {entry.styleTags.join(', ') || entry.stylePrompt || 'Sans titre'}
                 </span>
-                <span style={{ color: '#ffd43b', marginLeft: '8px' }}>
+                <span style={{ color: '#b0b0b0', marginLeft: '8px' }}>
                   {'⭐'.repeat(entry.userRating)}
                 </span>
               </div>

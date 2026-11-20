@@ -60,7 +60,7 @@ export const RadioManagerPage: React.FC = () => {
   const [radioInstructions, setRadioInstructions] = useState('');
   const [uploadingLogo, setUploadingLogo] = useState(false);
 
-  const [radioVisualizerColor, setRadioVisualizerColor] = useState('#ff3366');
+  const [radioVisualizerColor, setRadioVisualizerColor] = useState('#b0b0b0');
 
   // Réglages Player Popup
   const [playerBgType, setPlayerBgType] = useState('color');
@@ -84,9 +84,9 @@ export const RadioManagerPage: React.FC = () => {
     border: isDark ? '#27272a' : '#e2e8f0',
     textMain: isDark ? '#f8fafc' : '#0f172a',
     textMuted: isDark ? '#a1a1aa' : '#64748b',
-    accent: '#00d9ff',
-    danger: '#ef4444',
-    success: '#10b981',
+    accent: '#ffffff',
+    danger: '#b0b0b0',
+    success: '#b0b0b0',
   };
 
   useEffect(() => {
@@ -103,7 +103,7 @@ export const RadioManagerPage: React.FC = () => {
         setRadioBgAnimation(profileData.radio_bg_animation || 'aurora');
         setRadioLogoUrl(profileData.radio_custom_logo_url || '');
         setRadioInstructions(profileData.radio_instructions || '');
-        setRadioVisualizerColor(profileData.radio_visualizer_color || '#ff3366');
+        setRadioVisualizerColor(profileData.radio_visualizer_color || '#b0b0b0');
         
         setPlayerBgType(profileData.player_bg_type || 'color');
         setPlayerBgValue(profileData.player_bg_value || '#05050a');
@@ -451,7 +451,7 @@ export const RadioManagerPage: React.FC = () => {
         .dash-btn-secondary { background: transparent; color: ${colors.textMain}; border: 1px solid ${colors.border}; }
         .dash-btn-secondary:hover { background: ${colors.inputBg}; }
         .dash-btn-danger { background: transparent; color: ${colors.danger}; border: 1px solid ${colors.danger}; }
-        .dash-btn-danger:hover { background: rgba(239, 68, 68, 0.1); }
+        .dash-btn-danger:hover { background: rgba(176, 176, 176, 0.1); }
         .dash-tab { padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid transparent; transition: all 0.2s; color: ${colors.textMuted}; background: transparent; }
         .dash-tab:hover { color: ${colors.textMain}; }
         .dash-tab.active { background: ${colors.inputBg}; color: ${colors.textMain}; border-color: ${colors.border}; }
@@ -459,7 +459,7 @@ export const RadioManagerPage: React.FC = () => {
         .dash-table th { padding: 12px 16px; font-size: 11px; font-weight: 600; text-transform: uppercase; color: ${colors.textMuted}; border-bottom: 1px solid ${colors.border}; letter-spacing: 0.5px; }
         .dash-table td { padding: 12px 16px; border-bottom: 1px solid ${colors.border}; font-size: 14px; }
         .dash-table tr:hover { background: rgba(255,255,255,0.02); }
-        .dash-table tr.selected { background: rgba(0, 217, 255, 0.05); }
+        .dash-table tr.selected { background: rgba(255, 255, 255, 0.05); }
         .dropzone { border: 1px dashed ${colors.border}; border-radius: 8px; padding: 16px; text-align: center; cursor: pointer; transition: all 0.2s; background: ${colors.inputBg}; }
         .dropzone:hover { border-color: ${colors.textMuted}; }
       `}</style>
@@ -483,7 +483,7 @@ export const RadioManagerPage: React.FC = () => {
                 alert(`Lien M3U copié !\n\n${m3uUrl}\n\nCe lien est DYNAMIQUE : il diffusera automatiquement la playlist ou le live en cours.`);
               }} 
               className="dash-btn dash-btn-secondary" 
-              style={{ borderColor: '#00d9ff', color: '#00d9ff' }}
+              style={{ borderColor: '#ffffff', color: '#ffffff' }}
             >
               📻 Copier le lien Radio (M3U)
             </button>
@@ -862,7 +862,7 @@ export const RadioManagerPage: React.FC = () => {
       )}
 
       {selectedTracks.length > 0 && (
-        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', background: colors.panelBg, border: `1px solid ${colors.accent}`, borderRadius: 16, padding: '12px 20px', boxShadow: '0 10px 40px rgba(0, 217, 255, 0.3)', display: 'flex', alignItems: 'center', gap: 16, zIndex: 999, backdropFilter: 'blur(20px)' }}>
+        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', background: colors.panelBg, border: `1px solid ${colors.accent}`, borderRadius: 16, padding: '12px 20px', boxShadow: '0 10px 40px rgba(255, 255, 255, 0.3)', display: 'flex', alignItems: 'center', gap: 16, zIndex: 999, backdropFilter: 'blur(20px)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><span style={{ background: colors.accent, color: '#000', fontWeight: 900, fontSize: 12, padding: '4px 10px', borderRadius: 10 }}>{selectedTracks.length}</span><span style={{ fontSize: 13, fontWeight: 600 }}>sélectionné(s)</span></div>
           <div style={{ width: 1, height: 24, background: colors.border }} />
           <button onClick={() => bulkToggleRadio(true)} disabled={saving} className="dash-btn dash-btn-secondary" style={{ borderColor: colors.success, color: colors.success, fontSize: 12 }}>✅ Activer</button>

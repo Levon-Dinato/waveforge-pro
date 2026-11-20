@@ -23,7 +23,7 @@ export function Knob({
   label,
   unit = '',
   size = 56,
-  color = '#00d9ff',
+  color = '#ffffff',
   defaultValue,
   onChange,
   bipolar = false,

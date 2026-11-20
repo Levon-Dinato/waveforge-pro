@@ -94,9 +94,9 @@ export function VUMeter({ audioBuffer, isPlaying, currentTime }: Props) {
 
   const getColor = (segmentIdx: number, totalSegments: number) => {
     const ratio = segmentIdx / totalSegments;
-    if (ratio < 0.6) return '#00ff88';       // Vert
+    if (ratio < 0.6) return '#b0b0b0';       // Vert
     if (ratio < 0.85) return '#ffb800';      // Jaune
-    return '#ff3366';                        // Rouge
+    return '#b0b0b0';                        // Rouge
   };
 
   return (

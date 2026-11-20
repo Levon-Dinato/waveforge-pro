@@ -8,8 +8,8 @@ interface ParticleCanvasProps {
 }
 
 export const ParticleCanvas: React.FC<ParticleCanvasProps> = ({
-  accent = 'rgba(255,51,102,0.8)',
-  accent2 = 'rgba(124,92,255,0.6)',
+  accent = 'rgba(176,176,176,0.8)',
+  accent2 = 'rgba(176,176,176,0.6)',
   density,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -93,7 +93,7 @@ export const ParticleCanvas: React.FC<ParticleCanvasProps> = ({
             ctx.beginPath();
             ctx.moveTo(p.x, p.y);
             ctx.lineTo(p2.x, p2.y);
-            ctx.strokeStyle = `rgba(255,51,102,${0.18 * (1 - d / 120)})`;
+            ctx.strokeStyle = `rgba(176,176,176,${0.18 * (1 - d / 120)})`;
             ctx.lineWidth = 0.5;
             ctx.stroke();
           }

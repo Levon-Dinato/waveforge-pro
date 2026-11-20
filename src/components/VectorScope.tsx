@@ -12,7 +12,7 @@ export const VectorScope: React.FC<VectorScopeProps> = ({
   analyser,
   isActive,
   size = 220,
-  color = '#00d9ff',
+  color = '#ffffff',
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rafRef = useRef<number | null>(null);

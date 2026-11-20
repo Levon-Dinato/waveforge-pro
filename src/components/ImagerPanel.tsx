@@ -28,7 +28,7 @@ export const ImagerPanel: React.FC<ImagerPanelProps> = ({
       sublabel: '0-200 Hz',
       value: lowAmount,
       onChange: onLowChange,
-      color: '#00d9ff',
+      color: '#ffffff',
       icon: '🎵',
     },
     {
@@ -36,7 +36,7 @@ export const ImagerPanel: React.FC<ImagerPanelProps> = ({
       sublabel: '200-4k Hz',
       value: midAmount,
       onChange: onMidChange,
-      color: '#00ff88',
+      color: '#b0b0b0',
       icon: '🎶',
     },
     {
@@ -44,7 +44,7 @@ export const ImagerPanel: React.FC<ImagerPanelProps> = ({
       sublabel: '4k-20k Hz',
       value: highAmount,
       onChange: onHighChange,
-      color: '#ffd43b',
+      color: '#b0b0b0',
       icon: '🎼',
     },
   ];
@@ -54,9 +54,9 @@ export const ImagerPanel: React.FC<ImagerPanelProps> = ({
       style={{
         padding: 14,
         background: enabled
-          ? 'linear-gradient(135deg, rgba(124, 92, 255, 0.08), rgba(0, 217, 255, 0.05))'
+          ? 'linear-gradient(135deg, rgba(176, 176, 176, 0.08), rgba(255, 255, 255, 0.05))'
           : 'rgba(0, 0, 0, 0.3)',
-        border: `1px solid ${enabled ? 'rgba(124, 92, 255, 0.4)' : '#1f1f1f'}`,
+        border: `1px solid ${enabled ? 'rgba(176, 176, 176, 0.4)' : '#1f1f1f'}`,
         borderRadius: 8,
         transition: 'all 0.2s',
       }}
@@ -77,14 +77,14 @@ export const ImagerPanel: React.FC<ImagerPanelProps> = ({
               height: 32,
               borderRadius: 8,
               background: enabled
-                ? 'linear-gradient(135deg, #7c5cff, #00d9ff)'
+                ? 'linear-gradient(135deg, #b0b0b0, #ffffff)'
                 : 'rgba(255,255,255,0.05)',
               border: `1px solid ${enabled ? 'transparent' : '#333'}`,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               fontSize: 16,
-              boxShadow: enabled ? '0 0 12px rgba(124, 92, 255, 0.5)' : 'none',
+              boxShadow: enabled ? '0 0 12px rgba(176, 176, 176, 0.5)' : 'none',
               transition: 'all 0.2s',
             }}
           >
@@ -95,7 +95,7 @@ export const ImagerPanel: React.FC<ImagerPanelProps> = ({
               style={{
                 fontSize: 12,
                 fontWeight: 700,
-                color: enabled ? '#7c5cff' : '#888',
+                color: enabled ? '#b0b0b0' : '#888',
                 letterSpacing: '0.5px',
               }}
             >
@@ -115,12 +115,12 @@ export const ImagerPanel: React.FC<ImagerPanelProps> = ({
             borderRadius: 12,
             border: 'none',
             background: enabled
-              ? 'linear-gradient(135deg, #7c5cff, #00d9ff)'
+              ? 'linear-gradient(135deg, #b0b0b0, #ffffff)'
               : '#2a2a2a',
             cursor: 'pointer',
             position: 'relative',
             transition: 'all 0.2s',
-            boxShadow: enabled ? '0 0 12px rgba(124, 92, 255, 0.4)' : 'none',
+            boxShadow: enabled ? '0 0 12px rgba(176, 176, 176, 0.4)' : 'none',
           }}
         >
           <div
@@ -218,7 +218,7 @@ export const ImagerPanel: React.FC<ImagerPanelProps> = ({
             lineHeight: 1.5,
           }}
         >
-          💡 <strong style={{ color: '#7c5cff' }}>Astuce :</strong> Mets les basses à
+          💡 <strong style={{ color: '#b0b0b0' }}>Astuce :</strong> Mets les basses à
           100% (mono) et les aigus à 0% (stéréo) pour un son propre et large.
         </div>
       </div>

@@ -50,8 +50,8 @@ export const RadioPage: React.FC = () => {
     textMuted: isDark ? '#888888' : '#666666',
     border: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
     panelBg: isDark ? 'rgba(20,20,25,0.6)' : 'rgba(255,255,255,0.8)',
-    accent: '#ff3366',
-    accentGradient: 'linear-gradient(135deg, #ff3366, #7c5cff)',
+    accent: '#b0b0b0',
+    accentGradient: 'linear-gradient(135deg, #b0b0b0, #b0b0b0)',
     glass: isDark ? 'rgba(15,15,20,0.7)' : 'rgba(255,255,255,0.7)',
   };
 
@@ -250,7 +250,7 @@ export const RadioPage: React.FC = () => {
 
       <style>{`
         @keyframes spin { 100% { transform: rotate(360deg); } }
-        @keyframes pulseGlow { 0% { box-shadow: 0 0 40px rgba(255,51,102,0.3); } 50% { box-shadow: 0 0 80px rgba(255,51,102,0.7); } 100% { box-shadow: 0 0 40px rgba(255,51,102,0.3); } }
+        @keyframes pulseGlow { 0% { box-shadow: 0 0 40px rgba(176,176,176,0.3); } 50% { box-shadow: 0 0 80px rgba(176,176,176,0.7); } 100% { box-shadow: 0 0 40px rgba(176,176,176,0.3); } }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
         
         /* ✅ ANIMATION DES BARRES */
@@ -261,8 +261,8 @@ export const RadioPage: React.FC = () => {
 
         .animated-bg { position: absolute; inset: 0; z-index: 0; overflow: hidden; background: ${colors.bg}; }
         .aurora-blob { position: absolute; width: 60vw; height: 60vw; border-radius: 50%; filter: blur(100px); opacity: ${isDark ? '0.4' : '0.2'}; }
-        .blob1 { background: ${coverImage ? `url(${coverImage}) center/cover` : '#ff3366'}; top: -10%; left: -10%; animation: pulse 10s ease-in-out infinite; }
-        .blob2 { background: #7c5cff; bottom: -10%; right: -10%; animation: pulse 15s ease-in-out infinite reverse; }
+        .blob1 { background: ${coverImage ? `url(${coverImage}) center/cover` : '#b0b0b0'}; top: -10%; left: -10%; animation: pulse 10s ease-in-out infinite; }
+        .blob2 { background: #b0b0b0; bottom: -10%; right: -10%; animation: pulse 15s ease-in-out infinite reverse; }
         
         .glass-panel { background: ${colors.glass}; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid ${colors.border}; box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
         
@@ -305,7 +305,7 @@ export const RadioPage: React.FC = () => {
           background: ${colors.accentGradient};
           border-radius: 6px;
           transform-origin: bottom center; /* L'animation part du bas (bord du vinyle) */
-          box-shadow: 0 0 12px rgba(255,51,102,0.8);
+          box-shadow: 0 0 12px rgba(176,176,176,0.8);
           animation: beatCircle 0.5s ease-in-out infinite alternate;
           animation-play-state: ${isPlaying ? 'running' : 'paused'};
         }
@@ -337,7 +337,7 @@ export const RadioPage: React.FC = () => {
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
         </button>
         <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: isLive ? 'linear-gradient(135deg, #ff3366, #ff0033)' : (activeSchedule ? '#00d9ff' : 'rgba(255,255,255,0.1)'), padding: '8px 20px', borderRadius: 30, border: `1px solid ${isLive ? '#ff3366' : (activeSchedule ? '#00d9ff' : colors.border)}`, boxShadow: isLive ? '0 0 20px rgba(255,51,102,0.5)' : 'none', backdropFilter: 'blur(10px)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: isLive ? 'linear-gradient(135deg, #b0b0b0, #ff0033)' : (activeSchedule ? '#ffffff' : 'rgba(255,255,255,0.1)'), padding: '8px 20px', borderRadius: 30, border: `1px solid ${isLive ? '#b0b0b0' : (activeSchedule ? '#ffffff' : colors.border)}`, boxShadow: isLive ? '0 0 20px rgba(176,176,176,0.5)' : 'none', backdropFilter: 'blur(10px)' }}>
             <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#fff', animation: 'pulse 1.5s infinite' }} />
             <span style={{ fontSize: 12, fontWeight: 900, color: '#fff', letterSpacing: '1px' }}>{isLive ? 'LIVE' : activeSchedule ? `PROG: ${activeSchedule}` : 'EN DIRECT'}</span>
           </div>
@@ -353,7 +353,7 @@ export const RadioPage: React.FC = () => {
       {/* NOW PLAYING BAR */}
       <div className="glass-panel" style={{ zIndex: 2, width: '100%', maxWidth: 1100, padding: '12px 24px', borderRadius: 40, display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 30 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{ width: 10, height: 10, borderRadius: '50%', background: isPlaying ? colors.accent : colors.textMuted, animation: isPlaying ? 'pulse 1.5s infinite' : 'none', boxShadow: isPlaying ? '0 0 10px #ff3366' : 'none' }} />
+          <div style={{ width: 10, height: 10, borderRadius: '50%', background: isPlaying ? colors.accent : colors.textMuted, animation: isPlaying ? 'pulse 1.5s infinite' : 'none', boxShadow: isPlaying ? '0 0 10px #b0b0b0' : 'none' }} />
           <span style={{ fontSize: 14, fontWeight: 800, color: colors.textMain, textTransform: 'uppercase', letterSpacing: '1px' }}>
             {isLive ? '🔴 En Direct' : activeSchedule ? `📻 ${activeSchedule}` : '🎵 Radio Auto'}
           </span>
@@ -371,7 +371,7 @@ export const RadioPage: React.FC = () => {
           
           {isLive ? (
              <div style={{ width: '100%', maxWidth: 400, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20, marginBottom: 30 }}>
-              <div style={{ width: size, height: size, borderRadius: '50%', background: 'linear-gradient(135deg, #ff3366, #7c5cff)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 80px rgba(255,51,102,0.6)', animation: 'pulse 3s infinite' }}>
+              <div style={{ width: size, height: size, borderRadius: '50%', background: 'linear-gradient(135deg, #b0b0b0, #b0b0b0)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 80px rgba(176,176,176,0.6)', animation: 'pulse 3s infinite' }}>
                 <div style={{ fontSize: 90 }}>🎙️</div>
                 <div style={{ fontSize: 18, fontWeight: 900, color: '#fff', letterSpacing: '3px', marginTop: 10 }}>LIVE</div>
               </div>
@@ -384,7 +384,7 @@ export const RadioPage: React.FC = () => {
             <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 40, padding: 40 }}>
               
               {/* AURA LUMINEUSE */}
-              <div style={{ position: 'absolute', width: size + 40, height: size + 40, borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,51,102,0.3) 0%, transparent 60%)', filter: 'blur(30px)', animation: isPlaying ? 'pulseGlow 2s infinite' : 'none' }} />
+              <div style={{ position: 'absolute', width: size + 40, height: size + 40, borderRadius: '50%', background: 'radial-gradient(circle, rgba(176,176,176,0.3) 0%, transparent 60%)', filter: 'blur(30px)', animation: isPlaying ? 'pulseGlow 2s infinite' : 'none' }} />
               
               {/* ✅ LE VISUALISEUR CIRCULAIRE CORRIGÉ */}
               <div className="circular-visualizer">
@@ -413,8 +413,8 @@ export const RadioPage: React.FC = () => {
 
               {/* CERCLE DE PROGRESSION */}
               <svg width={size + 40} height={size + 40} style={{ position: 'absolute', transform: 'rotate(-90deg)', zIndex: 3 }}>
-                <defs><linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#ff3366" /><stop offset="100%" stopColor="#7c5cff" /></linearGradient></defs>
-                <circle cx={(size + 40) / 2} cy={(size + 40) / 2} r={radius + 20} stroke="url(#progressGradient)" strokeWidth={strokeWidth} fill="none" strokeDasharray={circumference + 100} strokeDashoffset={strokeDashoffset} strokeLinecap="round" style={{ transition: 'stroke-dashoffset 0.1s linear', filter: 'drop-shadow(0 0 10px rgba(255,51,102,0.8))' }} />
+                <defs><linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#b0b0b0" /><stop offset="100%" stopColor="#b0b0b0" /></linearGradient></defs>
+                <circle cx={(size + 40) / 2} cy={(size + 40) / 2} r={radius + 20} stroke="url(#progressGradient)" strokeWidth={strokeWidth} fill="none" strokeDasharray={circumference + 100} strokeDashoffset={strokeDashoffset} strokeLinecap="round" style={{ transition: 'stroke-dashoffset 0.1s linear', filter: 'drop-shadow(0 0 10px rgba(176,176,176,0.8))' }} />
               </svg>
               <input type="range" min={0} max={duration || 100} value={progress} onChange={(e) => seek(Number(e.target.value))} style={{ position: 'absolute', width: size + 40, height: size + 40, opacity: 0, cursor: 'pointer', zIndex: 10, transform: 'rotate(-90deg)' }} />
               
@@ -439,7 +439,7 @@ export const RadioPage: React.FC = () => {
           </div>
 
           <div style={{ display: 'flex', gap: 30, marginBottom: 30, alignItems: 'center' }}>
-             <button onClick={handleLike} style={{ background: colors.glass, border: `1px solid ${colors.border}`, padding: '8px 16px', borderRadius: 20, color: isLiked ? '#ff3366' : colors.textMain, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 800, backdropFilter: 'blur(10px)' }}>
+             <button onClick={handleLike} style={{ background: colors.glass, border: `1px solid ${colors.border}`, padding: '8px 16px', borderRadius: 20, color: isLiked ? '#b0b0b0' : colors.textMain, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 800, backdropFilter: 'blur(10px)' }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill={isLiked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
               {likeCount}
             </button>
@@ -459,7 +459,7 @@ export const RadioPage: React.FC = () => {
             <div style={{ display: 'flex', alignItems: 'center', gap: 35 }}>
               {!isLive && <button onClick={playPrev} style={{ background: 'transparent', border: 'none', color: colors.textMain, cursor: 'pointer', opacity: 0.8 }}><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" strokeWidth="2"></line></svg></button>}
               
-              <button onClick={togglePlay} style={{ width: 80, height: 80, borderRadius: '50%', background: isLive ? '#ff3366' : colors.accentGradient, color: '#fff', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: isLive ? '0 0 40px rgba(255,51,102,0.8)' : '0 15px 30px rgba(255, 51, 102, 0.5)', transition: 'all 0.2s', transform: isPlaying ? 'scale(1)' : 'scale(0.98)' }} onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.92)'} onMouseUp={(e) => e.currentTarget.style.transform = isPlaying ? 'scale(1)' : 'scale(0.98)'}>
+              <button onClick={togglePlay} style={{ width: 80, height: 80, borderRadius: '50%', background: isLive ? '#b0b0b0' : colors.accentGradient, color: '#fff', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: isLive ? '0 0 40px rgba(176,176,176,0.8)' : '0 15px 30px rgba(176, 176, 176, 0.5)', transition: 'all 0.2s', transform: isPlaying ? 'scale(1)' : 'scale(0.98)' }} onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.92)'} onMouseUp={(e) => e.currentTarget.style.transform = isPlaying ? 'scale(1)' : 'scale(0.98)'}>
                 {isPlaying ? <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg> : <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: 6 }}><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>}
               </button>
 
@@ -483,7 +483,7 @@ export const RadioPage: React.FC = () => {
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={colors.accent} strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
               Live Chat
             </h3>
-            <span style={{ fontSize: 10, background: 'rgba(0,217,255,0.15)', color: '#00d9ff', padding: '3px 10px', borderRadius: 12, fontWeight: 900, letterSpacing: '0.5px' }}>REALTIME</span>
+            <span style={{ fontSize: 10, background: 'rgba(255,255,255,0.15)', color: '#ffffff', padding: '3px 10px', borderRadius: 12, fontWeight: 900, letterSpacing: '0.5px' }}>REALTIME</span>
           </div>
           
           <div style={{ flex: 1, overflowY: 'auto', padding: 24, display: 'flex', flexDirection: 'column', gap: 18 }}>
@@ -494,7 +494,7 @@ export const RadioPage: React.FC = () => {
                 <div key={msg.id} style={{ display: 'flex', gap: 12, position: 'relative' }}>
                   <img src={msg.avatar_url || `https://ui-avatars.com/api/?name=${msg.username}&background=random`} alt="avatar" style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: `2px solid ${colors.border}` }} />
                   <div style={{ paddingRight: 20 }}>
-                    <span style={{ fontSize: 13, fontWeight: 800, color: msg.username === userProfile?.username ? '#ff3366' : colors.textMain }}>{msg.username}</span>
+                    <span style={{ fontSize: 13, fontWeight: 800, color: msg.username === userProfile?.username ? '#b0b0b0' : colors.textMain }}>{msg.username}</span>
                     <div style={{ fontSize: 14, color: colors.textMuted, marginTop: 4, lineHeight: 1.4, wordBreak: 'break-word', background: 'rgba(255,255,255,0.05)', padding: '8px 12px', borderRadius: '0 12px 12px 12px' }}>{msg.text}</div>
                   </div>
                   
@@ -503,7 +503,7 @@ export const RadioPage: React.FC = () => {
                       onClick={() => handleDeleteMessage(msg.id)}
                       title="Supprimer"
                       style={{ position: 'absolute', right: 0, top: 0, background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', fontSize: 14, opacity: 0.6 }}
-                      onMouseEnter={(e) => e.currentTarget.style.color = '#ff3366'}
+                      onMouseEnter={(e) => e.currentTarget.style.color = '#b0b0b0'}
                       onMouseLeave={(e) => e.currentTarget.style.color = colors.textMuted}
                     >
                       ✕
@@ -517,7 +517,7 @@ export const RadioPage: React.FC = () => {
 
           <form onSubmit={handleSendMessage} style={{ padding: 20, borderTop: `1px solid ${colors.border}`, display: 'flex', gap: 12 }}>
             <input type="text" value={newMessage} onChange={(e) => setNewMessage(e.target.value)} placeholder={user ? "Envoie un message..." : "Connecte-toi pour discuter"} disabled={!user} style={{ flex: 1, background: 'rgba(0,0,0,0.2)', border: `1px solid ${colors.border}`, borderRadius: 20, padding: '12px 18px', color: colors.textMain, fontSize: 14, outline: 'none', opacity: user ? 1 : 0.5 }} />
-            <button type="submit" disabled={!user || !newMessage.trim()} style={{ background: colors.accentGradient, color: '#fff', border: 'none', borderRadius: '50%', width: 48, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: (user && newMessage.trim()) ? 'pointer' : 'not-allowed', opacity: (user && newMessage.trim()) ? 1 : 0.5, transition: 'all 0.2s', boxShadow: '0 5px 15px rgba(255,51,102,0.3)' }}>
+            <button type="submit" disabled={!user || !newMessage.trim()} style={{ background: colors.accentGradient, color: '#fff', border: 'none', borderRadius: '50%', width: 48, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: (user && newMessage.trim()) ? 'pointer' : 'not-allowed', opacity: (user && newMessage.trim()) ? 1 : 0.5, transition: 'all 0.2s', boxShadow: '0 5px 15px rgba(176,176,176,0.3)' }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
             </button>
           </form>
@@ -550,7 +550,7 @@ export const RadioPage: React.FC = () => {
               <div><strong>Sur Android :</strong> Scanne, puis <strong>Ajouter à l'écran d'accueil</strong>.</div>
             </div>
 
-            <button onClick={() => setShowQrModal(false)} style={{ marginTop: 30, width: '100%', padding: 16, background: colors.accentGradient, color: '#fff', border: 'none', borderRadius: 16, fontWeight: 900, fontSize: 16, cursor: 'pointer', boxShadow: '0 10px 20px rgba(255,51,102,0.3)' }}>
+            <button onClick={() => setShowQrModal(false)} style={{ marginTop: 30, width: '100%', padding: 16, background: colors.accentGradient, color: '#fff', border: 'none', borderRadius: 16, fontWeight: 900, fontSize: 16, cursor: 'pointer', boxShadow: '0 10px 20px rgba(176,176,176,0.3)' }}>
               Fermer
             </button>
           </div>

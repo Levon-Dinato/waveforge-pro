@@ -20,7 +20,7 @@ export const ContactPage: React.FC = () => {
     inputBg: isDark ? '#0a0a0a' : '#f9fafb',
     textMain: isDark ? '#ffffff' : '#1a1a1a',
     textMuted: isDark ? '#a1a1aa' : '#666666',
-    accent: '#00d9ff',
+    accent: '#ffffff',
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -66,7 +66,7 @@ export const ContactPage: React.FC = () => {
         </p>
 
         {sent ? (
-          <div style={{ padding: 20, background: 'rgba(0, 217, 255, 0.08)', border: '1px solid rgba(0, 217, 255, 0.3)', borderRadius: 8, color: colors.textMain, fontSize: 14, lineHeight: 1.6 }}>
+          <div style={{ padding: 20, background: 'rgba(255, 255, 255, 0.08)', border: '1px solid rgba(255, 255, 255, 0.3)', borderRadius: 8, color: colors.textMain, fontSize: 14, lineHeight: 1.6 }}>
             ✅ Votre messagerie s'est ouverte avec votre message pré-rempli. Si elle ne s'est pas ouverte,
             écrivez-nous directement à <a href="mailto:contact@dropzone-dj.com" style={{ color: colors.accent }}>contact@dropzone-dj.com</a>.
           </div>

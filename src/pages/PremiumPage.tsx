@@ -105,7 +105,7 @@ export const PremiumPage: React.FC = () => {
   const [followLoading, setFollowLoading] = useState(false);
 
   const isOwner = user && profile && user.id === profile.id;
-  const themeColor = profile?.theme_color || '#00d9ff';
+  const themeColor = profile?.theme_color || '#ffffff';
   const fontFamily = profile?.settings?.font_family || 'Inter, sans-serif';
 
   const colors = {
@@ -409,7 +409,7 @@ export const PremiumPage: React.FC = () => {
             </button>
             <button onClick={() => setShowBookingModal(true)} style={{ 
               padding: isMobile ? '6px 12px' : '8px 20px', fontSize: 12, 
-              background: `linear-gradient(135deg, ${themeColor}, #a855f7)`, color: '#fff', 
+              background: `linear-gradient(135deg, ${themeColor}, #b0b0b0)`, color: '#fff', 
               border: 'none', borderRadius: 6, fontWeight: 800, cursor: 'pointer', 
               display: 'flex', alignItems: 'center', gap: 8, boxShadow: `0 4px 15px ${themeColor}40`
             }}>
@@ -470,9 +470,9 @@ export const PremiumPage: React.FC = () => {
                 style={{ 
                   display: 'flex', alignItems: 'center', gap: 8, 
                   padding: isMobile ? '10px 20px' : '16px 32px', 
-                  background: 'linear-gradient(135deg, #ff3366, #7c5cff)', 
+                  background: 'linear-gradient(135deg, #b0b0b0, #b0b0b0)', 
                   color: '#fff', borderRadius: 8, fontSize: 14, fontWeight: 800, 
-                  textDecoration: 'none', boxShadow: '0 8px 20px rgba(255, 51, 102, 0.4)',
+                  textDecoration: 'none', boxShadow: '0 8px 20px rgba(176, 176, 176, 0.4)',
                   border: 'none', cursor: 'pointer', backdropFilter: 'blur(10px)'
                 }}
               >

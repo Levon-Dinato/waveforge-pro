@@ -11,8 +11,8 @@ interface HotCue {
 }
 
 const HOT_CUE_COLORS = [
-  '#ff3366', '#ff5cf0', '#7c5cff', '#00d9ff',
-  '#00ff88', '#ffd43b', '#ff8800', '#ff6b35',
+  '#b0b0b0', '#b0b0b0', '#b0b0b0', '#ffffff',
+  '#b0b0b0', '#b0b0b0', '#ff8800', '#ff6b35',
 ];
 
 export const CDJ3000: React.FC = () => {
@@ -217,11 +217,11 @@ export const CDJ3000: React.FC = () => {
               <span
                 style={{
                   fontSize: 10,
-                  color: '#00d9ff',
+                  color: '#ffffff',
                   marginLeft: 10,
                   padding: '3px 8px',
-                  background: 'rgba(0, 217, 255, 0.15)',
-                  border: '1px solid rgba(0, 217, 255, 0.4)',
+                  background: 'rgba(255, 255, 255, 0.15)',
+                  border: '1px solid rgba(255, 255, 255, 0.4)',
                   borderRadius: 10,
                   verticalAlign: 'middle',
                   fontWeight: 700,
@@ -240,11 +240,11 @@ export const CDJ3000: React.FC = () => {
             style={{
               padding: '8px 16px',
               background: quantize
-                ? 'rgba(0, 255, 136, 0.15)'
-                : 'rgba(255, 51, 102, 0.15)',
-              border: `1px solid ${quantize ? '#00ff88' : '#ff3366'}`,
+                ? 'rgba(176, 176, 176, 0.15)'
+                : 'rgba(176, 176, 176, 0.15)',
+              border: `1px solid ${quantize ? '#b0b0b0' : '#b0b0b0'}`,
               borderRadius: 6,
-              color: quantize ? '#00ff88' : '#ff3366',
+              color: quantize ? '#b0b0b0' : '#b0b0b0',
               fontSize: 11,
               fontWeight: 700,
               cursor: 'pointer',
@@ -303,16 +303,16 @@ export const CDJ3000: React.FC = () => {
             </div>
 
             <div style={{ display: 'flex', gap: 20, flexShrink: 0 }}>
-              <StatBox label="BPM" value={bpm.toFixed(1)} color="#00d9ff" />
+              <StatBox label="BPM" value={bpm.toFixed(1)} color="#ffffff" />
               <StatBox
                 label="BEAT"
                 value={timeToBarBeat(currentTime, grid)}
-                color="#ff5cf0"
+                color="#b0b0b0"
               />
               <StatBox
                 label="TEMPO"
                 value={`${tempo > 0 ? '+' : ''}${tempo.toFixed(1)}%`}
-                color={tempo === 0 ? '#fff' : tempo > 0 ? '#00ff88' : '#ff3366'}
+                color={tempo === 0 ? '#fff' : tempo > 0 ? '#b0b0b0' : '#b0b0b0'}
               />
             </div>
           </div>
@@ -358,7 +358,7 @@ export const CDJ3000: React.FC = () => {
                   left: 0,
                   height: '100%',
                   width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%`,
-                  background: 'linear-gradient(90deg, #00d9ff, #7c5cff)',
+                  background: 'linear-gradient(90deg, #ffffff, #b0b0b0)',
                   borderRadius: 3,
                 }}
               />
@@ -413,10 +413,10 @@ export const CDJ3000: React.FC = () => {
                 height: 64,
                 borderRadius: '50%',
                 background: isPlaying
-                  ? 'linear-gradient(135deg, #00ff88, #00a850)'
+                  ? 'linear-gradient(135deg, #b0b0b0, #00a850)'
                   : 'linear-gradient(135deg, #1a1a24, #0d0d15)',
                 border: `2px solid ${
-                  isPlaying ? '#00ff88' : 'rgba(255,255,255,0.1)'
+                  isPlaying ? '#b0b0b0' : 'rgba(255,255,255,0.1)'
                 }`,
                 color: isPlaying ? '#000' : '#fff',
                 fontSize: 22,
@@ -424,7 +424,7 @@ export const CDJ3000: React.FC = () => {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                boxShadow: isPlaying ? '0 0 30px rgba(0, 255, 136, 0.6)' : 'none',
+                boxShadow: isPlaying ? '0 0 30px rgba(176, 176, 176, 0.6)' : 'none',
                 transition: 'all 0.2s',
               }}
             >
@@ -469,7 +469,7 @@ export const CDJ3000: React.FC = () => {
                 step={0.01}
                 value={tempo}
                 onChange={(e) => setTempo(parseFloat(e.target.value))}
-                style={{ width: 140, accentColor: '#00d9ff' }}
+                style={{ width: 140, accentColor: '#ffffff' }}
               />
               <div
                 style={{
@@ -477,7 +477,7 @@ export const CDJ3000: React.FC = () => {
                   fontWeight: 700,
                   fontFamily: 'monospace',
                   color:
-                    tempo === 0 ? '#fff' : tempo > 0 ? '#00ff88' : '#ff3366',
+                    tempo === 0 ? '#fff' : tempo > 0 ? '#b0b0b0' : '#b0b0b0',
                   minWidth: 50,
                   textAlign: 'right',
                 }}
@@ -576,19 +576,19 @@ export const CDJ3000: React.FC = () => {
                     style={{
                       padding: '8px 14px',
                       background: isActive
-                        ? 'linear-gradient(180deg, rgba(0, 217, 255, 0.3), rgba(0, 217, 255, 0.1))'
+                        ? 'linear-gradient(180deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.1))'
                         : 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))',
                       border: `1px solid ${
-                        isActive ? '#00d9ff' : 'rgba(255,255,255,0.08)'
+                        isActive ? '#ffffff' : 'rgba(255,255,255,0.08)'
                       }`,
                       borderRadius: 5,
-                      color: isActive ? '#00d9ff' : '#aaa',
+                      color: isActive ? '#ffffff' : '#aaa',
                       fontSize: 11,
                       fontWeight: 700,
                       fontFamily: 'monospace',
                       cursor: 'pointer',
                       boxShadow: isActive
-                        ? '0 0 16px rgba(0, 217, 255, 0.5)'
+                        ? '0 0 16px rgba(255, 255, 255, 0.5)'
                         : 'none',
                       transition: 'all 0.15s',
                     }}
@@ -602,10 +602,10 @@ export const CDJ3000: React.FC = () => {
                   onClick={handleLoopExit}
                   style={{
                     padding: '8px 14px',
-                    background: 'rgba(255, 51, 102, 0.15)',
-                    border: '1px solid #ff3366',
+                    background: 'rgba(176, 176, 176, 0.15)',
+                    border: '1px solid #b0b0b0',
                     borderRadius: 5,
-                    color: '#ff3366',
+                    color: '#b0b0b0',
                     fontSize: 11,
                     fontWeight: 700,
                     fontFamily: 'monospace',
@@ -625,8 +625,8 @@ export const CDJ3000: React.FC = () => {
             style={{
               padding: 40,
               textAlign: 'center',
-              background: 'rgba(0, 217, 255, 0.03)',
-              border: '1px dashed rgba(0, 217, 255, 0.3)',
+              background: 'rgba(255, 255, 255, 0.03)',
+              border: '1px dashed rgba(255, 255, 255, 0.3)',
               borderRadius: 12,
               color: '#888',
             }}

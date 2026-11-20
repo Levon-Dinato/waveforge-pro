@@ -123,7 +123,7 @@ export const SearchPage: React.FC = () => {
               outline: 'none'
             }} 
           />
-          <button type="submit" style={{ padding: '0 24px', background: '#e50000', color: '#fff', border: 'none', borderRadius: 50, fontWeight: 700, cursor: 'pointer', fontSize: '1rem' }}>
+          <button type="submit" style={{ padding: '0 24px', background: '#b0b0b0', color: '#fff', border: 'none', borderRadius: 50, fontWeight: 700, cursor: 'pointer', fontSize: '1rem' }}>
             Chercher
           </button>
         </form>
@@ -141,7 +141,7 @@ export const SearchPage: React.FC = () => {
                 background: 'none', border: 'none', padding: '10px 0', 
                 color: activeTab === 'tracks' ? '#fff' : '#888', 
                 fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer', 
-                borderBottom: activeTab === 'tracks' ? '2px solid #e50000' : '2px solid transparent' 
+                borderBottom: activeTab === 'tracks' ? '2px solid #b0b0b0' : '2px solid transparent' 
               }}
             >
               Morceaux ({tracks.length})
@@ -152,7 +152,7 @@ export const SearchPage: React.FC = () => {
                 background: 'none', border: 'none', padding: '10px 0', 
                 color: activeTab === 'artists' ? '#fff' : '#888', 
                 fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer', 
-                borderBottom: activeTab === 'artists' ? '2px solid #e50000' : '2px solid transparent' 
+                borderBottom: activeTab === 'artists' ? '2px solid #b0b0b0' : '2px solid transparent' 
               }}
             >
               Artistes ({artists.length})
@@ -179,7 +179,7 @@ export const SearchPage: React.FC = () => {
                               <div style={{ width: '100%', height: '100%', background: '#222', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>🎵</div>
                             )}
                             <div className="play-overlay" style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0, transition: 'opacity 0.2s' }}>
-                              <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#e50000', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', color: '#fff', paddingLeft: 3 }}>▶</div>
+                              <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#b0b0b0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', color: '#fff', paddingLeft: 3 }}>▶</div>
                             </div>
                           </div>
                           <div style={{ color: '#fff', fontSize: '0.9rem', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.title}</div>
@@ -201,7 +201,7 @@ export const SearchPage: React.FC = () => {
                       {artists.map((artist) => (
                         <Link key={artist.id} to={`/profil/${artist.id}`} style={{ textDecoration: 'none' }}>
                           <div style={{ background: 'rgba(20, 22, 30, 0.8)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 12, padding: 15, display: 'flex', alignItems: 'center', gap: 15, transition: 'all 0.2s' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(30, 33, 45, 0.9)'; e.currentTarget.style.borderColor = 'rgba(229, 0, 0, 0.3)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(20, 22, 30, 0.8)'; e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.05)'; }}>
-                            <div style={{ width: 60, height: 60, borderRadius: '50%', background: '#222', flexShrink: 0, overflow: 'hidden', border: '2px solid #e50000' }}>
+                            <div style={{ width: 60, height: 60, borderRadius: '50%', background: '#222', flexShrink: 0, overflow: 'hidden', border: '2px solid #b0b0b0' }}>
                               {artist.avatar_url ? <img src={artist.avatar_url} alt={artist.username} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>🎧</div>}
                             </div>
                             <div style={{ color: '#fff', fontWeight: 700, fontSize: '1rem' }}>{artist.username}</div>

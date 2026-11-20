@@ -27,7 +27,7 @@ export const SmartLinkPage: React.FC = () => {
     textMuted: isDark ? 'rgba(255,255,255,0.6)' : '#666666',
     border: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
     cardBg: isDark ? '#121212' : '#ffffff',
-    accent: '#00d9ff',
+    accent: '#ffffff',
   };
 
   useEffect(() => {

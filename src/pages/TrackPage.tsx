@@ -11,7 +11,7 @@ const Icons = {
   play: <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>,
   pause: <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>,
   heart: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>,
-  heartFilled: <svg width="20" height="20" viewBox="0 0 24 24" fill="#ff3366" stroke="#ff3366" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>,
+  heartFilled: <svg width="20" height="20" viewBox="0 0 24 24" fill="#b0b0b0" stroke="#b0b0b0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>,
   send: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>,
   close: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>,
   comment: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>,
@@ -162,7 +162,7 @@ export const TrackPage: React.FC = () => {
     textMain: isDark ? '#ffffff' : '#1a1a1a',
     textMuted: isDark ? 'rgba(255,255,255,0.5)' : '#666666',
     inputBg: isDark ? '#0a0a0a' : '#f3f4f6',
-    accent: '#00d9ff',
+    accent: '#ffffff',
   };
 
   useEffect(() => {
@@ -353,7 +353,7 @@ export const TrackPage: React.FC = () => {
     );
   }
 
-  const themeColor = artist?.theme_color || '#00d9ff';
+  const themeColor = artist?.theme_color || '#ffffff';
   const isCurrent = currentTrack?.id === track.id;
   const isThisPlaying = isCurrent && isPlaying;
 
@@ -454,7 +454,7 @@ export const TrackPage: React.FC = () => {
               </div>
 
               <div style={{ display: 'flex', gap: 12, paddingTop: 16, borderTop: `1px solid ${colors.border}`, marginTop: 16 }}>
-                <button onClick={handleLike} disabled={likeLoading} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', background: isLiked ? 'rgba(255,51,102,0.1)' : 'transparent', border: `1px solid ${isLiked ? '#ff3366' : colors.border}`, color: isLiked ? '#ff3366' : colors.textMain, borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' }}>
+                <button onClick={handleLike} disabled={likeLoading} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', background: isLiked ? 'rgba(176,176,176,0.1)' : 'transparent', border: `1px solid ${isLiked ? '#b0b0b0' : colors.border}`, color: isLiked ? '#b0b0b0' : colors.textMain, borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' }}>
                   {isLiked ? Icons.heartFilled : Icons.heart}
                   {track.likes_count || 0}
                 </button>
@@ -500,7 +500,7 @@ export const TrackPage: React.FC = () => {
                           
                           <span style={{ fontSize: 12, color: colors.textMuted, marginLeft: 'auto' }}>{formatDate(comment.created_at)}</span>
                           {user && user.id === comment.user_id && (
-                            <button onClick={() => handleDeleteComment(comment.id)} style={{ background: 'transparent', border: 'none', color: '#ff3366', cursor: 'pointer', fontSize: 11, fontWeight: 700 }}>Supprimer</button>
+                            <button onClick={() => handleDeleteComment(comment.id)} style={{ background: 'transparent', border: 'none', color: '#b0b0b0', cursor: 'pointer', fontSize: 11, fontWeight: 700 }}>Supprimer</button>
                           )}
                         </div>
                         <p style={{ margin: 0, fontSize: 14, color: colors.textMuted, lineHeight: 1.6 }}>{comment.content}</p>

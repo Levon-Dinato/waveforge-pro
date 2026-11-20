@@ -22,7 +22,7 @@ interface DayPoint {
   downloads: number;
 }
 
-const PIE_COLORS = ['#00d9ff', '#a855f7', '#ec4899', '#f59e0b', '#10b981', '#ef4444', '#3b82f6'];
+const PIE_COLORS = ['#ffffff', '#b0b0b0', '#b0b0b0', '#b0b0b0', '#b0b0b0', '#b0b0b0', '#b0b0b0'];
 
 const last30Days = (): string[] => {
   const days: string[] = [];
@@ -46,7 +46,7 @@ export const PremiumStats: React.FC<PremiumStatsProps> = ({ profile, tracks, emb
   const isDark = theme === 'dark';
 
   const profileId: string | undefined = profile?.id;
-  const themeColor: string = profile?.theme_color || '#00d9ff';
+  const themeColor: string = profile?.theme_color || '#ffffff';
 
   const [eventCounts, setEventCounts] = useState({ views: 0, plays: 0, downloads: 0 });
   const [followersCount, setFollowersCount] = useState(0);
@@ -270,16 +270,16 @@ export const PremiumStats: React.FC<PremiumStatsProps> = ({ profile, tracks, emb
         </div>
         <div style={cardStyle}>
           <div style={labelStyle}>Téléchargements</div>
-          <div style={{ ...valueStyle, color: '#10b981' }}>{loading ? '—' : formatNumber(totalDownloads)}</div>
+          <div style={{ ...valueStyle, color: '#b0b0b0' }}>{loading ? '—' : formatNumber(totalDownloads)}</div>
           <div style={{ fontSize: 11, color: colors.textMuted, marginTop: 6 }}>Conversion {conversionRate}%</div>
         </div>
         <div style={cardStyle}>
           <div style={labelStyle}>Abonnés</div>
-          <div style={{ ...valueStyle, color: '#a855f7' }}>{loading ? '—' : formatNumber(followersCount)}</div>
+          <div style={{ ...valueStyle, color: '#b0b0b0' }}>{loading ? '—' : formatNumber(followersCount)}</div>
         </div>
         <div style={cardStyle}>
           <div style={labelStyle}>Likes</div>
-          <div style={{ ...valueStyle, color: '#ec4899' }}>{loading ? '—' : formatNumber(trackStats.totalLikes)}</div>
+          <div style={{ ...valueStyle, color: '#b0b0b0' }}>{loading ? '—' : formatNumber(trackStats.totalLikes)}</div>
         </div>
       </div>
 
@@ -355,8 +355,8 @@ export const PremiumStats: React.FC<PremiumStatsProps> = ({ profile, tracks, emb
               />
               <Legend wrapperStyle={{ fontSize: 12, color: colors.textMuted }} />
               <Line type="monotone" dataKey="views" name="Vues" stroke={themeColor} strokeWidth={2} dot={false} />
-              <Line type="monotone" dataKey="plays" name="Plays" stroke="#a855f7" strokeWidth={2} dot={false} />
-              <Line type="monotone" dataKey="downloads" name="Téléchargements" stroke="#f59e0b" strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="plays" name="Plays" stroke="#b0b0b0" strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="downloads" name="Téléchargements" stroke="#b0b0b0" strokeWidth={2} dot={false} />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -447,9 +447,9 @@ export const PremiumStats: React.FC<PremiumStatsProps> = ({ profile, tracks, emb
         <h3 style={sectionTitleStyle}>📚 Bibliothèque</h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10 }}>
           <LibRow label="Sons publiés" value={trackStats.totalTracks} color={colors.textMain} bg={colors.innerBg} muted={colors.textMuted} />
-          <LibRow label="Téléchargeables" value={trackStats.downloadable} color="#10b981" bg={colors.innerBg} muted={colors.textMuted} />
-          <LibRow label="En vente" value={trackStats.paidTracksCount} color="#f59e0b" bg={colors.innerBg} muted={colors.textMuted} />
-          <LibRow label="Sans DL" value={trackStats.totalTracks - trackStats.downloadable} color="#ef4444" bg={colors.innerBg} muted={colors.textMuted} />
+          <LibRow label="Téléchargeables" value={trackStats.downloadable} color="#b0b0b0" bg={colors.innerBg} muted={colors.textMuted} />
+          <LibRow label="En vente" value={trackStats.paidTracksCount} color="#b0b0b0" bg={colors.innerBg} muted={colors.textMuted} />
+          <LibRow label="Sans DL" value={trackStats.totalTracks - trackStats.downloadable} color="#b0b0b0" bg={colors.innerBg} muted={colors.textMuted} />
         </div>
       </div>
     </section>

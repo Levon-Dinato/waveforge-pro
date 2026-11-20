@@ -20,7 +20,7 @@ export const JogWheel: React.FC<JogWheelProps> = ({
   onTouchStart,
   onTouchEnd,
   vinylMode = true,
-  color = '#00d9ff',
+  color = '#ffffff',
 }) => {
   const wheelRef = useRef<HTMLDivElement>(null);
   const [rotation, setRotation] = useState(0);

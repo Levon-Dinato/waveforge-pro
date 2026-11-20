@@ -12,7 +12,7 @@ import { PageMeta } from '../components/PageMeta';
 
 const Icons = {
   heart: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>,
-  heartFilled: <svg width="18" height="18" viewBox="0 0 24 24" fill="#ff3366" stroke="#ff3366" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>,
+  heartFilled: <svg width="18" height="18" viewBox="0 0 24 24" fill="#b0b0b0" stroke="#b0b0b0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>,
   message: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>,
   share: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>,
   link: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>,
@@ -22,7 +22,7 @@ const Icons = {
   pause: <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>,
   music: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>,
   sparkles: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path></svg>,
-  check: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>,
+  check: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#b0b0b0" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>,
 };
 
 interface DbEvent { id: string; title: string; event_date: string; location: string | null; city: string | null; url: string | null; image_url: string | null; created_at?: string; }
@@ -80,7 +80,7 @@ const linkify = (text: string) => {
   return text.split(urlRegex).map((part, i) => {
     if (part.match(urlRegex)) {
       return (
-        <a key={i} href={part} target="_blank" rel="noopener noreferrer" style={{ color: '#00d9ff', textDecoration: 'underline', wordBreak: 'break-all' }}>
+        <a key={i} href={part} target="_blank" rel="noopener noreferrer" style={{ color: '#ffffff', textDecoration: 'underline', wordBreak: 'break-all' }}>
           {part}
         </a>
       );
@@ -139,8 +139,8 @@ export const FeedPage: React.FC = () => {
     btnPublishText: isDark ? '#000000' : '#ffffff',
     btnPublishDisabledBg: isDark ? '#1a1a1a' : '#e5e7eb',
     btnPublishDisabledText: isDark ? '#555555' : '#999999',
-    accent: '#00d9ff',
-    cardHoverBorder: isDark ? 'rgba(0, 217, 255, 0.3)' : 'rgba(0, 217, 255, 0.4)',
+    accent: '#ffffff',
+    cardHoverBorder: isDark ? 'rgba(255, 255, 255, 0.3)' : 'rgba(255, 255, 255, 0.4)',
   };
 
   useEffect(() => {
@@ -588,7 +588,7 @@ export const FeedPage: React.FC = () => {
 
                       {!isEditing && (
                         <div style={{ padding: '0 20px 16px', display: 'flex', gap: 24 }}>
-                          <button onClick={(e) => handleLikePost(e, item.data.id)} style={{ background: 'transparent', border: 'none', color: isLiked ? '#ff3366' : colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700 }}>
+                          <button onClick={(e) => handleLikePost(e, item.data.id)} style={{ background: 'transparent', border: 'none', color: isLiked ? '#b0b0b0' : colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700 }}>
                             {isLiked ? Icons.heartFilled : Icons.heart} {item.data.likes_count || 0}
                           </button>
                           <button onClick={() => openComments('post', item.data.id)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700 }}>
@@ -640,7 +640,7 @@ export const FeedPage: React.FC = () => {
                   <div key={`${item.type}-${item.data.id}-${index}`} style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 20, overflow: 'hidden', backdropFilter: 'blur(20px)', transition: 'border-color 0.2s' }} onMouseEnter={(e) => { e.currentTarget.style.borderColor = colors.cardHoverBorder; }} onMouseLeave={(e) => { e.currentTarget.style.borderColor = colors.border; }}>
                     <div style={{ padding: '20px 20px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
-                        <div style={{ width: 44, height: 44, flexShrink: 0, borderRadius: '50%', background: colors.avatarBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: item.type === 'track' ? colors.accent : '#ff3366', fontWeight: 'bold', fontSize: 18, border: `1px solid ${colors.border}` }}>
+                        <div style={{ width: 44, height: 44, flexShrink: 0, borderRadius: '50%', background: colors.avatarBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: item.type === 'track' ? colors.accent : '#b0b0b0', fontWeight: 'bold', fontSize: 18, border: `1px solid ${colors.border}` }}>
                           {authorName?.charAt(0).toUpperCase() || '?'}
                         </div>
                         <div>
@@ -659,7 +659,7 @@ export const FeedPage: React.FC = () => {
                         </div>
 
                         <div style={{ padding: '0 20px 16px', display: 'flex', gap: 24, flexWrap: 'wrap' }}>
-                          <button onClick={(e) => handleLikeTrack(e, item.data.id)} style={{ background: 'transparent', border: 'none', color: isLiked ? '#ff3366' : colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700 }}>
+                          <button onClick={(e) => handleLikeTrack(e, item.data.id)} style={{ background: 'transparent', border: 'none', color: isLiked ? '#b0b0b0' : colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700 }}>
                             {isLiked ? Icons.heartFilled : Icons.heart} {item.data.likes_count || 0}
                           </button>
                           <button onClick={() => openComments('track', item.data.id)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700 }}>
@@ -748,7 +748,7 @@ export const FeedPage: React.FC = () => {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                   {topTracks.map((track, index) => (
                     <div key={track.id} style={{ display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer', transition: 'transform 0.2s' }} onClick={() => navigate(`/track/${track.id}`)} onMouseEnter={(e) => (e.currentTarget.style.transform = 'translateX(4px)')} onMouseLeave={(e) => (e.currentTarget.style.transform = 'translateX(0)')}>
-                      <div style={{ fontSize: 24, background: index === 0 ? `linear-gradient(135deg, ${colors.accent}, #a855f7)` : 'transparent', WebkitBackgroundClip: index === 0 ? 'text' : 'unset', WebkitTextFillColor: index === 0 ? 'transparent' : colors.textMuted, color: index === 0 ? 'transparent' : colors.textMuted, fontWeight: 900, fontStyle: 'italic', width: 32, textAlign: 'center' }}>
+                      <div style={{ fontSize: 24, background: index === 0 ? `linear-gradient(135deg, ${colors.accent}, #b0b0b0)` : 'transparent', WebkitBackgroundClip: index === 0 ? 'text' : 'unset', WebkitTextFillColor: index === 0 ? 'transparent' : colors.textMuted, color: index === 0 ? 'transparent' : colors.textMuted, fontWeight: 900, fontStyle: 'italic', width: 32, textAlign: 'center' }}>
                         0{index + 1}
                       </div>
                       <div style={{ width: 48, height: 48, borderRadius: 8, background: track.cover_url ? `url(${track.cover_url}) center/cover` : colors.inputBg, flexShrink: 0, border: `1px solid ${colors.border}`, boxShadow: '0 4px 10px rgba(0,0,0,0.1)' }} />

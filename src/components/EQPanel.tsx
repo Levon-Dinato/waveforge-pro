@@ -135,10 +135,10 @@ export const EQPanel: React.FC<EQPanelProps> = ({
     }
 
     // Trace la courbe
-    ctx.strokeStyle = '#00d9ff';
+    ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 2;
     ctx.shadowBlur = 8;
-    ctx.shadowColor = '#00d9ff';
+    ctx.shadowColor = '#ffffff';
     ctx.beginPath();
 
     for (let i = 0; i < N; i++) {
@@ -155,7 +155,7 @@ export const EQPanel: React.FC<EQPanelProps> = ({
     ctx.lineTo(w, zeroY);
     ctx.lineTo(0, zeroY);
     ctx.closePath();
-    ctx.fillStyle = 'rgba(0, 217, 255, 0.08)';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
     ctx.fill();
 
     // Dessine les points des bandes
@@ -414,8 +414,8 @@ export const EQPanel: React.FC<EQPanelProps> = ({
           style={{
             padding: '4px 10px',
             fontSize: 10,
-            color: '#ff3366',
-            borderColor: 'rgba(255, 51, 102, 0.3)',
+            color: '#b0b0b0',
+            borderColor: 'rgba(176, 176, 176, 0.3)',
           }}
         >
           🔄 RESET EQ

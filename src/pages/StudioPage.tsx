@@ -41,8 +41,8 @@ export const StudioPage: React.FC = () => {
     border: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)',
     textMain: isDark ? '#ffffff' : '#1a1a1a',
     textMuted: isDark ? '#888888' : '#666666',
-    accent: '#00d9ff',
-    accentGradient: 'linear-gradient(135deg, #00d9ff, #7c5cff)',
+    accent: '#ffffff',
+    accentGradient: 'linear-gradient(135deg, #ffffff, #b0b0b0)',
   };
 
   // 1. CHARGEMENT DE LA BIBLIOTHÈQUE
@@ -170,8 +170,8 @@ export const StudioPage: React.FC = () => {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', background: colors.bg, color: colors.textMain, fontFamily: 'Inter, sans-serif', overflow: 'hidden' }}>
       
       {/* BACKGROUND DECORATIF (Néon) */}
-      <div style={{ position: 'absolute', top: '-20%', left: '-10%', width: '50vw', height: '50vw', background: 'radial-gradient(circle, rgba(0, 217, 255, 0.05) 0%, transparent 70%)', filter: 'blur(80px)', zIndex: 0, pointerEvents: 'none' }} />
-      <div style={{ position: 'absolute', bottom: '-20%', right: '-10%', width: '50vw', height: '50vw', background: 'radial-gradient(circle, rgba(124, 92, 255, 0.05) 0%, transparent 70%)', filter: 'blur(80px)', zIndex: 0, pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', top: '-20%', left: '-10%', width: '50vw', height: '50vw', background: 'radial-gradient(circle, rgba(255, 255, 255, 0.05) 0%, transparent 70%)', filter: 'blur(80px)', zIndex: 0, pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', bottom: '-20%', right: '-10%', width: '50vw', height: '50vw', background: 'radial-gradient(circle, rgba(176, 176, 176, 0.05) 0%, transparent 70%)', filter: 'blur(80px)', zIndex: 0, pointerEvents: 'none' }} />
 
       {/* TOP BAR */}
       <div style={{ padding: '16px 24px', borderBottom: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: colors.panelBg, backdropFilter: 'blur(20px)', zIndex: 10 }}>
@@ -186,7 +186,7 @@ export const StudioPage: React.FC = () => {
           </h1>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{ fontSize: 11, fontWeight: 800, color: colors.accent, background: 'rgba(0, 217, 255, 0.1)', padding: '6px 12px', borderRadius: 20, border: `1px solid rgba(0, 217, 255, 0.3)` }}>
+          <div style={{ fontSize: 11, fontWeight: 800, color: colors.accent, background: 'rgba(255, 255, 255, 0.1)', padding: '6px 12px', borderRadius: 20, border: `1px solid rgba(255, 255, 255, 0.3)` }}>
             ● SERVEUR EN LIGNE
           </div>
         </div>
@@ -205,7 +205,7 @@ export const StudioPage: React.FC = () => {
               <div style={{ padding: 20, textAlign: 'center', color: colors.textMuted, fontSize: 13, fontStyle: 'italic' }}>Aucune musique.</div>
             ) : (
               library.map(track => (
-                <div key={track.id} onClick={() => handleSelectTrack(track)} style={{ display: 'flex', gap: 12, alignItems: 'center', padding: 12, borderRadius: 8, cursor: 'pointer', background: activeTrack?.id === track.id ? 'rgba(0, 217, 255, 0.1)' : 'transparent', border: `1px solid ${activeTrack?.id === track.id ? 'rgba(0, 217, 255, 0.3)' : 'transparent'}`, marginBottom: 6, transition: 'all 0.2s' }} onMouseEnter={(e) => { if (activeTrack?.id !== track.id) e.currentTarget.style.background = 'rgba(255,255,255,0.03)' }} onMouseLeave={(e) => { if (activeTrack?.id !== track.id) e.currentTarget.style.background = 'transparent' }}>
+                <div key={track.id} onClick={() => handleSelectTrack(track)} style={{ display: 'flex', gap: 12, alignItems: 'center', padding: 12, borderRadius: 8, cursor: 'pointer', background: activeTrack?.id === track.id ? 'rgba(255, 255, 255, 0.1)' : 'transparent', border: `1px solid ${activeTrack?.id === track.id ? 'rgba(255, 255, 255, 0.3)' : 'transparent'}`, marginBottom: 6, transition: 'all 0.2s' }} onMouseEnter={(e) => { if (activeTrack?.id !== track.id) e.currentTarget.style.background = 'rgba(255,255,255,0.03)' }} onMouseLeave={(e) => { if (activeTrack?.id !== track.id) e.currentTarget.style.background = 'transparent' }}>
                   <div style={{ width: 40, height: 40, background: track.coverUrl ? `url(${track.coverUrl}) center/cover` : 'rgba(255,255,255,0.1)', borderRadius: 6, flexShrink: 0, boxShadow: '0 4px 10px rgba(0,0,0,0.3)' }} />
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: activeTrack?.id === track.id ? colors.accent : colors.textMain }}>{track.title}</div>
@@ -218,7 +218,7 @@ export const StudioPage: React.FC = () => {
 
           <div style={{ padding: 20, borderTop: `1px solid ${colors.border}` }}>
             <input type="file" accept="audio/*" ref={fileInputRef} onChange={handleFileChange} style={{ display: 'none' }} />
-            <button onClick={() => fileInputRef.current?.click()} disabled={isAnalyzing} style={{ width: '100%', padding: '14px', background: isAnalyzing ? colors.border : colors.accentGradient, color: '#000', border: 'none', borderRadius: 8, fontWeight: 900, cursor: isAnalyzing ? 'wait' : 'pointer', fontSize: 14, boxShadow: isAnalyzing ? 'none' : '0 8px 20px rgba(0, 217, 255, 0.3)', transition: 'all 0.2s', transform: isAnalyzing ? 'scale(0.98)' : 'scale(1)' }}>
+            <button onClick={() => fileInputRef.current?.click()} disabled={isAnalyzing} style={{ width: '100%', padding: '14px', background: isAnalyzing ? colors.border : colors.accentGradient, color: '#000', border: 'none', borderRadius: 8, fontWeight: 900, cursor: isAnalyzing ? 'wait' : 'pointer', fontSize: 14, boxShadow: isAnalyzing ? 'none' : '0 8px 20px rgba(255, 255, 255, 0.3)', transition: 'all 0.2s', transform: isAnalyzing ? 'scale(0.98)' : 'scale(1)' }}>
               {isAnalyzing ? 'Analyse...' : '+ Importer un son'}
             </button>
           </div>
@@ -247,17 +247,17 @@ export const StudioPage: React.FC = () => {
           {/* TOOLBAR (Style DAW) */}
           <div style={{ padding: '16px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid ${colors.border}`, background: colors.panelBg }}>
             <div style={{ display: 'flex', gap: 12 }}>
-              <button onClick={() => engine.playMidi && engine.playMidi()} disabled={detectedNotes.length === 0} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', background: detectedNotes.length === 0 ? 'transparent' : 'rgba(0, 217, 255, 0.1)', border: `1px solid ${detectedNotes.length === 0 ? colors.border : colors.accent}`, color: detectedNotes.length === 0 ? colors.textMuted : colors.accent, borderRadius: 8, cursor: detectedNotes.length === 0 ? 'not-allowed' : 'pointer', fontSize: 13, fontWeight: 800, transition: 'all 0.2s' }}>
+              <button onClick={() => engine.playMidi && engine.playMidi()} disabled={detectedNotes.length === 0} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', background: detectedNotes.length === 0 ? 'transparent' : 'rgba(255, 255, 255, 0.1)', border: `1px solid ${detectedNotes.length === 0 ? colors.border : colors.accent}`, color: detectedNotes.length === 0 ? colors.textMuted : colors.accent, borderRadius: 8, cursor: detectedNotes.length === 0 ? 'not-allowed' : 'pointer', fontSize: 13, fontWeight: 800, transition: 'all 0.2s' }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> LECTURE
               </button>
-              <button onClick={() => engine.stopAll && engine.stopAll()} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', background: 'rgba(255, 92, 92, 0.1)', border: '1px solid rgba(255, 92, 92, 0.3)', color: '#ff5c5c', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 800 }}>
+              <button onClick={() => engine.stopAll && engine.stopAll()} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', background: 'rgba(176, 176, 176, 0.1)', border: '1px solid rgba(176, 176, 176, 0.3)', color: '#b0b0b0', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 800 }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12"></rect></svg> STOP
               </button>
             </div>
             <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
               <span style={{ fontSize: 13, color: colors.textMain, fontWeight: 800, letterSpacing: 1 }}>{detectedNotes.length} <span style={{color: colors.textMuted, fontSize: 11}}>NOTES</span></span>
               <div style={{ height: 20, width: 1, background: colors.border }} />
-              <button onClick={handleExportMidi} disabled={detectedNotes.length === 0} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', background: detectedNotes.length === 0 ? 'transparent' : colors.accentGradient, border: 'none', color: detectedNotes.length === 0 ? colors.textMuted : '#000', borderRadius: 8, fontWeight: 900, cursor: detectedNotes.length === 0 ? 'not-allowed' : 'pointer', fontSize: 13, boxShadow: detectedNotes.length === 0 ? 'none' : '0 4px 15px rgba(0, 217, 255, 0.3)' }}>
+              <button onClick={handleExportMidi} disabled={detectedNotes.length === 0} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', background: detectedNotes.length === 0 ? 'transparent' : colors.accentGradient, border: 'none', color: detectedNotes.length === 0 ? colors.textMuted : '#000', borderRadius: 8, fontWeight: 900, cursor: detectedNotes.length === 0 ? 'not-allowed' : 'pointer', fontSize: 13, boxShadow: detectedNotes.length === 0 ? 'none' : '0 4px 15px rgba(255, 255, 255, 0.3)' }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> EXPORT MIDI
               </button>
             </div>
@@ -266,10 +266,10 @@ export const StudioPage: React.FC = () => {
           {/* PISTES */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, padding: '20px 32px' }}>
             {[
-              { label: 'MELODY', count: trackCounts.lead, color: '#7c5cff' },
-              { label: 'BASS', count: trackCounts.bass, color: '#00ff88' },
-              { label: 'CHORDS', count: trackCounts.harmony, color: '#ff5cf0' },
-              { label: 'DRUMS', count: trackCounts.drums, color: '#ffd43b' }
+              { label: 'MELODY', count: trackCounts.lead, color: '#b0b0b0' },
+              { label: 'BASS', count: trackCounts.bass, color: '#b0b0b0' },
+              { label: 'CHORDS', count: trackCounts.harmony, color: '#b0b0b0' },
+              { label: 'DRUMS', count: trackCounts.drums, color: '#b0b0b0' }
             ].map((track, i) => (
               <div key={i} style={{ background: colors.cardBg, padding: 16, borderRadius: 12, border: `1px solid ${colors.border}`, position: 'relative', overflow: 'hidden' }}>
                 <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 4, background: track.color }} />
@@ -301,7 +301,7 @@ export const StudioPage: React.FC = () => {
                   <div style={{ fontSize: 60, marginBottom: 20, opacity: 0.8 }}>🎼</div>
                   <h2 style={{ fontSize: '1.4rem', color: colors.textMain, marginBottom: 8, fontWeight: 900 }}>Grille de composition</h2>
                   <p style={{ fontSize: 14, color: colors.textMuted, marginBottom: 30, textAlign: 'center', maxWidth: 400, lineHeight: 1.5 }}>Importe un son à gauche pour extraire ses notes et les faire apparaître sur la partition.</p>
-                  <button onClick={() => fileInputRef.current?.click()} style={{ padding: '14px 28px', background: 'rgba(0,217,255,0.15)', border: `1px solid ${colors.accent}`, color: colors.accent, borderRadius: 8, fontWeight: 900, cursor: 'pointer', transition: 'all 0.2s', fontSize: 14 }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(0,217,255,0.25)'; e.currentTarget.style.transform = 'translateY(-2px)' }} onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(0,217,255,0.15)'; e.currentTarget.style.transform = 'translateY(0)' }}>
+                  <button onClick={() => fileInputRef.current?.click()} style={{ padding: '14px 28px', background: 'rgba(255,255,255,0.15)', border: `1px solid ${colors.accent}`, color: colors.accent, borderRadius: 8, fontWeight: 900, cursor: 'pointer', transition: 'all 0.2s', fontSize: 14 }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.25)'; e.currentTarget.style.transform = 'translateY(-2px)' }} onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.15)'; e.currentTarget.style.transform = 'translateY(0)' }}>
                     Importer un son
                   </button>
                 </div>
@@ -313,9 +313,9 @@ export const StudioPage: React.FC = () => {
                   
                   {/* Loader animé circulaire */}
                   <div style={{ position: 'relative', width: 120, height: 120, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 30 }}>
-                     <div style={{ position: 'absolute', inset: 0, border: '3px solid rgba(0, 217, 255, 0.1)', borderRadius: '50%' }} />
+                     <div style={{ position: 'absolute', inset: 0, border: '3px solid rgba(255, 255, 255, 0.1)', borderRadius: '50%' }} />
                      <div style={{ position: 'absolute', inset: 0, border: '3px solid transparent', borderTopColor: colors.accent, borderRadius: '50%', animation: 'spin 1.5s linear infinite' }} />
-                     <div style={{ position: 'absolute', inset: 10, border: '3px solid transparent', borderBottomColor: '#7c5cff', borderRadius: '50%', animation: 'spin 2s linear infinite reverse' }} />
+                     <div style={{ position: 'absolute', inset: 10, border: '3px solid transparent', borderBottomColor: '#b0b0b0', borderRadius: '50%', animation: 'spin 2s linear infinite reverse' }} />
                      <div style={{ fontSize: 32 }}>🎵</div>
                   </div>
 
@@ -324,7 +324,7 @@ export const StudioPage: React.FC = () => {
                   </h2>
                   
                   <p style={{ fontSize: 14, color: colors.textMuted, textAlign: 'center', maxWidth: 450, lineHeight: 1.6, background: 'rgba(255,255,255,0.03)', padding: '16px 24px', borderRadius: 12, border: `1px solid ${colors.border}` }}>
-                    <strong style={{ color: '#ffd43b' }}>⏳ Patience :</strong> L'analyse sur le serveur Render peut prendre <strong>1 à 2 minutes</strong> si le serveur était endormi. <br/> Ne quitte pas cette page.
+                    <strong style={{ color: '#b0b0b0' }}>⏳ Patience :</strong> L'analyse sur le serveur Render peut prendre <strong>1 à 2 minutes</strong> si le serveur était endormi. <br/> Ne quitte pas cette page.
                   </p>
 
                   <style>{`

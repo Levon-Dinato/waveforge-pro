@@ -45,18 +45,18 @@ export const PageTransition: React.FC<{ children: React.ReactNode }> = ({ childr
             .wipe-transition::after {
               content: '';
               position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
-              background: linear-gradient(180deg, #00d9ff, #7c5cff, #ff5cf0);
-              box-shadow: 0 0 24px rgba(0, 217, 255, 0.6);
+              background: linear-gradient(180deg, #ffffff, #b0b0b0, #b0b0b0);
+              box-shadow: 0 0 24px rgba(255, 255, 255, 0.6);
             }
             .wipe-transition .wt-inner {
               display: flex; flex-direction: column; align-items: center; gap: 14px;
             }
             .wipe-transition .wt-mark {
               width: 46px; height: 46px; border-radius: 12px;
-              background: linear-gradient(135deg, #00d9ff, #7c5cff);
+              background: linear-gradient(135deg, #ffffff, #b0b0b0);
               display: flex; align-items: center; justify-content: center;
               color: #000; font-weight: 900; font-size: 20px;
-              box-shadow: 0 8px 30px rgba(0, 217, 255, 0.4);
+              box-shadow: 0 8px 30px rgba(255, 255, 255, 0.4);
             }
             .wipe-transition span {
               color: ${isDark ? '#ffffff' : '#111111'};

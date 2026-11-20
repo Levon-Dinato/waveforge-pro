@@ -18,7 +18,7 @@ export function TrackSelector({ tracks, onToggle }: Props) {
       className="panel fade-in"
       style={{
         marginBottom: 0,
-        borderColor: 'rgba(0, 217, 255, 0.1)',
+        borderColor: 'rgba(255, 255, 255, 0.1)',
       }}
     >
       <div className="panel-header">

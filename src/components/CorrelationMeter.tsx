@@ -10,7 +10,7 @@ interface CorrelationMeterProps {
 export const CorrelationMeter: React.FC<CorrelationMeterProps> = ({
   analyser,
   isActive,
-  color = '#00d9ff',
+  color = '#ffffff',
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rafRef = useRef<number | null>(null);
@@ -62,9 +62,9 @@ export const CorrelationMeter: React.FC<CorrelationMeterProps> = ({
 
       // Gradient rouge → jaune → vert
       const gradient = ctx.createLinearGradient(trackX, 0, trackX + trackWidth, 0);
-      gradient.addColorStop(0, 'rgba(255, 51, 102, 0.4)');
-      gradient.addColorStop(0.5, 'rgba(255, 212, 59, 0.4)');
-      gradient.addColorStop(1, 'rgba(0, 255, 136, 0.4)');
+      gradient.addColorStop(0, 'rgba(176, 176, 176, 0.4)');
+      gradient.addColorStop(0.5, 'rgba(176, 176, 176, 0.4)');
+      gradient.addColorStop(1, 'rgba(176, 176, 176, 0.4)');
       ctx.fillStyle = gradient;
       ctx.fillRect(trackX, trackY, trackWidth, trackHeight);
 
@@ -93,12 +93,12 @@ export const CorrelationMeter: React.FC<CorrelationMeterProps> = ({
       // Zone rouge (problème de phase)
       const redZoneX = trackX;
       const redZoneEnd = trackX + (0.25 * trackWidth); // -1 à -0.5
-      ctx.fillStyle = 'rgba(255, 51, 102, 0.15)';
+      ctx.fillStyle = 'rgba(176, 176, 176, 0.15)';
       ctx.fillRect(redZoneX, trackY - 2, redZoneEnd - redZoneX, trackHeight + 4);
 
       // Zone jaune (transition)
       const yellowZoneEnd = trackX + (0.5 * trackWidth); // -0.5 à 0
-      ctx.fillStyle = 'rgba(255, 212, 59, 0.1)';
+      ctx.fillStyle = 'rgba(176, 176, 176, 0.1)';
       ctx.fillRect(redZoneEnd, trackY - 2, yellowZoneEnd - redZoneEnd, trackHeight + 4);
 
       // ============================================================
@@ -153,7 +153,7 @@ export const CorrelationMeter: React.FC<CorrelationMeterProps> = ({
       const indicatorX = trackX + ((correlation + 1) / 2) * trackWidth;
 
       // Ligne verticale
-      ctx.strokeStyle = correlation < -0.5 ? '#ff3366' : correlation < 0.2 ? '#ffd43b' : '#00ff88';
+      ctx.strokeStyle = correlation < -0.5 ? '#b0b0b0' : correlation < 0.2 ? '#b0b0b0' : '#b0b0b0';
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(indicatorX, trackY - 8);
@@ -161,7 +161,7 @@ export const CorrelationMeter: React.FC<CorrelationMeterProps> = ({
       ctx.stroke();
 
       // Cercle
-      ctx.fillStyle = correlation < -0.5 ? '#ff3366' : correlation < 0.2 ? '#ffd43b' : '#00ff88';
+      ctx.fillStyle = correlation < -0.5 ? '#b0b0b0' : correlation < 0.2 ? '#b0b0b0' : '#b0b0b0';
       ctx.beginPath();
       ctx.arc(indicatorX, trackY + trackHeight / 2, 5, 0, Math.PI * 2);
       ctx.fill();
@@ -226,10 +226,10 @@ export const CorrelationMeter: React.FC<CorrelationMeterProps> = ({
   // ÉTAT DE LA CORRÉLATION
   // ============================================================
   const status = (() => {
-    if (currentValue >= 0.5) return { label: 'EXCELLENT', color: '#00ff88', desc: 'Compatible mono' };
-    if (currentValue >= 0.2) return { label: 'BON', color: '#00ff88', desc: 'Bon compromis' };
-    if (currentValue >= -0.3) return { label: 'ATTENTION', color: '#ffd43b', desc: 'Stéréo large' };
-    return { label: 'PROBLÈME', color: '#ff3366', desc: 'Risque en mono' };
+    if (currentValue >= 0.5) return { label: 'EXCELLENT', color: '#b0b0b0', desc: 'Compatible mono' };
+    if (currentValue >= 0.2) return { label: 'BON', color: '#b0b0b0', desc: 'Bon compromis' };
+    if (currentValue >= -0.3) return { label: 'ATTENTION', color: '#b0b0b0', desc: 'Stéréo large' };
+    return { label: 'PROBLÈME', color: '#b0b0b0', desc: 'Risque en mono' };
   })();
 
   return (
@@ -256,8 +256,8 @@ export const CorrelationMeter: React.FC<CorrelationMeterProps> = ({
               width: 26,
               height: 26,
               borderRadius: 6,
-              background: 'rgba(0, 217, 255, 0.1)',
-              border: '1px solid rgba(0, 217, 255, 0.3)',
+              background: 'rgba(255, 255, 255, 0.1)',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -337,9 +337,9 @@ export const CorrelationMeter: React.FC<CorrelationMeterProps> = ({
           color: '#666',
         }}
       >
-        <span style={{ color: '#ff3366' }}>● -1 (Hors phase)</span>
-        <span style={{ color: '#ffd43b' }}>● 0 (Stéréo)</span>
-        <span style={{ color: '#00ff88' }}>● +1 (Mono)</span>
+        <span style={{ color: '#b0b0b0' }}>● -1 (Hors phase)</span>
+        <span style={{ color: '#b0b0b0' }}>● 0 (Stéréo)</span>
+        <span style={{ color: '#b0b0b0' }}>● +1 (Mono)</span>
       </div>
 
       {isActive && (

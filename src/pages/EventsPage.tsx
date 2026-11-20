@@ -54,9 +54,9 @@ export const EventsPage: React.FC = () => {
     textMain: isDark ? '#ffffff' : '#1a1a1a',
     textMuted: isDark ? '#999999' : '#666666',
     textLight: isDark ? '#cccccc' : '#444444',
-    accent: '#00d9ff',
+    accent: '#ffffff',
     accentText: '#000000', // Le texte sur le bouton accent
-    danger: '#ff5c5c',
+    danger: '#b0b0b0',
     cardGradient: isDark ? 'linear-gradient(135deg, #1c1c1c, #2a2a2a)' : 'linear-gradient(135deg, #ffffff, #f3f4f6)',
   };
 

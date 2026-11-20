@@ -42,7 +42,7 @@ export const AdminPage: React.FC = () => {
     textMain: isDark ? '#ffffff' : '#1a1a1a',
     textMuted: isDark ? '#888888' : '#666666',
     inputBg: isDark ? '#0a0a0a' : '#f3f4f6',
-    accent: '#00d9ff',
+    accent: '#ffffff',
   };
 
   useEffect(() => {
@@ -199,10 +199,10 @@ export const AdminPage: React.FC = () => {
           {/* ONGLET VUE D'ENSEMBLE */}
           {activeTab === 'stats' && (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16 }}>
-              <StatsCard title="Total Artistes" value={users.length} icon={Icons.users} color="#00d9ff" />
-              <StatsCard title="Membres Premium" value={premiumCount} icon={Icons.star} color="#fbbf24" />
-              <StatsCard title="Revenu Est. (30€/an)" value={`${revenueEstimation} €`} icon={Icons.chart} color="#10b981" />
-              <StatsCard title="Total Sons" value={tracks.length} icon={Icons.music} color="#ec4899" />
+              <StatsCard title="Total Artistes" value={users.length} icon={Icons.users} color="#ffffff" />
+              <StatsCard title="Membres Premium" value={premiumCount} icon={Icons.star} color="#b0b0b0" />
+              <StatsCard title="Revenu Est. (30€/an)" value={`${revenueEstimation} €`} icon={Icons.chart} color="#b0b0b0" />
+              <StatsCard title="Total Sons" value={tracks.length} icon={Icons.music} color="#b0b0b0" />
             </div>
           )}
 
@@ -237,7 +237,7 @@ export const AdminPage: React.FC = () => {
                     profile={{
                       id: selectedArtist.id,
                       username: selectedArtist.username,
-                      theme_color: selectedArtist.theme_color || '#00d9ff',
+                      theme_color: selectedArtist.theme_color || '#ffffff',
                     }}
                     tracks={selectedArtistTracks}
                     embedded
@@ -259,13 +259,13 @@ export const AdminPage: React.FC = () => {
               
               {/* Cartes de résumé intégrées */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
-                <div style={{ background: 'linear-gradient(135deg, rgba(16,185,129,0.08), transparent)', border: '1px solid rgba(16,185,129,0.3)', borderRadius: 12, padding: 20 }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: '#10b981', textTransform: 'uppercase', letterSpacing: 0.5 }}>Revenu Annuel Estimé</div>
+                <div style={{ background: 'linear-gradient(135deg, rgba(176,176,176,0.08), transparent)', border: '1px solid rgba(176,176,176,0.3)', borderRadius: 12, padding: 20 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: '#b0b0b0', textTransform: 'uppercase', letterSpacing: 0.5 }}>Revenu Annuel Estimé</div>
                   <div style={{ fontSize: 28, fontWeight: 800, color: colors.textMain, marginTop: 8 }}>{revenueEstimation} €</div>
                   <div style={{ fontSize: 12, color: colors.textMuted, marginTop: 4 }}>Basé sur {premiumCount} abonné(s)</div>
                 </div>
                 <div style={{ background: 'linear-gradient(135deg, rgba(251,191,36,0.08), transparent)', border: '1px solid rgba(251,191,36,0.3)', borderRadius: 12, padding: 20 }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: '#fbbf24', textTransform: 'uppercase', letterSpacing: 0.5 }}>Membres Premium</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: '#b0b0b0', textTransform: 'uppercase', letterSpacing: 0.5 }}>Membres Premium</div>
                   <div style={{ fontSize: 28, fontWeight: 800, color: colors.textMain, marginTop: 8 }}>{premiumCount}</div>
                   <div style={{ fontSize: 12, color: colors.textMuted, marginTop: 4 }}>Artistes avec accès complet</div>
                 </div>
@@ -299,7 +299,7 @@ export const AdminPage: React.FC = () => {
                               display: 'inline-flex', alignItems: 'center', gap: 6,
                               fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 6, 
                               background: u.is_premium ? 'rgba(251, 191, 36, 0.1)' : 'rgba(255,255,255,0.05)', 
-                              color: u.is_premium ? '#fbbf24' : colors.textMuted 
+                              color: u.is_premium ? '#b0b0b0' : colors.textMuted 
                             }}>
                               {u.is_premium && Icons.star}
                               {u.is_premium ? 'PREMIUM' : 'GRATUIT'}
@@ -311,9 +311,9 @@ export const AdminPage: React.FC = () => {
                                 onClick={() => togglePremium(u.id, u.is_premium)}
                                 style={{ 
                                   padding: '6px 12px', 
-                                  background: u.is_premium ? 'transparent' : 'rgba(16,185,129,0.1)', 
-                                  border: `1px solid ${u.is_premium ? colors.border : '#10b981'}`, 
-                                  color: u.is_premium ? colors.textMuted : '#10b981', 
+                                  background: u.is_premium ? 'transparent' : 'rgba(176,176,176,0.1)', 
+                                  border: `1px solid ${u.is_premium ? colors.border : '#b0b0b0'}`, 
+                                  color: u.is_premium ? colors.textMuted : '#b0b0b0', 
                                   borderRadius: 6, fontSize: 11, fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' 
                                 }}
                               >
@@ -322,7 +322,7 @@ export const AdminPage: React.FC = () => {
                               <button 
                                 onClick={() => { setSelectedArtistId(u.id); setActiveTab('artist-stats'); }}
                                 style={{ 
-                                  padding: '6px 12px', background: 'rgba(0,217,255,0.1)', border: `1px solid ${colors.accent}`, 
+                                  padding: '6px 12px', background: 'rgba(255,255,255,0.1)', border: `1px solid ${colors.accent}`, 
                                   color: colors.accent, borderRadius: 6, fontSize: 11, fontWeight: 700, cursor: 'pointer' 
                                 }}
                               >
@@ -355,7 +355,7 @@ export const AdminPage: React.FC = () => {
                       <span>❤️ {t.likes_count || 0}</span>
                       <span>⬇️ {t.downloads || 0}</span>
                     </div>
-                    <button onClick={() => deleteTrack(t)} style={{ background: 'rgba(255, 92, 92, 0.1)', border: '1px solid rgba(255, 92, 92, 0.2)', color: '#ff5c5c', padding: '8px', borderRadius: 6, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Supprimer">
+                    <button onClick={() => deleteTrack(t)} style={{ background: 'rgba(176, 176, 176, 0.1)', border: '1px solid rgba(176, 176, 176, 0.2)', color: '#b0b0b0', padding: '8px', borderRadius: 6, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Supprimer">
                       {Icons.trash}
                     </button>
                   </div>

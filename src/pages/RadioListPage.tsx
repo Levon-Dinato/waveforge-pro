@@ -28,7 +28,7 @@ export const RadioListPage: React.FC = () => {
     textMuted: isDark ? '#888888' : '#666666',
     border: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
     panelBg: isDark ? 'rgba(20,20,25,0.6)' : 'rgba(255,255,255,0.7)',
-    accent: '#ff3366',
+    accent: '#b0b0b0',
   };
 
   useEffect(() => {
@@ -111,7 +111,7 @@ export const RadioListPage: React.FC = () => {
               onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
               onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
             >
-              <button onClick={(e) => handleCopyLink(e, artist.username)} style={{ position: 'absolute', top: 16, right: 16, background: 'transparent', border: 'none', color: copiedId === artist.username ? '#10b981' : colors.textMuted, cursor: 'pointer', transition: 'all 0.2s' }} title="Copier le lien de la radio">
+              <button onClick={(e) => handleCopyLink(e, artist.username)} style={{ position: 'absolute', top: 16, right: 16, background: 'transparent', border: 'none', color: copiedId === artist.username ? '#b0b0b0' : colors.textMuted, cursor: 'pointer', transition: 'all 0.2s' }} title="Copier le lien de la radio">
                 {copiedId === artist.username ? (
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
                 ) : (
@@ -119,9 +119,9 @@ export const RadioListPage: React.FC = () => {
                 )}
               </button>
 
-              <div style={{ width: 100, height: 100, borderRadius: '50%', background: artist.avatar_url ? `url(${artist.avatar_url}) center/cover` : colors.border, border: `3px solid ${colors.bg}`, boxShadow: '0 0 20px rgba(255, 51, 102, 0.3)', marginBottom: 16 }} />
+              <div style={{ width: 100, height: 100, borderRadius: '50%', background: artist.avatar_url ? `url(${artist.avatar_url}) center/cover` : colors.border, border: `3px solid ${colors.bg}`, boxShadow: '0 0 20px rgba(176, 176, 176, 0.3)', marginBottom: 16 }} />
               
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(255, 51, 102, 0.15)', padding: '4px 10px', borderRadius: 20, marginBottom: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(176, 176, 176, 0.15)', padding: '4px 10px', borderRadius: 20, marginBottom: 12 }}>
                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: colors.accent, animation: 'pulse 1.5s infinite' }} />
                 <span style={{ fontSize: 10, fontWeight: 800, color: colors.accent, letterSpacing: '1px' }}>EN DIRECT</span>
               </div>
@@ -129,7 +129,7 @@ export const RadioListPage: React.FC = () => {
               <h3 style={{ fontSize: 20, fontWeight: 800, margin: '0 0 4px 0' }}>{artist.username}</h3>
               <p style={{ fontSize: 13, color: colors.textMuted, margin: '0 0 20px 0' }}>{artist.tracks_count} sons disponibles</p>
 
-              <Link to={`/radio/${artist.username}`} style={{ width: '100%', padding: '12px', background: 'linear-gradient(135deg, #ff3366, #7c5cff)', color: '#fff', border: 'none', borderRadius: 30, fontWeight: 800, fontSize: 14, textDecoration: 'none', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8 }}>
+              <Link to={`/radio/${artist.username}`} style={{ width: '100%', padding: '12px', background: 'linear-gradient(135deg, #b0b0b0, #b0b0b0)', color: '#fff', border: 'none', borderRadius: 30, fontWeight: 800, fontSize: 14, textDecoration: 'none', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8 }}>
                 ▶ Écouter la Radio
               </Link>
             </div>

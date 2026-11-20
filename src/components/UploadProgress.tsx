@@ -31,7 +31,7 @@ export function UploadProgress({
       style={{
         marginTop: 16,
         marginBottom: 16,
-        borderColor: 'rgba(0, 217, 255, 0.3)',
+        borderColor: 'rgba(255, 255, 255, 0.3)',
         background: 'rgba(0, 20, 30, 0.6)',
       }}
     >
@@ -84,8 +84,8 @@ export function UploadProgress({
                 width: `${percent}%`,
                 height: '100%',
                 background:
-                  'linear-gradient(90deg, #0088ff, #00d9ff)',
-                boxShadow: '0 0 12px rgba(0, 217, 255, 0.6)',
+                  'linear-gradient(90deg, #b0b0b0, #ffffff)',
+                boxShadow: '0 0 12px rgba(255, 255, 255, 0.6)',
                 borderRadius: 4,
                 transition: 'width 0.15s ease',
               }}

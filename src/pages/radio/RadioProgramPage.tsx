@@ -95,7 +95,7 @@ export const RadioProgramPage: React.FC = () => {
                         <div style={{ flex: 1, zIndex: 1 }}>
                           <div style={{ fontSize: 15, fontWeight: 800, color: isLive ? visualizerColor : colors.textMain, display: 'flex', alignItems: 'center', gap: 8 }}>
                             {schedule.title}
-                            {isLive && <span style={{ fontSize: 9, background: '#ef4444', color: '#fff', padding: '2px 6px', borderRadius: 4, animation: 'pulseLive 1.5s infinite' }}>EN DIRECT</span>}
+                            {isLive && <span style={{ fontSize: 9, background: '#b0b0b0', color: '#fff', padding: '2px 6px', borderRadius: 4, animation: 'pulseLive 1.5s infinite' }}>EN DIRECT</span>}
                           </div>
                           <div style={{ fontSize: 13, color: colors.textMuted, marginTop: 4 }}>
                             Fin à {schedule.end_time.slice(0, 5)} • {schedule.playlists?.name || 'Mix'}

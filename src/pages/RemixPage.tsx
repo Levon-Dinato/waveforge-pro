@@ -44,7 +44,7 @@ export const RemixPage: React.FC = () => {
       >
         <div>
           <h2 style={{ fontSize: 20, fontWeight: 700, margin: 0, marginBottom: 8 }}>
-            🎛️ <span style={{ color: '#ff5cf0' }}>Remix AI</span>
+            🎛️ <span style={{ color: '#b0b0b0' }}>Remix AI</span>
           </h2>
           <p style={{ color: '#888', fontSize: 12, margin: 0 }}>
             Transformation IA avec Treblo · apprentissage continu
@@ -59,10 +59,10 @@ export const RemixPage: React.FC = () => {
             gap: 10,
             padding: '8px 14px',
             background: hasApiKey
-              ? 'rgba(0, 255, 136, 0.06)'
-              : 'rgba(255, 51, 102, 0.06)',
+              ? 'rgba(176, 176, 176, 0.06)'
+              : 'rgba(176, 176, 176, 0.06)',
             border: `1px solid ${
-              hasApiKey ? 'rgba(0, 255, 136, 0.3)' : 'rgba(255, 51, 102, 0.3)'
+              hasApiKey ? 'rgba(176, 176, 176, 0.3)' : 'rgba(176, 176, 176, 0.3)'
             }`,
             borderRadius: 8,
             fontSize: 11,
@@ -73,8 +73,8 @@ export const RemixPage: React.FC = () => {
               width: 8,
               height: 8,
               borderRadius: '50%',
-              background: hasApiKey ? '#00ff88' : '#ff3366',
-              boxShadow: hasApiKey ? '0 0 8px #00ff88' : 'none',
+              background: hasApiKey ? '#b0b0b0' : '#b0b0b0',
+              boxShadow: hasApiKey ? '0 0 8px #b0b0b0' : 'none',
             }}
           />
           <div>
@@ -84,7 +84,7 @@ export const RemixPage: React.FC = () => {
             <div
               style={{
                 fontSize: 11,
-                color: hasApiKey ? '#00ff88' : '#ff3366',
+                color: hasApiKey ? '#b0b0b0' : '#b0b0b0',
                 fontWeight: 600,
               }}
             >
@@ -95,7 +95,7 @@ export const RemixPage: React.FC = () => {
             <Link
               to="/settings"
               style={{
-                color: '#ff5cf0',
+                color: '#b0b0b0',
                 fontSize: 10,
                 textDecoration: 'none',
                 marginLeft: 4,
@@ -132,25 +132,25 @@ export const RemixPage: React.FC = () => {
               icon="🎛️"
               label="REMIX GÉNÉRÉS"
               value={preferences.totalGenerations}
-              color="#ff5cf0"
+              color="#b0b0b0"
             />
             <StatCard
               icon="💾"
               label="EXPORTS"
               value={preferences.totalExports}
-              color="#00ff88"
+              color="#b0b0b0"
             />
             <StatCard
               icon="⭐"
               label="NOTE MOYENNE"
               value={`${preferences.avgRating.toFixed(1)}/5`}
-              color="#ffd43b"
+              color="#b0b0b0"
             />
             <StatCard
               icon="🎵"
               label="BPM PRÉFÉRÉ"
               value={`${preferences.preferredBPMRange.min}-${preferences.preferredBPMRange.max}`}
-              color="#00d9ff"
+              color="#ffffff"
             />
           </div>
         </div>
@@ -164,7 +164,7 @@ export const RemixPage: React.FC = () => {
             padding: 40,
             textAlign: 'center',
             borderStyle: 'dashed',
-            borderColor: 'rgba(255, 92, 240, 0.3)',
+            borderColor: 'rgba(176, 176, 176, 0.3)',
           }}
         >
           <div style={{ fontSize: 52, marginBottom: 16 }}>🎛️</div>
@@ -200,7 +200,7 @@ export const RemixPage: React.FC = () => {
               display: 'inline-flex',
               alignItems: 'center',
               gap: 6,
-              background: 'linear-gradient(135deg, #ff5cf0, #a020a0)',
+              background: 'linear-gradient(135deg, #b0b0b0, #a020a0)',
               color: '#000',
               borderColor: 'transparent',
               padding: '12px 24px',
@@ -352,11 +352,11 @@ const HistoryCard: React.FC<{ entry: RemixEntry }> = ({ entry }) => {
 
   const statusColor =
     entry.userAction === 'exported'
-      ? '#00ff88'
+      ? '#b0b0b0'
       : entry.userAction === 'deleted'
-      ? '#ff3366'
+      ? '#b0b0b0'
       : entry.userAction === 'regenerated'
-      ? '#ffd43b'
+      ? '#b0b0b0'
       : '#888';
 
   const statusLabel =

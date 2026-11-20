@@ -190,20 +190,20 @@ export const AuthPage: React.FC = () => {
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <input
             type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email"
-            style={INPUT_STYLE} onFocus={(e) => e.target.style.borderColor = '#00d9ff'} onBlur={(e) => e.target.style.borderColor = '#333'}
+            style={INPUT_STYLE} onFocus={(e) => e.target.style.borderColor = '#ffffff'} onBlur={(e) => e.target.style.borderColor = '#333'}
           />
 
           {mode !== 'forgot' && (
             <input
               type="password" placeholder="Mot de passe" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-              style={INPUT_STYLE} onFocus={(e) => e.target.style.borderColor = '#00d9ff'} onBlur={(e) => e.target.style.borderColor = '#333'}
+              style={INPUT_STYLE} onFocus={(e) => e.target.style.borderColor = '#ffffff'} onBlur={(e) => e.target.style.borderColor = '#333'}
             />
           )}
 
           {mode === 'signup' && (
             <input
               type="password" placeholder="Confirmer le mot de passe" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required autoComplete="new-password"
-              style={INPUT_STYLE} onFocus={(e) => e.target.style.borderColor = '#00d9ff'} onBlur={(e) => e.target.style.borderColor = '#333'}
+              style={INPUT_STYLE} onFocus={(e) => e.target.style.borderColor = '#ffffff'} onBlur={(e) => e.target.style.borderColor = '#333'}
             />
           )}
 
@@ -216,12 +216,12 @@ export const AuthPage: React.FC = () => {
 
           {/* Messages d'erreur / info */}
           {error && (
-            <div style={{ padding: '12px', background: 'rgba(255, 51, 102, 0.1)', border: '1px solid rgba(255, 51, 102, 0.3)', borderRadius: 6, color: '#ff5c5c', fontSize: '13px' }}>
+            <div style={{ padding: '12px', background: 'rgba(176, 176, 176, 0.1)', border: '1px solid rgba(176, 176, 176, 0.3)', borderRadius: 6, color: '#b0b0b0', fontSize: '13px' }}>
               {error}
             </div>
           )}
           {info && (
-            <div style={{ padding: '12px', background: 'rgba(0, 217, 255, 0.1)', border: '1px solid rgba(0, 217, 255, 0.3)', borderRadius: 6, color: '#00d9ff', fontSize: '13px' }}>
+            <div style={{ padding: '12px', background: 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255, 255, 255, 0.3)', borderRadius: 6, color: '#ffffff', fontSize: '13px' }}>
               {info}
             </div>
           )}

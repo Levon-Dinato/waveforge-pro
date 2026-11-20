@@ -117,11 +117,11 @@ export function Waveform({
     ctx.save();
     ctx.beginPath(); ctx.rect(0, 0, playedX, H); ctx.clip();
     const gradient = ctx.createLinearGradient(0, 0, 0, H);
-    gradient.addColorStop(0, 'rgba(0, 217, 255, 0.15)');
-    gradient.addColorStop(0.5, 'rgba(0, 217, 255, 1)');
-    gradient.addColorStop(1, 'rgba(0, 217, 255, 0.15)');
+    gradient.addColorStop(0, 'rgba(255, 255, 255, 0.15)');
+    gradient.addColorStop(0.5, 'rgba(255, 255, 255, 1)');
+    gradient.addColorStop(1, 'rgba(255, 255, 255, 0.15)');
     ctx.fillStyle = gradient;
-    ctx.shadowColor = '#00d9ff'; ctx.shadowBlur = 8;
+    ctx.shadowColor = '#ffffff'; ctx.shadowBlur = 8;
     for (let i = 0; i < currentPeaks.length; i++) {
       const x = (i / currentPeaks.length) * W;
       const barWidth = W / currentPeaks.length;
@@ -132,12 +132,12 @@ export function Waveform({
 
     // Tête de lecture
     if (duration > 0 && playedRatio < 1) {
-      ctx.strokeStyle = isDragging ? '#ffffff' : '#ff3366';
+      ctx.strokeStyle = isDragging ? '#ffffff' : '#b0b0b0';
       ctx.lineWidth = isDragging ? 3 : 2;
-      ctx.shadowColor = isDragging ? '#ffffff' : '#ff3366';
+      ctx.shadowColor = isDragging ? '#ffffff' : '#b0b0b0';
       ctx.shadowBlur = 12;
       ctx.beginPath(); ctx.moveTo(playedX, 0); ctx.lineTo(playedX, H); ctx.stroke();
-      ctx.fillStyle = isDragging ? '#ffffff' : '#ff3366';
+      ctx.fillStyle = isDragging ? '#ffffff' : '#b0b0b0';
       ctx.beginPath(); ctx.moveTo(playedX - 5, 0); ctx.lineTo(playedX + 5, 0); ctx.lineTo(playedX, 8); ctx.closePath(); ctx.fill();
       ctx.shadowBlur = 0;
     }

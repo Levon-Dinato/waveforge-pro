@@ -15,10 +15,10 @@ interface GlobalPlayerProps {
 
 const Icons = {
   heart: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>,
-  heartFilled: <svg width="18" height="18" viewBox="0 0 24 24" fill="#ff3366" stroke="#ff3366" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>,
+  heartFilled: <svg width="18" height="18" viewBox="0 0 24 24" fill="#b0b0b0" stroke="#b0b0b0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>,
   playlist: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>,
   plus: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>,
-  check: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+  check: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#b0b0b0" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
 };
 
 // ✅ CORRECTION : ajout du paramètre trackId et appel RPC
@@ -221,10 +221,10 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
 
     ctx.save(); ctx.beginPath(); ctx.rect(0, 0, playedX, H); ctx.clip();
     const gradient = ctx.createLinearGradient(0, 0, 0, H);
-    gradient.addColorStop(0, 'rgba(0, 217, 255, 0.2)');
-    gradient.addColorStop(0.5, 'rgba(0, 217, 255, 1)');
-    gradient.addColorStop(1, 'rgba(0, 217, 255, 0.2)');
-    ctx.fillStyle = gradient; ctx.shadowColor = '#00d9ff'; ctx.shadowBlur = isMobile ? 2 : 6;
+    gradient.addColorStop(0, 'rgba(255, 255, 255, 0.2)');
+    gradient.addColorStop(0.5, 'rgba(255, 255, 255, 1)');
+    gradient.addColorStop(1, 'rgba(255, 255, 255, 0.2)');
+    ctx.fillStyle = gradient; ctx.shadowColor = '#ffffff'; ctx.shadowBlur = isMobile ? 2 : 6;
 
     for (let i = 0; i < displayPeaks.length; i++) {
       const x = (i / displayPeaks.length) * W;
@@ -262,7 +262,7 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
       transition: 'background 0.3s ease, border-color 0.3s ease'
     }}>
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'rgba(255,255,255,0.1)' }}>
-        <div style={{ width: `${(currentTime / (duration || 1)) * 100}%`, height: '100%', background: '#00d9ff', boxShadow: '0 0 10px #00d9ff' }} />
+        <div style={{ width: `${(currentTime / (duration || 1)) * 100}%`, height: '100%', background: '#ffffff', boxShadow: '0 0 10px #ffffff' }} />
       </div>
 
       <div style={{ maxWidth: 1400, margin: '0 auto', height: isMobile ? '72px' : '96px', display: 'flex', alignItems: 'center', gap: isMobile ? '12px' : '32px', padding: isMobile ? '0 16px' : '0 32px' }}>
@@ -301,13 +301,13 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
 
         <div style={{ display: 'flex', gap: isMobile ? 10 : 16, alignItems: 'center', justifyContent: 'flex-end', width: isMobile ? 'auto' : '220px', position: 'relative' }}>
           
-          <button onClick={handleLike} style={{ background: 'transparent', border: 'none', color: isLiked ? '#ff3366' : colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'all 0.2s' }}
+          <button onClick={handleLike} style={{ background: 'transparent', border: 'none', color: isLiked ? '#b0b0b0' : colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'all 0.2s' }}
             onMouseEnter={e => { if (!isLiked) e.currentTarget.style.color = colors.textMain; }} onMouseLeave={e => { if (!isLiked) e.currentTarget.style.color = colors.textMuted; }}>
             {isLiked ? Icons.heartFilled : Icons.heart}
           </button>
 
           <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-            <button onClick={() => setShowPlaylistMenu(!showPlaylistMenu)} style={{ background: 'transparent', border: 'none', color: showPlaylistMenu ? '#00d9ff' : colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'all 0.2s' }}
+            <button onClick={() => setShowPlaylistMenu(!showPlaylistMenu)} style={{ background: 'transparent', border: 'none', color: showPlaylistMenu ? '#ffffff' : colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'all 0.2s' }}
               onMouseEnter={e => { if (!showPlaylistMenu) e.currentTarget.style.color = colors.textMain; }} onMouseLeave={e => { if (!showPlaylistMenu) e.currentTarget.style.color = colors.textMuted; }}>
               {Icons.playlist}
             </button>
@@ -337,8 +337,8 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
                     )}
                     
                     <div style={{ borderTop: `1px solid ${colors.border}`, paddingTop: 8, marginTop: 4 }}>
-                      <button onClick={() => setIsCreatingPlaylist(true)} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', textAlign: 'left', padding: '8px 10px', background: 'transparent', border: 'none', color: '#00d9ff', fontSize: 13, cursor: 'pointer', borderRadius: 6, fontWeight: 700 }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(0,217,255,0.1)'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
+                      <button onClick={() => setIsCreatingPlaylist(true)} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', textAlign: 'left', padding: '8px 10px', background: 'transparent', border: 'none', color: '#ffffff', fontSize: 13, cursor: 'pointer', borderRadius: 6, fontWeight: 700 }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
                         {Icons.plus} Créer une playlist
                       </button>
                     </div>
@@ -347,7 +347,7 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
                   <form onSubmit={handleCreatePlaylist} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                     <input type="text" autoFocus placeholder="Nom de la playlist..." value={newPlaylistName} onChange={(e) => setNewPlaylistName(e.target.value)} style={{ width: '100%', padding: '8px 10px', background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 6, color: colors.textMain, fontSize: 13, outline: 'none' }} />
                     <div style={{ display: 'flex', gap: 8 }}>
-                      <button type="submit" style={{ flex: 1, padding: '8px', background: '#00d9ff', color: '#000', border: 'none', borderRadius: 6, fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>Créer</button>
+                      <button type="submit" style={{ flex: 1, padding: '8px', background: '#ffffff', color: '#000', border: 'none', borderRadius: 6, fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>Créer</button>
                       <button type="button" onClick={() => setIsCreatingPlaylist(false)} style={{ padding: '8px 12px', background: 'transparent', color: colors.textMuted, border: `1px solid ${colors.border}`, borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Annuler</button>
                     </div>
                   </form>
@@ -363,7 +363,7 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
             </button>
           )}
 
-          <button onClick={onStop} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'color 0.2s', marginLeft: isMobile ? 4 : 8 }} onMouseEnter={e => e.currentTarget.style.color = '#ff5c5c'} onMouseLeave={e => e.currentTarget.style.color = colors.textMuted}>
+          <button onClick={onStop} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'color 0.2s', marginLeft: isMobile ? 4 : 8 }} onMouseEnter={e => e.currentTarget.style.color = '#b0b0b0'} onMouseLeave={e => e.currentTarget.style.color = colors.textMuted}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
           </button>
         </div>

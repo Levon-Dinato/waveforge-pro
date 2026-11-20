@@ -30,11 +30,11 @@ const STYLES: { id: VisualizerStyle; label: string; icon: string }[] = [
 ];
 
 const COLOR_PRESETS = [
-  { primary: '#00d9ff', accent: '#7c5cff', bg: '#0a0a14', name: 'Cyan/Violet' },
-  { primary: '#00ff88', accent: '#00b866', bg: '#0a140a', name: 'Vert néon' },
-  { primary: '#ff3366', accent: '#ff5cf0', bg: '#140a0a', name: 'Rose/Rouge' },
-  { primary: '#ffd43b', accent: '#ff8800', bg: '#141005', name: 'Or/Orange' },
-  { primary: '#7c5cff', accent: '#00d9ff', bg: '#0a0a20', name: 'Violet/Cyan' },
+  { primary: '#ffffff', accent: '#b0b0b0', bg: '#0a0a14', name: 'Cyan/Violet' },
+  { primary: '#b0b0b0', accent: '#00b866', bg: '#0a140a', name: 'Vert néon' },
+  { primary: '#b0b0b0', accent: '#b0b0b0', bg: '#140a0a', name: 'Rose/Rouge' },
+  { primary: '#b0b0b0', accent: '#ff8800', bg: '#141005', name: 'Or/Orange' },
+  { primary: '#b0b0b0', accent: '#ffffff', bg: '#0a0a20', name: 'Violet/Cyan' },
   { primary: '#ffffff', accent: '#888888', bg: '#000000', name: 'Blanc/Noir' },
 ];
 
@@ -45,8 +45,8 @@ export const VideoPage: React.FC = () => {
 
   const [config, setConfig] = useState<VisualizerConfig>({
     style: 'bars',
-    primaryColor: '#00d9ff',
-    accentColor: '#7c5cff',
+    primaryColor: '#ffffff',
+    accentColor: '#b0b0b0',
     bgColor: '#0a0a14',
     title: 'Mon morceau',
     subtitle: 'WaveForge PRO',
@@ -188,15 +188,15 @@ export const VideoPage: React.FC = () => {
       {/* HEADER */}
       <div>
         <h2 style={{ fontSize: isMobile ? 16 : 20, fontWeight: 700, margin: 0, marginBottom: 8 }}>
-          🎬 <span style={{ color: '#ff5cf0' }}>Générateur de clip</span>
+          🎬 <span style={{ color: '#b0b0b0' }}>Générateur de clip</span>
           <span
             style={{
               fontSize: 10,
-              color: '#ff5cf0',
+              color: '#b0b0b0',
               marginLeft: 10,
               padding: '2px 8px',
-              background: 'rgba(255, 92, 240, 0.15)',
-              border: '1px solid rgba(255, 92, 240, 0.4)',
+              background: 'rgba(176, 176, 176, 0.15)',
+              border: '1px solid rgba(176, 176, 176, 0.4)',
               borderRadius: 10,
               verticalAlign: 'middle',
               fontWeight: 700,
@@ -219,7 +219,7 @@ export const VideoPage: React.FC = () => {
             padding: isMobile ? 24 : 40,
             textAlign: 'center',
             borderStyle: 'dashed',
-            borderColor: 'rgba(255, 92, 240, 0.3)',
+            borderColor: 'rgba(176, 176, 176, 0.3)',
           }}
         >
           <div style={{ fontSize: isMobile ? 40 : 52, marginBottom: 16 }}>🎬</div>
@@ -246,7 +246,7 @@ export const VideoPage: React.FC = () => {
               display: 'inline-flex',
               alignItems: 'center',
               gap: 6,
-              background: 'linear-gradient(135deg, #ff5cf0, #d63fb8)',
+              background: 'linear-gradient(135deg, #b0b0b0, #d63fb8)',
               color: '#fff',
               borderColor: 'transparent',
               padding: '12px 24px',
@@ -288,13 +288,13 @@ export const VideoPage: React.FC = () => {
                       borderRadius: 6,
                       border:
                         config.style === s.id
-                          ? '1px solid #ff5cf0'
+                          ? '1px solid #b0b0b0'
                           : '1px solid var(--border)',
                       background:
                         config.style === s.id
-                          ? 'rgba(255, 92, 240, 0.15)'
+                          ? 'rgba(176, 176, 176, 0.15)'
                           : 'var(--bg-1)',
-                      color: config.style === s.id ? '#ff5cf0' : '#ccc',
+                      color: config.style === s.id ? '#b0b0b0' : '#ccc',
                       fontSize: 11,
                       fontWeight: 600,
                       cursor: 'pointer',
@@ -385,7 +385,7 @@ export const VideoPage: React.FC = () => {
                   type="checkbox"
                   checked={config.showGrid}
                   onChange={(e) => setConfig({ ...config, showGrid: e.target.checked })}
-                  style={{ accentColor: '#ff5cf0' }}
+                  style={{ accentColor: '#b0b0b0' }}
                 />
                 Afficher la grille de fond
               </label>
@@ -468,7 +468,7 @@ export const VideoPage: React.FC = () => {
                     alignItems: 'center',
                     gap: 6,
                     fontSize: 9,
-                    color: isPlaying ? '#00ff88' : '#666',
+                    color: isPlaying ? '#b0b0b0' : '#666',
                   }}
                 >
                   <div
@@ -476,8 +476,8 @@ export const VideoPage: React.FC = () => {
                       width: 6,
                       height: 6,
                       borderRadius: '50%',
-                      background: isPlaying ? '#00ff88' : '#444',
-                      boxShadow: isPlaying ? '0 0 8px #00ff88' : 'none',
+                      background: isPlaying ? '#b0b0b0' : '#444',
+                      boxShadow: isPlaying ? '0 0 8px #b0b0b0' : 'none',
                     }}
                   />
                   {isPlaying ? 'LIVE' : 'IDLE'}
@@ -500,7 +500,7 @@ export const VideoPage: React.FC = () => {
                   style={{
                     flex: 1,
                     padding: '10px',
-                    background: isPlaying ? '#ff3366' : '#ff5cf0',
+                    background: isPlaying ? '#b0b0b0' : '#b0b0b0',
                     color: isPlaying ? '#fff' : '#000',
                     borderColor: 'transparent',
                     fontWeight: 700,
@@ -518,13 +518,13 @@ export const VideoPage: React.FC = () => {
               className="panel"
               style={{
                 padding: 16,
-                borderColor: 'rgba(255, 92, 240, 0.3)',
-                background: 'linear-gradient(135deg, rgba(255, 92, 240, 0.05), transparent)',
+                borderColor: 'rgba(176, 176, 176, 0.3)',
+                background: 'linear-gradient(135deg, rgba(176, 176, 176, 0.05), transparent)',
               }}
             >
               <div
                 className="label-uppercase"
-                style={{ fontSize: 10, color: '#ff5cf0', letterSpacing: '1px', marginBottom: 10 }}
+                style={{ fontSize: 10, color: '#b0b0b0', letterSpacing: '1px', marginBottom: 10 }}
               >
                 📼 EXPORT VIDÉO
               </div>
@@ -537,7 +537,7 @@ export const VideoPage: React.FC = () => {
                   marginBottom: 12,
                 }}
               >
-                ⚠️ L'export se fait en <strong style={{ color: '#ff5cf0' }}>temps réel</strong> :
+                ⚠️ L'export se fait en <strong style={{ color: '#b0b0b0' }}>temps réel</strong> :
                 une vidéo de {formatDuration(engine.audioBuffer?.duration ?? 0)} prendra autant de
                 temps à générer. Ne ferme pas l'onglet pendant l'export.
               </div>
@@ -552,14 +552,14 @@ export const VideoPage: React.FC = () => {
                   borderRadius: 8,
                   background: isExporting
                     ? 'linear-gradient(135deg, #666, #444)'
-                    : 'linear-gradient(135deg, #ff5cf0, #d63fb8)',
+                    : 'linear-gradient(135deg, #b0b0b0, #d63fb8)',
                   color: isExporting ? '#888' : '#fff',
                   fontWeight: 700,
                   fontSize: 12,
                   letterSpacing: '1.5px',
                   textTransform: 'uppercase',
                   cursor: isExporting ? 'wait' : 'pointer',
-                  boxShadow: isExporting ? 'none' : '0 4px 20px rgba(255, 92, 240, 0.4)',
+                  boxShadow: isExporting ? 'none' : '0 4px 20px rgba(176, 176, 176, 0.4)',
                   transition: 'all 0.2s',
                   position: 'relative',
                   overflow: 'hidden',
@@ -635,10 +635,10 @@ export const VideoPage: React.FC = () => {
                         }}
                         style={{
                           padding: '4px 10px',
-                          background: 'rgba(255, 92, 240, 0.1)',
-                          border: '1px solid #ff5cf0',
+                          background: 'rgba(176, 176, 176, 0.1)',
+                          border: '1px solid #b0b0b0',
                           borderRadius: 4,
-                          color: '#ff5cf0',
+                          color: '#b0b0b0',
                           fontSize: 10,
                           fontWeight: 600,
                           cursor: 'pointer',

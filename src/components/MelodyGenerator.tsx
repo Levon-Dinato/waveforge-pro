@@ -66,7 +66,7 @@ export function MelodyGenerator({ bpm, onGenerated }: Props) {
               onClick={() => setOptions({ ...options, style: s.id as any })}
               style={{
                 padding: '6px 12px',
-                background: options.style === s.id ? '#7c5cff' : '#2a2a3a',
+                background: options.style === s.id ? '#b0b0b0' : '#2a2a3a',
                 color: '#fff',
                 border: 'none',
                 borderRadius: 6,
@@ -145,7 +145,7 @@ export function MelodyGenerator({ bpm, onGenerated }: Props) {
           onChange={(e) =>
             setOptions({ ...options, complexity: parseInt(e.target.value) })
           }
-          style={{ width: '100%', accentColor: '#7c5cff' }}
+          style={{ width: '100%', accentColor: '#b0b0b0' }}
         />
       </div>
 
@@ -160,7 +160,7 @@ export function MelodyGenerator({ bpm, onGenerated }: Props) {
               onClick={() => setOptions({ ...options, bars: b })}
               style={{
                 padding: '6px 12px',
-                background: options.bars === b ? '#7c5cff' : '#2a2a3a',
+                background: options.bars === b ? '#b0b0b0' : '#2a2a3a',
                 color: '#fff',
                 border: 'none',
                 borderRadius: 6,
@@ -181,7 +181,7 @@ export function MelodyGenerator({ bpm, onGenerated }: Props) {
           style={{
             flex: 1,
             padding: '10px 16px',
-            background: '#7c5cff',
+            background: '#b0b0b0',
             color: '#fff',
             border: 'none',
             borderRadius: 8,
@@ -199,7 +199,7 @@ export function MelodyGenerator({ bpm, onGenerated }: Props) {
             style={{
               flex: 1,
               padding: '10px 16px',
-              background: '#10b981',
+              background: '#b0b0b0',
               color: '#fff',
               border: 'none',
               borderRadius: 8,
@@ -218,8 +218,8 @@ export function MelodyGenerator({ bpm, onGenerated }: Props) {
           style={{
             marginTop: 12,
             padding: 8,
-            background: 'rgba(16, 185, 129, 0.1)',
-            border: '1px solid rgba(16, 185, 129, 0.3)',
+            background: 'rgba(176, 176, 176, 0.1)',
+            border: '1px solid rgba(176, 176, 176, 0.3)',
             borderRadius: 6,
             fontSize: 12,
             color: '#4ade80',

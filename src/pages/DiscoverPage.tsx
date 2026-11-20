@@ -33,7 +33,7 @@ export const DiscoverPage: React.FC = () => {
     border: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
     panelBg: isDark ? '#121212' : '#ffffff',
     cardBg: isDark ? 'rgba(255,255,255,0.03)' : '#ffffff',
-    accent: '#00d9ff'
+    accent: '#ffffff'
   };
 
   useEffect(() => {
@@ -124,14 +124,14 @@ export const DiscoverPage: React.FC = () => {
             </div>
           </div>
           <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, padding: '20px 40px', borderRadius: 16, flex: 1, minWidth: 200, display: 'flex', alignItems: 'center', gap: 16 }}>
-            <div style={{ color: '#a855f7' }}>{Icons.music}</div>
+            <div style={{ color: '#b0b0b0' }}>{Icons.music}</div>
             <div style={{ textAlign: 'left' }}>
               <div style={{ fontSize: 24, fontWeight: 900 }}>{stats.tracks}</div>
               <div style={{ fontSize: 12, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 1 }}>Sons</div>
             </div>
           </div>
           <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, padding: '20px 40px', borderRadius: 16, flex: 1, minWidth: 200, display: 'flex', alignItems: 'center', gap: 16 }}>
-            <div style={{ color: '#ec4899' }}>{Icons.playCircle}</div>
+            <div style={{ color: '#b0b0b0' }}>{Icons.playCircle}</div>
             <div style={{ textAlign: 'left' }}>
               <div style={{ fontSize: 24, fontWeight: 900 }}>{stats.plays}</div>
               <div style={{ fontSize: 12, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 1 }}>Écoutes</div>

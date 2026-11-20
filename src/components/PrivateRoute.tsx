@@ -28,8 +28,8 @@ export const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
           style={{
             width: 40,
             height: 40,
-            border: '3px solid rgba(0, 217, 255, 0.2)',
-            borderTop: '3px solid #00d9ff',
+            border: '3px solid rgba(255, 255, 255, 0.2)',
+            borderTop: '3px solid #ffffff',
             borderRadius: '50%',
             animation: 'spin 0.8s linear infinite',
           }}

@@ -87,7 +87,7 @@ export function generateAnalysisImage(
     ctx.fillRect(0, 0, W, H);
 
     // Bordure
-    ctx.strokeStyle = 'rgba(0, 217, 255, 0.3)';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
     ctx.lineWidth = 2;
     ctx.strokeRect(1, 1, W - 2, H - 2);
 
@@ -95,7 +95,7 @@ export function generateAnalysisImage(
     // HEADER
     // ============================================================
     // Logo / Branding
-    ctx.fillStyle = '#00d9ff';
+    ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 14px monospace';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'top';
@@ -123,18 +123,18 @@ export function generateAnalysisImage(
     // ============================================================
     const infoY = 175;
     const infoBoxes = [
-      { label: 'BPM', value: analysis.bpm.toFixed(2), color: '#00d9ff' },
-      { label: 'KEY', value: analysis.key, color: '#ff5cf0' },
-      { label: 'CAMELOT', value: analysis.camelot, color: '#ff5cf0' },
+      { label: 'BPM', value: analysis.bpm.toFixed(2), color: '#ffffff' },
+      { label: 'KEY', value: analysis.key, color: '#b0b0b0' },
+      { label: 'CAMELOT', value: analysis.camelot, color: '#b0b0b0' },
       {
         label: 'DURÉE',
         value: formatTime(analysis.duration),
-        color: '#ffd43b',
+        color: '#b0b0b0',
       },
       {
         label: 'VOCALS',
         value: `${analysis.vocalSections.length}`,
-        color: '#00ff88',
+        color: '#b0b0b0',
       },
     ];
 
@@ -181,7 +181,7 @@ export function generateAnalysisImage(
     ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
     ctx.fillRect(wfPadding, wfY, wfW, wfH);
 
-    ctx.strokeStyle = 'rgba(0, 217, 255, 0.2)';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
     ctx.strokeRect(wfPadding, wfY, wfW, wfH);
 
     // Waveform
@@ -194,10 +194,10 @@ export function generateAnalysisImage(
       const x1 = wfPadding + (section.start / analysis.duration) * wfW;
       const x2 = wfPadding + (section.end / analysis.duration) * wfW;
 
-      ctx.fillStyle = 'rgba(255, 92, 240, 0.15)';
+      ctx.fillStyle = 'rgba(176, 176, 176, 0.15)';
       ctx.fillRect(x1, wfY, x2 - x1, wfH);
 
-      ctx.strokeStyle = 'rgba(255, 92, 240, 0.4)';
+      ctx.strokeStyle = 'rgba(176, 176, 176, 0.4)';
       ctx.setLineDash([3, 3]);
       ctx.strokeRect(x1, wfY, x2 - x1, wfH);
       ctx.setLineDash([]);

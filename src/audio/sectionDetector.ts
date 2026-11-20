@@ -17,11 +17,11 @@ interface SectionTemplate {
 }
 
 const SECTION_TEMPLATES: SectionTemplate[] = [
-  { type: 'intro', label: 'INTRO', color: '#00ff88' },
-  { type: 'verse', label: 'VERSE', color: '#0088ff' },
-  { type: 'chorus', label: 'CHORUS', color: '#a855f7' },
+  { type: 'intro', label: 'INTRO', color: '#b0b0b0' },
+  { type: 'verse', label: 'VERSE', color: '#b0b0b0' },
+  { type: 'chorus', label: 'CHORUS', color: '#b0b0b0' },
   { type: 'bridge', label: 'BRIDGE', color: '#ffb800' },
-  { type: 'outro', label: 'OUTRO', color: '#ff3366' },
+  { type: 'outro', label: 'OUTRO', color: '#b0b0b0' },
 ];
 
 /**

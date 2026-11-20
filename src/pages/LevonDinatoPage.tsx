@@ -348,7 +348,7 @@ export const LevonDinatoPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="sidebar-widget" style={{ background: 'linear-gradient(135deg, rgba(0, 217, 255, 0.1), rgba(10, 18, 26, 0.9))', border: '1px solid rgba(0, 217, 255, 0.3)' }}>
+            <div className="sidebar-widget" style={{ background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(10, 18, 26, 0.9))', border: '1px solid rgba(255, 255, 255, 0.3)' }}>
               <div className="sidebar-title" style={{ color: 'var(--accent)' }}>✨ Page Premium</div>
               <p style={{ fontSize: '0.85rem', color: '#fff', marginBottom: '15px', lineHeight: 1.4 }}>
                 Envie d'une page aussi pro pour ton profil ?

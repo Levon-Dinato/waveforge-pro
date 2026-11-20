@@ -26,7 +26,7 @@ export const ArtistPromoSection: React.FC = () => {
     border: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
     textMain: isDark ? '#ffffff' : '#1a1a1a',
     textMuted: isDark ? 'rgba(255,255,255,0.5)' : '#666666',
-    accent: '#00d9ff'
+    accent: '#ffffff'
   };
 
   // ✅ J'AI AJOUTÉ UN LIEN (mailto) SUR LA CARTE SUPPORT PRO

@@ -24,7 +24,7 @@ const Icons = {
   sun: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>,
   moon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>,
   playlist: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>,
-  check: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>,
+  check: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#b0b0b0" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>,
   plus: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>,
   shuffle: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>,
   listMusic: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15V6"></path><path d="M18.5 18a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"></path><path d="M12 12H3"></path><path d="M16 6H3"></path><path d="M12 18H3"></path></svg>,
@@ -104,11 +104,12 @@ export const NouveautesPage: React.FC = () => {
     bg: isDark ? '#0a0a0a' : '#f5f5f7',
     textMain: isDark ? '#ffffff' : '#1a1a1a',
     textMuted: isDark ? '#888888' : '#666666',
+    accent: isDark ? '#ffffff' : '#111111',
     border: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.08)',
     panelBg: isDark ? 'rgba(255, 255, 255, 0.02)' : '#ffffff',
     inputBg: isDark ? 'rgba(255, 255, 255, 0.03)' : '#ffffff',
     inputBorder: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
-    rowHover: isDark ? 'rgba(0, 217, 255, 0.05)' : 'rgba(0, 217, 255, 0.08)',
+    rowHover: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.08)',
     dropdownBg: isDark ? '#18181b' : '#ffffff',
   };
 
@@ -559,7 +560,7 @@ export const NouveautesPage: React.FC = () => {
           </button>
           <span style={{ color: colors.border }}>|</span>
           <h1 style={{ fontSize: '1.2rem', fontWeight: 900, margin: 0, display: 'flex', alignItems: 'center', gap: 8, letterSpacing: '-0.5px' }}>
-            <span style={{ color: '#00d9ff', filter: 'drop-shadow(0 0 10px rgba(0,217,255,0.8))' }}>🔥</span> Nouveautés
+            <span style={{ color: colors.accent, filter: 'drop-shadow(0 0 10px rgba(255,255,255,0.8))' }}>🔥</span> Nouveautés
           </h1>
         </div>
 
@@ -592,26 +593,26 @@ export const NouveautesPage: React.FC = () => {
               <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: '20px 12px', backdropFilter: 'blur(20px)', boxShadow: isDark ? '0 10px 30px rgba(0,0,0,0.3)' : '0 4px 20px rgba(0,0,0,0.05)' }}>
                 <h3 style={{ fontSize: 11, fontWeight: 800, letterSpacing: '1.5px', padding: '0 10px 14px', margin: 0, color: colors.textMuted, textTransform: 'uppercase', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   Genres
-                  <span style={{ fontSize: 10, fontWeight: 700, background: 'rgba(0,217,255,0.1)', color: '#00d9ff', padding: '2px 8px', borderRadius: 20 }}>{Array.from(new Set(tracks.map(t => (t.genre || '').trim()).filter(Boolean))).length}</span>
+                  <span style={{ fontSize: 10, fontWeight: 700, background: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)', color: colors.accent, padding: '2px 8px', borderRadius: 20 }}>{Array.from(new Set(tracks.map(t => (t.genre || '').trim()).filter(Boolean))).length}</span>
                 </h3>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  <div onClick={() => setSelectedGenre(null)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', fontSize: 13, cursor: 'pointer', color: selectedGenre === null ? colors.textMain : colors.textMuted, fontWeight: selectedGenre === null ? 700 : 500, background: selectedGenre === null ? (isDark ? 'rgba(0, 217, 255, 0.12)' : 'rgba(0, 217, 255, 0.1)') : 'transparent', borderRadius: 10, transition: 'all 0.15s' }}
+                  <div onClick={() => setSelectedGenre(null)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', fontSize: 13, cursor: 'pointer', color: selectedGenre === null ? colors.textMain : colors.textMuted, fontWeight: selectedGenre === null ? 700 : 500, background: selectedGenre === null ? (isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.1)') : 'transparent', borderRadius: 10, transition: 'all 0.15s' }}
                     onMouseEnter={(e) => { if (selectedGenre !== null) e.currentTarget.style.background = colors.rowHover; }}
                     onMouseLeave={(e) => { if (selectedGenre !== null) e.currentTarget.style.background = 'transparent'; }}
                   >
-                    <span style={{ width: 26, height: 26, borderRadius: 8, background: selectedGenre === null ? 'linear-gradient(135deg, #00d9ff, #7c5cff)' : colors.inputBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: selectedGenre === null ? '#000' : colors.textMuted, flexShrink: 0, fontSize: 12 }}>{Icons.music}</span>
+                    <span style={{ width: 26, height: 26, borderRadius: 8, background: selectedGenre === null ? (isDark ? 'linear-gradient(135deg, #ffffff, #b0b0b0)' : '#111111') : colors.inputBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: selectedGenre === null ? (isDark ? '#000' : '#ffffff') : colors.textMuted, flexShrink: 0, fontSize: 12 }}>{Icons.music}</span>
                     <span style={{ flex: 1 }}>Tous les sons</span>
                     <span style={{ fontSize: 11, fontWeight: 700, background: colors.inputBg, color: colors.textMuted, padding: '2px 7px', borderRadius: 20 }}>{tracks.length}</span>
                   </div>
 
                   <div style={{ maxHeight: 'calc(100vh - 320px)', overflowY: 'auto', marginTop: 6, scrollbarGutter: 'stable', display: 'flex', flexDirection: 'column', gap: 2 }}>
                     {Array.from(new Set(tracks.map(t => (t.genre || 'Inconnu').trim()))).sort().map((genre, gi) => {
-                      const genreColors = ['#00d9ff', '#7c5cff', '#ff5cf0', '#ffd43b', '#00ff88', '#ff7b5c', '#5c9eff', '#b388ff'];
+                      const genreColors = ['#888888', '#b0b0b0', '#777777', '#999999', '#aaaaaa', '#808080', '#909090', '#858585'];
                       const gColor = genreColors[gi % genreColors.length];
                       const isSel = selectedGenre === genre;
                       return (
-                        <div key={genre} onClick={() => setSelectedGenre(genre)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', fontSize: 13, cursor: 'pointer', color: isSel ? colors.textMain : colors.textMuted, fontWeight: isSel ? 700 : 500, background: isSel ? (isDark ? 'rgba(0, 217, 255, 0.12)' : 'rgba(0, 217, 255, 0.1)') : 'transparent', borderRadius: 10, transition: 'all 0.15s' }}
+                        <div key={genre} onClick={() => setSelectedGenre(genre)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', fontSize: 13, cursor: 'pointer', color: isSel ? colors.textMain : colors.textMuted, fontWeight: isSel ? 700 : 500, background: isSel ? (isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.1)') : 'transparent', borderRadius: 10, transition: 'all 0.15s' }}
                           onMouseEnter={(e) => { if (!isSel) e.currentTarget.style.background = colors.rowHover; }}
                           onMouseLeave={(e) => { if (!isSel) e.currentTarget.style.background = 'transparent'; }}
                         >
@@ -631,8 +632,8 @@ export const NouveautesPage: React.FC = () => {
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 28, gap: 16, flexWrap: 'wrap' }}>
               <div>
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(0, 217, 255, 0.1)', border: '1px solid rgba(0, 217, 255, 0.3)', padding: '5px 12px', borderRadius: 20, fontSize: 10, fontWeight: 800, color: '#00d9ff', letterSpacing: '1.5px', marginBottom: 14, textTransform: 'uppercase' }}>
-                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#00d9ff', boxShadow: '0 0 8px #00d9ff' }} />
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)', border: isDark ? '1px solid rgba(255, 255, 255, 0.3)' : '1px solid rgba(0, 0, 0, 0.2)', padding: '5px 12px', borderRadius: 20, fontSize: 10, fontWeight: 800, color: colors.textMain, letterSpacing: '1.5px', marginBottom: 14, textTransform: 'uppercase' }}>
+                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: colors.textMain, boxShadow: `0 0 8px ${isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.3)'}` }} />
                   Nouvelles sorties
                 </div>
                 <h2 style={{ fontSize: 'clamp(1.8rem, 3vw, 2.6rem)', fontWeight: 900, margin: 0, letterSpacing: '-1.5px', color: colors.textMain, lineHeight: 1.1 }}>
@@ -648,7 +649,7 @@ export const NouveautesPage: React.FC = () => {
                 </p>
               </div>
               {user && (
-                <button onClick={() => setShowUploadModal(true)} style={{ padding: isMobile ? '10px 16px' : '12px 24px', background: 'linear-gradient(135deg, #00d9ff, #7c5cff)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 10, cursor: 'pointer', fontWeight: 800, fontSize: 13, boxShadow: '0 0 20px rgba(0, 217, 255, 0.4)', transition: 'transform 0.2s, box-shadow 0.2s', whiteSpace: 'nowrap' }}>
+                <button onClick={() => setShowUploadModal(true)} style={{ padding: isMobile ? '10px 16px' : '12px 24px', background: isDark ? '#ffffff' : '#111111', color: isDark ? '#000' : '#ffffff', border: '1px solid transparent', borderRadius: 10, cursor: 'pointer', fontWeight: 800, fontSize: 13, boxShadow: isDark ? '0 0 20px rgba(255, 255, 255, 0.25)' : '0 4px 16px rgba(0,0,0,0.15)', transition: 'transform 0.2s, box-shadow 0.2s', whiteSpace: 'nowrap' }}>
                   {isMobile ? '+ Son' : '+ Uploader'}
                 </button>
               )}
@@ -677,11 +678,11 @@ export const NouveautesPage: React.FC = () => {
                 disabled={!visibleTracks.length}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px',
-                  background: 'linear-gradient(135deg, #00d9ff, #0099ff)', color: '#000',
+                  background: isDark ? '#ffffff' : '#111111', color: isDark ? '#000' : '#ffffff',
                   border: 'none', borderRadius: 10, fontWeight: 800, fontSize: 13,
                   cursor: visibleTracks.length ? 'pointer' : 'not-allowed',
                   opacity: visibleTracks.length ? 1 : 0.5,
-                  boxShadow: '0 0 15px rgba(0,217,255,0.3)',
+                  boxShadow: isDark ? '0 0 15px rgba(255,255,255,0.25)' : '0 4px 14px rgba(0,0,0,0.15)',
                 }}
               >
                 {Icons.listMusic} Tout lire
@@ -722,7 +723,7 @@ export const NouveautesPage: React.FC = () => {
             </div>
 
             <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, width: '100%', overflow: 'hidden', backdropFilter: 'blur(20px)', boxShadow: isDark ? '0 20px 40px rgba(0,0,0,0.4)' : '0 10px 30px rgba(0,0,0,0.05)' }}>
-              <style>{`@keyframes skpulse{0%,100%{opacity:1}50%{opacity:.55}}@keyframes newpulse{0%,100%{box-shadow:0 0 6px rgba(0,217,255,0.4)}50%{box-shadow:0 0 16px rgba(0,217,255,0.9)}}`}</style>
+              <style>{`@keyframes skpulse{0%,100%{opacity:1}50%{opacity:.55}}@keyframes newpulse{0%,100%{box-shadow:0 0 6px rgba(255,255,255,0.4)}50%{box-shadow:0 0 16px rgba(255,255,255,0.9)}}`}</style>
 
               {!isMobile && (
                 <div style={{ display: 'grid', gridTemplateColumns: '40px 40px minmax(200px, 1fr) 120px 140px 160px', gap: 16, padding: '14px 16px', borderBottom: `1px solid ${colors.border}`, fontSize: 11, color: colors.textMuted, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1.2px', background: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)' }}>
@@ -779,21 +780,21 @@ export const NouveautesPage: React.FC = () => {
                   {(search || selectedGenre) ? (
                     <button
                       onClick={() => { setSearch(''); setSelectedGenre(null); }}
-                      style={{ padding: '10px 20px', background: '#00d9ff', color: '#000', border: 'none', borderRadius: 8, fontWeight: 800, cursor: 'pointer' }}
+                      style={{ padding: '10px 20px', background: isDark ? '#ffffff' : '#111111', color: isDark ? '#000' : '#ffffff', border: 'none', borderRadius: 8, fontWeight: 800, cursor: 'pointer' }}
                     >
                       Réinitialiser les filtres
                     </button>
                   ) : user ? (
                     <button
                       onClick={() => setShowUploadModal(true)}
-                      style={{ padding: '10px 20px', background: 'linear-gradient(135deg, #00d9ff, #7c5cff)', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 800, cursor: 'pointer' }}
+                      style={{ padding: '10px 20px', background: isDark ? 'linear-gradient(135deg, #ffffff, #b0b0b0)' : '#111111', color: isDark ? '#000' : '#ffffff', border: 'none', borderRadius: 8, fontWeight: 800, cursor: 'pointer' }}
                     >
                       + Uploader un son
                     </button>
                   ) : (
                     <button
                       onClick={() => navigate('/auth')}
-                      style={{ padding: '10px 20px', background: '#00d9ff', color: '#000', border: 'none', borderRadius: 8, fontWeight: 800, cursor: 'pointer' }}
+                      style={{ padding: '10px 20px', background: '#ffffff', color: '#000', border: 'none', borderRadius: 8, fontWeight: 800, cursor: 'pointer' }}
                     >
                       Se connecter
                     </button>
@@ -814,7 +815,7 @@ export const NouveautesPage: React.FC = () => {
                         <input type="number" value={editForm.bpm} onChange={e => setEditForm({...editForm, bpm: Number(e.target.value)})} style={{ width: 90, padding: 10, background: colors.inputBg, border: `1px solid ${colors.inputBorder}`, color: colors.textMain, borderRadius: 6 }} placeholder="BPM" />
                       </div>
                       <div style={{ display: 'flex', gap: 10 }}>
-                        <button onClick={saveEdit} style={{ background: '#00d9ff', color: '#000', border: 'none', padding: '8px 20px', borderRadius: 6, cursor: 'pointer', fontWeight: 800 }}>Enregistrer</button>
+                        <button onClick={saveEdit} style={{ background: '#ffffff', color: '#000', border: 'none', padding: '8px 20px', borderRadius: 6, cursor: 'pointer', fontWeight: 800 }}>Enregistrer</button>
                         <button onClick={() => setEditingId(null)} style={{ background: 'transparent', color: colors.textMuted, border: `1px solid ${colors.border}`, padding: '8px 20px', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>Annuler</button>
                       </div>
                     </div>
@@ -825,11 +826,11 @@ export const NouveautesPage: React.FC = () => {
                   return (
                     <div key={track.id} style={{ padding: '16px', borderBottom: `1px solid ${colors.border}`, display: 'flex', flexDirection: 'column', gap: 12 }}>
                       <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                        <button onClick={(e) => handlePlayTrack(e, track)} style={{ width: 40, height: 40, flexShrink: 0, borderRadius: '50%', background: isThisPlaying ? '#00d9ff' : colors.inputBg, border: `1px solid ${colors.inputBorder}`, color: isThisPlaying ? '#000' : colors.textMain, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                        <button onClick={(e) => handlePlayTrack(e, track)} style={{ width: 40, height: 40, flexShrink: 0, borderRadius: '50%', background: isThisPlaying ? '#ffffff' : colors.inputBg, border: `1px solid ${colors.inputBorder}`, color: isThisPlaying ? '#000' : colors.textMain, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
                           {isThisPlaying ? Icons.pause : Icons.play}
                         </button>
                         <div style={{ width: 48, height: 48, flexShrink: 0, borderRadius: 8, background: track.cover_url ? `url(${track.cover_url}) center/cover` : '#222', position: 'relative' }}>
-                          {isNew(track.created_at) && <span style={{ position: 'absolute', top: -4, right: -4, fontSize: 8, padding: '2px 5px', background: '#00d9ff', color: '#000', borderRadius: 4, fontWeight: 900, zIndex: 2, boxShadow: '0 0 10px rgba(0,217,255,0.5)' }}>NEW</span>}
+                          {isNew(track.created_at) && <span style={{ position: 'absolute', top: -4, right: -4, fontSize: 8, padding: '2px 5px', background: '#ffffff', color: '#000', borderRadius: 4, fontWeight: 900, zIndex: 2, boxShadow: '0 0 10px rgba(255,255,255,0.5)' }}>NEW</span>}
                         </div>
                         <div style={{ minWidth: 0, flex: 1 }}>
                           <div style={{ fontSize: 14, fontWeight: 700, color: colors.textMain, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: 2 }}>{track.title}</div>
@@ -838,18 +839,18 @@ export const NouveautesPage: React.FC = () => {
                       </div>
                       <div style={{ display: 'flex', gap: 8, fontSize: 11, color: colors.textMuted, paddingLeft: 52, flexWrap: 'wrap' }}>
                         <span style={{ background: colors.inputBg, padding: '2px 8px', borderRadius: 4 }}>{track.genre || 'Inconnu'}</span>
-                        <span style={{ background: 'rgba(0,217,255,0.1)', color: '#00d9ff', padding: '2px 8px', borderRadius: 4, fontWeight: 700 }}>{track.bpm} BPM</span>
+                        <span style={{ background: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)', color: colors.accent, padding: '2px 8px', borderRadius: 4, fontWeight: 700 }}>{track.bpm} BPM</span>
                         {track.song_key && <span style={{ background: colors.inputBg, padding: '2px 8px', borderRadius: 4 }}>{track.song_key}</span>}
                         {track.duration > 0 && (
                           <span style={{ background: colors.inputBg, padding: '2px 8px', borderRadius: 4 }}>{formatDuration(track.duration)}</span>
                         )}
                       </div>
                       <div style={{ display: 'flex', gap: 20, paddingLeft: 52, alignItems: 'center' }}>
-                         <button onClick={() => handleLike(track.id)} style={{ background: 'transparent', border: 'none', color: isLiked ? '#ff3366' : colors.textMuted, fontSize: 14 }}>{isLiked ? '❤️' : '🤍'} {track.likes_count}</button>
+                         <button onClick={() => handleLike(track.id)} style={{ background: 'transparent', border: 'none', color: isLiked ? '#b0b0b0' : colors.textMuted, fontSize: 14 }}>{isLiked ? '❤️' : '🤍'} {track.likes_count}</button>
                          <button onClick={(e) => handleDownloadClick(e, track)} style={{ background: 'transparent', border: 'none', color: colors.textMuted }}>{Icons.download}</button>
 
                          <div style={{ position: 'relative' }}>
-                            <button onClick={() => setAddingTrackId(addingTrackId === track.id ? null : track.id)} style={{ background: 'transparent', border: 'none', color: recentlyAdded === track.id ? '#10b981' : colors.textMuted, display: 'flex', alignItems: 'center' }}>
+                            <button onClick={() => setAddingTrackId(addingTrackId === track.id ? null : track.id)} style={{ background: 'transparent', border: 'none', color: recentlyAdded === track.id ? '#b0b0b0' : colors.textMuted, display: 'flex', alignItems: 'center' }}>
                               {recentlyAdded === track.id ? Icons.check : Icons.playlist}
                             </button>
                             {addingTrackId === track.id && (
@@ -867,7 +868,7 @@ export const NouveautesPage: React.FC = () => {
                                       ))
                                     )}
                                     <div style={{ borderTop: `1px solid ${colors.border}`, marginTop: 6, paddingTop: 6 }}>
-                                      <button onClick={(e) => { e.stopPropagation(); setIsCreatingPlaylistInMenu(true); }} style={{ display: 'flex', alignItems: 'center', gap: 6, width: '100%', textAlign: 'left', padding: '6px 8px', background: 'transparent', border: 'none', color: '#00d9ff', fontSize: 12, cursor: 'pointer', borderRadius: 4, fontWeight: 700 }}>
+                                      <button onClick={(e) => { e.stopPropagation(); setIsCreatingPlaylistInMenu(true); }} style={{ display: 'flex', alignItems: 'center', gap: 6, width: '100%', textAlign: 'left', padding: '6px 8px', background: 'transparent', border: 'none', color: colors.accent, fontSize: 12, cursor: 'pointer', borderRadius: 4, fontWeight: 700 }}>
                                         {Icons.plus} Créer une playlist
                                       </button>
                                     </div>
@@ -876,7 +877,7 @@ export const NouveautesPage: React.FC = () => {
                                   <form onSubmit={(e) => handleCreatePlaylistAndAdd(e, track.id)} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                                     <input type="text" autoFocus placeholder="Nom..." value={newPlaylistNameInMenu} onChange={e => setNewPlaylistNameInMenu(e.target.value)} style={{ width: '100%', padding: '6px 8px', background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 4, color: colors.textMain, fontSize: 12, outline: 'none' }} />
                                     <div style={{ display: 'flex', gap: 4 }}>
-                                      <button type="submit" style={{ flex: 1, padding: '6px', background: '#00d9ff', color: '#000', border: 'none', borderRadius: 4, fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>Créer</button>
+                                      <button type="submit" style={{ flex: 1, padding: '6px', background: '#ffffff', color: '#000', border: 'none', borderRadius: 4, fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>Créer</button>
                                       <button type="button" onClick={() => setIsCreatingPlaylistInMenu(false)} style={{ padding: '6px 8px', background: 'transparent', color: colors.textMuted, border: `1px solid ${colors.border}`, borderRadius: 4, fontSize: 11, cursor: 'pointer' }}>X</button>
                                     </div>
                                   </form>
@@ -885,7 +886,7 @@ export const NouveautesPage: React.FC = () => {
                             )}
                           </div>
                          {isOwner && <button onClick={(e) => startEdit(e, track)} style={{ background: 'transparent', border: 'none', color: colors.textMuted }}>{Icons.edit}</button>}
-                         {isOwner && <button onClick={(e) => handleDelete(e, track.id)} style={{ background: 'transparent', border: 'none', color: '#ff5c5c' }}>{Icons.trash}</button>}
+                         {isOwner && <button onClick={(e) => handleDelete(e, track.id)} style={{ background: 'transparent', border: 'none', color: '#b0b0b0' }}>{Icons.trash}</button>}
                       </div>
                     </div>
                   );
@@ -896,17 +897,17 @@ export const NouveautesPage: React.FC = () => {
                   onMouseEnter={e => e.currentTarget.style.background = colors.rowHover}
                   onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                   >
-                    <button onClick={(e) => handlePlayTrack(e, track)} style={{ width: 36, height: 36, borderRadius: '50%', background: isThisPlaying ? '#00d9ff' : colors.inputBg, border: `1px solid ${isThisPlaying ? '#00d9ff' : colors.inputBorder}`, color: isThisPlaying ? '#000' : colors.textMain, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s', boxShadow: isThisPlaying ? '0 0 12px rgba(0,217,255,0.5)' : 'none' }}
-                      onMouseEnter={(e) => { if (!isThisPlaying) { e.currentTarget.style.borderColor = '#00d9ff'; e.currentTarget.style.color = '#00d9ff'; } }}
+                    <button onClick={(e) => handlePlayTrack(e, track)} style={{ width: 36, height: 36, borderRadius: '50%', background: isThisPlaying ? '#ffffff' : colors.inputBg, border: `1px solid ${isThisPlaying ? '#ffffff' : colors.inputBorder}`, color: isThisPlaying ? '#000' : colors.textMain, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s', boxShadow: isThisPlaying ? '0 0 12px rgba(255,255,255,0.5)' : 'none' }}
+                      onMouseEnter={(e) => { if (!isThisPlaying) { e.currentTarget.style.borderColor = '#ffffff'; e.currentTarget.style.color = '#ffffff'; } }}
                       onMouseLeave={(e) => { if (!isThisPlaying) { e.currentTarget.style.borderColor = colors.inputBorder; e.currentTarget.style.color = colors.textMain; } }}
                     >
                       {isThisPlaying ? Icons.pause : Icons.play}
                     </button>
                     <div onClick={() => navigate(`/track/${track.id}`)} style={{ width: 44, height: 44, borderRadius: 10, background: track.cover_url ? `url(${track.cover_url}) center/cover` : '#222', flexShrink: 0, position: 'relative', border: `1px solid ${colors.border}`, boxShadow: '0 2px 8px rgba(0,0,0,0.3)' }}>
-                      {isNew(track.created_at) && <span style={{ position: 'absolute', top: -6, right: -6, fontSize: 8, padding: '3px 6px', background: '#00d9ff', color: '#000', borderRadius: 4, fontWeight: 900, zIndex: 2, boxShadow: '0 0 10px rgba(0,217,255,0.6)', animation: 'newpulse 2s ease-in-out infinite' }}>NEW</span>}
+                      {isNew(track.created_at) && <span style={{ position: 'absolute', top: -6, right: -6, fontSize: 8, padding: '3px 6px', background: '#ffffff', color: '#000', borderRadius: 4, fontWeight: 900, zIndex: 2, boxShadow: '0 0 10px rgba(255,255,255,0.6)', animation: 'newpulse 2s ease-in-out infinite' }}>NEW</span>}
                     </div>
                     <div onClick={() => navigate(`/track/${track.id}`)} style={{ minWidth: 0 }}>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: isThisPlaying ? '#00d9ff' : colors.textMain, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: 3 }}>{track.title}</div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: isThisPlaying ? colors.accent : colors.textMain, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: 3 }}>{track.title}</div>
                       <div style={{ fontSize: 12, color: colors.textMuted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.artist}</div>
                     </div>
 
@@ -917,7 +918,7 @@ export const NouveautesPage: React.FC = () => {
                     </div>
 
                     <div style={{ fontSize: 12, display: 'flex', gap: 6, alignItems: 'center' }}>
-                      <span style={{ background: 'rgba(0, 217, 255, 0.1)', border: '1px solid rgba(0,217,255,0.2)', color: '#00d9ff', padding: '4px 8px', borderRadius: 4, fontWeight: 700, fontFamily: 'monospace' }}>
+                      <span style={{ background: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0,0,0,0.06)', border: isDark ? '1px solid rgba(255,255,255,0.2)' : '1px solid rgba(0,0,0,0.15)', color: colors.accent, padding: '4px 8px', borderRadius: 4, fontWeight: 700, fontFamily: 'monospace' }}>
                         {track.bpm ? `${track.bpm}` : '—'}
                       </span>
                       <span style={{ color: colors.textMuted }}>·</span>
@@ -935,17 +936,17 @@ export const NouveautesPage: React.FC = () => {
                     </div>
 
                     <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', alignItems: 'center' }}>
-                      <button onClick={() => handleLike(track.id)} style={{ background: 'transparent', border: 'none', color: isLiked ? '#ff3366' : colors.textMuted, cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <button onClick={() => handleLike(track.id)} style={{ background: 'transparent', border: 'none', color: isLiked ? '#b0b0b0' : colors.textMuted, cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', gap: 4 }}>
                         {isLiked ? '❤️' : '🤍'} <span style={{ color: colors.textMuted, fontWeight: 600 }}>{track.likes_count}</span>
                       </button>
                       <div style={{ display: 'flex', gap: 10 }}>
-                        {track.purchase_url && <a href={track.purchase_url} target="_blank" rel="noopener noreferrer" style={{ color: '#00d9ff', display: 'flex', alignItems: 'center' }}>{Icons.buy}</a>}
+                        {track.purchase_url && <a href={track.purchase_url} target="_blank" rel="noopener noreferrer" style={{ color: colors.accent, display: 'flex', alignItems: 'center' }}>{Icons.buy}</a>}
                         <button onClick={(e) => handleDownloadClick(e, track)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center' }}>{Icons.download}</button>
                         <ShareButton url={`${window.location.origin}/share/${track.id}`} title={`${track.title} — ${track.artist}`} text={`Écoute sur DropZone DJ 🎵`} variant="icon" size="small" label="" position="bottom" />
 
                         {user && (
                           <div style={{ position: 'relative' }}>
-                            <button onClick={() => setAddingTrackId(addingTrackId === track.id ? null : track.id)} style={{ background: 'transparent', border: 'none', color: recentlyAdded === track.id ? '#10b981' : colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                            <button onClick={() => setAddingTrackId(addingTrackId === track.id ? null : track.id)} style={{ background: 'transparent', border: 'none', color: recentlyAdded === track.id ? '#b0b0b0' : colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
                               {recentlyAdded === track.id ? Icons.check : Icons.playlist}
                             </button>
                             {addingTrackId === track.id && (
@@ -963,7 +964,7 @@ export const NouveautesPage: React.FC = () => {
                                       ))
                                     )}
                                     <div style={{ borderTop: `1px solid ${colors.border}`, marginTop: 6, paddingTop: 6 }}>
-                                      <button onClick={(e) => { e.stopPropagation(); setIsCreatingPlaylistInMenu(true); }} style={{ display: 'flex', alignItems: 'center', gap: 6, width: '100%', textAlign: 'left', padding: '6px 8px', background: 'transparent', border: 'none', color: '#00d9ff', fontSize: 12, cursor: 'pointer', borderRadius: 4, fontWeight: 700 }}>
+                                      <button onClick={(e) => { e.stopPropagation(); setIsCreatingPlaylistInMenu(true); }} style={{ display: 'flex', alignItems: 'center', gap: 6, width: '100%', textAlign: 'left', padding: '6px 8px', background: 'transparent', border: 'none', color: colors.accent, fontSize: 12, cursor: 'pointer', borderRadius: 4, fontWeight: 700 }}>
                                         {Icons.plus} Créer une playlist
                                       </button>
                                     </div>
@@ -972,7 +973,7 @@ export const NouveautesPage: React.FC = () => {
                                   <form onSubmit={(e) => handleCreatePlaylistAndAdd(e, track.id)} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                                     <input type="text" autoFocus placeholder="Nom..." value={newPlaylistNameInMenu} onChange={e => setNewPlaylistNameInMenu(e.target.value)} style={{ width: '100%', padding: '6px 8px', background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 4, color: colors.textMain, fontSize: 12, outline: 'none' }} />
                                     <div style={{ display: 'flex', gap: 4 }}>
-                                      <button type="submit" style={{ flex: 1, padding: '6px', background: '#00d9ff', color: '#000', border: 'none', borderRadius: 4, fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>Créer</button>
+                                      <button type="submit" style={{ flex: 1, padding: '6px', background: '#ffffff', color: '#000', border: 'none', borderRadius: 4, fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>Créer</button>
                                       <button type="button" onClick={() => setIsCreatingPlaylistInMenu(false)} style={{ padding: '6px 8px', background: 'transparent', color: colors.textMuted, border: `1px solid ${colors.border}`, borderRadius: 4, fontSize: 11, cursor: 'pointer' }}>X</button>
                                     </div>
                                   </form>
@@ -983,7 +984,7 @@ export const NouveautesPage: React.FC = () => {
                         )}
 
                         {isOwner && <button onClick={(e) => startEdit(e, track)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center' }}>{Icons.edit}</button>}
-                        {isOwner && <button onClick={(e) => handleDelete(e, track.id)} style={{ background: 'transparent', border: 'none', color: '#ff5c5c', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>{Icons.trash}</button>}
+                        {isOwner && <button onClick={(e) => handleDelete(e, track.id)} style={{ background: 'transparent', border: 'none', color: '#b0b0b0', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>{Icons.trash}</button>}
                       </div>
                     </div>
                   </div>
@@ -1008,12 +1009,12 @@ export const NouveautesPage: React.FC = () => {
             <aside style={{ width: 280, flexShrink: 0, position: 'sticky', top: 100, display: 'flex', flexDirection: 'column', gap: 24 }}>
               <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 20, boxShadow: isDark ? 'none' : '0 4px 20px rgba(0,0,0,0.05)' }}>
                 <h3 style={{ fontSize: 12, fontWeight: 800, letterSpacing: '1px', margin: '0 0 16px 0', color: colors.textMain, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ color: '#00d9ff' }}>🔥</span> Top 10
+                  <span style={{ color: '#ffffff' }}>🔥</span> Top 10
                 </h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                   {tracks.slice(0, 10).map((track, index) => (
                     <div key={track.id} style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }} onClick={() => navigate(`/track/${track.id}`)}>
-                      <div style={{ width: 20, textAlign: 'center', fontSize: 14, color: index === 0 ? '#00d9ff' : index === 1 ? '#c0c0c0' : index === 2 ? '#cd7f32' : colors.textMuted, fontWeight: 900, fontStyle: 'italic' }}>{index + 1}</div>
+                      <div style={{ width: 20, textAlign: 'center', fontSize: 14, color: index === 0 ? '#ffffff' : index === 1 ? '#c0c0c0' : index === 2 ? '#cd7f32' : colors.textMuted, fontWeight: 900, fontStyle: 'italic' }}>{index + 1}</div>
                       <div style={{ width: 36, height: 36, borderRadius: 6, background: track.cover_url ? `url(${track.cover_url}) center/cover` : '#222', flexShrink: 0, border: `1px solid ${colors.border}` }} />
                       <div style={{ minWidth: 0, flex: 1 }}>
                         <div style={{ fontSize: 13, fontWeight: 700, color: colors.textMain, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.title}</div>
@@ -1033,15 +1034,15 @@ export const NouveautesPage: React.FC = () => {
 
       {showUploadModal && createPortal(
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          <div style={{ background: isDark ? 'rgba(15, 15, 20, 0.95)' : '#ffffff', border: `1px solid ${colors.border}`, borderRadius: 20, padding: 32, width: '100%', maxWidth: 500, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 0 50px rgba(0, 217, 255, 0.1)' }}>
+          <div style={{ background: isDark ? 'rgba(15, 15, 20, 0.95)' : '#ffffff', border: `1px solid ${colors.border}`, borderRadius: 20, padding: 32, width: '100%', maxWidth: 500, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 0 50px rgba(255, 255, 255, 0.1)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
               <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: colors.textMain, letterSpacing: '-0.5px' }}>Ajouter un son</h2>
               <button onClick={() => setShowUploadModal(false)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, fontSize: 24, cursor: 'pointer' }}>✕</button>
             </div>
 
             <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
-              <button onClick={() => setUploadType('file')} style={{ flex: 1, padding: 12, background: uploadType === 'file' ? 'linear-gradient(135deg, #00d9ff, #0099ff)' : 'transparent', color: uploadType === 'file' ? '#000' : colors.textMain, border: `1px solid ${colors.border}`, borderRadius: 8, cursor: 'pointer', fontWeight: 800, transition: 'all 0.2s' }}>Fichier MP3</button>
-              <button onClick={() => setUploadType('link')} style={{ flex: 1, padding: 12, background: uploadType === 'link' ? 'linear-gradient(135deg, #00d9ff, #0099ff)' : 'transparent', color: uploadType === 'link' ? '#000' : colors.textMain, border: `1px solid ${colors.border}`, borderRadius: 8, cursor: 'pointer', fontWeight: 800, transition: 'all 0.2s' }}>Lien / Embed</button>
+              <button onClick={() => setUploadType('file')} style={{ flex: 1, padding: 12, background: uploadType === 'file' ? 'linear-gradient(135deg, #ffffff, #0099ff)' : 'transparent', color: uploadType === 'file' ? '#000' : colors.textMain, border: `1px solid ${colors.border}`, borderRadius: 8, cursor: 'pointer', fontWeight: 800, transition: 'all 0.2s' }}>Fichier MP3</button>
+              <button onClick={() => setUploadType('link')} style={{ flex: 1, padding: 12, background: uploadType === 'link' ? 'linear-gradient(135deg, #ffffff, #0099ff)' : 'transparent', color: uploadType === 'link' ? '#000' : colors.textMain, border: `1px solid ${colors.border}`, borderRadius: 8, cursor: 'pointer', fontWeight: 800, transition: 'all 0.2s' }}>Lien / Embed</button>
             </div>
 
             <form onSubmit={handleUploadSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -1051,7 +1052,7 @@ export const NouveautesPage: React.FC = () => {
                   <div>
                     <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6, fontWeight: 600 }}>Fichier Audio (MP3, WAV) *</label>
                     <input type="file" accept="audio/*" onChange={handleAudioFileChange} required style={{ width: '100%', padding: 10, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain }} />
-                    {audioFile && <p style={{ fontSize: 11, color: '#00d9ff', marginTop: 4, fontWeight: 600 }}>Fichier sélectionné : {audioFile.name}</p>}
+                    {audioFile && <p style={{ fontSize: 11, color: '#ffffff', marginTop: 4, fontWeight: 600 }}>Fichier sélectionné : {audioFile.name}</p>}
                   </div>
 
                   <div>
@@ -1060,7 +1061,7 @@ export const NouveautesPage: React.FC = () => {
                     {coverFile && (
                       <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 10 }}>
                         <img src={URL.createObjectURL(coverFile)} alt="Cover preview" style={{ width: 50, height: 50, borderRadius: 6, objectFit: 'cover', border: `1px solid ${colors.border}` }} />
-                        <span style={{ fontSize: 11, color: '#00d9ff', fontWeight: 600 }}>Pochette chargée ✓</span>
+                        <span style={{ fontSize: 11, color: '#ffffff', fontWeight: 600 }}>Pochette chargée ✓</span>
                       </div>
                     )}
                   </div>
@@ -1103,7 +1104,7 @@ export const NouveautesPage: React.FC = () => {
                 </div>
               </div>
 
-              <button type="submit" disabled={uploading} style={{ marginTop: 12, padding: 16, background: '#00d9ff', color: '#000', border: 'none', borderRadius: 10, fontWeight: 800, fontSize: 14, cursor: uploading ? 'wait' : 'pointer', transition: 'opacity 0.2s', boxShadow: '0 0 20px rgba(0, 217, 255, 0.3)' }}>
+              <button type="submit" disabled={uploading} style={{ marginTop: 12, padding: 16, background: '#ffffff', color: '#000', border: 'none', borderRadius: 10, fontWeight: 800, fontSize: 14, cursor: uploading ? 'wait' : 'pointer', transition: 'opacity 0.2s', boxShadow: '0 0 20px rgba(255, 255, 255, 0.3)' }}>
                 {uploading ? 'Traitement en cours...' : 'Ajouter le son'}
               </button>
             </form>

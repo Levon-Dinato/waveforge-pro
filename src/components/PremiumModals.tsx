@@ -163,7 +163,7 @@ export const UploadModal: React.FC<{ isOpen: boolean; onClose: () => void; user:
           <div>
             <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6 }}>Fichier Audio *</label>
             <input type="file" accept="audio/*" onChange={handleAudioFileChange} required style={{ width: '100%', padding: 10, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain }} />
-            {audioFile && <p style={{ fontSize: 11, color: '#00d9ff', marginTop: 4 }}>{audioFile.name}</p>}
+            {audioFile && <p style={{ fontSize: 11, color: '#ffffff', marginTop: 4 }}>{audioFile.name}</p>}
           </div>
           <div>
             <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6 }}>Image de couverture (Optionnel)</label>

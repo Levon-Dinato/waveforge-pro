@@ -19,7 +19,7 @@ export const GlassCard: React.FC<GlassCardProps> = ({
   glow,
   onClick,
 }) => {
-  const glowColor = glow || 'rgba(0, 217, 255, 0)';
+  const glowColor = glow || 'rgba(255, 255, 255, 0)';
 
   return (
     <div

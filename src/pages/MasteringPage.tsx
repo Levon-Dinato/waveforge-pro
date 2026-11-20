@@ -8,14 +8,14 @@ import { Knob } from '../components/ui/Knob';
 import { CurveVisualizer } from '../components/ui/CurveVisualizer';
 
 const PRESETS = [
-  { id: 'universal', name: 'Universel', desc: 'Équilibre parfait', color: '#a08aff', icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg> },
-  { id: 'fire', name: 'Feu', desc: 'Chaleur & Distorsion', color: '#ef4444', icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 2.5z"/></svg> },
-  { id: 'clarity', name: 'Clarté', desc: 'Aigus cristallins', color: '#00d9ff', icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M6 3h12l4 6-10 13L2 9z"/><path d="M11 3L8 9l4 13 4-13-3-6"/><path d="M2 9h20"/></svg> },
-  { id: 'cassette', name: 'Cassette', desc: 'Vintage & Coloration', color: '#f59e0b', icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="8" cy="12" r="2"/><circle cx="16" cy="12" r="2"/><path d="M6 18h12"/></svg> },
-  { id: 'natural', name: 'Naturel', desc: 'Transparence totale', color: '#10b981', icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M11 20A7 7 0 019.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg> },
-  { id: 'spatial', name: 'Spatial', desc: 'Stéréo large', color: '#00d9ff', icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/><path d="M2 12h20"/></svg> },
-  { id: 'cinematic', name: 'Cinéma', desc: 'Impact & Profondeur', color: '#f59e0b', icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg> },
-  { id: 'punch', name: 'Punch', desc: 'Frappe percutante', color: '#ec4899', icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> },
+  { id: 'universal', name: 'Universel', desc: 'Équilibre parfait', color: '#b0b0b0', icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg> },
+  { id: 'fire', name: 'Feu', desc: 'Chaleur & Distorsion', color: '#b0b0b0', icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 2.5z"/></svg> },
+  { id: 'clarity', name: 'Clarté', desc: 'Aigus cristallins', color: '#ffffff', icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M6 3h12l4 6-10 13L2 9z"/><path d="M11 3L8 9l4 13 4-13-3-6"/><path d="M2 9h20"/></svg> },
+  { id: 'cassette', name: 'Cassette', desc: 'Vintage & Coloration', color: '#b0b0b0', icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="8" cy="12" r="2"/><circle cx="16" cy="12" r="2"/><path d="M6 18h12"/></svg> },
+  { id: 'natural', name: 'Naturel', desc: 'Transparence totale', color: '#b0b0b0', icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M11 20A7 7 0 019.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg> },
+  { id: 'spatial', name: 'Spatial', desc: 'Stéréo large', color: '#ffffff', icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/><path d="M2 12h20"/></svg> },
+  { id: 'cinematic', name: 'Cinéma', desc: 'Impact & Profondeur', color: '#b0b0b0', icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg> },
+  { id: 'punch', name: 'Punch', desc: 'Frappe percutante', color: '#b0b0b0', icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> },
 ];
 
 const LUFS_TARGETS = [
@@ -33,11 +33,11 @@ const formatTime = (seconds: number) => {
 };
 
 const getIntensityLabel = (v: number) => {
-  if (v < 20) return { label: 'SUBTIL', color: '#10b981' };
-  if (v < 45) return { label: 'LÉGER', color: '#00d9ff' };
-  if (v < 60) return { label: 'NORMAL', color: '#a08aff' };
-  if (v < 80) return { label: 'FORT', color: '#f59e0b' };
-  return { label: 'EXTRÊME', color: '#ef4444' };
+  if (v < 20) return { label: 'SUBTIL', color: '#b0b0b0' };
+  if (v < 45) return { label: 'LÉGER', color: '#ffffff' };
+  if (v < 60) return { label: 'NORMAL', color: '#b0b0b0' };
+  if (v < 80) return { label: 'FORT', color: '#b0b0b0' };
+  return { label: 'EXTRÊME', color: '#b0b0b0' };
 };
 
 interface SavedPreset {
@@ -448,9 +448,9 @@ export const MasteringPage: React.FC = () => {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', background: colors.bg, color: colors.textMain, fontFamily: 'Inter, sans-serif', overflow: 'hidden' }}>
       <style>{`
         .btn-modern { position: relative; overflow: hidden; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); text-transform: uppercase; letter-spacing: 1px; }
-        .btn-import { background: linear-gradient(135deg, #00d9ff, #0077ff); box-shadow: 0 4px 15px rgba(0,217,255,0.3); }
-        .btn-import:hover { box-shadow: 0 6px 20px rgba(0,217,255,0.5); transform: translateY(-1px); }
-        .btn-ai { background: linear-gradient(135deg, #a855f7, #ec4899); box-shadow: 0 4px 15px rgba(168,85,247,0.4); }
+        .btn-import { background: linear-gradient(135deg, #ffffff, #b0b0b0); box-shadow: 0 4px 15px rgba(255,255,255,0.3); }
+        .btn-import:hover { box-shadow: 0 6px 20px rgba(255,255,255,0.5); transform: translateY(-1px); }
+        .btn-ai { background: linear-gradient(135deg, #b0b0b0, #b0b0b0); box-shadow: 0 4px 15px rgba(168,85,247,0.4); }
         .btn-ai:hover { box-shadow: 0 6px 25px rgba(168,85,247,0.6); transform: translateY(-1px); }
         .preset-card-grid { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 8px; padding: 12px 14px; background: ${colors.presetCardBg}; border: 1px solid ${colors.border}; border-radius: 12px; cursor: pointer; transition: all 0.2s; text-align: left; position: relative; overflow: hidden; }
         .preset-card-grid:hover { background: ${colors.presetCardHover}; border-color: ${colors.borderLight}; transform: translateY(-2px); }
@@ -464,7 +464,7 @@ export const MasteringPage: React.FC = () => {
         .spectrum-grid { background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px); background-size: 20% 25%; }
         @keyframes pulse-ai { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
         .ai-pulse { animation: pulse-ai 2s infinite; }
-        .intensity-zone { height: 8px; border-radius: 4px; background: linear-gradient(90deg, #10b981 0%, #00d9ff 25%, #a08aff 50%, #f59e0b 75%, #ef4444 100%); position: relative; }
+        .intensity-zone { height: 8px; border-radius: 4px; background: linear-gradient(90deg, #b0b0b0 0%, #ffffff 25%, #b0b0b0 50%, #b0b0b0 75%, #b0b0b0 100%); position: relative; }
         .intensity-marker { position: absolute; top: -3px; width: 3px; height: 14px; background: #fff; border-radius: 2px; box-shadow: 0 0 8px #fff; transition: left 0.1s ease; }
         .bypass-btn { user-select: none; -webkit-user-select: none; }
         .bypass-btn:active { transform: scale(0.95); }
@@ -477,7 +477,7 @@ export const MasteringPage: React.FC = () => {
             OUTILS
           </Link>
           <div style={{ width: 1, height: 20, background: colors.borderLight }} />
-          <h1 style={{ fontSize: 16, fontWeight: 900, margin: 0, letterSpacing: '1px', color: colors.textMain }}>DROPZONE <span style={{ color: '#00d9ff' }}>MASTERING</span></h1>
+          <h1 style={{ fontSize: 16, fontWeight: 900, margin: 0, letterSpacing: '1px', color: colors.textMain }}>DROPZONE <span style={{ color: '#ffffff' }}>MASTERING</span></h1>
         </div>
         <div style={{ display: 'flex', gap: 12 }}>
           <button onClick={saveCurrentPreset} style={{ background: 'transparent', border: `1px solid ${colors.border}`, color: colors.textMuted, padding: '10px 16px', borderRadius: 6, fontWeight: 700, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -495,25 +495,25 @@ export const MasteringPage: React.FC = () => {
       </div>
 
       {importError && (
-        <div style={{ background: 'rgba(245, 158, 11, 0.1)', borderBottom: '1px solid rgba(245, 158, 11, 0.3)', color: '#f59e0b', padding: '12px 24px', fontSize: 13, fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ background: 'rgba(245, 158, 11, 0.1)', borderBottom: '1px solid rgba(245, 158, 11, 0.3)', color: '#b0b0b0', padding: '12px 24px', fontSize: 13, fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span>⚠️ {importError}</span>
-          <button onClick={() => setImportError(null)} style={{ background: 'transparent', border: 'none', color: '#f59e0b', cursor: 'pointer', fontWeight: 900 }}>✕</button>
+          <button onClick={() => setImportError(null)} style={{ background: 'transparent', border: 'none', color: '#b0b0b0', cursor: 'pointer', fontWeight: 900 }}>✕</button>
         </div>
       )}
 
       {isAnalyzing && (
         <div style={{ background: 'linear-gradient(90deg, rgba(168,85,247,0.15), rgba(236,72,153,0.15))', borderBottom: '1px solid rgba(168,85,247,0.3)', padding: '12px 24px', display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div className="ai-pulse" style={{ width: 10, height: 10, borderRadius: '50%', background: '#a855f7', boxShadow: '0 0 15px #a855f7' }} />
-          <span style={{ fontSize: 13, fontWeight: 700, color: '#a855f7' }}>🧠 IA analyse votre morceau en cours...</span>
+          <div className="ai-pulse" style={{ width: 10, height: 10, borderRadius: '50%', background: '#b0b0b0', boxShadow: '0 0 15px #b0b0b0' }} />
+          <span style={{ fontSize: 13, fontWeight: 700, color: '#b0b0b0' }}>🧠 IA analyse votre morceau en cours...</span>
         </div>
       )}
 
       {!isAnalyzing && analysis && (
-        <div style={{ background: analysisApplied ? 'linear-gradient(90deg, rgba(16,185,129,0.15), rgba(5,150,105,0.15))' : 'linear-gradient(90deg, rgba(168,85,247,0.15), rgba(236,72,153,0.15))', borderBottom: `1px solid ${analysisApplied ? 'rgba(16,185,129,0.3)' : 'rgba(168,85,247,0.3)'}`, padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
+        <div style={{ background: analysisApplied ? 'linear-gradient(90deg, rgba(176,176,176,0.15), rgba(5,150,105,0.15))' : 'linear-gradient(90deg, rgba(168,85,247,0.15), rgba(236,72,153,0.15))', borderBottom: `1px solid ${analysisApplied ? 'rgba(176,176,176,0.3)' : 'rgba(168,85,247,0.3)'}`, padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, flex: 1, minWidth: 280 }}>
             <div style={{ fontSize: 28 }}>{analysisApplied ? '✅' : '🧠'}</div>
             <div>
-              <div style={{ fontSize: 13, fontWeight: 900, color: analysisApplied ? '#10b981' : '#a855f7', marginBottom: 4, letterSpacing: '0.5px' }}>{analysisApplied ? 'RECOMMANDATION APPLIQUÉE' : 'RECOMMANDATION IA'}</div>
+              <div style={{ fontSize: 13, fontWeight: 900, color: analysisApplied ? '#b0b0b0' : '#b0b0b0', marginBottom: 4, letterSpacing: '0.5px' }}>{analysisApplied ? 'RECOMMANDATION APPLIQUÉE' : 'RECOMMANDATION IA'}</div>
               <div style={{ fontSize: 12, color: colors.textMain, marginBottom: 4 }}>{analysis.weaknesses[0].message}</div>
               {!analysisApplied && (
                 <div style={{ fontSize: 11, color: colors.textMuted }}>
@@ -545,7 +545,7 @@ export const MasteringPage: React.FC = () => {
               return (
                 <div key={p.id} onClick={() => setActivePreset(p.id)} className={`preset-card-grid ${activePreset === p.id ? 'active' : ''} ${isPreviewing ? 'preview' : ''}`} style={{ color: p.color, position: 'relative' }}>
                   {isRecommended && (
-                    <div style={{ position: 'absolute', top: -6, right: -6, background: 'linear-gradient(135deg, #a855f7, #ec4899)', color: '#fff', fontSize: 8, fontWeight: 900, padding: '2px 6px', borderRadius: 4, letterSpacing: '0.5px', boxShadow: '0 2px 8px rgba(168,85,247,0.5)' }}>IA ⚡</div>
+                    <div style={{ position: 'absolute', top: -6, right: -6, background: 'linear-gradient(135deg, #b0b0b0, #b0b0b0)', color: '#fff', fontSize: 8, fontWeight: 900, padding: '2px 6px', borderRadius: 4, letterSpacing: '0.5px', boxShadow: '0 2px 8px rgba(168,85,247,0.5)' }}>IA ⚡</div>
                   )}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%' }}>
                     <div className="preset-icon-wrapper">{p.icon}</div>
@@ -599,7 +599,7 @@ export const MasteringPage: React.FC = () => {
             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
               <div style={{ fontSize: 14, fontWeight: 800, color: hasAudio ? colors.textMain : colors.textDark }}>Prévisualisation</div>
               {hasAudio && (
-                <div style={{ fontSize: 11, color: '#00d9ff', fontFamily: 'monospace', background: colors.waveBg, padding: '4px 10px', borderRadius: 6, border: `1px solid ${colors.border}` }}>
+                <div style={{ fontSize: 11, color: '#ffffff', fontFamily: 'monospace', background: colors.waveBg, padding: '4px 10px', borderRadius: 6, border: `1px solid ${colors.border}` }}>
                   {formatTime(currentTime)} / {formatTime(duration)}
                 </div>
               )}
@@ -616,15 +616,15 @@ export const MasteringPage: React.FC = () => {
                 title="Maintenir pour entendre le signal original (sans traitement)"
                 style={{
                   padding: '10px 20px',
-                  background: isBypassPressed ? '#ef4444' : 'transparent',
-                  border: `2px solid ${isBypassPressed ? '#ef4444' : '#ef4444'}`,
-                  color: isBypassPressed ? '#fff' : '#ef4444',
+                  background: isBypassPressed ? '#b0b0b0' : 'transparent',
+                  border: `2px solid ${isBypassPressed ? '#b0b0b0' : '#b0b0b0'}`,
+                  color: isBypassPressed ? '#fff' : '#b0b0b0',
                   borderRadius: 8,
                   fontSize: 11,
                   fontWeight: 900,
                   cursor: 'pointer',
                   letterSpacing: '1px',
-                  boxShadow: isBypassPressed ? '0 0 25px rgba(239,68,68,0.6)' : 'none',
+                  boxShadow: isBypassPressed ? '0 0 25px rgba(176,176,176,0.6)' : 'none',
                   transition: 'all 0.15s',
                   display: 'flex',
                   alignItems: 'center',
@@ -637,7 +637,7 @@ export const MasteringPage: React.FC = () => {
               
               <div style={{ display: 'flex', gap: 4, background: colors.panelBg, padding: 4, borderRadius: 8, border: `1px solid ${colors.border}` }}>
                 <button onClick={() => setAbMode('original')} style={{ padding: '8px 16px', borderRadius: 6, fontSize: 11, fontWeight: 800, cursor: 'pointer', background: abMode === 'original' ? colors.borderLight : 'transparent', color: abMode === 'original' ? colors.textMain : colors.textMuted, border: 'none' }}>ORIGINAL</button>
-                <button onClick={() => setAbMode('mastered')} style={{ padding: '8px 16px', borderRadius: 6, fontSize: 11, fontWeight: 800, cursor: 'pointer', background: abMode === 'mastered' ? '#a08aff' : 'transparent', color: abMode === 'mastered' ? '#000' : colors.textMuted, border: 'none', boxShadow: abMode === 'mastered' ? '0 0 15px rgba(160,138,255,0.4)' : 'none' }}>MASTERISÉ</button>
+                <button onClick={() => setAbMode('mastered')} style={{ padding: '8px 16px', borderRadius: 6, fontSize: 11, fontWeight: 800, cursor: 'pointer', background: abMode === 'mastered' ? '#b0b0b0' : 'transparent', color: abMode === 'mastered' ? '#000' : colors.textMuted, border: 'none', boxShadow: abMode === 'mastered' ? '0 0 15px rgba(160,138,255,0.4)' : 'none' }}>MASTERISÉ</button>
               </div>
             </div>
           </div>
@@ -651,18 +651,18 @@ export const MasteringPage: React.FC = () => {
               <div style={{ borderTop: '1px dashed rgba(255,255,255,0.1)', width: '100%', position: 'relative' }}><span style={{ position: 'absolute', right: 0, top: -8, fontSize: 9, color: 'rgba(255,255,255,0.3)', fontFamily: 'monospace' }}>-24 dB</span></div>
             </div>
             <div style={{ flex: 1, padding: '50px 30px 0 30px', minHeight: 150, zIndex: 6 }}>
-              <CurveVisualizer analyser={abAnalyser} isActive={isPlayingAB} height={160} color="#00d9ff" />
+              <CurveVisualizer analyser={abAnalyser} isActive={isPlayingAB} height={160} color="#ffffff" />
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 40px 16px 40px', fontSize: 10, color: colors.textMuted, fontWeight: 800, fontFamily: 'monospace', zIndex: 10 }}>
               <span>20 Hz</span><span>200 Hz</span><span>2 kHz</span><span>20 kHz</span>
             </div>
             <div style={{ padding: '0 24px 24px 24px', display: 'flex', alignItems: 'center', gap: 20, zIndex: 10 }}>
-              <button onClick={() => isPlayingAB ? handlePauseAB() : handlePlayAB(currentTime)} style={{ width: 50, height: 50, borderRadius: '50%', background: isPlayingAB ? 'rgba(239,68,68,0.15)' : 'linear-gradient(135deg, #a08aff, #7c5cff)', border: isPlayingAB ? '2px solid #ef4444' : '2px solid transparent', color: isPlayingAB ? '#ef4444' : '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: isPlayingAB ? '0 0 20px rgba(239,68,68,0.3)' : '0 0 25px rgba(160,138,255,0.5)', flexShrink: 0 }}>
+              <button onClick={() => isPlayingAB ? handlePauseAB() : handlePlayAB(currentTime)} style={{ width: 50, height: 50, borderRadius: '50%', background: isPlayingAB ? 'rgba(176,176,176,0.15)' : 'linear-gradient(135deg, #b0b0b0, #b0b0b0)', border: isPlayingAB ? '2px solid #b0b0b0' : '2px solid transparent', color: isPlayingAB ? '#b0b0b0' : '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: isPlayingAB ? '0 0 20px rgba(176,176,176,0.3)' : '0 0 25px rgba(160,138,255,0.5)', flexShrink: 0 }}>
                 {isPlayingAB ? <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg> : <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: 2 }}><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>}
               </button>
               <div onClick={handleSeek} style={{ flex: 1, height: 12, background: colors.sliderBg, borderRadius: 6, position: 'relative', cursor: 'pointer', display: 'flex', alignItems: 'center', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.5)' }}>
-                <div style={{ height: '100%', width: `${(currentTime / (duration || 1)) * 100}%`, background: 'linear-gradient(90deg, #0088aa, #a08aff)', borderRadius: 6, boxShadow: '0 0 15px rgba(160,138,255,0.5)', position: 'relative' }}>
-                  {hasAudio && <div style={{ position: 'absolute', right: -6, top: -3, width: 18, height: 18, borderRadius: '50%', background: '#fff', boxShadow: '0 0 10px #a08aff' }} />}
+                <div style={{ height: '100%', width: `${(currentTime / (duration || 1)) * 100}%`, background: 'linear-gradient(90deg, #0088aa, #b0b0b0)', borderRadius: 6, boxShadow: '0 0 15px rgba(160,138,255,0.5)', position: 'relative' }}>
+                  {hasAudio && <div style={{ position: 'absolute', right: -6, top: -3, width: 18, height: 18, borderRadius: '50%', background: '#fff', boxShadow: '0 0 10px #b0b0b0' }} />}
                 </div>
               </div>
               <div style={{ fontSize: 12, color: colors.textMuted, fontFamily: 'monospace', fontWeight: 800, width: 45, textAlign: 'right' }}>{formatTime(duration)}</div>
@@ -685,7 +685,7 @@ export const MasteringPage: React.FC = () => {
                 return (
                   <div key={item.label} style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 10, padding: '12px 14px', textAlign: 'center' }}>
                     <div style={{ fontSize: 9, color: colors.textDark, fontWeight: 800, letterSpacing: '1px', marginBottom: 6 }}>{item.label}</div>
-                    <div style={{ fontSize: 22, fontWeight: 900, fontFamily: 'monospace', color: isTooLoud ? '#ef4444' : isGood ? '#10b981' : colors.textMain, letterSpacing: '-1px' }}>
+                    <div style={{ fontSize: 22, fontWeight: 900, fontFamily: 'monospace', color: isTooLoud ? '#b0b0b0' : isGood ? '#b0b0b0' : colors.textMain, letterSpacing: '-1px' }}>
                       {item.value > -Infinity ? item.value.toFixed(1) : '-∞'}
                     </div>
                     <div style={{ fontSize: 9, color: colors.textMuted, marginTop: 4 }}>{item.desc}</div>
@@ -702,7 +702,7 @@ export const MasteringPage: React.FC = () => {
                   <div key={t.label} style={{ background: colors.panelBg, border: `1px solid ${isAligned ? t.color : colors.border}`, borderRadius: 8, padding: '8px 10px', textAlign: 'center', boxShadow: isAligned ? `0 0 15px ${t.color}30` : 'none' }}>
                     <div style={{ fontSize: 10, fontWeight: 800, color: t.color, marginBottom: 2 }}>{t.label}</div>
                     <div style={{ fontSize: 9, color: colors.textMuted, fontFamily: 'monospace' }}>{t.target} LUFS</div>
-                    <div style={{ fontSize: 9, marginTop: 4, fontWeight: 800, color: isAligned ? '#10b981' : isTooLoud ? '#ef4444' : colors.textMuted }}>
+                    <div style={{ fontSize: 9, marginTop: 4, fontWeight: 800, color: isAligned ? '#b0b0b0' : isTooLoud ? '#b0b0b0' : colors.textMuted }}>
                       {lufs.i > -Infinity ? (isAligned ? '✓ OK' : (diff > 0 ? `+${diff.toFixed(1)}` : diff.toFixed(1)) + ' dB') : '—'}
                     </div>
                   </div>
@@ -727,7 +727,7 @@ export const MasteringPage: React.FC = () => {
                 <div key={band.key}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, marginBottom: 12 }}>
                     <span style={{ fontWeight: 800, color: colors.textMain }}>{band.label}</span>
-                    <span style={{ color: '#00d9ff', fontFamily: 'monospace', fontWeight: 700 }}>{eq[band.key as keyof typeof eq] > 50 ? '+' : ''}{((eq[band.key as keyof typeof eq] - 50) / 50 * 10).toFixed(1)} dB</span>
+                    <span style={{ color: '#ffffff', fontFamily: 'monospace', fontWeight: 700 }}>{eq[band.key as keyof typeof eq] > 50 ? '+' : ''}{((eq[band.key as keyof typeof eq] - 50) / 50 * 10).toFixed(1)} dB</span>
                   </div>
                   <input type="range" min="0" max="100" step="1" value={eq[band.key as keyof typeof eq]} onChange={(e) => setEq({ ...eq, [band.key]: Number(e.target.value) })} className="eq-slider" />
                   <div style={{ fontSize: 10, color: colors.textDark, marginTop: 8, fontFamily: 'monospace', textAlign: 'center' }}>{band.freq}</div>
@@ -740,8 +740,8 @@ export const MasteringPage: React.FC = () => {
         <div style={{ width: 280, background: colors.panelBg, borderLeft: `1px solid ${colors.border}`, padding: 24, display: 'flex', flexDirection: 'column', gap: 24, overflowY: 'auto', flexShrink: 0 }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 32 }}>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <Knob value={gainVal} onChange={setGainVal} label="GAIN" color="#ff5cf0" size={80} />
-              <div style={{ fontSize: 11, fontWeight: 800, fontFamily: 'monospace', marginTop: 4, color: parseFloat(knobGainDb) > 0 ? '#10b981' : parseFloat(knobGainDb) < 0 ? '#ef4444' : colors.textMuted }}>
+              <Knob value={gainVal} onChange={setGainVal} label="GAIN" color="#b0b0b0" size={80} />
+              <div style={{ fontSize: 11, fontWeight: 800, fontFamily: 'monospace', marginTop: 4, color: parseFloat(knobGainDb) > 0 ? '#b0b0b0' : parseFloat(knobGainDb) < 0 ? '#b0b0b0' : colors.textMuted }}>
                 {parseFloat(knobGainDb) > 0 ? '+' : ''}{knobGainDb} dB
               </div>
             </div>
@@ -761,11 +761,11 @@ export const MasteringPage: React.FC = () => {
             </div>
             <div style={{ display: 'flex', gap: 20 }}>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <Knob value={widthVal} onChange={setWidthVal} label="LARGEUR" color="#00d9ff" size={65} />
+                <Knob value={widthVal} onChange={setWidthVal} label="LARGEUR" color="#ffffff" size={65} />
                 <div style={{ fontSize: 10, fontWeight: 800, fontFamily: 'monospace', marginTop: 4, color: colors.textMuted }}>{knobWidth}x</div>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <Knob value={dynVal} onChange={setDynVal} label="DYNAMIQUE" color="#a08aff" size={65} />
+                <Knob value={dynVal} onChange={setDynVal} label="DYNAMIQUE" color="#b0b0b0" size={65} />
                 <div style={{ fontSize: 10, fontWeight: 800, fontFamily: 'monospace', marginTop: 4, color: colors.textMuted }}>{knobDynRatio}:1</div>
               </div>
             </div>
@@ -804,7 +804,7 @@ export const MasteringPage: React.FC = () => {
                 <span style={{ color: colors.textMain, fontWeight: 800, fontFamily: 'monospace' }}>{effectiveValues.width.toFixed(0)}%</span>
               </div>
             </div>
-            <button onClick={handleExport} className="btn-modern" style={{ width: '100%', marginTop: 16, padding: '14px', background: 'linear-gradient(135deg, #10b981, #059669)', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 900, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)' }}>
+            <button onClick={handleExport} className="btn-modern" style={{ width: '100%', marginTop: 16, padding: '14px', background: 'linear-gradient(135deg, #b0b0b0, #059669)', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 900, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: '0 4px 15px rgba(176, 176, 176, 0.3)' }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
               EXPORT WAV
             </button>

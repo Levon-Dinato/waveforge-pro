@@ -55,7 +55,7 @@ export const RadioHomePage: React.FC = () => {
       `}</style>
 
       <section style={{ position: 'relative', padding: isMobile ? '60px 20px 40px' : '90px 40px 60px', overflow: 'hidden' }}>
-        <ParticleCanvas accent={`${visualizerColor}cc`} accent2="rgba(124,92,255,0.6)" />
+        <ParticleCanvas accent={`${visualizerColor}cc`} accent2="rgba(176,176,176,0.6)" />
         
         <div style={{ position: 'relative', zIndex: 3, maxWidth: 1300, margin: '0 auto', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1.3fr', gap: 40, alignItems: 'center' }}>
           
@@ -69,7 +69,7 @@ export const RadioHomePage: React.FC = () => {
                 <React.Fragment key={i}><span style={{ display: 'inline-block' }}>{[...w].map((c, ci) => (<span key={ci} style={{ display: 'inline-block', opacity: 0, transform: 'translateY(24px)', animation: `letterIn 0.6s cubic-bezier(0.2,0.8,0.2,1) ${(i * 5 + ci) * 0.03}s forwards` }}>{c}</span>))}</span>{' '}</React.Fragment>
               ))}
               <span style={{ display: 'inline-block' }}>
-                {[...profile.username].map((c: string, ci: number) => (<span key={ci} style={{ display: 'inline-block', opacity: 0, transform: 'translateY(24px)', animation: `letterIn 0.6s cubic-bezier(0.2,0.8,0.2,1) ${(15 + ci) * 0.03}s forwards`, background: `linear-gradient(135deg, ${visualizerColor}, #7c5cff)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{c}</span>))}
+                {[...profile.username].map((c: string, ci: number) => (<span key={ci} style={{ display: 'inline-block', opacity: 0, transform: 'translateY(24px)', animation: `letterIn 0.6s cubic-bezier(0.2,0.8,0.2,1) ${(15 + ci) * 0.03}s forwards`, background: `linear-gradient(135deg, ${visualizerColor}, #b0b0b0)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{c}</span>))}
               </span>
             </h1>
             <p style={{ fontSize: isMobile ? 14 : 17, color: colors.textMuted, marginBottom: 32, lineHeight: 1.6 }}>{profile.radio_instructions || 'Écoutez la meilleure sélection musicale, en direct et sans interruption.'}</p>
@@ -108,7 +108,7 @@ export const RadioHomePage: React.FC = () => {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20, borderTop: `1px solid ${colors.border}`, paddingTop: 28, maxWidth: 460 }}>
               {[{ n: listeners, l: 'Auditeurs' }, { n: radioTracks.length, l: 'Titres' }, { n: totalLikes, l: 'Likes' }].map((s, i) => (
                 <div key={i}>
-                  <div style={{ fontSize: 28, fontWeight: 900, background: `linear-gradient(135deg, ${visualizerColor}, #7c5cff)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{s.n}</div>
+                  <div style={{ fontSize: 28, fontWeight: 900, background: `linear-gradient(135deg, ${visualizerColor}, #b0b0b0)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{s.n}</div>
                   <div style={{ fontSize: 10, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700, marginTop: 4 }}>{s.l}</div>
                 </div>
               ))}
@@ -194,7 +194,7 @@ export const RadioHomePage: React.FC = () => {
         
         <div className="rp-glass" style={{ padding: 24, background: `linear-gradient(145deg, ${visualizerColor}15, transparent 60%)`, border: `1px solid ${visualizerColor}30` }}>
           <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: '1.5px', textTransform: 'uppercase', color: visualizerColor, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#ef4444', animation: 'pulseLive 1.5s infinite' }} /> En cours
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#b0b0b0', animation: 'pulseLive 1.5s infinite' }} /> En cours
           </div>
           <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
             {/* ✅ IMAGE DE LA CARTE INFOS AVEC KEY */}
@@ -208,7 +208,7 @@ export const RadioHomePage: React.FC = () => {
               <div style={{ fontSize: 15, fontWeight: 900, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{currentTrack?.title || 'En attente'}</div>
               <div style={{ fontSize: 12, color: colors.textMuted, marginTop: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{currentTrack?.artist || 'DropZone Radio'}</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 8, fontSize: 11, color: colors.textMuted, fontWeight: 700 }}>
-                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981' }} /> {listeners} auditeur{listeners > 1 ? 's' : ''}
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#b0b0b0' }} /> {listeners} auditeur{listeners > 1 ? 's' : ''}
               </div>
             </div>
           </div>

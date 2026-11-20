@@ -64,7 +64,7 @@ export const MyPlaylistsPage: React.FC = () => {
     border: isDark ? '#222222' : '#e5e7eb',
     textMain: isDark ? '#ffffff' : '#1a1a1a',
     textMuted: isDark ? '#888888' : '#666666',
-    accent: '#00d9ff',
+    accent: '#ffffff',
     hoverBg: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
     inputBg: isDark ? '#0a0a0a' : '#f3f4f6',
     modalBg: isDark ? '#121212' : '#ffffff',
@@ -540,7 +540,7 @@ export const MyPlaylistsPage: React.FC = () => {
                           onClick={(e) => removeTrackFromPlaylist(e, track.id)}
                           style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 8, transition: 'color 0.2s' }}
                           title="Retirer de la playlist"
-                          onMouseEnter={(e) => (e.currentTarget.style.color = '#ff5c5c')}
+                          onMouseEnter={(e) => (e.currentTarget.style.color = '#b0b0b0')}
                           onMouseLeave={(e) => (e.currentTarget.style.color = colors.textMuted)}
                         >
                           {Icons.trash}
@@ -612,7 +612,7 @@ export const MyPlaylistsPage: React.FC = () => {
                     <button
                       onClick={(e) => deletePlaylist(e, p.id)}
                       style={{ position: 'absolute', top: 16, right: 16, background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', padding: 4, transition: 'color 0.2s' }}
-                      onMouseEnter={(e) => (e.currentTarget.style.color = '#ff5c5c')}
+                      onMouseEnter={(e) => (e.currentTarget.style.color = '#b0b0b0')}
                       onMouseLeave={(e) => (e.currentTarget.style.color = colors.textMuted)}
                     >
                       {Icons.trash}

@@ -11,10 +11,10 @@
   --wf-border: #2a2a2a;
   --wf-border-light: #333333;
   
-  --wf-cyan: #00d9ff;
-  --wf-purple: #7c5cff;
-  --wf-green: #00ff88;
-  --wf-red: #ff3366;
+  --wf-cyan: #ffffff;
+  --wf-purple: #b0b0b0;
+  --wf-green: #b0b0b0;
+  --wf-red: #b0b0b0;
   
   --wf-text: #ffffff;
   --wf-text-dim: #999999;
@@ -202,7 +202,7 @@ h1, h2, h3, h4, h5, h6, p {
 }
 
 .wf-btn-primary { background: var(--wf-cyan); color: #000; }
-.wf-btn-primary:hover { background: #33e0ff; }
+.wf-btn-primary:hover { background: #e5e5e5; }
 .wf-btn-secondary { background: #1c1c1c; color: var(--wf-text); border: 1px solid var(--wf-border); }
 .wf-btn-secondary:hover { background: #2a2a2a; }
 

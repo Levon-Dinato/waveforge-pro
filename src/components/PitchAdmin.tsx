@@ -84,7 +84,7 @@ export const PitchAdmin: React.FC = () => {
         <h2 style={{ fontSize: 20, fontWeight: 800, color: colors.textMain, margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
           🎵 Pitchs Playlists ({pitches.length})
         </h2>
-        <button onClick={fetchPitches} style={{ background: 'transparent', border: 'none', color: '#00d9ff', cursor: 'pointer', fontSize: 13, fontWeight: 700 }}>Rafraîchir</button>
+        <button onClick={fetchPitches} style={{ background: 'transparent', border: 'none', color: '#ffffff', cursor: 'pointer', fontSize: 13, fontWeight: 700 }}>Rafraîchir</button>
       </div>
 
       {pitches.length === 0 ? (
@@ -99,7 +99,7 @@ export const PitchAdmin: React.FC = () => {
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
                   <span style={{ fontSize: 15, fontWeight: 800, color: colors.textMain }}>{pitch.track_title}</span>
-                  <span style={{ fontSize: 10, background: pitch.status === 'pending' ? '#f9731620' : '#10b98120', color: pitch.status === 'pending' ? '#f97316' : '#10b981', padding: '2px 8px', borderRadius: 12, fontWeight: 800, textTransform: 'uppercase' }}>
+                  <span style={{ fontSize: 10, background: pitch.status === 'pending' ? '#f9731620' : '#b0b0b020', color: pitch.status === 'pending' ? '#f97316' : '#b0b0b0', padding: '2px 8px', borderRadius: 12, fontWeight: 800, textTransform: 'uppercase' }}>
                     {pitch.status === 'pending' ? 'En attente' : 'Accepté'}
                   </span>
                 </div>
@@ -108,17 +108,17 @@ export const PitchAdmin: React.FC = () => {
               </div>
 
               <div style={{ display: 'flex', gap: 8 }}>
-                <a href={pitch.track_url} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', background: '#00d9ff', color: '#000', borderRadius: 8, fontSize: 13, fontWeight: 800, textDecoration: 'none' }}>
+                <a href={pitch.track_url} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', background: '#ffffff', color: '#000', borderRadius: 8, fontSize: 13, fontWeight: 800, textDecoration: 'none' }}>
                   {Icons.play} Écouter
                 </a>
                 
                 {pitch.status !== 'accepted' && (
-                  <button onClick={() => updateStatus(pitch.id, 'accepted')} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: '1px solid #10b981', borderRadius: 8, fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>
+                  <button onClick={() => updateStatus(pitch.id, 'accepted')} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', background: 'rgba(176, 176, 176, 0.1)', color: '#b0b0b0', border: '1px solid #b0b0b0', borderRadius: 8, fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>
                     {Icons.check} Accepter
                   </button>
                 )}
                 
-                <button onClick={() => deletePitch(pitch.id)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 12px', background: 'transparent', color: '#ff5c5c', border: '1px solid rgba(255, 92, 92, 0.3)', borderRadius: 8, fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>
+                <button onClick={() => deletePitch(pitch.id)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 12px', background: 'transparent', color: '#b0b0b0', border: '1px solid rgba(176, 176, 176, 0.3)', borderRadius: 8, fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>
                   {Icons.trash}
                 </button>
               </div>

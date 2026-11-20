@@ -120,7 +120,7 @@ export const LiveChat = ({ roomId = 'djcontrolradio' }: { roomId?: string }) => 
             width: '100%',
             padding: '12px',
             background: authorName.trim()
-              ? 'linear-gradient(135deg, #00d9ff, #0088ff)'
+              ? 'linear-gradient(135deg, #ffffff, #b0b0b0)'
               : 'rgba(255, 255, 255, 0.1)',
             color: authorName.trim() ? '#000' : 'rgba(255, 255, 255, 0.3)',
             border: 'none',
@@ -160,8 +160,8 @@ export const LiveChat = ({ roomId = 'djcontrolradio' }: { roomId?: string }) => 
             width: 6,
             height: 6,
             borderRadius: '50%',
-            background: '#00ff88',
-            boxShadow: '0 0 8px #00ff88',
+            background: '#b0b0b0',
+            boxShadow: '0 0 8px #b0b0b0',
           }} />
           Chat en direct
         </div>
@@ -193,7 +193,7 @@ export const LiveChat = ({ roomId = 'djcontrolradio' }: { roomId?: string }) => 
             <div key={msg.id} style={{ fontSize: 13, lineHeight: 1.4 }}>
               <span style={{
                 fontWeight: 700,
-                color: isMe ? '#00d9ff' : '#7c5cff',
+                color: isMe ? '#ffffff' : '#b0b0b0',
                 marginRight: 6,
               }}>
                 {msg.author_name}
@@ -239,7 +239,7 @@ export const LiveChat = ({ roomId = 'djcontrolradio' }: { roomId?: string }) => 
           style={{
             padding: '10px 16px',
             background: input.trim()
-              ? 'linear-gradient(135deg, #00d9ff, #0088ff)'
+              ? 'linear-gradient(135deg, #ffffff, #b0b0b0)'
               : 'rgba(255, 255, 255, 0.1)',
             color: input.trim() ? '#000' : 'rgba(255, 255, 255, 0.3)',
             border: 'none',

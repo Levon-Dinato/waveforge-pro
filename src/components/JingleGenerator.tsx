@@ -44,7 +44,7 @@ export const JingleGenerator: React.FC<JingleGeneratorProps> = ({ onGenerated })
     border: isDark ? '#27272a' : '#e2e8f0',
     textMain: isDark ? '#f8fafc' : '#0f172a',
     textMuted: isDark ? '#a1a1aa' : '#64748b',
-    accent: '#00d9ff',
+    accent: '#ffffff',
   };
 
   return (
@@ -92,7 +92,7 @@ export const JingleGenerator: React.FC<JingleGeneratorProps> = ({ onGenerated })
       </button>
 
       {error && (
-        <div style={{ marginTop: 16, padding: 12, background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', borderRadius: 8, fontSize: 13 }}>
+        <div style={{ marginTop: 16, padding: 12, background: 'rgba(176, 176, 176, 0.1)', color: '#b0b0b0', borderRadius: 8, fontSize: 13 }}>
           {error}
         </div>
       )}

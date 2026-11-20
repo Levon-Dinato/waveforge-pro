@@ -20,7 +20,7 @@ export const LegalPageShell: React.FC<LegalPageShellProps> = ({ title, updatedAt
     border: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
     textMain: isDark ? '#ffffff' : '#1a1a1a',
     textMuted: isDark ? '#a1a1aa' : '#666666',
-    accent: '#00d9ff',
+    accent: '#ffffff',
   };
 
   return (

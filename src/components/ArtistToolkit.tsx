@@ -45,18 +45,18 @@ export const ArtistToolkit: React.FC = () => {
     textMuted: isDark ? 'rgba(255,255,255,0.6)' : '#666666',
     border: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
     cardBg: isDark ? '#121212' : '#ffffff',
-    accent: '#00d9ff',
+    accent: '#ffffff',
     inputBg: isDark ? '#0a0a0a' : '#f3f4f6',
     modalBg: isDark ? '#121212' : '#ffffff',
   };
 
   const TOOLS = [
-    { id: 'smartlink', icon: Icons.link, title: "Smart Link", desc: "Créez un lien unique pour regrouper toutes vos plateformes (Spotify, Apple, etc.).", color: '#3b82f6' },
-    { id: 'promo', icon: Icons.image, title: "Cartes Promo", desc: "Générez de belles images (format Instagram) avec la pochette de votre son.", color: '#ec4899' },
+    { id: 'smartlink', icon: Icons.link, title: "Smart Link", desc: "Créez un lien unique pour regrouper toutes vos plateformes (Spotify, Apple, etc.).", color: '#b0b0b0' },
+    { id: 'promo', icon: Icons.image, title: "Cartes Promo", desc: "Générez de belles images (format Instagram) avec la pochette de votre son.", color: '#b0b0b0' },
     { id: 'pitch', icon: Icons.music, title: "Pitch Playlist", desc: "Soumettez votre son pour une chance d'être ajouté à la playlist officielle DropZone.", color: '#f97316' },
-    { id: 'premium', icon: Icons.globe, title: "Ma Page Premium", desc: "Personnalisez votre page artiste, vos couleurs et vos modules.", color: '#00d9ff' },
+    { id: 'premium', icon: Icons.globe, title: "Ma Page Premium", desc: "Personnalisez votre page artiste, vos couleurs et vos modules.", color: '#ffffff' },
     { id: 'stats', icon: Icons.chart, title: "Mes Statistiques", desc: "Consultez vos vues, écoutes et téléchargements en temps réel.", color: '#8b5cf6' },
-    { id: 'support', icon: Icons.shield, title: "Support Prioritaire", desc: "Un problème ? Une question ? Contactez directement l'équipe DropZone.", color: '#10b981' }
+    { id: 'support', icon: Icons.shield, title: "Support Prioritaire", desc: "Un problème ? Une question ? Contactez directement l'équipe DropZone.", color: '#b0b0b0' }
   ];
 
   const handleToolClick = (toolId: string) => {
@@ -217,12 +217,12 @@ export const ArtistToolkit: React.FC = () => {
               <>
                 {isSuccess ? (
                   <div style={{ textAlign: 'center', padding: '20px 0' }}>
-                    <div style={{ color: '#3b82f6', marginBottom: 16, display: 'flex', justifyContent: 'center' }}>{Icons.check}</div>
+                    <div style={{ color: '#b0b0b0', marginBottom: 16, display: 'flex', justifyContent: 'center' }}>{Icons.check}</div>
                     <h2 style={{ fontSize: 24, fontWeight: 900, color: colors.textMain, marginBottom: 8 }}>Smart Link créé !</h2>
                     <p style={{ fontSize: 14, color: colors.textMuted, marginBottom: 16 }}>Voici votre lien à partager en bio :</p>
                     <div style={{ display: 'flex', gap: 10 }}>
                       <input type="text" readOnly value={generatedLink} style={{ flex: 1, padding: 12, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain, fontSize: 13 }} />
-                      <button onClick={() => { navigator.clipboard.writeText(generatedLink); alert('Copié !'); }} style={{ padding: '0 16px', background: '#3b82f6', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 700, cursor: 'pointer' }}>Copier</button>
+                      <button onClick={() => { navigator.clipboard.writeText(generatedLink); alert('Copié !'); }} style={{ padding: '0 16px', background: '#b0b0b0', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 700, cursor: 'pointer' }}>Copier</button>
                     </div>
                   </div>
                 ) : (
@@ -253,7 +253,7 @@ export const ArtistToolkit: React.FC = () => {
                         <input type="url" value={smartLinkData.youtube} onChange={e => setSmartLinkData({...smartLinkData, youtube: e.target.value})} style={{ width: '100%', padding: 10, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain }} placeholder="Lien YouTube" />
                       </div>
                       
-                      <button type="submit" disabled={isSubmitting} style={{ marginTop: 10, padding: 16, background: '#3b82f6', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 800, cursor: isSubmitting ? 'wait' : 'pointer' }}>
+                      <button type="submit" disabled={isSubmitting} style={{ marginTop: 10, padding: 16, background: '#b0b0b0', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 800, cursor: isSubmitting ? 'wait' : 'pointer' }}>
                         {isSubmitting ? 'Création...' : 'Générer mon lien'}
                       </button>
                     </div>
@@ -277,7 +277,7 @@ export const ArtistToolkit: React.FC = () => {
                     )}
                     <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: 16, background: 'linear-gradient(transparent, rgba(0,0,0,0.9))' }}>
                       <div style={{ color: '#fff', fontSize: 18, fontWeight: 900, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{promoData.title || 'Titre du son'}</div>
-                      <div style={{ color: '#00d9ff', fontSize: 13, fontWeight: 700 }}>{promoData.artistName || 'Nom de l\'artiste'}</div>
+                      <div style={{ color: '#ffffff', fontSize: 13, fontWeight: 700 }}>{promoData.artistName || 'Nom de l\'artiste'}</div>
                     </div>
                   </div>
 
@@ -285,7 +285,7 @@ export const ArtistToolkit: React.FC = () => {
                     <input type="text" placeholder="Titre du son" value={promoData.title} onChange={e => setPromoData({...promoData, title: e.target.value})} style={{ width: '100%', padding: 12, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain }} />
                     <input type="text" placeholder="Nom de l'artiste" value={promoData.artistName} onChange={e => setPromoData({...promoData, artistName: e.target.value})} style={{ width: '100%', padding: 12, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain }} />
                     <input type="url" placeholder="URL de la cover (optionnel)" value={promoData.coverUrl} onChange={e => setPromoData({...promoData, coverUrl: e.target.value})} style={{ width: '100%', padding: 12, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain }} />
-                    <button onClick={handleDownloadImage} style={{ marginTop: 10, padding: 16, background: '#ec4899', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 800, cursor: 'pointer' }}>Télécharger l'image</button>
+                    <button onClick={handleDownloadImage} style={{ marginTop: 10, padding: 16, background: '#b0b0b0', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 800, cursor: 'pointer' }}>Télécharger l'image</button>
                   </div>
                 </div>
               </div>
@@ -296,7 +296,7 @@ export const ArtistToolkit: React.FC = () => {
               <>
                 {isSuccess ? (
                   <div style={{ textAlign: 'center', padding: '40px 0' }}>
-                    <div style={{ color: '#10b981', marginBottom: 16, display: 'flex', justifyContent: 'center' }}>{Icons.check}</div>
+                    <div style={{ color: '#b0b0b0', marginBottom: 16, display: 'flex', justifyContent: 'center' }}>{Icons.check}</div>
                     <h2 style={{ fontSize: 24, fontWeight: 900, color: colors.textMain, marginBottom: 8 }}>Pitch envoyé !</h2>
                     <p style={{ fontSize: 14, color: colors.textMuted }}>Notre équipe écoutera votre son très prochainement.</p>
                     <button onClick={closeModal} style={{ marginTop: 24, padding: '12px 24px', background: colors.textMain, color: colors.bg, border: 'none', borderRadius: 8, fontWeight: 800, cursor: 'pointer' }}>Fermer</button>

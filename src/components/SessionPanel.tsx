@@ -122,7 +122,7 @@ export const SessionPanel: React.FC<SessionPanelProps> = ({ isOpen, onClose }) =
           width: 'min(600px, 92vw)',
           maxHeight: '85vh',
           background: 'linear-gradient(135deg, #0a0a0f, #0d0d14)',
-          border: '1px solid rgba(0, 217, 255, 0.3)',
+          border: '1px solid rgba(255, 255, 255, 0.3)',
           borderRadius: 12,
           boxShadow: '0 20px 60px rgba(0,0,0,0.8)',
           zIndex: 1000,
@@ -172,12 +172,12 @@ export const SessionPanel: React.FC<SessionPanelProps> = ({ isOpen, onClose }) =
           style={{
             padding: 16,
             borderBottom: '1px solid var(--border)',
-            background: 'rgba(0, 217, 255, 0.03)',
+            background: 'rgba(255, 255, 255, 0.03)',
           }}
         >
           <div
             className="label-uppercase"
-            style={{ fontSize: 10, color: '#00d9ff', marginBottom: 8, letterSpacing: '1px' }}
+            style={{ fontSize: 10, color: '#ffffff', marginBottom: 8, letterSpacing: '1px' }}
           >
             💾 SAUVEGARDER LA SESSION ACTUELLE
           </div>
@@ -205,7 +205,7 @@ export const SessionPanel: React.FC<SessionPanelProps> = ({ isOpen, onClose }) =
               className="btn-action primary"
               style={{
                 background: engine.audioBuffer
-                  ? 'linear-gradient(135deg, #00d9ff, #0088ff)'
+                  ? 'linear-gradient(135deg, #ffffff, #b0b0b0)'
                   : 'var(--bg-2)',
                 color: engine.audioBuffer ? '#000' : '#666',
                 borderColor: 'transparent',
@@ -219,7 +219,7 @@ export const SessionPanel: React.FC<SessionPanelProps> = ({ isOpen, onClose }) =
             </button>
           </div>
           {!engine.audioBuffer && (
-            <div style={{ fontSize: 10, color: '#ff3366', marginTop: 6 }}>
+            <div style={{ fontSize: 10, color: '#b0b0b0', marginTop: 6 }}>
               ⚠️ Charge un audio dans le Studio d'abord.
             </div>
           )}
@@ -265,8 +265,8 @@ export const SessionPanel: React.FC<SessionPanelProps> = ({ isOpen, onClose }) =
                           width: 40,
                           height: 40,
                           borderRadius: 8,
-                          background: 'rgba(0, 217, 255, 0.1)',
-                          border: '1px solid rgba(0, 217, 255, 0.3)',
+                          background: 'rgba(255, 255, 255, 0.1)',
+                          border: '1px solid rgba(255, 255, 255, 0.3)',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
@@ -301,8 +301,8 @@ export const SessionPanel: React.FC<SessionPanelProps> = ({ isOpen, onClose }) =
                         disabled={isLoading}
                         className="btn-action"
                         style={{
-                          color: '#00ff88',
-                          borderColor: 'rgba(0, 255, 136, 0.3)',
+                          color: '#b0b0b0',
+                          borderColor: 'rgba(176, 176, 176, 0.3)',
                           fontSize: 11,
                           padding: '6px 12px',
                           fontWeight: 600,
@@ -317,9 +317,9 @@ export const SessionPanel: React.FC<SessionPanelProps> = ({ isOpen, onClose }) =
                           width: 32,
                           height: 32,
                           borderRadius: 6,
-                          border: '1px solid rgba(255, 51, 102, 0.3)',
+                          border: '1px solid rgba(176, 176, 176, 0.3)',
                           background: 'transparent',
-                          color: '#ff3366',
+                          color: '#b0b0b0',
                           fontSize: 14,
                           cursor: 'pointer',
                           flexShrink: 0,
@@ -356,7 +356,7 @@ export const SessionPanel: React.FC<SessionPanelProps> = ({ isOpen, onClose }) =
               style={{
                 background: 'transparent',
                 border: 'none',
-                color: '#ff3366',
+                color: '#b0b0b0',
                 fontSize: 10,
                 cursor: 'pointer',
                 fontWeight: 600,

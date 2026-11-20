@@ -71,7 +71,7 @@ export const RadioLayout: React.FC = () => {
   });
   const [visualizerColor, setVisualizerColor] = useState(() => {
     const cached = sessionStorage.getItem(`radio_profile_${username}`);
-    return cached ? JSON.parse(cached).radio_visualizer_color || '#ff3366' : '#ff3366';
+    return cached ? JSON.parse(cached).radio_visualizer_color || '#b0b0b0' : '#b0b0b0';
   });
   const [socials, setSocials] = useState<any>({});
   const [showToast, setShowToast] = useState(false);
@@ -147,7 +147,7 @@ export const RadioLayout: React.FC = () => {
         setCustomBgOpacity(profileData.radio_bg_opacity ?? 0.6);
         setCustomBgAnimation(profileData.radio_bg_animation || 'aurora');
         setCustomLogo(profileData.radio_custom_logo_url || '');
-        setVisualizerColor(profileData.radio_visualizer_color || '#ff3366');
+        setVisualizerColor(profileData.radio_visualizer_color || '#b0b0b0');
 
         updateRadioSettings(
           profileData.radio_crossfade_enabled || false,
@@ -456,7 +456,7 @@ export const RadioLayout: React.FC = () => {
         @keyframes aurora2 { 0% { transform: translate(0,0) scale(1); } 50% { transform: translate(-50px,50px) scale(1.1); } 100% { transform: translate(0,0) scale(1); } }
         .aurora-blob { position: absolute; width: 60vw; height: 60vw; border-radius: 50%; filter: blur(120px); opacity: ${isDark ? '0.4' : '0.2'}; }
         .blob1 { background: ${coverImage ? `url(${coverImage}) center/cover` : visualizerColor}; top: -20%; left: -10%; animation: aurora1 15s ease-in-out infinite; }
-        .blob2 { background: #7c5cff; bottom: -20%; right: -10%; animation: aurora2 18s ease-in-out infinite reverse; }
+        .blob2 { background: #b0b0b0; bottom: -20%; right: -10%; animation: aurora2 18s ease-in-out infinite reverse; }
         .grid-animation { position: absolute; inset: -50%; background-image: linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px); background-size: 60px 60px; transform: perspective(500px) rotateX(60deg); animation: gridMove 3s linear infinite; }
         @keyframes gridMove { 0% { transform: perspective(500px) rotateX(60deg) translateY(0); } 100% { transform: perspective(500px) rotateX(60deg) translateY(60px); } }
         .waves-animation { position: absolute; bottom: 0; left: 0; width: 200%; height: 250px; background: radial-gradient(circle at 50% 100%, ${visualizerColor}30 0%, transparent 70%); border-radius: 45%; animation: waveMove 12s linear infinite; }
@@ -664,7 +664,7 @@ export const RadioLayout: React.FC = () => {
                 </Link>
               )}
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: isLive ? '#ef4444' : 'rgba(255,255,255,0.05)', padding: '7px 14px', borderRadius: 20, border: isLive ? 'none' : `1px solid ${colors.border}` }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: isLive ? '#b0b0b0' : 'rgba(255,255,255,0.05)', padding: '7px 14px', borderRadius: 20, border: isLive ? 'none' : `1px solid ${colors.border}` }}>
                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#fff', animation: 'pulseLive 1s infinite' }} />
                 <span style={{ fontSize: 10, fontWeight: 900, color: isLive ? '#fff' : colors.textMain, letterSpacing: '0.5px' }}>{isLive ? 'ON AIR' : activeSchedule ? `PROG: ${activeSchedule}` : 'RADIO AUTO'}</span>
               </div>
@@ -710,7 +710,7 @@ export const RadioLayout: React.FC = () => {
               {/* ✅ AJOUT DE LA KEY POUR FORCER LA MISE À JOUR DE L'IMAGE */}
               <div key={currentTrack?.id || 'cover'} style={{ 
                 width: 42, height: 42, borderRadius: 10, 
-                background: currentCover ? `url(${currentCover}) center/cover` : `linear-gradient(135deg, ${visualizerColor}, #7c5cff)`, 
+                background: currentCover ? `url(${currentCover}) center/cover` : `linear-gradient(135deg, ${visualizerColor}, #b0b0b0)`, 
                 border: `1px solid ${colors.border}`, flexShrink: 0,
                 display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, color: '#fff'
               }}>
@@ -718,7 +718,7 @@ export const RadioLayout: React.FC = () => {
               </div>
 
               <div style={{ minWidth: 0, flex: 1 }}>
-                <div style={{ fontSize: 13, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{currentTrack?.title || 'En attente'} {isLive && <span style={{ fontSize: 9, background: '#ef4444', color: '#fff', padding: '2px 6px', borderRadius: 4 }}>LIVE</span>}</div>
+                <div style={{ fontSize: 13, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{currentTrack?.title || 'En attente'} {isLive && <span style={{ fontSize: 9, background: '#b0b0b0', color: '#fff', padding: '2px 6px', borderRadius: 4 }}>LIVE</span>}</div>
                 <div style={{ fontSize: 11, color: colors.textMuted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{currentTrack?.artist || 'DropZone Radio'}</div>
               </div>
             </div>
@@ -732,7 +732,7 @@ export const RadioLayout: React.FC = () => {
             )}
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: colors.textMuted, fontWeight: 700, background: 'rgba(255,255,255,0.05)', padding: '4px 10px', borderRadius: 20 }}><span style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981', animation: 'pulseLive 1.5s infinite' }} /> {listeners}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: colors.textMuted, fontWeight: 700, background: 'rgba(255,255,255,0.05)', padding: '4px 10px', borderRadius: 20 }}><span style={{ width: 6, height: 6, borderRadius: '50%', background: '#b0b0b0', animation: 'pulseLive 1.5s infinite' }} /> {listeners}</div>
               
               <button onClick={handlePlayRadio} title="Revenir à la radio en direct" style={{ background: 'rgba(255,255,255,0.05)', color: colors.textMain, border: `1px solid ${colors.border}`, width: 36, height: 36, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
@@ -768,7 +768,7 @@ export const RadioLayout: React.FC = () => {
             </form>
           </div>
           <button onClick={() => setIsChatOpen(!isChatOpen)} className="rp-btn-3d" style={{ width: 56, height: 56, borderRadius: '50%', background: visualizerColor, color: iconColor, border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-            {isChatOpen ? <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> : <div style={{ position: 'relative' }}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg><span style={{ position: 'absolute', top: -6, right: -6, width: 10, height: 10, background: '#ff3366', borderRadius: '50%', border: `2px solid ${colors.bg}` }} /></div>}
+            {isChatOpen ? <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> : <div style={{ position: 'relative' }}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg><span style={{ position: 'absolute', top: -6, right: -6, width: 10, height: 10, background: '#b0b0b0', borderRadius: '50%', border: `2px solid ${colors.bg}` }} /></div>}
           </button>
         </div>
       </div>

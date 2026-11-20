@@ -9,21 +9,21 @@ const TOOLS = [
     title: 'DJ Auto CUE',
     desc: 'Prépare tes sets, analyse les BPM et exporte tes pistes pour tes platines.',
     icon: '🎧',
-    color: '#00d9ff'
+    color: '#ffffff'
   },
   {
     path: '/mastering',
     title: 'Mastering',
     desc: 'Donne de la puissance à tes morceaux avec notre chaîne de mastering pro.',
     icon: '🎛️',
-    color: '#ff3366'
+    color: '#b0b0b0'
   },
   {
     path: '/studio',
     title: 'Studio Audio → MIDI',
     desc: 'Crée, édite et remixe tes morceaux avec notre station de travail audio intégrée.',
     icon: '🎹',
-    color: '#7c5cff'
+    color: '#b0b0b0'
   },
   {
     path: '/mixer',
@@ -54,7 +54,7 @@ export const ToolsPage: React.FC = () => {
       {/* En-tête minimaliste */}
       <div style={{ marginBottom: 48, textAlign: 'left', borderBottom: `1px solid ${colors.border}`, paddingBottom: 24 }}>
         <h1 style={{ fontSize: '2rem', fontWeight: 800, margin: '0 0 8px 0', letterSpacing: '-0.5px', color: colors.textMain }}>
-          OUTILS <span style={{ color: '#00d9ff' }}>DJ</span>
+          OUTILS <span style={{ color: '#ffffff' }}>DJ</span>
         </h1>
         <p style={{ color: colors.textMuted, fontSize: '0.9rem', margin: 0 }}>
           Ta suite de production. Crée, mixe et masterise.
@@ -138,7 +138,7 @@ export const ToolsPage: React.FC = () => {
       {/* Petit effet hover pour le texte "Lancer l'outil" */}
       <style>{`
         a:hover .tool-link-text {
-          color: #00d9ff;
+          color: #ffffff;
         }
       `}</style>
     </div>

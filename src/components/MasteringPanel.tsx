@@ -53,13 +53,13 @@ export const MasteringPanel: React.FC<MasteringPanelProps> = ({
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       <style>{`
         .btn-export {
-          background: linear-gradient(135deg, #10b981, #059669);
+          background: linear-gradient(135deg, #b0b0b0, #059669);
           color: #000;
-          box-shadow: 0 4px 15px rgba(16,185,129,0.3);
+          box-shadow: 0 4px 15px rgba(176,176,176,0.3);
           transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
         .btn-export:hover:not(:disabled) {
-          box-shadow: 0 6px 20px rgba(16,185,129,0.5);
+          box-shadow: 0 6px 20px rgba(176,176,176,0.5);
           transform: translateY(-1px);
         }
         .btn-export:disabled {

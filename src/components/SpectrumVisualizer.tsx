@@ -79,14 +79,14 @@ export const SpectrumVisualizer: React.FC<SpectrumVisualizerProps> = ({
         // ✅ NOUVEAU : Gestion des couleurs
         if (colorMode === 'frequency') {
           // Couleurs fixes par bande de fréquence (Style DJ)
-          if (freq < 250) ctx.fillStyle = '#00d9ff';        // Basses (Cyan)
-          else if (freq < 4000) ctx.fillStyle = '#00ff88';  // Médiums (Vert)
-          else ctx.fillStyle = '#7c5cff';                   // Aigus (Violet)
+          if (freq < 250) ctx.fillStyle = '#ffffff';        // Basses (Cyan)
+          else if (freq < 4000) ctx.fillStyle = '#b0b0b0';  // Médiums (Vert)
+          else ctx.fillStyle = '#b0b0b0';                   // Aigus (Violet)
         } else {
           // Ancien mode basé sur l'amplitude
-          if (nextHeight > h * 0.85) ctx.fillStyle = '#ff3366';
-          else if (nextHeight > h * 0.6) ctx.fillStyle = '#ffd43b';
-          else ctx.fillStyle = '#00ff88';
+          if (nextHeight > h * 0.85) ctx.fillStyle = '#b0b0b0';
+          else if (nextHeight > h * 0.6) ctx.fillStyle = '#b0b0b0';
+          else ctx.fillStyle = '#b0b0b0';
         }
 
         ctx.beginPath();

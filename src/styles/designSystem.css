@@ -14,12 +14,12 @@
   --border-default: rgba(255, 255, 255, 0.1);
   --border-strong: rgba(255, 255, 255, 0.15);
 
-  --accent-primary: #00d9ff;
-  --accent-secondary: #7c5cff;
-  --accent-success: #00ff88;
-  --accent-warning: #ffd43b;
-  --accent-danger: #ff3366;
-  --accent-magenta: #ff5cf0;
+  --accent-primary: #ffffff;
+  --accent-secondary: #b0b0b0;
+  --accent-success: #b0b0b0;
+  --accent-warning: #b0b0b0;
+  --accent-danger: #b0b0b0;
+  --accent-magenta: #b0b0b0;
 
   --text-primary: #ffffff;
   --text-secondary: rgba(255, 255, 255, 0.65);
@@ -38,6 +38,11 @@
 
 * {
   box-sizing: border-box;
+}
+
+/* ✅ Minimaliste : pas de bleu de lien par défaut du navigateur */
+a {
+  color: inherit;
 }
 
 html, body {
@@ -68,8 +73,8 @@ h2 { font-weight: 700; }
    ============================================================ */
 body {
   background-image:
-    radial-gradient(circle at 15% 10%, rgba(0, 217, 255, 0.08) 0%, transparent 40%),
-    radial-gradient(circle at 85% 90%, rgba(124, 92, 255, 0.06) 0%, transparent 40%);
+    radial-gradient(circle at 15% 10%, rgba(255, 255, 255, 0.08) 0%, transparent 40%),
+    radial-gradient(circle at 85% 90%, rgba(176, 176, 176, 0.06) 0%, transparent 40%);
   background-attachment: fixed;
 }
 
@@ -113,15 +118,15 @@ body {
 }
 
 .wf-btn-primary {
-  background-color: #00d9ff;
-  background-image: linear-gradient(135deg, #00d9ff 0%, #0088ff 100%);
+  background-color: #ffffff;
+  background-image: linear-gradient(135deg, #ffffff 0%, #b0b0b0 100%);
   color: #000000;
-  box-shadow: 0 4px 16px rgba(0, 217, 255, 0.3);
+  box-shadow: 0 4px 16px rgba(255, 255, 255, 0.3);
 }
 
 .wf-btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 217, 255, 0.5);
+  box-shadow: 0 8px 24px rgba(255, 255, 255, 0.5);
 }
 
 .wf-btn-secondary {
@@ -149,9 +154,9 @@ body {
   font-weight: 700;
   letter-spacing: 0.8px;
   text-transform: uppercase;
-  background: rgba(0, 217, 255, 0.12);
-  color: #00d9ff;
-  border: 1px solid rgba(0, 217, 255, 0.35);
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.35);
 }
 
 /* ============================================================
@@ -169,8 +174,8 @@ body {
    TITRE GRADIENT
    ============================================================ */
 .wf-title-gradient {
-  color: #00d9ff;
-  background: linear-gradient(135deg, #00d9ff 0%, #7c5cff 50%, #ff5cf0 100%);
+  color: #ffffff;
+  background: linear-gradient(135deg, #ffffff 0%, #b0b0b0 50%, #b0b0b0 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;

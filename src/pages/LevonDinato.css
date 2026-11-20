@@ -6,9 +6,9 @@ div.levon-page {
   --border: #162536;
   --border-light: #233b54;
   --text: #ffffff;
-  --text-muted: #8c9f98; 
-  --accent: #00d9ff; 
-  --accent-gradient: linear-gradient(135deg, var(--accent) 0%, #0077ff 100%);
+  --text-muted: #b0b0b0; 
+  --accent: #ffffff; 
+  --accent-gradient: linear-gradient(135deg, var(--accent) 0%, #b0b0b0 100%);
   --font-main: 'Inter', -apple-system, sans-serif;
   
   background-color: var(--bg) !important; 
@@ -72,16 +72,16 @@ div.levon-page .btn-primary {
   padding: 12px 28px; background: linear-gradient(180deg, #10202e 0%, #060b10 100%) !important; 
   color: var(--accent) !important; border-radius: 6px; font-size: 0.85rem; font-weight: 800; 
   letter-spacing: 1px; text-transform: uppercase; border: 1px solid var(--accent) !important; 
-  box-shadow: 0 6px 0 #000, 0 8px 15px rgba(0,0,0,0.6), 0 0 15px rgba(0, 217, 255, 0.2), inset 0 1px 0 rgba(255,255,255,0.2); 
+  box-shadow: 0 6px 0 #000, 0 8px 15px rgba(0,0,0,0.6), 0 0 15px rgba(255, 255, 255, 0.2), inset 0 1px 0 rgba(255,255,255,0.2); 
   transition: all 0.15s; position: relative; overflow: hidden; text-decoration: none !important; 
 }
-div.levon-page .btn-primary:hover { color: #fff !important; border-color: var(--accent) !important; transform: translateY(-3px); box-shadow: 0 9px 0 #000, 0 12px 20px rgba(0,0,0,0.7), 0 0 25px rgba(0, 217, 255, 0.5); }
+div.levon-page .btn-primary:hover { color: #fff !important; border-color: var(--accent) !important; transform: translateY(-3px); box-shadow: 0 9px 0 #000, 0 12px 20px rgba(0,0,0,0.7), 0 0 25px rgba(255, 255, 255, 0.5); }
 div.levon-page .btn-outline-hero { 
   padding: 12px 24px; font-size: 0.95rem; border: 1px solid var(--border-light); border-radius: 6px; 
   font-weight: 700; background: rgba(255,255,255,0.05); text-transform: uppercase; letter-spacing: 1px; 
   display: inline-flex; align-items: center; gap: 8px; text-decoration: none !important; color: var(--text) !important; 
 }
-div.levon-page .btn-outline-hero:hover { background: rgba(0,217,255,0.1); border-color: var(--accent) !important; color: #fff !important; }
+div.levon-page .btn-outline-hero:hover { background: rgba(255,255,255,0.1); border-color: var(--accent) !important; color: #fff !important; }
 
 /* ✅ BANDEAU D'ÉVÉNEMENTS DÉFILANT */
 div.levon-page .event-ticker-wrapper { 
@@ -161,7 +161,7 @@ div.levon-page .hero-inner {
   width: 100%;
 }
 
-div.levon-page .hero-tag { display: inline-block !important; padding: 8px 16px; border: 1px solid var(--border-light); border-radius: 20px; font-size: 0.75rem; font-weight: 700; color: var(--accent) !important; margin-bottom: 24px; background: rgba(0, 217, 255, 0.1) !important; }
+div.levon-page .hero-tag { display: inline-block !important; padding: 8px 16px; border: 1px solid var(--border-light); border-radius: 20px; font-size: 0.75rem; font-weight: 700; color: var(--accent) !important; margin-bottom: 24px; background: rgba(255, 255, 255, 0.1) !important; }
 div.levon-page .hero-title { font-size: clamp(2.5rem, 5vw, 4.5rem) !important; font-weight: 900 !important; line-height: 1.1 !important; letter-spacing: -2px; margin-bottom: 24px; max-width: 900px; color: #fff !important; }
 div.levon-page .hero-title span { color: var(--accent) !important; }
 div.levon-page .hero-desc { font-size: 1.1rem; color: var(--text-muted) !important; max-width: 600px; margin-bottom: 40px; }
@@ -180,7 +180,7 @@ div.levon-page .section-title { font-size: 1.4rem; font-weight: 800; color: #fff
 /* CARTES ET CONTENEURS */
 div.levon-page .about-grid, div.levon-page .service-card, div.levon-page .sidebar-widget, div.levon-page .tracklist { 
   background: linear-gradient(145deg, rgba(13, 22, 33, 0.95), rgba(6, 13, 20, 0.95)) !important; 
-  backdrop-filter: blur(10px); border: 1px solid rgba(0, 217, 255, 0.15) !important; 
+  backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.15) !important; 
   border-radius: 16px !important; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5) !important; 
   transition: all 0.3s ease; 
 }
@@ -198,7 +198,7 @@ div.levon-page .about-grid {
 div.levon-page .about-text { min-width: 0 !important; word-wrap: break-word !important; }
 div.levon-page .about-text h3 { font-size: 1.3rem; font-weight: 800; margin-bottom: 16px; color: #fff !important; }
 div.levon-page .about-text p { color: var(--text-muted) !important; margin-bottom: 24px; }
-div.levon-page .member-box { margin-bottom: 20px; padding: 10px 16px; border-left: 3px solid var(--accent); background: rgba(0,217,255,0.05); }
+div.levon-page .member-box { margin-bottom: 20px; padding: 10px 16px; border-left: 3px solid var(--accent); background: rgba(255,255,255,0.05); }
 div.levon-page .member-box h4 { color: #fff !important; font-weight: 700; }
 div.levon-page .member-box p { color: var(--text-muted) !important; margin: 0; font-size: 0.9rem; }
 
@@ -225,7 +225,7 @@ div.levon-page .service-card p { color: var(--text-muted) !important; font-size:
 /* TRACKLIST */
 div.levon-page .track-header { display: grid !important; grid-template-columns: 60px 2fr 1fr 80px; gap: 16px; padding: 20px 24px; border-bottom: 1px solid var(--border); color: var(--accent) !important; font-weight: 700; text-transform: uppercase; font-size: 0.75rem; }
 div.levon-page .track-row { display: grid !important; grid-template-columns: 60px 2fr 1fr 80px; gap: 16px; align-items: center !important; padding: 16px 24px; border-bottom: 1px solid var(--border); cursor: pointer; }
-div.levon-page .track-row:hover { background: rgba(0, 217, 255, 0.05); }
+div.levon-page .track-row:hover { background: rgba(255, 255, 255, 0.05); }
 div.levon-page .track-play { width: 40px; height: 40px; border-radius: 50%; background: #112436; display: flex !important; justify-content: center !important; align-items: center !important; color: var(--accent) !important; }
 div.levon-page .track-info h4 { color: #fff !important; font-weight: 700; margin: 0; font-size: 1rem; }
 div.levon-page .track-info p { color: var(--text-muted) !important; margin: 0; font-size: 0.85rem; }
@@ -248,7 +248,7 @@ div.levon-page .event-item p { color: var(--text-muted) !important; font-size: 0
 /* UPSELL (VENTE) */
 div.levon-page .upsell-section { padding-block: 100px; background: linear-gradient(180deg, var(--bg) 0%, #0a121a 100%) !important; border-top: 1px solid var(--border); }
 div.levon-page .upsell-grid { display: grid !important; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center !important; }
-div.levon-page .upsell-tag { display: inline-block !important; padding: 6px 12px; border: 1px solid var(--accent); border-radius: 20px; font-size: 0.7rem; font-weight: 800; color: var(--accent) !important; background: rgba(0,217,255,0.1); text-transform: uppercase; margin-bottom: 20px; }
+div.levon-page .upsell-tag { display: inline-block !important; padding: 6px 12px; border: 1px solid var(--accent); border-radius: 20px; font-size: 0.7rem; font-weight: 800; color: var(--accent) !important; background: rgba(255,255,255,0.1); text-transform: uppercase; margin-bottom: 20px; }
 div.levon-page .upsell-text h2 { font-size: 2.5rem; font-weight: 900; color: #fff !important; margin-bottom: 20px; }
 div.levon-page .upsell-text p { font-size: 1.1rem; color: var(--text-muted) !important; margin-bottom: 30px; }
 div.levon-page .upsell-visual { display: flex !important; justify-content: center !important; }
@@ -262,13 +262,13 @@ div.levon-page .contact-email { display: inline-flex !important; align-items: ce
 div.levon-page .footer { border-top: 1px solid var(--border); padding: 32px 0; text-align: center; color: var(--text-muted) !important; font-size: 0.85rem; }
 
 /* LECTEUR AUDIO FLOTTANT */
-div.levon-page .audio-player { position: fixed !important; bottom: 0; left: 0; right: 0; z-index: 2000 !important; background: rgba(10, 18, 26, 0.98) !important; backdrop-filter: blur(15px); border-top: 1px solid rgba(0, 217, 255, 0.3) !important; display: flex !important; align-items: center !important; padding: 15px 24px; gap: 20px; transform: translateY(100%); transition: transform 0.4s ease; }
+div.levon-page .audio-player { position: fixed !important; bottom: 0; left: 0; right: 0; z-index: 2000 !important; background: rgba(10, 18, 26, 0.98) !important; backdrop-filter: blur(15px); border-top: 1px solid rgba(255, 255, 255, 0.3) !important; display: flex !important; align-items: center !important; padding: 15px 24px; gap: 20px; transform: translateY(100%); transition: transform 0.4s ease; }
 div.levon-page .audio-player.active { transform: translateY(0) !important; }
 div.levon-page .audio-info { flex: 1 !important; min-width: 0; display: flex !important; flex-direction: column !important; }
 div.levon-page .audio-title { font-size: 1rem; font-weight: 800; color: #fff !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 div.levon-page .audio-artist { font-size: 0.8rem; color: var(--accent) !important; font-weight: 600; }
 div.levon-page .audio-controls { display: flex !important; align-items: center !important; gap: 16px; }
-div.levon-page .audio-btn { width: 50px !important; height: 50px !important; border-radius: 50% !important; background: linear-gradient(180deg, #112436 0%, #08111a 100%) !important; color: var(--accent) !important; display: flex !important; align-items: center !important; justify-content: center !important; font-size: 1.2rem; border: 1px solid rgba(0, 217, 255, 0.4) !important; }
+div.levon-page .audio-btn { width: 50px !important; height: 50px !important; border-radius: 50% !important; background: linear-gradient(180deg, #112436 0%, #08111a 100%) !important; color: var(--accent) !important; display: flex !important; align-items: center !important; justify-content: center !important; font-size: 1.2rem; border: 1px solid rgba(255, 255, 255, 0.4) !important; }
 div.levon-page .audio-btn:hover { color: #fff !important; border-color: var(--accent) !important; }
 div.levon-page .audio-progress-wrap { flex: 2 !important; display: flex !important; align-items: center !important; gap: 12px; }
 div.levon-page .audio-progress { flex: 1 !important; height: 8px; background: #000 !important; border-radius: 4px; cursor: pointer; }
@@ -300,9 +300,9 @@ div.levon-page .audio-time { font-size: 0.8rem; color: var(--text-muted) !import
     from 0deg, 
     transparent 0%, 
     transparent 60%, 
-    var(--accent, #00d9ff) 80%, 
+    var(--accent, #ffffff) 80%, 
     #ffffff 90%, 
-    var(--accent, #00d9ff) 100%
+    var(--accent, #ffffff) 100%
   );
   animation: borderRotate 4s linear infinite;
   z-index: -2; 

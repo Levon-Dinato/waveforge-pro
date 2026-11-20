@@ -70,7 +70,7 @@ export const HomePage = () => {
     btnPrimaryText: isDark ? '#000000' : '#ffffff',
     btnSecondaryBg: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
     btnSecondaryBorder: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
-    accent: '#00d9ff',
+    accent: '#ffffff',
     footerBg: isDark ? '#050505' : '#ffffff',
   };
 
@@ -225,7 +225,7 @@ export const HomePage = () => {
 
           <div style={{ position: 'relative', padding: isMobile ? '20px' : '64px', zIndex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%', maxWidth: 620 }}>
 
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(0, 217, 255, 0.1)', border: '1px solid rgba(0, 217, 255, 0.3)', padding: '6px 12px', borderRadius: 20, fontSize: 10, fontWeight: 700, color: colors.accent, width: 'fit-content', marginBottom: 16, letterSpacing: '1px' }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255, 255, 255, 0.3)', padding: '6px 12px', borderRadius: 20, fontSize: 10, fontWeight: 700, color: colors.accent, width: 'fit-content', marginBottom: 16, letterSpacing: '1px' }}>
               <span style={{ width: 6, height: 6, borderRadius: '50%', background: colors.accent, boxShadow: `0 0 8px ${colors.accent}` }} />
               LA PLATEFORME DES DJS INDÉPENDANTS
             </div>
@@ -279,7 +279,7 @@ export const HomePage = () => {
         {featured ? (
           <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, overflow: 'hidden', height: isMobile ? 'auto' : 320, position: 'relative' }}>
             <div style={{ width: isMobile ? '100%' : 320, height: isMobile ? 200 : '100%', background: featured.cover_url ? `url(${featured.cover_url}) center/cover` : colors.textDark, position: 'relative', flexShrink: 0 }}>
-              <div style={{ position: 'absolute', top: 16, left: 16, background: '#ff3366', color: '#fff', padding: '4px 12px', borderRadius: 30, fontSize: 10, fontWeight: 900, letterSpacing: '1px', zIndex: 2, display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div style={{ position: 'absolute', top: 16, left: 16, background: '#b0b0b0', color: '#fff', padding: '4px 12px', borderRadius: 30, fontSize: 10, fontWeight: 900, letterSpacing: '1px', zIndex: 2, display: 'flex', alignItems: 'center', gap: 6 }}>
                 {Icons.star} À LA UNE
               </div>
             </div>
@@ -289,7 +289,7 @@ export const HomePage = () => {
               <div style={{ fontSize: isMobile ? 14 : 18, color: colors.textMuted, marginBottom: 20 }}>{featured.artist}</div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-                <button onClick={playFeatured} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: isMobile ? '10px 20px' : '14px 28px', background: isFeaturedPlaying ? 'rgba(0, 217, 255, 0.15)' : colors.accent, color: isFeaturedPlaying ? colors.accent : '#000', border: isFeaturedPlaying ? `1px solid ${colors.accent}` : 'none', borderRadius: 30, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                <button onClick={playFeatured} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: isMobile ? '10px 20px' : '14px 28px', background: isFeaturedPlaying ? 'rgba(255, 255, 255, 0.15)' : colors.accent, color: isFeaturedPlaying ? colors.accent : '#000', border: isFeaturedPlaying ? `1px solid ${colors.accent}` : 'none', borderRadius: 30, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
                   {isFeaturedPlaying ? <>{Icons.pause} En lecture</> : <>{Icons.play} Écouter</>}
                 </button>
                 <div style={{ display: 'flex', gap: 6 }}>
@@ -394,8 +394,8 @@ export const HomePage = () => {
           <section>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 20 }}>
               <div>
-                <div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: '#ff3366', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#ff3366', animation: 'pulse 1.5s infinite' }} />
+                <div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: '#b0b0b0', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#b0b0b0', animation: 'pulse 1.5s infinite' }} />
                   En Direct
                 </div>
                 <h2 style={{ fontSize: isMobile ? 20 : 28, fontWeight: 900, color: colors.textMain, margin: 0, letterSpacing: '-0.5px' }}>Radios de la communauté</h2>
@@ -408,13 +408,13 @@ export const HomePage = () => {
             <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 16 }}>
               {artists.slice(0, 3).map((artist) => (
                 <Link key={artist.id} to={`/radio/${artist.username}`} style={{ display: 'flex', alignItems: 'center', gap: 16, background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 16, textDecoration: 'none', transition: 'all 0.2s' }}
-                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#ff3366'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#b0b0b0'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
                   onMouseLeave={(e) => { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.transform = 'translateY(0)'; }}
                 >
-                  <div style={{ width: 60, height: 60, borderRadius: '50%', background: artist.avatar_url ? `url(${artist.avatar_url}) center/cover` : colors.textDark, flexShrink: 0, border: '2px solid rgba(255, 51, 102, 0.3)' }} />
+                  <div style={{ width: 60, height: 60, borderRadius: '50%', background: artist.avatar_url ? `url(${artist.avatar_url}) center/cover` : colors.textDark, flexShrink: 0, border: '2px solid rgba(176, 176, 176, 0.3)' }} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 15, fontWeight: 800, color: colors.textMain, marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{artist.username}</div>
-                    <div style={{ fontSize: 12, color: '#ff3366', fontWeight: 600 }}>Écouter la radio →</div>
+                    <div style={{ fontSize: 12, color: '#b0b0b0', fontWeight: 600 }}>Écouter la radio →</div>
                   </div>
                 </Link>
               ))}

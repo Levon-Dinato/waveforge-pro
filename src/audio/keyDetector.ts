@@ -248,14 +248,14 @@ function clamp(value: number, min: number, max: number) {
 
 export function getCamelotColor(camelot: string): string {
   const colors: Record<string, string> = {
-    '1A': '#ff5c5c', '1B': '#ff5c5c',
+    '1A': '#b0b0b0', '1B': '#b0b0b0',
     '2A': '#ff8c00', '2B': '#ff8c00',
-    '3A': '#ffd43b', '3B': '#ffd43b',
+    '3A': '#b0b0b0', '3B': '#b0b0b0',
     '4A': '#a0ff5c', '4B': '#a0ff5c',
     '5A': '#5cff8c', '5B': '#5cff8c',
     '6A': '#5cffe5', '6B': '#5cffe5',
     '7A': '#5c8cff', '7B': '#5c8cff',
-    '8A': '#7c5cff', '8B': '#7c5cff',
+    '8A': '#b0b0b0', '8B': '#b0b0b0',
     '9A': '#d45cff', '9B': '#d45cff',
     '10A': '#ff5ce5', '10B': '#ff5ce5',
     '11A': '#ff5c8c', '11B': '#ff5c8c',

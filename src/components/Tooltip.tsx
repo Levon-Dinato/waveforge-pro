@@ -73,7 +73,7 @@ export function Tooltip({ text, children, position = 'top' }: Props) {
             textAlign: 'center',
             zIndex: 99999,
             boxShadow:
-              '0 4px 24px rgba(0, 0, 0, 0.9), 0 0 24px rgba(0, 217, 255, 0.4)',
+              '0 4px 24px rgba(0, 0, 0, 0.9), 0 0 24px rgba(255, 255, 255, 0.4)',
             pointerEvents: 'none',
             lineHeight: 1.4,
           }}

@@ -8,7 +8,7 @@ interface ToggleSwitchProps {
   color?: string;
 }
 
-export const ToggleSwitch: React.FC<ToggleSwitchProps> = ({ isActive, onClick, label, color = '#00d9ff' }) => {
+export const ToggleSwitch: React.FC<ToggleSwitchProps> = ({ isActive, onClick, label, color = '#ffffff' }) => {
   return (
     <button
       onClick={onClick}

@@ -83,7 +83,7 @@ export const ReleaseCard: React.FC<ReleaseCardProps> = ({
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             {track.purchase_url && (
-              <a href={track.purchase_url} target="_blank" rel="noopener noreferrer" style={{ background: 'transparent', border: `1px solid #00d9ff`, color: '#00d9ff', padding: '10px 16px', borderRadius: 8, fontSize: 12, fontWeight: 700, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <a href={track.purchase_url} target="_blank" rel="noopener noreferrer" style={{ background: 'transparent', border: `1px solid #ffffff`, color: '#ffffff', padding: '10px 16px', borderRadius: 8, fontSize: 12, fontWeight: 700, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 8 }}>
                 Acheter
               </a>
             )}

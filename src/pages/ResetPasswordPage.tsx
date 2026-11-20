@@ -90,11 +90,11 @@ export const ResetPasswordPage: React.FC = () => {
             padding: '40px',
             maxWidth: 420,
             margin: '0 auto',
-            borderColor: 'rgba(0, 255, 136, 0.4)',
+            borderColor: 'rgba(176, 176, 176, 0.4)',
           }}
         >
           <div style={{ fontSize: 40, marginBottom: 16 }}>✅</div>
-          <h2 style={{ fontSize: '1.1rem', marginBottom: 8, color: '#00ff88' }}>
+          <h2 style={{ fontSize: '1.1rem', marginBottom: 8, color: '#b0b0b0' }}>
             Mot de passe modifié !
           </h2>
           <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem' }}>
@@ -120,7 +120,7 @@ export const ResetPasswordPage: React.FC = () => {
           padding: '32px',
           maxWidth: 420,
           width: '100%',
-          borderColor: 'rgba(0, 217, 255, 0.3)',
+          borderColor: 'rgba(255, 255, 255, 0.3)',
         }}
       >
         <div style={{ textAlign: 'center', marginBottom: '24px' }}>
@@ -129,13 +129,13 @@ export const ResetPasswordPage: React.FC = () => {
               width: 56,
               height: 56,
               borderRadius: 14,
-              background: 'linear-gradient(135deg, #00d9ff, #0088ff)',
+              background: 'linear-gradient(135deg, #ffffff, #b0b0b0)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               fontSize: 26,
               margin: '0 auto 12px',
-              boxShadow: '0 0 24px rgba(0, 217, 255, 0.5)',
+              boxShadow: '0 0 24px rgba(255, 255, 255, 0.5)',
             }}
           >
             🔐
@@ -189,7 +189,7 @@ export const ResetPasswordPage: React.FC = () => {
             style={{
               marginTop: 8,
               padding: '12px',
-              background: loading ? '#666' : 'linear-gradient(135deg, #00d9ff, #0088ff)',
+              background: loading ? '#666' : 'linear-gradient(135deg, #ffffff, #b0b0b0)',
               color: '#000',
               border: 'none',
               borderRadius: 8,

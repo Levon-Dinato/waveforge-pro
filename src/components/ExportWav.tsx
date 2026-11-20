@@ -204,7 +204,7 @@ export function ExportWav({
               className="btn-action"
               onClick={handleExportVocalsOnly}
               disabled={isRendering}
-              style={{ borderColor: 'rgba(255, 51, 102, 0.3)' }}
+              style={{ borderColor: 'rgba(176, 176, 176, 0.3)' }}
             >
               🎤 VOIX SEULE (.wav)
             </button>
@@ -215,7 +215,7 @@ export function ExportWav({
               className="btn-action"
               onClick={handleExportInstruOnly}
               disabled={isRendering}
-              style={{ borderColor: 'rgba(0, 255, 136, 0.3)' }}
+              style={{ borderColor: 'rgba(176, 176, 176, 0.3)' }}
             >
               🎸 INSTRU SEUL (.wav)
             </button>
@@ -228,8 +228,8 @@ export function ExportWav({
             className="fade-in"
             style={{
               padding: 8,
-              background: 'rgba(0, 217, 255, 0.08)',
-              border: '1px solid rgba(0, 217, 255, 0.3)',
+              background: 'rgba(255, 255, 255, 0.08)',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
               borderRadius: 6,
               fontSize: 12,
               color: 'var(--cyan)',
@@ -247,14 +247,14 @@ export function ExportWav({
             style={{
               padding: 8,
               background: lastExport.startsWith('✅')
-                ? 'rgba(0, 255, 136, 0.08)'
-                : 'rgba(255, 51, 102, 0.08)',
+                ? 'rgba(176, 176, 176, 0.08)'
+                : 'rgba(176, 176, 176, 0.08)',
               border: lastExport.startsWith('✅')
-                ? '1px solid rgba(0, 255, 136, 0.3)'
-                : '1px solid rgba(255, 51, 102, 0.3)',
+                ? '1px solid rgba(176, 176, 176, 0.3)'
+                : '1px solid rgba(176, 176, 176, 0.3)',
               borderRadius: 6,
               fontSize: 12,
-              color: lastExport.startsWith('✅') ? 'var(--green)' : '#ff3366',
+              color: lastExport.startsWith('✅') ? 'var(--green)' : '#b0b0b0',
             }}
           >
             {lastExport}

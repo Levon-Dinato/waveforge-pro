@@ -48,7 +48,7 @@ export function TimelineMarkers({
               bottom: 0,
               width: 1,
               background: isMajor
-                ? 'rgba(0, 217, 255, 0.3)'
+                ? 'rgba(255, 255, 255, 0.3)'
                 : 'rgba(255, 255, 255, 0.05)',
             }}
           />

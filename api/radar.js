@@ -13,7 +13,11 @@ const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const COUNTRY = 'fr';
 const GENRES = [
   { id: '17', label: 'Dance' },
-  { id: '18', label: 'Electronic' },
+  { id: '7', label: 'Electronic' },
+  { id: '18', label: 'Hip-hop/Rap' },
+  { id: '12', label: 'Latin' },
+  { id: '14', label: 'Pop' },
+  { id: '15', label: 'R&B/Soul' },
 ];
 const LIMIT = 100; // titres récupérés par genre
 

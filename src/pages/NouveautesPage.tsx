@@ -1009,7 +1009,7 @@ export const NouveautesPage: React.FC = () => {
             <aside style={{ width: 280, flexShrink: 0, position: 'sticky', top: 100, display: 'flex', flexDirection: 'column', gap: 24 }}>
               <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 20, boxShadow: isDark ? 'none' : '0 4px 20px rgba(0,0,0,0.05)' }}>
                 <h3 style={{ fontSize: 12, fontWeight: 800, letterSpacing: '1px', margin: '0 0 16px 0', color: colors.textMain, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ color: '#ffffff' }}>🔥</span> Top 10
+                  <span style={{ color: colors.accent }}>🔥</span> Top 10
                 </h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                   {tracks.slice(0, 10).map((track, index) => (
@@ -1052,7 +1052,7 @@ export const NouveautesPage: React.FC = () => {
                   <div>
                     <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6, fontWeight: 600 }}>Fichier Audio (MP3, WAV) *</label>
                     <input type="file" accept="audio/*" onChange={handleAudioFileChange} required style={{ width: '100%', padding: 10, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain }} />
-                    {audioFile && <p style={{ fontSize: 11, color: '#ffffff', marginTop: 4, fontWeight: 600 }}>Fichier sélectionné : {audioFile.name}</p>}
+                    {audioFile && <p style={{ fontSize: 11, color: colors.textMain, marginTop: 4, fontWeight: 600 }}>Fichier sélectionné : {audioFile.name}</p>}
                   </div>
 
                   <div>
@@ -1061,7 +1061,7 @@ export const NouveautesPage: React.FC = () => {
                     {coverFile && (
                       <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 10 }}>
                         <img src={URL.createObjectURL(coverFile)} alt="Cover preview" style={{ width: 50, height: 50, borderRadius: 6, objectFit: 'cover', border: `1px solid ${colors.border}` }} />
-                        <span style={{ fontSize: 11, color: '#ffffff', fontWeight: 600 }}>Pochette chargée ✓</span>
+                        <span style={{ fontSize: 11, color: colors.textMain, fontWeight: 600 }}>Pochette chargée ✓</span>
                       </div>
                     )}
                   </div>

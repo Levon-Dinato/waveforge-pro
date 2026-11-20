@@ -27,6 +27,7 @@ export const RadioManagerPage: React.FC = () => {
 
   const [showJingleModal, setShowJingleModal] = useState(false);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [showLiveGuide, setShowLiveGuide] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   
@@ -515,12 +516,61 @@ export const RadioManagerPage: React.FC = () => {
         )}
       </div>
 
-      <div className="dash-card" style={{ padding: 20, marginBottom: 24, display: 'flex', gap: 20, alignItems: 'center', flexWrap: 'wrap', borderLeft: isLive ? `3px solid ${colors.danger}` : `3px solid ${colors.border}` }}>
-        <div style={{ flex: 1, minWidth: 250 }}>
-          <h2 style={{ margin: '0 0 8px 0', fontSize: 14, fontWeight: 600 }}>{isLive ? '🔴 Direct en cours' : 'Direct Audio'}</h2>
-          <input type="text" placeholder="Lien du flux (Mixlr, Icecast...)" value={liveUrl} onChange={(e) => setLiveUrl(e.target.value)} disabled={isLive} className="dash-input" />
+      <div className="dash-card" style={{ padding: 24, marginBottom: 24, borderLeft: isLive ? `3px solid ${colors.danger}` : `3px solid ${colors.accent}`, background: isLive ? 'rgba(176,176,176,0.06)' : colors.panelBg }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap', marginBottom: 16 }}>
+          <div>
+            <h2 style={{ margin: '0 0 6px 0', fontSize: 16, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 8 }}>
+              {isLive ? '🔴 Direct en cours' : '🎙️ Direct Audio'}
+            </h2>
+            <p style={{ margin: 0, fontSize: 13, color: colors.textMuted }}>
+              {isLive
+                ? 'Tu es en direct : tous tes auditeurs écoutent ton flux en temps réel.'
+                : 'Diffuse en direct avec ta voix ou un logiciel DJ (OBS, BUTT…) en collant simplement ton lien de flux.'}
+            </p>
+          </div>
+          <button onClick={() => setShowLiveGuide(!showLiveGuide)} className="dash-btn dash-btn-secondary" style={{ fontSize: 12 }}>
+            {showLiveGuide ? 'Masquer le guide' : '📖 Comment diffuser ?'}
+          </button>
         </div>
-        <button onClick={toggleLiveStatus} disabled={saving} className={`dash-btn ${isLive ? 'dash-btn-danger' : 'dash-btn-primary'}`}>{isLive ? 'Arrêter' : 'Passer en Direct'}</button>
+
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+          <div style={{ flex: 1, minWidth: 260 }}>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 700, marginBottom: 6, color: colors.textMuted }}>Lien du flux audio (URL de diffusion)</label>
+            <input type="text" placeholder="Ex: http://ton-serveur:8000/live" value={liveUrl} onChange={(e) => setLiveUrl(e.target.value)} disabled={isLive} className="dash-input" />
+          </div>
+          <button onClick={toggleLiveStatus} disabled={saving} className={`dash-btn ${isLive ? 'dash-btn-danger' : 'dash-btn-primary'}`} style={{ alignSelf: 'flex-end' }}>
+            {isLive ? '■ Arrêter le direct' : '▶ Passer en Direct'}
+          </button>
+        </div>
+
+        {showLiveGuide && (
+          <div style={{ marginTop: 20, padding: 20, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 12, fontSize: 13, lineHeight: 1.7 }}>
+            <h3 style={{ margin: '0 0 12px 0', fontSize: 13, fontWeight: 800 }}>Comment diffuser en direct (gratuit)</h3>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <span style={{ flexShrink: 0, width: 22, height: 22, borderRadius: '50%', background: colors.accent, color: isDark ? '#000' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 900 }}>1</span>
+                <div><strong>Prépare ton flux.</strong> Utilise un logiciel gratuit (OBS Studio, BUTT) qui envoie ton son vers un serveur Icecast. Ce serveur peut être un VPS (~4€/mois) ou un hébergeur radio gratuit.</div>
+              </div>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <span style={{ flexShrink: 0, width: 22, height: 22, borderRadius: '50%', background: colors.accent, color: isDark ? '#000' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 900 }}>2</span>
+                <div><strong>Récupère l'URL d'écoute</strong> de ton flux (elle ressemble à <code style={{ background: colors.border, padding: '2px 6px', borderRadius: 4 }}>http://…/live</code>). C'est le lien que tes auditeurs utiliseront.</div>
+              </div>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <span style={{ flexShrink: 0, width: 22, height: 22, borderRadius: '50%', background: colors.accent, color: isDark ? '#000' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 900 }}>3</span>
+                <div><strong>Colle ce lien</strong> dans le champ ci-dessus et clique « Passer en Direct ». Ta radio bascule instantanément en live pour tous.</div>
+              </div>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <span style={{ flexShrink: 0, width: 22, height: 22, borderRadius: '50%', background: colors.accent, color: isDark ? '#000' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 900 }}>4</span>
+                <div><strong>Termine</strong> en cliquant « Arrêter le direct » : la radio revient automatiquement à ta playlist.</div>
+              </div>
+            </div>
+
+            <p style={{ margin: '16px 0 0 0', fontSize: 12, color: colors.textMuted }}>
+              💡 Pas encore de serveur ? Le plus rapide : un hébergeur radio gratuit, ou un mini VPS avec Icecast. (Une diffusion directe directement depuis le micro du navigateur arrivera dans une prochaine mise à jour.)
+            </p>
+          </div>
+        )}
       </div>
 
       <div style={{ display: 'flex', gap: 6, marginBottom: 24, borderBottom: `1px solid ${colors.border}`, paddingBottom: 12, overflowX: 'auto', flexWrap: 'nowrap' }}>

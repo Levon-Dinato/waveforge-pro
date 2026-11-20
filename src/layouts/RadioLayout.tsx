@@ -221,9 +221,11 @@ export const RadioLayout: React.FC = () => {
           setTopTracks([...musicTracks].sort((a: any, b: any) => (b.likes_count || 0) - (a.likes_count || 0)));
           setLatestReleases([...musicTracks].sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
 
-          if (!isRadioStartedRef.current && !isRadioActiveRef.current) {
+          if (!isRadioStartedRef.current) {
             isRadioStartedRef.current = true;
-            startRadio(mixedTracks, profileData.is_live || false, profileData.live_url || '', startIndex, t);
+            // ✅ force=true : repositionne toujours la radio au point calculé par l'epoch,
+            // même au rechargement de la page (radio synchronisée, pas de retour au début).
+            startRadio(mixedTracks, profileData.is_live || false, profileData.live_url || '', startIndex, t, true);
           }
         }
 
@@ -298,11 +300,8 @@ export const RadioLayout: React.FC = () => {
 
   const handleOpenPlayer = () => {
     const url = `/player/${username}`;
-    if (isMobile) {
-      navigate(url);
-    } else {
-      window.open(url, 'RadioPlayer', 'width=420,height=700,scrollbars=no,resizable=yes,status=no,location=no,toolbar=no,menubar=no');
-    }
+    // ✅ On ouvre TOUJOURS le popup (même sur mobile, où window.open ouvre un nouvel onglet).
+    window.open(url, 'RadioPlayer', 'width=420,height=700,scrollbars=no,resizable=yes,status=no,location=no,toolbar=no,menubar=no');
   };
 
   const handlePlayRadio = () => {

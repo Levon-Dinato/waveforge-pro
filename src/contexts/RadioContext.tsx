@@ -14,7 +14,7 @@ export interface RadioContextType {
   liveUrl: string;
   isRadioActive: boolean;
   needsGesture: boolean;
-  startRadio: (newTracks: any[], live: boolean, url: string, startIndex?: number, startTime?: number) => void;
+  startRadio: (newTracks: any[], live: boolean, url: string, startIndex?: number, startTime?: number, force?: boolean) => void;
   updateRadioSettings: (crossfadeEnabled: boolean, crossfadeDuration: number) => void;
   togglePlay: () => void;
   playNext: () => void;
@@ -138,8 +138,10 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     setCrossfadeDuration(dur);
   }, []);
 
-  const startRadio = useCallback((newTracks: any[], live: boolean, url: string, startIndex: number = 0, startTime?: number) => {
-    if (isActiveRef.current && tracks.length > 0) return;
+  const startRadio = useCallback((newTracks: any[], live: boolean, url: string, startIndex: number = 0, startTime?: number, force: boolean = false) => {
+    // ✅ En mode forcé (chargement initial), on repositionne toujours sur le point calculé
+    // par l'epoch pour une radio réellement synchronisée, même si l'état persisté dit "active".
+    if (!force && isActiveRef.current && tracks.length > 0) return;
 
     isActiveRef.current = true;
     stopMainPlayer();

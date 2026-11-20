@@ -4,7 +4,7 @@ import { useOutletContext } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
 export const RadioProgramPage: React.FC = () => {
-  const { schedules, visualizerColor, colors } = useOutletContext<any>();
+  const { schedules, visualizerColor, colors, iconColor } = useOutletContext<any>();
 
   const DAYS = [
     { id: '1', label: 'Lundi' },
@@ -88,7 +88,7 @@ export const RadioProgramPage: React.FC = () => {
                         boxShadow: isLive ? `0 0 20px ${visualizerColor}30` : 'none',
                         position: 'relative', overflow: 'hidden'
                       }}>
-                        <div style={{ fontSize: 14, fontWeight: 900, color: isLive ? '#fff' : visualizerColor, background: isLive ? visualizerColor : `${visualizerColor}15`, padding: '6px 12px', borderRadius: 8, whiteSpace: 'nowrap', zIndex: 1 }}>
+                        <div style={{ fontSize: 14, fontWeight: 900, color: isLive ? iconColor : visualizerColor, background: isLive ? visualizerColor : `${visualizerColor}15`, padding: '6px 12px', borderRadius: 8, whiteSpace: 'nowrap', zIndex: 1 }}>
                           {schedule.start_time.slice(0, 5)}
                         </div>
                         

@@ -102,7 +102,7 @@ export const RadioTopPage: React.FC = () => {
 
               const isFirst = order === 0;
               const isLiked = likedTracks.includes(item.id);
-              const medals = ['#ffd700', '#c0c0c0', '#cd7f32'];
+              const medals = ['#ffffff', '#b0b0b0', '#888888'];
 
               return (
                 <motion.div 

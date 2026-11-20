@@ -14,7 +14,7 @@ export const RadioHomePage: React.FC = () => {
   const { isPlaying, currentTrack } = useRadio();
   
   const { 
-    profile, radioTracks, listeners, colors, visualizerColor, iconColor,
+    profile, radioTracks, listeners, colors, visualizerColor, iconColor, titleColor,
     socials, coverImage, totalLikes, SocialLink, recentTracks, handlePlayRadio 
   } = useOutletContext<any>();
 
@@ -69,7 +69,7 @@ export const RadioHomePage: React.FC = () => {
                 <React.Fragment key={i}><span style={{ display: 'inline-block' }}>{[...w].map((c, ci) => (<span key={ci} style={{ display: 'inline-block', opacity: 0, transform: 'translateY(24px)', animation: `letterIn 0.6s cubic-bezier(0.2,0.8,0.2,1) ${(i * 5 + ci) * 0.03}s forwards` }}>{c}</span>))}</span>{' '}</React.Fragment>
               ))}
               <span style={{ display: 'inline-block' }}>
-                {[...profile.username].map((c: string, ci: number) => (<span key={ci} style={{ display: 'inline-block', opacity: 0, transform: 'translateY(24px)', animation: `letterIn 0.6s cubic-bezier(0.2,0.8,0.2,1) ${(15 + ci) * 0.03}s forwards`, background: `linear-gradient(135deg, ${visualizerColor}, #b0b0b0)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{c}</span>))}
+                {[...profile.username].map((c: string, ci: number) => (<span key={ci} style={{ display: 'inline-block', opacity: 0, transform: 'translateY(24px)', animation: `letterIn 0.6s cubic-bezier(0.2,0.8,0.2,1) ${(15 + ci) * 0.03}s forwards`, background: `linear-gradient(135deg, ${visualizerColor}, ${titleColor})`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{c}</span>))}
               </span>
             </h1>
             <p style={{ fontSize: isMobile ? 14 : 17, color: colors.textMuted, marginBottom: 32, lineHeight: 1.6 }}>{profile.radio_instructions || 'Écoutez la meilleure sélection musicale, en direct et sans interruption.'}</p>
@@ -108,7 +108,7 @@ export const RadioHomePage: React.FC = () => {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20, borderTop: `1px solid ${colors.border}`, paddingTop: 28, maxWidth: 460 }}>
               {[{ n: listeners, l: 'Auditeurs' }, { n: radioTracks.length, l: 'Titres' }, { n: totalLikes, l: 'Likes' }].map((s, i) => (
                 <div key={i}>
-                  <div style={{ fontSize: 28, fontWeight: 900, background: `linear-gradient(135deg, ${visualizerColor}, #b0b0b0)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{s.n}</div>
+                  <div style={{ fontSize: 28, fontWeight: 900, background: `linear-gradient(135deg, ${visualizerColor}, ${titleColor})`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{s.n}</div>
                   <div style={{ fontSize: 10, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700, marginTop: 4 }}>{s.l}</div>
                 </div>
               ))}

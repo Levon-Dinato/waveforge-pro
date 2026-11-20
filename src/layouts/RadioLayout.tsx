@@ -73,6 +73,10 @@ export const RadioLayout: React.FC = () => {
     const cached = sessionStorage.getItem(`radio_profile_${username}`);
     return cached ? JSON.parse(cached).radio_visualizer_color || '#b0b0b0' : '#b0b0b0';
   });
+  const [titleColor, setTitleColor] = useState(() => {
+    const cached = sessionStorage.getItem(`radio_profile_${username}`);
+    return cached ? JSON.parse(cached).radio_title_color || '#ffffff' : '#ffffff';
+  });
   const [socials, setSocials] = useState<any>({});
   const [showToast, setShowToast] = useState(false);
   const [toastMsg, setToastMsg] = useState('');
@@ -149,6 +153,7 @@ export const RadioLayout: React.FC = () => {
         setCustomBgAnimation(profileData.radio_bg_animation || 'aurora');
         setCustomLogo(profileData.radio_custom_logo_url || '');
         setVisualizerColor(profileData.radio_visualizer_color || '#b0b0b0');
+        setTitleColor(profileData.radio_title_color || '#ffffff');
 
         updateRadioSettings(
           profileData.radio_crossfade_enabled || false,
@@ -425,7 +430,7 @@ export const RadioLayout: React.FC = () => {
 
   const outletContext = {
     profile, userProfile, radioTracks, topTracks, latestReleases, schedules, activeSchedule,
-    listeners, colors, visualizerColor, iconColor, socials, coverImage, totalLikes, recentTracks,
+    listeners, colors, visualizerColor, iconColor, titleColor, socials, coverImage, totalLikes, recentTracks,
     handleOpenPlayer, handlePlayRadio, handleTogglePlay, handleSendMessage, messages, newMessage, setNewMessage, isChatOpen, setIsChatOpen, chatEndRef,
     SocialLink
   };

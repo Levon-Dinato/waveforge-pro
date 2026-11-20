@@ -61,6 +61,7 @@ export const RadioManagerPage: React.FC = () => {
   const [uploadingLogo, setUploadingLogo] = useState(false);
 
   const [radioVisualizerColor, setRadioVisualizerColor] = useState('#b0b0b0');
+  const [radioTitleColor, setRadioTitleColor] = useState('#ffffff');
 
   // Réglages Player Popup
   const [playerBgType, setPlayerBgType] = useState('color');
@@ -104,6 +105,7 @@ export const RadioManagerPage: React.FC = () => {
         setRadioLogoUrl(profileData.radio_custom_logo_url || '');
         setRadioInstructions(profileData.radio_instructions || '');
         setRadioVisualizerColor(profileData.radio_visualizer_color || '#b0b0b0');
+        setRadioTitleColor(profileData.radio_title_color || '#ffffff');
         
         setPlayerBgType(profileData.player_bg_type || 'color');
         setPlayerBgValue(profileData.player_bg_value || '#05050a');
@@ -377,6 +379,7 @@ export const RadioManagerPage: React.FC = () => {
       radio_custom_logo_url: radioLogoUrl,
       radio_instructions: radioInstructions,
       radio_visualizer_color: radioVisualizerColor,
+      radio_title_color: radioTitleColor,
       player_bg_type: playerBgType,
       player_bg_value: playerBgValue,
       player_bg_animation: playerBgAnimation
@@ -634,6 +637,15 @@ export const RadioManagerPage: React.FC = () => {
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <input type="color" value={radioVisualizerColor} onChange={(e) => setRadioVisualizerColor(e.target.value)} style={{ width: 50, height: 50, padding: 0, background: 'transparent', border: 'none', cursor: 'pointer', borderRadius: 8 }} />
                 <input type="text" value={radioVisualizerColor} onChange={(e) => setRadioVisualizerColor(e.target.value)} className="dash-input" style={{ flex: 1, fontFamily: 'monospace' }} />
+              </div>
+            </div>
+
+            <div>
+              <h3 style={{ margin: '0 0 12px 0', fontSize: 14, fontWeight: 600 }}>Couleur du titre (bi-ton)</h3>
+              <p style={{ margin: '0 0 12px 0', fontSize: 12, color: colors.textMuted }}>La deuxième couleur du dégradé appliqué au nom du DJ sur la page de la radio.</p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <input type="color" value={radioTitleColor} onChange={(e) => setRadioTitleColor(e.target.value)} style={{ width: 50, height: 50, padding: 0, background: 'transparent', border: 'none', cursor: 'pointer', borderRadius: 8 }} />
+                <input type="text" value={radioTitleColor} onChange={(e) => setRadioTitleColor(e.target.value)} className="dash-input" style={{ flex: 1, fontFamily: 'monospace' }} />
               </div>
             </div>
 

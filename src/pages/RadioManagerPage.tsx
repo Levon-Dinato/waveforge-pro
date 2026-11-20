@@ -63,8 +63,8 @@ export const RadioManagerPage: React.FC = () => {
   const [radioVisualizerColor, setRadioVisualizerColor] = useState('#b0b0b0');
   const [radioTitleColorStart, setRadioTitleColorStart] = useState('#b0b0b0');
   const [radioTitleColor, setRadioTitleColor] = useState('#ffffff');
-  const [radioTitleAngle, setRadioTitleAngle] = useState(135);
-  const [radioTitleBalance, setRadioTitleBalance] = useState(100);
+  const [radioTitleSplitStart, setRadioTitleSplitStart] = useState(0);
+  const [radioTitleSplitEnd, setRadioTitleSplitEnd] = useState(100);
   const [radioTitleText, setRadioTitleText] = useState('Le son de');
   const [radioSlogan, setRadioSlogan] = useState('Play the Beat. Feel the Sound. Live the Experience.');
 
@@ -112,8 +112,8 @@ export const RadioManagerPage: React.FC = () => {
         setRadioVisualizerColor(profileData.radio_visualizer_color || '#b0b0b0');
         setRadioTitleColorStart(profileData.radio_title_color_start || '#b0b0b0');
         setRadioTitleColor(profileData.radio_title_color || '#ffffff');
-        setRadioTitleAngle(profileData.radio_title_angle ?? 135);
-        setRadioTitleBalance(profileData.radio_title_balance ?? 100);
+        setRadioTitleSplitStart(profileData.radio_title_split_start ?? 0);
+        setRadioTitleSplitEnd(profileData.radio_title_split_end ?? 100);
         setRadioTitleText(profileData.radio_title_text || 'Le son de');
         setRadioSlogan(profileData.radio_slogan || 'Play the Beat. Feel the Sound. Live the Experience.');
         
@@ -391,8 +391,8 @@ export const RadioManagerPage: React.FC = () => {
       radio_visualizer_color: radioVisualizerColor,
       radio_title_color_start: radioTitleColorStart,
       radio_title_color: radioTitleColor,
-      radio_title_angle: radioTitleAngle,
-      radio_title_balance: radioTitleBalance,
+      radio_title_split_start: radioTitleSplitStart,
+      radio_title_split_end: radioTitleSplitEnd,
       radio_title_text: radioTitleText,
       radio_slogan: radioSlogan,
       player_bg_type: playerBgType,
@@ -678,22 +678,23 @@ export const RadioManagerPage: React.FC = () => {
 
                 <div>
                   <label style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontWeight: 700, marginBottom: 8, color: colors.textMuted }}>
-                    <span>Angle du dégradé</span>
-                    <span>{radioTitleAngle}°</span>
+                    <span>Zone colorée (lettres concernées)</span>
+                    <span>{radioTitleSplitStart}% → {radioTitleSplitEnd}%</span>
                   </label>
-                  <input type="range" min="0" max="360" step="15" value={radioTitleAngle} onChange={(e) => setRadioTitleAngle(Number(e.target.value))} style={{ width: '100%', accentColor: radioTitleColorStart }} />
+                  <div className="dual-range" style={{ position: 'relative', height: 32 }}>
+                    <div style={{ position: 'absolute', top: 14, left: 0, right: 0, height: 4, background: colors.border, borderRadius: 2 }} />
+                    <div style={{ position: 'absolute', top: 14, left: `${radioTitleSplitStart}%`, width: `${radioTitleSplitEnd - radioTitleSplitStart}%`, height: 4, background: `linear-gradient(90deg, ${radioTitleColorStart}, ${radioTitleColor})`, borderRadius: 2 }} />
+                    <input type="range" min="0" max="100" value={radioTitleSplitStart} onChange={(e) => setRadioTitleSplitStart(Math.min(Number(e.target.value), radioTitleSplitEnd - 1))} style={{ position: 'absolute', top: 0, left: 0, width: '100%', background: 'transparent', pointerEvents: 'none', WebkitAppearance: 'none', appearance: 'none' }} />
+                    <input type="range" min="0" max="100" value={radioTitleSplitEnd} onChange={(e) => setRadioTitleSplitEnd(Math.max(Number(e.target.value), radioTitleSplitStart + 1))} style={{ position: 'absolute', top: 0, left: 0, width: '100%', background: 'transparent', pointerEvents: 'none', WebkitAppearance: 'none', appearance: 'none' }} />
+                    <style>{`
+                      .dual-range input::-webkit-slider-thumb { pointer-events: auto; -webkit-appearance: none; appearance: none; width: 16px; height: 16px; border-radius: 50%; background: #fff; border: 2px solid ${colors.accent}; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.4); }
+                      .dual-range input::-moz-range-thumb { pointer-events: auto; width: 16px; height: 16px; border-radius: 50%; background: #fff; border: 2px solid ${colors.accent}; cursor: pointer; }
+                    `}</style>
+                  </div>
                 </div>
 
-                <div>
-                  <label style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontWeight: 700, marginBottom: 8, color: colors.textMuted }}>
-                    <span>Proportion couleur 1</span>
-                    <span>{radioTitleBalance}%</span>
-                  </label>
-                  <input type="range" min="0" max="100" step="1" value={radioTitleBalance} onChange={(e) => setRadioTitleBalance(Number(e.target.value))} style={{ width: '100%', accentColor: radioTitleColorStart }} />
-                </div>
-
-                <div style={{ padding: 12, borderRadius: 10, background: `linear-gradient(${radioTitleAngle}deg, ${radioTitleColorStart} 0%, ${radioTitleColorStart} ${radioTitleBalance}%, ${radioTitleColor} 100%)`, border: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <span style={{ fontSize: 18, fontWeight: 900, letterSpacing: '1px', color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>Aperçu</span>
+                <div style={{ padding: 12, borderRadius: 10, background: colors.inputBg, border: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <span style={{ fontSize: 18, fontWeight: 900, letterSpacing: '1px', background: `linear-gradient(90deg, ${radioTitleColorStart} 0%, ${radioTitleColorStart} ${radioTitleSplitStart}%, ${radioTitleColor} ${radioTitleSplitStart}%, ${radioTitleColor} ${radioTitleSplitEnd}%, ${radioTitleColorStart} ${radioTitleSplitEnd}%, ${radioTitleColorStart} 100%)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>DROPZONE</span>
                 </div>
               </div>
 

@@ -81,13 +81,13 @@ export const RadioLayout: React.FC = () => {
     const cached = sessionStorage.getItem(`radio_profile_${username}`);
     return cached ? JSON.parse(cached).radio_title_color || '#ffffff' : '#ffffff';
   });
-  const [titleAngle, setTitleAngle] = useState(() => {
+  const [titleSplitStart, setTitleSplitStart] = useState(() => {
     const cached = sessionStorage.getItem(`radio_profile_${username}`);
-    return cached ? JSON.parse(cached).radio_title_angle ?? 135 : 135;
+    return cached ? JSON.parse(cached).radio_title_split_start ?? 0 : 0;
   });
-  const [titleBalance, setTitleBalance] = useState(() => {
+  const [titleSplitEnd, setTitleSplitEnd] = useState(() => {
     const cached = sessionStorage.getItem(`radio_profile_${username}`);
-    return cached ? JSON.parse(cached).radio_title_balance ?? 100 : 100;
+    return cached ? JSON.parse(cached).radio_title_split_end ?? 100 : 100;
   });
   const [titleText, setTitleText] = useState(() => {
     const cached = sessionStorage.getItem(`radio_profile_${username}`);
@@ -183,8 +183,8 @@ export const RadioLayout: React.FC = () => {
         setVisualizerColor(profileData.radio_visualizer_color || '#b0b0b0');
         setTitleColorStart(profileData.radio_title_color_start || '#b0b0b0');
         setTitleColor(profileData.radio_title_color || '#ffffff');
-        setTitleAngle(profileData.radio_title_angle ?? 135);
-        setTitleBalance(profileData.radio_title_balance ?? 100);
+        setTitleSplitStart(profileData.radio_title_split_start ?? 0);
+        setTitleSplitEnd(profileData.radio_title_split_end ?? 100);
         setTitleText(profileData.radio_title_text || 'Le son de');
         setSloganText(profileData.radio_slogan || 'Play the Beat. Feel the Sound. Live the Experience.');
 
@@ -463,7 +463,7 @@ export const RadioLayout: React.FC = () => {
 
   const outletContext = {
     profile, userProfile, radioTracks, topTracks, latestReleases, schedules, activeSchedule,
-    listeners, colors, visualizerColor, iconColor, titleColorStart, titleColor, titleAngle, titleBalance, titleText, socials, coverImage, totalLikes, recentTracks,
+    listeners, colors, visualizerColor, iconColor, titleColorStart, titleColor, titleSplitStart, titleSplitEnd, titleText, socials, coverImage, totalLikes, recentTracks,
     handleOpenPlayer, handlePlayRadio, handleTogglePlay, handleSendMessage, messages, newMessage, setNewMessage, isChatOpen, setIsChatOpen, chatEndRef,
     SocialLink
   };

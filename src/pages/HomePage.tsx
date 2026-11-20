@@ -95,7 +95,7 @@ export const HomePage = () => {
               .from('tracks')
               .select('*')
               .in('user_id', premiumIds) // Filtre par les IDs des premiums
-              .eq('is_jingle', false)    // ✅ CORRECTION : On ignore les jingles
+              .or('is_jingle.is.null,is_jingle.eq.false') // ✅ Ignore les jingles
               .order('created_at', { ascending: false })
               .limit(30);
               

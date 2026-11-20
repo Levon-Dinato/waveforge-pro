@@ -137,7 +137,13 @@ export const NouveautesPage: React.FC = () => {
 
   const loadTracks = async () => {
     setLoading(true);
-    const { data, error } = await supabase.from('tracks').select('*').order('created_at', { ascending: false });
+    // ✅ Exclut les jingles radio (is_jingle = true) de la page Nouveautés.
+    // On garde les morceaux où is_jingle est false OU null (anciens sons sans ce champ).
+    const { data, error } = await supabase
+      .from('tracks')
+      .select('*')
+      .or('is_jingle.is.null,is_jingle.eq.false')
+      .order('created_at', { ascending: false });
     if (!error && data) {
       setTracks(data.map((t: any) => ({ ...t, peaks: Array.isArray(t.peaks) ? t.peaks : [], cover_url: t.cover_url || null, user_id: t.user_id || null, downloads: t.downloads || 0, likes_count: t.likes_count || 0, song_key: t.song_key || null, camelot: t.camelot || null, purchase_url: t.purchase_url || null })));
     }

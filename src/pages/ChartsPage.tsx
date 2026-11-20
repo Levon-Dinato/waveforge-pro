@@ -112,6 +112,7 @@ export const ChartsPage: React.FC = () => {
         const { data, error } = await supabase
           .from('tracks')
           .select('*')
+          .or('is_jingle.is.null,is_jingle.eq.false')
           .order('plays', { ascending: false })
           .limit(50);
 

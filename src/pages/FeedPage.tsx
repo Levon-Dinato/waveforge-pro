@@ -174,7 +174,7 @@ export const FeedPage: React.FC = () => {
           }
         }
 
-        const { data: tracksData } = await supabase.from('tracks').select('*').order('created_at', { ascending: false }).limit(40);
+        const { data: tracksData } = await supabase.from('tracks').select('*').or('is_jingle.is.null,is_jingle.eq.false').order('created_at', { ascending: false }).limit(40);
         const today = new Date().toISOString().split('T')[0];
         const { data: eventsData } = await supabase.from('events').select('*').gte('event_date', today).order('event_date', { ascending: true }).limit(10);
         const { data: postsData } = await supabase.from('artist_posts').select('*, profiles:profile_id(username)').order('created_at', { ascending: false }).limit(20);
@@ -195,7 +195,7 @@ export const FeedPage: React.FC = () => {
         combined.sort((a, b) => b.date.getTime() - a.date.getTime());
         setFeedItems(combined);
 
-        const { data: topData } = await supabase.from('tracks').select('*').order('likes_count', { ascending: false }).limit(5);
+        const { data: topData } = await supabase.from('tracks').select('*').or('is_jingle.is.null,is_jingle.eq.false').order('likes_count', { ascending: false }).limit(5);
         if (topData) setTopTracks(topData as Track[]);
         if (eventsData) setUpcomingEvents(eventsData.slice(0, 3) as DbEvent[]);
 

@@ -44,6 +44,7 @@ export const DiscoverPage: React.FC = () => {
         const { data: tracksData, error: tracksError } = await supabase
           .from('tracks')
           .select('*')
+          .or('is_jingle.is.null,is_jingle.eq.false')
           .order('plays', { ascending: false });
 
         if (tracksError) console.error("Erreur tracks:", tracksError);

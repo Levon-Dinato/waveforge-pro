@@ -36,6 +36,7 @@ export const GenresPage: React.FC = () => {
         const { data, error } = await supabase
           .from('tracks')
           .select('*')
+          .or('is_jingle.is.null,is_jingle.eq.false')
           .order('created_at', { ascending: false });
 
         if (error) throw error;

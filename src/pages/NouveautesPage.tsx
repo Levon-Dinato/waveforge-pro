@@ -589,21 +589,39 @@ export const NouveautesPage: React.FC = () => {
 
           {!isMobile && (
             <aside style={{ width: 240, flexShrink: 0, position: 'sticky', top: 100, alignSelf: 'flex-start' }}>
-              <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: '20px 16px', backdropFilter: 'blur(20px)', boxShadow: isDark ? 'none' : '0 4px 20px rgba(0,0,0,0.05)' }}>
-                <h3 style={{ fontSize: 11, fontWeight: 800, letterSpacing: '1.5px', padding: '0 8px 16px', margin: 0, color: colors.textMuted, textTransform: 'uppercase', borderBottom: `1px solid ${colors.border}` }}>Genres</h3>
-                <div onClick={() => setSelectedGenre(null)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', fontSize: 13, cursor: 'pointer', marginTop: 12, color: selectedGenre === null ? colors.textMain : colors.textMuted, fontWeight: selectedGenre === null ? 700 : 500, background: selectedGenre === null ? (isDark ? 'linear-gradient(90deg, rgba(0, 217, 255, 0.15) 0%, transparent 100%)' : 'rgba(0, 217, 255, 0.1)') : 'transparent', borderLeft: selectedGenre === null ? '3px solid #00d9ff' : '3px solid transparent', borderRadius: '0 8px 8px 0', transition: 'all 0.2s' }}>
-                  <span style={{ color: selectedGenre === null ? '#00d9ff' : colors.textMuted }}>{Icons.music}</span>
-                  <span style={{ flex: 1 }}>Tous les sons</span>
-                  <span style={{ fontSize: 11, color: colors.textMuted, opacity: 0.7 }}>{tracks.length}</span>
-                </div>
-                <div style={{ maxHeight: 'calc(100vh - 300px)', overflowY: 'auto', marginTop: 8, scrollbarGutter: 'stable' }}>
-                  {Array.from(new Set(tracks.map(t => (t.genre || 'Inconnu').trim()))).sort().map((genre) => (
-                    <div key={genre} onClick={() => setSelectedGenre(genre)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', fontSize: 13, cursor: 'pointer', color: selectedGenre === genre ? colors.textMain : colors.textMuted, fontWeight: selectedGenre === genre ? 700 : 500, background: selectedGenre === genre ? (isDark ? 'linear-gradient(90deg, rgba(0, 217, 255, 0.15) 0%, transparent 100%)' : 'rgba(0, 217, 255, 0.1)') : 'transparent', borderLeft: selectedGenre === genre ? '3px solid #00d9ff' : '3px solid transparent', borderRadius: '0 8px 8px 0', transition: 'all 0.2s' }}>
-                      <span style={{ color: selectedGenre === genre ? '#00d9ff' : colors.textMuted }}>{Icons.music}</span>
-                      <span style={{ flex: 1 }}>{genre}</span>
-                      <span style={{ fontSize: 11, color: colors.textMuted, opacity: 0.7 }}>{genreCounts[genre] || 0}</span>
-                    </div>
-                  ))}
+              <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: '20px 12px', backdropFilter: 'blur(20px)', boxShadow: isDark ? '0 10px 30px rgba(0,0,0,0.3)' : '0 4px 20px rgba(0,0,0,0.05)' }}>
+                <h3 style={{ fontSize: 11, fontWeight: 800, letterSpacing: '1.5px', padding: '0 10px 14px', margin: 0, color: colors.textMuted, textTransform: 'uppercase', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  Genres
+                  <span style={{ fontSize: 10, fontWeight: 700, background: 'rgba(0,217,255,0.1)', color: '#00d9ff', padding: '2px 8px', borderRadius: 20 }}>{Array.from(new Set(tracks.map(t => (t.genre || '').trim()).filter(Boolean))).length}</span>
+                </h3>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <div onClick={() => setSelectedGenre(null)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', fontSize: 13, cursor: 'pointer', color: selectedGenre === null ? colors.textMain : colors.textMuted, fontWeight: selectedGenre === null ? 700 : 500, background: selectedGenre === null ? (isDark ? 'rgba(0, 217, 255, 0.12)' : 'rgba(0, 217, 255, 0.1)') : 'transparent', borderRadius: 10, transition: 'all 0.15s' }}
+                    onMouseEnter={(e) => { if (selectedGenre !== null) e.currentTarget.style.background = colors.rowHover; }}
+                    onMouseLeave={(e) => { if (selectedGenre !== null) e.currentTarget.style.background = 'transparent'; }}
+                  >
+                    <span style={{ width: 26, height: 26, borderRadius: 8, background: selectedGenre === null ? 'linear-gradient(135deg, #00d9ff, #7c5cff)' : colors.inputBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: selectedGenre === null ? '#000' : colors.textMuted, flexShrink: 0, fontSize: 12 }}>{Icons.music}</span>
+                    <span style={{ flex: 1 }}>Tous les sons</span>
+                    <span style={{ fontSize: 11, fontWeight: 700, background: colors.inputBg, color: colors.textMuted, padding: '2px 7px', borderRadius: 20 }}>{tracks.length}</span>
+                  </div>
+
+                  <div style={{ maxHeight: 'calc(100vh - 320px)', overflowY: 'auto', marginTop: 6, scrollbarGutter: 'stable', display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    {Array.from(new Set(tracks.map(t => (t.genre || 'Inconnu').trim()))).sort().map((genre, gi) => {
+                      const genreColors = ['#00d9ff', '#7c5cff', '#ff5cf0', '#ffd43b', '#00ff88', '#ff7b5c', '#5c9eff', '#b388ff'];
+                      const gColor = genreColors[gi % genreColors.length];
+                      const isSel = selectedGenre === genre;
+                      return (
+                        <div key={genre} onClick={() => setSelectedGenre(genre)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', fontSize: 13, cursor: 'pointer', color: isSel ? colors.textMain : colors.textMuted, fontWeight: isSel ? 700 : 500, background: isSel ? (isDark ? 'rgba(0, 217, 255, 0.12)' : 'rgba(0, 217, 255, 0.1)') : 'transparent', borderRadius: 10, transition: 'all 0.15s' }}
+                          onMouseEnter={(e) => { if (!isSel) e.currentTarget.style.background = colors.rowHover; }}
+                          onMouseLeave={(e) => { if (!isSel) e.currentTarget.style.background = 'transparent'; }}
+                        >
+                          <span style={{ width: 8, height: 8, borderRadius: '50%', background: gColor, flexShrink: 0, boxShadow: `0 0 6px ${gColor}80` }} />
+                          <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{genre}</span>
+                          <span style={{ fontSize: 11, fontWeight: 700, background: colors.inputBg, color: isSel ? gColor : colors.textMuted, padding: '2px 7px', borderRadius: 20 }}>{genreCounts[genre] || 0}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             </aside>

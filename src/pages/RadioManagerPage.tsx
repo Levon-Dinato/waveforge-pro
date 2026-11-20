@@ -84,7 +84,7 @@ export const RadioManagerPage: React.FC = () => {
     border: isDark ? '#27272a' : '#e2e8f0',
     textMain: isDark ? '#f8fafc' : '#0f172a',
     textMuted: isDark ? '#a1a1aa' : '#64748b',
-    accent: '#ffffff',
+    accent: isDark ? '#ffffff' : '#111111',
     danger: '#b0b0b0',
     success: '#b0b0b0',
   };
@@ -464,12 +464,16 @@ export const RadioManagerPage: React.FC = () => {
         .dropzone:hover { border-color: ${colors.textMuted}; }
       `}</style>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16, marginBottom: 24 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 16, marginBottom: 24 }}>
         <div>
-          <button onClick={() => navigate('/settings')} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 500, marginBottom: 8, padding: 0 }}>
+          <button onClick={() => navigate('/settings')} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 500, marginBottom: 10, padding: 0 }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Retour à l'Espace Artiste
           </button>
-          <h1 style={{ fontSize: 24, fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: 10 }}>📻 Radio Manager</h1>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)', border: isDark ? '1px solid rgba(255,255,255,0.15)' : '1px solid rgba(0,0,0,0.15)', padding: '4px 12px', borderRadius: 20, fontSize: 10, fontWeight: 800, color: colors.textMuted, letterSpacing: '1.5px', marginBottom: 10, textTransform: 'uppercase' }}>
+            Studio radio
+          </div>
+          <h1 style={{ fontSize: 28, fontWeight: 900, margin: 0, letterSpacing: '-1px', color: colors.textMain }}>📻 Radio Manager</h1>
+          <p style={{ color: colors.textMuted, fontSize: 14, margin: '6px 0 0 0', fontWeight: 500 }}>Gère ta musique, tes jingles, ta programmation et l'apparence de ta radio.</p>
         </div>
         {profileUsername && (
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
@@ -483,7 +487,7 @@ export const RadioManagerPage: React.FC = () => {
                 alert(`Lien M3U copié !\n\n${m3uUrl}\n\nCe lien est DYNAMIQUE : il diffusera automatiquement la playlist ou le live en cours.`);
               }} 
               className="dash-btn dash-btn-secondary" 
-              style={{ borderColor: '#ffffff', color: '#ffffff' }}
+              style={{ borderColor: colors.accent, color: colors.accent }}
             >
               📻 Copier le lien Radio (M3U)
             </button>
@@ -501,12 +505,16 @@ export const RadioManagerPage: React.FC = () => {
         <button onClick={toggleLiveStatus} disabled={saving} className={`dash-btn ${isLive ? 'dash-btn-danger' : 'dash-btn-primary'}`}>{isLive ? 'Arrêter' : 'Passer en Direct'}</button>
       </div>
 
-      <div style={{ display: 'flex', gap: 8, marginBottom: 24, borderBottom: `1px solid ${colors.border}`, paddingBottom: 12 }}>
-        <button onClick={() => setRadioTab('musics')} className={`dash-tab ${radioTab === 'musics' ? 'active' : ''}`}>Mes musiques</button>
-        <button onClick={() => setRadioTab('jingles')} className={`dash-tab ${radioTab === 'jingles' ? 'active' : ''}`}>Jingles</button>
-        <button onClick={() => setRadioTab('schedules')} className={`dash-tab ${radioTab === 'schedules' ? 'active' : ''}`}>Programmation</button>
-        <button onClick={() => setRadioTab('rules')} className={`dash-tab ${radioTab === 'rules' ? 'active' : ''}`}>Règles</button>
-        <button onClick={() => setRadioTab('appearance')} className={`dash-tab ${radioTab === 'appearance' ? 'active' : ''}`}>Apparence</button>
+      <div style={{ display: 'flex', gap: 6, marginBottom: 24, borderBottom: `1px solid ${colors.border}`, paddingBottom: 12, overflowX: 'auto', flexWrap: 'nowrap' }}>
+        {[
+          { id: 'musics', label: '🎵 Mes musiques' },
+          { id: 'jingles', label: '🎙️ Jingles' },
+          { id: 'schedules', label: '📅 Programmation' },
+          { id: 'rules', label: '⚙️ Règles' },
+          { id: 'appearance', label: '🎨 Apparence' },
+        ].map(tab => (
+          <button key={tab.id} onClick={() => setRadioTab(tab.id as any)} className={`dash-tab ${radioTab === tab.id ? 'active' : ''}`} style={{ whiteSpace: 'nowrap' }}>{tab.label}</button>
+        ))}
       </div>
 
       {radioTab === 'rules' ? (
@@ -863,7 +871,7 @@ export const RadioManagerPage: React.FC = () => {
 
       {selectedTracks.length > 0 && (
         <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', background: colors.panelBg, border: `1px solid ${colors.accent}`, borderRadius: 16, padding: '12px 20px', boxShadow: '0 10px 40px rgba(255, 255, 255, 0.3)', display: 'flex', alignItems: 'center', gap: 16, zIndex: 999, backdropFilter: 'blur(20px)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><span style={{ background: colors.accent, color: '#000', fontWeight: 900, fontSize: 12, padding: '4px 10px', borderRadius: 10 }}>{selectedTracks.length}</span><span style={{ fontSize: 13, fontWeight: 600 }}>sélectionné(s)</span></div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><span style={{ background: colors.accent, color: isDark ? '#000' : '#fff', fontWeight: 900, fontSize: 12, padding: '4px 10px', borderRadius: 10 }}>{selectedTracks.length}</span><span style={{ fontSize: 13, fontWeight: 600 }}>sélectionné(s)</span></div>
           <div style={{ width: 1, height: 24, background: colors.border }} />
           <button onClick={() => bulkToggleRadio(true)} disabled={saving} className="dash-btn dash-btn-secondary" style={{ borderColor: colors.success, color: colors.success, fontSize: 12 }}>✅ Activer</button>
           <button onClick={() => bulkToggleRadio(false)} disabled={saving} className="dash-btn dash-btn-secondary" style={{ borderColor: colors.textMuted, color: colors.textMuted, fontSize: 12 }}>⏸️ Désactiver</button>

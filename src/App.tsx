@@ -3,7 +3,7 @@ import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { HelmetProvider } from 'react-helmet-async';
-import { AudioEngineProvider } from './contexts/AudioEngineContext';
+import { PremiumAudioLayout } from './components/PremiumAudioLayout';
 import { AuthProvider } from './contexts/AuthContext';
 import { PlayerProvider } from './contexts/PlayerContext';
 import { RadioProvider } from './contexts/RadioContext';
@@ -123,13 +123,17 @@ function AnimatedRoutes() {
           <Route path="radio-manager" element={<PageTransition><PremiumGuard><RadioManagerPage /></PremiumGuard></PageTransition>} />
           <Route path="settings" element={<PageTransition><PremiumGuard><SettingsPage /></PremiumGuard></PageTransition>} />
           <Route path="ia-videos" element={<PageTransition><PremiumGuard><DropZoneVideosPage /></PremiumGuard></PageTransition>} />
-          <Route path="studio" element={<PageTransition><PremiumGuard><StudioPage /></PremiumGuard></PageTransition>} />
-          <Route path="stems" element={<PageTransition><PremiumGuard><StemsPage /></PremiumGuard></PageTransition>} />
-          <Route path="musicgen" element={<PageTransition><PremiumGuard><MusicGenPage /></PremiumGuard></PageTransition>} />
-          <Route path="generator" element={<PageTransition><PremiumGuard><GeneratorPage /></PremiumGuard></PageTransition>} />
-          <Route path="video" element={<PageTransition><PremiumGuard><VideoPage /></PremiumGuard></PageTransition>} />
-          <Route path="cdj" element={<PageTransition><PremiumGuard><CDJPage /></PremiumGuard></PageTransition>} />
-          <Route path="mastering" element={<PageTransition><PremiumGuard><MasteringPage /></PremiumGuard></PageTransition>} />
+
+          {/* ✅ Outils audio (Tone.js chargé en lazy uniquement ici) */}
+          <Route element={<PremiumAudioLayout />}>
+            <Route path="studio" element={<PageTransition><PremiumGuard><StudioPage /></PremiumGuard></PageTransition>} />
+            <Route path="stems" element={<PageTransition><PremiumGuard><StemsPage /></PremiumGuard></PageTransition>} />
+            <Route path="musicgen" element={<PageTransition><PremiumGuard><MusicGenPage /></PremiumGuard></PageTransition>} />
+            <Route path="generator" element={<PageTransition><PremiumGuard><GeneratorPage /></PremiumGuard></PageTransition>} />
+            <Route path="video" element={<PageTransition><PremiumGuard><VideoPage /></PremiumGuard></PageTransition>} />
+            <Route path="cdj" element={<PageTransition><PremiumGuard><CDJPage /></PremiumGuard></PageTransition>} />
+            <Route path="mastering" element={<PageTransition><PremiumGuard><MasteringPage /></PremiumGuard></PageTransition>} />
+          </Route>
 
           <Route path="admin" element={<PrivateRoute><PageTransition><AdminPage /></PageTransition></PrivateRoute>} />
         </Route>
@@ -147,18 +151,16 @@ export default function App() {
         <AuthProvider>
           <PlayerProvider>
             <RadioProvider>
-              <AudioEngineProvider>
-                <BrowserRouter>
-                  <WindowsProvider>
-                    
-                    {/* ✅ J'AI SUPPRIMÉ <CustomCursor /> ET <AmbientBackground /> ICI */}
+              <BrowserRouter>
+                <WindowsProvider>
+                  
+                  {/* ✅ J'AI SUPPRIMÉ <CustomCursor /> ET <AmbientBackground /> ICI */}
 
-                    <Suspense fallback={<PageLoader />}>
-                      <AnimatedRoutes />
-                    </Suspense>
-                  </WindowsProvider>
-                </BrowserRouter>
-              </AudioEngineProvider>
+                  <Suspense fallback={<PageLoader />}>
+                    <AnimatedRoutes />
+                  </Suspense>
+                </WindowsProvider>
+              </BrowserRouter>
             </RadioProvider>
           </PlayerProvider>
         </AuthProvider>

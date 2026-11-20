@@ -1,28 +1,17 @@
 // src/contexts/AudioEngineContext.tsx
-import React, { createContext, useContext, type ReactNode } from 'react';
-import { useAudioEngine } from '../hooks/useAudioEngine';
+// Contexte LÉGER : contient uniquement le createContext + le hook de consommation.
+// Le provider lourd (qui importe Tone.js) est dans AudioEngineProvider.tsx et est
+// chargé en lazy uniquement sur les outils Premium.
+import { createContext, useContext } from 'react';
+import type { useAudioEngine } from '../hooks/useAudioEngine';
 
-// ✅ Récupère automatiquement le type de retour de useAudioEngine
-type AudioEngineType = ReturnType<typeof useAudioEngine>;
+// ✅ Récupère automatiquement le type de retour de useAudioEngine (sans importer Tone.js au runtime)
+export type AudioEngineType = ReturnType<typeof useAudioEngine>;
 
-const AudioEngineContext = createContext<AudioEngineType | null>(null);
-
-interface AudioEngineProviderProps {
-  children: ReactNode;
-}
-
-export const AudioEngineProvider: React.FC<AudioEngineProviderProps> = ({ children }) => {
-  const engine = useAudioEngine();
-
-  return (
-    <AudioEngineContext.Provider value={engine}>
-      {children}
-    </AudioEngineContext.Provider>
-  );
-};
+export const AudioEngineContext = createContext<AudioEngineType | null>(null);
 
 /**
- * Hook pour accéder au moteur audio depuis n'importe quelle page.
+ * Hook pour accéder au moteur audio depuis n'importe quelle page Premium.
  * Lance une erreur si utilisé en dehors du provider.
  */
 export function useAudioEngineContext(): AudioEngineType {

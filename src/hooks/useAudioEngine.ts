@@ -4,11 +4,10 @@ import * as Tone from 'tone';
 import { splitTracks } from '../audio/noteSplitter';
 import { quantizeNotes } from '../audio/quantizer';
 import type { DetectedNote, AnalysisResult, EngineSettings } from '../types';
-
-// ✅ Force le CPU pour toute l'application (évite les conflits avec le Worker)
-import * as tf from '@tensorflow/tfjs';
-import '@tensorflow/tfjs-backend-cpu';
-tf.setBackend('cpu').catch(console.error);
+// NB : tfjs n'est PAS nécessaire sur le thread principal : l'analyse audio
+// (Basic Pitch) tourne dans un Web Worker séparé (basicPitch.worker.ts) qui
+// importe et configure son propre backend tfjs. L'importer ici gonflait inutilement
+// le bundle initial de ~1,5 Mo.
 
 const DEFAULT_SETTINGS: EngineSettings = {
   sensitivity: 0.5,

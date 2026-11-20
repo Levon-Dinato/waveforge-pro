@@ -28,7 +28,6 @@ export default defineConfig({
           'supabase-vendor': ['@supabase/supabase-js'],
           // ✅ Grosses libs isolées pour éviter de gonfler le bundle initial
           'tone-vendor': ['tone'],
-          'tfjs-vendor': ['@tensorflow/tfjs', '@tensorflow/tfjs-backend-cpu'],
           'midi-vendor': ['@tonejs/midi'],
         },
       },

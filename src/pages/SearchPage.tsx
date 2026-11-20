@@ -96,7 +96,7 @@ export const SearchPage: React.FC = () => {
   };
 
   return (
-    <div style={{ background: '#0a0c14', minHeight: '100vh', color: '#fff', fontFamily: 'sans-serif', paddingBottom: 100 }}>
+    <div style={{ background: '#0a0a0a', minHeight: '100vh', color: '#fff', fontFamily: 'sans-serif', paddingBottom: 100 }}>
       
       <PageMeta title="Recherche" description="Recherchez des sons, des artistes et des DJs sur DropZone DJ." />
 

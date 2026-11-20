@@ -14,7 +14,7 @@ export const ContactPage: React.FC = () => {
   const [sent, setSent] = useState(false);
 
   const colors = {
-    bg: isDark ? '#050505' : '#f5f5f7',
+    bg: isDark ? '#0a0a0a' : '#f5f5f7',
     panelBg: isDark ? '#121212' : '#ffffff',
     border: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
     inputBg: isDark ? '#0a0a0a' : '#f9fafb',

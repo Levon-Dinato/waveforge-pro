@@ -25,7 +25,7 @@ export const LivePage = () => {
 
   // ✅ PALETTE DE COULEURS DYNAMIQUES
   const colors = {
-    bg: isDark ? '#121212' : '#f5f5f7',
+    bg: isDark ? '#0a0a0a' : '#f5f5f7',
     panelBg: isDark ? '#181818' : '#ffffff',
     border: isDark ? '#2a2a2a' : '#e5e7eb',
     textMain: isDark ? '#ffffff' : '#1a1a1a',

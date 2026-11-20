@@ -23,7 +23,7 @@ export const RadioListPage: React.FC = () => {
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const colors = {
-    bg: isDark ? '#05050a' : '#f5f5f7',
+    bg: isDark ? '#0a0a0a' : '#f5f5f7',
     textMain: isDark ? '#ffffff' : '#1a1a1a',
     textMuted: isDark ? '#888888' : '#666666',
     border: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',

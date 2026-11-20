@@ -39,7 +39,7 @@ export const ArtistsPage: React.FC = () => {
   const [premiumColumnAvailable, setPremiumColumnAvailable] = useState(true);
 
   const colors = {
-    bg: isDark ? '#050505' : '#f5f5f7',
+    bg: isDark ? '#0a0a0a' : '#f5f5f7',
     textMain: isDark ? '#ffffff' : '#1a1a1a',
     textMuted: isDark ? '#999999' : '#666666',
     inputBg: isDark ? '#1a1a1a' : '#ffffff',

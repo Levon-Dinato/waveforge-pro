@@ -105,7 +105,7 @@ export const MasteringPage: React.FC = () => {
   const isPreviewingRef = useRef(false);
 
   const colors = {
-    bg: isDark ? '#050505' : '#f5f5f7',
+    bg: isDark ? '#0a0a0a' : '#f5f5f7',
     panelBg: isDark ? '#0a0a0c' : '#ffffff',
     cardBg: isDark ? '#111114' : '#f9fafb',
     border: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',

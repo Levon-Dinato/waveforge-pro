@@ -47,7 +47,7 @@ export const EventsPage: React.FC = () => {
 
   // ✅ PALETTE DE COULEURS DYNAMIQUES
   const colors = {
-    bg: isDark ? '#121212' : '#f5f5f7',
+    bg: isDark ? '#0a0a0a' : '#f5f5f7',
     panelBg: isDark ? '#1c1c1c' : '#ffffff',
     inputBg: isDark ? '#121212' : '#f3f4f6',
     border: isDark ? '#2a2a2a' : '#e5e7eb',

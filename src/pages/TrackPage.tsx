@@ -156,7 +156,7 @@ export const TrackPage: React.FC = () => {
   const [isDownloading, setIsDownloading] = useState(false); // ✅ NOUVEL ÉTAT
 
   const colors = {
-    bg: isDark ? '#050505' : '#f5f5f7',
+    bg: isDark ? '#0a0a0a' : '#f5f5f7',
     panelBg: isDark ? 'rgba(18, 18, 18, 0.6)' : 'rgba(255, 255, 255, 0.6)',
     border: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
     textMain: isDark ? '#ffffff' : '#1a1a1a',

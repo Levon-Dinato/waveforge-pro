@@ -324,7 +324,7 @@ export const ProfilePage: React.FC = () => {
   const topRef = useRef<HTMLDivElement>(null);
 
   const colors = {
-    bg: isDark ? '#050505' : '#f5f5f7',
+    bg: isDark ? '#0a0a0a' : '#f5f5f7',
     panelBg: isDark ? '#121212' : '#ffffff',
     border: isDark ? '#222222' : '#e5e7eb',
     textMain: isDark ? '#ffffff' : '#1a1a1a',

@@ -20,7 +20,7 @@ export const GenresPage: React.FC = () => {
 
   // ✅ PALETTE DE COULEURS DYNAMIQUES
   const colors = {
-    bg: isDark ? '#121212' : '#f5f5f7',
+    bg: isDark ? '#0a0a0a' : '#f5f5f7',
     panelBg: isDark ? '#1c1c1c' : '#ffffff',
     border: isDark ? '#2a2a2a' : '#e5e7eb',
     borderHover: isDark ? '#3a3a3a' : '#d1d5db',

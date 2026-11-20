@@ -109,7 +109,7 @@ export const PremiumPage: React.FC = () => {
   const fontFamily = profile?.settings?.font_family || 'Inter, sans-serif';
 
   const colors = {
-    bg: isDark ? '#050505' : '#f5f5f7', textMain: isDark ? '#ffffff' : '#1a1a1a',
+    bg: isDark ? '#0a0a0a' : '#f5f5f7', textMain: isDark ? '#ffffff' : '#1a1a1a',
     textMuted: isDark ? 'rgba(255,255,255,0.5)' : '#666666', textSoft: isDark ? 'rgba(255,255,255,0.8)' : '#444444',
     border: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)', panelBg: isDark ? 'rgba(20,20,20,0.6)' : 'rgba(255,255,255,0.7)',
     inputBg: isDark ? '#0a0a0a' : '#f3f4f6', navBg: isDark ? 'rgba(5,5,5,0.7)' : 'rgba(245,245,247,0.7)',

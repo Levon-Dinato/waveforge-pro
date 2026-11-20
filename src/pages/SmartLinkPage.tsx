@@ -22,7 +22,7 @@ export const SmartLinkPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   const colors = {
-    bg: isDark ? '#050505' : '#f5f5f7',
+    bg: isDark ? '#0a0a0a' : '#f5f5f7',
     textMain: isDark ? '#ffffff' : '#1a1a1a',
     textMuted: isDark ? 'rgba(255,255,255,0.6)' : '#666666',
     border: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',

@@ -77,7 +77,7 @@ export const RadioManagerPage: React.FC = () => {
   const [crossfadeDuration, setCrossfadeDuration] = useState(3); // En secondes
 
   const colors = {
-    bg: isDark ? '#09090b' : '#f8fafc',
+    bg: isDark ? '#0a0a0a' : '#f5f5f7',
     sidebarBg: isDark ? '#121212' : '#ffffff',
     panelBg: isDark ? '#18181b' : '#ffffff',
     inputBg: isDark ? '#09090b' : '#f1f5f9',

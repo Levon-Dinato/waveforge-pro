@@ -85,7 +85,7 @@ export const CDJPage: React.FC = () => {
   const handleMouseMoveGlobal = (e: React.MouseEvent) => setMousePos({ x: e.clientX, y: e.clientY });
 
   const colors = {
-    bg: isDark ? '#050508' : '#f5f5f7',
+    bg: isDark ? '#0a0a0a' : '#f5f5f7',
     textMain: isDark ? '#ffffff' : '#1a1a1a',
     textMuted: isDark ? '#888888' : '#666666',
     textDark: isDark ? '#444444' : '#999999',

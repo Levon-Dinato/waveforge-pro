@@ -126,7 +126,7 @@ export const FeedPage: React.FC = () => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const colors = {
-    bg: isDark ? '#050505' : '#f5f5f7',
+    bg: isDark ? '#0a0a0a' : '#f5f5f7',
     textMain: isDark ? '#ffffff' : '#1a1a1a',
     textMuted: isDark ? '#888888' : '#666666',
     textLight: isDark ? '#dddddd' : '#333333',

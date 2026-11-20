@@ -35,7 +35,7 @@ export const StudioPage: React.FC = () => {
   const [detectedNotes, setDetectedNotes] = useState<DetectedNote[]>([]);
 
   const colors = {
-    bg: isDark ? '#050508' : '#f5f5f7',
+    bg: isDark ? '#0a0a0a' : '#f5f5f7',
     panelBg: isDark ? 'rgba(15, 15, 20, 0.7)' : 'rgba(255, 255, 255, 0.8)',
     cardBg: isDark ? '#0d0d12' : '#ffffff',
     border: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)',

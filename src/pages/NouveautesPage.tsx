@@ -704,10 +704,10 @@ export const NouveautesPage: React.FC = () => {
             </div>
 
             <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, width: '100%', overflow: 'hidden', backdropFilter: 'blur(20px)', boxShadow: isDark ? '0 20px 40px rgba(0,0,0,0.4)' : '0 10px 30px rgba(0,0,0,0.05)' }}>
-              <style>{`@keyframes skpulse{0%,100%{opacity:1}50%{opacity:.55}}`}</style>
+              <style>{`@keyframes skpulse{0%,100%{opacity:1}50%{opacity:.55}}@keyframes newpulse{0%,100%{box-shadow:0 0 6px rgba(0,217,255,0.4)}50%{box-shadow:0 0 16px rgba(0,217,255,0.9)}}`}</style>
 
               {!isMobile && (
-                <div style={{ display: 'grid', gridTemplateColumns: '40px 40px minmax(200px, 1fr) 120px 140px 160px', gap: 16, padding: '16px', borderBottom: `1px solid ${colors.border}`, fontSize: 11, color: colors.textMuted, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', background: isDark ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.02)' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '40px 40px minmax(200px, 1fr) 120px 140px 160px', gap: 16, padding: '14px 16px', borderBottom: `1px solid ${colors.border}`, fontSize: 11, color: colors.textMuted, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1.2px', background: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)' }}>
                   <div></div><div></div><div>Titre / Artistes</div><div>Genre</div><div>BPM / Clé</div><div style={{ textAlign: 'right' }}>Actions</div>
                 </div>
               )}
@@ -878,11 +878,14 @@ export const NouveautesPage: React.FC = () => {
                   onMouseEnter={e => e.currentTarget.style.background = colors.rowHover}
                   onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                   >
-                    <button onClick={(e) => handlePlayTrack(e, track)} style={{ width: 36, height: 36, borderRadius: '50%', background: isThisPlaying ? '#00d9ff' : colors.inputBg, border: `1px solid ${colors.inputBorder}`, color: isThisPlaying ? '#000' : colors.textMain, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }}>
+                    <button onClick={(e) => handlePlayTrack(e, track)} style={{ width: 36, height: 36, borderRadius: '50%', background: isThisPlaying ? '#00d9ff' : colors.inputBg, border: `1px solid ${isThisPlaying ? '#00d9ff' : colors.inputBorder}`, color: isThisPlaying ? '#000' : colors.textMain, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s', boxShadow: isThisPlaying ? '0 0 12px rgba(0,217,255,0.5)' : 'none' }}
+                      onMouseEnter={(e) => { if (!isThisPlaying) { e.currentTarget.style.borderColor = '#00d9ff'; e.currentTarget.style.color = '#00d9ff'; } }}
+                      onMouseLeave={(e) => { if (!isThisPlaying) { e.currentTarget.style.borderColor = colors.inputBorder; e.currentTarget.style.color = colors.textMain; } }}
+                    >
                       {isThisPlaying ? Icons.pause : Icons.play}
                     </button>
-                    <div onClick={() => navigate(`/track/${track.id}`)} style={{ width: 44, height: 44, borderRadius: 8, background: track.cover_url ? `url(${track.cover_url}) center/cover` : '#222', flexShrink: 0, position: 'relative', border: `1px solid ${colors.border}` }}>
-                      {isNew(track.created_at) && <span style={{ position: 'absolute', top: -6, right: -6, fontSize: 8, padding: '3px 6px', background: '#00d9ff', color: '#000', borderRadius: 4, fontWeight: 900, zIndex: 2 }}>NEW</span>}
+                    <div onClick={() => navigate(`/track/${track.id}`)} style={{ width: 44, height: 44, borderRadius: 10, background: track.cover_url ? `url(${track.cover_url}) center/cover` : '#222', flexShrink: 0, position: 'relative', border: `1px solid ${colors.border}`, boxShadow: '0 2px 8px rgba(0,0,0,0.3)' }}>
+                      {isNew(track.created_at) && <span style={{ position: 'absolute', top: -6, right: -6, fontSize: 8, padding: '3px 6px', background: '#00d9ff', color: '#000', borderRadius: 4, fontWeight: 900, zIndex: 2, boxShadow: '0 0 10px rgba(0,217,255,0.6)', animation: 'newpulse 2s ease-in-out infinite' }}>NEW</span>}
                     </div>
                     <div onClick={() => navigate(`/track/${track.id}`)} style={{ minWidth: 0 }}>
                       <div style={{ fontSize: 14, fontWeight: 700, color: isThisPlaying ? '#00d9ff' : colors.textMain, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: 3 }}>{track.title}</div>

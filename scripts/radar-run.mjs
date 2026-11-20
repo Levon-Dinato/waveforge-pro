@@ -18,6 +18,8 @@ const GENRES = [
   { id: '12', label: 'Latin' },
   { id: '14', label: 'Pop' },
   { id: '15', label: 'R&B/Soul' },
+  { id: '20', label: 'Alternative' },
+  { id: '24', label: 'Reggae' },
 ];
 const LIMIT = 100;
 

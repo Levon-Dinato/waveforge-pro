@@ -68,25 +68,6 @@ h1, h2, h3, h4, .wf-display {
 h1 { font-weight: 800; }
 h2 { font-weight: 700; }
 
-/* ✅ Nuance subtile sur les gros titres : léger dégradé cyan→gris.
-   Reste lisible en mode sombre comme en mode clair. */
-h1, h2 {
-  background-image: linear-gradient(135deg, var(--title-accent-start), var(--title-accent-end));
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: var(--text-primary);
-}
-
-:root {
-  --title-accent-start: #e8f4f8;
-  --title-accent-end: #b9c6cc;
-}
-body[data-theme='light'] {
-  --title-accent-start: #1a2a30;
-  --title-accent-end: #4a5a60;
-}
-
 /* ============================================================
    FOND - aura subtile
    ============================================================ */

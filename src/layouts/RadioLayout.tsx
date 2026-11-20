@@ -126,6 +126,14 @@ export const RadioLayout: React.FC = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // ✅ Arrête la radio quand on quitte la page radio (évite le doublon audio
+  // quand on navigue vers le panel ou ailleurs avec le lecteur encore actif).
+  useEffect(() => {
+    return () => {
+      stopRadio();
+    };
+  }, [stopRadio]);
+
   useEffect(() => {
     if (!username) return;
 

@@ -32,6 +32,7 @@
   --radius-full: 9999px;
 
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-display: 'Space Grotesk', 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
 }
 
@@ -50,6 +51,17 @@ html, body {
   -webkit-font-smoothing: antialiased;
   min-height: 100%;
 }
+
+/* ============================================================
+   TYPOGRAPHIE — titres en Space Grotesk (look DJ/techno)
+   ============================================================ */
+h1, h2, h3, h4, .wf-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+h1 { font-weight: 800; }
+h2 { font-weight: 700; }
 
 /* ============================================================
    FOND - aura subtile

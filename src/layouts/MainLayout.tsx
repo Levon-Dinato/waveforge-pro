@@ -8,6 +8,7 @@ import { GlobalSearch } from '../components/GlobalSearch';
 import { ScrollButtons } from '../components/ScrollButtons';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { useTheme } from '../contexts/ThemeContext';
+import { Footer } from '../components/Footer';
 
 const Icons = {
   home: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>,
@@ -120,6 +121,7 @@ export const MainLayout: React.FC = () => {
         {location.pathname !== '/nouveautes' && <ThemeToggleButton />}
         <Outlet />
         <ScrollButtons />
+        {location.pathname === '/nouveautes' && <Footer />}
         {currentTrack && <GlobalPlayer currentTrack={currentTrack} isPlaying={isPlaying} onTogglePlay={togglePlay} onStop={stop} />}
       </div>
     );
@@ -161,6 +163,8 @@ export const MainLayout: React.FC = () => {
         <main style={{ flex: 1, padding: '16px 12px', paddingBottom: currentTrack ? 140 : 90, overflowX: 'hidden', width: '100%', maxWidth: '100vw' }}>
           <Outlet />
         </main>
+
+        <Footer />
         
         {currentTrack && <GlobalPlayer currentTrack={currentTrack} isPlaying={isPlaying} onTogglePlay={togglePlay} onStop={stop} />}
 
@@ -318,6 +322,8 @@ export const MainLayout: React.FC = () => {
         <main style={{ flex: 1, padding: 32, maxWidth: 1400, margin: '0 auto', width: '100%' }}>
           <Outlet />
         </main>
+
+        <Footer />
       </div>
 
       <ScrollButtons />

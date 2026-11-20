@@ -18,8 +18,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   useEffect(() => {
     localStorage.setItem('dropzone-theme', theme);
-    // On met à jour la couleur de fond globale du body selon le thème
     document.body.style.backgroundColor = theme === 'dark' ? '#05050a' : '#f5f5f7';
+    document.body.setAttribute('data-theme', theme);
   }, [theme]);
 
   const toggleTheme = () => {

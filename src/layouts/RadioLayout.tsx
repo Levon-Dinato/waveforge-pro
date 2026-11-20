@@ -85,6 +85,18 @@ export const RadioLayout: React.FC = () => {
     const cached = sessionStorage.getItem(`radio_profile_${username}`);
     return cached ? JSON.parse(cached).radio_title_angle ?? 135 : 135;
   });
+  const [titleBalance, setTitleBalance] = useState(() => {
+    const cached = sessionStorage.getItem(`radio_profile_${username}`);
+    return cached ? JSON.parse(cached).radio_title_balance ?? 100 : 100;
+  });
+  const [titleText, setTitleText] = useState(() => {
+    const cached = sessionStorage.getItem(`radio_profile_${username}`);
+    return cached ? JSON.parse(cached).radio_title_text || 'Le son de' : 'Le son de';
+  });
+  const [sloganText, setSloganText] = useState(() => {
+    const cached = sessionStorage.getItem(`radio_profile_${username}`);
+    return cached ? JSON.parse(cached).radio_slogan || 'Play the Beat. Feel the Sound. Live the Experience.' : 'Play the Beat. Feel the Sound. Live the Experience.';
+  });
   const [socials, setSocials] = useState<any>({});
   const [showToast, setShowToast] = useState(false);
   const [toastMsg, setToastMsg] = useState('');
@@ -103,7 +115,7 @@ export const RadioLayout: React.FC = () => {
     card: isDark ? 'rgba(255,255,255,0.04)' : '#ffffff',
   };
 
-  const slogan = "Play the Beat. Feel the Sound. Live the Experience.";
+  const slogan = sloganText || "Play the Beat. Feel the Sound. Live the Experience.";
   const shareText = `${slogan} - Écoute la radio de ${profile?.username || 'DropZone DJ'} !`;
 
   useEffect(() => {
@@ -172,6 +184,9 @@ export const RadioLayout: React.FC = () => {
         setTitleColorStart(profileData.radio_title_color_start || '#b0b0b0');
         setTitleColor(profileData.radio_title_color || '#ffffff');
         setTitleAngle(profileData.radio_title_angle ?? 135);
+        setTitleBalance(profileData.radio_title_balance ?? 100);
+        setTitleText(profileData.radio_title_text || 'Le son de');
+        setSloganText(profileData.radio_slogan || 'Play the Beat. Feel the Sound. Live the Experience.');
 
         updateRadioSettings(
           profileData.radio_crossfade_enabled || false,
@@ -448,7 +463,7 @@ export const RadioLayout: React.FC = () => {
 
   const outletContext = {
     profile, userProfile, radioTracks, topTracks, latestReleases, schedules, activeSchedule,
-    listeners, colors, visualizerColor, iconColor, titleColorStart, titleColor, titleAngle, socials, coverImage, totalLikes, recentTracks,
+    listeners, colors, visualizerColor, iconColor, titleColorStart, titleColor, titleAngle, titleBalance, titleText, socials, coverImage, totalLikes, recentTracks,
     handleOpenPlayer, handlePlayRadio, handleTogglePlay, handleSendMessage, messages, newMessage, setNewMessage, isChatOpen, setIsChatOpen, chatEndRef,
     SocialLink
   };

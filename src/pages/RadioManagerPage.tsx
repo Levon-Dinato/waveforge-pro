@@ -64,6 +64,9 @@ export const RadioManagerPage: React.FC = () => {
   const [radioTitleColorStart, setRadioTitleColorStart] = useState('#b0b0b0');
   const [radioTitleColor, setRadioTitleColor] = useState('#ffffff');
   const [radioTitleAngle, setRadioTitleAngle] = useState(135);
+  const [radioTitleBalance, setRadioTitleBalance] = useState(100);
+  const [radioTitleText, setRadioTitleText] = useState('Le son de');
+  const [radioSlogan, setRadioSlogan] = useState('Play the Beat. Feel the Sound. Live the Experience.');
 
   // Réglages Player Popup
   const [playerBgType, setPlayerBgType] = useState('color');
@@ -110,6 +113,9 @@ export const RadioManagerPage: React.FC = () => {
         setRadioTitleColorStart(profileData.radio_title_color_start || '#b0b0b0');
         setRadioTitleColor(profileData.radio_title_color || '#ffffff');
         setRadioTitleAngle(profileData.radio_title_angle ?? 135);
+        setRadioTitleBalance(profileData.radio_title_balance ?? 100);
+        setRadioTitleText(profileData.radio_title_text || 'Le son de');
+        setRadioSlogan(profileData.radio_slogan || 'Play the Beat. Feel the Sound. Live the Experience.');
         
         setPlayerBgType(profileData.player_bg_type || 'color');
         setPlayerBgValue(profileData.player_bg_value || '#05050a');
@@ -386,6 +392,9 @@ export const RadioManagerPage: React.FC = () => {
       radio_title_color_start: radioTitleColorStart,
       radio_title_color: radioTitleColor,
       radio_title_angle: radioTitleAngle,
+      radio_title_balance: radioTitleBalance,
+      radio_title_text: radioTitleText,
+      radio_slogan: radioSlogan,
       player_bg_type: playerBgType,
       player_bg_value: playerBgValue,
       player_bg_animation: playerBgAnimation
@@ -648,7 +657,7 @@ export const RadioManagerPage: React.FC = () => {
 
             <div style={{ padding: 20, background: colors.inputBg, borderRadius: 12, border: `1px solid ${colors.border}` }}>
               <h3 style={{ margin: '0 0 6px 0', fontSize: 15, fontWeight: 700 }}>Titre en bi-ton</h3>
-              <p style={{ margin: '0 0 16px 0', fontSize: 12, color: colors.textMuted }}>Dégradé appliqué au nom du DJ. Choisis les deux couleurs et l'angle du dégradé.</p>
+              <p style={{ margin: '0 0 16px 0', fontSize: 12, color: colors.textMuted }}>Dégradé appliqué au nom du DJ. Choisis les deux couleurs, l'angle et la proportion.</p>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div>
@@ -675,8 +684,27 @@ export const RadioManagerPage: React.FC = () => {
                   <input type="range" min="0" max="360" step="15" value={radioTitleAngle} onChange={(e) => setRadioTitleAngle(Number(e.target.value))} style={{ width: '100%', accentColor: radioTitleColorStart }} />
                 </div>
 
-                <div style={{ padding: 12, borderRadius: 10, background: `linear-gradient(${radioTitleAngle}deg, ${radioTitleColorStart}, ${radioTitleColor})`, border: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div>
+                  <label style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontWeight: 700, marginBottom: 8, color: colors.textMuted }}>
+                    <span>Proportion couleur 1</span>
+                    <span>{radioTitleBalance}%</span>
+                  </label>
+                  <input type="range" min="0" max="100" step="1" value={radioTitleBalance} onChange={(e) => setRadioTitleBalance(Number(e.target.value))} style={{ width: '100%', accentColor: radioTitleColorStart }} />
+                </div>
+
+                <div style={{ padding: 12, borderRadius: 10, background: `linear-gradient(${radioTitleAngle}deg, ${radioTitleColorStart} 0%, ${radioTitleColorStart} ${radioTitleBalance}%, ${radioTitleColor} 100%)`, border: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <span style={{ fontSize: 18, fontWeight: 900, letterSpacing: '1px', color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>Aperçu</span>
+                </div>
+              </div>
+
+              <div style={{ marginTop: 16, paddingTop: 16, borderTop: `1px solid ${colors.border}`, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 700, marginBottom: 6, color: colors.textMuted }}>Texte avant le nom</label>
+                  <input type="text" value={radioTitleText} onChange={(e) => setRadioTitleText(e.target.value)} className="dash-input" placeholder="Ex: Le son de" />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 700, marginBottom: 6, color: colors.textMuted }}>Slogan</label>
+                  <input type="text" value={radioSlogan} onChange={(e) => setRadioSlogan(e.target.value)} className="dash-input" placeholder="Play the Beat..." />
                 </div>
               </div>
             </div>

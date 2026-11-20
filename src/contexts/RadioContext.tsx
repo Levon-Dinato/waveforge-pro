@@ -29,7 +29,12 @@ const RadioContext = createContext<RadioContextType | undefined>(undefined);
 const SYNC_KEY = 'dropzone_global_radio_state';
 
 export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const getInitialState = () => {
+    const getInitialState = () => {
+    // ✅ On vérifie qu'on est sur une page radio ou player avant de charger l'état
+    if (typeof window !== 'undefined' && !window.location.pathname.includes('/radio/') && !window.location.pathname.includes('/player/')) {
+      return null; 
+    }
+    
     try {
       const saved = localStorage.getItem(SYNC_KEY);
       if (saved) {

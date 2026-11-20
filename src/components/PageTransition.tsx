@@ -12,17 +12,17 @@ export const PageTransition: React.FC<{ children: React.ReactNode }> = ({ childr
 
   useEffect(() => {
     setShowWipe(true);
-    const timer = setTimeout(() => setShowWipe(false), 800);
+    const timer = setTimeout(() => setShowWipe(false), 700);
     return () => clearTimeout(timer);
   }, [location.pathname]);
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%', flex: 1 }}>
       <motion.div
-        initial={{ opacity: 0, y: 30, filter: 'blur(10px)', scale: 0.98 }}
+        initial={{ opacity: 0, y: 20, filter: 'blur(8px)', scale: 0.99 }}
         animate={{ opacity: 1, y: 0, filter: 'blur(0px)', scale: 1 }}
-        exit={{ opacity: 0, y: -30, filter: 'blur(10px)', scale: 0.98 }}
-        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        exit={{ opacity: 0, y: -16, filter: 'blur(8px)', scale: 0.99 }}
+        transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
         style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}
       >
         {children}
@@ -32,33 +32,50 @@ export const PageTransition: React.FC<{ children: React.ReactNode }> = ({ childr
         <>
           <style>{`
             .wipe-transition {
-              position: fixed; inset: 0; z-index: 999999; 
-              /* ✅ INVERSÉ : Sombre en dark, Blanc en light */
-              background: ${isDark ? '#111111' : '#ffffff'}; 
-              border-left: 4px solid ${isDark ? '#ffffff' : '#000000'};
+              position: fixed; inset: 0; z-index: 999999;
+              background: ${isDark
+                ? 'linear-gradient(135deg, #0a0a0a 0%, #12121a 50%, #0a0a0a 100%)'
+                : 'linear-gradient(135deg, #ffffff 0%, #f0f4ff 50%, #ffffff 100%)'};
               display: flex; justify-content: center; align-items: center;
-              box-shadow: -10px 0 60px ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'};
               transform: translateX(100%);
-              animation: slideWipeAnim 0.8s cubic-bezier(0.77, 0, 0.175, 1) forwards;
+              animation: slideWipeAnim 0.7s cubic-bezier(0.77, 0, 0.175, 1) forwards;
               pointer-events: none;
+              overflow: hidden;
+            }
+            .wipe-transition::after {
+              content: '';
+              position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+              background: linear-gradient(180deg, #00d9ff, #7c5cff, #ff5cf0);
+              box-shadow: 0 0 24px rgba(0, 217, 255, 0.6);
+            }
+            .wipe-transition .wt-inner {
+              display: flex; flex-direction: column; align-items: center; gap: 14px;
+            }
+            .wipe-transition .wt-mark {
+              width: 46px; height: 46px; border-radius: 12px;
+              background: linear-gradient(135deg, #00d9ff, #7c5cff);
+              display: flex; align-items: center; justify-content: center;
+              color: #000; font-weight: 900; font-size: 20px;
+              box-shadow: 0 8px 30px rgba(0, 217, 255, 0.4);
             }
             .wipe-transition span {
-              /* ✅ Texte Blanc en dark, Noir en light */
-              color: ${isDark ? '#ffffff' : '#000000'}; 
-              font-family: 'Space Grotesk', sans-serif; font-size: 1.8rem; font-weight: 700;
-              letter-spacing: 6px; opacity: 0; transform: scale(0.9); transition: all 0.3s;
-              text-shadow: 0 0 30px ${isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'};
+              color: ${isDark ? '#ffffff' : '#111111'};
+              font-family: 'Space Grotesk', sans-serif; font-size: 1.5rem; font-weight: 700;
+              letter-spacing: 5px; opacity: 0; transform: scale(0.9); transition: all 0.3s;
             }
-            .wipe-transition.active span { opacity: 1; transform: scale(1); transition-delay: 0.3s; }
+            .wipe-transition.active span { opacity: 1; transform: scale(1); transition-delay: 0.22s; }
             @keyframes slideWipeAnim {
               0% { transform: translateX(100%); }
-              40% { transform: translateX(0); }
-              60% { transform: translateX(0); }
+              42% { transform: translateX(0); }
+              58% { transform: translateX(0); }
               100% { transform: translateX(-100%); }
             }
           `}</style>
           <div className="wipe-transition active">
-            <span>DROPZONE DJ</span>
+            <div className="wt-inner">
+              <div className="wt-mark">DZ</div>
+              <span>DROPZONE DJ</span>
+            </div>
           </div>
         </>
       )}

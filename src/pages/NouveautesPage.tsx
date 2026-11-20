@@ -611,17 +611,23 @@ export const NouveautesPage: React.FC = () => {
 
           <main style={{ flex: 1, minWidth: 0, width: '100%', minHeight: 'calc(100vh - 150px)' }}>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 28, gap: 16, flexWrap: 'wrap' }}>
               <div>
-                <h2 style={{ fontSize: '2rem', fontWeight: 900, margin: 0, letterSpacing: '-1px', color: colors.textMain }}>
-                  Nouveautés
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(0, 217, 255, 0.1)', border: '1px solid rgba(0, 217, 255, 0.3)', padding: '5px 12px', borderRadius: 20, fontSize: 10, fontWeight: 800, color: '#00d9ff', letterSpacing: '1.5px', marginBottom: 14, textTransform: 'uppercase' }}>
+                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#00d9ff', boxShadow: '0 0 8px #00d9ff' }} />
+                  Nouvelles sorties
+                </div>
+                <h2 style={{ fontSize: 'clamp(1.8rem, 3vw, 2.6rem)', fontWeight: 900, margin: 0, letterSpacing: '-1.5px', color: colors.textMain, lineHeight: 1.1 }}>
+                  Les derniers sons
                   {!loading && (
-                    <span style={{ fontSize: '1rem', color: colors.textMuted, fontWeight: 600, marginLeft: 12 }}>
-                      ({visibleTracks.length})
+                    <span style={{ fontSize: '1.1rem', color: colors.textMuted, fontWeight: 700, marginLeft: 12, letterSpacing: '0' }}>
+                      {visibleTracks.length}
                     </span>
                   )}
                 </h2>
-                <p style={{ color: colors.textMuted, fontSize: 14, margin: '6px 0 0 0', fontWeight: 500 }}>Découvrez les derniers sons partagés par la communauté.</p>
+                <p style={{ color: colors.textMuted, fontSize: 15, margin: '10px 0 0 0', fontWeight: 500, maxWidth: 480, lineHeight: 1.5 }}>
+                  Écoute, like et télécharge les dernières exclusivités des DJs indépendants.
+                </p>
               </div>
               {user && (
                 <button onClick={() => setShowUploadModal(true)} style={{ padding: isMobile ? '10px 16px' : '12px 24px', background: 'linear-gradient(135deg, #00d9ff, #7c5cff)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 10, cursor: 'pointer', fontWeight: 800, fontSize: 13, boxShadow: '0 0 20px rgba(0, 217, 255, 0.4)', transition: 'transform 0.2s, box-shadow 0.2s', whiteSpace: 'nowrap' }}>
@@ -630,15 +636,15 @@ export const NouveautesPage: React.FC = () => {
               )}
             </div>
 
-            <div style={{ display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
-              <div style={{ position: 'relative', flex: '1 1 200px' }}>
-                <div style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: colors.textMuted, pointerEvents: 'none' }}>
+            <div style={{ display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap', alignItems: 'center' }}>
+              <div style={{ position: 'relative', flex: '1 1 260px' }}>
+                <div style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: colors.textMuted, pointerEvents: 'none', display: 'flex' }}>
                   {Icons.search}
                 </div>
-                <input type="text" placeholder="Rechercher un son, un artiste..." value={search} onChange={(e) => setSearch(e.target.value)} style={{ padding: '10px 14px 10px 40px', background: colors.inputBg, border: `1px solid ${colors.inputBorder}`, borderRadius: '10px', color: colors.textMain, fontFamily: 'Inter, sans-serif', fontSize: '13px', outline: 'none', width: '100%', transition: 'all 0.2s' }} />
+                <input type="text" placeholder="Rechercher un son, un artiste..." value={search} onChange={(e) => setSearch(e.target.value)} style={{ padding: '11px 14px 11px 42px', background: colors.inputBg, border: `1px solid ${colors.inputBorder}`, borderRadius: '10px', color: colors.textMain, fontFamily: 'Inter, sans-serif', fontSize: '13px', outline: 'none', width: '100%', transition: 'all 0.2s', boxSizing: 'border-box' }} />
               </div>
 
-              <select value={sortBy} onChange={(e) => setSortBy(e.target.value as any)} style={{ padding: '10px 14px', background: colors.inputBg, border: `1px solid ${colors.inputBorder}`, borderRadius: '10px', color: colors.textMain, fontFamily: 'Inter, sans-serif', fontSize: '13px', outline: 'none', cursor: 'pointer', flex: '0 1 180px' }}>
+              <select value={sortBy} onChange={(e) => setSortBy(e.target.value as any)} style={{ padding: '11px 14px', background: colors.inputBg, border: `1px solid ${colors.inputBorder}`, borderRadius: '10px', color: colors.textMain, fontFamily: 'Inter, sans-serif', fontSize: '13px', outline: 'none', cursor: 'pointer', flex: '0 1 200px', boxSizing: 'border-box' }}>
                 <option value="recent" style={{ background: colors.bg, color: colors.textMain }}>Plus récents</option>
                 <option value="likes" style={{ background: colors.bg, color: colors.textMain }}>Plus aimés</option>
                 <option value="bpm" style={{ background: colors.bg, color: colors.textMain }}>BPM (Décroissant)</option>

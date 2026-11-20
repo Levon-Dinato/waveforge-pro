@@ -34,12 +34,14 @@ function extract(json, genre) {
         (links.find((l) => l.attributes?.rel === 'alternate' && l.attributes?.type === 'text/html' && l.attributes?.href?.includes('i='))?.attributes?.href)
         || (links.find((l) => l.attributes?.rel === 'alternate')?.attributes?.href)
         || '';
+      const preview = links.find((l) => l.attributes?.rel === 'enclosure')?.attributes?.href || '';
       return {
         title: e?.['im:name']?.label || '',
         artist: e?.['im:artist']?.label || '',
         genre,
         cover_url: cover600(e?.['im:image'] || []),
         purchase_url: trackLink,
+        audio_url: preview,
       };
     })
     .filter((t) => t.title && t.artist && t.purchase_url);
@@ -111,12 +113,12 @@ export default async function handler(req, res) {
       genre: c.genre,
       bpm: 0,
       song_key: null,
-      audio_url: '',
+      audio_url: c.audio_url,
       cover_url: c.cover_url,
       embed_code: null,
       purchase_url: c.purchase_url,
       peaks: [],
-      duration: 0,
+      duration: 30,
       likes_count: 0,
       downloads: 0,
     }));

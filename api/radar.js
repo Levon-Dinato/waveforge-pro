@@ -10,7 +10,7 @@ const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
 // Genres iTunes ciblés (17 = Dance, 18 = Electronic) + pays du store.
 // Ajoute d'autres genres ici si besoin (ex. 7 = Hip-Hop/Rap).
-const COUNTRY = 'fr';
+const COUNTRIES = ['fr', 'us', 'gb', 'de'];
 const GENRES = [
   { id: '17', label: 'Dance' },
   { id: '7', label: 'Electronic' },
@@ -71,17 +71,19 @@ export default async function handler(req, res) {
 
   // 1) Récupère les candidats depuis iTunes RSS
   const candidates = [];
-  for (const g of GENRES) {
-    const url = `https://itunes.apple.com/${COUNTRY}/rss/topsongs/limit=${LIMIT}/genre=${g.id}/explicit=true/json`;
-    try {
-      const r = await fetch(url, { headers: { Accept: 'application/json' } });
-      if (!r.ok) {
-        console.error(`iTunes ${g.label} : HTTP ${r.status}`);
-        continue;
+  for (const country of COUNTRIES) {
+    for (const g of GENRES) {
+      const url = `https://itunes.apple.com/${country}/rss/topsongs/limit=${LIMIT}/genre=${g.id}/explicit=true/json`;
+      try {
+        const r = await fetch(url, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(20000) });
+        if (!r.ok) {
+          console.error(`iTunes ${g.label} : HTTP ${r.status}`);
+          continue;
+        }
+        candidates.push(...extract(await r.json(), g.label));
+      } catch (e) {
+        console.error(`iTunes ${g.label} :`, e.message || e);
       }
-      candidates.push(...extract(await r.json(), g.label));
-    } catch (e) {
-      console.error(`iTunes ${g.label} :`, e.message || e);
     }
   }
 

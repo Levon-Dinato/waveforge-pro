@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { useTheme } from '../contexts/ThemeContext';
+import { PageMeta } from '../components/PageMeta';
 
 interface Artist {
   id: string;
@@ -185,6 +186,7 @@ export const ArtistsPage: React.FC = () => {
         transition: 'background 0.3s ease, color 0.3s ease',
       }}
     >
+      <PageMeta title="Artistes" description="Découvrez les DJs et producteurs indépendants inscrits sur DropZone DJ." />
       {/* 🎨 CSS global de la page (hover + skeleton) */}
       <style>{`
         .artist-card { transition: all 0.2s ease; }

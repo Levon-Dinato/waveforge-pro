@@ -10,6 +10,7 @@ import { usePlayer } from '../contexts/PlayerContext';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { useTheme } from '../contexts/ThemeContext';
 import { parseBlob } from 'music-metadata-browser';
+import { PageMeta } from '../components/PageMeta';
 
 const Icons = {
   play: <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>,
@@ -541,6 +542,8 @@ export const NouveautesPage: React.FC = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: colors.bg, fontFamily: 'Inter, sans-serif', color: colors.textMain, position: 'relative', transition: 'background 0.3s ease' }}>
+
+      <PageMeta title="Nouveautés" description="Les dernières sorties et exclusivités des DJs indépendants sur DropZone DJ." />
 
       {isDark && (
         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, pointerEvents: 'none', zIndex: 0, overflow: 'hidden' }}>

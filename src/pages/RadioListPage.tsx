@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useTheme } from '../contexts/ThemeContext';
 import { useIsMobile } from '../hooks/useIsMobile';
+import { PageMeta } from '../components/PageMeta';
 
 interface ArtistRadio {
   id: string;
@@ -92,6 +93,7 @@ export const RadioListPage: React.FC = () => {
 
   return (
     <div style={{ background: colors.bg, minHeight: '100vh', color: colors.textMain, fontFamily: 'Inter, sans-serif', padding: isMobile ? '20px' : '40px' }}>
+      <PageMeta title="Toutes les radios" description="Écoutez les radios des DJs indépendants inscrits sur DropZone DJ." />
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>
         
         <div style={{ textAlign: 'center', marginBottom: 40 }}>

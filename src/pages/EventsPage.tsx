@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { useTheme } from '../contexts/ThemeContext'; // ✅ IMPORT AJOUTÉ
+import { PageMeta } from '../components/PageMeta';
 
 interface Event {
   id: string;
@@ -196,6 +197,7 @@ export const EventsPage: React.FC = () => {
       color: colors.textMain,
       transition: 'background 0.3s ease, color 0.3s ease' // ✅ Transition fluide
     }}>
+      <PageMeta title="Événements" description="Les soirées, festivals et dates des DJs de la communauté DropZone DJ." />
       
       {/* HEADER */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>

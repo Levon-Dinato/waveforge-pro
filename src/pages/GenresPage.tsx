@@ -5,6 +5,7 @@ import { TrackGrid } from '../components/TrackGrid';
 import type { Track } from '../components/TrackGrid';
 import { useTheme } from '../contexts/ThemeContext'; // ✅ IMPORT DU THEME
 import { usePlayer } from '../contexts/PlayerContext'; // ✅ LECTURE
+import { PageMeta } from '../components/PageMeta';
 
 export const GenresPage: React.FC = () => {
 
@@ -86,6 +87,8 @@ export const GenresPage: React.FC = () => {
   return (
     <div style={{ width: '100%', maxWidth: '100%', fontFamily: 'Inter, sans-serif', background: colors.bg, paddingBottom: 100, minHeight: '100vh', transition: 'background 0.3s ease' }}>
       
+      <PageMeta title="Genres" description="Explorez les sons DropZone DJ par style musical : house, techno, hip-hop et plus." />
+
       {/* TITRE */}
       <div style={{ marginBottom: 32, padding: '0 24px' }}>
         <h1 style={{ 

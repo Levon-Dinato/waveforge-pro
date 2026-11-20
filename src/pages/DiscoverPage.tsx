@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { usePlayer } from '../contexts/PlayerContext';
+import { PageMeta } from '../components/PageMeta';
 
 const Icons = {
   play: <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>,
@@ -102,6 +103,8 @@ export const DiscoverPage: React.FC = () => {
   return (
     <div style={{ background: colors.bg, minHeight: '100vh', color: colors.textMain, fontFamily: 'Inter, sans-serif', paddingBottom: 100 }}>
       
+      <PageMeta title="Découvrir" description="Explorez les nouveaux talents et les sons les plus populaires de la communauté DropZone DJ." />
+
       {/* HEADER & STATS */}
       <div style={{ padding: '80px 20px 40px', textAlign: 'center', borderBottom: `1px solid ${colors.border}` }}>
         <h1 style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)', fontWeight: 900, marginBottom: 16, letterSpacing: '-0.03em' }}>

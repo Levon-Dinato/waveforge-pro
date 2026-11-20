@@ -8,6 +8,7 @@ import { useIsMobile } from '../hooks/useIsMobile';
 import { usePlayer } from '../contexts/PlayerContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { OnlineUsersWidget } from '../components/OnlineUsersWidget';
+import { PageMeta } from '../components/PageMeta';
 
 const Icons = {
   heart: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>,
@@ -435,6 +436,7 @@ export const FeedPage: React.FC = () => {
 
   return (
     <div style={{ background: colors.bg, minHeight: '100vh', color: colors.textMain, fontFamily: 'Inter, sans-serif', transition: 'background 0.3s ease, color 0.3s ease' }}>
+      <PageMeta title="Feed" description="Suivez l'actualité et les partages de la communauté DropZone DJ." />
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '16px 12px' : '24px', display: 'flex', gap: 40, flexDirection: isMobile ? 'column' : 'row', height: isMobile ? 'auto' : 'calc(100vh - 120px)' }}>
         
         {/* COLONNE PRINCIPALE */}

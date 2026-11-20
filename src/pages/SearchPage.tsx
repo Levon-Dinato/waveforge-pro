@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { usePlayer } from '../contexts/PlayerContext';
 import { useIsMobile } from '../hooks/useIsMobile';
+import { PageMeta } from '../components/PageMeta';
 
 interface Track {
   id: string;
@@ -96,6 +97,8 @@ export const SearchPage: React.FC = () => {
   return (
     <div style={{ background: '#0a0c14', minHeight: '100vh', color: '#fff', fontFamily: 'sans-serif', paddingBottom: 100 }}>
       
+      <PageMeta title="Recherche" description="Recherchez des sons, des artistes et des DJs sur DropZone DJ." />
+
       {/* HEADER + BARRE DE RECHERCHE */}
       <div style={{ padding: isMobile ? '20px 15px' : '40px 20px', maxWidth: 1200, margin: '0 auto' }}>
         <h1 style={{ fontSize: isMobile ? 24 : 32, fontWeight: 900, margin: 0, marginBottom: 20 }}>

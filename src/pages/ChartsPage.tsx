@@ -6,6 +6,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { usePlayer } from '../contexts/PlayerContext';
 import { ScrollToTop } from '../components/ScrollToTop';
+import { PageMeta } from '../components/PageMeta';
 
 interface Track {
   id: string;
@@ -181,6 +182,7 @@ export const ChartsPage: React.FC = () => {
 
   return (
     <div style={{ background: colors.bg, minHeight: '100vh', padding: '40px 20px', color: colors.textMain, fontFamily: 'Inter, sans-serif' }}>
+      <PageMeta title="Top 50" description="Le classement des morceaux les plus écoutés par la communauté DropZone DJ, mis à jour en temps réel." />
       <div style={{ maxWidth: 1000, margin: '0 auto' }}>
         
         {/* HEADER */}

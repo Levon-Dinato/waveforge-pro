@@ -47,8 +47,5 @@
   ],
   "crons": [
     { "path": "/api/radar", "schedule": "0 */6 * * *" }
-  ],
-  "functions": {
-    "api/radar.js": { "maxDuration": 60 }
-  }
+  ]
 }

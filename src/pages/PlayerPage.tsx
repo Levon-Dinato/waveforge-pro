@@ -30,12 +30,6 @@ export const PlayerPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'chat' | 'history'>('chat');
 
   useEffect(() => {
-    if (currentTrack) {
-      supabase.from('tracks').update({ last_played_at: new Date().toISOString() }).eq('id', currentTrack.id).then();
-    }
-  }, [currentTrack]);
-
-  useEffect(() => {
     let isMounted = true;
     let channel: any = null;
 

@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useRef, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import { usePlayer } from './PlayerContext';
+import { supabase } from '../lib/supabase';
 
 export interface RadioContextType {
   tracks: any[];
@@ -72,6 +73,13 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const { stop: stopMainPlayer } = usePlayer();
 
   const currentTrack = tracks[currentIndex];
+
+  // ✅ Met à jour "last_played_at" à chaque changement de titre (page radio ET popup)
+  useEffect(() => {
+    if (currentTrack?.id) {
+      supabase.from('tracks').update({ last_played_at: new Date().toISOString() }).eq('id', currentTrack.id).then();
+    }
+  }, [currentTrack?.id]);
 
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {

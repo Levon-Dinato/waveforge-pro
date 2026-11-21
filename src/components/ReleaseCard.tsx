@@ -64,7 +64,7 @@ export const ReleaseCard: React.FC<ReleaseCardProps> = ({
       <div style={{ ...bgStyle, border: `1px solid ${colors.cardBorder}`, borderRadius: 16, overflow: 'hidden', padding: 24, backdropFilter: 'blur(20px)', boxShadow: hasCustomBg ? 'none' : '0 10px 30px rgba(0,0,0,0.1)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 16 }}>
           
-          <div style={{ position: 'relative', width: 80, height: 80, borderRadius: 12, overflow: 'hidden', flexShrink: 0, background: colors.inputBg }} onClick={() => handlePlayTrack(track)}>
+          <div style={{ position: 'relative', width: 88, height: 88, borderRadius: 12, overflow: 'hidden', flexShrink: 0, background: colors.inputBg }} onClick={() => handlePlayTrack(track)}>
             {track.cover_url ? <img src={track.cover_url} alt={track.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : null}
             <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: isThisPlaying ? 1 : 0, transition: 'opacity 0.2s', cursor: 'pointer' }} className="play-overlay">
               <div style={{ width: 36, height: 36, borderRadius: '50%', background: themeColor, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', boxShadow: `0 0 15px ${themeColor}80` }}>
@@ -77,9 +77,23 @@ export const ReleaseCard: React.FC<ReleaseCardProps> = ({
             </div>
           </div>
 
-          <div style={{ flex: 1 }}>
-            <h3 style={{ fontSize: 20, fontWeight: 800, color: titleColor, margin: 0 }}>{track.title}</h3>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <h3 style={{ fontSize: 20, fontWeight: 800, color: titleColor, margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.title}</h3>
             <div style={{ fontSize: 14, color: mutedColor, marginTop: 4 }}>{track.artist} • {track.genre}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 12, fontSize: 12, color: mutedColor, fontWeight: 600 }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                {track.plays || 0}
+              </span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                {track.likes_count || track.likes || 0}
+              </span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                {track.comments_count || 0}
+              </span>
+            </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             {track.purchase_url && (
@@ -110,11 +124,13 @@ export const ReleaseCard: React.FC<ReleaseCardProps> = ({
         </div>
         
         {isPlayable && (
-          <div style={{ padding: '0 8px', marginTop: 12 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-              <span style={{ fontSize: 11, color: themeColor, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>Dropzone</span>
+          <div style={{ padding: '0 4px', marginTop: 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
               <span style={{ fontSize: 11, color: mutedColor, fontFamily: 'monospace', fontWeight: 600 }}>
-                {isCurrentTrack ? `${formatTime(currentTime)} / ${formatTime(duration)}` : `0:00 / ${formatTime(track.duration)}`}
+                {isCurrentTrack ? formatTime(currentTime) : '0:00'}
+              </span>
+              <span style={{ fontSize: 11, color: mutedColor, fontFamily: 'monospace', fontWeight: 600 }}>
+                {isCurrentTrack ? formatTime(duration) : formatTime(track.duration)}
               </span>
             </div>
             <CanvasWaveform

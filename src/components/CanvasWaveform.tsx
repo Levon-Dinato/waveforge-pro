@@ -36,13 +36,15 @@ export const CanvasWaveform: React.FC<CanvasWaveformProps> = ({ peaks, isPlaying
     const step = Math.max(1, Math.floor(safePeaks.length / barCount));
     const displayPeaks = safePeaks.filter((_: any, i: number) => i % step === 0).slice(0, barCount);
 
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.globalAlpha = 0.25;
+    ctx.fillStyle = themeColor;
     for (let i = 0; i < displayPeaks.length; i++) {
       const x = (i / displayPeaks.length) * W;
       const val = displayPeaks[i] > 1 ? displayPeaks[i] / 100 : displayPeaks[i];
       const barHeight = Math.max(val * maxAmplitude, 2);
       if (x >= playedX) ctx.fillRect(x, centerY - barHeight, 1, barHeight * 2);
     }
+    ctx.globalAlpha = 1;
 
     if (isPlaying || displayProgress > 0) {
       ctx.save();
@@ -124,7 +126,7 @@ export const CanvasWaveform: React.FC<CanvasWaveformProps> = ({ peaks, isPlaying
   return (
     <canvas 
       ref={canvasRef} onMouseDown={handleMouseDown} onClick={(e) => { if (isCurrent) e.stopPropagation(); }}
-      style={{ width: '100%', height: isMobile ? '30px' : '40px', display: 'block', cursor: isCurrent ? 'pointer' : 'default', touchAction: 'none', opacity: isCurrent ? 1 : 0.6 }} 
+      style={{ width: '100%', height: isMobile ? '36px' : '48px', display: 'block', cursor: isCurrent ? 'pointer' : 'default', touchAction: 'none', opacity: isCurrent ? 1 : 0.6 }} 
     />
   );
 };

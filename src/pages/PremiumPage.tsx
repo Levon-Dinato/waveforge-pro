@@ -242,7 +242,8 @@ export const PremiumPage: React.FC = () => {
     if (!user) return alert("🔒 Inscrivez-vous pour écouter.");
     if (track.audio_url && track.audio_url.length > 0) {
       const isNew = currentTrack?.id !== track.id;
-      play({ ...track, peaks: track.peaks });
+      const queue = tracks.filter(t => t.audio_url && t.audio_url.length > 0);
+      play({ ...track, peaks: track.peaks }, queue);
       if (isNew && !isOwner) { await supabase.rpc('increment_play_count', { track_id_param: track.id }); setTracks(prev => prev.map(t => t.id === track.id ? { ...t, plays: (t.plays || 0) + 1 } : t)); }
     }
   };

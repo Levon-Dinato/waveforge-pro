@@ -43,7 +43,7 @@ const forceDownload = async (url: string, filename: string, trackId: string) => 
 };
 
 export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlaying, onTogglePlay, onStop }) => {
-  const { currentTime, duration, seek } = usePlayer();
+  const { currentTime, duration, seek, next, previous, hasNext, hasPrevious, volume, setVolume } = usePlayer();
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
@@ -59,6 +59,8 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
   const [isCreatingPlaylist, setIsCreatingPlaylist] = useState(false);
   const [newPlaylistName, setNewPlaylistName] = useState('');
   const [recentlyAdded, setRecentlyAdded] = useState<string | null>(null);
+  const [isMuted, setIsMuted] = useState(false);
+  const lastVolumeRef = useRef(volume);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isMobile, setIsMobile] = useState(false);
@@ -249,6 +251,17 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
     seek(clickX / rect.width);
   };
 
+  const toggleMute = () => {
+    if (isMuted || volume === 0) {
+      setVolume(lastVolumeRef.current > 0 ? lastVolumeRef.current : 0.8);
+      setIsMuted(false);
+    } else {
+      lastVolumeRef.current = volume;
+      setVolume(0);
+      setIsMuted(true);
+    }
+  };
+
   if (!currentTrack) return null;
 
   return (
@@ -281,6 +294,10 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
         </div>
 
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: isMobile ? 12 : 24 }}>
+          <button onClick={previous} disabled={!hasPrevious} style={{ background: 'transparent', border: 'none', color: hasPrevious ? colors.textMain : colors.textMuted, cursor: hasPrevious ? 'pointer' : 'default', opacity: hasPrevious ? 1 : 0.35, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, padding: 4 }}>
+            <svg width={isMobile ? 18 : 22} height={isMobile ? 18 : 22} viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="4" width="2.5" height="16"></rect><polygon points="19 4 8.5 12 19 20"></polygon></svg>
+          </button>
+
           <button onClick={onTogglePlay} style={{ width: isMobile ? 36 : 48, height: isMobile ? 36 : 48, borderRadius: '50%', background: colors.playBtnBg, color: colors.playBtnText, border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, transition: 'transform 0.1s, background 0.3s, color 0.3s', boxShadow: isDark ? '0 0 20px rgba(255,255,255,0.1)' : '0 4px 10px rgba(0,0,0,0.1)' }}
             onMouseDown={e => e.currentTarget.style.transform = 'scale(0.92)'} onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'} onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}>
             {isPlaying ? (
@@ -288,6 +305,10 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
             ) : (
               <svg width={isMobile ? 16 : 20} height={isMobile ? 16 : 20} viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: 3 }}><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
             )}
+          </button>
+
+          <button onClick={next} disabled={!hasNext} style={{ background: 'transparent', border: 'none', color: hasNext ? colors.textMain : colors.textMuted, cursor: hasNext ? 'pointer' : 'default', opacity: hasNext ? 1 : 0.35, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, padding: 4 }}>
+            <svg width={isMobile ? 18 : 22} height={isMobile ? 18 : 22} viewBox="0 0 24 24" fill="currentColor"><polygon points="5 4 15.5 12 5 20"></polygon><rect x="16.5" y="4" width="2.5" height="16"></rect></svg>
           </button>
 
           {!isMobile && <span style={{ fontSize: 12, fontFamily: 'monospace', color: colors.textMuted, width: 40, textAlign: 'right', fontWeight: 600 }}>{formatTime(currentTime)}</span>}
@@ -299,8 +320,21 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
           {!isMobile && <span style={{ fontSize: 12, fontFamily: 'monospace', color: colors.textMuted, width: 40, fontWeight: 600 }}>{formatTime(duration)}</span>}
         </div>
 
-        <div style={{ display: 'flex', gap: isMobile ? 10 : 16, alignItems: 'center', justifyContent: 'flex-end', width: isMobile ? 'auto' : '220px', position: 'relative' }}>
+        <div style={{ display: 'flex', gap: isMobile ? 8 : 12, alignItems: 'center', justifyContent: 'flex-end', width: isMobile ? 'auto' : '264px', position: 'relative' }}>
           
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <button onClick={toggleMute} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'color 0.2s' }} onMouseEnter={e => e.currentTarget.style.color = colors.textMain} onMouseLeave={e => e.currentTarget.style.color = colors.textMuted}>
+              {volume === 0 ? (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>
+              ) : (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+              )}
+            </button>
+            {!isMobile && (
+              <input type="range" min={0} max={1} step={0.01} value={isMuted ? 0 : volume} onChange={(e) => { setVolume(parseFloat(e.target.value)); setIsMuted(false); }} style={{ width: 70, accentColor: '#ffffff', cursor: 'pointer' }} />
+            )}
+          </div>
+
           <button onClick={handleLike} style={{ background: 'transparent', border: 'none', color: isLiked ? '#b0b0b0' : colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'all 0.2s' }}
             onMouseEnter={e => { if (!isLiked) e.currentTarget.style.color = colors.textMain; }} onMouseLeave={e => { if (!isLiked) e.currentTarget.style.color = colors.textMuted; }}>
             {isLiked ? Icons.heartFilled : Icons.heart}

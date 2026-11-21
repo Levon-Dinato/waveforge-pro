@@ -33,6 +33,7 @@ const Icons = {
 
 const NAV_ITEMS = [
   { path: '/', label: 'Accueil', icon: Icons.home, exact: true },
+  { path: '/radio/ELEKTRAQ', label: 'ELEKTRAQ Radio', icon: Icons.live },
   { path: '/discover', label: 'Découvrir', icon: Icons.discover },
   { path: '/charts', label: 'Top 50', icon: Icons.trophy },
   { path: '/feed', label: 'Feed', icon: Icons.feed },
@@ -54,6 +55,7 @@ const MOBILE_NAV = [
   { path: '/discover', label: 'Découvrir', icon: Icons.discover }, 
   { path: '/charts', label: 'Top 50', icon: Icons.trophy },
   { path: '/nouveautes', label: 'Sorties', icon: Icons.new },
+  { path: '/radio/ELEKTRAQ', label: 'Radio', icon: Icons.radioList },
   { path: '#menu', label: 'Menu', icon: Icons.menu }, 
 ];
 

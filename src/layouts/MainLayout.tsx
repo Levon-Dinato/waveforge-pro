@@ -33,18 +33,18 @@ const Icons = {
 
 const NAV_ITEMS = [
   { path: '/', label: 'Accueil', icon: Icons.home, exact: true },
-  { path: '/radio/ELEKTRAQ', label: 'ELEKTRAQ Radio', icon: Icons.live },
-  { path: '/sortie-radio', label: 'Sortie Radio', icon: Icons.radioList },
   { path: '/discover', label: 'Découvrir', icon: Icons.discover },
   { path: '/charts', label: 'Top 50', icon: Icons.trophy },
+  { path: '/genres', label: 'Genres', icon: Icons.genres },
+  { path: '/artists', label: 'Artistes', icon: Icons.artists },
   { path: '/feed', label: 'Feed', icon: Icons.feed },
   { path: '/nouveautes', label: 'DJ Only / Promos', icon: Icons.new },
   { path: '/mes-playlists', label: 'Mes Playlists', icon: Icons.playlist },
-  { path: '/events', label: 'Événements', icon: Icons.events },
-  { path: '/live', label: 'Live DJ', icon: Icons.live },
-  { path: '/genres', label: 'Genres', icon: Icons.genres },
-  { path: '/artists', label: 'Artistes', icon: Icons.artists },
+  { path: '/radio/ELEKTRAQ', label: 'ELEKTRAQ Radio', icon: Icons.live },
+  { path: '/sortie-radio', label: 'Sortie Radio', icon: Icons.radioList },
   { path: '/radios', label: 'Toutes les Radios', icon: Icons.radioList },
+  { path: '/live', label: 'Live DJ', icon: Icons.live },
+  { path: '/events', label: 'Événements', icon: Icons.events },
   
   // ✅ "Outils DJ" et "Réglages" ont été retirés d'ici
   

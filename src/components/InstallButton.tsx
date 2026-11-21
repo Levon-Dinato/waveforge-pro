@@ -71,7 +71,7 @@ export const InstallButton: React.FC<InstallButtonProps> = ({ variant = 'sidebar
             letterSpacing: '0.5px',
           }}
         >
-          INSTALLER DROPZONE DJ
+          INSTALLER ELEKTRAQ
         </h3>
 
         {isIOS ? (

@@ -137,7 +137,7 @@ export const ElektraqVideosPage: React.FC = () => {
       if (containerRef.current) {
         containerRef.current.innerHTML = `
           <div class="dz-videos-wrapper">
-            <header><div class="logo"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>DROPZONE <b>IA VIDEOS</b></div><div class="hb"><button data-a="con">Journal</button></div></header>
+            <header><div class="logo"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>ELEKTRAQ <b>IA VIDEOS</b></div><div class="hb"><button data-a="con">Journal</button></div></header>
             <main id="main"></main>
             <div id="con"><div><span>JOURNAL TECHNIQUE</span><button data-a="con">✕</button></div><div id="lb"></div></div>
             <div id="toast"></div>

@@ -245,7 +245,7 @@ const JogWheel = ({
     >
       <div ref={innerRef} style={{ width: '92%', height: '92%', borderRadius: '50%', background: '#080808', border: '1px solid #111', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
         <div style={{ width: size * 0.55, height: size * 0.55, borderRadius: '50%', overflow: 'hidden', border: '3px solid #111', background: '#111', boxShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
-          {coverUrl ? <img src={coverUrl} alt="cover" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#333', fontSize: size * 0.1, fontWeight: 900 }}>DZ</div>}
+          {coverUrl ? <img src={coverUrl} alt="cover" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#333', fontSize: size * 0.1, fontWeight: 900 }}>EQ</div>}
           <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: size * 0.08, height: size * 0.08, borderRadius: '50%', background: 'linear-gradient(135deg, #444, #111)', boxShadow: 'inset 0 1px 3px rgba(255,255,255,0.2)' }} />
         </div>
       </div>

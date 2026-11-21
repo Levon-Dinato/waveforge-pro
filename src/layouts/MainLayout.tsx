@@ -134,7 +134,7 @@ export const MainLayout: React.FC = () => {
         <header style={{ position: 'sticky', top: 0, zIndex: 50, background: colors.bg, borderBottom: `1px solid ${colors.border}`, padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
             <img src="/icons/icon-192.png" alt="ELEKTRAQ" style={{ width: 32, height: 32, objectFit: 'contain', borderRadius: 8 }} />
-            <span style={{ fontWeight: 800, fontSize: '1rem', color: colors.textMain, letterSpacing: '-0.5px' }}>DROPZONE <span style={{ color: colors.textMuted }}>DJ</span></span>
+            <span style={{ fontWeight: 800, fontSize: '1rem', color: colors.textMain, letterSpacing: '-0.5px' }}>ELEKTRAQ</span>
           </Link>
           
           <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>

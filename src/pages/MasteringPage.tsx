@@ -477,7 +477,7 @@ export const MasteringPage: React.FC = () => {
             OUTILS
           </Link>
           <div style={{ width: 1, height: 20, background: colors.borderLight }} />
-          <h1 style={{ fontSize: 16, fontWeight: 900, margin: 0, letterSpacing: '1px', color: colors.textMain }}>DROPZONE <span style={{ color: '#ffffff' }}>MASTERING</span></h1>
+          <h1 style={{ fontSize: 16, fontWeight: 900, margin: 0, letterSpacing: '1px', color: colors.textMain }}>ELEKTRAQ <span style={{ color: '#ffffff' }}>MASTERING</span></h1>
         </div>
         <div style={{ display: 'flex', gap: 12 }}>
           <button onClick={saveCurrentPreset} style={{ background: 'transparent', border: `1px solid ${colors.border}`, color: colors.textMuted, padding: '10px 16px', borderRadius: 6, fontWeight: 700, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>

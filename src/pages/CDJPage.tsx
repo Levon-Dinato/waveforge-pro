@@ -392,7 +392,7 @@ export const CDJPage: React.FC = () => {
 
   const exportCuePoints = () => {
     if (!activeTrack || !activeTrack.cuePoints) return;
-    let content = `====================================================\nFICHE DE PRÉPARATION - DROPZONE DJ\n====================================================\n\nTitre    : ${activeTrack.title}\nArtiste  : ${activeTrack.artist}\nGenre    : ${activeTrack.genre}\nBPM      : ${activeTrack.bpm}\nTonalité : ${activeTrack.key}\nDurée    : ${formatDuration(activeTrack.duration || 0)}\n\n----------------------------------------------------\nEMPLACEMENT DES CUE POINTS\n----------------------------------------------------\n\n`;
+    let content = `====================================================\nFICHE DE PRÉPARATION - ELEKTRAQ\n====================================================\n\nTitre    : ${activeTrack.title}\nArtiste  : ${activeTrack.artist}\nGenre    : ${activeTrack.genre}\nBPM      : ${activeTrack.bpm}\nTonalité : ${activeTrack.key}\nDurée    : ${formatDuration(activeTrack.duration || 0)}\n\n----------------------------------------------------\nEMPLACEMENT DES CUE POINTS\n----------------------------------------------------\n\n`;
     activeTrack.cuePoints.forEach((cue: any) => {
       content += `Cue ${cue.id} (${cue.label})\n  Temps exact : ${formatDuration(cue.time)}\n  Millisecondes : ${Math.floor(cue.time * 1000)} ms\n\n`;
     });

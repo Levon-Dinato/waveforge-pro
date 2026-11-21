@@ -813,7 +813,7 @@ export const RadioLayout: React.FC = () => {
 
       {isWiping && (
         <div className="wipe-overlay">
-          <span>DROPZONE DJ</span>
+          <span>ELEKTRAQ</span>
         </div>
       )}
     </div>

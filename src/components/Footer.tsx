@@ -61,10 +61,10 @@ export const Footer: React.FC = () => {
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               color: '#000', fontWeight: 900, fontSize: 16,
             }}>
-              DZ
+              EQ
             </div>
             <div style={{ fontSize: 16, fontWeight: 800, color: colors.heading, letterSpacing: '-0.5px' }}>
-              DROP<span style={{ color: colors.accent }}>ZONE</span> DJ
+              ELEKTRAQ
             </div>
           </div>
           <p style={{ fontSize: 13, lineHeight: 1.7, margin: 0, maxWidth: 240 }}>

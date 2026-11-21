@@ -47,6 +47,7 @@ const LivePage = lazy(() => import('./pages/LivePage').then((m) => ({ default: m
 const TrackPage = lazy(() => import('./pages/TrackPage').then((m) => ({ default: m.TrackPage })));
 const EventsPage = lazy(() => import('./pages/EventsPage').then((m) => ({ default: m.EventsPage })));
 const FeedPage = lazy(() => import('./pages/FeedPage').then((m) => ({ default: m.FeedPage })));
+const SortieRadioPage = lazy(() => import('./pages/SortieRadioPage').then((m) => ({ default: m.SortieRadioPage })));
 const ToolsPage = lazy(() => import('./pages/ToolsPage').then((m) => ({ default: m.ToolsPage })));
 const AdminPage = lazy(() => import('./pages/AdminPage').then((m) => ({ default: m.AdminPage }))); 
 const LevonDinatoPage = lazy(() => import('./pages/LevonDinatoPage').then((m) => ({ default: m.LevonDinatoPage })));
@@ -101,6 +102,7 @@ function AnimatedRoutes() {
           
           <Route index element={<PageTransition><HomePage /></PageTransition>} />
           <Route path="feed" element={<PageTransition><FeedPage /></PageTransition>} />
+          <Route path="sortie-radio" element={<PageTransition><SortieRadioPage /></PageTransition>} />
           <Route path="nouveautes" element={<PageTransition><NouveautesPage /></PageTransition>} />
           <Route path="discover" element={<PageTransition><DiscoverPage /></PageTransition>} />
           <Route path="charts" element={<PageTransition><ChartsPage /></PageTransition>} />

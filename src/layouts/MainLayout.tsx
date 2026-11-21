@@ -34,9 +34,10 @@ const Icons = {
 const NAV_ITEMS = [
   { path: '/', label: 'Accueil', icon: Icons.home, exact: true },
   { path: '/radio/ELEKTRAQ', label: 'ELEKTRAQ Radio', icon: Icons.live },
+  { path: '/sortie-radio', label: 'Sortie Radio', icon: Icons.radioList },
   { path: '/discover', label: 'Découvrir', icon: Icons.discover },
   { path: '/charts', label: 'Top 50', icon: Icons.trophy },
-  { path: '/feed', label: 'Feed', icon: Icons.feed },
+  { path: '/feed', label: 'DJ Only / Promos', icon: Icons.feed },
   { path: '/nouveautes', label: 'Nouveautés', icon: Icons.new },
   { path: '/mes-playlists', label: 'Mes Playlists', icon: Icons.playlist },
   { path: '/events', label: 'Événements', icon: Icons.events },

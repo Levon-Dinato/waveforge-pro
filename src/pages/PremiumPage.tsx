@@ -85,14 +85,12 @@ export const PremiumPage: React.FC = () => {
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [visibleTracksCount, setVisibleTracksCount] = useState(4);
-  const [visibleRadioCount, setVisibleRadioCount] = useState(6);
   const [activeShort, setActiveShort] = useState<any>(null);
 
   const [isPremium, setIsPremium] = useState(false);
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<any>(null);
   const [tracks, setTracks] = useState<any[]>([]);
-  const [radioTracks, setRadioTracks] = useState<any[]>([]);
   const [events, setEvents] = useState<any[]>([]);
   const [gallery, setGallery] = useState<any[]>([]);
   const [shorts, setShorts] = useState<any[]>([]);
@@ -205,11 +203,6 @@ export const PremiumPage: React.FC = () => {
           setTracks(formatted);
           formatted.forEach(track => { if (track.audio_url && !track.duration) { const a = new Audio(track.audio_url); a.onloadedmetadata = () => setTracks(prev => prev.map(x => x.id === track.id ? { ...x, duration: a.duration } : x)); } });
         }
-        const { data: rt } = await supabase.from('tracks').select('*').is('user_id', null).neq('is_jingle', true).order('created_at', { ascending: false });
-        if (rt) {
-          const rformatted = rt.map(x => ({ ...x, peaks: typeof x.peaks === 'string' ? JSON.parse(x.peaks) : x.peaks || [] }));
-          setRadioTracks(rformatted);
-        }
 
         const today = new Date().toISOString().split('T')[0];
         const { data: e } = await supabase.from('events').select('*').eq('created_by', p.id).gte('event_date', today).order('event_date');
@@ -249,8 +242,7 @@ export const PremiumPage: React.FC = () => {
     if (!user) return alert("🔒 Inscrivez-vous pour écouter.");
     if (track.audio_url && track.audio_url.length > 0) {
       const isNew = currentTrack?.id !== track.id;
-      const sourceList = radioTracks.some(t => t.id === track.id) ? radioTracks : tracks;
-      const queue = sourceList.filter(t => t.audio_url && t.audio_url.length > 0);
+      const queue = tracks.filter(t => t.audio_url && t.audio_url.length > 0);
       play({ ...track, peaks: track.peaks }, queue);
       if (isNew && !isOwner) { await supabase.rpc('increment_play_count', { track_id_param: track.id }); setTracks(prev => prev.map(t => t.id === track.id ? { ...t, plays: (t.plays || 0) + 1 } : t)); }
     }
@@ -678,9 +670,9 @@ export const PremiumPage: React.FC = () => {
 
         {showReleases && (
           <section id="releases" style={{ paddingTop: isMobile ? 40 : 80, borderTop: `1px solid ${colors.border}` }}>
-            <div className="section-subtitle">🔥 DJ Only / Promos</div>
+            <div className="section-subtitle">Écouter</div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: isMobile ? 20 : 40 }}>
-              <h2 className="section-title" style={{ margin: 0 }}>{settings.releases_title || 'Reprends & télécharge'}</h2>
+              <h2 className="section-title" style={{ margin: 0 }}>{settings.releases_title || 'Dernières Sorties'}</h2>
               {isOwner && (
                 <div style={{ display: 'flex', gap: 12 }}>
                   <button onClick={() => setShowUploadModal(true)} style={{ padding: '8px 16px', background: themeColor, color: '#000', borderRadius: 6, fontSize: 12, fontWeight: 800, border: 'none', cursor: 'pointer', boxShadow: `0 4px 15px ${themeColor}40` }}>
@@ -754,40 +746,6 @@ export const PremiumPage: React.FC = () => {
           </section>
         )}
 
-        {radioTracks.length > 0 && (
-          <section id="sortie-radio" style={{ paddingTop: isMobile ? 40 : 80, borderTop: `1px solid ${colors.border}` }}>
-            <div className="section-subtitle">🎵 Sortie Radio</div>
-            <h2 className="section-title" style={{ marginBottom: isMobile ? 20 : 40 }}>Sélection IA / Radar</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 16 : 24 }}>
-              {radioTracks.slice(0, visibleRadioCount).map((track) => (
-                <ReleaseCard 
-                  key={track.id}
-                  track={track}
-                  isDark={isDark}
-                  themeColor={themeColor}
-                  colors={colors}
-                  isCurrentTrack={currentTrack?.id === track.id}
-                  isThisPlaying={currentTrack?.id === track.id && isPlaying}
-                  isMobile={isMobile}
-                  handlePlayTrack={handlePlayTrack}
-                  handleDownload={handleDownload}
-                  seek={seek}
-                  currentTime={currentTime}
-                  duration={duration}
-                  formatTime={formatTime}
-                  isOwner={isOwner}
-                />
-              ))}
-              {radioTracks.length > visibleRadioCount && (
-                <div style={{ textAlign: 'center', marginTop: 20 }}>
-                  <button onClick={() => setVisibleRadioCount(prev => prev + 6)} style={{ background: 'transparent', border: `1px solid ${themeColor}`, color: themeColor, padding: '12px 32px', borderRadius: 8, fontSize: 13, fontWeight: 800, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '1px', transition: 'all 0.2s' }}>
-                    Voir plus
-                  </button>
-                </div>
-              )}
-            </div>
-          </section>
-        )}
       </div>
 
       {isOwner && (

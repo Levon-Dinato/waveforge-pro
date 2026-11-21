@@ -192,6 +192,7 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   const transitionToTrack = useCallback((nextIndex: number) => {
     if (isLive || tracks.length === 0) return;
+    if (isCrossfadingRef.current) return;
     const nextTrack = tracks[nextIndex];
     if (!nextTrack) return;
 
@@ -235,6 +236,17 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       }
     };
     requestAnimationFrame(animateFade);
+
+    // Filet de sécurité : garantit la fin de la transition même si requestAnimationFrame est interrompu
+    setTimeout(() => {
+      if (!isCrossfadingRef.current) return;
+      isCrossfadingRef.current = false;
+      if (currentAudio) { currentAudio.pause(); currentAudio.currentTime = 0; currentAudio.volume = 1; }
+      if (nextAudio) nextAudio.volume = 1;
+      activePlayerRef.current = activePlayerRef.current === 'A' ? 'B' : 'A';
+      setCurrentIndex(nextIndex);
+      saveStateToLocalStorage({ currentIndex: nextIndex, progress: 0 });
+    }, durationMs + 150);
   }, [crossfadeEnabled, crossfadeDuration, isLive, isPlaying, tracks, currentTrack?.is_jingle, saveStateToLocalStorage]);
 
   const playNext = useCallback(() => {

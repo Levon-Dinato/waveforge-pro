@@ -24,3 +24,10 @@ dist-ssr
 *.sw?
 
 package-lock.json
+
+radar-auto.bat
+_batch.json
+check-dates.txt
+r1.json
+r2.json
+r3.json

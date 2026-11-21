@@ -43,7 +43,6 @@ const ProfilePage = lazy(() => import('./pages/ProfilePage').then((m) => ({ defa
 const GenresPage = lazy(() => import('./pages/GenresPage').then((m) => ({ default: m.GenresPage })));
 const ArtistsPage = lazy(() => import('./pages/ArtistsPage').then((m) => ({ default: m.ArtistsPage })));
 const SearchPage = lazy(() => import('./pages/SearchPage').then((m) => ({ default: m.SearchPage })));
-const MixerPage = lazy(() => import('./pages/MixerPage').then((m) => ({ default: m.MixerPage })));
 const LivePage = lazy(() => import('./pages/LivePage').then((m) => ({ default: m.LivePage })));
 const TrackPage = lazy(() => import('./pages/TrackPage').then((m) => ({ default: m.TrackPage })));
 const EventsPage = lazy(() => import('./pages/EventsPage').then((m) => ({ default: m.EventsPage })));
@@ -89,7 +88,6 @@ function AnimatedRoutes() {
         <Route path="/link/:slug" element={<SmartLinkPage />} />
         
         <Route path="/player/:username" element={<PlayerPage />} />
-
         <Route path="/radio/:username" element={<RadioLayout />}>
           <Route index element={<RadioHomePage />} />
           <Route path="top" element={<RadioTopPage />} />

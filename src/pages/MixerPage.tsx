@@ -70,9 +70,29 @@ const TimeDisplay = ({ getCurrentTime }: { getCurrentTime: () => number }) => {
   return <span ref={timeRef} style={{ fontFamily: 'monospace', fontWeight: 700, color: '#ffffff' }}>00:00</span>;
 };
 
-const StereoMeter = ({ isPlaying }: { isPlaying: boolean }) => {
+const StereoMeter = ({ analyser }: { analyser: AnalyserNode | null }) => {
   const segments = 15;
-  const activeSegments = isPlaying ? 10 + Math.floor(Math.random() * 5) : 0;
+  const [activeSegments, setActiveSegments] = useState(0);
+
+  useEffect(() => {
+    if (!analyser) { setActiveSegments(0); return; }
+    let raf: number;
+    const data = new Uint8Array(analyser.fftSize);
+    const update = () => {
+      analyser.getByteTimeDomainData(data);
+      let sum = 0;
+      for (let i = 0; i < data.length; i++) {
+        const v = (data[i] - 128) / 128;
+        sum += v * v;
+      }
+      const rms = Math.sqrt(sum / data.length);
+      const level = Math.min(1, rms * 4);
+      setActiveSegments(Math.floor(level * segments));
+      raf = requestAnimationFrame(update);
+    };
+    update();
+    return () => cancelAnimationFrame(raf);
+  }, [analyser]);
 
   return (
     <div style={{ display: 'flex', gap: 2, height: 120, background: '#050505', padding: 3, borderRadius: 2, border: '1px solid #222', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.8)' }}>
@@ -237,16 +257,17 @@ const JogWheel = ({
       style={{
         width: size, height: size, borderRadius: '50%',
         background: `radial-gradient(circle at 50% 50%, #0a0a0a 0%, #000 60%, #000 100%)`,
-        border: `4px solid ${isDragging ? color : (isHovered ? '#555' : '#222')}`,
-        boxShadow: isDragging ? `0 0 20px ${color}60, inset 0 0 30px rgba(0,0,0,0.9)` : 'inset 0 0 30px rgba(0,0,0,0.9), 0 4px 10px rgba(0,0,0,0.5)',
+        border: `4px solid ${isDragging ? color : (isHovered ? '#555' : '#2a2a2a')}`,
+        boxShadow: isDragging ? `0 0 25px ${color}70, inset 0 0 30px rgba(0,0,0,0.9)` : 'inset 0 0 30px rgba(0,0,0,0.9), 0 6px 14px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05)',
         position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center',
         cursor: isDragging ? 'grabbing' : 'grab', touchAction: 'none'
       }}
     >
-      <div ref={innerRef} style={{ width: '92%', height: '92%', borderRadius: '50%', background: '#080808', border: '1px solid #111', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
-        <div style={{ width: size * 0.55, height: size * 0.55, borderRadius: '50%', overflow: 'hidden', border: '3px solid #111', background: '#111', boxShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
-          {coverUrl ? <img src={coverUrl} alt="cover" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#333', fontSize: size * 0.1, fontWeight: 900 }}>EQ</div>}
-          <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: size * 0.08, height: size * 0.08, borderRadius: '50%', background: 'linear-gradient(135deg, #444, #111)', boxShadow: 'inset 0 1px 3px rgba(255,255,255,0.2)' }} />
+      <div ref={innerRef} style={{ width: '92%', height: '92%', borderRadius: '50%', background: 'radial-gradient(circle at 35% 35%, #1c1c1c 0%, #0b0b0b 45%, #050505 100%)', border: '1px solid #111', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', boxShadow: 'inset 0 0 24px rgba(0,0,0,0.95)' }}>
+        <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'repeating-radial-gradient(circle, transparent 0, transparent 3px, rgba(255,255,255,0.03) 4px, transparent 5px)', pointerEvents: 'none' }} />
+        <div style={{ width: size * 0.55, height: size * 0.55, borderRadius: '50%', overflow: 'hidden', border: '3px solid #1c1c1c', background: '#111', boxShadow: '0 2px 12px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,255,255,0.06)' }}>
+          {coverUrl ? <img src={coverUrl} alt="cover" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3a3a3a', fontSize: size * 0.085, fontWeight: 900, letterSpacing: 1 }}>ELEKTRAQ</div>}
+          <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: size * 0.09, height: size * 0.09, borderRadius: '50%', background: 'radial-gradient(circle at 35% 35%, #3a3a3a, #000)', boxShadow: 'inset 0 1px 3px rgba(255,255,255,0.25), 0 1px 2px rgba(0,0,0,0.8)' }} />
         </div>
       </div>
     </div>
@@ -266,6 +287,7 @@ export const MixerPage: React.FC = () => {
   const [crossfader, setCrossfader] = useState(0.5);
   const [masterVol, setMasterVol] = useState(0.8);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
 
   const [waveA, setWaveA] = useState<WaveformData | null>(null);
   const [waveB, setWaveB] = useState<WaveformData | null>(null);
@@ -369,10 +391,11 @@ export const MixerPage: React.FC = () => {
       const filter = ctx.createBiquadFilter(); filter.type = 'lowpass'; filter.frequency.value = 20000;
       const vol = ctx.createGain(); vol.gain.value = 0.8;
       const gain = ctx.createGain(); gain.gain.value = deck === 'A' ? 1 - crossfader : crossfader;
+      const analyser = ctx.createAnalyser(); analyser.fftSize = 256; analyser.smoothingTimeConstant = 0.8;
       
       eqL.connect(eqM); eqM.connect(eqH); eqH.connect(filter);
-      filter.connect(vol); vol.connect(gain); gain.connect(masterGainRef.current!);
-      nodes.current = { ...nodes.current, eqH, eqM, eqL, filter, vol, gain, buffer, startTime: 0, pauseTime: 0 };
+      filter.connect(vol); vol.connect(analyser); analyser.connect(gain); gain.connect(masterGainRef.current!);
+      nodes.current = { ...nodes.current, eqH, eqM, eqL, filter, vol, gain, analyser, buffer, startTime: 0, pauseTime: 0 };
       
       if (deck === 'A') setDeckA({ ...initialDeckState, track, isPlaying: false });
       else setDeckB({ ...initialDeckState, track, isPlaying: false });
@@ -515,7 +538,12 @@ export const MixerPage: React.FC = () => {
     else setDeckB(p => ({ ...p, loopSize: size, isLooping: true }));
   };
 
-  const filteredTracks = tracks.filter(t => t.title.toLowerCase().includes(searchQuery.toLowerCase()) || t.artist.toLowerCase().includes(searchQuery.toLowerCase()));
+  const genres = Array.from(new Set(tracks.map(t => t.genre).filter(Boolean)));
+  const filteredTracks = tracks.filter(t => {
+    const matchesSearch = t.title.toLowerCase().includes(searchQuery.toLowerCase()) || t.artist.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesGenre = !selectedGenre || t.genre === selectedGenre;
+    return matchesSearch && matchesGenre;
+  });
 
   const renderDeck = (deck: 'A' | 'B') => {
     const isA = deck === 'A';
@@ -586,6 +614,19 @@ export const MixerPage: React.FC = () => {
 
         {/* 2. CENTRE : Jog Wheel + Play/Cue */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+           {/* Infos piste */}
+           <div style={{ textAlign: 'center', marginBottom: 10, maxWidth: 220 }}>
+             <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{state.track?.title || 'Load Track...'}</div>
+             <div style={{ fontSize: 11, color: '#888', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{state.track?.artist || '---'}</div>
+             <div style={{ display: 'flex', gap: 8, justifyContent: 'center', alignItems: 'center', marginTop: 4, fontSize: 11, color: waveColor, fontFamily: 'monospace', fontWeight: 700 }}>
+               <span>{state.track?.bpm ? state.track.bpm.toFixed(1) : '---'} BPM</span>
+               <span style={{ color: '#555' }}>•</span>
+               <span>{state.track?.song_key || '--'}</span>
+               <span style={{ color: '#555' }}>•</span>
+               <span><TimeDisplay getCurrentTime={isA ? getTimeA : getTimeB} /></span>
+             </div>
+           </div>
+
            <JogWheel size={180} coverUrl={state.track?.cover_url || null} isPlaying={state.isPlaying} color={waveColor} getCurrentTime={isA ? getTimeA : getTimeB} duration={state.track?.duration || 1} onScrub={(time) => handleScratch(time, deck)} onScrubEnd={() => handleSeekEnd(deck)} />
            
            <div style={{ display: 'flex', gap: 12, marginTop: 15 }}>
@@ -634,7 +675,7 @@ export const MixerPage: React.FC = () => {
 
            {/* VU-mètre */}
            <div style={{ marginLeft: 12, display: 'flex', alignItems: 'flex-end' }}>
-              <StereoMeter isPlaying={state.isPlaying} />
+              <StereoMeter analyser={isA ? deckANodes.current.analyser : deckBNodes.current.analyser} />
            </div>
 
         </div>
@@ -652,49 +693,22 @@ export const MixerPage: React.FC = () => {
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #555; }
       `}</style>
 
-      <div style={{ height: 36, background: '#0a0a0a', borderBottom: '1px solid #222', display: 'flex', alignItems: 'center', padding: '0 16px', flexShrink: 0 }}>
-         <button onClick={() => navigate('/')} style={{ background: 'transparent', border: 'none', color: '#888', cursor: 'pointer', fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 16 }}>←</span> Retour au site
+      <div style={{ height: 48, background: '#0a0a0a', borderBottom: '1px solid #222', display: 'flex', alignItems: 'center', padding: '0 16px', flexShrink: 0, justifyContent: 'space-between' }}>
+         <button onClick={() => navigate('/tools')} style={{ background: 'transparent', border: 'none', color: '#aaa', cursor: 'pointer', fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5"></path><path d="M12 19l-7-7 7-7"></path></svg>
+            Outils DJ
          </button>
+         <div style={{ fontSize: 12, fontWeight: 900, letterSpacing: 3, color: '#fff' }}>MIXER PRO</div>
+         <div style={{ width: 80, textAlign: 'right', fontSize: 10, color: '#555', fontFamily: 'monospace' }}>2 DECKS</div>
       </div>
 
-      {/* --- BARRE DU HAUT : INFOS PISTES --- */}
-      <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', height: 60, flexShrink: 0, background: '#0a0a0a', borderBottom: '2px solid #000' }}>
-         {/* Deck A Info */}
-         <div style={{ flex: 1, display: 'flex', alignItems: 'center', padding: '0 16px', borderRight: '1px solid #222' }}>
-            <div style={{ width: 40, height: 40, background: deckA.track?.cover_url ? `url(${deckA.track.cover_url}) center/cover` : '#111', borderRadius: 4, marginRight: 12, boxShadow: '0 2px 5px rgba(0,0,0,0.5)', border: '1px solid #333' }} />
-            <div style={{ flex: 1, minWidth: 0 }}>
-               <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{deckA.track?.title || 'Load Track...'}</div>
-               <div style={{ fontSize: 11, color: '#888', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{deckA.track?.artist || '---'} • {deckA.track?.genre || '---'}</div>
-            </div>
-            <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-               <div style={{ fontSize: 14, color: '#ffffff', fontFamily: 'monospace', fontWeight: 800 }}>{deckA.track?.bpm ? deckA.track.bpm.toFixed(1) : '---'}</div>
-               <div style={{ fontSize: 14, color: '#ffffff', fontFamily: 'monospace', fontWeight: 800 }}>{deckA.track?.song_key || '--'}</div>
-               <div style={{ fontSize: 14, color: '#fff', background: '#111', padding: '4px 10px', borderRadius: 4, fontFamily: 'monospace', border: '1px solid #333' }}><TimeDisplay getCurrentTime={getTimeA} /></div>
-            </div>
+      {/* --- WAVEFORMS (empilées pour beatmatch) --- */}
+      <div style={{ display: 'flex', flexDirection: 'column', height: 180, flexShrink: 0, background: '#000', borderBottom: '1px solid #222' }}>
+         <div style={{ flex: 1, borderBottom: '1px solid #111', position: 'relative', minHeight: 0 }}>
+            <SeratoWaveform data={waveA} duration={deckA.track?.duration || 1} getCurrentTime={getTimeA} height={90} mode="zoom" onSeek={(newTime) => handleScratch(newTime, 'A')} onSeekEnd={() => handleSeekEnd('A')} cuePoints={deckA.cuePoints} cueColor="#ffffff" bpm={deckA.track?.bpm} />
          </div>
-         {/* Deck B Info */}
-         <div style={{ flex: 1, display: 'flex', alignItems: 'center', padding: '0 16px', flexDirection: 'row-reverse' }}>
-            <div style={{ width: 40, height: 40, background: deckB.track?.cover_url ? `url(${deckB.track.cover_url}) center/cover` : '#111', borderRadius: 4, marginLeft: 12, boxShadow: '0 2px 5px rgba(0,0,0,0.5)', border: '1px solid #333' }} />
-            <div style={{ flex: 1, minWidth: 0, textAlign: 'right' }}>
-               <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{deckB.track?.title || 'Load Track...'}</div>
-               <div style={{ fontSize: 11, color: '#888', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{deckB.track?.artist || '---'} • {deckB.track?.genre || '---'}</div>
-            </div>
-            <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexDirection: 'row-reverse' }}>
-               <div style={{ fontSize: 14, color: '#ff2a2a', fontFamily: 'monospace', fontWeight: 800 }}>{deckB.track?.bpm ? deckB.track.bpm.toFixed(1) : '---'}</div>
-               <div style={{ fontSize: 14, color: '#ff2a2a', fontFamily: 'monospace', fontWeight: 800 }}>{deckB.track?.song_key || '--'}</div>
-               <div style={{ fontSize: 14, color: '#fff', background: '#111', padding: '4px 10px', borderRadius: 4, fontFamily: 'monospace', border: '1px solid #333' }}><TimeDisplay getCurrentTime={getTimeB} /></div>
-            </div>
-         </div>
-      </div>
-
-      {/* --- WAVEFORMS --- */}
-      <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', height: 90, flexShrink: 0, background: '#000', borderBottom: '1px solid #222' }}>
-         <div style={{ flex: 1, borderRight: '1px solid #111', position: 'relative' }}>
-            <SeratoWaveform data={waveA} duration={deckA.track?.duration || 1} getCurrentTime={getTimeA} height={90} mode="zoom" onSeek={(newTime) => handleScratch(newTime, 'A')} onSeekEnd={() => handleSeekEnd('A')} cuePoints={deckA.cuePoints} cueColor="#ffffff" />
-         </div>
-         <div style={{ flex: 1 }}>
-            <SeratoWaveform data={waveB} duration={deckB.track?.duration || 1} getCurrentTime={getTimeB} height={90} mode="zoom" onSeek={(newTime) => handleScratch(newTime, 'B')} onSeekEnd={() => handleSeekEnd('B')} cuePoints={deckB.cuePoints} cueColor="#ff2a2a" />
+         <div style={{ flex: 1, minHeight: 0 }}>
+            <SeratoWaveform data={waveB} duration={deckB.track?.duration || 1} getCurrentTime={getTimeB} height={90} mode="zoom" onSeek={(newTime) => handleScratch(newTime, 'B')} onSeekEnd={() => handleSeekEnd('B')} cuePoints={deckB.cuePoints} cueColor="#ff2a2a" bpm={deckB.track?.bpm} />
          </div>
       </div>
 
@@ -745,17 +759,18 @@ export const MixerPage: React.FC = () => {
       <div style={{ flex: 1, display: 'flex', background: '#0d0d0d', overflow: 'hidden', minHeight: 0, flexDirection: isMobile ? 'column' : 'row' }}>
         {!isMobile && (
           <div style={{ width: 200, background: '#111', borderRight: '1px solid #222', padding: '15px 0', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
-            <div style={{ padding: '10px 20px', fontSize: 12, color: '#fff', fontWeight: 800, background: '#1a1a1a', borderLeft: '3px solid #ffffff', cursor: 'pointer', marginBottom: 5 }}>Discover</div>
-            <div style={{ padding: '10px 20px', fontSize: 12, color: '#888', cursor: 'pointer', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = '#1a1a1a'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>Genres</div>
-            <div style={{ padding: '10px 20px', fontSize: 12, color: '#888', cursor: 'pointer', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = '#1a1a1a'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>My Beatport</div>
+            <div style={{ padding: '10px 20px', fontSize: 12, color: '#fff', fontWeight: 800, background: '#1a1a1a', borderLeft: '3px solid #ffffff', marginBottom: 5 }}>Bibliothèque</div>
+            <div style={{ padding: '4px 20px', fontSize: 11, color: '#888' }}>{tracks.length} titres</div>
           </div>
         )}
 
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflowX: 'auto' }}>
            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 20px', borderBottom: '1px solid #222', flexShrink: 0, background: '#1a1a1a' }}>
-              <div style={{ display: 'flex', gap: 10 }}>
-                 <button style={{ padding: '5px 15px', background: '#fff', color: '#000', border: 'none', borderRadius: 20, fontSize: 11, fontWeight: 800 }}>Electronic</button>
-                 <button style={{ padding: '5px 15px', background: '#333', color: '#aaa', border: 'none', borderRadius: 20, fontSize: 11, fontWeight: 800 }}>Open Format</button>
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                 <button onClick={() => setSelectedGenre(null)} style={{ padding: '5px 15px', background: selectedGenre === null ? '#fff' : '#333', color: selectedGenre === null ? '#000' : '#aaa', border: 'none', borderRadius: 20, fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>Tous</button>
+                 {genres.map(g => (
+                   <button key={g} onClick={() => setSelectedGenre(g)} style={{ padding: '5px 15px', background: selectedGenre === g ? '#fff' : '#333', color: selectedGenre === g ? '#000' : '#aaa', border: 'none', borderRadius: 20, fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>{g}</button>
+                 ))}
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <input type="text" placeholder="Start digging..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} style={{ background: '#050505', border: '1px solid #333', padding: '6px 14px', borderRadius: 20, color: '#fff', fontSize: 12, outline: 'none', width: isMobile ? 150 : 300 }} />
@@ -776,6 +791,13 @@ export const MixerPage: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
+                  {filteredTracks.length === 0 && (
+                    <tr>
+                      <td colSpan={6} style={{ padding: 50, textAlign: 'center', color: '#666', fontSize: 13 }}>
+                        {tracks.length === 0 ? 'Aucun titre dans la bibliothèque.' : 'Aucun titre ne correspond à votre recherche.'}
+                      </td>
+                    </tr>
+                  )}
                   {filteredTracks.map((track, i) => (
                     <tr 
                       key={track.id} 

@@ -25,13 +25,6 @@ const TOOLS = [
     icon: '🎹',
     color: '#b0b0b0'
   },
-  {
-    path: '/mixer',
-    title: 'Console Mixer Pro',
-    desc: 'Mixe tes morceaux en direct avec nos deux platines virtuelles, EQ et crossfader.',
-    icon: '🎚️',
-    color: '#00ff9d'
-  },
 ];
 
 export const ToolsPage: React.FC = () => {

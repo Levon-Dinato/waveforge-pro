@@ -13,10 +13,11 @@ interface Props {
   onSeekEnd?: () => void;
   cuePoints?: (number | null)[];
   cueColor?: string;
+  bpm?: number;
 }
 
 export const SeratoWaveform: React.FC<Props> = memo(({ 
-  data, duration, getCurrentTime, height, mode, zoomSeconds = 10, onSeek, onSeekEnd, cuePoints, cueColor = '#ffcc00' 
+  data, duration, getCurrentTime, height, mode, zoomSeconds = 10, onSeek, onSeekEnd, cuePoints, cueColor = '#ffcc00', bpm 
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animRef = useRef<number>(0);
@@ -108,11 +109,38 @@ export const SeratoWaveform: React.FC<Props> = memo(({
         playheadX = ((currentTime - startTime) / (endTime - startTime)) * width;
       }
 
-      // Dessin du Playhead
+      // ✅ Beat grid (repérage tempo)
+      if (bpm && bpm > 0) {
+        const beatInterval = 60 / bpm;
+        ctx.strokeStyle = 'rgba(255,255,255,0.10)';
+        ctx.lineWidth = 1;
+        const firstBeat = Math.floor(startTime / beatInterval) * beatInterval;
+        for (let t = firstBeat; t <= endTime; t += beatInterval) {
+          if (t < startTime) continue;
+          const x = mode === 'overview' ? (t / duration) * width : ((t - startTime) / (endTime - startTime)) * width;
+          ctx.beginPath();
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x, h);
+          ctx.stroke();
+        }
+      }
+
+      // Dessin du Playhead (bien visible)
+      ctx.fillStyle = 'rgba(255,255,255,0.15)';
+      ctx.fillRect(playheadX - 2, 0, 5, h);
+      ctx.shadowColor = '#ffffff';
+      ctx.shadowBlur = 6;
       ctx.fillStyle = '#ffffff';
-      ctx.fillRect(playheadX, 0, 2, h);
-      ctx.fillStyle = 'rgba(255,255,255,0.2)';
-      ctx.fillRect(playheadX - 1, 0, 4, h);
+      ctx.fillRect(playheadX - 1, 0, 2, h);
+      ctx.shadowBlur = 0;
+      // Curseur triangle en haut
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.moveTo(playheadX - 5, 0);
+      ctx.lineTo(playheadX + 5, 0);
+      ctx.lineTo(playheadX, 8);
+      ctx.closePath();
+      ctx.fill();
 
       // ✅ DESSIN DES POINTS CUE
       if (cuePoints) {
@@ -200,5 +228,6 @@ export const SeratoWaveform: React.FC<Props> = memo(({
       && prevProps.duration === nextProps.duration 
       && prevProps.height === nextProps.height 
       && prevProps.mode === nextProps.mode
-      && prevProps.cuePoints === nextProps.cuePoints;
+      && prevProps.cuePoints === nextProps.cuePoints
+      && prevProps.bpm === nextProps.bpm;
 });

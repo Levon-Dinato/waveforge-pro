@@ -144,6 +144,7 @@ export const NouveautesPage: React.FC = () => {
       .from('tracks')
       .select('*')
       .or('is_jingle.is.null,is_jingle.eq.false')
+      .not('user_id', 'is', null)
       .order('created_at', { ascending: false });
     if (!error && data) {
       setTracks(data.map((t: any) => ({ ...t, peaks: Array.isArray(t.peaks) ? t.peaks : [], cover_url: t.cover_url || null, user_id: t.user_id || null, downloads: t.downloads || 0, likes_count: t.likes_count || 0, song_key: t.song_key || null, camelot: t.camelot || null, purchase_url: t.purchase_url || null })));

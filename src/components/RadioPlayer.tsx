@@ -14,7 +14,7 @@ interface RadioPlayerProps {
 }
 
 export const RadioPlayer: React.FC<RadioPlayerProps> = ({ profile, visualizerColor, iconColor, isMobile, compact }) => {
-  const { currentTrack, isPlaying, progress, duration, togglePlay, isLive, volume, setVolume, seek } = useRadio();
+  const { currentTrack, isPlaying, progress, duration, togglePlay, isLive, volume, setVolume } = useRadio();
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   const { user } = useAuth();
@@ -154,11 +154,6 @@ export const RadioPlayer: React.FC<RadioPlayerProps> = ({ profile, visualizerCol
         <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', maxWidth: compact ? 220 : 260, fontSize: compact ? 10 : 12, color: '#888', fontWeight: 800 }}>
           <span>{formatTime(progress)}</span>
           <span>{formatTime(duration)}</span>
-        </div>
-
-        {/* Barre de progression cliquable (seek) */}
-        <div onClick={(e) => { if (!duration) return; const r = e.currentTarget.getBoundingClientRect(); seek(Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * duration); }} style={{ width: '100%', maxWidth: compact ? 220 : 260, height: 5, borderRadius: 3, background: 'rgba(255,255,255,0.12)', cursor: 'pointer', position: 'relative', overflow: 'hidden' }}>
-          <div style={{ width: `${duration > 0 ? (progress / duration) * 100 : 0}%`, height: '100%', background: visualizerColor, borderRadius: 3, boxShadow: `0 0 10px ${visualizerColor}80` }} />
         </div>
         
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 20 }}>

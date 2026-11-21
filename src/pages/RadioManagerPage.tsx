@@ -68,6 +68,7 @@ export const RadioManagerPage: React.FC = () => {
   const [radioTitleSplitEnd, setRadioTitleSplitEnd] = useState(100);
   const [radioTitleText, setRadioTitleText] = useState('Le son de');
   const [radioSlogan, setRadioSlogan] = useState('Play the Beat. Feel the Sound. Live the Experience.');
+  const [radioName, setRadioName] = useState('ELEKTRAQ Radio');
 
   // Réglages Player Popup
   const [playerBgType, setPlayerBgType] = useState('color');
@@ -117,6 +118,7 @@ export const RadioManagerPage: React.FC = () => {
         setRadioTitleSplitEnd(profileData.radio_title_split_end ?? 100);
         setRadioTitleText(profileData.radio_title_text || 'Le son de');
         setRadioSlogan(profileData.radio_slogan || 'Play the Beat. Feel the Sound. Live the Experience.');
+        setRadioName(profileData.radio_name || 'ELEKTRAQ Radio');
         
         setPlayerBgType(profileData.player_bg_type || 'color');
         setPlayerBgValue(profileData.player_bg_value || '#05050a');
@@ -396,6 +398,7 @@ export const RadioManagerPage: React.FC = () => {
       radio_title_split_end: radioTitleSplitEnd,
       radio_title_text: radioTitleText,
       radio_slogan: radioSlogan,
+      radio_name: radioName,
       player_bg_type: playerBgType,
       player_bg_value: playerBgValue,
       player_bg_animation: playerBgAnimation
@@ -744,11 +747,15 @@ export const RadioManagerPage: React.FC = () => {
                 </div>
 
                 <div style={{ padding: 12, borderRadius: 10, background: colors.inputBg, border: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <span style={{ fontSize: 18, fontWeight: 900, letterSpacing: '1px', background: `linear-gradient(90deg, ${radioTitleColorStart} 0%, ${radioTitleColorStart} ${radioTitleSplitStart}%, ${radioTitleColor} ${radioTitleSplitStart}%, ${radioTitleColor} ${radioTitleSplitEnd}%, ${radioTitleColorStart} ${radioTitleSplitEnd}%, ${radioTitleColorStart} 100%)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>DROPZONE</span>
+                  <span style={{ fontSize: 18, fontWeight: 900, letterSpacing: '1px', background: `linear-gradient(90deg, ${radioTitleColorStart} 0%, ${radioTitleColorStart} ${radioTitleSplitStart}%, ${radioTitleColor} ${radioTitleSplitStart}%, ${radioTitleColor} ${radioTitleSplitEnd}%, ${radioTitleColorStart} ${radioTitleSplitEnd}%, ${radioTitleColorStart} 100%)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{radioName}</span>
                 </div>
               </div>
 
               <div style={{ marginTop: 16, paddingTop: 16, borderTop: `1px solid ${colors.border}`, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 700, marginBottom: 6, color: colors.textMuted }}>Nom de la radio</label>
+                  <input type="text" value={radioName} onChange={(e) => setRadioName(e.target.value)} className="dash-input" placeholder="Ex: ELEKTRAQ Radio" />
+                </div>
                 <div>
                   <label style={{ display: 'block', fontSize: 12, fontWeight: 700, marginBottom: 6, color: colors.textMuted }}>Texte avant le nom</label>
                   <input type="text" value={radioTitleText} onChange={(e) => setRadioTitleText(e.target.value)} className="dash-input" placeholder="Ex: Le son de" />

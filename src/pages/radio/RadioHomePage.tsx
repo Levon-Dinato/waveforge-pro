@@ -20,7 +20,7 @@ export const RadioHomePage: React.FC = () => {
 
   // ✅ ON UTILISE CURRENTTRACK POUR LE MARQUEE
   const marqueeItems = [
-    `${profile.username.toUpperCase()}`, 
+    `${(profile.radio_name || profile.username).toUpperCase()}`, 
     `EN COURS : ${currentTrack?.title || 'LIVE RADIO'}`, 
     `${totalLikes} LIKES`,
     `EN DIRECT`, 
@@ -70,7 +70,7 @@ export const RadioHomePage: React.FC = () => {
               ))}
               <span style={{ display: 'inline-block' }}>
                 {(() => {
-                  const name = profile.username;
+                  const name = profile.radio_name || profile.username;
                   const total = name.length;
                   return [...name].map((c: string, ci: number) => {
                     // Position de la lettre en pourcentage (0 → 100)

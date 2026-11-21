@@ -68,8 +68,10 @@ const MINOR_PROFILE = [6.33, 2.68, 3.52, 5.38, 2.60, 3.53, 2.54, 4.75, 3.98, 2.6
 export async function detectKey(audioBuffer: AudioBuffer): Promise<KeyResult> {
   const sr = audioBuffer.sampleRate;
   const data = mixToMono(audioBuffer);
-  const maxSamples = Math.min(data.length, 90 * sr);
-  const segment = data.slice(0, maxSamples);
+  // Évite l'intro (souvent percussive) et analyse jusqu'à ~3 min (inclut le drop)
+  const start = Math.floor(sr * 15);
+  const end = Math.min(data.length, Math.floor(sr * 195));
+  const segment = data.slice(start, Math.max(end, start + 1));
 
   console.log(`🎼 Analyse Key (Meyda) sur ${(segment.length / sr).toFixed(1)}s`);
 
@@ -162,13 +164,13 @@ async function detectKeyWithMeyda(
       candidates.push({
         key: NOTES[root],
         isMinor: false,
-        score: cosine(chroma, majorProfile),
+        score: correlation(chroma, majorProfile),
       });
 
       candidates.push({
         key: `${NOTES[root]}m`,
         isMinor: true,
-        score: cosine(chroma, minorProfile),
+        score: correlation(chroma, minorProfile),
       });
     }
 
@@ -197,21 +199,26 @@ async function detectKeyWithMeyda(
   }
 }
 
-function cosine(a: number[], b: number[]): number {
-  if (a.length !== b.length || a.length === 0) return 0;
+function correlation(a: number[], b: number[]): number {
+  const n = a.length;
+  if (n === 0 || a.length !== b.length) return 0;
 
-  let dot = 0;
-  let normA = 0;
-  let normB = 0;
+  const ma = a.reduce((s, v) => s + v, 0) / n;
+  const mb = b.reduce((s, v) => s + v, 0) / n;
+  let num = 0;
+  let da = 0;
+  let db = 0;
 
-  for (let i = 0; i < a.length; i++) {
-    dot += a[i] * b[i];
-    normA += a[i] * a[i];
-    normB += b[i] * b[i];
+  for (let i = 0; i < n; i++) {
+    const xa = a[i] - ma;
+    const xb = b[i] - mb;
+    num += xa * xb;
+    da += xa * xa;
+    db += xb * xb;
   }
 
-  if (normA <= 0 || normB <= 0) return 0;
-  return dot / (Math.sqrt(normA) * Math.sqrt(normB));
+  if (da <= 0 || db <= 0) return 0;
+  return num / Math.sqrt(da * db);
 }
 
 function mixToMono(buffer: AudioBuffer): Float32Array {

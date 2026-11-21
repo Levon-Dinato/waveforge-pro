@@ -64,10 +64,10 @@ export const ReleaseCard: React.FC<ReleaseCardProps> = ({
       <div style={{ ...bgStyle, border: `1px solid ${colors.cardBorder}`, borderRadius: 16, overflow: 'hidden', padding: 24, backdropFilter: 'blur(20px)', boxShadow: hasCustomBg ? 'none' : '0 10px 30px rgba(0,0,0,0.1)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 16 }}>
           
-          <div style={{ position: 'relative', width: 88, height: 88, borderRadius: 12, overflow: 'hidden', flexShrink: 0, background: colors.inputBg }} onClick={() => handlePlayTrack(track)}>
+          <div style={{ position: 'relative', width: 120, height: 120, borderRadius: 10, overflow: 'hidden', flexShrink: 0, background: colors.inputBg }} onClick={() => handlePlayTrack(track)}>
             {track.cover_url ? <img src={track.cover_url} alt={track.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : null}
             <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: isThisPlaying ? 1 : 0, transition: 'opacity 0.2s', cursor: 'pointer' }} className="play-overlay">
-              <div style={{ width: 36, height: 36, borderRadius: '50%', background: themeColor, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', boxShadow: `0 0 15px ${themeColor}80` }}>
+              <div style={{ width: 44, height: 44, borderRadius: '50%', background: themeColor, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', boxShadow: `0 0 15px ${themeColor}80` }}>
                 {isThisPlaying ? (
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
                 ) : (
@@ -148,6 +148,7 @@ export const ReleaseCard: React.FC<ReleaseCardProps> = ({
                 }
               }}
               isMobile={isMobile}
+              height={80}
             />
           </div>
         )}

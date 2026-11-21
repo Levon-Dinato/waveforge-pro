@@ -2,14 +2,15 @@ import React, { useRef, useState, useEffect, useMemo } from 'react';
 
 interface CanvasWaveformProps {
   peaks: number[]; isPlaying: boolean; themeColor: string; progress: number; isCurrent: boolean; onSeek: (ratio: number) => void; isMobile: boolean;
+  height?: number;
 }
 
-export const CanvasWaveform: React.FC<CanvasWaveformProps> = ({ peaks, isPlaying, themeColor, progress, isCurrent, onSeek, isMobile }) => {
+export const CanvasWaveform: React.FC<CanvasWaveformProps> = ({ peaks, isPlaying, themeColor, progress, isCurrent, onSeek, isMobile, height = 48 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [dragProgress, setDragProgress] = useState<number | null>(null);
   const isDraggingRef = useRef(false);
 
-  const mockPeaks = useMemo(() => Array.from({ length: 150 }, () => Math.random() * 70 + 30), [peaks]);
+  const mockPeaks = useMemo(() => Array.from({ length: 220 }, () => Math.random() * 70 + 30), [peaks]);
 
   useEffect(() => { if (!isDraggingRef.current) setDragProgress(null); }, [progress]);
 
@@ -28,24 +29,37 @@ export const CanvasWaveform: React.FC<CanvasWaveformProps> = ({ peaks, isPlaying
 
     let safePeaks = Array.isArray(peaks) && peaks.length > 0 ? peaks : mockPeaks;
     const centerY = H / 2;
-    const maxAmplitude = H * 0.45;
+    const maxAmplitude = H * 0.46;
     const displayProgress = dragProgress !== null ? dragProgress : progress;
     const playedX = displayProgress * W;
 
-    const barCount = isMobile ? 150 : 300;
+    // Barres denses et régulières, façon SoundCloud
+    const barCount = isMobile ? 110 : 220;
     const step = Math.max(1, Math.floor(safePeaks.length / barCount));
-    const displayPeaks = safePeaks.filter((_: any, i: number) => i % step === 0).slice(0, barCount);
+    const displayPeaks: number[] = [];
+    for (let i = 0; i < safePeaks.length && displayPeaks.length < barCount; i += step) {
+      displayPeaks.push(safePeaks[i]);
+    }
+    const slot = W / Math.max(1, displayPeaks.length);
+    const barWidth = Math.max(1, slot * 0.72);
 
-    ctx.globalAlpha = 0.25;
+    const drawBar = (i: number) => {
+      const x = i * slot + (slot - barWidth) / 2;
+      const raw = displayPeaks[i];
+      const val = raw > 1 ? raw / 100 : raw;
+      const barHeight = Math.max(val * maxAmplitude, 1.5);
+      ctx.fillRect(x, centerY - barHeight, barWidth, barHeight * 2);
+    };
+
+    // Partie non jouée (teintée aux couleurs de l'artiste)
+    ctx.globalAlpha = 0.22;
     ctx.fillStyle = themeColor;
     for (let i = 0; i < displayPeaks.length; i++) {
-      const x = (i / displayPeaks.length) * W;
-      const val = displayPeaks[i] > 1 ? displayPeaks[i] / 100 : displayPeaks[i];
-      const barHeight = Math.max(val * maxAmplitude, 2);
-      if (x >= playedX) ctx.fillRect(x, centerY - barHeight, 1, barHeight * 2);
+      if ((i * slot) >= playedX) drawBar(i);
     }
     ctx.globalAlpha = 1;
 
+    // Partie jouée (dégradé accent + glow)
     if (isPlaying || displayProgress > 0) {
       ctx.save();
       ctx.beginPath();
@@ -59,18 +73,15 @@ export const CanvasWaveform: React.FC<CanvasWaveformProps> = ({ peaks, isPlaying
 
       ctx.fillStyle = gradient;
       ctx.shadowColor = themeColor;
-      ctx.shadowBlur = isMobile ? 2 : 6; 
-
+      ctx.shadowBlur = isMobile ? 2 : 6;
       for (let i = 0; i < displayPeaks.length; i++) {
-        const x = (i / displayPeaks.length) * W;
-        const val = displayPeaks[i] > 1 ? displayPeaks[i] / 100 : displayPeaks[i];
-        const barHeight = Math.max(val * maxAmplitude, 2);
-        ctx.fillRect(x, centerY - barHeight, 1, barHeight * 2);
+        drawBar(i);
       }
       ctx.shadowBlur = 0;
       ctx.restore();
     }
 
+    // Curseur de lecture
     if (isPlaying || displayProgress > 0) {
       ctx.strokeStyle = '#fff';
       ctx.lineWidth = 2;
@@ -82,7 +93,7 @@ export const CanvasWaveform: React.FC<CanvasWaveformProps> = ({ peaks, isPlaying
       ctx.stroke();
       ctx.shadowBlur = 0;
     }
-  }, [peaks, mockPeaks, isPlaying, themeColor, progress, dragProgress, isMobile]);
+  }, [peaks, mockPeaks, isPlaying, themeColor, progress, dragProgress, isMobile, height]);
 
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (!isCurrent) return;
@@ -124,9 +135,9 @@ export const CanvasWaveform: React.FC<CanvasWaveformProps> = ({ peaks, isPlaying
   };
 
   return (
-    <canvas 
+    <canvas
       ref={canvasRef} onMouseDown={handleMouseDown} onClick={(e) => { if (isCurrent) e.stopPropagation(); }}
-      style={{ width: '100%', height: isMobile ? '36px' : '48px', display: 'block', cursor: isCurrent ? 'pointer' : 'default', touchAction: 'none', opacity: isCurrent ? 1 : 0.6 }} 
+      style={{ width: '100%', height: `${isMobile ? Math.min(height, 56) : height}px`, display: 'block', cursor: isCurrent ? 'pointer' : 'default', touchAction: 'none', opacity: isCurrent ? 1 : 0.6 }}
     />
   );
 };

@@ -60,6 +60,7 @@ export const MasteringPage: React.FC = () => {
   const [localFileName, setLocalFileName] = useState<string | null>(null);
   const [isImporting, setIsImporting] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [presetIntensity, setPresetIntensity] = useState(50);
@@ -277,8 +278,7 @@ export const MasteringPage: React.FC = () => {
   const knobDynRatio = (1 + ((dynVal - 50) / 50) * 1.5).toFixed(1);
   const intensityLabel = getIntensityLabel(presetIntensity);
 
-  const handleLocalFileLoad = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const loadFile = useCallback(async (file: File) => {
     if (!file) return;
     setIsImporting(true); setImportError(null); setLocalFileName(file.name);
     const controller = new AbortController();
@@ -297,6 +297,19 @@ export const MasteringPage: React.FC = () => {
         setImportError("⚠️ Serveur distant injoignable. Mode Mastering Local (Navigateur) activé.");
       } catch (localErr) { setImportError("Impossible de lire ce fichier audio."); setLocalFileName(null); }
     } finally { setIsImporting(false); }
+  }, [engine]);
+
+  const handleLocalFileLoad = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) loadFile(file);
+    e.target.value = '';
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) loadFile(file);
   };
 
   useEffect(() => {
@@ -595,6 +608,26 @@ export const MasteringPage: React.FC = () => {
         </div>
 
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: 24, background: colors.bg, gap: 24, overflowY: 'auto' }}>
+          {!hasAudio && (
+            <div
+              onDrop={handleDrop}
+              onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+              onDragLeave={() => setIsDragging(false)}
+              style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 16, border: `2px dashed ${isDragging ? colors.textMain : colors.borderLight}`, borderRadius: 20, padding: 40, background: colors.cardBg, textAlign: 'center', transition: 'border-color 0.2s, background 0.2s', minHeight: 320 }}
+            >
+              <div style={{ fontSize: 56 }}>🎛️</div>
+              <div style={{ fontSize: 22, fontWeight: 900 }}>Déposez votre fichier audio ici</div>
+              <div style={{ fontSize: 13, color: colors.textMuted, maxWidth: 400, lineHeight: 1.6 }}>
+                WAV, MP3, FLAC… Importez un morceau pour l'analyser, appliquer un style de mastering, comparer A/B et exporter en WAV.
+              </div>
+              <button onClick={() => fileInputRef.current?.click()} disabled={isImporting} className="btn-modern btn-import" style={{ color: '#000', border: 'none', padding: '12px 24px', borderRadius: 8, fontWeight: 900, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
+                {isImporting ? 'CHARGEMENT...' : '+ PARCOURIR LES FICHIERS'}
+              </button>
+              <div style={{ fontSize: 11, color: colors.textDark }}>Analyse IA + mastering haute qualité.</div>
+            </div>
+          )}
+
+          {hasAudio && (<>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
               <div style={{ fontSize: 14, fontWeight: 800, color: hasAudio ? colors.textMain : colors.textDark }}>Prévisualisation</div>
@@ -735,6 +768,7 @@ export const MasteringPage: React.FC = () => {
               ))}
             </div>
           </div>
+          </>)}
         </div>
 
         <div style={{ width: 280, background: colors.panelBg, borderLeft: `1px solid ${colors.border}`, padding: 24, display: 'flex', flexDirection: 'column', gap: 24, overflowY: 'auto', flexShrink: 0 }}>
@@ -804,7 +838,7 @@ export const MasteringPage: React.FC = () => {
                 <span style={{ color: colors.textMain, fontWeight: 800, fontFamily: 'monospace' }}>{effectiveValues.width.toFixed(0)}%</span>
               </div>
             </div>
-            <button onClick={handleExport} className="btn-modern" style={{ width: '100%', marginTop: 16, padding: '14px', background: 'linear-gradient(135deg, #b0b0b0, #059669)', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 900, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: '0 4px 15px rgba(176, 176, 176, 0.3)' }}>
+            <button onClick={handleExport} disabled={!hasAudio} className="btn-modern" style={{ width: '100%', marginTop: 16, padding: '14px', background: 'linear-gradient(135deg, #b0b0b0, #059669)', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 900, fontSize: 13, cursor: hasAudio ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: '0 4px 15px rgba(176, 176, 176, 0.3)', opacity: hasAudio ? 1 : 0.5 }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
               EXPORT WAV
             </button>

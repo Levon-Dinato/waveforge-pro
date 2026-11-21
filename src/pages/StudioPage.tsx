@@ -28,6 +28,8 @@ export const StudioPage: React.FC = () => {
   const [library, setLibrary] = useState<LibraryTrack[]>([]);
   const [activeTrack, setActiveTrack] = useState<LibraryTrack | null>(null);
   const [loading, setLoading] = useState(true);
+  const [serverStatus, setServerStatus] = useState<'checking' | 'online' | 'offline'>('checking');
+  const [isDragging, setIsDragging] = useState(false);
 
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0); // Pour le fake loader
@@ -62,8 +64,10 @@ export const StudioPage: React.FC = () => {
     };
     fetchLibrary();
     
-    // ✅ RÉVEIL DU SERVEUR DÈS L'OUVERTURE DE LA PAGE (Ping silencieux)
-    fetch(`${RENDER_SERVER_URL}/ping`).catch(() => {});
+    // ✅ Vérifie l'état du serveur (ping silencieux au chargement)
+    fetch(`${RENDER_SERVER_URL}/ping`)
+      .then((r) => setServerStatus(r.ok ? 'online' : 'offline'))
+      .catch(() => setServerStatus('offline'));
   }, [user]);
 
   // Fake loader animé pour faire patienter
@@ -117,13 +121,22 @@ export const StudioPage: React.FC = () => {
   };
 
   // 3. IMPORTATION
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const analyzeFile = async (file: File) => {
+    setActiveTrack(null);
+    await runTranscription(file, file.name);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setActiveTrack(null);
-      await runTranscription(file, file.name);
-    }
+    if (file) analyzeFile(file);
     e.target.value = '';
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) analyzeFile(file);
   };
 
   // 4. SÉLECTION D'UN SON
@@ -167,8 +180,14 @@ export const StudioPage: React.FC = () => {
   if (loading) return <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', background: colors.bg, color: colors.accent, fontFamily: 'Inter, sans-serif', fontSize: 20, fontWeight: 800 }}>Chargement du Studio...</div>;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', background: colors.bg, color: colors.textMain, fontFamily: 'Inter, sans-serif', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', background: colors.bg, color: colors.textMain, fontFamily: 'Inter, sans-serif', overflow: 'hidden' }} onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }} onDragLeave={() => setIsDragging(false)} onDrop={handleDrop}>
       
+      {isDragging && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', border: `3px dashed ${colors.accent}`, pointerEvents: 'none', backdropFilter: 'blur(4px)' }}>
+          <div style={{ fontSize: 24, fontWeight: 900, color: colors.accent, letterSpacing: '1px' }}>Déposez le fichier audio pour l'analyser</div>
+        </div>
+      )}
+
       {/* BACKGROUND DECORATIF (Néon) */}
       <div style={{ position: 'absolute', top: '-20%', left: '-10%', width: '50vw', height: '50vw', background: 'radial-gradient(circle, rgba(255, 255, 255, 0.05) 0%, transparent 70%)', filter: 'blur(80px)', zIndex: 0, pointerEvents: 'none' }} />
       <div style={{ position: 'absolute', bottom: '-20%', right: '-10%', width: '50vw', height: '50vw', background: 'radial-gradient(circle, rgba(176, 176, 176, 0.05) 0%, transparent 70%)', filter: 'blur(80px)', zIndex: 0, pointerEvents: 'none' }} />
@@ -176,7 +195,7 @@ export const StudioPage: React.FC = () => {
       {/* TOP BAR */}
       <div style={{ padding: '16px 24px', borderBottom: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: colors.panelBg, backdropFilter: 'blur(20px)', zIndex: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-          <button onClick={() => navigate('/')} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600, transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = colors.textMain} onMouseLeave={(e) => e.currentTarget.style.color = colors.textMuted}>
+          <button onClick={() => navigate('/tools')} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600, transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = colors.textMain} onMouseLeave={(e) => e.currentTarget.style.color = colors.textMuted}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
             Quitter le studio
           </button>
@@ -186,8 +205,9 @@ export const StudioPage: React.FC = () => {
           </h1>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{ fontSize: 11, fontWeight: 800, color: colors.accent, background: 'rgba(255, 255, 255, 0.1)', padding: '6px 12px', borderRadius: 20, border: `1px solid rgba(255, 255, 255, 0.3)` }}>
-            ● SERVEUR EN LIGNE
+          <div style={{ fontSize: 11, fontWeight: 800, padding: '6px 12px', borderRadius: 20, display: 'flex', alignItems: 'center', gap: 6, color: serverStatus === 'online' ? '#4ade80' : serverStatus === 'offline' ? '#f87171' : colors.textMuted, background: serverStatus === 'online' ? 'rgba(74,222,128,0.12)' : serverStatus === 'offline' ? 'rgba(248,113,113,0.12)' : 'rgba(255,255,255,0.05)', border: `1px solid ${serverStatus === 'online' ? 'rgba(74,222,128,0.4)' : serverStatus === 'offline' ? 'rgba(248,113,113,0.4)' : colors.border}` }}>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: serverStatus === 'online' ? '#4ade80' : serverStatus === 'offline' ? '#f87171' : colors.textMuted }} />
+            {serverStatus === 'online' ? 'SERVEUR EN LIGNE' : serverStatus === 'offline' ? 'SERVEUR HORS LIGNE' : 'CONNEXION...'}
           </div>
         </div>
       </div>

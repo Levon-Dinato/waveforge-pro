@@ -23,6 +23,15 @@ function cover600(images) {
   return url.replace(/(\/\d+x\d+bb\.)/, '/600x600bb.');
 }
 
+// Exclut les rééditions/remasters de vieux morceaux (datés 2026 par iTunes mais anciens)
+function isOldReissue(title) {
+  const t = title || '';
+  const years = t.match(/\b(19\d{2}|20\d{2})\b/g) || [];
+  if (years.some((y) => parseInt(y, 10) < 2026)) return true;
+  if (/\b(remaster|remastered|deluxe|reissue|re-issue|re-recorded|anniversary)\b/i.test(t)) return true;
+  return false;
+}
+
 function extract(json, genre) {
   const entries = json?.feed?.entry || [];
   return entries
@@ -40,9 +49,10 @@ function extract(json, genre) {
         cover_url: cover600(e?.['im:image'] || []),
         purchase_url: trackLink,
         audio_url: preview,
+        release_year: (e?.['im:releaseDate']?.label || '').slice(0, 4),
       };
     })
-    .filter((t) => t.title && t.artist && t.purchase_url);
+    .filter((t) => t.title && t.artist && t.purchase_url && t.release_year >= '2026' && !isOldReissue(t.title));
 }
 
 export default async function handler(req, res) {

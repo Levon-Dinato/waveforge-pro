@@ -129,7 +129,7 @@ export const SortieRadioPage: React.FC = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: colors.bg, fontFamily: 'Inter, sans-serif', color: colors.textMain, transition: 'background 0.3s ease' }}>
-      <PageMeta title="Sortie Radio" description="Les sorties radio ELEKTRAQ — sélection IA / radar." />
+      <PageMeta title="Sortie Radio" description="Les dernières sorties à écouter sur la radio ELEKTRAQ." />
 
       <div style={{ padding: isMobile ? '16px 12px' : '32px 24px', paddingBottom: 100, width: '100%', boxSizing: 'border-box', flex: 1 }}>
         <div style={{ display: 'flex', gap: 32, alignItems: 'flex-start', width: '100%', maxWidth: 1600, margin: '0 auto' }}>
@@ -182,8 +182,8 @@ export const SortieRadioPage: React.FC = () => {
               <div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: colors.accent, marginBottom: 8 }}>
                 <span style={{ filter: 'drop-shadow(0 0 10px rgba(255,255,255,0.8))' }}>🎵</span> Sortie Radio
               </div>
-              <h1 style={{ fontSize: isMobile ? 28 : 36, fontWeight: 900, margin: 0, letterSpacing: '-1px' }}>Sélection IA / Radar</h1>
-              <p style={{ color: colors.textMuted, fontSize: 14, marginTop: 8 }}>Les titres repérés par le radar, pour ta programmation radio.</p>
+              <h1 style={{ fontSize: isMobile ? 28 : 36, fontWeight: 900, margin: 0, letterSpacing: '-1px' }}>Sortie Radio</h1>
+              <p style={{ color: colors.textMuted, fontSize: 14, marginTop: 8 }}>Les dernières sorties à écouter sur la radio ELEKTRAQ.</p>
             </div>
 
             {/* Recherche + compteur */}
@@ -209,7 +209,7 @@ export const SortieRadioPage: React.FC = () => {
                 <div style={{ padding: 60, textAlign: 'center', color: colors.textMuted }}>
                   <div style={{ fontSize: 48, marginBottom: 16 }}>🔍</div>
                   <div style={{ fontSize: 16, fontWeight: 700, color: colors.textMain, marginBottom: 8 }}>Aucun titre pour le moment</div>
-                  <div style={{ fontSize: 13 }}>Lance le radar pour remplir la sélection radio.</div>
+                  <div style={{ fontSize: 13 }}>Reviens bientôt pour de nouvelles sorties.</div>
                 </div>
               ) : paginatedTracks.map((track) => {
                 const isThisPlaying = currentTrack?.id === track.id && isPlaying;

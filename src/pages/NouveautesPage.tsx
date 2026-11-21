@@ -10,6 +10,7 @@ import { usePlayer } from '../contexts/PlayerContext';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { useTheme } from '../contexts/ThemeContext';
 import { parseBlob } from 'music-metadata-browser';
+import { detectKey } from '../audio/keyDetector';
 import { PageMeta } from '../components/PageMeta';
 
 const Icons = {
@@ -59,6 +60,22 @@ const formatDuration = (seconds: number): string => {
   const m = Math.floor(seconds / 60);
   const s = Math.floor(seconds % 60);
   return `${m}:${s.toString().padStart(2, '0')}`;
+};
+
+const decodeAndDetectKey = async (file: File): Promise<string> => {
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+    const ctx = new AudioCtx();
+    const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+    const result = await detectKey(audioBuffer);
+    if (result && result.key !== 'Inconnu' && result.camelot && result.camelot !== '?') {
+      return result.camelot;
+    }
+  } catch (e) {
+    console.warn('Analyse audio de la tonalité impossible:', e);
+  }
+  return '';
 };
 
 export const NouveautesPage: React.FC = () => {
@@ -384,6 +401,13 @@ export const NouveautesPage: React.FC = () => {
         const coverFileFromTag = new File([blob], `cover-${Date.now()}.jpg`, { type: pic.format });
         setCoverFile(coverFileFromTag);
       }
+
+      // Affinage de la tonalité par analyse audio (Meyda), plus précise que les tags
+      decodeAndDetectKey(file).then((audioCamelot) => {
+        if (audioCamelot) {
+          setUploadForm((prev) => ({ ...prev, song_key: audioCamelot }));
+        }
+      }).catch(() => {});
     } catch (err: any) {
       console.warn("Impossible de lire les tags ID3", err);
     }

@@ -22,7 +22,7 @@ interface DayPoint {
   downloads: number;
 }
 
-const PIE_COLORS = ['#ffffff', '#b0b0b0', '#b0b0b0', '#b0b0b0', '#b0b0b0', '#b0b0b0', '#b0b0b0'];
+const PIE_COLORS = ['#8b5cf6', '#06b6d4', '#f59e0b', '#ec4899', '#22c55e', '#3b82f6', '#ef4444'];
 
 const last30Days = (): string[] => {
   const days: string[] = [];

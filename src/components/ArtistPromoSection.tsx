@@ -44,7 +44,7 @@ export const ArtistPromoSection: React.FC = () => {
       <div style={{ maxWidth: 1000, margin: '0 auto' }}>
         
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
-          <div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: colors.accent, marginBottom: 12 }}>Dropzone Pro</div>
+          <div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: colors.accent, marginBottom: 12 }}>ELEKTRAQ Pro</div>
           <h2 style={{ fontSize: 'clamp(2rem, 4vw, 2.5rem)', fontWeight: 900, color: colors.textMain, letterSpacing: '-0.03em', marginBottom: 16 }}>
             La boîte à outils de l'artiste
           </h2>

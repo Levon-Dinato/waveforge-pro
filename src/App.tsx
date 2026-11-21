@@ -51,6 +51,7 @@ const ToolsPage = lazy(() => import('./pages/ToolsPage').then((m) => ({ default:
 const AdminPage = lazy(() => import('./pages/AdminPage').then((m) => ({ default: m.AdminPage }))); 
 const LevonDinatoPage = lazy(() => import('./pages/LevonDinatoPage').then((m) => ({ default: m.LevonDinatoPage })));
 const PremiumPage = lazy(() => import('./pages/PremiumPage').then((m) => ({ default: m.PremiumPage })));
+const PremiumLandingPage = lazy(() => import('./pages/PremiumLandingPage').then((m) => ({ default: m.PremiumLandingPage })));
 const ElektraqVideosPage = lazy(() => import('./pages/ElektraqVideosPage').then((m) => ({ default: m.ElektraqVideosPage })));
 const SmartLinkPage = lazy(() => import('./pages/SmartLinkPage').then((m) => ({ default: m.SmartLinkPage })));
 const MyPlaylistsPage = lazy(() => import('./pages/MyPlaylistsPage').then((m) => ({ default: m.MyPlaylistsPage })));
@@ -84,6 +85,7 @@ function AnimatedRoutes() {
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/levon-dinato" element={<LevonDinatoPage />} />
+        <Route path="/premium" element={<PremiumLandingPage />} />
         <Route path="/premium/:username" element={<PremiumPage />} />
         <Route path="/link/:slug" element={<SmartLinkPage />} />
         

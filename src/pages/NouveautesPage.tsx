@@ -550,7 +550,7 @@ export const NouveautesPage: React.FC = () => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: colors.bg, fontFamily: 'Inter, sans-serif', color: colors.textMain, position: 'relative', transition: 'background 0.3s ease' }}>
 
-      <PageMeta title="Nouveautés" description="Les dernières sorties et exclusivités des DJs indépendants sur DropZone DJ." />
+      <PageMeta title="Nouveautés" description="Les dernières sorties et exclusivités des DJs indépendants sur ELEKTRAQ." />
 
       <div style={{ zIndex: 10, padding: '16px 24px', borderBottom: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: isDark ? 'rgba(10, 10, 10, 0.7)' : 'rgba(255, 255, 255, 0.8)', backdropFilter: 'blur(20px)', position: 'sticky', top: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
@@ -942,7 +942,7 @@ export const NouveautesPage: React.FC = () => {
                       <div style={{ display: 'flex', gap: 10 }}>
                         {track.purchase_url && <a href={track.purchase_url} target="_blank" rel="noopener noreferrer" style={{ color: colors.accent, display: 'flex', alignItems: 'center' }}>{Icons.buy}</a>}
                         <button onClick={(e) => handleDownloadClick(e, track)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center' }}>{Icons.download}</button>
-                        <ShareButton url={`${window.location.origin}/share/${track.id}`} title={`${track.title} — ${track.artist}`} text={`Écoute sur DropZone DJ 🎵`} variant="icon" size="small" label="" position="bottom" />
+                        <ShareButton url={`${window.location.origin}/share/${track.id}`} title={`${track.title} — ${track.artist}`} text={`Écoute sur ELEKTRAQ 🎵`} variant="icon" size="small" label="" position="bottom" />
 
                         {user && (
                           <div style={{ position: 'relative' }}>

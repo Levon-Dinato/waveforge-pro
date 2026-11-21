@@ -242,8 +242,8 @@ export const RadioPage: React.FC = () => {
     <div style={{ background: colors.bg, minHeight: '100vh', color: colors.textMain, fontFamily: 'Inter, sans-serif', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: isMobile ? '20px' : '40px' }}>
       
       <Helmet>
-        <title>Radio {profile.username} — DropZone DJ</title>
-        <meta property="og:title" content={`Écoute Radio ${profile.username} en direct sur DropZone DJ`} />
+        <title>Radio {profile.username} — ELEKTRAQ</title>
+        <meta property="og:title" content={`Écoute Radio ${profile.username} en direct sur ELEKTRAQ`} />
         <meta property="og:description" content="Ta radio, ta musique, ton univers." />
         <meta property="og:image" content={coverImage} />
       </Helmet>
@@ -434,7 +434,7 @@ export const RadioPage: React.FC = () => {
               {isLive ? '🎧 Live Set' : currentTrack?.title || 'En attente'}
             </h1>
             <p style={{ color: colors.textMuted, fontSize: 16, margin: 0, fontWeight: 600 }}>
-              {isLive ? profile.username : currentTrack?.artist || 'DropZone Radio'}
+              {isLive ? profile.username : currentTrack?.artist || 'ELEKTRAQ Radio'}
             </p>
           </div>
 

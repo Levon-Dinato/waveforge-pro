@@ -186,7 +186,7 @@ export const ArtistsPage: React.FC = () => {
         transition: 'background 0.3s ease, color 0.3s ease',
       }}
     >
-      <PageMeta title="Artistes" description="Découvrez les DJs et producteurs indépendants inscrits sur DropZone DJ." />
+      <PageMeta title="Artistes" description="Découvrez les DJs et producteurs indépendants inscrits sur ELEKTRAQ." />
       {/* 🎨 CSS global de la page (hover + skeleton) */}
       <style>{`
         .artist-card { transition: all 0.2s ease; }
@@ -223,7 +223,7 @@ export const ArtistsPage: React.FC = () => {
           Découvrir les <span style={{ color: '#ffffff' }}>Artistes</span>
         </h1>
         <p style={{ color: colors.textMuted, marginTop: 8, fontSize: '0.9rem' }}>
-          Les DJs et producteurs qui font vibrer DropZone.
+          Les DJs et producteurs qui font vibrer ELEKTRAQ.
         </p>
 
         <div style={{ marginTop: 24, maxWidth: 400 }}>

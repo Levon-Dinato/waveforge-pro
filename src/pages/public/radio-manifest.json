@@ -1,7 +1,7 @@
 {
-  "name": "DropZone Radio",
+  "name": "ELEKTRAQ Radio",
   "short_name": "Radio",
-  "description": "Écoutez les meilleures webradios de DJs indépendants sur DropZone.",
+  "description": "Écoutez les meilleures webradios de DJs indépendants sur ELEKTRAQ.",
   "start_url": "/radio-redirect",
   "display": "standalone",
   "background_color": "#05050a",

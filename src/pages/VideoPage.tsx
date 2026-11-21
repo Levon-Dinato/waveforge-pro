@@ -49,7 +49,7 @@ export const VideoPage: React.FC = () => {
     accentColor: '#b0b0b0',
     bgColor: '#0a0a14',
     title: 'Mon morceau',
-    subtitle: 'WaveForge PRO',
+    subtitle: 'ELEKTRAQ PRO',
     showGrid: true,
   });
 
@@ -148,7 +148,7 @@ export const VideoPage: React.FC = () => {
       });
 
       // Télécharge automatiquement
-      const filename = `waveforge-video-${Date.now()}.${result.extension}`;
+      const filename = `elektraq-video-${Date.now()}.${result.extension}`;
       downloadVideo(result.blob, filename);
 
       // Ajoute à l'historique
@@ -630,7 +630,7 @@ export const VideoPage: React.FC = () => {
                       </div>
                       <button
                         onClick={() => {
-                          const filename = `waveforge-video-${exp.id}.webm`;
+                          const filename = `elektraq-video-${exp.id}.webm`;
                           downloadVideo(exp.blob, filename);
                         }}
                         style={{

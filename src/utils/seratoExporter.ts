@@ -49,7 +49,7 @@ export async function exportSeratoMP3(
     .join(' | ');
 
   writer.setFrame('COMM', {
-    description: 'WaveForge Cues',
+    description: 'ELEKTRAQ Cues',
     text: cueList || 'No cues detected',
   });
 
@@ -67,7 +67,7 @@ export function downloadSeratoMP3(
   originalFileName: string
 ): void {
   const baseName = originalFileName.replace(/\.[^.]+$/, '');
-  const filename = `${baseName}-waveforge.mp3`;
+  const filename = `${baseName}-elektraq.mp3`;
 
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');

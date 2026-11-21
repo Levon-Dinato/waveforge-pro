@@ -218,7 +218,7 @@ export const RadioHomePage: React.FC = () => {
             />
             <div style={{ minWidth: 0, flex: 1 }}>
               <div style={{ fontSize: 15, fontWeight: 900, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{currentTrack?.title || 'En attente'}</div>
-              <div style={{ fontSize: 12, color: colors.textMuted, marginTop: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{currentTrack?.artist || 'DropZone Radio'}</div>
+              <div style={{ fontSize: 12, color: colors.textMuted, marginTop: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{currentTrack?.artist || 'ELEKTRAQ Radio'}</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 8, fontSize: 11, color: colors.textMuted, fontWeight: 700 }}>
                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#b0b0b0' }} /> {listeners} auditeur{listeners > 1 ? 's' : ''}
               </div>

@@ -108,7 +108,7 @@ export const AuthPage: React.FC = () => {
 
   const titles: Record<Mode, { title: string; subtitle: string; submit: string }> = {
     login: { title: 'Connexion', subtitle: 'Accédez à vos morceaux et à la communauté', submit: 'Se connecter' },
-    signup: { title: 'Créer un compte', subtitle: 'Rejoignez DropZone DJ', submit: 'Créer mon compte' },
+    signup: { title: 'Créer un compte', subtitle: 'Rejoignez ELEKTRAQ', submit: 'Créer mon compte' },
     forgot: { title: 'Mot de passe oublié', subtitle: 'Recevez un lien pour en définir un nouveau', submit: 'Envoyer le lien' },
   };
 

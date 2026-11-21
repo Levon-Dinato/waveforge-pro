@@ -84,7 +84,7 @@ export const PresetManager: React.FC<PresetManagerProps> = ({
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `waveforge-mastering-presets-${Date.now()}.json`;
+    a.download = `elektraq-mastering-presets-${Date.now()}.json`;
     a.click();
     URL.revokeObjectURL(url);
     showToast('📤 Presets exportés', '#b0b0b0');

@@ -61,7 +61,7 @@ setSuggestedTags(suggestions);
   // --- Génération ---
   const handleGenerate = useCallback(async () => {
     if (!sourceAudioFile) {
-      alert('Charge d\'abord un audio dans WaveForge.');
+      alert('Charge d\'abord un audio dans ELEKTRAQ.');
       return;
     }
     if (styleTags.length === 0 && !tagQuery.trim()) {

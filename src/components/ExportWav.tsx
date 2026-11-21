@@ -74,7 +74,7 @@ export function ExportWav({
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `waveforge-mix-${Date.now()}.wav`;
+      a.download = `elektraq-mix-${Date.now()}.wav`;
       a.click();
       URL.revokeObjectURL(url);
 
@@ -107,7 +107,7 @@ export function ExportWav({
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `waveforge-vocals-${Date.now()}.wav`;
+      a.download = `elektraq-vocals-${Date.now()}.wav`;
       a.click();
       URL.revokeObjectURL(url);
 
@@ -140,7 +140,7 @@ export function ExportWav({
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `waveforge-instru-${Date.now()}.wav`;
+      a.download = `elektraq-instru-${Date.now()}.wav`;
       a.click();
       URL.revokeObjectURL(url);
 

@@ -140,7 +140,7 @@ export const RadioPlayer: React.FC<RadioPlayerProps> = ({ profile, visualizerCol
           {currentTrack?.title || 'En attente'}
         </h1>
         <p style={{ color: '#888', fontSize: compact ? 12 : 14, margin: 0, fontWeight: 600 }}>
-          {currentTrack?.artist || 'DropZone Radio'}
+          {currentTrack?.artist || 'ELEKTRAQ Radio'}
         </p>
       </div>
 

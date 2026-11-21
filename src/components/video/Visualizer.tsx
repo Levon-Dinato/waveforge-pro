@@ -398,7 +398,7 @@ function drawStaticTitle(
     ctx.fillText(subtitle, padding, baseY + 50);
   }
 
-  // Logo WaveForge en haut à droite
+  // Logo ELEKTRAQ en haut à droite
   ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
   ctx.font = '600 20px "Inter", system-ui, sans-serif';
   ctx.textAlign = 'right';

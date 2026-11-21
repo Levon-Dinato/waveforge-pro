@@ -396,7 +396,7 @@ export const CDJPage: React.FC = () => {
     activeTrack.cuePoints.forEach((cue: any) => {
       content += `Cue ${cue.id} (${cue.label})\n  Temps exact : ${formatDuration(cue.time)}\n  Millisecondes : ${Math.floor(cue.time * 1000)} ms\n\n`;
     });
-    content += `----------------------------------------------------\nGénéré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleTimeString('fr-FR')}\nOutil : DJ PREP - DropZone Premium\n====================================================\n`;
+    content += `----------------------------------------------------\nGénéré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleTimeString('fr-FR')}\nOutil : DJ PREP - ELEKTRAQ Premium\n====================================================\n`;
     const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');

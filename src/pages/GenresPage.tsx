@@ -88,7 +88,7 @@ export const GenresPage: React.FC = () => {
   return (
     <div style={{ width: '100%', maxWidth: '100%', fontFamily: 'Inter, sans-serif', background: colors.bg, paddingBottom: 100, minHeight: '100vh', transition: 'background 0.3s ease' }}>
       
-      <PageMeta title="Genres" description="Explorez les sons DropZone DJ par style musical : house, techno, hip-hop et plus." />
+      <PageMeta title="Genres" description="Explorez les sons ELEKTRAQ par style musical : house, techno, hip-hop et plus." />
 
       {/* TITRE */}
       <div style={{ marginBottom: 32, padding: '0 24px' }}>

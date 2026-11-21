@@ -95,7 +95,7 @@ export const SmartLinkPage: React.FC = () => {
             Nouvelle Sortie
           </div>
           <h1 style={{ fontSize: 28, fontWeight: 900, color: colors.textMain, margin: '0 0 8px 0', lineHeight: 1.1 }}>{linkData.title}</h1>
-          <p style={{ fontSize: 16, fontWeight: 600, color: colors.textMuted, margin: '0 0 32px 0' }}>DropZone DJ</p>
+          <p style={{ fontSize: 16, fontWeight: 600, color: colors.textMuted, margin: '0 0 32px 0' }}>ELEKTRAQ</p>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {platforms.map((platform, idx) => (
@@ -128,7 +128,7 @@ export const SmartLinkPage: React.FC = () => {
         </div>
         
         <div style={{ marginTop: 40, fontSize: 11, color: colors.textMuted, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-          Propulsé par <strong style={{ color: colors.textMain }}>DropZone.dj</strong>
+          Propulsé par <strong style={{ color: colors.textMain }}>elektraq.dj</strong>
         </div>
 
       </div>

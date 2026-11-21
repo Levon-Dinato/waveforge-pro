@@ -137,7 +137,7 @@ export const AdminPage: React.FC = () => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 20, marginBottom: 32 }}>
         <div>
           <h1 style={{ fontSize: 28, fontWeight: 900, color: colors.textMain, margin: 0, letterSpacing: '-0.5px' }}>Panel Administrateur</h1>
-          <p style={{ color: colors.textMuted, marginTop: 4, fontSize: 14 }}>Gérez votre plateforme DropZone en toute simplicité.</p>
+          <p style={{ color: colors.textMuted, marginTop: 4, fontSize: 14 }}>Gérez votre plateforme ELEKTRAQ en toute simplicité.</p>
         </div>
         
         {/* Boutons d'accès rapide repensés */}

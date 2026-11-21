@@ -146,7 +146,7 @@ export const Footer: React.FC = () => {
         fontSize: 12,
         color: colors.textMuted,
       }}>
-        <div>© {new Date().getFullYear()} DropZone DJ. Tous droits réservés.</div>
+        <div>© {new Date().getFullYear()} ELEKTRAQ. Tous droits réservés.</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           Fait avec <span style={{ color: '#b0b0b0' }}>❤</span> pour les DJs.
         </div>

@@ -116,7 +116,7 @@ export const RadioLayout: React.FC = () => {
   };
 
   const slogan = sloganText || "Play the Beat. Feel the Sound. Live the Experience.";
-  const shareText = `${slogan} - Écoute la radio de ${profile?.username || 'DropZone DJ'} !`;
+  const shareText = `${slogan} - Écoute la radio de ${profile?.username || 'ELEKTRAQ'} !`;
 
   useEffect(() => {
     const handleContextMenu = (e: MouseEvent) => {
@@ -477,8 +477,8 @@ export const RadioLayout: React.FC = () => {
   return (
     <div style={{ background: colors.bg, minHeight: '100vh', color: colors.textMain, fontFamily: 'Inter, sans-serif', position: 'relative', display: 'flex', flexDirection: 'column', paddingBottom: 100 }}>
       <Helmet>
-        <title>Radio {profile.username} — DropZone DJ</title>
-        <meta property="og:title" content={`Radio ${profile.username} — DropZone DJ`} />
+        <title>Radio {profile.username} — ELEKTRAQ</title>
+        <meta property="og:title" content={`Radio ${profile.username} — ELEKTRAQ`} />
         <meta property="og:description" content={slogan} />
         <meta name="twitter:description" content={slogan} />
         <meta property="og:image" content={coverImage || 'https://via.placeholder.com/500'} />
@@ -635,7 +635,7 @@ export const RadioLayout: React.FC = () => {
                 )}
                 <div>
                   <h1 style={{ fontSize: 16, fontWeight: 900, margin: 0, letterSpacing: '-0.3px' }}>{profile.username}</h1>
-                  <p style={{ fontSize: 10, color: colors.textMuted, margin: 0, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>DropZone DJ · Radio</p>
+                  <p style={{ fontSize: 10, color: colors.textMuted, margin: 0, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>ELEKTRAQ · Radio</p>
                 </div>
               </Link>
             </div>
@@ -757,7 +757,7 @@ export const RadioLayout: React.FC = () => {
 
               <div style={{ minWidth: 0, flex: 1 }}>
                 <div style={{ fontSize: 13, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{currentTrack?.title || 'En attente'} {isLive && <span style={{ fontSize: 9, background: '#b0b0b0', color: '#fff', padding: '2px 6px', borderRadius: 4 }}>LIVE</span>}</div>
-                <div style={{ fontSize: 11, color: colors.textMuted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{currentTrack?.artist || 'DropZone Radio'}</div>
+                <div style={{ fontSize: 11, color: colors.textMuted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{currentTrack?.artist || 'ELEKTRAQ Radio'}</div>
               </div>
             </div>
 

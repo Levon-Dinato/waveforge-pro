@@ -27,7 +27,7 @@ export default async function middleware(request: Request) {
 
   const ogTags = `
     <meta property="og:type" content="profile" />
-    <meta property="og:site_name" content="DropZone DJ" />
+    <meta property="og:site_name" content="ELEKTRAQ" />
     <meta property="og:url" content="${url.origin}/levon-dinato" />
     <meta property="og:title" content="Levon &amp; Dinato — DJ &amp; Production Officiel" />
     <meta property="og:description" content="Découvrez les productions Funky House, Nu-Disco et Tech House du duo Levon &amp; Dinato. Un set conçu pour faire vibrer les dancefloors." />

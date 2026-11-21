@@ -51,7 +51,7 @@ export function formatAnalysisAsText(
   }
 
   lines.push('');
-  lines.push('Analysé par WaveForge PRO · waveforge-pro-one.vercel.app');
+  lines.push('Analysé par ELEKTRAQ PRO · elektraq.dj');
 
   return lines.join('\n');
 }
@@ -305,7 +305,7 @@ export function generateAnalysisImage(
     ctx.textAlign = 'center';
     ctx.textBaseline = 'bottom';
     ctx.fillText(
-      'Généré par WaveForge PRO · waveforge-pro-one.vercel.app',
+      'Généré par ELEKTRAQ PRO · elektraq.dj',
       W / 2,
       H - 20
     );
@@ -342,7 +342,7 @@ function timeToBarBeat(time: number, bpm: number): string {
 // ============================================================
 export function downloadAnalysisImage(blob: Blob, fileName: string): void {
   const baseName = fileName.replace(/\.[^.]+$/, '');
-  const filename = `${baseName}-waveforge-analysis.png`;
+  const filename = `${baseName}-elektraq-analysis.png`;
 
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');

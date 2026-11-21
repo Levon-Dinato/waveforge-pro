@@ -183,13 +183,13 @@ export const ChartsPage: React.FC = () => {
 
   return (
     <div style={{ background: colors.bg, minHeight: '100vh', padding: '40px 20px', color: colors.textMain, fontFamily: 'Inter, sans-serif' }}>
-      <PageMeta title="Top 50" description="Le classement des morceaux les plus écoutés par la communauté DropZone DJ, mis à jour en temps réel." />
+      <PageMeta title="Top 50" description="Le classement des morceaux les plus écoutés par la communauté ELEKTRAQ, mis à jour en temps réel." />
       <div style={{ maxWidth: 1000, margin: '0 auto' }}>
         
         {/* HEADER */}
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
           <div style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: colors.accent, marginBottom: 12 }}>
-            DropZone Charts
+            ELEKTRAQ Charts
           </div>
           <h1 style={{ fontSize: 'clamp(2.5rem, 6vw, 4rem)', fontWeight: 900, letterSpacing: '-0.03em', marginBottom: 16 }}>
             Top 50 <span style={{ color: colors.accent }}>des sons</span>

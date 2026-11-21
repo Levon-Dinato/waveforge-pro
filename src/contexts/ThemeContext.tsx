@@ -12,12 +12,12 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setTheme] = useState<Theme>(() => {
-    const saved = localStorage.getItem('dropzone-theme');
+    const saved = localStorage.getItem('elektraq-theme');
     return (saved as Theme) || 'dark'; // Dark par défaut
   });
 
   useEffect(() => {
-    localStorage.setItem('dropzone-theme', theme);
+    localStorage.setItem('elektraq-theme', theme);
     document.body.style.backgroundColor = theme === 'dark' ? '#05050a' : '#f5f5f7';
     document.body.setAttribute('data-theme', theme);
   }, [theme]);

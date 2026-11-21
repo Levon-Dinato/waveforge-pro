@@ -9,8 +9,8 @@ interface PageMetaProps {
 }
 
 export const PageMeta: React.FC<PageMetaProps> = ({ title, description }) => {
-  const fullTitle = title.includes('DropZone DJ') ? title : `${title} — DropZone DJ`;
-  const desc = description || 'DropZone DJ, la plateforme gratuite où les DJs indépendants partagent leurs sons et font vibrer la communauté.';
+  const fullTitle = title.includes('ELEKTRAQ') ? title : `${title} — ELEKTRAQ`;
+  const desc = description || 'ELEKTRAQ, la plateforme gratuite où les DJs indépendants partagent leurs sons et font vibrer la communauté.';
 
   return (
     <Helmet>

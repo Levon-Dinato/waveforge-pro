@@ -61,7 +61,7 @@ export const JingleGenerator: React.FC<JingleGeneratorProps> = ({ onGenerated })
       <textarea
         value={text}
         onChange={(e) => setText(e.target.value)}
-        placeholder="Ex: Bienvenue sur la radio officielle de DropZone DJ, le son qui fait vibrer la nuit..."
+        placeholder="Ex: Bienvenue sur la radio officielle de ELEKTRAQ, le son qui fait vibrer la nuit..."
         rows={3}
         style={{
           width: '100%', padding: 12, background: isDark ? '#09090b' : '#f1f5f9',

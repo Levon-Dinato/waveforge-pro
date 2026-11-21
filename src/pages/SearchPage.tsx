@@ -98,7 +98,7 @@ export const SearchPage: React.FC = () => {
   return (
     <div style={{ background: '#0a0a0a', minHeight: '100vh', color: '#fff', fontFamily: 'sans-serif', paddingBottom: 100 }}>
       
-      <PageMeta title="Recherche" description="Recherchez des sons, des artistes et des DJs sur DropZone DJ." />
+      <PageMeta title="Recherche" description="Recherchez des sons, des artistes et des DJs sur ELEKTRAQ." />
 
       {/* HEADER + BARRE DE RECHERCHE */}
       <div style={{ padding: isMobile ? '20px 15px' : '40px 20px', maxWidth: 1200, margin: '0 auto' }}>

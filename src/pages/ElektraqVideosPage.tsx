@@ -1,8 +1,8 @@
-// src/pages/DropZoneVideosPage.tsx
+// src/pages/ElektraqVideosPage.tsx
 import React, { useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 
-export const DropZoneVideosPage: React.FC = () => {
+export const ElektraqVideosPage: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -29,7 +29,7 @@ export const DropZoneVideosPage: React.FC = () => {
               <div style="background: rgba(10,18,26,0.8); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.3); padding: 48px; border-radius: 16px; text-align: center; max-width: 600px; width: 100%; box-shadow: 0 20px 50px rgba(0,0,0,0.6), 0 0 40px rgba(255,255,255,0.1);">
                 <div style="font-size: 60px; margin-bottom: 20px;">🔒</div>
                 <h2 style="color: #fff; font-size: 28px; margin-bottom: 16px; font-family: 'Orbitron', sans-serif; font-weight: 800;">Débloquez le pouvoir de <span style="color: #ffffff;">l'IA</span></h2>
-                <p style="color: #b0b0b0; font-size: 16px; margin-bottom: 32px; line-height: 1.6;">Transformez vos musiques en clips vidéo époustouflants. Cette fonctionnalité exclusive est réservée aux membres <b style="color: #fff;">DropZone Premium</b>.</p>
+                <p style="color: #b0b0b0; font-size: 16px; margin-bottom: 32px; line-height: 1.6;">Transformez vos musiques en clips vidéo époustouflants. Cette fonctionnalité exclusive est réservée aux membres <b style="color: #fff;">ELEKTRAQ Premium</b>.</p>
                 
                 <div style="display: flex; flex-direction: column; gap: 16px; text-align: left; margin-bottom: 40px;">
                   <div style="display: flex; align-items: center; gap: 16px; background: rgba(255,255,255,0.03); padding: 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
@@ -475,7 +475,7 @@ export const DropZoneVideosPage: React.FC = () => {
             try{db=await openDB()}catch(e){}
             const savedKey = getSavedKey();
             if (savedKey) { KEYS.list = [mkKey(savedKey)]; log('in', 'Clé API chargée depuis la mémoire.'); }
-            setP(newP()); page=0;render(); log('in','DropZone IA Videos prêt');
+            setP(newP()); page=0;render(); log('in','ELEKTRAQ IA Videos prêt');
             if(!KEYS.list.length){ setTimeout(() => { const k=prompt("Entrez votre clé API Agnès (une seule fois) :"); if(k&&k.length>8) { KEYS.list=[mkKey(k.trim())]; saveKey(k.trim()); toast('Clé API enregistrée !'); } }, 1000); }
           })();
         }, 100);

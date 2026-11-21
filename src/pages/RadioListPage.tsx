@@ -93,7 +93,7 @@ export const RadioListPage: React.FC = () => {
 
   return (
     <div style={{ background: colors.bg, minHeight: '100vh', color: colors.textMain, fontFamily: 'Inter, sans-serif', padding: isMobile ? '20px' : '40px' }}>
-      <PageMeta title="Toutes les radios" description="Écoutez les radios des DJs indépendants inscrits sur DropZone DJ." />
+      <PageMeta title="Toutes les radios" description="Écoutez les radios des DJs indépendants inscrits sur ELEKTRAQ." />
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>
         
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
@@ -101,7 +101,7 @@ export const RadioListPage: React.FC = () => {
             📻 Toutes les Radios
           </h1>
           <p style={{ color: colors.textMuted, fontSize: 16 }}>
-            Découvre les webradios en direct de la communauté DropZone DJ.
+            Découvre les webradios en direct de la communauté ELEKTRAQ.
           </p>
         </div>
 

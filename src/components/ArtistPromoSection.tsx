@@ -36,7 +36,7 @@ export const ArtistPromoSection: React.FC = () => {
     { icon: Icons.pitch, title: 'Pitch Playlist', desc: 'Soumettez vos sons à la playlist officielle.' },
     { icon: Icons.page, title: 'Page Premium', desc: 'Personnalisez votre page avec votre univers.' },
     { icon: Icons.stats, title: 'Statistiques', desc: 'Suivez vos écoutes, téléchargements et revenus.' },
-    { icon: Icons.support, title: 'Support Pro', desc: 'Une équipe dédiée pour vous accompagner.', link: 'mailto:contact@dropzone-dj.com' } 
+    { icon: Icons.support, title: 'Support Pro', desc: 'Une équipe dédiée pour vous accompagner.', link: 'mailto:contact@elektraq.com' } 
   ];
 
   return (

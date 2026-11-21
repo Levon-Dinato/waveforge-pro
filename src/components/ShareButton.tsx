@@ -56,7 +56,7 @@ const PLATFORMS: Platform[] = [
 
 export const ShareButton: React.FC<ShareButtonProps> = ({
   url,
-  title = 'DropZone DJ',
+  title = 'ELEKTRAQ',
   text = 'Écoute ce son !',
   variant = 'button',
   size = 'medium',

@@ -92,7 +92,7 @@ export const SettingsPage: React.FC = () => {
     releases_title: 'Dernières Sorties',
     parcours_title: 'Un parcours visible, des événements qui parlent.',
     parcours_subtitle: "L'écosystème du DJ indépendant.",
-    parcours_description: "DropZone n'est pas juste une page web, c'est votre QG numérique...",
+    parcours_description: "ELEKTRAQ n'est pas juste une page web, c'est votre QG numérique...",
     parcours_card_tag: 'POURQUOI NOUS REJOINDRE',
     parcours_card_title: 'La plateforme qui propulse votre son.',
     show_duo: true, show_prestations: true, show_releases: true, show_sidebar_top: true, show_sidebar_dates: true,
@@ -394,7 +394,7 @@ export const SettingsPage: React.FC = () => {
           <p style={{ color: colors.textMuted, fontSize: 16, lineHeight: 1.6, marginBottom: 30 }}>La personnalisation de votre page et la gestion de votre musique sont réservées aux membres <strong>Premium</strong>.</p>
           <div style={{ background: 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255, 255, 255, 0.3)', borderRadius: 12, padding: '16px', marginBottom: 24 }}>
             <div style={{ fontSize: 26, fontWeight: 900, color: '#ffffff', marginBottom: 4 }}>30 € / an</div>
-            <div style={{ fontSize: 14, color: colors.textMain, fontWeight: 600 }}>Abonnement annuel DropZone Premium</div>
+            <div style={{ fontSize: 14, color: colors.textMain, fontWeight: 600 }}>Abonnement annuel ELEKTRAQ Premium</div>
           </div>
           <div style={{ background: '#fff', borderRadius: 8, padding: '10px', display: 'inline-block', minWidth: '250px' }}><PayPalButton /></div>
         </div>

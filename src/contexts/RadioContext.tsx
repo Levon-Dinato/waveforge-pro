@@ -26,7 +26,7 @@ export interface RadioContextType {
 
 const RadioContext = createContext<RadioContextType | undefined>(undefined);
 
-const SYNC_KEY = 'dropzone_global_radio_state';
+const SYNC_KEY = 'elektraq_global_radio_state';
 
 export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const getInitialState = () => {

@@ -5,14 +5,14 @@ export default async function handler(req: any, res: any) {
 
   const supabaseUrl = 'https://ivusrxkufajugvkbpcia.supabase.co';
   const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml2dXNyeGt1ZmFqdWd2a2JwY2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE5MzU1MDUsImV4cCI6MjEwNzUxMTUwNX0.iwjZ-9Lm8vRazk6KR7zi0BLmZ1RYRUP9dIwfyiW83_U';
-  const baseUrl = 'https://dropzone-dj.vercel.app'; // ✅ Domaine mis à jour
+  const baseUrl = 'https://elektraq.dj'; // ✅ Domaine mis à jour
 
   // ==========================================
   // 1️⃣ CAS : PAGE PREMIUM (Artiste)
   // ==========================================
   if (premiumUsername) {
-    let title = `${premiumUsername} — Artiste DropZone`;
-    let description = `Découvre l'univers de ${premiumUsername} sur DropZone.dj`;
+    let title = `${premiumUsername} — Artiste ELEKTRAQ`;
+    let description = `Découvre l'univers de ${premiumUsername} sur elektraq.dj`;
     let coverUrl = `${baseUrl}/og-image.jpg`;
 
     try {
@@ -27,8 +27,8 @@ export default async function handler(req: any, res: any) {
       );
       const data = await r.json();
       if (Array.isArray(data) && data[0]) {
-        title = `${data[0].username || premiumUsername} — Artiste DropZone`;
-        description = data[0].hero_description || `Découvre l'univers de ${data[0].username || premiumUsername} sur DropZone.dj`;
+        title = `${data[0].username || premiumUsername} — Artiste ELEKTRAQ`;
+        description = data[0].hero_description || `Découvre l'univers de ${data[0].username || premiumUsername} sur elektraq.dj`;
         coverUrl = data[0].avatar_url || coverUrl;
       }
     } catch (e) {
@@ -45,7 +45,7 @@ export default async function handler(req: any, res: any) {
     <meta charset="UTF-8" />
     <title>${safeTitle}</title>
     <meta property="og:type" content="profile" />
-    <meta property="og:site_name" content="DropZone DJ" />
+    <meta property="og:site_name" content="ELEKTRAQ" />
     <meta property="og:title" content="${safeTitle}" />
     <meta property="og:description" content="${safeDescription}" />
     <meta property="og:image" content="${coverUrl}" />
@@ -82,16 +82,16 @@ export default async function handler(req: any, res: any) {
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <title>Live DropZone DJ 🎧</title>
+    <title>Live ELEKTRAQ 🎧</title>
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="DropZone DJ" />
-    <meta property="og:title" content="Rejoins le live DropZone DJ !" />
+    <meta property="og:site_name" content="ELEKTRAQ" />
+    <meta property="og:title" content="Rejoins le live ELEKTRAQ !" />
     <meta property="og:description" content="Les nouvelles sorties et les remixes. Les promos, edits et morceaux exclusifs autorisés au partage. Nouveautés House, Tech House, EDM, Dance et Underground." />
     <meta property="og:image" content="${baseUrl}/og-live.jpg" />
     <meta property="og:url" content="${baseUrl}/share/live" />
     
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Rejoins le live DropZone DJ !" />
+    <meta name="twitter:title" content="Rejoins le live ELEKTRAQ !" />
     <meta name="twitter:description" content="Les nouvelles sorties et les remixes. Une communauté où les DJs présentent leurs productions et leurs découvertes." />
     <meta name="twitter:image" content="${baseUrl}/og-live.jpg" />
   </head>
@@ -120,7 +120,7 @@ export default async function handler(req: any, res: any) {
     return res.status(400).send('Missing track id or premium username');
   }
 
-  let title = 'DropZone DJ';
+  let title = 'ELEKTRAQ';
   let artist = 'Studio DJ & Mastering';
   let coverUrl = `${baseUrl}/og-image.jpg`;
   let audioUrl = '';
@@ -154,11 +154,11 @@ export default async function handler(req: any, res: any) {
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <title>${safeTitle} — ${safeArtist} · DropZone DJ</title>
+    <title>${safeTitle} — ${safeArtist} · ELEKTRAQ</title>
     <meta property="og:type" content="music.song" />
-    <meta property="og:site_name" content="DropZone DJ" />
+    <meta property="og:site_name" content="ELEKTRAQ" />
     <meta property="og:title" content="${safeTitle} — ${safeArtist}" />
-    <meta property="og:description" content="Écoute ${safeTitle} par ${safeArtist} sur DropZone DJ 🎵" />
+    <meta property="og:description" content="Écoute ${safeTitle} par ${safeArtist} sur ELEKTRAQ 🎵" />
     <meta property="og:image" content="${coverUrl}" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
@@ -166,7 +166,7 @@ export default async function handler(req: any, res: any) {
     ${audioUrl ? `<meta property="og:audio" content="${audioUrl}" />` : ''}
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="${safeTitle} — ${safeArtist}" />
-    <meta name="twitter:description" content="Écoute ${safeTitle} par ${safeArtist} sur DropZone DJ 🎵" />
+    <meta name="twitter:description" content="Écoute ${safeTitle} par ${safeArtist} sur ELEKTRAQ 🎵" />
     <meta name="twitter:image" content="${coverUrl}" />
   </head>
   <body style="background:#121212;color:#fff;font-family:monospace;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;">

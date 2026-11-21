@@ -16,18 +16,18 @@ export default async function handler(req: any, res: any) {
         <title>Levon & Dinato — DJ & Production Officiel</title>
         
         <meta property="og:type" content="profile" />
-        <meta property="og:site_name" content="DropZone DJ" />
-        <meta property="og:url" content="https://waveforge-pro-one.vercel.app/levon-dinato" />
+        <meta property="og:site_name" content="ELEKTRAQ" />
+        <meta property="og:url" content="https://elektraq.dj/levon-dinato" />
         <meta property="og:title" content="Levon &amp; Dinato — DJ &amp; Production Officiel" />
         <meta property="og:description" content="Découvrez les productions Funky House, Nu-Disco et Tech House du duo Levon &amp; Dinato." />
-        <meta property="og:image" content="https://waveforge-pro-one.vercel.app/og-levon-dinato.jpg" />
-        <meta property="og:image:secure_url" content="https://waveforge-pro-one.vercel.app/og-levon-dinato.jpg" />
+        <meta property="og:image" content="https://elektraq.dj/og-levon-dinato.jpg" />
+        <meta property="og:image:secure_url" content="https://elektraq.dj/og-levon-dinato.jpg" />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
         
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Levon &amp; Dinato — DJ &amp; Production Officiel" />
-        <meta name="twitter:image" content="https://waveforge-pro-one.vercel.app/og-levon-dinato.jpg" />
+        <meta name="twitter:image" content="https://elektraq.dj/og-levon-dinato.jpg" />
       </head>
       <body>
         <h1>Levon &amp; Dinato</h1>

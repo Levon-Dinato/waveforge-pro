@@ -27,4 +27,4 @@ export const MUSICGEN_URL = 'http://localhost:8001';
  * Message affiché en production quand le serveur local n'est pas disponible
  */
 export const LOCAL_SERVER_MESSAGE =
-  "Cette fonctionnalité nécessite le serveur Python local. Lance WaveForge sur ton PC pour l'utiliser.";
+  "Cette fonctionnalité nécessite le serveur Python local. Lance ELEKTRAQ sur ton PC pour l'utiliser.";

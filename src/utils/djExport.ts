@@ -40,7 +40,7 @@ const downloadFile = (content: string, filename: string, mimeType: string): void
  * ✅ Export M3U — Format universel (VLC, iTunes, WMP, tout logiciel DJ)
  * Simple, robuste, fonctionne partout.
  */
-export const exportToM3U = (tracks: DJTrack[], playlistName: string = 'DropZone Playlist'): void => {
+export const exportToM3U = (tracks: DJTrack[], playlistName: string = 'ELEKTRAQ Playlist'): void => {
   if (!tracks || tracks.length === 0) {
     alert('Aucun morceau à exporter.');
     return;
@@ -58,7 +58,7 @@ export const exportToM3U = (tracks: DJTrack[], playlistName: string = 'DropZone 
 
   downloadFile(
     m3u,
-    `dropzone_${sanitizeFileName(playlistName)}.m3u`,
+    `elektraq_${sanitizeFileName(playlistName)}.m3u`,
     'audio/x-mpegurl;charset=utf-8'
   );
 };
@@ -67,7 +67,7 @@ export const exportToM3U = (tracks: DJTrack[], playlistName: string = 'DropZone 
  * ✅ Export JSON — Pour les outils avancés (Lexicon, DJ Cue Bridge, etc.)
  * Contient TOUTES les métadonnées + les cue points.
  */
-export const exportToJSON = (tracks: DJTrack[], playlistName: string = 'DropZone Playlist'): void => {
+export const exportToJSON = (tracks: DJTrack[], playlistName: string = 'ELEKTRAQ Playlist'): void => {
   if (!tracks || tracks.length === 0) {
     alert('Aucun morceau à exporter.');
     return;
@@ -75,8 +75,8 @@ export const exportToJSON = (tracks: DJTrack[], playlistName: string = 'DropZone
 
   const exportData = {
     exportDate: new Date().toISOString(),
-    generator: 'DropZone.dj',
-    format: 'dropzone-playlist-v1',
+    generator: 'elektraq.dj',
+    format: 'elektraq-playlist-v1',
     playlistName,
     trackCount: tracks.length,
     tracks: tracks.map((track) => ({
@@ -100,7 +100,7 @@ export const exportToJSON = (tracks: DJTrack[], playlistName: string = 'DropZone
 
   downloadFile(
     JSON.stringify(exportData, null, 2),
-    `dropzone_${sanitizeFileName(playlistName)}.json`,
+    `elektraq_${sanitizeFileName(playlistName)}.json`,
     'application/json;charset=utf-8'
   );
 };

@@ -26,7 +26,7 @@ export const ContactPage: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const body = encodeURIComponent(`Nom : ${name}\nEmail : ${email}\n\n${message}`);
-    window.location.href = `mailto:contact@dropzone-dj.com?subject=${encodeURIComponent(subject)}&body=${body}`;
+    window.location.href = `mailto:contact@elektraq.com?subject=${encodeURIComponent(subject)}&body=${body}`;
     setSent(true);
   };
 
@@ -53,8 +53,8 @@ export const ContactPage: React.FC = () => {
   return (
     <div style={{ maxWidth: 720, margin: '0 auto', padding: '40px 20px 80px', fontFamily: 'Inter, sans-serif', minHeight: '100vh' }}>
       <Helmet>
-        <title>Contact — DropZone DJ</title>
-        <meta name="description" content="Contactez l'équipe DropZone DJ : support technique, questions sur Premium, partenariats." />
+        <title>Contact — ELEKTRAQ</title>
+        <meta name="description" content="Contactez l'équipe ELEKTRAQ : support technique, questions sur Premium, partenariats." />
       </Helmet>
 
       <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: '40px 36px' }}>
@@ -68,7 +68,7 @@ export const ContactPage: React.FC = () => {
         {sent ? (
           <div style={{ padding: 20, background: 'rgba(255, 255, 255, 0.08)', border: '1px solid rgba(255, 255, 255, 0.3)', borderRadius: 8, color: colors.textMain, fontSize: 14, lineHeight: 1.6 }}>
             ✅ Votre messagerie s'est ouverte avec votre message pré-rempli. Si elle ne s'est pas ouverte,
-            écrivez-nous directement à <a href="mailto:contact@dropzone-dj.com" style={{ color: colors.accent }}>contact@dropzone-dj.com</a>.
+            écrivez-nous directement à <a href="mailto:contact@elektraq.com" style={{ color: colors.accent }}>contact@elektraq.com</a>.
           </div>
         ) : (
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
@@ -121,7 +121,7 @@ export const ContactPage: React.FC = () => {
         )}
 
         <div style={{ marginTop: 32, paddingTop: 24, borderTop: `1px solid ${colors.border}`, fontSize: 13, color: colors.textMuted }}>
-          Ou directement par email : <a href="mailto:contact@dropzone-dj.com" style={{ color: colors.accent }}>contact@dropzone-dj.com</a>
+          Ou directement par email : <a href="mailto:contact@elektraq.com" style={{ color: colors.accent }}>contact@elektraq.com</a>
         </div>
       </div>
     </div>

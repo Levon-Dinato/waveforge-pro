@@ -7,9 +7,9 @@ export default async function handler(req, res) {
   const supabaseKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
 
   // ✅ URL DE TON PROJET VERCEL
-  const baseUrl = "https://waveforge-pro-one.vercel.app";
+  const baseUrl = "https://elektraq.dj";
   
-  let title = `Radio ${username} — DropZone DJ`;
+  let title = `Radio ${username} — ELEKTRAQ`;
   let description = "Ta radio, ta musique, ton univers. Écoute les meilleurs DJs en direct.";
   let image = `${baseUrl}/radio-og.jpg`; // ✅ L'image par défaut utilise ton domaine
 

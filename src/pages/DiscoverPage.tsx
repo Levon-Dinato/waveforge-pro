@@ -98,18 +98,18 @@ export const DiscoverPage: React.FC = () => {
   };
 
   if (loading) {
-    return <div style={{ background: colors.bg, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.textMain }}>Chargement de l'univers DropZone...</div>;
+    return <div style={{ background: colors.bg, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.textMain }}>Chargement de l'univers ELEKTRAQ...</div>;
   }
 
   return (
     <div style={{ background: colors.bg, minHeight: '100vh', color: colors.textMain, fontFamily: 'Inter, sans-serif', paddingBottom: 100 }}>
       
-      <PageMeta title="Découvrir" description="Explorez les nouveaux talents et les sons les plus populaires de la communauté DropZone DJ." />
+      <PageMeta title="Découvrir" description="Explorez les nouveaux talents et les sons les plus populaires de la communauté ELEKTRAQ." />
 
       {/* HEADER & STATS */}
       <div style={{ padding: '80px 20px 40px', textAlign: 'center', borderBottom: `1px solid ${colors.border}` }}>
         <h1 style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)', fontWeight: 900, marginBottom: 16, letterSpacing: '-0.03em' }}>
-          Découvrez <span style={{ color: colors.accent }}>DropZone</span>
+          Découvrez <span style={{ color: colors.accent }}>ELEKTRAQ</span>
         </h1>
         <p style={{ color: colors.textMuted, fontSize: 18, maxWidth: 600, margin: '0 auto 40px' }}>
           Explorez les nouveaux talents, écoutez les sons les plus populaires et rejoignez la communauté.
@@ -191,7 +191,7 @@ export const DiscoverPage: React.FC = () => {
                     <div style={{ width: 80, height: 80, borderRadius: '50%', margin: '0 auto 16px', background: artist.avatar_url ? `url(${artist.avatar_url}) center/cover` : colors.border, border: `2px solid ${artist.theme_color || colors.accent}40` }} />
                     <h3 style={{ fontSize: 18, fontWeight: 800, color: colors.textMain, margin: '0 0 8px' }}>{artist.username}</h3>
                     <p style={{ fontSize: 12, color: colors.textMuted, margin: 0, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                      {artist.bio || "Nouvel artiste sur DropZone."}
+                      {artist.bio || "Nouvel artiste sur ELEKTRAQ."}
                     </p>
                   </div>
                 </Link>

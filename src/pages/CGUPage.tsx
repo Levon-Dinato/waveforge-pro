@@ -9,7 +9,7 @@ export const CGUPage: React.FC = () => {
         <h2>1. Objet</h2>
         <p>
           Les présentes Conditions Générales d'Utilisation (CGU) définissent les règles d'accès et d'utilisation
-          de la plateforme <strong>DropZone DJ</strong>. En créant un compte, vous acceptez sans réserve ces conditions.
+          de la plateforme <strong>ELEKTRAQ</strong>. En créant un compte, vous acceptez sans réserve ces conditions.
         </p>
 
         <h2>2. Accès au service</h2>
@@ -25,7 +25,7 @@ export const CGUPage: React.FC = () => {
 
         <h2>3. Contenus publiés</h2>
         <p>
-          En publiant un son sur DropZone DJ, vous garantissez :
+          En publiant un son sur ELEKTRAQ, vous garantissez :
         </p>
         <ul>
           <li>détenir les droits d'auteur et droits voisins sur ce contenu (ou disposer des autorisations nécessaires) ;</li>
@@ -52,7 +52,7 @@ export const CGUPage: React.FC = () => {
 
         <h2>6. Suspension et suppression</h2>
         <p>
-          DropZone DJ se réserve le droit de suspendre ou supprimer tout compte en cas de non-respect des présentes
+          ELEKTRAQ se réserve le droit de suspendre ou supprimer tout compte en cas de non-respect des présentes
           CGU, sans préavis et sans indemnité.
         </p>
 
@@ -64,7 +64,7 @@ export const CGUPage: React.FC = () => {
 
         <h2>8. Contact</h2>
         <p>
-          Pour toute question : <a href="mailto:contact@dropzone-dj.com">contact@dropzone-dj.com</a>.
+          Pour toute question : <a href="mailto:contact@elektraq.com">contact@elektraq.com</a>.
         </p>
       </div>
     </LegalPageShell>

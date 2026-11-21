@@ -1,7 +1,7 @@
 {
   "id": "/",
-  "name": "DropZone DJ · Les nouvelles sorties et les remixes",
-  "short_name": "DropZone",
+  "name": "ELEKTRAQ · Les nouvelles sorties et les remixes",
+  "short_name": "ELEKTRAQ",
   "description": "Promos, edits et morceaux exclusifs. Nouveautés House, Tech House, EDM, Dance et Underground.",
   "start_url": "/",
   "scope": "/",
@@ -79,7 +79,7 @@
       "name": "Live DJ",
       "short_name": "Live",
       "url": "/live",
-      "description": "Regarder le live DropZone DJ",
+      "description": "Regarder le live ELEKTRAQ",
       "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     }
   ]

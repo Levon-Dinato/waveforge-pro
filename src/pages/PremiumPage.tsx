@@ -122,8 +122,8 @@ export const PremiumPage: React.FC = () => {
   
   const handleShare = async () => {
     const shareData = { 
-      title: `${profile?.username} — Artiste DropZone`, 
-      text: `Découvre l'univers de ${profile?.username} sur DropZone.dj`, 
+      title: `${profile?.username} — Artiste ELEKTRAQ`, 
+      text: `Découvre l'univers de ${profile?.username} sur elektraq.dj`, 
       url: window.location.href 
     };
     try { 
@@ -157,7 +157,7 @@ export const PremiumPage: React.FC = () => {
     const date = new Date(event.event_date);
     const endDate = new Date(date.getTime() + 2 * 60 * 60 * 1000);
     const formatDate = (d: Date) => d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-    const icsContent = `BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//DropZone DJ//FR\nBEGIN:VEVENT\nUID:${event.id}@dropzone.dj\nDTSTAMP:${formatDate(new Date())}\nDTSTART:${formatDate(date)}\nDTEND:${formatDate(endDate)}\nSUMMARY:${event.title}\nLOCATION:${event.location || ''} ${event.city || ''}\nDESCRIPTION:${event.description || 'Événement DropZone DJ'}\nURL:${event.url || window.location.href}\nEND:VEVENT\nEND:VCALENDAR`;
+    const icsContent = `BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//ELEKTRAQ//FR\nBEGIN:VEVENT\nUID:${event.id}@elektraq.dj\nDTSTAMP:${formatDate(new Date())}\nDTSTART:${formatDate(date)}\nDTEND:${formatDate(endDate)}\nSUMMARY:${event.title}\nLOCATION:${event.location || ''} ${event.city || ''}\nDESCRIPTION:${event.description || 'Événement ELEKTRAQ'}\nURL:${event.url || window.location.href}\nEND:VEVENT\nEND:VCALENDAR`;
     const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -341,15 +341,15 @@ export const PremiumPage: React.FC = () => {
       </div>
 
       <Helmet>
-        <title>{profile.username} — Artiste DropZone</title>
-        <meta property="og:title" content={`${profile.username} — Artiste DropZone`} />
+        <title>{profile.username} — Artiste ELEKTRAQ</title>
+        <meta property="og:title" content={`${profile.username} — Artiste ELEKTRAQ`} />
         <meta property="og:description" content={heroDesc} />
         <meta property="og:url" content={window.location.href} />
         <meta property="og:type" content="profile" />
         <meta property="og:image" content={shareImage} />
         
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={`${profile.username} — Artiste DropZone`} />
+        <meta name="twitter:title" content={`${profile.username} — Artiste ELEKTRAQ`} />
         <meta name="twitter:description" content={heroDesc} />
         <meta name="twitter:image" content={shareImage} />
       </Helmet>
@@ -754,9 +754,9 @@ export const PremiumPage: React.FC = () => {
 
       <footer style={{ borderTop: `1px solid ${colors.border}`, padding: '40px 24px', marginTop: 'auto', textAlign: 'center', background: colors.panelBg, backdropFilter: 'blur(20px)', position: 'relative', zIndex: 10 }}>
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-          <span style={{ fontSize: 20, fontWeight: 900, color: colors.textMain, letterSpacing: '-0.5px' }}>DropZone<span style={{ color: themeColor }}>.dj</span></span>
+          <span style={{ fontSize: 20, fontWeight: 900, color: colors.textMain, letterSpacing: '-0.5px' }}>ELEKTRAQ<span style={{ color: themeColor }}>.dj</span></span>
         </div>
-        <p style={{ fontSize: 13, color: colors.textMuted, marginBottom: 24 }}>Page officielle de <strong>{profile.username}</strong> propulsée par DropZone.dj</p>
+        <p style={{ fontSize: 13, color: colors.textMuted, marginBottom: 24 }}>Page officielle de <strong>{profile.username}</strong> propulsée par elektraq.dj</p>
         {socials.length > 0 && (
           <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginBottom: 32 }}>
             {socials.map(s => (
@@ -766,7 +766,7 @@ export const PremiumPage: React.FC = () => {
             ))}
           </div>
         )}
-        <div style={{ fontSize: 11, color: colors.textMuted }}>© {new Date().getFullYear()} DropZone.dj — Tous droits réservés</div>
+        <div style={{ fontSize: 11, color: colors.textMuted }}>© {new Date().getFullYear()} elektraq.dj — Tous droits réservés</div>
       </footer>
 
       {currentTrack && GlobalPlayer && <GlobalPlayer currentTrack={currentTrack} isPlaying={isPlaying} onTogglePlay={togglePlay} onStop={stop} />}

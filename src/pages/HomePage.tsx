@@ -197,9 +197,9 @@ export const HomePage = () => {
     <div style={{ display: 'flex', flexDirection: 'column', fontFamily: 'Inter, sans-serif', color: colors.textMain, width: '100%', maxWidth: '100%', overflowX: 'hidden', background: colors.bg, transition: 'background 0.3s ease, color 0.3s ease' }}>
 
       <Helmet>
-        <title>DropZone DJ — La plateforme des DJs indépendants</title>
+        <title>ELEKTRAQ — La plateforme des DJs indépendants</title>
         <meta name="description" content="Partage tes sons, découvre les dernières exclusivités et connecte-toi avec les meilleurs DJs. La plateforme gratuite des DJs indépendants." />
-        <meta property="og:title" content="DropZone DJ — La plateforme des DJs indépendants" />
+        <meta property="og:title" content="ELEKTRAQ — La plateforme des DJs indépendants" />
         <meta property="og:description" content="Partage tes sons et fais vibrer la nuit. La plateforme gratuite des DJs indépendants." />
         <meta property="og:type" content="website" />
       </Helmet>

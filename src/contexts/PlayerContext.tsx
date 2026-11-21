@@ -58,7 +58,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     navigator.mediaSession.metadata = new MediaMetadata({
       title: currentTrack.title,
       artist: currentTrack.artist,
-      album: 'DropZone.dj',
+      album: 'ELEKTRAQ',
       artwork: [
         { 
           src: currentTrack.cover_url || `${window.location.origin}/og-image.jpg`, 

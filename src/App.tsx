@@ -52,7 +52,7 @@ const ToolsPage = lazy(() => import('./pages/ToolsPage').then((m) => ({ default:
 const AdminPage = lazy(() => import('./pages/AdminPage').then((m) => ({ default: m.AdminPage }))); 
 const LevonDinatoPage = lazy(() => import('./pages/LevonDinatoPage').then((m) => ({ default: m.LevonDinatoPage })));
 const PremiumPage = lazy(() => import('./pages/PremiumPage').then((m) => ({ default: m.PremiumPage })));
-const DropZoneVideosPage = lazy(() => import('./pages/DropZoneVideosPage').then((m) => ({ default: m.DropZoneVideosPage })));
+const ElektraqVideosPage = lazy(() => import('./pages/ElektraqVideosPage').then((m) => ({ default: m.ElektraqVideosPage })));
 const SmartLinkPage = lazy(() => import('./pages/SmartLinkPage').then((m) => ({ default: m.SmartLinkPage })));
 const MyPlaylistsPage = lazy(() => import('./pages/MyPlaylistsPage').then((m) => ({ default: m.MyPlaylistsPage })));
 const DiscoverPage = lazy(() => import('./pages/DiscoverPage').then((m) => ({ default: m.DiscoverPage })));
@@ -122,7 +122,7 @@ function AnimatedRoutes() {
           <Route path="tools" element={<PageTransition><PremiumGuard><ToolsPage /></PremiumGuard></PageTransition>} />
           <Route path="radio-manager" element={<PageTransition><PremiumGuard><RadioManagerPage /></PremiumGuard></PageTransition>} />
           <Route path="settings" element={<PageTransition><PremiumGuard><SettingsPage /></PremiumGuard></PageTransition>} />
-          <Route path="ia-videos" element={<PageTransition><PremiumGuard><DropZoneVideosPage /></PremiumGuard></PageTransition>} />
+          <Route path="ia-videos" element={<PageTransition><PremiumGuard><ElektraqVideosPage /></PremiumGuard></PageTransition>} />
 
           {/* ✅ Outils audio (Tone.js chargé en lazy uniquement ici) */}
           <Route element={<PremiumAudioLayout />}>

@@ -137,7 +137,7 @@ export const InstallButton: React.FC<InstallButtonProps> = ({ variant = 'sidebar
             </li>
             <li>
               OU ouvre le menu <strong style={{ color: '#fff' }}>⋮</strong> de Chrome →{' '}
-              <strong style={{ color: '#fff' }}>« Installer DropZone DJ »</strong>
+              <strong style={{ color: '#fff' }}>« Installer ELEKTRAQ »</strong>
             </li>
             <li>Confirme l'installation</li>
           </ol>
@@ -204,7 +204,7 @@ export const InstallButton: React.FC<InstallButtonProps> = ({ variant = 'sidebar
               overflow: 'hidden',
             }}
           >
-            <img src="/icons/icon-192.png" alt="DropZone DJ" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <img src="/icons/icon-192.png" alt="ELEKTRAQ" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           </div>
 
           <div style={{ flex: 1, minWidth: 0 }}>
@@ -216,7 +216,7 @@ export const InstallButton: React.FC<InstallButtonProps> = ({ variant = 'sidebar
                 marginBottom: 2,
               }}
             >
-              Installer DropZone DJ
+              Installer ELEKTRAQ
             </div>
             <div style={{ fontSize: 10, color: '#888' }}>
               Accès rapide · Sans barre d'URL

@@ -109,7 +109,7 @@ export const LevonDinatoPage: React.FC = () => {
   const handleShare = async () => {
     const shareData = {
       title: 'Levon & Dinato — DJ & Production Officiel',
-      text: 'Découvrez la page officielle du duo Levon & Dinato sur DropZone DJ !',
+      text: 'Découvrez la page officielle du duo Levon & Dinato sur ELEKTRAQ !',
       url: window.location.href,
     };
     if (navigator.share) {
@@ -131,16 +131,16 @@ export const LevonDinatoPage: React.FC = () => {
         <title>Levon & Dinato — DJ & Production Officiel</title>
         <meta name="description" content="Découvrez les productions Funky House, Nu-Disco et Tech House du duo Levon & Dinato. Un set conçu pour faire vibrer les dancefloors." />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://waveforge-pro-one.vercel.app/levon-dinato" />
+        <meta property="og:url" content="https://elektraq.dj/levon-dinato" />
         <meta property="og:title" content="Levon & Dinato — DJ & Production Officiel" />
         <meta property="og:description" content="Découvrez les productions Funky House, Nu-Disco et Tech House du duo Levon & Dinato." />
-        <meta property="og:image" content="https://waveforge-pro-one.vercel.app/og-levon-dinato.jpg" />
+        <meta property="og:image" content="https://elektraq.dj/og-levon-dinato.jpg" />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Levon & Dinato — DJ & Production Officiel" />
         <meta name="twitter:description" content="Découvrez les productions Funky House, Nu-Disco et Tech House du duo Levon & Dinato." />
-        <meta name="twitter:image" content="https://waveforge-pro-one.vercel.app/og-levon-dinato.jpg" />
+        <meta name="twitter:image" content="https://elektraq.dj/og-levon-dinato.jpg" />
       </Helmet>
 
       <div className="top-bar">
@@ -367,7 +367,7 @@ export const LevonDinatoPage: React.FC = () => {
         <div className="wrapper">
           <div className="upsell-grid">
             <div className="upsell-text">
-              <span className="upsell-tag">Exclusivité DropZone</span>
+              <span className="upsell-tag">Exclusivité ELEKTRAQ</span>
               <h2>Envie de te démarquer avec une page comme celle-ci ?</h2>
               <p>Ne laisse plus ton profil ressembler à tous les autres. Obtiens ta propre page officielle sur-mesure avec ton design et ton lecteur audio intégré.</p>
               {/* ✅ REDIRECTION VERS L'ABONNEMENT */}

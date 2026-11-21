@@ -197,7 +197,7 @@ export const EventsPage: React.FC = () => {
       color: colors.textMain,
       transition: 'background 0.3s ease, color 0.3s ease' // ✅ Transition fluide
     }}>
-      <PageMeta title="Événements" description="Les soirées, festivals et dates des DJs de la communauté DropZone DJ." />
+      <PageMeta title="Événements" description="Les soirées, festivals et dates des DJs de la communauté ELEKTRAQ." />
       
       {/* HEADER */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>

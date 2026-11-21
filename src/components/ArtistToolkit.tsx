@@ -53,10 +53,10 @@ export const ArtistToolkit: React.FC = () => {
   const TOOLS = [
     { id: 'smartlink', icon: Icons.link, title: "Smart Link", desc: "Créez un lien unique pour regrouper toutes vos plateformes (Spotify, Apple, etc.).", color: '#b0b0b0' },
     { id: 'promo', icon: Icons.image, title: "Cartes Promo", desc: "Générez de belles images (format Instagram) avec la pochette de votre son.", color: '#b0b0b0' },
-    { id: 'pitch', icon: Icons.music, title: "Pitch Playlist", desc: "Soumettez votre son pour une chance d'être ajouté à la playlist officielle DropZone.", color: '#f97316' },
+    { id: 'pitch', icon: Icons.music, title: "Pitch Playlist", desc: "Soumettez votre son pour une chance d'être ajouté à la playlist officielle ELEKTRAQ.", color: '#f97316' },
     { id: 'premium', icon: Icons.globe, title: "Ma Page Premium", desc: "Personnalisez votre page artiste, vos couleurs et vos modules.", color: '#ffffff' },
     { id: 'stats', icon: Icons.chart, title: "Mes Statistiques", desc: "Consultez vos vues, écoutes et téléchargements en temps réel.", color: '#8b5cf6' },
-    { id: 'support', icon: Icons.shield, title: "Support Prioritaire", desc: "Un problème ? Une question ? Contactez directement l'équipe DropZone.", color: '#b0b0b0' }
+    { id: 'support', icon: Icons.shield, title: "Support Prioritaire", desc: "Un problème ? Une question ? Contactez directement l'équipe ELEKTRAQ.", color: '#b0b0b0' }
   ];
 
   const handleToolClick = (toolId: string) => {
@@ -69,7 +69,7 @@ export const ArtistToolkit: React.FC = () => {
     setGeneratedLink('');
     if (toolId === 'premium') navigate('/settings');
     else if (toolId === 'stats') navigate(`/premium/${user.user_metadata?.username || user.id}`);
-    else if (toolId === 'support') window.location.href = "mailto:support@dropzone.dj";
+    else if (toolId === 'support') window.location.href = "mailto:support@elektraq.dj";
     else setActiveModal(toolId);
   };
 
@@ -120,7 +120,7 @@ export const ArtistToolkit: React.FC = () => {
     try {
       const canvas = await html2canvas(cardRef.current, { backgroundColor: '#000000', scale: 2, useCORS: true });
       const link = document.createElement('a');
-      link.download = `dropzone-promo-${Date.now()}.png`;
+      link.download = `elektraq-promo-${Date.now()}.png`;
       link.href = canvas.toDataURL('image/png');
       link.click();
     } catch (err) {
@@ -138,7 +138,7 @@ export const ArtistToolkit: React.FC = () => {
     try {
       const { error } = await supabase.from('pitch_submissions').insert({
         user_id: user.id,
-        artist_name: user.user_metadata?.username || 'Artiste DropZone',
+        artist_name: user.user_metadata?.username || 'Artiste ELEKTRAQ',
         track_title: pitchData.title,
         track_url: pitchData.url,
         message: pitchData.message
@@ -160,7 +160,7 @@ export const ArtistToolkit: React.FC = () => {
       
       <div style={{ textAlign: 'center', marginBottom: 50 }}>
         <div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: colors.accent, marginBottom: 12 }}>
-          DropZone Pro
+          ELEKTRAQ Pro
         </div>
         <h2 style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', fontWeight: 900, color: colors.textMain, letterSpacing: '-1px', margin: 0 }}>
           La boîte à outils de l'artiste
@@ -238,7 +238,7 @@ export const ArtistToolkit: React.FC = () => {
                       <div>
                         <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 4, fontWeight: 700 }}>Lien personnalisé (URL) *</label>
                         <div style={{ display: 'flex', alignItems: 'center', background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, paddingLeft: 10 }}>
-                          <span style={{ fontSize: 13, color: colors.textMuted }}>dropzone.dj/link/</span>
+                          <span style={{ fontSize: 13, color: colors.textMuted }}>elektraq.dj/link/</span>
                           <input type="text" required value={smartLinkData.slug} onChange={e => setSmartLinkData({...smartLinkData, slug: e.target.value.toLowerCase().replace(/\s+/g, '-')})} style={{ flex: 1, padding: 10, background: 'transparent', border: 'none', color: colors.textMain, outline: 'none' }} placeholder="take-on-me" />
                         </div>
                       </div>
@@ -317,7 +317,7 @@ export const ArtistToolkit: React.FC = () => {
                       </div>
                       <div>
                         <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 8, fontWeight: 700 }}>Message (Optionnel)</label>
-                        <textarea rows={3} value={pitchData.message} onChange={e => setPitchData({...pitchData, message: e.target.value})} style={{ width: '100%', padding: 12, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain, resize: 'vertical' }} placeholder="Pourquoi ce son correspond à DropZone ?" />
+                        <textarea rows={3} value={pitchData.message} onChange={e => setPitchData({...pitchData, message: e.target.value})} style={{ width: '100%', padding: 12, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain, resize: 'vertical' }} placeholder="Pourquoi ce son correspond à ELEKTRAQ ?" />
                       </div>
                       <button type="submit" disabled={isSubmitting} style={{ marginTop: 10, padding: 16, background: '#f97316', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 800, cursor: isSubmitting ? 'wait' : 'pointer' }}>
                         {isSubmitting ? 'Envoi en cours...' : 'Envoyer le pitch'}

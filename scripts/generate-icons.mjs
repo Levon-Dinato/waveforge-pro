@@ -70,7 +70,7 @@ async function generateIcon(size, filename, maskable = false) {
 }
 
 async function main() {
-  console.log('🎨 Génération des icônes WaveForge PRO...\n');
+  console.log('🎨 Génération des icônes ELEKTRAQ PRO...\n');
   try {
     await generateIcon(192, 'icon-192.png', false);
     await generateIcon(512, 'icon-512.png', false);

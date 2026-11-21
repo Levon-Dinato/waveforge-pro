@@ -35,8 +35,8 @@ export const LegalPageShell: React.FC<LegalPageShellProps> = ({ title, updatedAt
       }}
     >
       <Helmet>
-        <title>{title} — DropZone DJ</title>
-        <meta name="description" content={`${title} de DropZone DJ, la plateforme des DJs indépendants.`} />
+        <title>{title} — ELEKTRAQ</title>
+        <meta name="description" content={`${title} de ELEKTRAQ, la plateforme des DJs indépendants.`} />
       </Helmet>
 
       <div

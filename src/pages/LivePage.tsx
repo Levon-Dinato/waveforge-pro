@@ -17,8 +17,8 @@ export const LivePage = () => {
 
   const rtmpUrl = 'rtmp://live.tviply.com/stream';
   const streamKey = '6n9kjjb7qw4ko4w4ock';
-  const tviplyEmbedUrl = 'https://tviply.com/dropzonedj/embed';
-  const tviplyChannelUrl = 'https://tviply.com/dropzonedj';
+  const tviplyEmbedUrl = 'https://tviply.com/elektraq/embed';
+  const tviplyChannelUrl = 'https://tviply.com/elektraq';
   
   // URL à partager
   const liveShareUrl = window.location.origin + '/live';
@@ -58,7 +58,7 @@ export const LivePage = () => {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'DropZone DJ Live 🎧',
+          title: 'ELEKTRAQ Live 🎧',
           text: 'Rejoins le live et vibre avec la communauté !',
           url: liveShareUrl,
         });
@@ -85,23 +85,23 @@ export const LivePage = () => {
 
       {/* ✅ METADONNÉES POUR LE PARTAGE (Facebook, Twitter, Discord, etc.) */}
       <Helmet>
-        <title>Live DropZone DJ 🎧 - Prends l'antenne</title>
+        <title>Live ELEKTRAQ 🎧 - Prends l'antenne</title>
         
         {/* Open Graph (Facebook, Discord, WhatsApp) */}
         <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="DropZone DJ" />
-        <meta property="og:title" content="Live DropZone DJ 🎧" />
+        <meta property="og:site_name" content="ELEKTRAQ" />
+        <meta property="og:title" content="Live ELEKTRAQ 🎧" />
         <meta property="og:description" content="Rejoins la scène, mixe en direct et partage ta passion avec la communauté." />
         <meta property="og:url" content={liveShareUrl} />
-        <meta property="og:image" content="https://waveforge-pro-one.vercel.app/og-live.jpg" />
+        <meta property="og:image" content="https://elektraq.dj/og-live.jpg" />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
         
         {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Live DropZone DJ 🎧" />
+        <meta name="twitter:title" content="Live ELEKTRAQ 🎧" />
         <meta name="twitter:description" content="Rejoins la scène, mixe en direct et partage ta passion." />
-        <meta name="twitter:image" content="https://waveforge-pro-one.vercel.app/og-live.jpg" />
+        <meta name="twitter:image" content="https://elektraq.dj/og-live.jpg" />
       </Helmet>
 
       {/* ==================================================== */}
@@ -150,7 +150,7 @@ export const LivePage = () => {
               margin: '0 0 40px 0',
               lineHeight: 1.6,
             }}>
-              Rejoignez la scène DropZone. Diffusez vos sets en direct, partagez votre passion avec la communauté et faites découvrir votre univers musical.
+              Rejoignez la scène ELEKTRAQ. Diffusez vos sets en direct, partagez votre passion avec la communauté et faites découvrir votre univers musical.
             </p>
 
             {/* Boutons d'action */}
@@ -243,7 +243,7 @@ export const LivePage = () => {
               height="100%"
               frameBorder="0"
               allowFullScreen
-              title="DropZone DJ - Live"
+              title="ELEKTRAQ - Live"
               scrolling="no"
               style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none' }}
               allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
@@ -273,7 +273,7 @@ export const LivePage = () => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 16, flexWrap: 'wrap', gap: 12 }}>
           <div style={{ fontSize: 12, color: colors.textMuted, display: 'flex', alignItems: 'center', gap: 8 }}>
              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#b0b0b0' }} />
-             En direct sur DropZone
+             En direct sur ELEKTRAQ
           </div>
           <div style={{ display: 'flex', gap: 16 }}>
             {!isMobile && (
@@ -308,7 +308,7 @@ export const LivePage = () => {
       {/* 3. POURQUOI MIXER ICI                                */}
       {/* ==================================================== */}
       <section style={{ maxWidth: 1200, margin: '0 auto', width: '100%', padding: '0 20px' }}>
-        <h2 style={{ fontSize: 20, fontWeight: 600, marginBottom: 32, color: colors.textMain }}>Pourquoi mixer sur DropZone ?</h2>
+        <h2 style={{ fontSize: 20, fontWeight: 600, marginBottom: 32, color: colors.textMain }}>Pourquoi mixer sur ELEKTRAQ ?</h2>
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 24 }}>
           {[
             { title: 'Outils intégrés', desc: 'Profitez de notre suite de Mastering et de nos outils pour peaufiner votre son.' },

@@ -8,12 +8,12 @@ export const MentionsLegalesPage: React.FC = () => {
       <div className="legal-shell">
         <h2>1. Éditeur du site</h2>
         <p>
-          Le site <strong>DropZone DJ</strong> (accessible à l'adresse <a href="https://dropzone-dj.vercel.app">dropzone-dj.vercel.app</a>)
+          Le site <strong>ELEKTRAQ</strong> (accessible à l'adresse <a href="https://elektraq.dj">elektraq.dj</a>)
           est édité à titre personnel / par la structure suivante :
         </p>
         <ul>
           <li><strong>Nom / Raison sociale :</strong> [À compléter — nom de l'éditeur]</li>
-          <li><strong>Email de contact :</strong> <a href="mailto:contact@dropzone-dj.com">contact@dropzone-dj.com</a></li>
+          <li><strong>Email de contact :</strong> <a href="mailto:contact@elektraq.com">contact@elektraq.com</a></li>
           <li><strong>Hébergeur :</strong> Vercel Inc., 340 S Lemon Ave #4133, Walnut, CA 91789, États-Unis.</li>
         </ul>
 
@@ -35,13 +35,13 @@ export const MentionsLegalesPage: React.FC = () => {
 
         <h2>4. Données personnelles</h2>
         <p>
-          Les données collectées sur DropZone DJ sont traitées conformément à notre{' '}
+          Les données collectées sur ELEKTRAQ sont traitées conformément à notre{' '}
           <a href="/confidentialite">Politique de confidentialité</a>.
         </p>
 
         <h2>5. Responsabilité</h2>
         <p>
-          DropZone DJ s'efforce d'assurer l'exactitude des informations diffusées, mais ne saurait être tenu
+          ELEKTRAQ s'efforce d'assurer l'exactitude des informations diffusées, mais ne saurait être tenu
           responsable des erreurs, omissions ou indisponibilités du service. Les contenus publiés par les
           utilisateurs n'engagent que leurs auteurs.
         </p>
@@ -49,7 +49,7 @@ export const MentionsLegalesPage: React.FC = () => {
         <h2>6. Contact</h2>
         <p>
           Pour toute question relative aux présentes mentions légales, vous pouvez nous écrire à{' '}
-          <a href="mailto:contact@dropzone-dj.com">contact@dropzone-dj.com</a>.
+          <a href="mailto:contact@elektraq.com">contact@elektraq.com</a>.
         </p>
       </div>
     </LegalPageShell>

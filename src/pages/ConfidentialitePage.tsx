@@ -53,7 +53,7 @@ export const ConfidentialitePage: React.FC = () => {
         </p>
         <p>
           Pour exercer ces droits, contactez-nous à{' '}
-          <a href="mailto:contact@dropzone-dj.com">contact@dropzone-dj.com</a>.
+          <a href="mailto:contact@elektraq.com">contact@elektraq.com</a>.
         </p>
       </div>
     </LegalPageShell>

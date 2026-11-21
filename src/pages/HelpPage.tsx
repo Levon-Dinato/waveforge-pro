@@ -8,7 +8,7 @@ interface SectionInfo {
 }
 
 const SECTIONS: SectionInfo[] = [
-  { id: 'intro', title: 'C\'est quoi DropZone DJ ?' },
+  { id: 'intro', title: 'C\'est quoi ELEKTRAQ ?' },
   { id: 'uploader', title: 'Uploader un son' },
   { id: 'ecouter', title: 'Écouter et liker' },
   { id: 'partager', title: 'Partager un son' },
@@ -135,14 +135,14 @@ export const HelpPage: React.FC = () => {
             Guide de la communauté
           </h1>
           <p style={{ color: colors.textMuted, fontSize: 16, margin: 0, lineHeight: 1.6 }}>
-            Tout ce qu'il faut savoir pour partager, écouter et propulser ta carrière sur DropZone DJ.
+            Tout ce qu'il faut savoir pour partager, écouter et propulser ta carrière sur ELEKTRAQ.
           </p>
         </div>
 
         {/* SECTIONS */}
-        <Section id="intro" title="C'est quoi DropZone DJ ?" colors={colors}>
+        <Section id="intro" title="C'est quoi ELEKTRAQ ?" colors={colors}>
           <p>
-            <strong>DropZone DJ</strong> est la plateforme tout-en-un dédiée aux DJs et producteurs indépendants.
+            <strong>ELEKTRAQ</strong> est la plateforme tout-en-un dédiée aux DJs et producteurs indépendants.
           </p>
           <ul>
             <li>🎵 Partage tes <strong>morceaux</strong> (originaux, remixes, exclusivités)</li>
@@ -152,7 +152,7 @@ export const HelpPage: React.FC = () => {
             <li>🔴 Rejoins le <strong>Live DJ</strong> pour écouter ou mixer en direct</li>
           </ul>
           <Callout title="Gratuit & Premium" colors={colors}>
-            La création de compte et l'écoute sont <strong>100% gratuites</strong>. Pour accéder aux outils de carrière (Statistiques, Personnalisation de page, Upload illimité), il faut passer en <strong>DropZone Premium</strong>.
+            La création de compte et l'écoute sont <strong>100% gratuites</strong>. Pour accéder aux outils de carrière (Statistiques, Personnalisation de page, Upload illimité), il faut passer en <strong>ELEKTRAQ Premium</strong>.
           </Callout>
         </Section>
 
@@ -181,7 +181,7 @@ export const HelpPage: React.FC = () => {
         </Section>
 
         <Section id="ecouter" title="Comment écouter et liker ?" colors={colors}>
-          <p>Pour profiter de la musique sur DropZone :</p>
+          <p>Pour profiter de la musique sur ELEKTRAQ :</p>
 
           <FeatureGrid>
             <Feature icon="▶" title="Bouton Play" description="Clique sur le bouton Play au centre de la pochette." colors={colors} />
@@ -196,11 +196,11 @@ export const HelpPage: React.FC = () => {
         </Section>
 
         <Section id="partager" title="Partager un son" colors={colors}>
-          <p>Le partage est au cœur de DropZone.</p>
+          <p>Le partage est au cœur de ELEKTRAQ.</p>
           <ul>
             <li>Utilise le bouton <strong>Partager</strong> sur la page d'un son.</li>
-            <li>Sur ta page Premium, utilise ton <strong>Smart Link</strong> (dans tes outils) pour regrouper Spotify, Apple Music et DropZone dans un seul lien.</li>
-            <li>Copie simplement l'URL de ton profil : <code>dropzone.dj/premium/ton-pseudo</code>.</li>
+            <li>Sur ta page Premium, utilise ton <strong>Smart Link</strong> (dans tes outils) pour regrouper Spotify, Apple Music et ELEKTRAQ dans un seul lien.</li>
+            <li>Copie simplement l'URL de ton profil : <code>elektraq.dj/premium/ton-pseudo</code>.</li>
           </ul>
         </Section>
 
@@ -221,7 +221,7 @@ export const HelpPage: React.FC = () => {
             <Feature icon="📊" title="Statistiques" description="Suis tes écoutes, tes téléchargements et estime tes revenus en temps réel." colors={colors} />
             <Feature icon="🔗" title="Smart Link" description="Un lien unique qui redirige vers toutes tes plateformes d'écoute." colors={colors} />
             <Feature icon="🖼️" title="Cartes Promo" description="Génère des visuels pour Instagram avec la pochette de ton son." colors={colors} />
-            <Feature icon="📤" title="Pitch Playlist" description="Propose tes sons pour la playlist officielle DropZone." colors={colors} />
+            <Feature icon="📤" title="Pitch Playlist" description="Propose tes sons pour la playlist officielle ELEKTRAQ." colors={colors} />
           </FeatureGrid>
           <Callout title="Comment y accéder ?" colors={colors}>
             Ces outils se trouvent dans ton Espace Artiste (Réglages) ou depuis le menu "Découvrir".
@@ -240,7 +240,7 @@ export const HelpPage: React.FC = () => {
               <div style={{ fontSize: 15, fontWeight: 700, color: colors.textMain, marginBottom: 8 }}>📧 Contact Support</div>
               <p style={{ margin: 0, fontSize: 14, color: colors.textMuted }}>
                 Un bug technique ? Une question sur Premium ?<br/>
-                Écris-nous à <strong>contact@dropzone-dj.com</strong>
+                Écris-nous à <strong>contact@elektraq.com</strong>
               </p>
             </div>
           </div>

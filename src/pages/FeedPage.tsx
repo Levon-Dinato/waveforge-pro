@@ -436,7 +436,7 @@ export const FeedPage: React.FC = () => {
 
   return (
     <div style={{ background: colors.bg, minHeight: '100vh', color: colors.textMain, fontFamily: 'Inter, sans-serif', transition: 'background 0.3s ease, color 0.3s ease' }}>
-      <PageMeta title="Feed" description="Suivez l'actualité et les partages de la communauté DropZone DJ." />
+      <PageMeta title="Feed" description="Suivez l'actualité et les partages de la communauté ELEKTRAQ." />
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '16px 12px' : '24px', display: 'flex', gap: 40, flexDirection: isMobile ? 'column' : 'row', height: isMobile ? 'auto' : 'calc(100vh - 120px)' }}>
         
         {/* COLONNE PRINCIPALE */}
@@ -594,7 +594,7 @@ export const FeedPage: React.FC = () => {
                           <button onClick={() => openComments('post', item.data.id)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700 }}>
                             {Icons.message} Commenter
                           </button>
-                          <button onClick={() => handleShare(`${item.data.author} sur DropZone`, window.location.href)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700 }}>
+                          <button onClick={() => handleShare(`${item.data.author} sur ELEKTRAQ`, window.location.href)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700 }}>
                             {Icons.share} Partager
                           </button>
                         </div>
@@ -736,7 +736,7 @@ export const FeedPage: React.FC = () => {
               <div style={{ background: `linear-gradient(135deg, ${colors.accent}15, transparent 60%), ${colors.panelBg}`, border: `1px solid ${colors.border}`, borderRadius: 20, padding: 24, backdropFilter: 'blur(20px)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
                   <div style={{ color: colors.accent }}>{Icons.sparkles}</div>
-                  <h3 style={{ fontSize: 14, fontWeight: 900, color: colors.textMain, margin: 0 }}>Bienvenue sur DropZone</h3>
+                  <h3 style={{ fontSize: 14, fontWeight: 900, color: colors.textMain, margin: 0 }}>Bienvenue sur ELEKTRAQ</h3>
                 </div>
                 <p style={{ fontSize: 13, color: colors.textMuted, lineHeight: 1.5, margin: '0 0 16px 0' }}>
                   Découvre les meilleurs sons, partage tes propres tracks et connecte-toi avec la communauté.
@@ -781,7 +781,7 @@ export const FeedPage: React.FC = () => {
               </div>
 
               <div style={{ padding: '0 24px', fontSize: 11, color: colors.textMuted, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                <span>© {new Date().getFullYear()} DropZone.dj</span>
+                <span>© {new Date().getFullYear()} elektraq.dj</span>
                 <span>•</span>
                 <span style={{ cursor: 'pointer' }}>Confidentialité</span>
                 <span>•</span>

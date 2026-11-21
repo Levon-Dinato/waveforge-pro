@@ -91,7 +91,7 @@ ${tracksXml}
   </COLLECTION>
   <PLAYLISTS>
     <NODE Type="0" Name="ROOT" Count="1">
-      <NODE Name="WaveForge Export" Type="1" KeyType="0" Entries="${tracks.length}">
+      <NODE Name="ELEKTRAQ Export" Type="1" KeyType="0" Entries="${tracks.length}">
 ${tracks.map((_, idx) => `        <TRACK Key="${idx + 1}"/>`).join('\n')}
       </NODE>
     </NODE>
@@ -133,7 +133,7 @@ export function downloadRekordboxXML(
 
   const a = document.createElement('a');
   a.href = url;
-  a.download = filename || `waveforge-rekordbox-${Date.now()}.xml`;
+  a.download = filename || `elektraq-rekordbox-${Date.now()}.xml`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);

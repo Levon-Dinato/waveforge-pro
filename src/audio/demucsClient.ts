@@ -34,7 +34,7 @@ export async function separateVocalsWithProgress(
 ): Promise<SeparateResult> {
   if (isProduction()) {
     throw new Error(
-      "La séparation de stems nécessite le serveur Python local. Lance WaveForge sur ton PC."
+      "La séparation de stems nécessite le serveur Python local. Lance ELEKTRAQ sur ton PC."
     );
   }
 

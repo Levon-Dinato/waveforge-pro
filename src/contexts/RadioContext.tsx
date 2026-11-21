@@ -23,6 +23,8 @@ export interface RadioContextType {
   seek: (time: number) => void;
   stopRadio: () => void;
   unlockAudio: () => void;
+  volume: number;
+  setVolume: (v: number) => void;
 }
 
 const RadioContext = createContext<RadioContextType | undefined>(undefined);
@@ -62,6 +64,7 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   
   const [crossfadeEnabled, setCrossfadeEnabled] = useState(false);
   const [crossfadeDuration, setCrossfadeDuration] = useState(3);
+  const [volume, setVolume] = useState(1);
   const isCrossfadingRef = useRef(false);
 
   const audioARef = useRef<HTMLAudioElement | null>(null);
@@ -337,11 +340,18 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     return () => currentAudio.removeEventListener('canplay', onCanPlay);
   }, [currentTrack, isLive, liveUrl, isPlaying]);
 
+  // ✅ Applique le volume aux deux lecteurs audio
+  useEffect(() => {
+    if (audioARef.current) audioARef.current.volume = volume;
+    if (audioBRef.current) audioBRef.current.volume = volume;
+  }, [volume, currentTrack?.id]);
+
   return (
     <RadioContext.Provider value={{
       tracks, currentIndex, currentTrack, isPlaying, progress, duration,
       isLive, liveUrl, isRadioActive, needsGesture,
-      startRadio, updateRadioSettings, togglePlay, playNext, playPrev, seek, stopRadio, unlockAudio
+      startRadio, updateRadioSettings, togglePlay, playNext, playPrev, seek, stopRadio, unlockAudio,
+      volume, setVolume
     }}>
       {children}
       {/* ✅ AJOUT DE LA CLÉ POUR FORCER LE CHANGEMENT D'ÉTAT AUDIO */}

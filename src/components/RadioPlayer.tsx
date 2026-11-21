@@ -14,7 +14,7 @@ interface RadioPlayerProps {
 }
 
 export const RadioPlayer: React.FC<RadioPlayerProps> = ({ profile, visualizerColor, iconColor, isMobile, compact }) => {
-  const { currentTrack, isPlaying, progress, duration, togglePlay, isLive } = useRadio();
+  const { currentTrack, isPlaying, progress, duration, togglePlay, isLive, volume, setVolume, seek } = useRadio();
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   const { user } = useAuth();
@@ -155,11 +155,26 @@ export const RadioPlayer: React.FC<RadioPlayerProps> = ({ profile, visualizerCol
           <span>{formatTime(progress)}</span>
           <span>{formatTime(duration)}</span>
         </div>
+
+        {/* Barre de progression cliquable (seek) */}
+        <div onClick={(e) => { if (!duration) return; const r = e.currentTarget.getBoundingClientRect(); seek(Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * duration); }} style={{ width: '100%', maxWidth: compact ? 220 : 260, height: 5, borderRadius: 3, background: 'rgba(255,255,255,0.12)', cursor: 'pointer', position: 'relative', overflow: 'hidden' }}>
+          <div style={{ width: `${duration > 0 ? (progress / duration) * 100 : 0}%`, height: '100%', background: visualizerColor, borderRadius: 3, boxShadow: `0 0 10px ${visualizerColor}80` }} />
+        </div>
         
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 30 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 20 }}>
           <button onClick={togglePlay} style={{ width: compact ? 52 : 64, height: compact ? 52 : 64, borderRadius: '50%', background: visualizerColor, color: iconColor, border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: `0 10px 20px ${visualizerColor}60`, transition: 'all 0.2s', transform: isPlaying ? 'scale(1)' : 'scale(0.98)' }}>
             {isPlaying ? <svg width={compact ? 20 : 24} height={compact ? 20 : 24} viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg> : <svg width={compact ? 20 : 24} height={compact ? 20 : 24} viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: 3 }}><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>}
           </button>
+
+          {/* Volume */}
+          <button onClick={() => setVolume(volume > 0 ? 0 : 1)} style={{ background: 'transparent', border: 'none', color: '#888', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 4 }} title={volume === 0 ? 'Activer le son' : 'Couper le son'}>
+            {volume === 0 ? (
+              <svg width={compact ? 16 : 20} height={compact ? 16 : 20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"></path><line x1="22" y1="9" x2="16" y2="15"></line><line x1="16" y1="9" x2="22" y2="15"></line></svg>
+            ) : (
+              <svg width={compact ? 16 : 20} height={compact ? 16 : 20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"></path><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+            )}
+          </button>
+          <input type="range" min="0" max="1" step="0.01" value={volume} onChange={(e) => setVolume(parseFloat(e.target.value))} style={{ width: compact ? 60 : 90, accentColor: visualizerColor, cursor: 'pointer' }} aria-label="Volume" />
         </div>
       </div>
     </div>

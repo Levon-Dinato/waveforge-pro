@@ -436,7 +436,7 @@ export const FeedPage: React.FC = () => {
 
   return (
     <div style={{ background: colors.bg, minHeight: '100vh', color: colors.textMain, fontFamily: 'Inter, sans-serif', transition: 'background 0.3s ease, color 0.3s ease' }}>
-      <PageMeta title="DJ Only / Promos" description="Les promos et remixes des DJ ELEKTRAQ, à reprendre et télécharger." />
+      <PageMeta title="Feed" description="Suivez l'actualité et les partages de la communauté ELEKTRAQ." />
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '16px 12px' : '24px', display: 'flex', gap: 40, flexDirection: isMobile ? 'column' : 'row', height: isMobile ? 'auto' : 'calc(100vh - 120px)' }}>
         
         {/* COLONNE PRINCIPALE */}
@@ -444,9 +444,9 @@ export const FeedPage: React.FC = () => {
           
           <div style={{ marginBottom: 32 }}>
             <h1 style={{ fontSize: isMobile ? 26 : 36, fontWeight: 900, margin: 0, letterSpacing: '-1px' }}>
-              DJ Only / <span style={{ color: colors.accent }}>Promos</span>
+              Fil d'<span style={{ color: colors.accent }}>actualité</span>
             </h1>
-            <p style={{ color: colors.textMuted, fontSize: 14, marginTop: 8 }}>Les promos et remixes des DJ ELEKTRAQ, à reprendre et télécharger.</p>
+            <p style={{ color: colors.textMuted, fontSize: 14, marginTop: 8 }}>Toutes les dernières pépites et les prochains événements.</p>
           </div>
 
           {user && (

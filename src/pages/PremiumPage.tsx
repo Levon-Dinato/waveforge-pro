@@ -197,7 +197,7 @@ export const PremiumPage: React.FC = () => {
         if (error) { setProfile(null); setLoading(false); return; }
         
         setProfile(p);
-        const { data: t } = await supabase.from('tracks').select('*').eq('user_id', p.id).order('created_at', { ascending: false });
+        const { data: t } = await supabase.from('tracks').select('*').eq('user_id', p.id).neq('is_jingle', true).order('created_at', { ascending: false });
         if (t) {
           const formatted = t.map(x => ({ ...x, peaks: typeof x.peaks === 'string' ? JSON.parse(x.peaks) : x.peaks || [] }));
           setTracks(formatted);

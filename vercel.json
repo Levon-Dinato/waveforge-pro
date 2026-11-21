@@ -44,5 +44,11 @@
         { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
       ]
     }
-  ]
+  ],
+  "crons": [
+    { "path": "/api/radar", "schedule": "0 */6 * * *" }
+  ],
+  "functions": {
+    "api/radar.js": { "maxDuration": 60 }
+  }
 }

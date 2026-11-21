@@ -401,16 +401,16 @@ export const NouveautesPage: React.FC = () => {
         const coverFileFromTag = new File([blob], `cover-${Date.now()}.jpg`, { type: pic.format });
         setCoverFile(coverFileFromTag);
       }
-
-      // Affinage de la tonalité par analyse audio (Meyda), plus précise que les tags
-      decodeAndDetectKey(file).then((audioCamelot) => {
-        if (audioCamelot) {
-          setUploadForm((prev) => ({ ...prev, song_key: audioCamelot }));
-        }
-      }).catch(() => {});
     } catch (err: any) {
       console.warn("Impossible de lire les tags ID3", err);
     }
+
+    // Détection de la tonalité même si les tags sont illisibles/absents
+    decodeAndDetectKey(file).then((audioCamelot) => {
+      if (audioCamelot) {
+        setUploadForm((prev) => ({ ...prev, song_key: audioCamelot }));
+      }
+    }).catch(() => {});
   };
 
   const handleUploadSubmit = async (e: React.FormEvent) => {

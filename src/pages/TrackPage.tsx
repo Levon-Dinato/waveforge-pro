@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { usePlayer } from '../contexts/PlayerContext';
 import { fetchArtistInfo } from '../utils/artistInfo';
+import { useTranslation } from 'react-i18next';
 
 // --- ICÔNES ---
 const Icons = {
@@ -174,6 +175,7 @@ export const TrackPage: React.FC = () => {
   const { play, currentTrack, isPlaying, togglePlay, currentTime, duration, seek } = usePlayer();
   const navigate = useNavigate();
   const isDark = theme === 'dark';
+  const { t } = useTranslation();
 
   const [track, setTrack] = useState<any>(null);
   const [artist, setArtist] = useState<any>(null);
@@ -357,7 +359,7 @@ export const TrackPage: React.FC = () => {
       if (!error) {
         setTrack((prev: any) => ({ ...prev, downloads: (prev.downloads || 0) + 1 }));
       }
-      showToast('Téléchargement démarré ✅');
+      showToast(t('track.download_started'));
     } catch (error) {
       window.open(track.audio_url, '_blank');
     } finally {
@@ -419,10 +421,10 @@ export const TrackPage: React.FC = () => {
     const ok = await copyToClipboard(shareUrl);
     if (ok) {
       setCopied(true);
-      showToast('Lien copié dans le presse-papiers ✅');
+      showToast(t('track.link_copied_toast'));
       setTimeout(() => { setCopied(false); setShareOpen(false); }, 1200);
     } else {
-      showToast("Impossible de copier le lien");
+      showToast(t('track.copy_failed'));
     }
   };
 
@@ -439,10 +441,10 @@ export const TrackPage: React.FC = () => {
     try {
       const { error } = await supabase.from('playlist_tracks').insert({ playlist_id: playlistId, track_id: track.id });
       if (error) {
-        if (error.code === '23505') showToast('Déjà dans cette playlist');
-        else showToast("Erreur lors de l'ajout");
+        if (error.code === '23505') showToast(t('track.already_in_playlist'));
+        else showToast(t('track.add_error'));
       } else {
-        showToast('Ajouté à la playlist ✅');
+        showToast(t('track.added_playlist'));
         setPlaylistOpen(false);
       }
     } catch (err) {
@@ -469,7 +471,7 @@ export const TrackPage: React.FC = () => {
       setNewPlaylistName('');
       setCreatingPlaylist(false);
       setPlaylistOpen(false);
-      showToast('Playlist créée ✅');
+      showToast(t('track.playlist_created'));
     } catch (err: any) {
       showToast("Erreur : " + (err.message || ''));
     } finally {
@@ -558,15 +560,15 @@ export const TrackPage: React.FC = () => {
     } catch { return null; }
   };
 
-  if (loading) return <div style={{ background: colors.bg, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.textMain }}>Chargement...</div>;
+  if (loading) return <div style={{ background: colors.bg, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.textMain }}>{t('track.loading')}</div>;
 
   if (!track) {
     return (
       <div style={{ background: colors.bg, minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: colors.textMain, padding: 20 }}>
         <div style={{ fontSize: 60, marginBottom: 20 }}>🔍</div>
-        <h1 style={{ fontSize: 24, fontWeight: 800, marginBottom: 12 }}>Son introuvable</h1>
-        <p style={{ color: colors.textMuted, marginBottom: 32, textAlign: 'center' }}>Ce son a peut-être été supprimé.</p>
-        <Link to="/" style={{ padding: '12px 24px', background: colors.accent, color: isDark ? '#000' : '#fff', borderRadius: 8, fontWeight: 800, textDecoration: 'none' }}>Retour à l'accueil</Link>
+        <h1 style={{ fontSize: 24, fontWeight: 800, marginBottom: 12 }}>{t('track.not_found')}</h1>
+        <p style={{ color: colors.textMuted, marginBottom: 32, textAlign: 'center' }}>{t('track.not_found_sub')}</p>
+        <Link to="/" style={{ padding: '12px 24px', background: colors.accent, color: isDark ? '#000' : '#fff', borderRadius: 8, fontWeight: 800, textDecoration: 'none' }}>{t('track.back_home')}</Link>
       </div>
     );
   }
@@ -580,7 +582,7 @@ export const TrackPage: React.FC = () => {
   const shareText = `Écoute « ${track.title} » sur ELEKTRAQ`;
   const shareUrl = window.location.href;
 
-  const displayArtist = track.artist || artist?.username || 'Artiste inconnu';
+  const displayArtist = track.artist || artist?.username || t('track.unknown_artist');
   const artistIsUploader = !!(artist?.username && track.artist && artist.username.toLowerCase() === track.artist.toLowerCase());
 
   const socialLinks = [
@@ -610,7 +612,7 @@ export const TrackPage: React.FC = () => {
       <div style={{ position: 'relative', zIndex: 1, maxWidth: 1200, margin: '0 auto', padding: '40px 20px', paddingBottom: 120 }}>
         
         <button onClick={() => navigate(-1)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, marginBottom: 32, fontSize: 14, fontWeight: 700 }}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Retour
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> {t('track.back')}
         </button>
 
         <div style={{ display: 'flex', gap: 40, flexWrap: 'wrap' }}>
@@ -677,13 +679,13 @@ export const TrackPage: React.FC = () => {
               <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 20, marginBottom: 24, backdropFilter: 'blur(10px)' }}>
                 {track.description && (
                   <>
-                    <div style={{ fontSize: 11, fontWeight: 800, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>Description</div>
+                    <div style={{ fontSize: 11, fontWeight: 800, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>{t('track.description')}</div>
                     <p style={{ margin: 0, fontSize: 15, color: colors.textMuted, lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{track.description}</p>
                   </>
                 )}
                 {Array.isArray(track.tags) && track.tags.length > 0 && (
                   <div style={{ marginTop: track.description ? 16 : 0 }}>
-                    <div style={{ fontSize: 11, fontWeight: 800, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>Tags</div>
+                    <div style={{ fontSize: 11, fontWeight: 800, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>{t('track.tags')}</div>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                       {track.tags.map((t: string, i: number) => (
                         <span key={i} onClick={() => navigate('/search?q=' + encodeURIComponent(t))} style={{ display: 'inline-flex', alignItems: 'center', padding: '5px 12px', background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 20, fontSize: 12, fontWeight: 700, color: colors.textMuted, cursor: 'pointer', transition: 'color 0.2s' }} onMouseEnter={e => e.currentTarget.style.color = colors.textMain} onMouseLeave={e => e.currentTarget.style.color = colors.textMuted }>
@@ -738,7 +740,7 @@ export const TrackPage: React.FC = () => {
                     style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 30, color: colors.textMuted, cursor: 'text', textAlign: 'left' }}
                   >
                     <div style={{ width: 24, height: 24, borderRadius: '50%', background: colors.border, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10 }}>👤</div>
-                    Commentez à <span style={{ color: themeColor, fontWeight: 'bold' }}>{isCurrent ? formatTime(currentTime) : '0:00'}</span>
+                    {t('track.comment_at')} <span style={{ color: themeColor, fontWeight: 'bold' }}>{isCurrent ? formatTime(currentTime) : '0:00'}</span>
                   </button>
                 ) : (
                   <form onSubmit={handlePostComment} style={{ display: 'flex', alignItems: 'center', gap: 12, background: colors.inputBg, border: `1px solid ${themeColor}`, borderRadius: 30, padding: '8px 16px' }}>
@@ -748,7 +750,7 @@ export const TrackPage: React.FC = () => {
                       type="text" 
                       value={newComment} 
                       onChange={e => setNewComment(e.target.value)} 
-                      placeholder={`Commentez à ${isCurrent ? formatTime(currentTime) : '0:00'}...`}
+                      placeholder={`${t('track.comment_at')} ${isCurrent ? formatTime(currentTime) : '0:00'}...`}
                       style={{ flex: 1, background: 'transparent', border: 'none', color: colors.textMain, outline: 'none', fontSize: 14 }}
                     />
                     <button type="submit" disabled={posting || !newComment.trim()} style={{ background: 'transparent', border: 'none', color: themeColor, cursor: posting ? 'wait' : 'pointer', display: 'flex', alignItems: 'center' }}>
@@ -774,28 +776,28 @@ export const TrackPage: React.FC = () => {
 
                 {track.is_downloadable !== false && (
                   <button onClick={handleDownload} disabled={isDownloading} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', background: 'transparent', border: `1px solid ${colors.border}`, color: colors.textMain, borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: isDownloading ? 'wait' : 'pointer' }}>
-                    {Icons.download} {isDownloading ? '...' : 'Télécharger'}
+                    {Icons.download} {isDownloading ? '...' : t('track.download')}
                   </button>
                 )}
 
                 {track.purchase_url && (
                   <a href={track.purchase_url} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', background: 'transparent', border: `1px solid ${colors.border}`, color: colors.textMain, borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer', textDecoration: 'none' }}>
-                    {Icons.buy} Acheter
+                    {Icons.buy} {t('track.buy')}
                   </a>
                 )}
 
                 {/* PLAYLIST */}
                 <div ref={playlistMenuRef} style={{ position: 'relative', display: 'inline-block' }}>
                   <button onClick={() => { if (!user) { navigate('/auth'); return; } setPlaylistOpen(o => !o); setShareOpen(false); }} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', background: 'transparent', border: `1px solid ${colors.border}`, color: colors.textMain, borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
-                    {Icons.playlist} Playlist
+                    {Icons.playlist} {t('track.playlist')}
                   </button>
 
                   {playlistOpen && (
                     <div style={{ position: 'absolute', bottom: '100%', marginBottom: 8, left: 0, background: colors.menuBg, border: `1px solid ${colors.menuBorder}`, borderRadius: 12, padding: 8, minWidth: 220, boxShadow: '0 10px 30px rgba(0,0,0,0.3)', zIndex: 60, animation: 'menuIn 0.18s ease' }}>
-                      <div style={{ fontSize: 10, color: colors.textMuted, padding: '4px 12px 8px', letterSpacing: '1px', fontWeight: 800, textTransform: 'uppercase' }}>Ajouter à</div>
+                      <div style={{ fontSize: 10, color: colors.textMuted, padding: '4px 12px 8px', letterSpacing: '1px', fontWeight: 800, textTransform: 'uppercase' }}>{t('track.add_to')}</div>
 
                       {userPlaylists.length === 0 && !creatingPlaylist && (
-                        <div style={{ padding: '8px 12px', fontSize: 13, color: colors.textMuted }}>Aucune playlist</div>
+                        <div style={{ padding: '8px 12px', fontSize: 13, color: colors.textMuted }}>{t('track.no_playlist')}</div>
                       )}
 
                       {userPlaylists.map(p => (
@@ -809,12 +811,12 @@ export const TrackPage: React.FC = () => {
 
                       {creatingPlaylist ? (
                         <form onSubmit={handleCreatePlaylistAndAdd} style={{ display: 'flex', gap: 6, padding: '4px 6px' }}>
-                          <input autoFocus value={newPlaylistName} onChange={e => setNewPlaylistName(e.target.value)} placeholder="Nom de la playlist" style={{ flex: 1, padding: '8px', background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 6, color: colors.textMain, outline: 'none', fontSize: 13, minWidth: 0 }} />
+                          <input autoFocus value={newPlaylistName} onChange={e => setNewPlaylistName(e.target.value)} placeholder={t('track.playlist_name')} style={{ flex: 1, padding: '8px', background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 6, color: colors.textMain, outline: 'none', fontSize: 13, minWidth: 0 }} />
                           <button type="submit" disabled={addingToPlaylist || !newPlaylistName.trim()} style={{ padding: '0 12px', background: themeColor, color: '#000', border: 'none', borderRadius: 6, fontWeight: 800, cursor: 'pointer' }}>OK</button>
                         </form>
                       ) : (
                         <button onClick={() => setCreatingPlaylist(true)} style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '10px 12px', background: 'transparent', border: 'none', color: themeColor, cursor: 'pointer', fontSize: 13, textAlign: 'left', borderRadius: 6, fontWeight: 700 }}>
-                          <span>＋</span> Nouvelle playlist
+                          <span>＋</span> {t('track.new_playlist')}
                         </button>
                       )}
                     </div>
@@ -824,12 +826,12 @@ export const TrackPage: React.FC = () => {
                 {/* PARTAGE */}
                 <div ref={shareMenuRef} style={{ position: 'relative', display: 'inline-block', marginLeft: 'auto' }}>
                   <button onClick={handleShare} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', background: 'transparent', border: `1px solid ${colors.border}`, color: colors.textMain, borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
-                    {Icons.share} Partager
+                    {Icons.share} {t('track.share')}
                   </button>
 
                   {shareOpen && (
                     <div style={{ position: 'absolute', bottom: '100%', marginBottom: 8, right: 0, background: colors.menuBg, border: `1px solid ${colors.menuBorder}`, borderRadius: 12, padding: 8, minWidth: 230, boxShadow: '0 10px 30px rgba(0,0,0,0.3)', zIndex: 60, animation: 'menuIn 0.18s ease' }}>
-                      <div style={{ fontSize: 10, color: colors.textMuted, padding: '4px 12px 8px', letterSpacing: '1px', fontWeight: 800, textTransform: 'uppercase', borderBottom: `1px solid ${colors.menuBorder}`, marginBottom: 4 }}>Partager via</div>
+                      <div style={{ fontSize: 10, color: colors.textMuted, padding: '4px 12px 8px', letterSpacing: '1px', fontWeight: 800, textTransform: 'uppercase', borderBottom: `1px solid ${colors.menuBorder}`, marginBottom: 4 }}>{t('track.share_via')}</div>
 
                       {PLATFORMS.map(p => (
                         <button key={p.id} onClick={() => shareTo(p.id)} style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', padding: '10px 12px', background: 'transparent', border: 'none', color: colors.textMain, cursor: 'pointer', fontSize: 13, textAlign: 'left', borderRadius: 6, fontWeight: 500 }}>
@@ -842,7 +844,7 @@ export const TrackPage: React.FC = () => {
 
                       <button onClick={handleCopyLink} style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', padding: '10px 12px', background: copied ? 'rgba(176,176,176,0.12)' : 'transparent', border: 'none', color: copied ? '#b0b0b0' : colors.textMain, cursor: 'pointer', fontSize: 13, textAlign: 'left', borderRadius: 6, fontWeight: 600 }}>
                         <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 6, background: isDark ? '#121212' : colors.inputBg, color: '#b0b0b0', flexShrink: 0 }}>{copied ? Icons.check : Icons.copy}</span>
-                        {copied ? 'Lien copié !' : 'Copier le lien'}
+                        {copied ? t('track.link_copied') : t('track.copy_link')}
                       </button>
                     </div>
                   )}
@@ -853,12 +855,12 @@ export const TrackPage: React.FC = () => {
             {/* COMMENTAIRES */}
             <div id="comments-section" style={{ scrollMarginTop: 100 }}>
               <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 24, display: 'flex', alignItems: 'center', gap: 12 }}>
-                Commentaires <span style={{ fontSize: 14, color: colors.textMuted, fontWeight: 600 }}>({track.comments_count || 0})</span>
+                {t('track.comments')} <span style={{ fontSize: 14, color: colors.textMuted, fontWeight: 600 }}>({track.comments_count || 0})</span>
               </h2>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
                 {comments.length === 0 ? (
-                  <div style={{ textAlign: 'center', color: colors.textMuted, fontStyle: 'italic', padding: 40, border: `1px dashed ${colors.border}`, borderRadius: 16 }}>Sois le premier à commenter !</div>
+                  <div style={{ textAlign: 'center', color: colors.textMuted, fontStyle: 'italic', padding: 40, border: `1px dashed ${colors.border}`, borderRadius: 16 }}>{t('track.be_first')}</div>
                 ) : (
                   comments.map(comment => (
                     <div key={comment.id} style={{ display: 'flex', gap: 16 }}>
@@ -875,7 +877,7 @@ export const TrackPage: React.FC = () => {
                           
                           <span style={{ fontSize: 12, color: colors.textMuted, marginLeft: 'auto' }}>{formatDate(comment.created_at)}</span>
                           {user && user.id === comment.user_id && (
-                            <button onClick={() => handleDeleteComment(comment.id)} style={{ background: 'transparent', border: 'none', color: '#b0b0b0', cursor: 'pointer', fontSize: 11, fontWeight: 700 }}>Supprimer</button>
+                            <button onClick={() => handleDeleteComment(comment.id)} style={{ background: 'transparent', border: 'none', color: '#b0b0b0', cursor: 'pointer', fontSize: 11, fontWeight: 700 }}>{t('track.delete')}</button>
                           )}
                         </div>
                         <p style={{ margin: 0, fontSize: 14, color: colors.textMuted, lineHeight: 1.6 }}>{comment.content}</p>
@@ -889,7 +891,7 @@ export const TrackPage: React.FC = () => {
             {/* PLUS DE CET ARTISTE */}
             {relatedTracks.length > 0 && (
               <div style={{ marginTop: 48 }}>
-                <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 20 }}>Plus de {artist?.username || track.artist}</h2>
+                <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 20 }}>{t('track.more_from')} {artist?.username || track.artist}</h2>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 16 }}>
                   {relatedTracks.map(rt => (
                     <Link key={rt.id} to={`/track/${rt.id}`} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
@@ -911,10 +913,10 @@ export const TrackPage: React.FC = () => {
                 <div style={{ width: 100, height: 100, borderRadius: '50%', background: artist?.avatar_url ? `url(${artist.avatar_url}) center/cover` : colors.border, margin: '0 auto 16px', border: `3px solid ${themeColor}40`, boxShadow: `0 0 20px ${themeColor}20` }} />
               </Link>
               <Link to={`/premium/${artist?.username}`} style={{ fontSize: 20, fontWeight: 900, color: colors.textMain, textDecoration: 'none' }}>{artist?.username || track.artist}</Link>
-              <div style={{ fontSize: 13, color: colors.textMuted, marginTop: 6, fontWeight: 600 }}>Page officielle</div>
+              <div style={{ fontSize: 13, color: colors.textMuted, marginTop: 6, fontWeight: 600 }}>{t('track.official_page')}</div>
               {(artist?.settings?.parcours_description || artist?.bio) && (
                 <>
-                  <div style={{ fontSize: 10, fontWeight: 800, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 1, marginTop: 12 }}>Parcours</div>
+                  <div style={{ fontSize: 10, fontWeight: 800, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 1, marginTop: 12 }}>{t('track.journey')}</div>
                   <p style={{ fontSize: 13, color: colors.textMuted, lineHeight: 1.6, margin: '6px 0 0', display: '-webkit-box', WebkitLineClamp: 4, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                     {artist?.settings?.parcours_description || artist?.bio}
                   </p>
@@ -937,14 +939,14 @@ export const TrackPage: React.FC = () => {
               )}
 
               <button onClick={() => navigate(`/premium/${artist?.username}`)} style={{ width: '100%', marginTop: 24, padding: '12px', background: themeColor, color: '#000', border: 'none', borderRadius: 30, fontWeight: 800, fontSize: 14, cursor: 'pointer', transition: 'transform 0.2s' }} onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.02)'} onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}>
-                Voir la page complète
+                {t('track.view_full_page')}
               </button>
             </div>
             ) : (
               <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 20, padding: 24, textAlign: 'center', backdropFilter: 'blur(20px)', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }}>
                 <div style={{ width: 100, height: 100, borderRadius: '50%', background: (artistInfo?.image || track.cover_url) ? `url(${artistInfo?.image || track.cover_url}) center/cover` : colors.border, margin: '0 auto 16px', border: `3px solid ${themeColor}40`, boxShadow: `0 0 20px ${themeColor}20` }} />
                 <div style={{ fontSize: 20, fontWeight: 900, color: colors.textMain }}>{track.artist}</div>
-                <div style={{ fontSize: 13, color: colors.textMuted, marginTop: 6, fontWeight: 600 }}>Artiste</div>
+                <div style={{ fontSize: 13, color: colors.textMuted, marginTop: 6, fontWeight: 600 }}>{t('track.artist')}</div>
                 {artistInfo?.bio && (
                   <p style={{ fontSize: 13, color: colors.textMuted, lineHeight: 1.6, margin: '12px 0 0', display: '-webkit-box', WebkitLineClamp: 5, WebkitBoxOrient: 'vertical', overflow: 'hidden', textAlign: 'left' }}>
                     {artistInfo.bio}
@@ -955,7 +957,7 @@ export const TrackPage: React.FC = () => {
                 )}
                 {artistInfo?.link && (
                   <a href={artistInfo.link} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 14, padding: '8px 14px', background: colors.inputBg, border: `1px solid ${colors.border}`, color: colors.textMain, borderRadius: 20, fontSize: 12, fontWeight: 700, textDecoration: 'none' }}>
-                    Écouter sur Apple Music ↗
+                    {t('track.listen_apple')}
                   </a>
                 )}
                 {artist?.username && (
@@ -964,7 +966,7 @@ export const TrackPage: React.FC = () => {
                   </Link>
                 )}
                 {artistInfoLoading && !artistInfo && (
-                  <div style={{ fontSize: 12, color: colors.textMuted, marginTop: 12, fontStyle: 'italic' }}>Recherche d'infos artiste…</div>
+                  <div style={{ fontSize: 12, color: colors.textMuted, marginTop: 12, fontStyle: 'italic' }}>{t('track.searching_artist')}</div>
                 )}
               </div>
             )}
@@ -972,11 +974,11 @@ export const TrackPage: React.FC = () => {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 16 }}>
               <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 20, textAlign: 'center', backdropFilter: 'blur(10px)' }}>
                 <div style={{ fontSize: 24, fontWeight: 900, color: colors.textMain }}>{track.plays || 0}</div>
-                <div style={{ fontSize: 10, color: colors.textMuted, textTransform: 'uppercase', fontWeight: 800, marginTop: 4, letterSpacing: '1px' }}>Écoutes</div>
+                <div style={{ fontSize: 10, color: colors.textMuted, textTransform: 'uppercase', fontWeight: 800, marginTop: 4, letterSpacing: '1px' }}>{t('track.plays')}</div>
               </div>
               <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 20, textAlign: 'center', backdropFilter: 'blur(10px)' }}>
                 <div style={{ fontSize: 24, fontWeight: 900, color: colors.textMain }}>{track.downloads || 0}</div>
-                <div style={{ fontSize: 10, color: colors.textMuted, textTransform: 'uppercase', fontWeight: 800, marginTop: 4, letterSpacing: '1px' }}>Téléch.</div>
+                <div style={{ fontSize: 10, color: colors.textMuted, textTransform: 'uppercase', fontWeight: 800, marginTop: 4, letterSpacing: '1px' }}>{t('track.downloads')}</div>
               </div>
             </div>
           </div>

@@ -9,6 +9,8 @@ import { ScrollButtons } from '../components/ScrollButtons';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { useTheme } from '../contexts/ThemeContext';
 import { Footer } from '../components/Footer';
+import { useTranslation } from 'react-i18next';
+import { LanguageSwitcher } from '../components/LanguageSwitcher';
 
 const Icons = {
   home: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>,
@@ -32,32 +34,32 @@ const Icons = {
 };
 
 const NAV_ITEMS = [
-  { path: '/', label: 'Accueil', icon: Icons.home, exact: true },
-  { path: '/discover', label: 'Découvrir', icon: Icons.discover },
-  { path: '/charts', label: 'Top 50', icon: Icons.trophy },
-  { path: '/genres', label: 'Genres', icon: Icons.genres },
-  { path: '/artists', label: 'Artistes', icon: Icons.artists },
-  { path: '/feed', label: 'Feed', icon: Icons.feed },
-  { path: '/nouveautes', label: 'DJ Only / Promos', icon: Icons.new },
-  { path: '/mes-playlists', label: 'Mes Playlists', icon: Icons.playlist },
-  { path: '/radio/ELEKTRAQ', label: 'ELEKTRAQ Radio', icon: Icons.live },
-  { path: '/sortie-radio', label: 'Sortie Radio', icon: Icons.radioList },
-  { path: '/radios', label: 'Toutes les Radios', icon: Icons.radioList },
-  { path: '/live', label: 'Live DJ', icon: Icons.live },
-  { path: '/events', label: 'Événements', icon: Icons.events },
+  { path: '/', labelKey: 'nav.home', icon: Icons.home, exact: true },
+  { path: '/discover', labelKey: 'nav.discover', icon: Icons.discover },
+  { path: '/charts', labelKey: 'nav.top50', icon: Icons.trophy },
+  { path: '/genres', labelKey: 'nav.genres', icon: Icons.genres },
+  { path: '/artists', labelKey: 'nav.artists', icon: Icons.artists },
+  { path: '/feed', labelKey: 'nav.feed', icon: Icons.feed },
+  { path: '/nouveautes', labelKey: 'nav.djonly', icon: Icons.new },
+  { path: '/mes-playlists', labelKey: 'nav.playlists', icon: Icons.playlist },
+  { path: '/radio/ELEKTRAQ', labelKey: 'nav.radio', icon: Icons.live },
+  { path: '/sortie-radio', labelKey: 'nav.sortieRadio', icon: Icons.radioList },
+  { path: '/radios', labelKey: 'nav.allRadios', icon: Icons.radioList },
+  { path: '/live', labelKey: 'nav.live', icon: Icons.live },
+  { path: '/events', labelKey: 'nav.events', icon: Icons.events },
   
   // ✅ "Outils DJ" et "Réglages" ont été retirés d'ici
   
-  { path: '/help', label: 'Guide', icon: Icons.help },
+  { path: '/help', labelKey: 'nav.guide', icon: Icons.help },
 ];
 
 const MOBILE_NAV = [
-  { path: '/', label: 'Accueil', icon: Icons.home, exact: true },
-  { path: '/discover', label: 'Découvrir', icon: Icons.discover }, 
-  { path: '/charts', label: 'Top 50', icon: Icons.trophy },
-  { path: '/nouveautes', label: 'Sorties', icon: Icons.new },
-  { path: '/radio/ELEKTRAQ', label: 'Radio', icon: Icons.radioList },
-  { path: '#menu', label: 'Menu', icon: Icons.menu }, 
+  { path: '/', labelKey: 'nav.home', icon: Icons.home, exact: true },
+  { path: '/discover', labelKey: 'nav.discover', icon: Icons.discover }, 
+  { path: '/charts', labelKey: 'nav.top50', icon: Icons.trophy },
+  { path: '/nouveautes', labelKey: 'nav.releases', icon: Icons.new },
+  { path: '/radio/ELEKTRAQ', labelKey: 'nav.radioShort', icon: Icons.radioList },
+  { path: '#menu', labelKey: 'nav.menu', icon: Icons.menu }, 
 ];
 
 export const MainLayout: React.FC = () => {
@@ -68,6 +70,7 @@ export const MainLayout: React.FC = () => {
   const navigate = useNavigate();
   
   const { theme, toggleTheme } = useTheme();
+  const { t } = useTranslation();
   const isDark = theme === 'dark';
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -143,14 +146,15 @@ export const MainLayout: React.FC = () => {
           <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
             {user ? (
               <button onClick={handleAuthClick} style={{ background: 'transparent', border: 'none', color: '#b0b0b0', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
-                Déconnexion
+                {t('common.logout')}
               </button>
             ) : (
               <button onClick={handleAuthClick} style={{ background: '#ffffff', border: 'none', color: '#000', fontWeight: 700, fontSize: 13, padding: '6px 12px', borderRadius: 6, cursor: 'pointer' }}>
-                Connexion
+                {t('common.login')}
               </button>
             )}
 
+            <LanguageSwitcher />
             <button onClick={toggleTheme} style={{ background: 'transparent', border: 'none', color: colors.textMain, cursor: 'pointer', padding: 4 }}>
               {isDark ? Icons.sun : Icons.moon}
             </button>
@@ -183,7 +187,7 @@ export const MainLayout: React.FC = () => {
             return (
               <button key={item.path} onClick={() => isMenu ? setMobileMenuOpen(true) : navigate(item.path)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 12, background: 'transparent', border: 'none', color: isActive ? colors.textMain : colors.textMuted, cursor: 'pointer', minWidth: 60 }}>
                 <div style={{ transform: isActive ? 'scale(1.1)' : 'scale(1)', transition: 'transform 0.1s' }}>{item.icon}</div>
-                <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.2px' }}>{item.label}</span>
+                <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.2px' }}>{t(item.labelKey)}</span>
               </button>
             );
           })}
@@ -197,7 +201,7 @@ export const MainLayout: React.FC = () => {
             <style>{`@keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }`}</style>
             
             <div style={{ padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid ${colors.border}` }}>
-              <span style={{ fontWeight: 800, fontSize: '1.2rem', color: colors.textMain }}>Menu</span>
+              <span style={{ fontWeight: 800, fontSize: '1.2rem', color: colors.textMain }}>{t('nav.menu')}</span>
               <button onClick={() => setMobileMenuOpen(false)} style={{ background: 'transparent', border: 'none', color: colors.textMain, cursor: 'pointer', padding: 8 }}>
                 {Icons.close}
               </button>
@@ -214,7 +218,7 @@ export const MainLayout: React.FC = () => {
                     background: isActive ? colors.activeBg : 'transparent', fontWeight: isActive ? 700 : 500,
                   }}>
                     <span style={{ display: 'flex', color: isActive ? colors.textMain : colors.textMuted }}>{item.icon}</span>
-                    {item.label}
+                    {t(item.labelKey)}
                   </NavLink>
                 );
               })}
@@ -222,7 +226,7 @@ export const MainLayout: React.FC = () => {
 
             <div style={{ padding: '20px', borderTop: `1px solid ${colors.border}`, display: 'flex', flexDirection: 'column', gap: 12 }}>
               <button onClick={() => { toggleTheme(); setMobileMenuOpen(false); }} style={{ width: '100%', padding: '14px', background: colors.hoverBg, color: colors.textMain, border: 'none', borderRadius: 8, fontWeight: 700, fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                {isDark ? Icons.sun : Icons.moon} {isDark ? 'Mode Clair' : 'Mode Sombre'}
+                {isDark ? Icons.sun : Icons.moon} {isDark ? t('common.light_mode') : t('common.dark_mode')}
               </button>
               
               <button onClick={() => { handleAuthClick(); setMobileMenuOpen(false); }} style={{
@@ -230,7 +234,7 @@ export const MainLayout: React.FC = () => {
                 color: user ? '#b0b0b0' : '#000', border: user ? '1px solid #b0b0b0' : 'none',
                 borderRadius: 8, fontWeight: 800, fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8
               }}>
-                {user ? <>{Icons.logout} Déconnexion</> : 'Se connecter'}
+                {user ? <>{Icons.logout} {t('common.logout')}</> : t('common.sign_in')}
               </button>
             </div>
           </div>
@@ -261,7 +265,7 @@ export const MainLayout: React.FC = () => {
                 onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = colors.textMuted; } }}
               >
                 <span style={{ display: 'flex' }}>{item.icon}</span>
-                <span style={{ flex: 1 }}>{item.label}</span>
+                <span style={{ flex: 1 }}>{t(item.labelKey)}</span>
               </NavLink>
             );
           })}
@@ -269,9 +273,10 @@ export const MainLayout: React.FC = () => {
 
         <div style={{ padding: '16px', borderTop: `1px solid ${colors.border}`, display: 'flex', flexDirection: 'column', gap: '12px', flexShrink: 0 }}>
           
+          <LanguageSwitcher />
           <button onClick={toggleTheme} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '10px 12px', border: `1px solid ${colors.border}`, borderRadius: 8, background: 'transparent', color: colors.textMain, cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem', transition: 'all 0.2s' }}>
              {isDark ? Icons.sun : Icons.moon}
-             {isDark ? 'Mode Clair' : 'Mode Sombre'}
+             {isDark ? t('common.light_mode') : t('common.dark_mode')}
           </button>
 
           {isAdmin && (
@@ -280,7 +285,7 @@ export const MainLayout: React.FC = () => {
               onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255, 68, 68, 0.05)'}
             >
               {Icons.admin}
-              Panel Admin
+              {t('common.admin')}
             </NavLink>
           )}
 
@@ -298,9 +303,9 @@ export const MainLayout: React.FC = () => {
             onMouseLeave={(e) => { if (user) e.currentTarget.style.background = 'transparent'; }}
           >
             {user ? (
-              <>{Icons.logout} Déconnexion</>
+              <>{Icons.logout} {t('common.logout')}</>
             ) : (
-              'Se connecter'
+              t('common.sign_in')
             )}
           </button>
 
@@ -309,8 +314,8 @@ export const MainLayout: React.FC = () => {
               {avatarUrl ? <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (user ? displayName.charAt(0).toUpperCase() : '?')}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-               <div style={{ fontSize: '0.85rem', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: colors.textMain }}>{user ? displayName : 'Invité'}</div>
-               <div style={{ fontSize: '0.7rem', color: colors.textMuted }}>{user ? 'Voir mon profil' : 'Se connecter'}</div>
+               <div style={{ fontSize: '0.85rem', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: colors.textMain }}>{user ? displayName : t('common.guest')}</div>
+               <div style={{ fontSize: '0.7rem', color: colors.textMuted }}>{user ? t('common.view_profile') : t('common.sign_in')}</div>
             </div>
           </Link>
         </div>

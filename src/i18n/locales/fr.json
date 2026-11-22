@@ -1,10 +1,22 @@
 {
   "nav": {
     "home": "Accueil",
-    "live": "Live",
-    "nouveautes": "Nouveautés",
+    "discover": "Découvrir",
+    "top50": "Top 50",
     "genres": "Genres",
     "artists": "Artistes",
+    "feed": "Feed",
+    "djonly": "DJ Only / Promos",
+    "playlists": "Mes Playlists",
+    "radio": "ELEKTRAQ Radio",
+    "sortieRadio": "Sortie Radio",
+    "allRadios": "Toutes les Radios",
+    "live": "Live DJ",
+    "events": "Événements",
+    "guide": "Guide",
+    "menu": "Menu",
+    "releases": "Sorties",
+    "radioShort": "Radio",
     "studio": "Studio",
     "stems": "Stems",
     "mastering": "Mastering",
@@ -18,6 +30,18 @@
     "profile": "MON PROFIL",
     "logout": "DÉCONNEXION",
     "output": "SORTIE AUDIO"
+  },
+  "common": {
+    "login": "Connexion",
+    "logout": "Déconnexion",
+    "sign_in": "Se connecter",
+    "guest": "Invité",
+    "view_profile": "Voir mon profil",
+    "light_mode": "Mode Clair",
+    "dark_mode": "Mode Sombre",
+    "admin": "Panel Admin",
+    "loading": "Chargement...",
+    "search_placeholder": "Rechercher des sons, artistes, playlists..."
   },
   "auth": {
     "login_tab": "Connexion"

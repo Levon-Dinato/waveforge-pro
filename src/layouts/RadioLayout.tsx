@@ -422,13 +422,14 @@ export const RadioLayout: React.FC = () => {
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim() || !profile) return;
-    if (!user) { showToastMsg("Connecte-toi pour discuter !"); navigate('/auth'); return; }
     const text = newMessage;
     setNewMessage('');
+    const guestName = userProfile?.username || user?.email?.split('@')[0] || 'Invité';
     await supabase.from('radio_messages').insert({
-      radio_owner_id: profile.id, user_id: user.id,
-      username: userProfile?.username || user.email?.split('@')[0] || 'Anonyme',
-      avatar_url: userProfile?.avatar_url || `https://ui-avatars.com/api/?name=${user.email?.split('@')[0]}&background=random`,
+      radio_owner_id: profile.id,
+      user_id: user?.id || null,
+      username: guestName,
+      avatar_url: userProfile?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(guestName)}&background=random`,
       text,
     });
   };
@@ -849,7 +850,7 @@ export const RadioLayout: React.FC = () => {
               <div ref={chatEndRef} />
             </div>
             <form onSubmit={handleSendMessage} style={{ padding: 12, borderTop: `1px solid ${colors.border}`, display: 'flex', gap: 8 }}>
-              <input type="text" value={newMessage} onChange={(e) => setNewMessage(e.target.value)} placeholder={user ? 'Ton message...' : 'Connexion...'} disabled={!user} style={{ flex: 1, background: 'rgba(0,0,0,0.2)', border: `1px solid ${colors.border}`, borderRadius: 20, padding: '8px 12px', color: colors.textMain, fontSize: 12, outline: 'none' }} />
+              <input type="text" value={newMessage} onChange={(e) => setNewMessage(e.target.value)} placeholder="Ton message..." style={{ flex: 1, background: 'rgba(0,0,0,0.2)', border: `1px solid ${colors.border}`, borderRadius: 20, padding: '8px 12px', color: colors.textMain, fontSize: 12, outline: 'none' }} />
               <button type="submit" disabled={!user || !newMessage.trim()} style={{ background: visualizerColor, color: iconColor, border: 'none', borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: (user && newMessage.trim()) ? 'pointer' : 'not-allowed', opacity: (user && newMessage.trim()) ? 1 : 0.5 }}><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg></button>
             </form>
           </div>

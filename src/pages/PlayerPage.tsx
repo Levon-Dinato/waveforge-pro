@@ -337,12 +337,22 @@ export const PlayerPage: React.FC = () => {
       {needsGesture && (
         <div 
           onClick={unlockAudio}
-          style={{ position: 'absolute', inset: 0, zIndex: 500, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', textAlign: 'center', padding: 20 }}
+          style={{ position: 'absolute', inset: 0, zIndex: 500, background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(10px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', textAlign: 'center', padding: 20 }}
         >
-          <div style={{ width: 80, height: 80, borderRadius: '50%', background: accentColor, color: accentTextColor, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20, boxShadow: `0 10px 40px ${visualizerColor}80`, animation: 'pulse 2s infinite' }}>
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: 4 }}><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          <div style={{ position: 'relative', width: 120, height: 120, marginBottom: 24 }}>
+            <div style={{ width: '100%', height: '100%', borderRadius: '50%', overflow: 'hidden', border: `3px solid ${visualizerColor}`, boxShadow: `0 0 40px ${visualizerColor}60` }}>
+              {profile?.avatar_url ? (
+                <img src={profile.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : (
+                <div style={{ width: '100%', height: '100%', background: `linear-gradient(135deg, ${visualizerColor}, #333)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 48 }}>🎵</div>
+              )}
+            </div>
+            <div style={{ position: 'absolute', bottom: -4, right: -4, width: 48, height: 48, borderRadius: '50%', background: accentColor, color: accentTextColor, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 0 20px ${visualizerColor}80`, animation: 'pulse 2s infinite' }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: 3 }}><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            </div>
           </div>
-          <h2 style={{ color: '#fff', fontSize: 22, fontWeight: 900, margin: '0 0 8px 0', letterSpacing: '1px' }}>ÉCOUTER LA RADIO</h2>
+          <h2 style={{ color: '#fff', fontSize: 24, fontWeight: 900, margin: '0 0 4px 0', letterSpacing: '1px' }}>{profile?.username || 'Radio'}</h2>
+          <div style={{ color: visualizerColor, fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '3px', marginBottom: 12 }}>Radio en direct</div>
           <p style={{ color: '#ccc', fontSize: 13, margin: 0, maxWidth: 260 }}>Touchez pour lancer la lecture.</p>
         </div>
       )}

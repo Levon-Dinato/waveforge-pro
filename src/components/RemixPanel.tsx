@@ -189,7 +189,7 @@ setSuggestedTags(suggestions);
       {/* Header */}
       <div style={{ marginBottom: '16px' }}>
         <h2 style={{ margin: 0, fontSize: '16px', fontWeight: 700, letterSpacing: '1px' }}>
-          WAVEFORGE <span style={{ color: '#b0b0b0' }}>REMIX AI</span>
+          ELEKTRAQ <span style={{ color: '#b0b0b0' }}>REMIX AI</span>
         </h2>
         <div style={{ fontSize: '10px', color: '#444', marginTop: '2px', letterSpacing: '2px' }}>
           APPRENTISSAGE CONTINU · TREBLO API

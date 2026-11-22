@@ -99,7 +99,7 @@ export function generateAnalysisImage(
     ctx.font = 'bold 14px monospace';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'top';
-    ctx.fillText('WAVEFORGE PRO', 40, 32);
+    ctx.fillText('ELEKTRAQ PRO', 40, 32);
 
     ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
     ctx.font = '10px monospace';

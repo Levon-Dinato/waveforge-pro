@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import { OnlineUsersWidget } from '../components/OnlineUsersWidget';
 import { ShareButton } from '../components/ShareButton';
+import { TrackGrid } from '../components/TrackGrid';
 import { supabase, AUDIO_BUCKET } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { usePlayer } from '../contexts/PlayerContext';
@@ -260,6 +261,13 @@ export const NouveautesPage: React.FC = () => {
       navigate('/auth');
       return;
     }
+    if (!track.audio_url) return;
+    play({ id: track.id, title: track.title, artist: track.artist, audio_url: track.audio_url, cover_url: track.cover_url, user_id: track.user_id || null, duration: track.duration, peaks: track.peaks, bpm: track.bpm, song_key: track.song_key, genre: track.genre });
+  };
+
+  // ▶️ Lecture depuis la grille (TrackGrid)
+  const handleGridPlay = (track: any) => {
+    if (!user) { alert("🔒 Inscrivez-vous gratuitement pour écouter les morceaux en entier."); navigate('/auth'); return; }
     if (!track.audio_url) return;
     play({ id: track.id, title: track.title, artist: track.artist, audio_url: track.audio_url, cover_url: track.cover_url, user_id: track.user_id || null, duration: track.duration, peaks: track.peaks, bpm: track.bpm, song_key: track.song_key, genre: track.genre });
   };
@@ -747,275 +755,7 @@ export const NouveautesPage: React.FC = () => {
               </span>
             </div>
 
-            <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, width: '100%', overflow: 'hidden', backdropFilter: 'blur(20px)', boxShadow: isDark ? '0 20px 40px rgba(0,0,0,0.4)' : '0 10px 30px rgba(0,0,0,0.05)' }}>
-              <style>{`@keyframes skpulse{0%,100%{opacity:1}50%{opacity:.55}}@keyframes newpulse{0%,100%{box-shadow:0 0 6px rgba(255,255,255,0.4)}50%{box-shadow:0 0 16px rgba(255,255,255,0.9)}}`}</style>
-
-              {!isMobile && (
-                <div style={{ display: 'grid', gridTemplateColumns: '40px 40px minmax(200px, 1fr) 120px 140px 160px', gap: 16, padding: '14px 16px', borderBottom: `1px solid ${colors.border}`, fontSize: 11, color: colors.textMuted, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1.2px', background: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)' }}>
-                  <div></div><div></div><div>Titre / Artistes</div><div>Genre</div><div>BPM / Clé</div><div style={{ textAlign: 'right' }}>Actions</div>
-                </div>
-              )}
-
-              {loading ? (
-                <div>
-                  {Array.from({ length: 8 }).map((_, i) => {
-                    const bgBlock = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
-                    return (
-                      <div
-                        key={i}
-                        style={{
-                          display: 'grid',
-                          gridTemplateColumns: isMobile ? '1fr' : '40px 40px minmax(200px, 1fr) 120px 140px 160px',
-                          gap: 16,
-                          padding: '14px 16px',
-                          alignItems: 'center',
-                          borderBottom: `1px solid ${colors.border}`,
-                          animation: 'skpulse 1.5s ease-in-out infinite',
-                          animationDelay: `${i * 0.05}s`,
-                        }}
-                      >
-                        <div style={{ width: 36, height: 36, borderRadius: '50%', background: bgBlock }} />
-                        <div style={{ width: 44, height: 44, borderRadius: 8, background: bgBlock }} />
-                        <div>
-                          <div style={{ height: 12, width: '55%', borderRadius: 4, background: bgBlock, marginBottom: 6 }} />
-                          <div style={{ height: 10, width: '35%', borderRadius: 4, background: bgBlock }} />
-                        </div>
-                        {!isMobile && (
-                          <>
-                            <div style={{ height: 22, width: 70, borderRadius: 4, background: bgBlock }} />
-                            <div style={{ height: 22, width: 110, borderRadius: 4, background: bgBlock }} />
-                            <div style={{ height: 22, width: 110, borderRadius: 4, background: bgBlock, justifySelf: 'end' }} />
-                          </>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : paginatedTracks.length === 0 ? (
-                <div style={{ padding: 60, textAlign: 'center', color: colors.textMuted }}>
-                  <div style={{ fontSize: 48, marginBottom: 16 }}>🔍</div>
-                  <div style={{ fontSize: 16, fontWeight: 700, color: colors.textMain, marginBottom: 8 }}>
-                    {search || selectedGenre ? 'Aucun son ne correspond à ta recherche' : 'Aucun son pour le moment'}
-                  </div>
-                  <div style={{ fontSize: 13, marginBottom: 20 }}>
-                    {search || selectedGenre
-                      ? "Essaie d'autres mots-clés ou change de genre."
-                      : 'Sois le premier à partager un son !'}
-                  </div>
-                  {(search || selectedGenre) ? (
-                    <button
-                      onClick={() => { setSearch(''); setSelectedGenre(null); }}
-                      style={{ padding: '10px 20px', background: isDark ? '#ffffff' : '#111111', color: isDark ? '#000' : '#ffffff', border: 'none', borderRadius: 8, fontWeight: 800, cursor: 'pointer' }}
-                    >
-                      Réinitialiser les filtres
-                    </button>
-                  ) : user ? (
-                    <button
-                      onClick={() => setShowUploadModal(true)}
-                      style={{ padding: '10px 20px', background: isDark ? 'linear-gradient(135deg, #ffffff, #b0b0b0)' : '#111111', color: isDark ? '#000' : '#ffffff', border: 'none', borderRadius: 8, fontWeight: 800, cursor: 'pointer' }}
-                    >
-                      + Uploader un son
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => navigate('/auth')}
-                      style={{ padding: '10px 20px', background: '#ffffff', color: '#000', border: 'none', borderRadius: 8, fontWeight: 800, cursor: 'pointer' }}
-                    >
-                      Se connecter
-                    </button>
-                  )}
-                </div>
-              ) : paginatedTracks.map((track) => {
-                const isThisPlaying = currentTrack?.id === track.id && isPlaying;
-                const isLiked = userLikes[track.id] || false;
-                const isOwner = user?.id === track.user_id;
-
-                if (editingId === track.id) {
-                  return (
-                    <div key={track.id} style={{ padding: '20px 16px', borderBottom: `1px solid ${colors.border}`, display: 'flex', flexDirection: 'column', gap: 12, background: isDark ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.02)' }}>
-                      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                        <input type="text" value={editForm.title} onChange={e => setEditForm({...editForm, title: e.target.value})} style={{ flex: 1, padding: 10, background: colors.inputBg, border: `1px solid ${colors.inputBorder}`, color: colors.textMain, borderRadius: 6, minWidth: 150 }} placeholder="Titre" />
-                        <input type="text" value={editForm.artist} onChange={e => setEditForm({...editForm, artist: e.target.value})} style={{ flex: 1, padding: 10, background: colors.inputBg, border: `1px solid ${colors.inputBorder}`, color: colors.textMain, borderRadius: 6, minWidth: 150 }} placeholder="Artiste" />
-                        <input type="text" value={editForm.genre} onChange={e => setEditForm({...editForm, genre: e.target.value})} style={{ width: 140, padding: 10, background: colors.inputBg, border: `1px solid ${colors.inputBorder}`, color: colors.textMain, borderRadius: 6 }} placeholder="Genre" />
-                        <input type="number" value={editForm.bpm} onChange={e => setEditForm({...editForm, bpm: Number(e.target.value)})} style={{ width: 90, padding: 10, background: colors.inputBg, border: `1px solid ${colors.inputBorder}`, color: colors.textMain, borderRadius: 6 }} placeholder="BPM" />
-                      </div>
-                      <div style={{ display: 'flex', gap: 10 }}>
-                        <button onClick={saveEdit} style={{ background: '#ffffff', color: '#000', border: 'none', padding: '8px 20px', borderRadius: 6, cursor: 'pointer', fontWeight: 800 }}>Enregistrer</button>
-                        <button onClick={() => setEditingId(null)} style={{ background: 'transparent', color: colors.textMuted, border: `1px solid ${colors.border}`, padding: '8px 20px', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>Annuler</button>
-                      </div>
-                    </div>
-                  );
-                }
-
-                if (isMobile) {
-                  return (
-                    <div key={track.id} style={{ padding: '16px', borderBottom: `1px solid ${colors.border}`, display: 'flex', flexDirection: 'column', gap: 12 }}>
-                      <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                        <button onClick={(e) => handlePlayTrack(e, track)} style={{ width: 40, height: 40, flexShrink: 0, borderRadius: '50%', background: isThisPlaying ? '#ffffff' : colors.inputBg, border: `1px solid ${colors.inputBorder}`, color: isThisPlaying ? '#000' : colors.textMain, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                          {isThisPlaying ? Icons.pause : Icons.play}
-                        </button>
-                        <div style={{ width: 48, height: 48, flexShrink: 0, borderRadius: 8, background: track.cover_url ? `url(${track.cover_url}) center/cover` : '#222', position: 'relative' }}>
-                          {isNew(track.created_at) && <span style={{ position: 'absolute', top: -4, right: -4, fontSize: 8, padding: '2px 5px', background: '#ffffff', color: '#000', borderRadius: 4, fontWeight: 900, zIndex: 2, boxShadow: '0 0 10px rgba(255,255,255,0.5)' }}>NEW</span>}
-                        </div>
-                        <div style={{ minWidth: 0, flex: 1 }}>
-                          <div style={{ fontSize: 14, fontWeight: 700, color: colors.textMain, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: 2 }}>{track.title}</div>
-                          <div style={{ fontSize: 12, color: colors.textMuted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.artist}</div>
-                        </div>
-                      </div>
-                      <div style={{ display: 'flex', gap: 8, fontSize: 11, color: colors.textMuted, paddingLeft: 52, flexWrap: 'wrap' }}>
-                        <span style={{ background: colors.inputBg, padding: '2px 8px', borderRadius: 4 }}>{track.genre || 'Inconnu'}</span>
-                        <span style={{ background: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)', color: colors.accent, padding: '2px 8px', borderRadius: 4, fontWeight: 700 }}>{track.bpm} BPM</span>
-                        {track.song_key && <span style={{ background: colors.inputBg, padding: '2px 8px', borderRadius: 4 }}>{track.song_key}</span>}
-                        {track.duration > 0 && (
-                          <span style={{ background: colors.inputBg, padding: '2px 8px', borderRadius: 4 }}>{formatDuration(track.duration)}</span>
-                        )}
-                      </div>
-                      <div style={{ display: 'flex', gap: 20, paddingLeft: 52, alignItems: 'center' }}>
-                         <button onClick={() => handleLike(track.id)} style={{ background: 'transparent', border: 'none', color: isLiked ? '#b0b0b0' : colors.textMuted, fontSize: 14 }}>{isLiked ? '❤️' : '🤍'} {track.likes_count}</button>
-                         <button onClick={(e) => handleDownloadClick(e, track)} style={{ background: 'transparent', border: 'none', color: colors.textMuted }}>{Icons.download}</button>
-
-                         <div style={{ position: 'relative' }}>
-                            <button onClick={() => setAddingTrackId(addingTrackId === track.id ? null : track.id)} style={{ background: 'transparent', border: 'none', color: recentlyAdded === track.id ? '#b0b0b0' : colors.textMuted, display: 'flex', alignItems: 'center' }}>
-                              {recentlyAdded === track.id ? Icons.check : Icons.playlist}
-                            </button>
-                            {addingTrackId === track.id && (
-                              <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: 8, background: colors.dropdownBg, border: `1px solid ${colors.border}`, borderRadius: 8, padding: 8, width: 220, zIndex: 10, boxShadow: '0 10px 20px rgba(0,0,0,0.5)' }}>
-                                {!isCreatingPlaylistInMenu ? (
-                                  <>
-                                    <div style={{ fontSize: 9, fontWeight: 800, color: colors.textMuted, textTransform: 'uppercase', marginBottom: 6, padding: '0 4px' }}>Ajouter à...</div>
-                                    {userPlaylists.length === 0 ? (
-                                      <div style={{ fontSize: 11, color: colors.textMuted, padding: 4 }}>Aucune playlist.</div>
-                                    ) : (
-                                      userPlaylists.map(p => (
-                                        <button key={p.id} onClick={() => handleAddToPlaylist(p.id, track.id)} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '6px 8px', background: 'transparent', border: 'none', color: colors.textMain, fontSize: 12, cursor: 'pointer', borderRadius: 4 }} onMouseEnter={(e) => e.currentTarget.style.background = colors.rowHover} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
-                                          {p.name}
-                                        </button>
-                                      ))
-                                    )}
-                                    <div style={{ borderTop: `1px solid ${colors.border}`, marginTop: 6, paddingTop: 6 }}>
-                                      <button onClick={(e) => { e.stopPropagation(); setIsCreatingPlaylistInMenu(true); }} style={{ display: 'flex', alignItems: 'center', gap: 6, width: '100%', textAlign: 'left', padding: '6px 8px', background: 'transparent', border: 'none', color: colors.accent, fontSize: 12, cursor: 'pointer', borderRadius: 4, fontWeight: 700 }}>
-                                        {Icons.plus} Créer une playlist
-                                      </button>
-                                    </div>
-                                  </>
-                                ) : (
-                                  <form onSubmit={(e) => handleCreatePlaylistAndAdd(e, track.id)} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                                    <input type="text" autoFocus placeholder="Nom..." value={newPlaylistNameInMenu} onChange={e => setNewPlaylistNameInMenu(e.target.value)} style={{ width: '100%', padding: '6px 8px', background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 4, color: colors.textMain, fontSize: 12, outline: 'none' }} />
-                                    <div style={{ display: 'flex', gap: 4 }}>
-                                      <button type="submit" style={{ flex: 1, padding: '6px', background: '#ffffff', color: '#000', border: 'none', borderRadius: 4, fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>Créer</button>
-                                      <button type="button" onClick={() => setIsCreatingPlaylistInMenu(false)} style={{ padding: '6px 8px', background: 'transparent', color: colors.textMuted, border: `1px solid ${colors.border}`, borderRadius: 4, fontSize: 11, cursor: 'pointer' }}>X</button>
-                                    </div>
-                                  </form>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                         {isOwner && <button onClick={(e) => startEdit(e, track)} style={{ background: 'transparent', border: 'none', color: colors.textMuted }}>{Icons.edit}</button>}
-                         {isOwner && <button onClick={(e) => handleDelete(e, track.id)} style={{ background: 'transparent', border: 'none', color: '#b0b0b0' }}>{Icons.trash}</button>}
-                      </div>
-                    </div>
-                  );
-                }
-
-                return (
-                  <div key={track.id} className="track-row" style={{ display: 'grid', gridTemplateColumns: '40px 40px minmax(200px, 1fr) 120px 140px 160px', gap: 16, padding: '14px 16px', alignItems: 'center', borderBottom: `1px solid ${colors.border}`, cursor: 'pointer', transition: 'background 0.2s ease' }}
-                  onMouseEnter={e => e.currentTarget.style.background = colors.rowHover}
-                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                  >
-                    <button onClick={(e) => handlePlayTrack(e, track)} style={{ width: 36, height: 36, borderRadius: '50%', background: isThisPlaying ? '#ffffff' : colors.inputBg, border: `1px solid ${isThisPlaying ? '#ffffff' : colors.inputBorder}`, color: isThisPlaying ? '#000' : colors.textMain, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s', boxShadow: isThisPlaying ? '0 0 12px rgba(255,255,255,0.5)' : 'none' }}
-                      onMouseEnter={(e) => { if (!isThisPlaying) { e.currentTarget.style.borderColor = '#ffffff'; e.currentTarget.style.color = '#ffffff'; } }}
-                      onMouseLeave={(e) => { if (!isThisPlaying) { e.currentTarget.style.borderColor = colors.inputBorder; e.currentTarget.style.color = colors.textMain; } }}
-                    >
-                      {isThisPlaying ? Icons.pause : Icons.play}
-                    </button>
-                    <div onClick={() => navigate(`/track/${track.id}`)} style={{ width: 44, height: 44, borderRadius: 10, background: track.cover_url ? `url(${track.cover_url}) center/cover` : '#222', flexShrink: 0, position: 'relative', border: `1px solid ${colors.border}`, boxShadow: '0 2px 8px rgba(0,0,0,0.3)' }}>
-                      {isNew(track.created_at) && <span style={{ position: 'absolute', top: -6, right: -6, fontSize: 8, padding: '3px 6px', background: '#ffffff', color: '#000', borderRadius: 4, fontWeight: 900, zIndex: 2, boxShadow: '0 0 10px rgba(255,255,255,0.6)', animation: 'newpulse 2s ease-in-out infinite' }}>NEW</span>}
-                    </div>
-                    <div onClick={() => navigate(`/track/${track.id}`)} style={{ minWidth: 0 }}>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: isThisPlaying ? colors.accent : colors.textMain, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: 3 }}>{track.title}</div>
-                      <div style={{ fontSize: 12, color: colors.textMuted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.artist}</div>
-                    </div>
-
-                    <div style={{ fontSize: 12 }}>
-                      <span style={{ background: colors.inputBg, border: `1px solid ${colors.inputBorder}`, padding: '4px 10px', borderRadius: 4, color: colors.textMuted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'inline-block', maxWidth: '100%' }}>
-                        {track.genre || '—'}
-                      </span>
-                    </div>
-
-                    <div style={{ fontSize: 12, display: 'flex', gap: 6, alignItems: 'center' }}>
-                      <span style={{ background: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0,0,0,0.06)', border: isDark ? '1px solid rgba(255,255,255,0.2)' : '1px solid rgba(0,0,0,0.15)', color: colors.accent, padding: '4px 8px', borderRadius: 4, fontWeight: 700, fontFamily: 'monospace' }}>
-                        {track.bpm ? `${track.bpm}` : '—'}
-                      </span>
-                      <span style={{ color: colors.textMuted }}>·</span>
-                      <span style={{ background: colors.inputBg, border: `1px solid ${colors.inputBorder}`, color: colors.textMuted, padding: '4px 8px', borderRadius: 4, fontFamily: 'monospace' }}>
-                        {track.song_key || '—'}
-                      </span>
-                      {track.duration > 0 && (
-                        <>
-                          <span style={{ color: colors.textMuted }}>·</span>
-                          <span style={{ background: colors.inputBg, border: `1px solid ${colors.inputBorder}`, color: colors.textMuted, padding: '4px 8px', borderRadius: 4, fontFamily: 'monospace' }}>
-                            {formatDuration(track.duration)}
-                          </span>
-                        </>
-                      )}
-                    </div>
-
-                    <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', alignItems: 'center' }}>
-                      <button onClick={() => handleLike(track.id)} style={{ background: 'transparent', border: 'none', color: isLiked ? '#b0b0b0' : colors.textMuted, cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', gap: 4 }}>
-                        {isLiked ? '❤️' : '🤍'} <span style={{ color: colors.textMuted, fontWeight: 600 }}>{track.likes_count}</span>
-                      </button>
-                      <div style={{ display: 'flex', gap: 10 }}>
-                        {track.purchase_url && <a href={track.purchase_url} target="_blank" rel="noopener noreferrer" style={{ color: colors.accent, display: 'flex', alignItems: 'center' }}>{Icons.buy}</a>}
-                        <button onClick={(e) => handleDownloadClick(e, track)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center' }}>{Icons.download}</button>
-                        <ShareButton url={`${window.location.origin}/share/${track.id}`} title={`${track.title} — ${track.artist}`} text={`Écoute sur ELEKTRAQ 🎵`} variant="icon" size="small" label="" position="bottom" />
-
-                        {user && (
-                          <div style={{ position: 'relative' }}>
-                            <button onClick={() => setAddingTrackId(addingTrackId === track.id ? null : track.id)} style={{ background: 'transparent', border: 'none', color: recentlyAdded === track.id ? '#b0b0b0' : colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-                              {recentlyAdded === track.id ? Icons.check : Icons.playlist}
-                            </button>
-                            {addingTrackId === track.id && (
-                              <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: 8, background: colors.dropdownBg, border: `1px solid ${colors.border}`, borderRadius: 8, padding: 8, width: 220, zIndex: 10, boxShadow: '0 10px 20px rgba(0,0,0,0.5)' }}>
-                                {!isCreatingPlaylistInMenu ? (
-                                  <>
-                                    <div style={{ fontSize: 9, fontWeight: 800, color: colors.textMuted, textTransform: 'uppercase', marginBottom: 6, padding: '0 4px' }}>Ajouter à...</div>
-                                    {userPlaylists.length === 0 ? (
-                                      <div style={{ fontSize: 11, color: colors.textMuted, padding: 4 }}>Aucune playlist.</div>
-                                    ) : (
-                                      userPlaylists.map(p => (
-                                        <button key={p.id} onClick={() => handleAddToPlaylist(p.id, track.id)} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '6px 8px', background: 'transparent', border: 'none', color: colors.textMain, fontSize: 12, cursor: 'pointer', borderRadius: 4 }} onMouseEnter={(e) => e.currentTarget.style.background = colors.rowHover} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
-                                          {p.name}
-                                        </button>
-                                      ))
-                                    )}
-                                    <div style={{ borderTop: `1px solid ${colors.border}`, marginTop: 6, paddingTop: 6 }}>
-                                      <button onClick={(e) => { e.stopPropagation(); setIsCreatingPlaylistInMenu(true); }} style={{ display: 'flex', alignItems: 'center', gap: 6, width: '100%', textAlign: 'left', padding: '6px 8px', background: 'transparent', border: 'none', color: colors.accent, fontSize: 12, cursor: 'pointer', borderRadius: 4, fontWeight: 700 }}>
-                                        {Icons.plus} Créer une playlist
-                                      </button>
-                                    </div>
-                                  </>
-                                ) : (
-                                  <form onSubmit={(e) => handleCreatePlaylistAndAdd(e, track.id)} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                                    <input type="text" autoFocus placeholder="Nom..." value={newPlaylistNameInMenu} onChange={e => setNewPlaylistNameInMenu(e.target.value)} style={{ width: '100%', padding: '6px 8px', background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 4, color: colors.textMain, fontSize: 12, outline: 'none' }} />
-                                    <div style={{ display: 'flex', gap: 4 }}>
-                                      <button type="submit" style={{ flex: 1, padding: '6px', background: '#ffffff', color: '#000', border: 'none', borderRadius: 4, fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>Créer</button>
-                                      <button type="button" onClick={() => setIsCreatingPlaylistInMenu(false)} style={{ padding: '6px 8px', background: 'transparent', color: colors.textMuted, border: `1px solid ${colors.border}`, borderRadius: 4, fontSize: 11, cursor: 'pointer' }}>X</button>
-                                    </div>
-                                  </form>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        )}
-
-                        {isOwner && <button onClick={(e) => startEdit(e, track)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center' }}>{Icons.edit}</button>}
-                        {isOwner && <button onClick={(e) => handleDelete(e, track.id)} style={{ background: 'transparent', border: 'none', color: '#b0b0b0', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>{Icons.trash}</button>}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            <TrackGrid tracks={paginatedTracks as any} onPlay={handleGridPlay} />
 
             {!loading && totalPages > 1 && (
               <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 20, marginTop: 40 }}>

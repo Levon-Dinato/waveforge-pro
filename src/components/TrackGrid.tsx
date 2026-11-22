@@ -1,8 +1,9 @@
 // src/components/TrackGrid.tsx
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
 import { usePlayer } from '../contexts/PlayerContext';
+import { useAuth } from '../contexts/AuthContext';
 
 export interface Track {
   id: string;
@@ -31,12 +32,15 @@ const Icons = {
   playSmall: <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>,
   heart: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>,
   comment: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>,
-  headphone: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"></path><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path></svg>
+  headphone: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"></path><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path></svg>,
+  download: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>,
 };
 
 export const TrackGrid: React.FC<TrackGridProps> = ({ tracks, onPlay }) => {
   const { theme } = useTheme();
   const { currentTrack, isPlaying } = usePlayer();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const isDark = theme === 'dark';
 
   const colors = {
@@ -53,6 +57,23 @@ export const TrackGrid: React.FC<TrackGridProps> = ({ tracks, onPlay }) => {
     if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
     if (num >= 1000) return (num / 1000).toFixed(1) + 'k';
     return num?.toString() || '0';
+  };
+
+  const handleDownload = (e: React.MouseEvent, track: Track) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!user) { alert('🔒 Inscris-toi gratuitement pour télécharger les morceaux.'); navigate('/auth'); return; }
+    const filename = `${track.artist} - ${track.title}.mp3`;
+    fetch(track.audio_url)
+      .then((r) => r.blob())
+      .then((blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = filename;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      })
+      .catch(() => window.open(track.audio_url, '_blank'));
   };
 
   if (!tracks || tracks.length === 0) {
@@ -177,10 +198,15 @@ export const TrackGrid: React.FC<TrackGridProps> = ({ tracks, onPlay }) => {
                 </div>
 
                 {/* ✅ COMMENTAIRES */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: colors.textMuted, fontWeight: 600, marginLeft: 'auto' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: colors.textMuted, fontWeight: 600 }}>
                   {Icons.comment}
                   {formatNumber(track.comments_count || 0)}
                 </div>
+
+                {/* ⬇️ Télécharger */}
+                <button onClick={(e) => handleDownload(e, track)} title="Télécharger" style={{ marginLeft: 'auto', background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 4 }} onMouseEnter={(e) => e.currentTarget.style.color = colors.textMain} onMouseLeave={(e) => e.currentTarget.style.color = colors.textMuted }>
+                  {Icons.download}
+                </button>
 
               </div>
             </div>

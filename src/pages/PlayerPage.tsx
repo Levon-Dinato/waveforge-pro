@@ -9,8 +9,8 @@ import { useTheme } from '../contexts/ThemeContext';
 
 export const PlayerPage: React.FC = () => {
   const { username } = useParams<{ username: string }>();
-  const { startRadio, currentTrack, needsGesture, unlockAudio, isRadioActive } = useRadio();
-  const { theme } = useTheme();
+  const { startRadio, currentTrack, needsGesture, unlockAudio, isRadioActive, volume, setVolume } = useRadio();
+  const { theme, toggleTheme } = useTheme();
   const { user } = useAuth();
   const navigate = useNavigate();
   const isDark = theme === 'dark';
@@ -28,6 +28,18 @@ export const PlayerPage: React.FC = () => {
 
   const [recentTracks, setRecentTracks] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<'chat' | 'history'>('chat');
+  const [isMuted, setIsMuted] = useState(false);
+  const lastVolumeRef = React.useRef(volume);
+  const toggleMute = () => {
+    if (isMuted || volume === 0) {
+      setVolume(lastVolumeRef.current > 0 ? lastVolumeRef.current : 1);
+      setIsMuted(false);
+    } else {
+      lastVolumeRef.current = volume;
+      setVolume(0);
+      setIsMuted(true);
+    }
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -160,6 +172,8 @@ export const PlayerPage: React.FC = () => {
   const b = parseInt(hex.substr(4, 2), 16);
   const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
   const iconColor = yiq >= 128 ? '#000000' : '#ffffff';
+  const accentColor = isDark ? visualizerColor : (yiq >= 160 ? '#111111' : visualizerColor);
+  const accentTextColor = isDark ? iconColor : '#ffffff';
 
   // ✅ CORRECTION DU BOUTON FERMER
   const handleClose = () => {
@@ -183,6 +197,13 @@ export const PlayerPage: React.FC = () => {
       </div>
 
       {/* ✅ BOUTON FERMER CORRIGÉ */}
+      <button onClick={toggleTheme} style={{ position: 'absolute', top: 12, right: 52, background: 'rgba(0,0,0,0.4)', border: `1px solid rgba(255,255,255,0.2)`, borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', cursor: 'pointer', zIndex: 100, backdropFilter: 'blur(10px)' }} title={isDark ? 'Mode clair' : 'Mode sombre'}>
+        {isDark ? (
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+        ) : (
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        )}
+      </button>
       <button onClick={handleClose} style={{ position: 'absolute', top: 12, right: 12, background: 'rgba(0,0,0,0.4)', border: `1px solid rgba(255,255,255,0.2)`, borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', cursor: 'pointer', zIndex: 100, backdropFilter: 'blur(10px)' }}>✕</button>
 
       <div style={{ textAlign: 'center', marginBottom: 10, zIndex: 1 }}>
@@ -195,17 +216,28 @@ export const PlayerPage: React.FC = () => {
         <RadioPlayer profile={profile} visualizerColor={visualizerColor} iconColor={iconColor} isMobile={true} compact={true} />
       </div>
 
+      <div style={{ width: '100%', maxWidth: 380, marginTop: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, zIndex: 1 }}>
+        <button onClick={toggleMute} style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', cursor: 'pointer' }} title={volume === 0 ? 'Activer le son' : 'Couper le son'}>
+          {volume === 0 ? (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>
+          ) : (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+          )}
+        </button>
+        <input type="range" min={0} max={1} step={0.01} value={volume} onChange={(e) => { setVolume(parseFloat(e.target.value)); setIsMuted(false); }} style={{ width: 140, accentColor, cursor: 'pointer' }} />
+      </div>
+
       <div style={{ width: '100%', maxWidth: 380, marginTop: 12, display: 'flex', gap: 6, padding: 4, background: 'rgba(0,0,0,0.3)', borderRadius: 12, backdropFilter: 'blur(10px)', zIndex: 1 }}>
         <button 
           onClick={() => setActiveTab('chat')}
-          style={{ flex: 1, padding: '8px', border: 'none', borderRadius: 8, background: activeTab === 'chat' ? visualizerColor : 'transparent', color: activeTab === 'chat' ? iconColor : '#888', fontSize: 11, fontWeight: 800, cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+          style={{ flex: 1, padding: '8px', border: 'none', borderRadius: 8, background: activeTab === 'chat' ? accentColor : 'transparent', color: activeTab === 'chat' ? accentTextColor : '#888', fontSize: 11, fontWeight: 800, cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
         >
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
           Chat
         </button>
         <button 
           onClick={() => setActiveTab('history')}
-          style={{ flex: 1, padding: '8px', border: 'none', borderRadius: 8, background: activeTab === 'history' ? visualizerColor : 'transparent', color: activeTab === 'history' ? iconColor : '#888', fontSize: 11, fontWeight: 800, cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+          style={{ flex: 1, padding: '8px', border: 'none', borderRadius: 8, background: activeTab === 'history' ? accentColor : 'transparent', color: activeTab === 'history' ? accentTextColor : '#888', fontSize: 11, fontWeight: 800, cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
         >
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
           Historique
@@ -246,7 +278,7 @@ export const PlayerPage: React.FC = () => {
                 type="submit" 
                 disabled={!user || !newMessage.trim()} 
                 onClick={() => { if (!user) navigate('/auth'); }}
-                style={{ background: visualizerColor, color: iconColor, border: 'none', borderRadius: '50%', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: (user && newMessage.trim()) ? 'pointer' : 'not-allowed', opacity: (user && newMessage.trim()) ? 1 : 0.5, flexShrink: 0 }}
+                style={{ background: accentColor, color: accentTextColor, border: 'none', borderRadius: '50%', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: (user && newMessage.trim()) ? 'pointer' : 'not-allowed', opacity: (user && newMessage.trim()) ? 1 : 0.5, flexShrink: 0 }}
               >
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
               </button>
@@ -279,7 +311,7 @@ export const PlayerPage: React.FC = () => {
           onClick={unlockAudio}
           style={{ position: 'absolute', inset: 0, zIndex: 500, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', textAlign: 'center', padding: 20 }}
         >
-          <div style={{ width: 80, height: 80, borderRadius: '50%', background: visualizerColor, color: iconColor, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20, boxShadow: `0 10px 40px ${visualizerColor}80`, animation: 'pulse 2s infinite' }}>
+          <div style={{ width: 80, height: 80, borderRadius: '50%', background: accentColor, color: accentTextColor, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20, boxShadow: `0 10px 40px ${visualizerColor}80`, animation: 'pulse 2s infinite' }}>
             <svg width="36" height="36" viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: 4 }}><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
           </div>
           <h2 style={{ color: '#fff', fontSize: 20, fontWeight: 900, margin: '0 0 8px 0' }}>Clique pour écouter</h2>

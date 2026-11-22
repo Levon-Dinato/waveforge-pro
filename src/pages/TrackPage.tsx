@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { usePlayer } from '../contexts/PlayerContext';
+import { fetchArtistInfo } from '../utils/artistInfo';
 
 // --- ICÔNES ---
 const Icons = {
@@ -195,6 +196,8 @@ export const TrackPage: React.FC = () => {
   const [newPlaylistName, setNewPlaylistName] = useState('');
   const [addingToPlaylist, setAddingToPlaylist] = useState(false);
   const [relatedTracks, setRelatedTracks] = useState<any[]>([]);
+  const [artistInfo, setArtistInfo] = useState<any>(null);
+  const [artistInfoLoading, setArtistInfoLoading] = useState(false);
 
   const shareMenuRef = useRef<HTMLDivElement>(null);
   const playlistMenuRef = useRef<HTMLDivElement>(null);
@@ -267,6 +270,19 @@ export const TrackPage: React.FC = () => {
     fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, user]);
+
+  // 🔎 Fiche artiste automatique (quand l'artiste n'est pas l'uploader)
+  useEffect(() => {
+    if (!track || !track.artist) return;
+    const isSelf = !!(artist?.username && track.artist && artist.username.toLowerCase() === track.artist.toLowerCase());
+    if (isSelf) { setArtistInfo(null); setArtistInfoLoading(false); return; }
+    let cancelled = false;
+    setArtistInfoLoading(true);
+    fetchArtistInfo(track.artist)
+      .then((info) => { if (!cancelled) { setArtistInfo(info); setArtistInfoLoading(false); } })
+      .catch(() => { if (!cancelled) setArtistInfoLoading(false); });
+    return () => { cancelled = true; };
+  }, [track, artist]);
 
   // Fermer les menus au clic extérieur
   useEffect(() => {
@@ -889,7 +905,8 @@ export const TrackPage: React.FC = () => {
 
           {/* SIDEBAR ARTISTE + STATS */}
           <div style={{ flex: '0 0 300px', width: '100%' }}>
-            <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 20, padding: 24, textAlign: 'center', backdropFilter: 'blur(20px)', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }}>
+            {artistIsUploader ? (
+              <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 20, padding: 24, textAlign: 'center', backdropFilter: 'blur(20px)', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }}>
               <Link to={`/premium/${artist?.username}`}>
                 <div style={{ width: 100, height: 100, borderRadius: '50%', background: artist?.avatar_url ? `url(${artist.avatar_url}) center/cover` : colors.border, margin: '0 auto 16px', border: `3px solid ${themeColor}40`, boxShadow: `0 0 20px ${themeColor}20` }} />
               </Link>
@@ -923,6 +940,34 @@ export const TrackPage: React.FC = () => {
                 Voir la page complète
               </button>
             </div>
+            ) : (
+              <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 20, padding: 24, textAlign: 'center', backdropFilter: 'blur(20px)', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }}>
+                <div style={{ width: 100, height: 100, borderRadius: '50%', background: (artistInfo?.image || track.cover_url) ? `url(${artistInfo?.image || track.cover_url}) center/cover` : colors.border, margin: '0 auto 16px', border: `3px solid ${themeColor}40`, boxShadow: `0 0 20px ${themeColor}20` }} />
+                <div style={{ fontSize: 20, fontWeight: 900, color: colors.textMain }}>{track.artist}</div>
+                <div style={{ fontSize: 13, color: colors.textMuted, marginTop: 6, fontWeight: 600 }}>Artiste</div>
+                {artistInfo?.bio && (
+                  <p style={{ fontSize: 13, color: colors.textMuted, lineHeight: 1.6, margin: '12px 0 0', display: '-webkit-box', WebkitLineClamp: 5, WebkitBoxOrient: 'vertical', overflow: 'hidden', textAlign: 'left' }}>
+                    {artistInfo.bio}
+                  </p>
+                )}
+                {artistInfo?.genre && (
+                  <div style={{ fontSize: 12, color: colors.textMuted, marginTop: 10, fontWeight: 600 }}>{artistInfo.genre}</div>
+                )}
+                {artistInfo?.link && (
+                  <a href={artistInfo.link} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 14, padding: '8px 14px', background: colors.inputBg, border: `1px solid ${colors.border}`, color: colors.textMain, borderRadius: 20, fontSize: 12, fontWeight: 700, textDecoration: 'none' }}>
+                    Écouter sur Apple Music ↗
+                  </a>
+                )}
+                {artist?.username && (
+                  <Link to={`/premium/${artist?.username}`} style={{ display: 'block', marginTop: 14, fontSize: 12, color: colors.textMuted, textDecoration: 'none', fontWeight: 600 }}>
+                    via {artist?.username}
+                  </Link>
+                )}
+                {artistInfoLoading && !artistInfo && (
+                  <div style={{ fontSize: 12, color: colors.textMuted, marginTop: 12, fontStyle: 'italic' }}>Recherche d'infos artiste…</div>
+                )}
+              </div>
+            )}
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 16 }}>
               <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 20, textAlign: 'center', backdropFilter: 'blur(10px)' }}>

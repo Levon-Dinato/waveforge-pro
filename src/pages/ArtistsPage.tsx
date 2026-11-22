@@ -220,7 +220,7 @@ export const ArtistsPage: React.FC = () => {
             color: colors.textMain,
           }}
         >
-          Découvrir les <span style={{ color: '#ffffff' }}>Artistes</span>
+          Découvrir les <span style={{ color: colors.textMain }}>Artistes</span>
         </h1>
         <p style={{ color: colors.textMuted, marginTop: 8, fontSize: '0.9rem' }}>
           Les DJs et producteurs qui font vibrer ELEKTRAQ.

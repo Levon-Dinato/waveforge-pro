@@ -99,7 +99,7 @@ export const GenresPage: React.FC = () => {
           color: colors.textMain, // ✅ Couleur dynamique
           transition: 'color 0.3s ease'
         }}>
-          Explorer par <span style={{ color: '#ffffff' }}>Genre</span>
+          Explorer par <span style={{ color: colors.textMain }}>Genre</span>
         </h1>
         <p style={{ 
           color: colors.textMuted, // ✅ Couleur dynamique

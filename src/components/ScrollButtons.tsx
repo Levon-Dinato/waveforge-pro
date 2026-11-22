@@ -75,7 +75,7 @@ export const ScrollButtons: React.FC = () => {
           onClick={scrollToTop}
           style={buttonStyle}
           title="Retour en haut"
-          onMouseEnter={e => { e.currentTarget.style.borderColor = '#ffffff'; e.currentTarget.style.color = '#ffffff'; e.currentTarget.style.transform = 'translateY(-3px)'; }}
+          onMouseEnter={e => { e.currentTarget.style.borderColor = isDark ? '#ffffff' : '#111111'; e.currentTarget.style.color = isDark ? '#ffffff' : '#111111'; e.currentTarget.style.transform = 'translateY(-3px)'; }}
           onMouseLeave={e => { e.currentTarget.style.borderColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'; e.currentTarget.style.color = isDark ? '#ffffff' : '#1a1a1a'; e.currentTarget.style.transform = 'translateY(0)'; }}
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -89,7 +89,7 @@ export const ScrollButtons: React.FC = () => {
           onClick={scrollToBottom}
           style={buttonStyle}
           title="Aller en bas"
-          onMouseEnter={e => { e.currentTarget.style.borderColor = '#ffffff'; e.currentTarget.style.color = '#ffffff'; e.currentTarget.style.transform = 'translateY(3px)'; }}
+          onMouseEnter={e => { e.currentTarget.style.borderColor = isDark ? '#ffffff' : '#111111'; e.currentTarget.style.color = isDark ? '#ffffff' : '#111111'; e.currentTarget.style.transform = 'translateY(3px)'; }}
           onMouseLeave={e => { e.currentTarget.style.borderColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'; e.currentTarget.style.color = isDark ? '#ffffff' : '#1a1a1a'; e.currentTarget.style.transform = 'translateY(0)'; }}
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

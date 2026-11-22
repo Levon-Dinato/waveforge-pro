@@ -14,7 +14,7 @@ export const Footer: React.FC = () => {
     textMain: isDark ? '#ffffff' : '#1a1a1a',
     textMuted: isDark ? '#a1a1aa' : '#666666',
     heading: isDark ? '#ffffff' : '#1a1a1a',
-    accent: '#ffffff',
+    accent: isDark ? '#ffffff' : '#111111',
     chipBg: isDark ? '#14141c' : '#f4f4f5',
     chipBorder: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
   };

@@ -78,7 +78,7 @@ export const MainLayout: React.FC = () => {
     textMuted: isDark ? '#888888' : '#666666',
     border: isDark ? '#222222' : '#e5e7eb',
     hoverBg: isDark ? '#121212' : '#f3f4f6',
-    activeBg: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.1)',
+    activeBg: isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.06)',
     mainBg: isDark ? '#0a0a0a' : '#f5f5f7',
     panelBg: isDark ? '#121212' : '#ffffff',
   };
@@ -181,7 +181,7 @@ export const MainLayout: React.FC = () => {
             const isMenu = item.path === '#menu';
             const isActive = !isMenu && (item.exact ? location.pathname === item.path : location.pathname.startsWith(item.path));
             return (
-              <button key={item.path} onClick={() => isMenu ? setMobileMenuOpen(true) : navigate(item.path)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 12, background: 'transparent', border: 'none', color: isActive ? '#ffffff' : colors.textMuted, cursor: 'pointer', minWidth: 60 }}>
+              <button key={item.path} onClick={() => isMenu ? setMobileMenuOpen(true) : navigate(item.path)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 12, background: 'transparent', border: 'none', color: isActive ? colors.textMain : colors.textMuted, cursor: 'pointer', minWidth: 60 }}>
                 <div style={{ transform: isActive ? 'scale(1.1)' : 'scale(1)', transition: 'transform 0.1s' }}>{item.icon}</div>
                 <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.2px' }}>{item.label}</span>
               </button>
@@ -210,10 +210,10 @@ export const MainLayout: React.FC = () => {
                 return (
                   <NavLink key={item.path} to={item.path} onClick={() => setMobileMenuOpen(false)} style={{
                     display: 'flex', alignItems: 'center', gap: 16, padding: '16px', borderRadius: 12,
-                    textDecoration: 'none', color: isActive ? '#ffffff' : colors.textMain,
+                    textDecoration: 'none', color: colors.textMain,
                     background: isActive ? colors.activeBg : 'transparent', fontWeight: isActive ? 700 : 500,
                   }}>
-                    <span style={{ display: 'flex', color: isActive ? '#ffffff' : colors.textMuted }}>{item.icon}</span>
+                    <span style={{ display: 'flex', color: isActive ? colors.textMain : colors.textMuted }}>{item.icon}</span>
                     {item.label}
                   </NavLink>
                 );
@@ -256,7 +256,7 @@ export const MainLayout: React.FC = () => {
             const isActive = item.exact ? location.pathname === item.path : location.pathname.startsWith(item.path);
 
             return (
-              <NavLink key={item.path} to={item.path} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: `1px solid ${colors.border}`, textDecoration: 'none', color: isActive ? '#ffffff' : colors.textMuted, background: isActive ? colors.activeBg : 'transparent', fontWeight: isActive ? 700 : 500, fontSize: '0.9rem', borderLeft: isActive ? '2px solid #ffffff' : '2px solid transparent', transition: 'all 0.2s' }}
+              <NavLink key={item.path} to={item.path} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: `1px solid ${colors.border}`, textDecoration: 'none', color: isActive ? colors.textMain : colors.textMuted, background: isActive ? colors.activeBg : 'transparent', fontWeight: isActive ? 700 : 500, fontSize: '0.9rem', borderLeft: isActive ? `2px solid ${colors.textMain}` : '2px solid transparent', transition: 'all 0.2s' }}
                 onMouseEnter={(e) => { if (!isActive) { e.currentTarget.style.background = colors.hoverBg; e.currentTarget.style.color = colors.textMain; } }}
                 onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = colors.textMuted; } }}
               >

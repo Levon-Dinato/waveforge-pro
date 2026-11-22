@@ -8,6 +8,7 @@ import { useIsMobile } from '../hooks/useIsMobile';
 import { usePlayer } from '../contexts/PlayerContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { useTranslation } from 'react-i18next';
 import { EventsTicker } from '../components/EventsTicker';
 import { ArtistPromoSection } from '../components/ArtistPromoSection';
 
@@ -50,6 +51,7 @@ export const HomePage = () => {
   const { play, isPlaying, currentTrack } = usePlayer() as any;
   const { user } = useAuth();
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const isDark = theme === 'dark';
 
   const [tracks, setTracks] = useState<ExtendedTrack[]>([]);
@@ -188,9 +190,9 @@ export const HomePage = () => {
   };
 
   const steps = [
-    { icon: Icons.upload, title: 'Upload ton son', desc: 'Ajoute tes tracks, remixes et exclusivités en quelques clics.' },
-    { icon: Icons.share, title: 'Partage ta page', desc: 'Un lien unique pour ta bio, tes dates et tes releases.' },
-    { icon: Icons.bolt, title: 'Fais vibrer la nuit', desc: 'Sois découvert par des milliers de DJs et de fans.' },
+    { icon: Icons.upload, title: t('home.step1_title'), desc: t('home.step1_desc') },
+    { icon: Icons.share, title: t('home.step2_title'), desc: t('home.step2_desc') },
+    { icon: Icons.bolt, title: t('home.step3_title'), desc: t('home.step3_desc') },
   ];
 
   return (
@@ -227,23 +229,23 @@ export const HomePage = () => {
 
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255, 255, 255, 0.3)', padding: '6px 12px', borderRadius: 20, fontSize: 10, fontWeight: 700, color: colors.accent, width: 'fit-content', marginBottom: 16, letterSpacing: '1px' }}>
               <span style={{ width: 6, height: 6, borderRadius: '50%', background: colors.accent, boxShadow: `0 0 8px ${colors.accent}` }} />
-              LA PLATEFORME DES DJS INDÉPENDANTS
+              {t('home.badge')}
             </div>
 
             <h1 style={{ fontSize: isMobile ? '2.2rem' : '4rem', fontWeight: 900, margin: '0 0 16px 0', letterSpacing: '-1.5px', lineHeight: 1.05, textShadow: isDark ? '0 4px 20px rgba(0,0,0,0.8)' : 'none', color: colors.textMain }}>
-              Partage tes sons.<br /><span style={{ color: colors.accent }}>Fais vibrer</span> la nuit.
+              {t('home.hero_1')}<br /><span style={{ color: colors.accent }}>{t('home.hero_2')}</span> {t('home.hero_3')}
             </h1>
 
             <p style={{ color: colors.textMuted, fontSize: isMobile ? 14 : 18, margin: '0 0 24px 0', lineHeight: 1.5, maxWidth: 480 }}>
-              Découvre les dernières exclusivités, partage tes productions et connecte-toi avec les meilleurs DJs.
+              {t('home.hero_sub')}
             </p>
 
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 28 }}>
               <Link to="/nouveautes" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: isMobile ? '10px 20px' : '14px 32px', background: colors.accent, color: '#000', borderRadius: 30, fontWeight: 800, fontSize: isMobile ? 13 : 15, textDecoration: 'none', boxShadow: `0 8px 24px ${colors.accent}40` }}>
-                Écouter les sorties {Icons.arrowRight}
+                {t('home.listen_releases')} {Icons.arrowRight}
               </Link>
               <Link to="/auth" style={{ padding: isMobile ? '10px 20px' : '14px 32px', background: colors.btnSecondaryBg, color: colors.textMain, border: `1px solid ${colors.btnSecondaryBorder}`, borderRadius: 30, fontWeight: 600, fontSize: isMobile ? 13 : 15, textDecoration: 'none' }}>
-                Rejoindre
+                {t('home.join')}
               </Link>
             </div>
 
@@ -254,7 +256,7 @@ export const HomePage = () => {
                 ))}
               </div>
               <div style={{ fontSize: 12, color: colors.textMuted, fontWeight: 600 }}>
-                <span style={{ color: colors.textMain, fontWeight: 800 }}>{artists.length > 0 ? `${artists.length * 15}+` : '500+'}</span> artistes déjà inscrits
+                <span style={{ color: colors.textMain, fontWeight: 800 }}>{artists.length > 0 ? `${artists.length * 15}+` : '500+'}</span> {t('home.artists_registered')}
               </div>
             </div>
           </div>
@@ -263,9 +265,9 @@ export const HomePage = () => {
         {/* 2. STATS BAR */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, padding: '24px 0', borderTop: `1px solid ${colors.border}`, borderBottom: `1px solid ${colors.border}` }}>
           {[
-            { icon: Icons.headphones, value: `${tracks.length * 12}+`, label: 'Sons partagés' },
-            { icon: Icons.users, value: `${artists.length * 15}+`, label: 'Artistes actifs' },
-            { icon: Icons.music, value: '24/7', label: 'Nouveaux sons' },
+            { icon: Icons.headphones, value: `${tracks.length * 12}+`, label: t('home.sounds_shared') },
+            { icon: Icons.users, value: `${artists.length * 15}+`, label: t('home.active_artists') },
+            { icon: Icons.music, value: '24/7', label: t('home.new_sounds') },
           ].map((s, i) => (
             <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, borderLeft: i > 0 ? `1px solid ${colors.border}` : 'none' }}>
               <div style={{ color: colors.accent }}>{s.icon}</div>
@@ -280,17 +282,17 @@ export const HomePage = () => {
           <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, overflow: 'hidden', height: isMobile ? 'auto' : 320, position: 'relative' }}>
             <div style={{ width: isMobile ? '100%' : 320, height: isMobile ? 200 : '100%', background: featured.cover_url ? `url(${featured.cover_url}) center/cover` : colors.textDark, position: 'relative', flexShrink: 0 }}>
               <div style={{ position: 'absolute', top: 16, left: 16, background: '#b0b0b0', color: '#fff', padding: '4px 12px', borderRadius: 30, fontSize: 10, fontWeight: 900, letterSpacing: '1px', zIndex: 2, display: 'flex', alignItems: 'center', gap: 6 }}>
-                {Icons.star} À LA UNE
+                {Icons.star} {t('home.featured_badge')}
               </div>
             </div>
             <div style={{ flex: 1, padding: isMobile ? 20 : 40, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-              <div style={{ fontSize: 10, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700, marginBottom: 8 }}>Le son du moment</div>
+              <div style={{ fontSize: 10, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700, marginBottom: 8 }}>{t('home.track_of_moment')}</div>
               <h2 style={{ fontSize: isMobile ? 22 : 40, fontWeight: 900, margin: '0 0 8px 0', lineHeight: 1.1, letterSpacing: '-0.5px', color: colors.textMain }}>{featured.title}</h2>
               <div style={{ fontSize: isMobile ? 14 : 18, color: colors.textMuted, marginBottom: 20 }}>{featured.artist}</div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
                 <button onClick={playFeatured} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: isMobile ? '10px 20px' : '14px 28px', background: isFeaturedPlaying ? 'rgba(255, 255, 255, 0.15)' : colors.accent, color: isFeaturedPlaying ? colors.accent : '#000', border: isFeaturedPlaying ? `1px solid ${colors.accent}` : 'none', borderRadius: 30, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
-                  {isFeaturedPlaying ? <>{Icons.pause} En lecture</> : <>{Icons.play} Écouter</>}
+                  {isFeaturedPlaying ? <>{Icons.pause} {t('home.listening')}</> : <>{Icons.play} {t('home.listen')}</>}
                 </button>
                 <div style={{ display: 'flex', gap: 6 }}>
                   {featured.bpm && <span style={{ padding: '4px 10px', background: colors.tagBg, border: `1px solid ${colors.border}`, borderRadius: 20, fontSize: 11, fontWeight: 600, color: colors.textMain }}>{featured.bpm} BPM</span>}
@@ -300,16 +302,16 @@ export const HomePage = () => {
             </div>
           </div>
         ) : (
-          <div style={{ padding: 40, textAlign: 'center', color: colors.textMuted, background: colors.panelBg, borderRadius: 16, border: `1px solid ${colors.border}` }}>Aucun son à la une pour le moment.</div>
+          <div style={{ padding: 40, textAlign: 'center', color: colors.textMuted, background: colors.panelBg, borderRadius: 16, border: `1px solid ${colors.border}` }}>{t('home.no_featured')}</div>
         )}
 
         {/* 4. GRILLE PRINCIPALE + TOP 10 */}
         <div style={{ display: 'flex', gap: isMobile ? 20 : 40, alignItems: 'flex-start', flexDirection: isMobile ? 'column' : 'row' }}>
           <div style={{ flex: 1, minWidth: 0, width: '100%' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <h2 style={{ fontSize: isMobile ? 18 : 24, fontWeight: 800, color: colors.textMain, margin: 0, letterSpacing: '-0.5px' }}>Nouvelles sorties</h2>
+              <h2 style={{ fontSize: isMobile ? 18 : 24, fontWeight: 800, color: colors.textMain, margin: 0, letterSpacing: '-0.5px' }}>{t('home.new_releases')}</h2>
               <Link to="/nouveautes" style={{ fontSize: 12, color: colors.textMuted, textDecoration: 'none', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
-                Tout voir {Icons.arrowRight}
+                {t('home.see_all')} {Icons.arrowRight}
               </Link>
             </div>
             
@@ -317,7 +319,7 @@ export const HomePage = () => {
               <TrackGrid tracks={newReleases as any} onPlay={(t) => handlePlayTrack(t as any)} />
             ) : (
               <div style={{ padding: 40, textAlign: 'center', color: colors.textMuted, background: colors.panelBg, borderRadius: 16, border: `1px solid ${colors.border}` }}>
-                Aucune nouvelle sortie pour le moment.
+                {t('home.no_new_releases')}
               </div>
             )}
           </div>
@@ -325,7 +327,7 @@ export const HomePage = () => {
           {!isMobile && top10.length > 0 && (
             <aside style={{ width: 320, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 24 }}>
               <div style={{ background: colors.panelBg, borderRadius: 16, border: `1px solid ${colors.border}`, padding: 24 }}>
-                <h3 style={{ fontSize: 14, fontWeight: 800, color: colors.textMain, margin: '0 0 20px 0', letterSpacing: '1px', textTransform: 'uppercase' }}>Top 10 Chart</h3>
+                <h3 style={{ fontSize: 14, fontWeight: 800, color: colors.textMain, margin: '0 0 20px 0', letterSpacing: '1px', textTransform: 'uppercase' }}>{t('home.top10')}</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                   {top10.map((track, idx) => (
                     <div key={track.id} onClick={() => navigate(`/track/${track.id}`)} style={{ display: 'flex', alignItems: 'center', gap: 16, cursor: 'pointer' }}>
@@ -348,11 +350,11 @@ export const HomePage = () => {
           <section>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 20 }}>
               <div>
-                <div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: colors.accent, marginBottom: 6 }}>Communauté</div>
-                <h2 style={{ fontSize: isMobile ? 20 : 28, fontWeight: 900, color: colors.textMain, margin: 0, letterSpacing: '-0.5px' }}>Artistes à découvrir</h2>
+                <div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: colors.accent, marginBottom: 6 }}>{t('home.community')}</div>
+                <h2 style={{ fontSize: isMobile ? 20 : 28, fontWeight: 900, color: colors.textMain, margin: 0, letterSpacing: '-0.5px' }}>{t('home.discover_artists')}</h2>
               </div>
               <Link to="/artists" style={{ fontSize: 12, color: colors.textMuted, textDecoration: 'none', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
-                Tout voir {Icons.arrowRight}
+                {t('home.see_all')} {Icons.arrowRight}
               </Link>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(3, 1fr)' : 'repeat(6, 1fr)', gap: isMobile ? 12 : 16 }}>
@@ -373,8 +375,8 @@ export const HomePage = () => {
         {genres.length > 0 && (
           <section>
             <div style={{ marginBottom: 20 }}>
-              <div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: colors.accent, marginBottom: 6 }}>Explorer</div>
-              <h2 style={{ fontSize: isMobile ? 20 : 28, fontWeight: 900, color: colors.textMain, margin: 0, letterSpacing: '-0.5px' }}>Par style musical</h2>
+              <div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: colors.accent, marginBottom: 6 }}>{t('home.explore')}</div>
+              <h2 style={{ fontSize: isMobile ? 20 : 28, fontWeight: 900, color: colors.textMain, margin: 0, letterSpacing: '-0.5px' }}>{t('home.by_style')}</h2>
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
               {genres.map((genre) => (
@@ -396,12 +398,12 @@ export const HomePage = () => {
               <div>
                 <div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: '#b0b0b0', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
                   <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#b0b0b0', animation: 'pulse 1.5s infinite' }} />
-                  En Direct
+                  {t('home.live')}
                 </div>
-                <h2 style={{ fontSize: isMobile ? 20 : 28, fontWeight: 900, color: colors.textMain, margin: 0, letterSpacing: '-0.5px' }}>Radios de la communauté</h2>
+                <h2 style={{ fontSize: isMobile ? 20 : 28, fontWeight: 900, color: colors.textMain, margin: 0, letterSpacing: '-0.5px' }}>{t('home.community_radios')}</h2>
               </div>
               <Link to="/radios" style={{ fontSize: 12, color: colors.textMuted, textDecoration: 'none', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
-                Voir toutes les radios {Icons.arrowRight}
+                {t('home.see_all_radios')} {Icons.arrowRight}
               </Link>
             </div>
             
@@ -414,7 +416,7 @@ export const HomePage = () => {
                   <div style={{ width: 60, height: 60, borderRadius: '50%', background: artist.avatar_url ? `url(${artist.avatar_url}) center/cover` : colors.textDark, flexShrink: 0, border: '2px solid rgba(176, 176, 176, 0.3)' }} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 15, fontWeight: 800, color: colors.textMain, marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{artist.username}</div>
-                    <div style={{ fontSize: 12, color: '#b0b0b0', fontWeight: 600 }}>Écouter la radio →</div>
+                    <div style={{ fontSize: 12, color: '#b0b0b0', fontWeight: 600 }}>{t('home.listen_radio')}</div>
                   </div>
                 </Link>
               ))}
@@ -425,8 +427,8 @@ export const HomePage = () => {
         {/* 8. COMMENT ÇA MARCHE */}
         <section>
           <div style={{ textAlign: 'center', marginBottom: isMobile ? 24 : 40 }}>
-            <div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: colors.accent, marginBottom: 6 }}>Simple & rapide</div>
-            <h2 style={{ fontSize: isMobile ? 22 : 32, fontWeight: 900, color: colors.textMain, margin: 0, letterSpacing: '-0.5px' }}>Comment ça marche ?</h2>
+            <div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: colors.accent, marginBottom: 6 }}>{t('home.simple_fast')}</div>
+            <h2 style={{ fontSize: isMobile ? 22 : 32, fontWeight: 900, color: colors.textMain, margin: 0, letterSpacing: '-0.5px' }}>{t('home.how_it_works')}</h2>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: isMobile ? 16 : 24 }}>
             {steps.map((step, i) => (
@@ -456,17 +458,17 @@ export const HomePage = () => {
         }}>
           <div style={{ position: 'absolute', top: -50, right: -50, width: 200, height: 200, borderRadius: '50%', background: colors.accent, opacity: 0.08, filter: 'blur(60px)' }} />
           <h2 style={{ fontSize: isMobile ? 24 : 36, fontWeight: 900, color: colors.textMain, margin: '0 0 12px 0', letterSpacing: '-1px', position: 'relative' }}>
-            Prêt à faire vibrer la nuit ?
+            {t('home.cta_title')}
           </h2>
           <p style={{ fontSize: isMobile ? 14 : 16, color: colors.textMuted, margin: '0 auto 28px auto', maxWidth: 500, lineHeight: 1.6, position: 'relative' }}>
-            Rejoins une communauté de DJs passionnés, partage tes sons et sois découvert par des milliers de fans.
+            {t('home.cta_sub')}
           </p>
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', position: 'relative' }}>
             <Link to="/auth" style={{ padding: '14px 32px', background: colors.accent, color: '#000', borderRadius: 30, fontWeight: 800, fontSize: 14, textDecoration: 'none', boxShadow: `0 8px 24px ${colors.accent}40` }}>
-              Créer un compte gratuit
+              {t('home.cta_create')}
             </Link>
             <Link to="/premium" style={{ padding: '14px 32px', background: 'transparent', color: colors.textMain, border: `1px solid ${colors.btnSecondaryBorder}`, borderRadius: 30, fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>
-              Découvrir Premium
+              {t('home.cta_premium')}
             </Link>
           </div>
         </section>

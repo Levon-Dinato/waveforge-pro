@@ -41,6 +41,17 @@ function writeCache(name: string, info: ArtistInfo): void {
   } catch { /* ignore */ }
 }
 
+// Extrait l'artiste principal d'une chaîne multi-artistes :
+// "Block & Crown, Lissat" -> "Block & Crown" ; "A feat. B" -> "A".
+// Le "&" est conservé (nom de duo type "Block & Crown").
+function primaryArtist(name: string): string {
+  const parts = name
+    .split(/\s*,\s*|\s+feat\.?\s+|\s+ft\.?\s+|\s+vs\.?\s+/i)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  return parts[0] || name.trim();
+}
+
 // Wikipédia multi-langues : renvoie l'extrait (bio) s'il existe
 async function fetchWikiBio(name: string): Promise<string | undefined> {
   const langs = ['en', 'fr', 'nl', 'de', 'it', 'es'];
@@ -73,8 +84,9 @@ async function fetchMusicBrainz(name: string): Promise<{ type?: string; country?
 export async function fetchArtistInfo(name: string): Promise<ArtistInfo | null> {
   if (!name || !name.trim()) return null;
   const clean = name.trim();
+  const primary = primaryArtist(clean);
 
-  const cached = readCache(clean);
+  const cached = readCache(primary);
   if (cached) return cached;
 
   let image: string | undefined;
@@ -84,7 +96,7 @@ export async function fetchArtistInfo(name: string): Promise<ArtistInfo | null> 
 
   try {
     // 1) Artiste iTunes (lien + genre)
-    const artistRes = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(clean)}&entity=musicArtist&limit=1`);
+    const artistRes = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(primary)}&entity=musicArtist&limit=1`);
     if (artistRes.ok) {
       const artistJson = await artistRes.json();
       const artist = artistJson?.results?.[0];
@@ -95,7 +107,7 @@ export async function fetchArtistInfo(name: string): Promise<ArtistInfo | null> 
     }
 
     // 2) Album iTunes (artwork)
-    const albumRes = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(clean)}&entity=album&limit=1`);
+    const albumRes = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(primary)}&entity=album&limit=1`);
     if (albumRes.ok) {
       const albumJson = await albumRes.json();
       const artwork = albumJson?.results?.[0]?.artworkUrl100;
@@ -104,11 +116,11 @@ export async function fetchArtistInfo(name: string): Promise<ArtistInfo | null> 
   } catch { /* iTunes KO -> on continue */ }
 
   // 3) Wikipédia (bio + miniature)
-  bio = await fetchWikiBio(clean);
+  bio = await fetchWikiBio(primary);
   if (!image) {
     // essayer de récupérer la miniature Wikipédia comme secours
     try {
-      const res = await fetch(`https://fr.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(clean)}`);
+      const res = await fetch(`https://fr.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(primary)}`);
       if (res.ok) {
         const j = await res.json();
         if (j?.thumbnail?.source) image = j.thumbnail.source;
@@ -118,7 +130,7 @@ export async function fetchArtistInfo(name: string): Promise<ArtistInfo | null> 
 
   // 4) MusicBrainz : résumé de secours si pas de bio Wikipédia
   if (!bio) {
-    const mb = await fetchMusicBrainz(clean);
+    const mb = await fetchMusicBrainz(primary);
     if (mb) {
       const typeLabel = mb.type === 'Group' ? 'Duo / groupe de DJs & producteurs'
         : mb.type === 'Person' ? 'DJ & producteur'
@@ -133,6 +145,6 @@ export async function fetchArtistInfo(name: string): Promise<ArtistInfo | null> 
   if (!image && !bio && !link && !genre) return null;
 
   const info: ArtistInfo = { name: clean, image, bio, link, genre };
-  writeCache(clean, info);
+  writeCache(primary, info);
   return info;
 }

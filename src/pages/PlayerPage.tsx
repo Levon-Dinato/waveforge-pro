@@ -324,13 +324,13 @@ export const PlayerPage: React.FC = () => {
                 <div style={{ width: '100%', height: '100%', background: `linear-gradient(135deg, ${visualizerColor}, #333)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 48 }}>🎵</div>
               )}
             </div>
-            <div style={{ position: 'absolute', bottom: -4, right: -4, width: 48, height: 48, borderRadius: '50%', background: accentColor, color: accentTextColor, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 0 20px ${visualizerColor}80`, animation: 'pulse 2s infinite' }}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: 3 }}><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            <div style={{ position: 'absolute', bottom: -6, right: -6, width: 64, height: 64, borderRadius: '50%', background: accentColor, color: accentTextColor, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 0 30px ${visualizerColor}90`, animation: 'pulse 1.6s infinite' }}>
+              <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: 4 }}><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
             </div>
           </div>
           <h2 style={{ color: '#fff', fontSize: 24, fontWeight: 900, margin: '0 0 4px 0', letterSpacing: '1px' }}>{profile?.username || 'Radio'}</h2>
           <div style={{ color: visualizerColor, fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '3px', marginBottom: 12 }}>Radio en direct</div>
-          <p style={{ color: '#ccc', fontSize: 13, margin: 0, maxWidth: 260 }}>Touchez pour lancer la lecture.</p>
+          <p style={{ color: '#ccc', fontSize: 14, margin: 0, maxWidth: 280 }}>Appuyez n'importe où pour lancer la lecture.</p>
         </div>
       )}
 

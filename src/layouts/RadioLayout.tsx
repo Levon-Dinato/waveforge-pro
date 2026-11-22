@@ -727,8 +727,8 @@ export const RadioLayout: React.FC = () => {
                 </Link>
               )}
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: isLive ? '#b0b0b0' : 'rgba(255,255,255,0.05)', padding: '7px 14px', borderRadius: 20, border: isLive ? 'none' : `1px solid ${colors.border}` }}>
-                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#fff', animation: 'pulseLive 1s infinite' }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: isLive ? '#b0b0b0' : (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'), padding: '7px 14px', borderRadius: 20, border: isLive ? 'none' : `1px solid ${colors.border}` }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: isLive ? '#fff' : (isDark ? '#ffffff' : '#111111'), animation: 'pulseLive 1s infinite' }} />
                 <span style={{ fontSize: 10, fontWeight: 900, color: isLive ? '#fff' : colors.textMain, letterSpacing: '0.5px' }}>{isLive ? 'ON AIR' : activeSchedule ? `PROG: ${activeSchedule}` : 'RADIO AUTO'}</span>
               </div>
               <button onClick={handleOpenPlayer} className="rp-btn-3d" style={{ background: visualizerColor, color: iconColor, border: 'none', padding: '10px 22px', borderRadius: 12, fontSize: 12, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>

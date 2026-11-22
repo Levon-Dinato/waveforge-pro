@@ -342,8 +342,8 @@ export const PlayerPage: React.FC = () => {
           <div style={{ width: 80, height: 80, borderRadius: '50%', background: accentColor, color: accentTextColor, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20, boxShadow: `0 10px 40px ${visualizerColor}80`, animation: 'pulse 2s infinite' }}>
             <svg width="36" height="36" viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: 4 }}><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
           </div>
-          <h2 style={{ color: '#fff', fontSize: 20, fontWeight: 900, margin: '0 0 8px 0' }}>Clique pour écouter</h2>
-          <p style={{ color: '#ccc', fontSize: 13, margin: 0, maxWidth: 260 }}>Le navigateur a bloqué la lecture automatique. Un clic pour activer le son.</p>
+          <h2 style={{ color: '#fff', fontSize: 22, fontWeight: 900, margin: '0 0 8px 0', letterSpacing: '1px' }}>ÉCOUTER LA RADIO</h2>
+          <p style={{ color: '#ccc', fontSize: 13, margin: 0, maxWidth: 260 }}>Touchez pour lancer la lecture.</p>
         </div>
       )}
 

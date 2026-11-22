@@ -465,9 +465,9 @@ export const RadioLayout: React.FC = () => {
     if (!url) return null;
     return (
       <a href={url} target="_blank" rel="noreferrer" title={name}
-        style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.textMain, border: `1px solid ${colors.border}`, transition: 'all 0.2s' }}
+        style={{ width: 36, height: 36, borderRadius: 10, background: colors.chipBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.textMain, border: `1px solid ${colors.border}`, transition: 'all 0.2s' }}
         onMouseEnter={(e) => { e.currentTarget.style.background = visualizerColor; e.currentTarget.style.color = iconColor; e.currentTarget.style.borderColor = visualizerColor; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = `0 6px 15px ${visualizerColor}50`; }}
-        onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = colors.textMain; e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
+        onMouseLeave={(e) => { e.currentTarget.style.background = colors.chipBg; e.currentTarget.style.color = colors.textMain; e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
       >
         {icon}
       </a>
@@ -627,9 +627,9 @@ export const RadioLayout: React.FC = () => {
               <button 
                 onClick={() => { stopRadio(); navigate('/'); }}
                 title="Retour au site principal"
-                style={{ display: 'flex', alignItems: 'center', gap: 8, color: colors.textMain, textDecoration: 'none', fontSize: 13, fontWeight: 700, padding: '8px 14px', borderRadius: 10, background: 'rgba(255,255,255,0.05)', border: `1px solid ${colors.border}`, transition: 'all 0.2s', cursor: 'pointer' }} 
+                style={{ display: 'flex', alignItems: 'center', gap: 8, color: colors.textMain, textDecoration: 'none', fontSize: 13, fontWeight: 700, padding: '8px 14px', borderRadius: 10, background: colors.chipBg, border: `1px solid ${colors.border}`, transition: 'all 0.2s', cursor: 'pointer' }} 
                 onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'} 
-                onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                onMouseLeave={(e) => e.currentTarget.style.background = colors.chipBg}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
@@ -658,7 +658,7 @@ export const RadioLayout: React.FC = () => {
               <button 
                 onClick={toggleTheme}
                 title={isDark ? 'Mode clair' : 'Mode sombre'}
-                style={{ background: 'rgba(255,255,255,0.05)', border: `1px solid ${colors.border}`, color: colors.textMain, width: 38, height: 38, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                style={{ background: colors.chipBg, border: `1px solid ${colors.border}`, color: colors.textMain, width: 38, height: 38, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
               >
                 {isDark ? (
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
@@ -671,7 +671,7 @@ export const RadioLayout: React.FC = () => {
                 <button 
                   onClick={() => setShowShareMenu(!showShareMenu)} 
                   title="Partager la radio"
-                  style={{ background: 'rgba(255,255,255,0.05)', border: `1px solid ${colors.border}`, color: colors.textMain, width: 38, height: 38, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                  style={{ background: colors.chipBg, border: `1px solid ${colors.border}`, color: colors.textMain, width: 38, height: 38, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <circle cx="18" cy="5" r="3"></circle>
@@ -722,7 +722,7 @@ export const RadioLayout: React.FC = () => {
               </div>
 
               {isOwner && (
-                <Link to="/radio-manager" className="rp-btn-3d" style={{ background: 'rgba(255,255,255,0.08)', color: colors.textMain, border: `1px solid ${colors.border}`, padding: '10px 16px', borderRadius: 12, fontSize: 12, fontWeight: 800, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Link to="/radio-manager" className="rp-btn-3d" style={{ background: colors.chipBgStrong, color: colors.textMain, border: `1px solid ${colors.border}`, padding: '10px 16px', borderRadius: 12, fontSize: 12, fontWeight: 800, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
                   ⚙️ Gérer
                 </Link>
               )}
@@ -762,7 +762,7 @@ export const RadioLayout: React.FC = () => {
 
         <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 90, background: isDark ? 'rgba(10,10,16,0.96)' : 'rgba(255,255,255,0.96)', backdropFilter: 'blur(30px)', borderTop: `1px solid ${colors.border}`, boxShadow: '0 -10px 40px rgba(0,0,0,0.4)' }}>
           {!isLive && (
-            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'rgba(255,255,255,0.05)' }}>
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: colors.chipBg }}>
               <div style={{ width: `${progressPercent}%`, height: '100%', background: visualizerColor, boxShadow: `0 0 10px ${visualizerColor}`, transition: 'width 1s linear' }} />
             </div>
           )}
@@ -795,7 +795,7 @@ export const RadioLayout: React.FC = () => {
             )}
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: colors.textMuted, fontWeight: 700, background: 'rgba(255,255,255,0.05)', padding: '4px 10px', borderRadius: 20 }}><span style={{ width: 6, height: 6, borderRadius: '50%', background: visualizerColor, animation: 'pulseLive 1.5s infinite', boxShadow: `0 0 6px ${visualizerColor}` }} /> {listeners}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: colors.textMuted, fontWeight: 700, background: colors.chipBg, padding: '4px 10px', borderRadius: 20 }}><span style={{ width: 6, height: 6, borderRadius: '50%', background: visualizerColor, animation: 'pulseLive 1.5s infinite', boxShadow: `0 0 6px ${visualizerColor}` }} /> {listeners}</div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 <button onClick={toggleMute} title={volume === 0 ? 'Activer le son' : 'Couper le son'} style={{ background: 'transparent', border: 'none', color: colors.textMain, cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 4 }}>
@@ -810,14 +810,14 @@ export const RadioLayout: React.FC = () => {
                 )}
               </div>
               
-              <button onClick={handlePlayRadio} title="Revenir à la radio en direct" style={{ background: 'rgba(255,255,255,0.05)', color: colors.textMain, border: `1px solid ${colors.border}`, width: 36, height: 36, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }}>
+              <button onClick={handlePlayRadio} title="Revenir à la radio en direct" style={{ background: colors.chipBg, color: colors.textMain, border: `1px solid ${colors.border}`, width: 36, height: 36, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
               </button>
 
               <button onClick={handleTogglePlay} style={{ width: 44, height: 44, borderRadius: '50%', background: visualizerColor, color: iconColor, border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: `0 4px 15px ${visualizerColor}60` }}>
                 {isPlaying ? <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg> : <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: 3 }}><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>}
               </button>
-              <button onClick={handleOpenPlayer} style={{ background: 'rgba(255,255,255,0.08)', color: colors.textMain, border: `1px solid ${colors.border}`, padding: '8px 16px', borderRadius: 20, fontSize: 12, fontWeight: 800, cursor: 'pointer', display: isMobile ? 'none' : 'flex', alignItems: 'center', gap: 6 }}>Player ↗</button>
+              <button onClick={handleOpenPlayer} style={{ background: colors.chipBgStrong, color: colors.textMain, border: `1px solid ${colors.border}`, padding: '8px 16px', borderRadius: 20, fontSize: 12, fontWeight: 800, cursor: 'pointer', display: isMobile ? 'none' : 'flex', alignItems: 'center', gap: 6 }}>Player ↗</button>
             </div>
           </div>
         </div>

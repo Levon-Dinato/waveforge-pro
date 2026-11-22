@@ -3,7 +3,7 @@
   "name": "ELEKTRAQ · Radio & DJ",
   "short_name": "ELEKTRAQ",
   "description": "Radio ELEKTRAQ en direct, promos, edits et morceaux exclusifs. Nouveautés House, Tech House, EDM, Dance et Underground.",
-  "start_url": "/",
+  "start_url": "/radio/ELEKTRAQ",
   "scope": "/",
   "display": "standalone",
   "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],

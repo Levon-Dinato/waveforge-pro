@@ -14,6 +14,7 @@ interface Artist {
   country?: string;
   is_premium?: boolean;
   trackCount: number;
+  bio?: string | null;
 }
 
 const PAGE_SIZE = 24;
@@ -78,8 +79,8 @@ export const ArtistsPage: React.FC = () => {
         };
 
         const cols = premiumColumnAvailable
-          ? 'id, username, avatar_url, city, country, is_premium'
-          : 'id, username, avatar_url, city, country';
+          ? 'id, username, avatar_url, city, country, is_premium, bio'
+          : 'id, username, avatar_url, city, country, bio';
 
         let { data: profilesData, error: profilesError } =
           await buildProfilesQuery(cols);
@@ -91,7 +92,7 @@ export const ArtistsPage: React.FC = () => {
         ) {
           setPremiumColumnAvailable(false);
           const retry = await buildProfilesQuery(
-            'id, username, avatar_url, city, country'
+            'id, username, avatar_url, city, country, bio'
           );
           profilesData = retry.data as any;
           profilesError = retry.error;
@@ -473,6 +474,23 @@ export const ArtistsPage: React.FC = () => {
                               }`
                             : 'France'}
                         </div>
+                        {artist.bio && (
+                          <div
+                            style={{
+                              color: colors.textMuted,
+                              fontSize: 11.5,
+                              marginTop: 8,
+                              lineHeight: 1.5,
+                              display: '-webkit-box',
+                              WebkitLineClamp: 2,
+                              WebkitBoxOrient: 'vertical',
+                              overflow: 'hidden',
+                              maxWidth: '100%',
+                            }}
+                          >
+                            {artist.bio}
+                          </div>
+                        )}
                       </div>
 
                       {/* Badge unifié */}

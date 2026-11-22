@@ -207,7 +207,7 @@ export const TrackGrid: React.FC<TrackGridProps> = ({ tracks, onPlay }) => {
                   {track.title}
                 </div>
                 <div style={{ fontSize: 13, color: colors.textMuted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {track.profiles?.username || track.artist}
+                  {track.artist || track.profiles?.username}
                 </div>
               </div>
 

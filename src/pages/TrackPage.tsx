@@ -556,10 +556,10 @@ export const TrackPage: React.FC = () => {
   const shareText = `Écoute « ${track.title} » sur ELEKTRAQ`;
   const shareUrl = window.location.href;
 
+  const displayArtist = track.artist || artist?.username || 'Artiste inconnu';
+  const artistIsUploader = !!(artist?.username && track.artist && artist.username.toLowerCase() === track.artist.toLowerCase());
+
   const metaChips: { icon: React.ReactNode; label: string }[] = [
-    { icon: Icons.disc, label: track.genre || 'Musique' },
-    ...(track.bpm ? [{ icon: Icons.bpm, label: `${Math.round(track.bpm)} BPM` }] : []),
-    ...(track.song_key ? [{ icon: Icons.key, label: track.song_key }] : []),
     ...(trackDuration > 0 ? [{ icon: Icons.time, label: formatTime(trackDuration) }] : []),
     ...(formatReleaseDate(track.created_at) ? [{ icon: Icons.calendar, label: formatReleaseDate(track.created_at)! }] : []),
   ];
@@ -581,14 +581,48 @@ export const TrackPage: React.FC = () => {
           
           <div style={{ flex: '1 1 600px', minWidth: 0 }}>
             
-            <div style={{ display: 'flex', gap: 24, marginBottom: 32, alignItems: 'flex-end', flexWrap: 'wrap' }}>
-              <div style={{ width: 180, height: 180, borderRadius: 16, background: track.cover_url ? `url(${track.cover_url}) center/cover` : colors.border, border: `1px solid ${colors.border}`, boxShadow: '0 20px 40px rgba(0,0,0,0.4)', flexShrink: 0 }} />
-              <div style={{ flex: 1, minWidth: 200 }}>
+            <div style={{ display: 'flex', gap: 32, marginBottom: 32, alignItems: 'center', flexWrap: 'wrap' }}>
+              <div style={{ position: 'relative', width: 240, height: 240, maxWidth: '100%', borderRadius: 20, background: track.cover_url ? `url(${track.cover_url}) center/cover` : colors.border, border: `1px solid ${colors.border}`, boxShadow: '0 24px 60px rgba(0,0,0,0.45)', flexShrink: 0 }}>
+                <button onClick={handlePlay} style={{ position: 'absolute', inset: 0, borderRadius: 20, background: 'rgba(0,0,0,0.35)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', opacity: isThisPlaying ? 1 : 0, transition: 'opacity 0.25s' }} onMouseEnter={e => e.currentTarget.style.opacity = '1'} onMouseLeave={e => { if (!isThisPlaying) e.currentTarget.style.opacity = '0'; }}>
+                  <div style={{ width: 72, height: 72, borderRadius: '50%', background: isThisPlaying ? themeColor : colors.textMain, color: isThisPlaying ? '#000' : colors.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 30px rgba(0,0,0,0.4)' }}>
+                    {isThisPlaying ? Icons.pause : Icons.play}
+                  </div>
+                </button>
+              </div>
+              <div style={{ flex: 1, minWidth: 240 }}>
                 <div style={{ display: 'inline-block', fontSize: 11, fontWeight: 800, color: themeColor, background: `${themeColor}15`, padding: '4px 12px', borderRadius: 20, letterSpacing: '1px', textTransform: 'uppercase', marginBottom: 12 }}>{track.genre || 'Musique'}</div>
-                <h1 style={{ fontSize: 'clamp(2rem, 5vw, 3rem)', fontWeight: 900, margin: '0 0 12px 0', letterSpacing: '-0.03em', lineHeight: 1.1 }}>{track.title}</h1>
-                <Link to={`/premium/${artist?.username}`} style={{ fontSize: 18, color: colors.textMuted, textDecoration: 'none', fontWeight: 600, transition: 'color 0.2s' }} onMouseEnter={e => e.currentTarget.style.color = themeColor} onMouseLeave={e => e.currentTarget.style.color = colors.textMuted}>
-                  {artist?.username || track.artist}
-                </Link>
+                <h1 style={{ fontSize: 'clamp(2rem, 5vw, 3rem)', fontWeight: 900, margin: '0 0 8px 0', letterSpacing: '-0.03em', lineHeight: 1.1 }}>{track.title}</h1>
+                <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 10, marginBottom: 4 }}>
+                  {artistIsUploader ? (
+                    <Link to={`/premium/${artist?.username}`} style={{ fontSize: 20, fontWeight: 700, color: colors.textMain, textDecoration: 'none', transition: 'color 0.2s' }} onMouseEnter={e => e.currentTarget.style.color = themeColor} onMouseLeave={e => e.currentTarget.style.color = colors.textMain}>
+                      {displayArtist}
+                    </Link>
+                  ) : (
+                    <span style={{ fontSize: 20, fontWeight: 700, color: colors.textMain }}>{displayArtist}</span>
+                  )}
+                  {artist?.username && !artistIsUploader && (
+                    <Link to={`/premium/${artist?.username}`} style={{ fontSize: 13, color: colors.textMuted, textDecoration: 'none', fontWeight: 600, transition: 'color 0.2s' }} onMouseEnter={e => e.currentTarget.style.color = themeColor} onMouseLeave={e => e.currentTarget.style.color = colors.textMuted}>
+                      via {artist?.username}
+                    </Link>
+                  )}
+                </div>
+
+                {(track.song_key || track.bpm) && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginTop: 18, flexWrap: 'wrap' }}>
+                    {track.song_key && (
+                      <div style={{ width: 72, height: 72, borderRadius: '50%', background: `linear-gradient(135deg, ${themeColor}, ${themeColor}88)`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: `2px solid ${themeColor}55`, boxShadow: `0 0 26px ${themeColor}33`, flexShrink: 0 }}>
+                        <span style={{ fontSize: 20, fontWeight: 900, color: '#000', lineHeight: 1 }}>{track.song_key}</span>
+                        <span style={{ fontSize: 9, fontWeight: 800, color: 'rgba(0,0,0,0.7)', textTransform: 'uppercase', letterSpacing: 1, marginTop: 2 }}>Key</span>
+                      </div>
+                    )}
+                    {track.bpm && (
+                      <div style={{ padding: '12px 18px', borderRadius: 16, background: colors.panelBg, border: `1px solid ${colors.border}`, backdropFilter: 'blur(10px)' }}>
+                        <span style={{ fontSize: 26, fontWeight: 900, color: colors.textMain, lineHeight: 1 }}>{Math.round(track.bpm)}</span>
+                        <span style={{ fontSize: 10, fontWeight: 800, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 1, marginLeft: 6 }}>BPM</span>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -600,6 +634,29 @@ export const TrackPage: React.FC = () => {
                     {chip.icon} {chip.label}
                   </span>
                 ))}
+              </div>
+            )}
+
+            {(track.description || (Array.isArray(track.tags) && track.tags.length > 0)) && (
+              <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 20, marginBottom: 24, backdropFilter: 'blur(10px)' }}>
+                {track.description && (
+                  <>
+                    <div style={{ fontSize: 11, fontWeight: 800, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>Description</div>
+                    <p style={{ margin: 0, fontSize: 15, color: colors.textMuted, lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{track.description}</p>
+                  </>
+                )}
+                {Array.isArray(track.tags) && track.tags.length > 0 && (
+                  <div style={{ marginTop: track.description ? 16 : 0 }}>
+                    <div style={{ fontSize: 11, fontWeight: 800, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>Tags</div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                      {track.tags.map((t: string, i: number) => (
+                        <span key={i} onClick={() => navigate('/search?q=' + encodeURIComponent(t))} style={{ display: 'inline-flex', alignItems: 'center', padding: '5px 12px', background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 20, fontSize: 12, fontWeight: 700, color: colors.textMuted, cursor: 'pointer', transition: 'color 0.2s' }} onMouseEnter={e => e.currentTarget.style.color = colors.textMain} onMouseLeave={e => e.currentTarget.style.color = colors.textMuted }>
+                          #{t}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -817,7 +874,7 @@ export const TrackPage: React.FC = () => {
                 <div style={{ width: 100, height: 100, borderRadius: '50%', background: artist?.avatar_url ? `url(${artist.avatar_url}) center/cover` : colors.border, margin: '0 auto 16px', border: `3px solid ${themeColor}40`, boxShadow: `0 0 20px ${themeColor}20` }} />
               </Link>
               <Link to={`/premium/${artist?.username}`} style={{ fontSize: 20, fontWeight: 900, color: colors.textMain, textDecoration: 'none' }}>{artist?.username || track.artist}</Link>
-              <div style={{ fontSize: 13, color: colors.textMuted, marginTop: 6, fontWeight: 600 }}>Artiste ELEKTRAQ</div>
+              <div style={{ fontSize: 13, color: colors.textMuted, marginTop: 6, fontWeight: 600 }}>Page officielle</div>
               
               <button onClick={() => navigate(`/premium/${artist?.username}`)} style={{ width: '100%', marginTop: 24, padding: '12px', background: themeColor, color: '#000', border: 'none', borderRadius: 30, fontWeight: 800, fontSize: 14, cursor: 'pointer', transition: 'transform 0.2s' }} onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.02)'} onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}>
                 Voir la page complète

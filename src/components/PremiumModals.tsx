@@ -75,7 +75,7 @@ export const BookingModal: React.FC<{ isOpen: boolean; onClose: () => void; prof
 
 // --- MODALE D'UPLOAD ---
 export const UploadModal: React.FC<{ isOpen: boolean; onClose: () => void; user: any; isDark: boolean; colors: any; themeColor: string; onUploadSuccess: (track: any) => void }> = ({ isOpen, onClose, user, isDark, colors, themeColor, onUploadSuccess }) => {
-  const [uploadForm, setUploadForm] = useState({ title: '', artist: '', genre: '', bpm: '', song_key: '', purchase_url: '', is_downloadable: true });
+  const [uploadForm, setUploadForm] = useState({ title: '', artist: '', genre: '', bpm: '', song_key: '', purchase_url: '', is_downloadable: true, description: '', tags: '' });
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -137,6 +137,8 @@ export const UploadModal: React.FC<{ isOpen: boolean; onClose: () => void; user:
         genre: uploadForm.genre || 'Inconnu', bpm: Number(uploadForm.bpm) || 0,
         song_key: uploadForm.song_key || null, audio_url: audioUrlData.publicUrl,
         cover_url: coverUrl, purchase_url: uploadForm.purchase_url || null,
+        description: uploadForm.description || null,
+        tags: uploadForm.tags ? uploadForm.tags.split(',').map((t: string) => t.trim().replace(/^#/, '')).filter(Boolean) : null,
         is_downloadable: uploadForm.is_downloadable, peaks: [], duration: 0, likes_count: 0, downloads: 0
       }).select().single();
 
@@ -144,7 +146,7 @@ export const UploadModal: React.FC<{ isOpen: boolean; onClose: () => void; user:
       if (data) onUploadSuccess(data);
       
       onClose();
-      setUploadForm({ title: '', artist: '', genre: '', bpm: '', song_key: '', purchase_url: '', is_downloadable: true });
+      setUploadForm({ title: '', artist: '', genre: '', bpm: '', song_key: '', purchase_url: '', is_downloadable: true, description: '', tags: '' });
       setAudioFile(null); setCoverFile(null);
       alert("Son uploadé ! 🎵");
     } catch (err: any) { alert("Erreur : " + err.message); } finally { setUploading(false); }
@@ -189,6 +191,14 @@ export const UploadModal: React.FC<{ isOpen: boolean; onClose: () => void; user:
               <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6 }}>BPM</label>
               <input type="number" value={uploadForm.bpm} onChange={e => setUploadForm({...uploadForm, bpm: e.target.value})} placeholder="128" style={{ width: '100%', padding: 10, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain }} />
             </div>
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6 }}>Description (Optionnel)</label>
+            <textarea value={uploadForm.description} onChange={e => setUploadForm({...uploadForm, description: e.target.value})} rows={3} placeholder="Parle-nous de ce son..." style={{ width: '100%', padding: 10, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain, resize: 'vertical', outline: 'none' }} />
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6 }}>Tags (séparés par des virgules)</label>
+            <input type="text" value={uploadForm.tags} onChange={e => setUploadForm({...uploadForm, tags: e.target.value})} placeholder="Ex: house, remix, disco" style={{ width: '100%', padding: 10, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain }} />
           </div>
           <div style={{ padding: 16, background: colors.inputBg, borderRadius: 8, border: `1px solid ${colors.border}` }}>
             <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', marginBottom: 16 }}>

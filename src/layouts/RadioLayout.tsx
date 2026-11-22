@@ -436,6 +436,7 @@ export const RadioLayout: React.FC = () => {
   const g = parseInt(hex.substr(2, 2), 16);
   const b = parseInt(hex.substr(4, 2), 16);
   const iconColor = (((r * 299) + (g * 587) + (b * 114)) / 1000) >= 128 ? '#000' : '#fff';
+  const accentColor = isDark ? visualizerColor : ((((r * 299) + (g * 587) + (b * 114)) / 1000) >= 160 ? '#111111' : visualizerColor);
 
   if (loading) return <div style={{ color: colors.textMain, background: colors.bg, height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Chargement...</div>;
   if (!profile) return <div style={{ color: colors.textMain, background: colors.bg, height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>DJ introuvable.</div>;
@@ -765,7 +766,7 @@ export const RadioLayout: React.FC = () => {
         <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 90, background: isDark ? 'rgba(10,10,16,0.96)' : 'rgba(255,255,255,0.96)', backdropFilter: 'blur(30px)', borderTop: `1px solid ${colors.border}`, boxShadow: '0 -10px 40px rgba(0,0,0,0.4)' }}>
           {!isLive && (
             <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: colors.chipBg }}>
-              <div style={{ width: `${progressPercent}%`, height: '100%', background: visualizerColor, boxShadow: `0 0 10px ${visualizerColor}`, transition: 'width 1s linear' }} />
+              <div style={{ width: `${progressPercent}%`, height: '100%', background: accentColor, boxShadow: `0 0 10px ${accentColor}`, transition: 'width 1s linear' }} />
             </div>
           )}
 
@@ -797,7 +798,7 @@ export const RadioLayout: React.FC = () => {
             )}
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: colors.textMuted, fontWeight: 700, background: colors.chipBg, padding: '4px 10px', borderRadius: 20 }}><span style={{ width: 6, height: 6, borderRadius: '50%', background: visualizerColor, animation: 'pulseLive 1.5s infinite', boxShadow: `0 0 6px ${visualizerColor}` }} /> {listeners}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: colors.textMuted, fontWeight: 700, background: colors.chipBg, padding: '4px 10px', borderRadius: 20 }}><span style={{ width: 6, height: 6, borderRadius: '50%', background: accentColor, animation: 'pulseLive 1.5s infinite', boxShadow: `0 0 6px ${accentColor}` }} /> {listeners}</div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 <button onClick={toggleMute} title={volume === 0 ? 'Activer le son' : 'Couper le son'} style={{ background: 'transparent', border: 'none', color: colors.textMain, cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 4 }}>

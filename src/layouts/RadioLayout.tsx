@@ -126,6 +126,8 @@ export const RadioLayout: React.FC = () => {
     bg: isDark ? '#05050a' : '#f5f5f7', textMain: isDark ? '#ffffff' : '#1a1a1a', textMuted: isDark ? '#888888' : '#666666',
     border: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)', glass: isDark ? 'rgba(15,15,20,0.7)' : 'rgba(255,255,255,0.7)', panelBg: isDark ? '#18181b' : '#ffffff',
     card: isDark ? 'rgba(255,255,255,0.04)' : '#ffffff',
+    chipBg: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+    chipBgStrong: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
   };
 
   const slogan = sloganText || "Play the Beat. Feel the Sound. Live the Experience.";

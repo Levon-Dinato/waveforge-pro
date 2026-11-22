@@ -9,7 +9,7 @@ import { useTheme } from '../contexts/ThemeContext';
 
 export const PlayerPage: React.FC = () => {
   const { username } = useParams<{ username: string }>();
-  const { startRadio, currentTrack, needsGesture, unlockAudio, isRadioActive, volume, setVolume } = useRadio();
+  const { startRadio, currentTrack, needsGesture, unlockAudio, isRadioActive } = useRadio();
   const { theme, toggleTheme } = useTheme();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -28,18 +28,6 @@ export const PlayerPage: React.FC = () => {
 
   const [recentTracks, setRecentTracks] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<'chat' | 'history'>('chat');
-  const [isMuted, setIsMuted] = useState(false);
-  const lastVolumeRef = React.useRef(volume);
-  const toggleMute = () => {
-    if (isMuted || volume === 0) {
-      setVolume(lastVolumeRef.current > 0 ? lastVolumeRef.current : 1);
-      setIsMuted(false);
-    } else {
-      lastVolumeRef.current = volume;
-      setVolume(0);
-      setIsMuted(true);
-    }
-  };
 
   // 📲 Installation PWA (app radio)
   const [installPrompt, setInstallPrompt] = useState<any>(null);
@@ -242,17 +230,6 @@ export const PlayerPage: React.FC = () => {
 
       <div style={{ width: '100%', display: 'flex', justifyContent: 'center', zIndex: 1 }}>
         <RadioPlayer profile={profile} visualizerColor={visualizerColor} iconColor={iconColor} isMobile={true} compact={true} />
-      </div>
-
-      <div style={{ width: '100%', maxWidth: 380, marginTop: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, zIndex: 1 }}>
-        <button onClick={toggleMute} style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', cursor: 'pointer' }} title={volume === 0 ? 'Activer le son' : 'Couper le son'}>
-          {volume === 0 ? (
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>
-          ) : (
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
-          )}
-        </button>
-        <input type="range" min={0} max={1} step={0.01} value={volume} onChange={(e) => { setVolume(parseFloat(e.target.value)); setIsMuted(false); }} style={{ width: 140, accentColor, cursor: 'pointer' }} />
       </div>
 
       <div style={{ width: '100%', maxWidth: 380, marginTop: 12, display: 'flex', gap: 6, padding: 4, background: 'rgba(0,0,0,0.3)', borderRadius: 12, backdropFilter: 'blur(10px)', zIndex: 1 }}>

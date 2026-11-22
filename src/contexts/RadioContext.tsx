@@ -346,6 +346,38 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     if (audioBRef.current) audioBRef.current.volume = volume;
   }, [volume, currentTrack?.id]);
 
+  // 🎵 Media Session API (contrôles sur écran verrouillé + lecture en arrière-plan)
+  useEffect(() => {
+    if (!currentTrack || !('mediaSession' in navigator)) return;
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: currentTrack.title,
+      artist: currentTrack.artist || 'ELEKTRAQ Radio',
+      album: 'ELEKTRAQ Radio',
+      artwork: [{ src: currentTrack.cover_url || '/icons/icon-512.png', sizes: '512x512', type: 'image/png' }]
+    });
+    navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
+    navigator.mediaSession.setActionHandler('play', () => { if (!isPlaying) togglePlay(); });
+    navigator.mediaSession.setActionHandler('pause', () => { if (isPlaying) togglePlay(); });
+    return () => {
+      navigator.mediaSession.setActionHandler('play', null);
+      navigator.mediaSession.setActionHandler('pause', null);
+    };
+  }, [currentTrack, isPlaying]);
+
+  // 📱 Reprend la lecture quand l'écran se déverrouille / l'onglet redevient visible (iOS)
+  useEffect(() => {
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        const currentAudio = activePlayerRef.current === 'A' ? audioARef.current : audioBRef.current;
+        if (currentAudio && currentAudio.paused && isPlaying) {
+          currentAudio.play().catch(() => {});
+        }
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
+  }, [isPlaying]);
+
   return (
     <RadioContext.Provider value={{
       tracks, currentIndex, currentTrack, isPlaying, progress, duration,
@@ -355,8 +387,8 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }}>
       {children}
       {/* ✅ AJOUT DE LA CLÉ POUR FORCER LE CHANGEMENT D'ÉTAT AUDIO */}
-      <audio key={`audio-A-${currentTrack?.id || 'empty'}`} ref={audioARef} preload="auto" onTimeUpdate={handleTimeUpdate} onEnded={isLive ? undefined : playNext} crossOrigin="anonymous" />
-      <audio key={`audio-B-${currentTrack?.id || 'empty'}`} ref={audioBRef} preload="auto" onTimeUpdate={() => { if (activePlayerRef.current === 'B') { setProgress(audioBRef.current?.currentTime || 0); setDuration(audioBRef.current?.duration || 0); } }} onEnded={() => { if (activePlayerRef.current === 'B') playNext(); }} crossOrigin="anonymous" />
+      <audio key={`audio-A-${currentTrack?.id || 'empty'}`} ref={audioARef} preload="auto" playsInline onTimeUpdate={handleTimeUpdate} onEnded={isLive ? undefined : playNext} crossOrigin="anonymous" />
+      <audio key={`audio-B-${currentTrack?.id || 'empty'}`} ref={audioBRef} preload="auto" playsInline onTimeUpdate={() => { if (activePlayerRef.current === 'B') { setProgress(audioBRef.current?.currentTime || 0); setDuration(audioBRef.current?.duration || 0); } }} onEnded={() => { if (activePlayerRef.current === 'B') playNext(); }} crossOrigin="anonymous" />
     </RadioContext.Provider>
   );
 };

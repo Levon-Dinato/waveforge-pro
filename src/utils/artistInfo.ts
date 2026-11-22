@@ -1,8 +1,9 @@
 // src/utils/artistInfo.ts
 // Recherche automatique d'infos artiste (photo, résumé, lien) via des API gratuites sans clé :
 // - iTunes / Apple Music : artwork + lien + genre
-// - Wikipédia (FR) : résumé (extrait) + miniature
-// Résultats mis en cache dans localStorage (24h) pour limiter les appels.
+// - Wikipédia (multi-langues) : résumé (extrait) + miniature
+// - MusicBrainz : type (groupe/personne), pays -> génère un résumé de secours
+// Résultats mis en cache dans localStorage (24h).
 
 export interface ArtistInfo {
   name: string;
@@ -14,6 +15,15 @@ export interface ArtistInfo {
 
 const CACHE_PREFIX = 'elektraq_artist_';
 const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 heures
+
+// Code pays ISO -> adjectif français (pour le résumé généré)
+const COUNTRY_FR: Record<string, string> = {
+  NL: 'néerlandais', FR: 'français', US: 'américain', GB: 'britannique',
+  DE: 'allemand', IT: 'italien', ES: 'espagnol',
+  BE: 'belge', CA: 'canadien', AU: 'australien', CH: 'suisse',
+  SE: 'suédois', NO: 'norvégien', DK: 'danois', BR: 'brésilien',
+  PT: 'portugais', IE: 'irlandais', AT: 'autrichien',
+};
 
 function readCache(name: string): ArtistInfo | null {
   try {
@@ -29,6 +39,35 @@ function writeCache(name: string, info: ArtistInfo): void {
   try {
     localStorage.setItem(CACHE_PREFIX + name.toLowerCase(), JSON.stringify({ t: Date.now(), d: info }));
   } catch { /* ignore */ }
+}
+
+// Wikipédia multi-langues : renvoie l'extrait (bio) s'il existe
+async function fetchWikiBio(name: string): Promise<string | undefined> {
+  const langs = ['en', 'fr', 'nl', 'de', 'it', 'es'];
+  for (const lang of langs) {
+    try {
+      const res = await fetch(`https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(name)}`);
+      if (!res.ok) continue;
+      const j = await res.json();
+      if (j && j.extract && j.type !== 'disambiguation') return j.extract as string;
+    } catch { /* next lang */ }
+  }
+  return undefined;
+}
+
+// MusicBrainz : renvoie { type, country } du meilleur résultat
+async function fetchMusicBrainz(name: string): Promise<{ type?: string; country?: string } | null> {
+  try {
+    const res = await fetch(
+      `https://musicbrainz.org/ws/2/artist/?query=artist:${encodeURIComponent('"' + name + '"')}&fmt=json&limit=1`,
+      { headers: { 'User-Agent': 'ELEKTRAQ/1.0 (https://elektraq.dj)' } }
+    );
+    if (!res.ok) return null;
+    const j = await res.json();
+    const a = j?.artists?.[0];
+    if (!a || (a.score && a.score < 70)) return null;
+    return { type: a.type || undefined, country: a.country || undefined };
+  } catch { return null; }
 }
 
 export async function fetchArtistInfo(name: string): Promise<ArtistInfo | null> {
@@ -62,19 +101,34 @@ export async function fetchArtistInfo(name: string): Promise<ArtistInfo | null> 
       const artwork = albumJson?.results?.[0]?.artworkUrl100;
       if (artwork) image = artwork.replace(/100x100bb/, '600x600bb');
     }
-  } catch { /* iTunes KO -> on continue avec Wikipédia */ }
+  } catch { /* iTunes KO -> on continue */ }
 
-  try {
-    // 3) Wikipédia FR (résumé + miniature)
-    const wikiRes = await fetch(`https://fr.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(clean)}`);
-    if (wikiRes.ok) {
-      const wiki = await wikiRes.json();
-      if (wiki && wiki.extract && wiki.type !== 'disambiguation') {
-        bio = wiki.extract;
-        if (!image && wiki.thumbnail?.source) image = wiki.thumbnail.source;
+  // 3) Wikipédia (bio + miniature)
+  bio = await fetchWikiBio(clean);
+  if (!image) {
+    // essayer de récupérer la miniature Wikipédia comme secours
+    try {
+      const res = await fetch(`https://fr.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(clean)}`);
+      if (res.ok) {
+        const j = await res.json();
+        if (j?.thumbnail?.source) image = j.thumbnail.source;
       }
+    } catch { /* ignore */ }
+  }
+
+  // 4) MusicBrainz : résumé de secours si pas de bio Wikipédia
+  if (!bio) {
+    const mb = await fetchMusicBrainz(clean);
+    if (mb) {
+      const typeLabel = mb.type === 'Group' ? 'Duo / groupe de DJs & producteurs'
+        : mb.type === 'Person' ? 'DJ & producteur'
+        : 'Artiste';
+      const nat = mb.country && COUNTRY_FR[mb.country] ? COUNTRY_FR[mb.country] : '';
+      const genreLabel = genre ? `spécialisé dans la ${genre}` : '';
+      const parts = [typeLabel, nat, genreLabel].filter(Boolean);
+      if (parts.length > 0) bio = `${parts.join(', ')}.`;
     }
-  } catch { /* Wikipédia KO -> on garde ce qu'on a */ }
+  }
 
   if (!image && !bio && !link && !genre) return null;
 

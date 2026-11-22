@@ -1,5 +1,5 @@
 // src/components/TrackGrid.tsx
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
 import { usePlayer } from '../contexts/PlayerContext';
@@ -34,6 +34,7 @@ const Icons = {
   comment: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>,
   headphone: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"></path><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path></svg>,
   download: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>,
+  share: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>,
 };
 
 export const TrackGrid: React.FC<TrackGridProps> = ({ tracks, onPlay }) => {
@@ -42,6 +43,7 @@ export const TrackGrid: React.FC<TrackGridProps> = ({ tracks, onPlay }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const isDark = theme === 'dark';
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const colors = {
     bg: isDark ? '#0a0a0a' : '#f5f5f7',
@@ -74,6 +76,33 @@ export const TrackGrid: React.FC<TrackGridProps> = ({ tracks, onPlay }) => {
         URL.revokeObjectURL(url);
       })
       .catch(() => window.open(track.audio_url, '_blank'));
+  };
+
+  const handleShare = async (e: React.MouseEvent, track: Track) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const url = `${window.location.origin}/track/${track.id}`;
+    const text = `Écoute « ${track.title} » sur ELEKTRAQ`;
+
+    if (navigator.share) {
+      try { await navigator.share({ title: `${track.title} — ${track.artist}`, text, url }); return; } catch { /* annulé */ }
+    }
+
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch {
+      const ta = document.createElement('textarea');
+      ta.value = url;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+    setCopiedId(track.id);
+    setTimeout(() => setCopiedId(null), 1500);
   };
 
   if (!tracks || tracks.length === 0) {
@@ -206,6 +235,11 @@ export const TrackGrid: React.FC<TrackGridProps> = ({ tracks, onPlay }) => {
                 {/* ⬇️ Télécharger */}
                 <button onClick={(e) => handleDownload(e, track)} title="Télécharger" style={{ marginLeft: 'auto', background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 4 }} onMouseEnter={(e) => e.currentTarget.style.color = colors.textMain} onMouseLeave={(e) => e.currentTarget.style.color = colors.textMuted }>
                   {Icons.download}
+                </button>
+
+                {/* 🔗 Partager */}
+                <button onClick={(e) => handleShare(e, track)} title="Partager" style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 4 }} onMouseEnter={(e) => e.currentTarget.style.color = colors.textMain} onMouseLeave={(e) => e.currentTarget.style.color = colors.textMuted }>
+                  {copiedId === track.id ? <span style={{ fontSize: 13, fontWeight: 900, color: '#4ade80', lineHeight: 1 }}>✓</span> : Icons.share}
                 </button>
 
               </div>

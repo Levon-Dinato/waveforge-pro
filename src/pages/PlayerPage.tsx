@@ -41,6 +41,28 @@ export const PlayerPage: React.FC = () => {
     }
   };
 
+  // 📲 Installation PWA (app radio)
+  const [installPrompt, setInstallPrompt] = useState<any>(null);
+  const [showInstallBanner, setShowInstallBanner] = useState(false);
+
+  useEffect(() => {
+    const handler = (e: any) => {
+      e.preventDefault();
+      setInstallPrompt(e);
+      setShowInstallBanner(true);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  const handleInstall = async () => {
+    if (!installPrompt) return;
+    installPrompt.prompt();
+    const choice = await installPrompt.userChoice;
+    if (choice?.outcome === 'accepted') setShowInstallBanner(false);
+    setInstallPrompt(null);
+  };
+
   useEffect(() => {
     let isMounted = true;
     let channel: any = null;
@@ -211,6 +233,12 @@ export const PlayerPage: React.FC = () => {
           {profile?.username}
         </h2>
       </div>
+
+      {showInstallBanner && (
+        <button onClick={handleInstall} style={{ zIndex: 1, display: 'flex', alignItems: 'center', gap: 8, background: accentColor, color: accentTextColor, border: 'none', padding: '8px 16px', borderRadius: 20, fontSize: 12, fontWeight: 800, cursor: 'pointer', marginBottom: 8, boxShadow: '0 4px 15px rgba(0,0,0,0.3)' }}>
+          📲 Installer l'app radio
+        </button>
+      )}
 
       <div style={{ width: '100%', display: 'flex', justifyContent: 'center', zIndex: 1 }}>
         <RadioPlayer profile={profile} visualizerColor={visualizerColor} iconColor={iconColor} isMobile={true} compact={true} />

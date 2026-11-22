@@ -36,6 +36,13 @@ export const RadioLayout: React.FC = () => {
     }
   };
 
+  // 📱 Sur mobile, on oriente directement vers le player pro (app radio séparée du site)
+  useEffect(() => {
+    if (isMobile && username) {
+      navigate(`/player/${username}`, { replace: true });
+    }
+  }, [isMobile, username, navigate]);
+
   const [profile, setProfile] = useState<any>(() => {
     const cached = sessionStorage.getItem(`radio_profile_${username}`);
     return cached ? JSON.parse(cached) : null;

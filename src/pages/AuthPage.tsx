@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { useTranslation } from 'react-i18next';
 
 // ✅ Style des inputs aligné sur le reste du site
 const INPUT_STYLE: React.CSSProperties = {
@@ -25,6 +26,7 @@ export const AuthPage: React.FC = () => {
   
   // ✅ Récupération de la page d'origine (si l'utilisateur a été redirigé)
   const from = location.state?.from || '/';
+  const { t } = useTranslation();
 
   const [mode, setMode] = useState<Mode>('login');
   const [email, setEmail] = useState('');
@@ -49,7 +51,7 @@ export const AuthPage: React.FC = () => {
       });
       if (error) throw error;
     } catch (err: any) {
-      setError(err.message || 'Erreur lors de la connexion avec Google');
+      setError(err.message || t('auth.google_error'));
       setOauthLoading(false);
     }
   };
@@ -66,12 +68,10 @@ export const AuthPage: React.FC = () => {
           redirectTo: window.location.origin + '/reset-password',
         });
         if (resetError) throw resetError;
-        setInfo(
-          'Un email vient d\'être envoyé à ' + email + '. Cliquez sur le lien pour définir un nouveau mot de passe.'
-        );
+        setInfo(t('auth.email_sent', { email }));
       } else if (mode === 'signup') {
-        if (password !== confirmPassword) throw new Error('Les mots de passe ne correspondent pas');
-        if (password.length < 6) throw new Error('Le mot de passe doit contenir au moins 6 caractères');
+        if (password !== confirmPassword) throw new Error(t('auth.passwords_mismatch'));
+        if (password.length < 6) throw new Error(t('auth.password_too_short'));
 
         const { data, error: signUpError } = await supabase.auth.signUp({ email, password });
         if (signUpError) throw signUpError;
@@ -79,7 +79,7 @@ export const AuthPage: React.FC = () => {
         if (data.session) {
           navigate(from, { replace: true });
         } else {
-          setInfo('Compte créé ! Vérifiez votre email pour confirmer votre inscription.');
+          setInfo(t('auth.account_created'));
         }
       } else {
         const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
@@ -89,10 +89,10 @@ export const AuthPage: React.FC = () => {
     } catch (err: any) {
       console.error('Erreur auth:', err);
       const msg = err.message || '';
-      if (msg.includes('Invalid login')) setError('Email ou mot de passe incorrect');
-      else if (msg.includes('already registered')) setError('Cet email est déjà utilisé');
-      else if (msg.includes('User not found')) setError('Aucun compte avec cet email');
-      else setError(msg || 'Une erreur est survenue');
+      if (msg.includes('Invalid login')) setError(t('auth.invalid_credentials'));
+      else if (msg.includes('already registered')) setError(t('auth.email_in_use'));
+      else if (msg.includes('User not found')) setError(t('auth.user_not_found'));
+      else setError(msg || t('auth.generic_error'));
     } finally {
       setLoading(false);
     }
@@ -107,9 +107,9 @@ export const AuthPage: React.FC = () => {
   };
 
   const titles: Record<Mode, { title: string; subtitle: string; submit: string }> = {
-    login: { title: 'Connexion', subtitle: 'Accédez à vos morceaux et à la communauté', submit: 'Se connecter' },
-    signup: { title: 'Créer un compte', subtitle: 'Rejoignez ELEKTRAQ', submit: 'Créer mon compte' },
-    forgot: { title: 'Mot de passe oublié', subtitle: 'Recevez un lien pour en définir un nouveau', submit: 'Envoyer le lien' },
+    login: { title: t('auth.login_title'), subtitle: t('auth.login_subtitle'), submit: t('auth.login_submit') },
+    signup: { title: t('auth.signup_title'), subtitle: t('auth.signup_subtitle'), submit: t('auth.signup_submit') },
+    forgot: { title: t('auth.forgot_title'), subtitle: t('auth.forgot_subtitle'), submit: t('auth.forgot_submit') },
   };
 
   return (
@@ -153,13 +153,13 @@ export const AuthPage: React.FC = () => {
                 <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
                 <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
               </svg>
-              {oauthLoading ? 'Connexion...' : 'Continuer avec Google'}
+              {oauthLoading ? t('auth.google_loading') : t('auth.google_continue')}
             </button>
 
             {/* Séparateur "ou" */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '24px 0' }}>
               <div style={{ flex: 1, height: 1, background: '#2a2a2a' }} />
-              <span style={{ fontSize: 12, color: '#888' }}>ou</span>
+              <span style={{ fontSize: 12, color: '#888' }}>{t('auth.or')}</span>
               <div style={{ flex: 1, height: 1, background: '#2a2a2a' }} />
             </div>
           </>
@@ -180,7 +180,7 @@ export const AuthPage: React.FC = () => {
                   cursor: 'pointer', transition: 'all 0.2s', marginBottom: '-1px',
                 }}
               >
-                {m === 'login' ? 'Connexion' : 'Inscription'}
+                {m === 'login' ? t('auth.login_tab') : t('auth.signup_tab')}
               </button>
             ))}
           </div>
@@ -189,20 +189,20 @@ export const AuthPage: React.FC = () => {
         {/* Formulaire */}
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <input
-            type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email"
+            type="email" placeholder={t('auth.email')} value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email"
             style={INPUT_STYLE} onFocus={(e) => e.target.style.borderColor = '#ffffff'} onBlur={(e) => e.target.style.borderColor = '#333'}
           />
 
           {mode !== 'forgot' && (
             <input
-              type="password" placeholder="Mot de passe" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+              type="password" placeholder={t('auth.password')} value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
               style={INPUT_STYLE} onFocus={(e) => e.target.style.borderColor = '#ffffff'} onBlur={(e) => e.target.style.borderColor = '#333'}
             />
           )}
 
           {mode === 'signup' && (
             <input
-              type="password" placeholder="Confirmer le mot de passe" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required autoComplete="new-password"
+              type="password" placeholder={t('auth.confirm_password')} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required autoComplete="new-password"
               style={INPUT_STYLE} onFocus={(e) => e.target.style.borderColor = '#ffffff'} onBlur={(e) => e.target.style.borderColor = '#333'}
             />
           )}
@@ -210,7 +210,7 @@ export const AuthPage: React.FC = () => {
           {/* Lien mot de passe oublié */}
           {mode === 'login' && (
             <button type="button" onClick={() => switchMode('forgot')} style={{ background: 'transparent', border: 'none', color: '#888', fontSize: '12px', textAlign: 'right', cursor: 'pointer', padding: 0, marginTop: -8 }} onMouseEnter={(e) => e.currentTarget.style.color = '#fff'} onMouseLeave={(e) => e.currentTarget.style.color = '#888'}>
-              Mot de passe oublié ?
+              {t('auth.forgot_link')}
             </button>
           )}
 
@@ -233,13 +233,13 @@ export const AuthPage: React.FC = () => {
             onMouseEnter={(e) => { if (!loading && !oauthLoading) e.currentTarget.style.background = '#e0e0e0'; }}
             onMouseLeave={(e) => { if (!loading && !oauthLoading) e.currentTarget.style.background = '#fff'; }}
           >
-            {loading ? 'Traitement...' : titles[mode].submit}
+            {loading ? t('auth.processing') : titles[mode].submit}
           </button>
 
           {/* Retour au login depuis forgot */}
           {mode === 'forgot' && (
             <button type="button" onClick={() => switchMode('login')} style={{ background: 'transparent', border: 'none', color: '#888', padding: '10px', fontSize: '13px', cursor: 'pointer', marginTop: 8 }} onMouseEnter={(e) => e.currentTarget.style.color = '#fff'} onMouseLeave={(e) => e.currentTarget.style.color = '#888'}>
-              ← Retour à la connexion
+              {t('auth.back_to_login')}
             </button>
           )}
         </form>

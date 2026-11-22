@@ -20,8 +20,21 @@ export const RadioLayout: React.FC = () => {
 
   const { 
     isLive, currentTrack, isPlaying, togglePlay, startRadio, isRadioActive, 
-    progress, duration, updateRadioSettings, stopRadio, seek
+    progress, duration, updateRadioSettings, stopRadio, seek, volume, setVolume
   } = useRadio();
+
+  const [isMuted, setIsMuted] = useState(false);
+  const lastVolumeRef = useRef(volume);
+  const toggleMute = () => {
+    if (isMuted || volume === 0) {
+      setVolume(lastVolumeRef.current > 0 ? lastVolumeRef.current : 1);
+      setIsMuted(false);
+    } else {
+      lastVolumeRef.current = volume;
+      setVolume(0);
+      setIsMuted(true);
+    }
+  };
 
   const [profile, setProfile] = useState<any>(() => {
     const cached = sessionStorage.getItem(`radio_profile_${username}`);
@@ -747,7 +760,7 @@ export const RadioLayout: React.FC = () => {
           </AnimatePresence>
         </div>
 
-        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 90, background: colors.glass, backdropFilter: 'blur(30px)', borderTop: `1px solid ${colors.border}`, boxShadow: '0 -10px 40px rgba(0,0,0,0.4)' }}>
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 90, background: isDark ? 'rgba(10,10,16,0.96)' : 'rgba(255,255,255,0.96)', backdropFilter: 'blur(30px)', borderTop: `1px solid ${colors.border}`, boxShadow: '0 -10px 40px rgba(0,0,0,0.4)' }}>
           {!isLive && (
             <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'rgba(255,255,255,0.05)' }}>
               <div style={{ width: `${progressPercent}%`, height: '100%', background: visualizerColor, boxShadow: `0 0 10px ${visualizerColor}`, transition: 'width 1s linear' }} />
@@ -768,7 +781,7 @@ export const RadioLayout: React.FC = () => {
               </div>
 
               <div style={{ minWidth: 0, flex: 1 }}>
-                <div style={{ fontSize: 13, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{currentTrack?.title || 'En attente'} {isLive && <span style={{ fontSize: 9, background: '#b0b0b0', color: '#fff', padding: '2px 6px', borderRadius: 4 }}>LIVE</span>}</div>
+                <div style={{ fontSize: 13, fontWeight: 800, color: colors.textMain, display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{currentTrack?.title || 'En attente'} {isLive && <span style={{ fontSize: 9, background: '#b0b0b0', color: '#fff', padding: '2px 6px', borderRadius: 4 }}>LIVE</span>}</div>
                 <div style={{ fontSize: 11, color: colors.textMuted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{currentTrack?.artist || 'ELEKTRAQ Radio'}</div>
               </div>
             </div>
@@ -782,7 +795,20 @@ export const RadioLayout: React.FC = () => {
             )}
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: colors.textMuted, fontWeight: 700, background: 'rgba(255,255,255,0.05)', padding: '4px 10px', borderRadius: 20 }}><span style={{ width: 6, height: 6, borderRadius: '50%', background: '#b0b0b0', animation: 'pulseLive 1.5s infinite' }} /> {listeners}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: colors.textMuted, fontWeight: 700, background: 'rgba(255,255,255,0.05)', padding: '4px 10px', borderRadius: 20 }}><span style={{ width: 6, height: 6, borderRadius: '50%', background: visualizerColor, animation: 'pulseLive 1.5s infinite', boxShadow: `0 0 6px ${visualizerColor}` }} /> {listeners}</div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <button onClick={toggleMute} title={volume === 0 ? 'Activer le son' : 'Couper le son'} style={{ background: 'transparent', border: 'none', color: colors.textMain, cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 4 }}>
+                  {volume === 0 ? (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>
+                  ) : (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+                  )}
+                </button>
+                {!isMobile && (
+                  <input type="range" min={0} max={1} step={0.01} value={volume} onChange={(e) => { setVolume(parseFloat(e.target.value)); setIsMuted(false); }} style={{ width: 70, accentColor: visualizerColor, cursor: 'pointer' }} />
+                )}
+              </div>
               
               <button onClick={handlePlayRadio} title="Revenir à la radio en direct" style={{ background: 'rgba(255,255,255,0.05)', color: colors.textMain, border: `1px solid ${colors.border}`, width: 36, height: 36, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>

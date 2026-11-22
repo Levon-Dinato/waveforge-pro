@@ -875,10 +875,13 @@ export const TrackPage: React.FC = () => {
               </Link>
               <Link to={`/premium/${artist?.username}`} style={{ fontSize: 20, fontWeight: 900, color: colors.textMain, textDecoration: 'none' }}>{artist?.username || track.artist}</Link>
               <div style={{ fontSize: 13, color: colors.textMuted, marginTop: 6, fontWeight: 600 }}>Page officielle</div>
-              {artist?.bio && (
-                <p style={{ fontSize: 13, color: colors.textMuted, lineHeight: 1.6, margin: '12px 0 0', display: '-webkit-box', WebkitLineClamp: 4, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                  {artist.bio}
-                </p>
+              {(artist?.settings?.parcours_description || artist?.bio) && (
+                <>
+                  <div style={{ fontSize: 10, fontWeight: 800, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 1, marginTop: 12 }}>Parcours</div>
+                  <p style={{ fontSize: 13, color: colors.textMuted, lineHeight: 1.6, margin: '6px 0 0', display: '-webkit-box', WebkitLineClamp: 4, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                    {artist?.settings?.parcours_description || artist?.bio}
+                  </p>
+                </>
               )}
               
               <button onClick={() => navigate(`/premium/${artist?.username}`)} style={{ width: '100%', marginTop: 24, padding: '12px', background: themeColor, color: '#000', border: 'none', borderRadius: 30, fontWeight: 800, fontSize: 14, cursor: 'pointer', transition: 'transform 0.2s' }} onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.02)'} onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}>

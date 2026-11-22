@@ -53,7 +53,6 @@ export const PlayerPage: React.FC = () => {
 
   useEffect(() => {
     let isMounted = true;
-    let channel: any = null;
 
     const fetchData = async () => {
       const { data } = await supabase.from('profiles').select('*').eq('username', username).single();
@@ -128,20 +127,24 @@ export const PlayerPage: React.FC = () => {
         .order('created_at', { ascending: true }).limit(30);
       if (isMounted && oldMessages) setMessages(oldMessages);
 
-      channel = supabase.channel(`player_chat_${data.id}_${Date.now()}`)
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'radio_messages', filter: `radio_owner_id=eq.${data.id}` }, 
-          (payload: any) => setMessages((prev) => [...prev, payload.new]))
-        .subscribe();
-
       setLoading(false);
     };
 
     fetchData();
     return () => { 
       isMounted = false; 
-      if (channel) { channel.unsubscribe(); supabase.removeChannel(channel); }
     };
   }, [username, isRadioActive, startRadio, user]);
+
+  // 📡 Abonnement temps réel au chat (créé UNE SEULE FOIS pour éviter les doublons)
+  useEffect(() => {
+    if (!profile?.id) return;
+    const channel = supabase.channel(`player_chat_${profile.id}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'radio_messages', filter: `radio_owner_id=eq.${profile.id}` }, 
+        (payload: any) => setMessages((prev) => [...prev, payload.new]))
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [profile?.id]);
 
   useEffect(() => {
     if (activeTab === 'chat') {

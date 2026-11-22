@@ -55,6 +55,13 @@ const setupAudioUnlock = () => {
 
 setupAudioUnlock();
 
+// ✅ ENREGISTREMENT DU SERVICE WORKER (PWA installable)
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch((err) => console.warn('SW registration failed', err));
+  });
+}
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     {/* ✅ ON ENVELOPPE TOUT DANS LE THEME PROVIDER */}

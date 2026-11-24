@@ -175,5 +175,24 @@
     "add_error": "Erreur lors de l'ajout",
     "added_playlist": "Ajouté à la playlist ✅",
     "playlist_created": "Playlist créée ✅"
+  },
+  "genres": {
+    "loading": "Chargement...",
+    "title_a": "Explorer par",
+    "title_b": "Genre",
+    "subtitle": "Trouve le son parfait pour ton prochain set.",
+    "tracks": "morceaux",
+    "back": "← Retour aux genres",
+    "recent": "Les morceaux les plus récents dans le style {{genre}}."
+  },
+  "search": {
+    "title": "Recherche",
+    "placeholder": "Cherche un titre, un artiste, un genre...",
+    "button": "Chercher",
+    "tracks_tab": "Morceaux ({{count}})",
+    "artists_tab": "Artistes ({{count}})",
+    "loading": "Recherche en cours...",
+    "no_tracks": "Aucun morceau trouvé pour \"{{query}}\".",
+    "no_artists": "Aucun artiste trouvé pour \"{{query}}\"."
   }
 }

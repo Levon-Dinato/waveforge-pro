@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import { usePlayer } from '../contexts/PlayerContext';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { PageMeta } from '../components/PageMeta';
+import { useTranslation } from 'react-i18next';
 
 interface Track {
   id: string;
@@ -28,6 +29,7 @@ export const SearchPage: React.FC = () => {
   const initialQuery = searchParams.get('q') || '';
   const isMobile = useIsMobile(768);
   const { play } = usePlayer();
+  const { t } = useTranslation();
 
   const [query, setQuery] = useState(initialQuery);
   const [activeTab, setActiveTab] = useState<'tracks' | 'artists'>('tracks');
@@ -103,13 +105,13 @@ export const SearchPage: React.FC = () => {
       {/* HEADER + BARRE DE RECHERCHE */}
       <div style={{ padding: isMobile ? '20px 15px' : '40px 20px', maxWidth: 1200, margin: '0 auto' }}>
         <h1 style={{ fontSize: isMobile ? 24 : 32, fontWeight: 900, margin: 0, marginBottom: 20 }}>
-          Recherche
+          {t('search.title')}
         </h1>
         
         <form onSubmit={handleSearch} style={{ display: 'flex', gap: 10, maxWidth: 600 }}>
           <input 
             type="text" 
-            placeholder="Cherche un titre, un artiste, un genre..." 
+            placeholder={t('search.placeholder')} 
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             style={{ 
@@ -124,7 +126,7 @@ export const SearchPage: React.FC = () => {
             }} 
           />
           <button type="submit" style={{ padding: '0 24px', background: '#b0b0b0', color: '#fff', border: 'none', borderRadius: 50, fontWeight: 700, cursor: 'pointer', fontSize: '1rem' }}>
-            Chercher
+            {t('search.button')}
           </button>
         </form>
       </div>
@@ -144,7 +146,7 @@ export const SearchPage: React.FC = () => {
                 borderBottom: activeTab === 'tracks' ? '2px solid #b0b0b0' : '2px solid transparent' 
               }}
             >
-              Morceaux ({tracks.length})
+              {t('search.tracks_tab', { count: tracks.length })}
             </button>
             <button 
               onClick={() => setActiveTab('artists')}
@@ -155,19 +157,19 @@ export const SearchPage: React.FC = () => {
                 borderBottom: activeTab === 'artists' ? '2px solid #b0b0b0' : '2px solid transparent' 
               }}
             >
-              Artistes ({artists.length})
+              {t('search.artists_tab', { count: artists.length })}
             </button>
           </div>
 
           {loading ? (
-            <div style={{ textAlign: 'center', padding: 40, color: '#888' }}>Recherche en cours...</div>
+            <div style={{ textAlign: 'center', padding: 40, color: '#888' }}>{t('search.loading')}</div>
           ) : (
             <>
               {/* ONGLET TRACKS */}
               {activeTab === 'tracks' && (
                 <div>
                   {tracks.length === 0 ? (
-                    <div style={{ textAlign: 'center', padding: 40, color: '#888' }}>Aucun morceau trouvé pour "{initialQuery}".</div>
+                    <div style={{ textAlign: 'center', padding: 40, color: '#888' }}>{t('search.no_tracks', { query: initialQuery })}</div>
                   ) : (
                     <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(5, 1fr)', gap: 15 }}>
                       {tracks.map((track) => (
@@ -195,7 +197,7 @@ export const SearchPage: React.FC = () => {
               {activeTab === 'artists' && (
                 <div>
                   {artists.length === 0 ? (
-                    <div style={{ textAlign: 'center', padding: 40, color: '#888' }}>Aucun artiste trouvé pour "{initialQuery}".</div>
+                    <div style={{ textAlign: 'center', padding: 40, color: '#888' }}>{t('search.no_artists', { query: initialQuery })}</div>
                   ) : (
                     <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(250px, 1fr))', gap: 15 }}>
                       {artists.map((artist) => (

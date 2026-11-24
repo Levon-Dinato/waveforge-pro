@@ -6,12 +6,14 @@ import type { Track } from '../components/TrackGrid';
 import { useTheme } from '../contexts/ThemeContext'; // ✅ IMPORT DU THEME
 import { usePlayer } from '../contexts/PlayerContext'; // ✅ LECTURE
 import { PageMeta } from '../components/PageMeta';
+import { useTranslation } from 'react-i18next';
 
 export const GenresPage: React.FC = () => {
 
   const { theme } = useTheme(); // ✅ RÉCUPÉRATION DU THÈME
   const isDark = theme === 'dark';
   const { play } = usePlayer(); // ✅ LECTURE
+  const { t } = useTranslation();
 
   const [tracks, setTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(true);
@@ -80,7 +82,7 @@ export const GenresPage: React.FC = () => {
   if (loading) {
     return (
       <div style={{ padding: '40px 24px', color: colors.textMuted, fontFamily: 'Inter, sans-serif', background: colors.bg, minHeight: '100vh', transition: 'background 0.3s ease, color 0.3s ease' }}>
-        Chargement...
+        {t('genres.loading')}
       </div>
     );
   }
@@ -99,14 +101,14 @@ export const GenresPage: React.FC = () => {
           color: colors.textMain, // ✅ Couleur dynamique
           transition: 'color 0.3s ease'
         }}>
-          Explorer par <span style={{ color: colors.textMain }}>Genre</span>
+          {t('genres.title_a')} <span style={{ color: colors.textMain }}>{t('genres.title_b')}</span>
         </h1>
         <p style={{ 
           color: colors.textMuted, // ✅ Couleur dynamique
           fontSize: 14,
           margin: 0
         }}>
-          Trouve le son parfait pour ton prochain set.
+          {t('genres.subtitle')}
         </p>
       </div>
 
@@ -148,7 +150,7 @@ export const GenresPage: React.FC = () => {
                   {genre}
                 </div>
                 <div style={{ fontSize: 12, color: colors.textMuted }}> {/* ✅ Couleur dynamique */}
-                  {count} morceaux
+                  {count} {t('genres.tracks')}
                 </div>
               </button>
             );
@@ -176,7 +178,7 @@ export const GenresPage: React.FC = () => {
             onMouseEnter={(e) => e.currentTarget.style.background = colors.hoverBg}
             onMouseLeave={(e) => e.currentTarget.style.background = colors.panelBg}
           >
-            ← Retour aux genres
+            {t('genres.back')}
           </button>
 
           <h2 style={{ 
@@ -186,11 +188,11 @@ export const GenresPage: React.FC = () => {
             color: colors.textMain, // ✅ Couleur dynamique
           }}>
             {selectedGenre} <span style={{ color: colors.textMuted, fontWeight: 500, fontSize: 14 }}> {/* ✅ Couleur dynamique */}
-              ({filteredTracks.length} morceaux)
+              ({filteredTracks.length} {t('genres.tracks')})
             </span>
           </h2>
           <p style={{ color: colors.textMuted, fontSize: 13, marginBottom: 24 }}>
-            Les morceaux les plus récents dans le style {selectedGenre}.
+            {t('genres.recent', { genre: selectedGenre })}
           </p>
 
           <TrackGrid tracks={filteredTracks} onPlay={handlePlay} />

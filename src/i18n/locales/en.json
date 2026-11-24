@@ -175,5 +175,24 @@
     "add_error": "Error adding",
     "added_playlist": "Added to playlist ✅",
     "playlist_created": "Playlist created ✅"
+  },
+  "genres": {
+    "loading": "Loading...",
+    "title_a": "Explore by",
+    "title_b": "Genre",
+    "subtitle": "Find the perfect sound for your next set.",
+    "tracks": "tracks",
+    "back": "← Back to genres",
+    "recent": "The most recent tracks in {{genre}}."
+  },
+  "search": {
+    "title": "Search",
+    "placeholder": "Search a title, artist, genre...",
+    "button": "Search",
+    "tracks_tab": "Tracks ({{count}})",
+    "artists_tab": "Artists ({{count}})",
+    "loading": "Searching...",
+    "no_tracks": "No track found for \"{{query}}\".",
+    "no_artists": "No artist found for \"{{query}}\"."
   }
 }

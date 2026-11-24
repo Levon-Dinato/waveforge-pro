@@ -13,6 +13,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { parseBlob } from 'music-metadata-browser';
 import { detectKey } from '../audio/keyDetector';
 import { PageMeta } from '../components/PageMeta';
+import { useTranslation } from 'react-i18next';
 
 const Icons = {
   play: <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>,
@@ -86,6 +87,7 @@ export const NouveautesPage: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const isMobile = useIsMobile(768);
+  const { t } = useTranslation();
   const { currentTrack, isPlaying, play, stop } = usePlayer();
 
   const [tracks, setTracks] = useState<Track[]>([]);
@@ -589,11 +591,11 @@ export const NouveautesPage: React.FC = () => {
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           <button onClick={() => navigate('/')} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600, transition: 'color 0.2s' }} onMouseEnter={e => e.currentTarget.style.color = colors.textMain} onMouseLeave={e => e.currentTarget.style.color = colors.textMuted}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-            Retour au site
+            {t('nouveautes.back')}
           </button>
           <span style={{ color: colors.border }}>|</span>
           <h1 style={{ fontSize: '1.2rem', fontWeight: 900, margin: 0, display: 'flex', alignItems: 'center', gap: 8, letterSpacing: '-0.5px' }}>
-            <span style={{ color: colors.accent, filter: 'drop-shadow(0 0 10px rgba(255,255,255,0.8))' }}>🔥</span> DJ Only / Promos
+            <span style={{ color: colors.accent, filter: 'drop-shadow(0 0 10px rgba(255,255,255,0.8))' }}>🔥</span> {t('nouveautes.title')}
           </h1>
         </div>
 
@@ -625,7 +627,7 @@ export const NouveautesPage: React.FC = () => {
             <aside style={{ width: 240, flexShrink: 0, position: 'sticky', top: 100, alignSelf: 'flex-start' }}>
               <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: '20px 12px', backdropFilter: 'blur(20px)', boxShadow: isDark ? '0 10px 30px rgba(0,0,0,0.3)' : '0 4px 20px rgba(0,0,0,0.05)' }}>
                 <h3 style={{ fontSize: 11, fontWeight: 800, letterSpacing: '1.5px', padding: '0 10px 14px', margin: 0, color: colors.textMuted, textTransform: 'uppercase', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  Genres
+                  {t('nouveautes.genres')}
                   <span style={{ fontSize: 10, fontWeight: 700, background: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)', color: colors.accent, padding: '2px 8px', borderRadius: 20 }}>{Array.from(new Set(tracks.map(t => (t.genre || '').trim()).filter(Boolean))).length}</span>
                 </h3>
 
@@ -635,7 +637,7 @@ export const NouveautesPage: React.FC = () => {
                     onMouseLeave={(e) => { if (selectedGenre !== null) e.currentTarget.style.background = 'transparent'; }}
                   >
                     <span style={{ width: 26, height: 26, borderRadius: 8, background: selectedGenre === null ? (isDark ? 'linear-gradient(135deg, #ffffff, #b0b0b0)' : '#111111') : colors.inputBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: selectedGenre === null ? (isDark ? '#000' : '#ffffff') : colors.textMuted, flexShrink: 0, fontSize: 12 }}>{Icons.music}</span>
-                    <span style={{ flex: 1 }}>Tous les sons</span>
+                    <span style={{ flex: 1 }}>{t('nouveautes.all_tracks')}</span>
                     <span style={{ fontSize: 11, fontWeight: 700, background: colors.inputBg, color: colors.textMuted, padding: '2px 7px', borderRadius: 20 }}>{tracks.length}</span>
                   </div>
 
@@ -667,10 +669,10 @@ export const NouveautesPage: React.FC = () => {
               <div>
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)', border: isDark ? '1px solid rgba(255, 255, 255, 0.3)' : '1px solid rgba(0, 0, 0, 0.2)', padding: '5px 12px', borderRadius: 20, fontSize: 10, fontWeight: 800, color: colors.textMain, letterSpacing: '1.5px', marginBottom: 14, textTransform: 'uppercase' }}>
                   <span style={{ width: 6, height: 6, borderRadius: '50%', background: colors.textMain, boxShadow: `0 0 8px ${isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.3)'}` }} />
-                  Nouvelles sorties
+                  {t('nouveautes.badge')}
                 </div>
                 <h2 style={{ fontSize: 'clamp(1.8rem, 3vw, 2.6rem)', fontWeight: 900, margin: 0, letterSpacing: '-1.5px', color: colors.textMain, lineHeight: 1.1 }}>
-                  Les derniers sons
+                  {t('nouveautes.latest')}
                   {!loading && (
                     <span style={{ fontSize: '1.1rem', color: colors.textMuted, fontWeight: 700, marginLeft: 12, letterSpacing: '0' }}>
                       {visibleTracks.length}
@@ -678,12 +680,12 @@ export const NouveautesPage: React.FC = () => {
                   )}
                 </h2>
                 <p style={{ color: colors.textMuted, fontSize: 15, margin: '10px 0 0 0', fontWeight: 500, maxWidth: 480, lineHeight: 1.5 }}>
-                  Écoute, like et télécharge les dernières exclusivités des DJs indépendants.
+                  {t('nouveautes.subtitle')}
                 </p>
               </div>
               {user && (
                 <button onClick={() => setShowUploadModal(true)} style={{ padding: isMobile ? '10px 16px' : '12px 24px', background: isDark ? '#ffffff' : '#111111', color: isDark ? '#000' : '#ffffff', border: '1px solid transparent', borderRadius: 10, cursor: 'pointer', fontWeight: 800, fontSize: 13, boxShadow: isDark ? '0 0 20px rgba(255, 255, 255, 0.25)' : '0 4px 16px rgba(0,0,0,0.15)', transition: 'transform 0.2s, box-shadow 0.2s', whiteSpace: 'nowrap' }}>
-                  {isMobile ? '+ Son' : '+ Uploader'}
+                  {isMobile ? t('nouveautes.upload_short') : t('nouveautes.upload')}
                 </button>
               )}
             </div>
@@ -693,14 +695,14 @@ export const NouveautesPage: React.FC = () => {
                 <div style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: colors.textMuted, pointerEvents: 'none', display: 'flex' }}>
                   {Icons.search}
                 </div>
-                <input type="text" placeholder="Rechercher un son, un artiste..." value={search} onChange={(e) => setSearch(e.target.value)} style={{ padding: '11px 14px 11px 42px', background: colors.inputBg, border: `1px solid ${colors.inputBorder}`, borderRadius: '10px', color: colors.textMain, fontFamily: 'Inter, sans-serif', fontSize: '13px', outline: 'none', width: '100%', transition: 'all 0.2s', boxSizing: 'border-box' }} />
+                <input type="text" placeholder={t('nouveautes.search')} value={search} onChange={(e) => setSearch(e.target.value)} style={{ padding: '11px 14px 11px 42px', background: colors.inputBg, border: `1px solid ${colors.inputBorder}`, borderRadius: '10px', color: colors.textMain, fontFamily: 'Inter, sans-serif', fontSize: '13px', outline: 'none', width: '100%', transition: 'all 0.2s', boxSizing: 'border-box' }} />
               </div>
 
               <select value={sortBy} onChange={(e) => setSortBy(e.target.value as any)} style={{ padding: '11px 14px', background: colors.inputBg, border: `1px solid ${colors.inputBorder}`, borderRadius: '10px', color: colors.textMain, fontFamily: 'Inter, sans-serif', fontSize: '13px', outline: 'none', cursor: 'pointer', flex: '0 1 200px', boxSizing: 'border-box' }}>
-                <option value="recent" style={{ background: colors.bg, color: colors.textMain }}>Plus récents</option>
-                <option value="likes" style={{ background: colors.bg, color: colors.textMain }}>Plus aimés</option>
-                <option value="bpm" style={{ background: colors.bg, color: colors.textMain }}>BPM (Décroissant)</option>
-                <option value="title" style={{ background: colors.bg, color: colors.textMain }}>Titre (A-Z)</option>
+                <option value="recent" style={{ background: colors.bg, color: colors.textMain }}>{t('nouveautes.sort_recent')}</option>
+                <option value="likes" style={{ background: colors.bg, color: colors.textMain }}>{t('nouveautes.sort_likes')}</option>
+                <option value="bpm" style={{ background: colors.bg, color: colors.textMain }}>{t('nouveautes.sort_bpm')}</option>
+                <option value="title" style={{ background: colors.bg, color: colors.textMain }}>{t('nouveautes.sort_title')}</option>
               </select>
             </div>
 
@@ -718,7 +720,7 @@ export const NouveautesPage: React.FC = () => {
                   boxShadow: isDark ? '0 0 15px rgba(255,255,255,0.25)' : '0 4px 14px rgba(0,0,0,0.15)',
                 }}
               >
-                {Icons.listMusic} Tout lire
+                {Icons.listMusic} {t('nouveautes.play_all')}
               </button>
 
               <button
@@ -732,7 +734,7 @@ export const NouveautesPage: React.FC = () => {
                   opacity: visibleTracks.length ? 1 : 0.5,
                 }}
               >
-                {Icons.shuffle} Aléatoire
+                {Icons.shuffle} {t('nouveautes.shuffle')}
               </button>
 
               <button
@@ -746,11 +748,11 @@ export const NouveautesPage: React.FC = () => {
                   opacity: (visibleTracks.length && !exportingM3U) ? 1 : 0.5,
                 }}
               >
-                {Icons.download} {exportingM3U ? 'Export...' : 'M3U'}
+                {Icons.download} {exportingM3U ? t('nouveautes.exporting') : 'M3U'}
               </button>
 
               <span style={{ marginLeft: 'auto', fontSize: 12, color: colors.textMuted, fontWeight: 600 }}>
-                {visibleTracks.length} son{visibleTracks.length > 1 ? 's' : ''}
+                {t('nouveautes.tracks', { count: visibleTracks.length })}
                 {selectedGenre && ` · ${selectedGenre}`}
               </span>
             </div>
@@ -760,11 +762,11 @@ export const NouveautesPage: React.FC = () => {
             {!loading && totalPages > 1 && (
               <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 20, marginTop: 40 }}>
                 <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={safeCurrentPage === 1} style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, color: safeCurrentPage === 1 ? colors.textMuted : colors.textMain, padding: '10px 20px', borderRadius: 8, cursor: safeCurrentPage === 1 ? 'not-allowed' : 'pointer', fontSize: 13, fontWeight: 600 }}>
-                  ← Précédent
+                  {t('nouveautes.prev')}
                 </button>
-                <span style={{ fontSize: 13, color: colors.textMuted, fontWeight: 600 }}>Page {safeCurrentPage} sur {totalPages}</span>
+                <span style={{ fontSize: 13, color: colors.textMuted, fontWeight: 600 }}>{t('nouveautes.page', { current: safeCurrentPage, total: totalPages })}</span>
                 <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={safeCurrentPage === totalPages} style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, color: safeCurrentPage === totalPages ? colors.textMuted : colors.textMain, padding: '10px 20px', borderRadius: 8, cursor: safeCurrentPage === totalPages ? 'not-allowed' : 'pointer', fontSize: 13, fontWeight: 600 }}>
-                  Suivant →
+                  {t('nouveautes.next')}
                 </button>
               </div>
             )}
@@ -774,7 +776,7 @@ export const NouveautesPage: React.FC = () => {
             <aside style={{ width: 280, flexShrink: 0, position: 'sticky', top: 100, display: 'flex', flexDirection: 'column', gap: 24 }}>
               <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 20, boxShadow: isDark ? 'none' : '0 4px 20px rgba(0,0,0,0.05)' }}>
                 <h3 style={{ fontSize: 12, fontWeight: 800, letterSpacing: '1px', margin: '0 0 16px 0', color: colors.textMain, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ color: colors.accent }}>🔥</span> Top 10
+                  <span style={{ color: colors.accent }}>🔥</span> {t('nouveautes.top10')}
                 </h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                   {tracks.slice(0, 10).map((track, index) => (
@@ -801,13 +803,13 @@ export const NouveautesPage: React.FC = () => {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
           <div style={{ background: isDark ? 'rgba(15, 15, 20, 0.95)' : '#ffffff', border: `1px solid ${colors.border}`, borderRadius: 20, padding: 32, width: '100%', maxWidth: 500, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 0 50px rgba(255, 255, 255, 0.1)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-              <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: colors.textMain, letterSpacing: '-0.5px' }}>Ajouter un son</h2>
+              <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: colors.textMain, letterSpacing: '-0.5px' }}>{t('nouveautes.modal_title')}</h2>
               <button onClick={() => setShowUploadModal(false)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, fontSize: 24, cursor: 'pointer' }}>✕</button>
             </div>
 
             <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
-              <button onClick={() => setUploadType('file')} style={{ flex: 1, padding: 12, background: uploadType === 'file' ? 'linear-gradient(135deg, #ffffff, #0099ff)' : 'transparent', color: uploadType === 'file' ? '#000' : colors.textMain, border: `1px solid ${colors.border}`, borderRadius: 8, cursor: 'pointer', fontWeight: 800, transition: 'all 0.2s' }}>Fichier MP3</button>
-              <button onClick={() => setUploadType('link')} style={{ flex: 1, padding: 12, background: uploadType === 'link' ? 'linear-gradient(135deg, #ffffff, #0099ff)' : 'transparent', color: uploadType === 'link' ? '#000' : colors.textMain, border: `1px solid ${colors.border}`, borderRadius: 8, cursor: 'pointer', fontWeight: 800, transition: 'all 0.2s' }}>Lien / Embed</button>
+              <button onClick={() => setUploadType('file')} style={{ flex: 1, padding: 12, background: uploadType === 'file' ? 'linear-gradient(135deg, #ffffff, #0099ff)' : 'transparent', color: uploadType === 'file' ? '#000' : colors.textMain, border: `1px solid ${colors.border}`, borderRadius: 8, cursor: 'pointer', fontWeight: 800, transition: 'all 0.2s' }}>{t('nouveautes.file_tab')}</button>
+              <button onClick={() => setUploadType('link')} style={{ flex: 1, padding: 12, background: uploadType === 'link' ? 'linear-gradient(135deg, #ffffff, #0099ff)' : 'transparent', color: uploadType === 'link' ? '#000' : colors.textMain, border: `1px solid ${colors.border}`, borderRadius: 8, cursor: 'pointer', fontWeight: 800, transition: 'all 0.2s' }}>{t('nouveautes.link_tab')}</button>
             </div>
 
             <form onSubmit={handleUploadSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -815,18 +817,18 @@ export const NouveautesPage: React.FC = () => {
               {uploadType === 'file' ? (
                 <>
                   <div>
-                    <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6, fontWeight: 600 }}>Fichier Audio (MP3, WAV) *</label>
+                    <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6, fontWeight: 600 }}>{t('nouveautes.audio_label')}</label>
                     <input type="file" accept="audio/*" onChange={handleAudioFileChange} required style={{ width: '100%', padding: 10, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain }} />
-                    {audioFile && <p style={{ fontSize: 11, color: colors.textMain, marginTop: 4, fontWeight: 600 }}>Fichier sélectionné : {audioFile.name}</p>}
+                    {audioFile && <p style={{ fontSize: 11, color: colors.textMain, marginTop: 4, fontWeight: 600 }}>{t('nouveautes.file_selected')} {audioFile.name}</p>}
                   </div>
 
                   <div>
-                    <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6, fontWeight: 600 }}>Image de couverture (Optionnel)</label>
+                    <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6, fontWeight: 600 }}>{t('nouveautes.cover_label')}</label>
                     <input type="file" accept="image/*" onChange={(e) => setCoverFile(e.target.files?.[0] || null)} style={{ width: '100%', padding: 10, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain }} />
                     {coverFile && (
                       <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 10 }}>
                         <img src={URL.createObjectURL(coverFile)} alt="Cover preview" style={{ width: 50, height: 50, borderRadius: 6, objectFit: 'cover', border: `1px solid ${colors.border}` }} />
-                        <span style={{ fontSize: 11, color: colors.textMain, fontWeight: 600 }}>Pochette chargée ✓</span>
+                        <span style={{ fontSize: 11, color: colors.textMain, fontWeight: 600 }}>{t('nouveautes.cover_loaded')}</span>
                       </div>
                     )}
                   </div>
@@ -834,11 +836,11 @@ export const NouveautesPage: React.FC = () => {
               ) : (
                 <>
                   <div>
-                    <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6, fontWeight: 600 }}>Lien direct MP3 (ex: Catbox) ou Lien d'achat</label>
+                    <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6, fontWeight: 600 }}>{t('nouveautes.link_label')}</label>
                     <input type="url" value={uploadForm.audio_url} onChange={e => setUploadForm({...uploadForm, audio_url: e.target.value})} placeholder="https://..." style={{ width: '100%', padding: 10, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain }} />
                   </div>
                   <div>
-                    <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6, fontWeight: 600 }}>Code d'intégration (Beatport, Audio.com, etc.)</label>
+                    <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6, fontWeight: 600 }}>{t('nouveautes.embed_label')}</label>
                     <textarea value={uploadForm.embed_code} onChange={e => setUploadForm({...uploadForm, embed_code: e.target.value})} placeholder="<iframe src='...'></iframe>" rows={3} style={{ width: '100%', padding: 10, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain, fontFamily: 'monospace' }} />
                   </div>
                 </>
@@ -846,31 +848,31 @@ export const NouveautesPage: React.FC = () => {
 
               <div style={{ display: 'flex', gap: 12 }}>
                 <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6, fontWeight: 600 }}>Titre *</label>
+                  <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6, fontWeight: 600 }}>{t('nouveautes.title_label')}</label>
                   <input type="text" value={uploadForm.title} onChange={e => setUploadForm({...uploadForm, title: e.target.value})} required style={{ width: '100%', padding: 10, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain }} />
                 </div>
                 <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6, fontWeight: 600 }}>Artiste *</label>
+                  <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6, fontWeight: 600 }}>{t('nouveautes.artist_label')}</label>
                   <input type="text" value={uploadForm.artist} onChange={e => setUploadForm({...uploadForm, artist: e.target.value})} required style={{ width: '100%', padding: 10, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain }} />
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 12 }}>
                 <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6, fontWeight: 600 }}>Genre</label>
+                  <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6, fontWeight: 600 }}>{t('nouveautes.genre_label')}</label>
                   <input type="text" value={uploadForm.genre} onChange={e => setUploadForm({...uploadForm, genre: e.target.value})} placeholder="Ex: Techno" style={{ width: '100%', padding: 10, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain }} />
                 </div>
                 <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6, fontWeight: 600 }}>BPM</label>
+                  <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6, fontWeight: 600 }}>{t('nouveautes.bpm_label')}</label>
                   <input type="number" value={uploadForm.bpm} onChange={e => setUploadForm({...uploadForm, bpm: e.target.value})} placeholder="128" style={{ width: '100%', padding: 10, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain }} />
                 </div>
                 <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6, fontWeight: 600 }}>Clé</label>
+                  <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6, fontWeight: 600 }}>{t('nouveautes.key_label')}</label>
                   <input type="text" value={uploadForm.song_key} onChange={e => setUploadForm({...uploadForm, song_key: e.target.value})} placeholder="Am" style={{ width: '100%', padding: 10, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain }} />
                 </div>
               </div>
 
               <button type="submit" disabled={uploading} style={{ marginTop: 12, padding: 16, background: '#ffffff', color: '#000', border: 'none', borderRadius: 10, fontWeight: 800, fontSize: 14, cursor: uploading ? 'wait' : 'pointer', transition: 'opacity 0.2s', boxShadow: '0 0 20px rgba(255, 255, 255, 0.3)' }}>
-                {uploading ? 'Traitement en cours...' : 'Ajouter le son'}
+                {uploading ? t('nouveautes.processing') : t('nouveautes.submit')}
               </button>
             </form>
           </div>

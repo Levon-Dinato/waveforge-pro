@@ -7,6 +7,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { usePlayer } from '../contexts/PlayerContext';
 import { useIsMobile } from '../hooks/useIsMobile';
+import { useTranslation } from 'react-i18next';
 
 const Icons = {
   playlist: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>,
@@ -40,6 +41,7 @@ export const MyPlaylistsPage: React.FC = () => {
   const isDark = theme === 'dark';
   const navigate = useNavigate();
   const isMobile = useIsMobile(768);
+  const { t } = useTranslation();
 
   const { play, currentTrack, isPlaying, togglePlay } = usePlayer() as any;
 
@@ -185,7 +187,7 @@ export const MyPlaylistsPage: React.FC = () => {
 
   const deletePlaylist = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
-    if (!window.confirm('Supprimer cette playlist ?')) return;
+    if (!window.confirm(t('playlists.confirm_delete'))) return;
     await supabase.from('playlists').delete().eq('id', id);
     setPlaylists(playlists.filter((p) => p.id !== id));
     if (selectedPlaylist?.id === id) setSelectedPlaylist(null);
@@ -194,7 +196,7 @@ export const MyPlaylistsPage: React.FC = () => {
   const removeTrackFromPlaylist = async (e: React.MouseEvent, trackId: string) => {
     e.stopPropagation();
     if (!selectedPlaylist) return;
-    if (!window.confirm('Retirer ce son de la playlist ?')) return;
+    if (!window.confirm(t('playlists.confirm_remove'))) return;
 
     try {
       const { error } = await supabase
@@ -206,7 +208,7 @@ export const MyPlaylistsPage: React.FC = () => {
       if (error) throw error;
       setPlaylistTracks((prev) => prev.filter((t) => t.id !== trackId));
     } catch {
-      alert('Erreur lors de la suppression du son.');
+      alert(t('playlists.remove_error'));
     }
   };
 
@@ -314,10 +316,10 @@ export const MyPlaylistsPage: React.FC = () => {
                   onClick={() => setSelectedPlaylist(null)}
                   style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.7)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 16, fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1 }}
                 >
-                  {Icons.arrowLeft} Retour aux playlists
+                  {Icons.arrowLeft} {t('playlists.back')}
                 </button>
                 <div style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 2, marginBottom: 8, opacity: 0.8 }}>
-                  Playlist
+                  {t('playlists.label')}
                 </div>
                 <h1 style={{ fontSize: isMobile ? 32 : 56, fontWeight: 900, margin: '0 0 16px 0', letterSpacing: '-1px', lineHeight: 1 }}>
                   {selectedPlaylist.name}
@@ -326,7 +328,7 @@ export const MyPlaylistsPage: React.FC = () => {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 14, fontWeight: 600, opacity: 0.9, flexWrap: 'wrap' }}>
                   <span>{user?.email?.split('@')[0]}</span>
                   <span>•</span>
-                  <span>{playlistTracks.length} sons</span>
+                  <span>{t('playlists.tracks', { count: playlistTracks.length })}</span>
                   <span>•</span>
                   <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                     {Icons.clock} {formatTotalDuration(playlistTracks)}
@@ -347,7 +349,7 @@ export const MyPlaylistsPage: React.FC = () => {
                       onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.05)')}
                       onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
                     >
-                      {Icons.play} Tout lire
+                      {Icons.play} {t('playlists.play_all')}
                     </button>
 
                     <button
@@ -363,12 +365,12 @@ export const MyPlaylistsPage: React.FC = () => {
                       onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.18)'; }}
                       onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
                     >
-                      {Icons.shuffle} Aléatoire
+                      {Icons.shuffle} {t('playlists.shuffle')}
                     </button>
 
                     <button
                       onClick={handleExportM3U}
-                      title="Exporter en .m3u (VLC, iTunes, mobile, TV…)"
+                      title={t('playlists.export_title')}
                       style={{
                         padding: '14px 24px', borderRadius: 30,
                         background: 'rgba(255,255,255,0.1)', color: '#fff',
@@ -380,7 +382,7 @@ export const MyPlaylistsPage: React.FC = () => {
                       onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.18)'; }}
                       onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
                     >
-                      {Icons.download} Exporter .m3u
+                      {Icons.download} {t('playlists.export')}
                     </button>
                   </div>
                 )}
@@ -391,19 +393,19 @@ export const MyPlaylistsPage: React.FC = () => {
           {/* LISTE */}
           <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '20px 12px' : '20px 60px' }}>
             {loadingTracks ? (
-              <div style={{ padding: 40, textAlign: 'center', color: colors.textMuted }}>Chargement des sons…</div>
+              <div style={{ padding: 40, textAlign: 'center', color: colors.textMuted }}>{t('playlists.loading_tracks')}</div>
             ) : playlistTracks.length === 0 ? (
               <div style={{ padding: 60, textAlign: 'center', border: `1px dashed ${colors.border}`, borderRadius: 16 }}>
                 <div style={{ color: colors.textMuted, marginBottom: 16, display: 'flex', justifyContent: 'center' }}>{Icons.playlist}</div>
-                <h3 style={{ fontSize: 18, fontWeight: 800, margin: '0 0 8px 0' }}>Cette playlist est vide</h3>
+                <h3 style={{ fontSize: 18, fontWeight: 800, margin: '0 0 8px 0' }}>{t('playlists.empty_title')}</h3>
                 <p style={{ color: colors.textMuted, marginBottom: 20, fontSize: 14 }}>
-                  Ajoute des sons depuis les Nouveautés ou le Feed pour commencer.
+                  {t('playlists.empty_sub')}
                 </p>
                 <button
                   onClick={() => navigate('/nouveautes')}
                   style={{ padding: '12px 24px', background: colors.accent, color: '#000', border: 'none', borderRadius: 8, fontWeight: 800, cursor: 'pointer' }}
                 >
-                  Découvrir des sons
+                  {t('playlists.discover')}
                 </button>
               </div>
             ) : (
@@ -417,7 +419,7 @@ export const MyPlaylistsPage: React.FC = () => {
                       </span>
                       <input
                         type="text"
-                        placeholder="Rechercher un son, un artiste…"
+                        placeholder={t('playlists.search')}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         style={{
@@ -438,10 +440,10 @@ export const MyPlaylistsPage: React.FC = () => {
                         cursor: 'pointer', minWidth: isMobile ? '100%' : 200,
                       }}
                     >
-                      <option value="added">Ajout récent</option>
-                      <option value="title">Titre (A-Z)</option>
-                      <option value="bpm">BPM (desc)</option>
-                      <option value="duration">Durée (desc)</option>
+                      <option value="added">{t('playlists.sort_added')}</option>
+                      <option value="title">{t('playlists.sort_title')}</option>
+                      <option value="bpm">{t('playlists.sort_bpm')}</option>
+                      <option value="duration">{t('playlists.sort_duration')}</option>
                     </select>
                   </div>
                 )}
@@ -450,16 +452,16 @@ export const MyPlaylistsPage: React.FC = () => {
                 {!isMobile && (
                   <div style={{ display: 'grid', gridTemplateColumns: '40px 1fr 100px 80px 40px', gap: 16, padding: '0 16px 12px', borderBottom: `1px solid ${colors.border}`, fontSize: 11, fontWeight: 800, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 1 }}>
                     <div>#</div>
-                    <div>Titre</div>
-                    <div>BPM</div>
-                    <div>Durée</div>
+                    <div>{t('playlists.col_title')}</div>
+                    <div>{t('playlists.col_bpm')}</div>
+                    <div>{t('playlists.col_duration')}</div>
                     <div></div>
                   </div>
                 )}
 
                 {visibleTracks.length === 0 ? (
                   <div style={{ padding: 40, textAlign: 'center', color: colors.textMuted }}>
-                    Aucun son ne correspond à «&nbsp;{searchQuery}&nbsp;».
+                    {t('playlists.no_match', { query: searchQuery })}
                   </div>
                 ) : (
                   visibleTracks.map((track, index) => {
@@ -539,7 +541,7 @@ export const MyPlaylistsPage: React.FC = () => {
                         <button
                           onClick={(e) => removeTrackFromPlaylist(e, track.id)}
                           style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 8, transition: 'color 0.2s' }}
-                          title="Retirer de la playlist"
+                          title={t('playlists.remove')}
                           onMouseEnter={(e) => (e.currentTarget.style.color = '#b0b0b0')}
                           onMouseLeave={(e) => (e.currentTarget.style.color = colors.textMuted)}
                         >
@@ -560,14 +562,14 @@ export const MyPlaylistsPage: React.FC = () => {
         <div style={{ maxWidth: 1000, margin: '0 auto', padding: isMobile ? '20px 12px' : '40px 20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 40, flexWrap: 'wrap', gap: 16 }}>
             <div>
-              <h1 style={{ fontSize: isMobile ? 28 : 36, fontWeight: 900, color: colors.textMain, margin: 0 }}>Mes Playlists</h1>
-              <p style={{ color: colors.textMuted, margin: '4px 0 0 0', fontSize: 14 }}>{playlists.length} playlist(s)</p>
+              <h1 style={{ fontSize: isMobile ? 28 : 36, fontWeight: 900, color: colors.textMain, margin: 0 }}>{t('playlists.title')}</h1>
+              <p style={{ color: colors.textMuted, margin: '4px 0 0 0', fontSize: 14 }}>{t('playlists.count', { count: playlists.length })}</p>
             </div>
             <button
               onClick={() => setShowCreateModal(true)}
               style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', background: colors.accent, color: '#000', borderRadius: 8, fontWeight: 800, border: 'none', cursor: 'pointer', boxShadow: `0 4px 15px ${colors.accent}40` }}
             >
-              {Icons.plus} Créer une playlist
+              {Icons.plus} {t('playlists.create')}
             </button>
           </div>
 
@@ -575,7 +577,7 @@ export const MyPlaylistsPage: React.FC = () => {
             {playlists.length === 0 ? (
               <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: 60, border: `1px dashed ${colors.border}`, borderRadius: 16 }}>
                 <div style={{ color: colors.textMuted, marginBottom: 16, display: 'flex', justifyContent: 'center' }}>{Icons.playlist}</div>
-                <p style={{ color: colors.textMuted, fontWeight: 700 }}>Vous n'avez pas encore de playlist.</p>
+                <p style={{ color: colors.textMuted, fontWeight: 700 }}>{t('playlists.none')}</p>
                 <p style={{ color: colors.textMuted, fontSize: 13 }}>Cliquez sur "Créer une playlist" pour organiser vos sons.</p>
               </div>
             ) : (
@@ -606,7 +608,7 @@ export const MyPlaylistsPage: React.FC = () => {
                     </div>
                     <h3 style={{ fontSize: 20, fontWeight: 800, color: colors.textMain, margin: '0 0 8px 0' }}>{p.name}</h3>
                     <p style={{ fontSize: 13, color: colors.textMuted, margin: 0 }}>
-                      {count} son{count > 1 ? 's' : ''} • créée le {new Date(p.created_at).toLocaleDateString('fr-FR')}
+                      {count} {t('playlists.tracks', { count })} • {t('playlists.created_on')} {new Date(p.created_at).toLocaleDateString('fr-FR')}
                     </p>
 
                     <button
@@ -641,17 +643,17 @@ export const MyPlaylistsPage: React.FC = () => {
             >
               {Icons.close}
             </button>
-            <h2 style={{ fontSize: 24, fontWeight: 900, color: colors.textMain, margin: '0 0 24px 0' }}>Nouvelle Playlist</h2>
+            <h2 style={{ fontSize: 24, fontWeight: 900, color: colors.textMain, margin: '0 0 24px 0' }}>{t('playlists.new_title')}</h2>
             <form onSubmit={handleCreatePlaylist} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div>
                 <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1 }}>
-                  Nom de la playlist
+                  {t('playlists.name_label')}
                 </label>
                 <input
                   type="text"
                   autoFocus
                   required
-                  placeholder="Ex: Mes sons préférés"
+                  placeholder={t('playlists.name_placeholder')}
                   value={newPlaylistName}
                   onChange={(e) => setNewPlaylistName(e.target.value)}
                   style={{ width: '100%', padding: '14px 16px', background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 10, color: colors.textMain, outline: 'none', fontSize: 15, boxSizing: 'border-box' }}
@@ -662,7 +664,7 @@ export const MyPlaylistsPage: React.FC = () => {
                 disabled={isCreating}
                 style={{ padding: 16, background: colors.accent, color: '#000', borderRadius: 10, fontWeight: 900, border: 'none', cursor: isCreating ? 'wait' : 'pointer', fontSize: 16, marginTop: 8 }}
               >
-                {isCreating ? 'Création…' : 'Créer la playlist'}
+                {isCreating ? t('playlists.creating') : t('playlists.create_btn')}
               </button>
             </form>
           </div>

@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { usePlayer } from '../contexts/PlayerContext';
+import { useTranslation } from 'react-i18next';
 
 const Icons = {
   music: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>,
@@ -294,6 +295,7 @@ export const ProfilePage: React.FC = () => {
   const { user } = useAuth();
   const { theme } = useTheme();
   const isDark = theme === 'dark';
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { play, currentTrack, isPlaying } = usePlayer();
 
@@ -540,28 +542,28 @@ export const ProfilePage: React.FC = () => {
               )}
               {profile.is_premium && !isOwner && (
                 <Link to={`/premium/${profile.username}`} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', background: themeColor, color: '#000', borderRadius: 8, fontSize: 12, fontWeight: 800, textDecoration: 'none' }}>
-                  {Icons.external} Voir la page officielle
+                  {Icons.external} {t('profile.official')}
                 </Link>
               )}
               {isOwner ? (
                 <button onClick={() => navigate('/settings')} style={{ background: 'transparent', border: `1px solid ${colors.border}`, color: colors.textMain, padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
-                  {Icons.settings} Modifier
+                  {Icons.settings} {t('profile.edit')}
                 </button>
               ) : (
-                <button onClick={handleFollow} disabled={followLoading} title={isFollowing ? 'Se désabonner' : "S'abonner"} style={{ padding: '8px 20px', borderRadius: 8, fontSize: 13, fontWeight: 800, cursor: followLoading ? 'wait' : 'pointer', background: isFollowing ? 'transparent' : themeColor, color: isFollowing ? colors.textMain : '#000', border: isFollowing ? `1px solid ${colors.border}` : 'none', transition: 'all 0.2s', boxShadow: isFollowing ? 'none' : `0 4px 15px ${themeColor}40` }}>
-                  {isFollowing ? '✓ Suivi' : '+ Suivre'}
+                <button onClick={handleFollow} disabled={followLoading} title={isFollowing ? t('profile.unfollow') : t('profile.follow')} style={{ padding: '8px 20px', borderRadius: 8, fontSize: 13, fontWeight: 800, cursor: followLoading ? 'wait' : 'pointer', background: isFollowing ? 'transparent' : themeColor, color: isFollowing ? colors.textMain : '#000', border: isFollowing ? `1px solid ${colors.border}` : 'none', transition: 'all 0.2s', boxShadow: isFollowing ? 'none' : `0 4px 15px ${themeColor}40` }}>
+                  {isFollowing ? t('profile.followed') : t('profile.follow_btn')}
                 </button>
               )}
             </div>
 
             <div style={{ display: 'flex', gap: 24, marginBottom: 12, flexWrap: 'wrap' }}>
-              <span style={{ fontSize: 14, color: colors.textMuted }}><strong style={{ color: colors.textMain, fontWeight: 800 }}>{followersCount}</strong> abonné{followersCount > 1 ? 's' : ''}</span>
-              <span style={{ fontSize: 14, color: colors.textMuted }}><strong style={{ color: colors.textMain, fontWeight: 800 }}>{followingCount}</strong> abonnement{followingCount > 1 ? 's' : ''}</span>
-              <span style={{ fontSize: 14, color: colors.textMuted }}><strong style={{ color: colors.textMain, fontWeight: 800 }}>{userTracks.length}</strong> son{userTracks.length > 1 ? 's' : ''}</span>
+              <span style={{ fontSize: 14, color: colors.textMuted }}><strong style={{ color: colors.textMain, fontWeight: 800 }}>{followersCount}</strong> {t('profile.followers', { count: followersCount })}</span>
+              <span style={{ fontSize: 14, color: colors.textMuted }}><strong style={{ color: colors.textMain, fontWeight: 800 }}>{followingCount}</strong> {t('profile.following', { count: followingCount })}</span>
+              <span style={{ fontSize: 14, color: colors.textMuted }}><strong style={{ color: colors.textMain, fontWeight: 800 }}>{userTracks.length}</strong> {t('profile.tracks', { count: userTracks.length })}</span>
             </div>
 
             <p style={{ color: colors.textMuted, fontSize: 15, lineHeight: 1.5, marginBottom: 16, maxWidth: 600 }}>
-              {profile.bio || 'Aucune biographie pour le moment.'}
+              {profile.bio || t('profile.no_bio')}
             </p>
 
             {socials.length > 0 && (
@@ -581,10 +583,10 @@ export const ProfilePage: React.FC = () => {
       <div style={{ maxWidth: 1000, margin: '0 auto', padding: '0 20px' }}>
         <div style={{ display: 'flex', gap: 24, borderBottom: `1px solid ${colors.border}`, overflowX: 'auto', paddingTop: 20, position: 'sticky', top: 0, background: colors.bg, zIndex: 10 }}>
           {[
-            { id: 'tracks', label: 'Sons', icon: Icons.music, count: userTracks.length },
-            { id: 'playlists', label: 'Playlists', icon: Icons.playlist, count: userPlaylists.length },
-            { id: 'likes', label: 'Likes', icon: Icons.heart, count: userLikes.length },
-            { id: 'about', label: 'À propos', icon: Icons.user, count: null },
+            { id: 'tracks', label: t('profile.tab_tracks'), icon: Icons.music, count: userTracks.length },
+            { id: 'playlists', label: t('profile.tab_playlists'), icon: Icons.playlist, count: userPlaylists.length },
+            { id: 'likes', label: t('profile.tab_likes'), icon: Icons.heart, count: userLikes.length },
+            { id: 'about', label: t('profile.tab_about'), icon: Icons.user, count: null },
           ].map((tab) => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id as Tab)} style={{ background: 'transparent', border: 'none', padding: '12px 0', borderBottom: activeTab === tab.id ? `2px solid ${themeColor}` : '2px solid transparent', color: activeTab === tab.id ? themeColor : colors.textMuted, fontSize: 14, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, transition: 'all 0.2s', whiteSpace: 'nowrap' }}>
               {tab.icon} {tab.label}
@@ -599,11 +601,11 @@ export const ProfilePage: React.FC = () => {
             userTracks.length === 0 ? (
               <div style={{ textAlign: 'center', padding: 60, border: `1px dashed ${colors.border}`, borderRadius: 16 }}>
                 <div style={{ color: colors.textMuted, marginBottom: 16, display: 'flex', justifyContent: 'center' }}>{Icons.music}</div>
-                <h3 style={{ fontSize: 18, fontWeight: 800, color: colors.textMain, marginBottom: 8 }}>Aucun son publié</h3>
-                <p style={{ color: colors.textMuted, marginBottom: 20 }}>Cet artiste n'a pas encore publié de morceaux.</p>
+                <h3 style={{ fontSize: 18, fontWeight: 800, color: colors.textMain, marginBottom: 8 }}>{t('profile.no_tracks')}</h3>
+                <p style={{ color: colors.textMuted, marginBottom: 20 }}>{t('profile.no_tracks_sub')}</p>
                 {isOwner && (
                   <button onClick={() => navigate('/settings')} style={{ padding: '10px 20px', background: themeColor, color: '#000', border: 'none', borderRadius: 8, fontWeight: 800, cursor: 'pointer' }}>
-                    Publier mon premier son
+                    {t('profile.publish_first')}
                   </button>
                 )}
               </div>
@@ -611,11 +613,11 @@ export const ProfilePage: React.FC = () => {
               <>
                 <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
                   <div style={{ fontSize: 13, color: colors.textMuted, fontWeight: 600 }}>
-                    {userTracks.length} son{userTracks.length > 1 ? 's' : ''} • Page {tracksPage}/{tracksTotalPages || 1}
+                    {t('profile.tracks', { count: userTracks.length })} • {t('profile.page', { current: tracksPage, total: tracksTotalPages || 1 })}
                   </div>
                   {userTracks.length > 1 && (
                     <button onClick={handlePlayAll} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', background: themeColor, color: '#000', border: 'none', borderRadius: 8, fontWeight: 800, fontSize: 13, cursor: 'pointer', boxShadow: `0 4px 15px ${themeColor}40` }}>
-                      {Icons.playCircle} Tout lire
+                      {Icons.playCircle} {t('profile.play_all')}
                     </button>
                   )}
                 </div>
@@ -630,7 +632,7 @@ export const ProfilePage: React.FC = () => {
                       onPlay={() => handlePlay(track)}
                       onToggleLike={() => handleToggleLike(track.id)}
                       onDelete={isOwner ? () => {
-                        if (!window.confirm('Supprimer ce son ?')) return;
+                        if (!window.confirm(t('profile.confirm_delete_track'))) return;
                         supabase.from('tracks').delete().eq('id', track.id).then(() => {
                           setUserTracks((prev) => prev.filter((t) => t.id !== track.id));
                         });
@@ -664,13 +666,13 @@ export const ProfilePage: React.FC = () => {
                 <div style={{ marginBottom: 24 }}>
                   {!showCreatePlaylist ? (
                     <button onClick={() => setShowCreatePlaylist(true)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', background: themeColor, color: '#000', borderRadius: 8, fontWeight: 800, border: 'none', cursor: 'pointer' }}>
-                      {Icons.plus} Créer une playlist
+                      {Icons.plus} {t('profile.create_playlist')}
                     </button>
                   ) : (
                     <form onSubmit={handleCreatePlaylist} style={{ display: 'flex', gap: 8, maxWidth: 400 }}>
-                      <input type="text" placeholder="Nom de la playlist..." autoFocus value={newPlaylistName} onChange={(e) => setNewPlaylistName(e.target.value)} style={{ flex: 1, padding: '10px 14px', background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain, outline: 'none' }} />
-                      <button type="submit" style={{ padding: '0 16px', background: themeColor, color: '#000', borderRadius: 8, fontWeight: 800, border: 'none', cursor: 'pointer' }}>Créer</button>
-                      <button type="button" onClick={() => setShowCreatePlaylist(false)} style={{ padding: '0 16px', background: 'transparent', color: colors.textMuted, border: `1px solid ${colors.border}`, borderRadius: 8, fontWeight: 600, cursor: 'pointer' }}>Annuler</button>
+                      <input type="text" placeholder={t('profile.playlist_name')} autoFocus value={newPlaylistName} onChange={(e) => setNewPlaylistName(e.target.value)} style={{ flex: 1, padding: '10px 14px', background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain, outline: 'none' }} />
+                      <button type="submit" style={{ padding: '0 16px', background: themeColor, color: '#000', borderRadius: 8, fontWeight: 800, border: 'none', cursor: 'pointer' }}>{t('profile.create')}</button>
+                      <button type="button" onClick={() => setShowCreatePlaylist(false)} style={{ padding: '0 16px', background: 'transparent', color: colors.textMuted, border: `1px solid ${colors.border}`, borderRadius: 8, fontWeight: 600, cursor: 'pointer' }}>{t('profile.cancel')}</button>
                     </form>
                   )}
                 </div>
@@ -679,7 +681,7 @@ export const ProfilePage: React.FC = () => {
               {userPlaylists.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: 60, border: `1px dashed ${colors.border}`, borderRadius: 16 }}>
                   <div style={{ color: colors.textMuted, marginBottom: 16, display: 'flex', justifyContent: 'center' }}>{Icons.playlist}</div>
-                  <p style={{ color: colors.textMuted }}>Aucune playlist publique.</p>
+                  <p style={{ color: colors.textMuted }}>{t('profile.no_playlists')}</p>
                 </div>
               ) : (
                 <>
@@ -692,7 +694,7 @@ export const ProfilePage: React.FC = () => {
                           {Icons.playlist}
                         </div>
                         <h4 style={{ fontSize: 15, fontWeight: 800, color: colors.textMain, margin: '0 0 4px 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</h4>
-                        <p style={{ fontSize: 12, color: colors.textMuted, margin: 0 }}>Créée le {new Date(p.created_at).toLocaleDateString('fr-FR')}</p>
+                        <p style={{ fontSize: 12, color: colors.textMuted, margin: 0 }}>{t('profile.created_on')} {new Date(p.created_at).toLocaleDateString('fr-FR')}</p>
                         {isOwner && (
                           <button onClick={(e) => handleDeletePlaylist(e, p.id)} style={{ position: 'absolute', top: 16, right: 16, background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', padding: 4 }}
                             onMouseEnter={(e) => (e.currentTarget.style.color = '#b0b0b0')}
@@ -715,12 +717,12 @@ export const ProfilePage: React.FC = () => {
             userLikes.length === 0 ? (
               <div style={{ textAlign: 'center', padding: 60, border: `1px dashed ${colors.border}`, borderRadius: 16 }}>
                 <div style={{ color: colors.textMuted, marginBottom: 16, display: 'flex', justifyContent: 'center' }}>{Icons.heart}</div>
-                <p style={{ color: colors.textMuted }}>Aucun son liké pour le moment.</p>
+                <p style={{ color: colors.textMuted }}>{t('profile.no_likes')}</p>
               </div>
             ) : (
               <>
                 <div style={{ marginBottom: 16, fontSize: 13, color: colors.textMuted, fontWeight: 600 }}>
-                  {userLikes.length} son{userLikes.length > 1 ? 's' : ''} liké{userLikes.length > 1 ? 's' : ''} • Page {likesPage}/{likesTotalPages || 1}
+                  {t('profile.liked', { count: userLikes.length })} • {t('profile.page', { current: likesPage, total: likesTotalPages || 1 })}
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   {paginatedLikes.map((track) => (
@@ -736,14 +738,14 @@ export const ProfilePage: React.FC = () => {
           {/* À PROPOS */}
           {activeTab === 'about' && (
             <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 32, maxWidth: 600 }}>
-              <h3 style={{ fontSize: 18, fontWeight: 800, color: colors.textMain, margin: '0 0 16px 0' }}>Biographie</h3>
+              <h3 style={{ fontSize: 18, fontWeight: 800, color: colors.textMain, margin: '0 0 16px 0' }}>{t('profile.bio')}</h3>
               <p style={{ color: colors.textMuted, lineHeight: 1.6, whiteSpace: 'pre-wrap', marginBottom: 32 }}>
-                {profile.bio || 'Aucune biographie.'}
+                {profile.bio || t('profile.no_bio_short')}
               </p>
 
-              <h3 style={{ fontSize: 18, fontWeight: 800, color: colors.textMain, margin: '0 0 16px 0' }}>Réseaux</h3>
+              <h3 style={{ fontSize: 18, fontWeight: 800, color: colors.textMain, margin: '0 0 16px 0' }}>{t('profile.networks')}</h3>
               {socials.length === 0 ? (
-                <p style={{ color: colors.textMuted }}>Aucun réseau renseigné.</p>
+                <p style={{ color: colors.textMuted }}>{t('profile.no_networks')}</p>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   {socials.map((s) => (

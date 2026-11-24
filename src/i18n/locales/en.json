@@ -194,5 +194,32 @@
     "loading": "Searching...",
     "no_tracks": "No track found for \"{{query}}\".",
     "no_artists": "No artist found for \"{{query}}\"."
+  },
+  "charts": {
+    "login_required": "Sign in to listen to the sounds!",
+    "title_a": "Top 50",
+    "title_b": "sounds",
+    "subtitle": "The most played tracks by the community. The chart updates in real time.",
+    "weekly": "This week",
+    "alltime": "All time",
+    "loading": "Loading chart...",
+    "empty_title": "No tracks in the chart",
+    "empty_sub": "There are not enough plays yet to build a Top 50. Come back later!",
+    "plays": "plays"
+  },
+  "discover": {
+    "login_required": "Sign in to listen to the sounds!",
+    "loading": "Loading the ELEKTRAQ universe...",
+    "title_a": "Discover",
+    "title_b": "ELEKTRAQ",
+    "subtitle": "Explore new talents, listen to the most popular sounds and join the community.",
+    "artists": "Artists",
+    "tracks": "Tracks",
+    "plays": "Plays",
+    "top10": "🏆 Top 10 sounds",
+    "no_tracks": "No sound available yet.",
+    "discover_artists": "🎧 Discover the artists",
+    "no_artists": "No artist signed up yet.",
+    "new_artist": "New artist on ELEKTRAQ."
   }
 }

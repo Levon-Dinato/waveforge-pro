@@ -194,5 +194,32 @@
     "loading": "Recherche en cours...",
     "no_tracks": "Aucun morceau trouvé pour \"{{query}}\".",
     "no_artists": "Aucun artiste trouvé pour \"{{query}}\"."
+  },
+  "charts": {
+    "login_required": "Connecte-toi pour écouter les sons !",
+    "title_a": "Top 50",
+    "title_b": "des sons",
+    "subtitle": "Les morceaux les plus écoutés par la communauté. Le classement est mis à jour en temps réel.",
+    "weekly": "Top de la semaine",
+    "alltime": "Tous les temps",
+    "loading": "Chargement du classement...",
+    "empty_title": "Aucun son dans le classement",
+    "empty_sub": "Il n'y a pas encore assez d'écoutes pour établir un Top 50. Reviens plus tard !",
+    "plays": "écoutes"
+  },
+  "discover": {
+    "login_required": "Connectez-vous pour écouter les sons !",
+    "loading": "Chargement de l'univers ELEKTRAQ...",
+    "title_a": "Découvrez",
+    "title_b": "ELEKTRAQ",
+    "subtitle": "Explorez les nouveaux talents, écoutez les sons les plus populaires et rejoignez la communauté.",
+    "artists": "Artistes",
+    "tracks": "Sons",
+    "plays": "Écoutes",
+    "top10": "🏆 Top 10 des sons",
+    "no_tracks": "Aucun son disponible pour le moment.",
+    "discover_artists": "🎧 Découvrir les artistes",
+    "no_artists": "Aucun artiste inscrit pour le moment.",
+    "new_artist": "Nouvel artiste sur ELEKTRAQ."
   }
 }

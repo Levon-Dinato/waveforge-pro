@@ -7,6 +7,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { usePlayer } from '../contexts/PlayerContext';
 import { ScrollToTop } from '../components/ScrollToTop';
 import { PageMeta } from '../components/PageMeta';
+import { useTranslation } from 'react-i18next';
 
 interface Track {
   id: string;
@@ -88,6 +89,7 @@ export const ChartsPage: React.FC = () => {
   const { play, currentTrack, isPlaying, togglePlay } = usePlayer() as any;
   const navigate = useNavigate();
   const isDark = theme === 'dark';
+  const { t } = useTranslation();
 
   const [tracks, setTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(true);
@@ -150,7 +152,7 @@ export const ChartsPage: React.FC = () => {
 
   const handlePlay = (track: Track) => {
     if (!user) {
-      alert("Connecte-toi pour écouter les sons !");
+      alert(t('charts.login_required'));
       navigate('/auth');
       return;
     }
@@ -192,10 +194,10 @@ export const ChartsPage: React.FC = () => {
             ELEKTRAQ Charts
           </div>
           <h1 style={{ fontSize: 'clamp(2.5rem, 6vw, 4rem)', fontWeight: 900, letterSpacing: '-0.03em', marginBottom: 16 }}>
-            Top 50 <span style={{ color: colors.accent }}>des sons</span>
+            {t('charts.title_a')} <span style={{ color: colors.accent }}>{t('charts.title_b')}</span>
           </h1>
           <p style={{ fontSize: 16, color: colors.textMuted, maxWidth: 600, margin: '0 auto' }}>
-            Les morceaux les plus écoutés par la communauté. Le classement est mis à jour en temps réel.
+            {t('charts.subtitle')}
           </p>
         </div>
 
@@ -205,22 +207,22 @@ export const ChartsPage: React.FC = () => {
             onClick={() => setTimeRange('weekly')}
             style={{ padding: '8px 20px', borderRadius: 20, fontSize: 13, fontWeight: 700, cursor: 'pointer', background: timeRange === 'weekly' ? colors.accent : 'transparent', color: timeRange === 'weekly' ? '#000' : colors.textMuted, border: `1px solid ${timeRange === 'weekly' ? colors.accent : colors.border}`, transition: 'all 0.2s' }}
           >
-            Top de la semaine
+            {t('charts.weekly')}
           </button>
           <button 
             onClick={() => setTimeRange('alltime')}
             style={{ padding: '8px 20px', borderRadius: 20, fontSize: 13, fontWeight: 700, cursor: 'pointer', background: timeRange === 'alltime' ? colors.textMain : 'transparent', color: timeRange === 'alltime' ? colors.bg : colors.textMuted, border: `1px solid ${timeRange === 'alltime' ? colors.textMain : colors.border}`, transition: 'all 0.2s' }}
           >
-            Tous les temps
+            {t('charts.alltime')}
           </button>
         </div>
 
         {loading ? (
-          <div style={{ textAlign: 'center', padding: 60, color: colors.textMuted }}>Chargement du classement...</div>
+          <div style={{ textAlign: 'center', padding: 60, color: colors.textMuted }}>{t('charts.loading')}</div>
         ) : tracks.length === 0 ? (
           <div style={{ textAlign: 'center', padding: 60, color: colors.textMuted, background: colors.panelBg, borderRadius: 16, border: `1px solid ${colors.border}` }}>
-            <h2 style={{ fontSize: 20, fontWeight: 800, color: colors.textMain, marginBottom: 8 }}>Aucun son dans le classement</h2>
-            <p>Il n'y a pas encore assez d'écoutes pour établir un Top 50. Reviens plus tard !</p>
+            <h2 style={{ fontSize: 20, fontWeight: 800, color: colors.textMain, marginBottom: 8 }}>{t('charts.empty_title')}</h2>
+            <p>{t('charts.empty_sub')}</p>
           </div>
         ) : (
           <>
@@ -292,7 +294,7 @@ export const ChartsPage: React.FC = () => {
                       
                       <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontSize: 12, color: colors.textMuted, fontWeight: 700 }}>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-                        {formatPlays(track.plays || 0)} écoutes
+                        {formatPlays(track.plays || 0)} {t('charts.plays')}
                       </div>
                     </div>
                   </div>
@@ -343,7 +345,7 @@ export const ChartsPage: React.FC = () => {
                     </div>
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: colors.textMuted, fontWeight: 600, width: 100, justifyContent: 'flex-end' }}>
-                      {formatPlays(track.plays || 0)} <span style={{ fontSize: 10 }}>écoutes</span>
+                      {formatPlays(track.plays || 0)} <span style={{ fontSize: 10 }}>{t('charts.plays')}</span>
                     </div>
 
                     <button 

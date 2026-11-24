@@ -6,6 +6,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { usePlayer } from '../contexts/PlayerContext';
 import { PageMeta } from '../components/PageMeta';
+import { useTranslation } from 'react-i18next';
 
 const Icons = {
   play: <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>,
@@ -20,6 +21,7 @@ export const DiscoverPage: React.FC = () => {
   const navigate = useNavigate();
   const { play, currentTrack, isPlaying } = usePlayer();
   const isDark = theme === 'dark';
+  const { t } = useTranslation();
 
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ artists: 0, tracks: 0, plays: 0 });
@@ -85,7 +87,7 @@ export const DiscoverPage: React.FC = () => {
 
   const handlePlay = (track: any) => {
     if (!user) {
-      alert("Connectez-vous pour écouter les sons !");
+      alert(t('discover.login_required'));
       navigate('/auth');
       return;
     }
@@ -98,7 +100,7 @@ export const DiscoverPage: React.FC = () => {
   };
 
   if (loading) {
-    return <div style={{ background: colors.bg, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.textMain }}>Chargement de l'univers ELEKTRAQ...</div>;
+    return <div style={{ background: colors.bg, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.textMain }}>{t('discover.loading')}</div>;
   }
 
   return (
@@ -109,10 +111,10 @@ export const DiscoverPage: React.FC = () => {
       {/* HEADER & STATS */}
       <div style={{ padding: '80px 20px 40px', textAlign: 'center', borderBottom: `1px solid ${colors.border}` }}>
         <h1 style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)', fontWeight: 900, marginBottom: 16, letterSpacing: '-0.03em' }}>
-          Découvrez <span style={{ color: colors.accent }}>ELEKTRAQ</span>
+          {t('discover.title_a')} <span style={{ color: colors.accent }}>{t('discover.title_b')}</span>
         </h1>
         <p style={{ color: colors.textMuted, fontSize: 18, maxWidth: 600, margin: '0 auto 40px' }}>
-          Explorez les nouveaux talents, écoutez les sons les plus populaires et rejoignez la communauté.
+          {t('discover.subtitle')}
         </p>
 
         <div style={{ display: 'flex', justifyContent: 'center', gap: 20, flexWrap: 'wrap', maxWidth: 800, margin: '0 auto' }}>
@@ -120,21 +122,21 @@ export const DiscoverPage: React.FC = () => {
             <div style={{ color: colors.accent }}>{Icons.users}</div>
             <div style={{ textAlign: 'left' }}>
               <div style={{ fontSize: 24, fontWeight: 900 }}>{stats.artists}</div>
-              <div style={{ fontSize: 12, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 1 }}>Artistes</div>
+              <div style={{ fontSize: 12, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 1 }}>{t('discover.artists')}</div>
             </div>
           </div>
           <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, padding: '20px 40px', borderRadius: 16, flex: 1, minWidth: 200, display: 'flex', alignItems: 'center', gap: 16 }}>
             <div style={{ color: '#b0b0b0' }}>{Icons.music}</div>
             <div style={{ textAlign: 'left' }}>
               <div style={{ fontSize: 24, fontWeight: 900 }}>{stats.tracks}</div>
-              <div style={{ fontSize: 12, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 1 }}>Sons</div>
+              <div style={{ fontSize: 12, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 1 }}>{t('discover.tracks')}</div>
             </div>
           </div>
           <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, padding: '20px 40px', borderRadius: 16, flex: 1, minWidth: 200, display: 'flex', alignItems: 'center', gap: 16 }}>
             <div style={{ color: '#b0b0b0' }}>{Icons.playCircle}</div>
             <div style={{ textAlign: 'left' }}>
               <div style={{ fontSize: 24, fontWeight: 900 }}>{stats.plays}</div>
-              <div style={{ fontSize: 12, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 1 }}>Écoutes</div>
+              <div style={{ fontSize: 12, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 1 }}>{t('discover.plays')}</div>
             </div>
           </div>
         </div>
@@ -145,13 +147,13 @@ export const DiscoverPage: React.FC = () => {
         {/* TOP 10 TRACKS */}
         <div style={{ marginBottom: 80 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 30 }}>
-            <h2 style={{ fontSize: 24, fontWeight: 800, margin: 0 }}>🏆 Top 10 des sons</h2>
+            <h2 style={{ fontSize: 24, fontWeight: 800, margin: 0 }}>{t('discover.top10')}</h2>
             <span style={{ fontSize: 11, background: colors.accent, color: '#000', padding: '4px 8px', borderRadius: 4, fontWeight: 800 }}>HITS</span>
           </div>
           
           {topTracks.length === 0 ? (
             <div style={{ textAlign: 'center', color: colors.textMuted, padding: 40, border: `1px dashed ${colors.border}`, borderRadius: 16 }}>
-              Aucun son disponible pour le moment.
+              {t('discover.no_tracks')}
             </div>
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
@@ -178,10 +180,10 @@ export const DiscoverPage: React.FC = () => {
 
         {/* ANNUAIRE DES ARTISTES */}
         <div>
-          <h2 style={{ fontSize: 24, fontWeight: 800, marginBottom: 30 }}>🎧 Découvrir les artistes</h2>
+          <h2 style={{ fontSize: 24, fontWeight: 800, marginBottom: 30 }}>{t('discover.discover_artists')}</h2>
           {artists.length === 0 ? (
             <div style={{ textAlign: 'center', color: colors.textMuted, padding: 40, border: `1px dashed ${colors.border}`, borderRadius: 16 }}>
-              Aucun artiste inscrit pour le moment.
+              {t('discover.no_artists')}
             </div>
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: 20 }}>
@@ -191,7 +193,7 @@ export const DiscoverPage: React.FC = () => {
                     <div style={{ width: 80, height: 80, borderRadius: '50%', margin: '0 auto 16px', background: artist.avatar_url ? `url(${artist.avatar_url}) center/cover` : colors.border, border: `2px solid ${artist.theme_color || colors.accent}40` }} />
                     <h3 style={{ fontSize: 18, fontWeight: 800, color: colors.textMain, margin: '0 0 8px' }}>{artist.username}</h3>
                     <p style={{ fontSize: 12, color: colors.textMuted, margin: 0, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                      {artist.bio || "Nouvel artiste sur ELEKTRAQ."}
+                      {artist.bio || t('discover.new_artist')}
                     </p>
                   </div>
                 </Link>

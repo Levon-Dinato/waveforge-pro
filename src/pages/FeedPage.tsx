@@ -9,6 +9,7 @@ import { usePlayer } from '../contexts/PlayerContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { OnlineUsersWidget } from '../components/OnlineUsersWidget';
 import { PageMeta } from '../components/PageMeta';
+import { useTranslation } from 'react-i18next';
 
 const Icons = {
   heart: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>,
@@ -95,6 +96,7 @@ export const FeedPage: React.FC = () => {
   const { user, username, isAdmin } = useAuth();
   const navigate = useNavigate();
   const isMobile = useIsMobile(768);
+  const { t } = useTranslation();
   const { play, currentTrack, isPlaying } = usePlayer();
   const { theme } = useTheme();
   const isDark = theme === 'dark';
@@ -427,7 +429,7 @@ export const FeedPage: React.FC = () => {
           <h2 style={{ fontSize: 22, fontWeight: 900, color: colors.textMain, marginBottom: 12 }}>Oups !</h2>
           <p style={{ color: colors.textMuted, marginBottom: 24 }}>{error}</p>
           <button onClick={() => window.location.reload()} style={{ padding: '12px 24px', background: colors.accent, color: '#000', border: 'none', borderRadius: 8, fontWeight: 800, cursor: 'pointer' }}>
-            Recharger
+            {t('feed.reload')}
           </button>
         </div>
       </div>
@@ -444,25 +446,25 @@ export const FeedPage: React.FC = () => {
           
           <div style={{ marginBottom: 32 }}>
             <h1 style={{ fontSize: isMobile ? 26 : 36, fontWeight: 900, margin: 0, letterSpacing: '-1px' }}>
-              Fil d'<span style={{ color: colors.accent }}>actualité</span>
+              {t('feed.title_a')}<span style={{ color: colors.accent }}>{t('feed.title_b')}</span>
             </h1>
-            <p style={{ color: colors.textMuted, fontSize: 14, marginTop: 8 }}>Toutes les dernières pépites et les prochains événements.</p>
+            <p style={{ color: colors.textMuted, fontSize: 14, marginTop: 8 }}>{t('feed.subtitle')}</p>
           </div>
 
           {user && (
             <div style={{ display: 'flex', gap: 8, marginBottom: 24, background: colors.panelBg, padding: 6, borderRadius: 12, border: `1px solid ${colors.border}`, width: 'fit-content', backdropFilter: 'blur(20px)' }}>
               <button onClick={() => setFeedMode('following')} style={{ padding: '10px 20px', borderRadius: 8, border: 'none', cursor: 'pointer', background: feedMode === 'following' ? colors.accent : 'transparent', color: feedMode === 'following' ? '#000' : colors.textMuted, fontWeight: 800, fontSize: 13, transition: 'all 0.2s' }}>
-                Mon Feed {followedArtists.length > 0 && `(${followedArtists.length})`}
+                {t('feed.my_feed', { count: followedArtists.length })}
               </button>
               <button onClick={() => setFeedMode('discover')} style={{ padding: '10px 20px', borderRadius: 8, border: 'none', cursor: 'pointer', background: feedMode === 'discover' ? colors.accent : 'transparent', color: feedMode === 'discover' ? '#000' : colors.textMuted, fontWeight: 800, fontSize: 13, transition: 'all 0.2s' }}>
-                Découverte
+                {t('feed.discover')}
               </button>
             </div>
           )}
 
           {feedMode === 'following' && followedArtists.length > 0 && (
             <div style={{ marginBottom: 24, background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 16, backdropFilter: 'blur(20px)' }}>
-              <h3 style={{ fontSize: 11, fontWeight: 800, letterSpacing: '1px', margin: '0 0 16px 0', color: colors.textMuted, textTransform: 'uppercase' }}>Artistes que tu suis</h3>
+              <h3 style={{ fontSize: 11, fontWeight: 800, letterSpacing: '1px', margin: '0 0 16px 0', color: colors.textMuted, textTransform: 'uppercase' }}>{t('feed.following')}</h3>
               <div style={{ display: 'flex', gap: 16, overflowX: 'auto', paddingBottom: 4 }}>
                 {followedArtists.map((artist) => (
                   <div key={artist.id} onClick={() => navigate(`/profil/${artist.id}`)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, cursor: 'pointer', flexShrink: 0 }}>
@@ -479,10 +481,10 @@ export const FeedPage: React.FC = () => {
           {feedMode === 'following' && followedArtists.length === 0 && (
             <div style={{ textAlign: 'center', padding: '40px 20px', background: colors.panelBg, border: `1px dashed ${colors.border}`, borderRadius: 16, marginBottom: 24, backdropFilter: 'blur(20px)' }}>
               <div style={{ color: colors.textMuted, marginBottom: 16, display: 'flex', justifyContent: 'center' }}>{Icons.music}</div>
-              <h3 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 8px 0', color: colors.textMain }}>Tu ne suis encore personne</h3>
+              <h3 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 8px 0', color: colors.textMain }}>{t('feed.no_following_title')}</h3>
               <p style={{ color: colors.textMuted, fontSize: 13, marginBottom: 16 }}>Découvre des artistes et clique sur "Suivre" sur leur profil.</p>
               <button onClick={() => setFeedMode('discover')} style={{ padding: '10px 20px', background: colors.accent, color: '#000', borderRadius: 8, border: 'none', fontWeight: 800, fontSize: 13, cursor: 'pointer' }}>
-                Explorer la découverte
+                {t('feed.explore_discover')}
               </button>
             </div>
           )}
@@ -496,16 +498,16 @@ export const FeedPage: React.FC = () => {
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 12, minWidth: 0 }}>
                   <textarea
                     ref={textareaRef}
-                    placeholder="Quoi de neuf ? Publie une actu..."
+                    placeholder={t('feed.placeholder')}
                     value={postContent}
                     onChange={(e) => setPostContent(e.target.value)}
                     rows={2}
                     style={{ background: 'transparent', border: 'none', color: colors.textMain, fontSize: 15, outline: 'none', resize: 'none', fontFamily: 'inherit', width: '100%', overflowWrap: 'anywhere', minHeight: 40 }}
                   />
                   {postType !== 'texte' && (
-                    <input type="text" placeholder={postType === 'image' ? "Lien direct de l'image (https://...)" : "Lien YouTube, Twitch, Facebook..."} value={postUrl} onChange={(e) => setPostUrl(e.target.value)} style={{ padding: '12px', background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 12, color: colors.textMain, fontSize: 13, outline: 'none', width: '100%', overflowWrap: 'anywhere' }} />
+                    <input type="text" placeholder={postType === 'image' ? t('feed.image_link') : t('feed.media_link')} value={postUrl} onChange={(e) => setPostUrl(e.target.value)} style={{ padding: '12px', background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 12, color: colors.textMain, fontSize: 13, outline: 'none', width: '100%', overflowWrap: 'anywhere' }} />
                   )}
-                  {postType === 'lien' && loadingPreview && <div style={{ fontSize: 12, color: colors.accent, fontWeight: 600 }}>Chargement de l'aperçu...</div>}
+                  {postType === 'lien' && loadingPreview && <div style={{ fontSize: 12, color: colors.accent, fontWeight: 600 }}>{t('feed.loading_preview')}</div>}
                   {postType === 'lien' && linkPreview && (
                     <div style={{ border: `1px solid ${colors.border}`, borderRadius: 12, overflow: 'hidden', background: colors.inputBg, display: 'flex', flexDirection: 'column' }}>
                       {linkPreview.image && <img src={linkPreview.image} alt="Preview" style={{ width: '100%', maxHeight: 200, objectFit: 'cover' }} />}
@@ -525,7 +527,7 @@ export const FeedPage: React.FC = () => {
                       ))}
                     </div>
                     <button onClick={handlePublish} disabled={!postContent.trim() && !postUrl.trim()} style={{ background: postContent.trim() || postUrl.trim() ? colors.btnPublishBg : colors.btnPublishDisabledBg, color: postContent.trim() || postUrl.trim() ? colors.btnPublishText : colors.btnPublishDisabledText, border: 'none', padding: '10px 24px', borderRadius: 20, fontWeight: 800, fontSize: 13, cursor: postContent.trim() || postUrl.trim() ? 'pointer' : 'not-allowed', transition: 'all 0.2s' }}>
-                      Publier
+                      {t('feed.publish')}
                     </button>
                   </div>
                 </div>
@@ -534,12 +536,12 @@ export const FeedPage: React.FC = () => {
           )}
 
           {loading ? (
-            <div style={{ textAlign: 'center', color: colors.textMuted, padding: 40 }}>Chargement...</div>
+            <div style={{ textAlign: 'center', color: colors.textMuted, padding: 40 }}>{t('feed.loading')}</div>
           ) : filteredFeedItems.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '60px 20px', background: colors.panelBg, border: `1px dashed ${colors.border}`, borderRadius: 16, backdropFilter: 'blur(20px)' }}>
               <div style={{ color: colors.border, marginBottom: 16 }}>{Icons.music}</div>
-              <h3 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 8px 0' }}>{feedMode === 'following' ? 'Rien de nouveau chez tes artistes' : 'Le feed est vide'}</h3>
-              {feedMode === 'following' && <p style={{ color: colors.textMuted, fontSize: 13 }}>Reviens plus tard ou découvre d'autres artistes.</p>}
+              <h3 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 8px 0' }}>{feedMode === 'following' ? t('feed.empty_following') : t('feed.empty_discover')}</h3>
+              {feedMode === 'following' && <p style={{ color: colors.textMuted, fontSize: 13 }}>{t('feed.empty_following_sub')}</p>}
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -565,8 +567,8 @@ export const FeedPage: React.FC = () => {
                         </div>
                         {!isEditing && (isAdmin || user?.id === item.data.profile_id) && (
                           <div style={{ display: 'flex', gap: 12 }}>
-                            <button onClick={() => startEditing(item.data)} style={{ background: 'transparent', border: 'none', color: colors.accent, cursor: 'pointer', fontSize: 11, fontWeight: 700 }}>Modifier</button>
-                            <button onClick={() => handleDeletePost(item.data.id)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', fontSize: 11, fontWeight: 700 }}>Supprimer</button>
+                            <button onClick={() => startEditing(item.data)} style={{ background: 'transparent', border: 'none', color: colors.accent, cursor: 'pointer', fontSize: 11, fontWeight: 700 }}>{t('feed.edit')}</button>
+                            <button onClick={() => handleDeletePost(item.data.id)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', fontSize: 11, fontWeight: 700 }}>{t('feed.delete')}</button>
                           </div>
                         )}
                       </div>
@@ -574,10 +576,10 @@ export const FeedPage: React.FC = () => {
                       {isEditing ? (
                         <div style={{ padding: '0 20px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
                           <textarea value={editContent} onChange={(e) => setEditContent(e.target.value)} rows={4} style={{ width: '100%', background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 12, color: colors.textMain, padding: 16, fontSize: 14, fontFamily: 'inherit', outline: 'none' }} />
-                          {item.data.postType !== 'text' && <input type="text" value={editUrl} onChange={(e) => setEditUrl(e.target.value)} placeholder="Lien du média" style={{ width: '100%', background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 12, color: colors.textMain, padding: 16, fontSize: 13, outline: 'none' }} />}
+                          {item.data.postType !== 'text' && <input type="text" value={editUrl} onChange={(e) => setEditUrl(e.target.value)} placeholder={t('feed.media_url')} style={{ width: '100%', background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 12, color: colors.textMain, padding: 16, fontSize: 13, outline: 'none' }} />}
                           <div style={{ display: 'flex', gap: 12 }}>
-                            <button onClick={() => handleSaveEdit(item.data.id)} style={{ padding: '10px 20px', background: colors.accent, color: '#000', border: 'none', borderRadius: 8, fontWeight: 800, cursor: 'pointer', fontSize: 13 }}>Enregistrer</button>
-                            <button onClick={() => setEditingPostId(null)} style={{ padding: '10px 20px', background: 'transparent', color: colors.textMuted, border: `1px solid ${colors.border}`, borderRadius: 8, fontWeight: 700, cursor: 'pointer', fontSize: 13 }}>Annuler</button>
+                            <button onClick={() => handleSaveEdit(item.data.id)} style={{ padding: '10px 20px', background: colors.accent, color: '#000', border: 'none', borderRadius: 8, fontWeight: 800, cursor: 'pointer', fontSize: 13 }}>{t('feed.save')}</button>
+                            <button onClick={() => setEditingPostId(null)} style={{ padding: '10px 20px', background: 'transparent', color: colors.textMuted, border: `1px solid ${colors.border}`, borderRadius: 8, fontWeight: 700, cursor: 'pointer', fontSize: 13 }}>{t('feed.cancel')}</button>
                           </div>
                         </div>
                       ) : (
@@ -592,10 +594,10 @@ export const FeedPage: React.FC = () => {
                             {isLiked ? Icons.heartFilled : Icons.heart} {item.data.likes_count || 0}
                           </button>
                           <button onClick={() => openComments('post', item.data.id)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700 }}>
-                            {Icons.message} Commenter
+                            {Icons.message} {t('feed.comment')}
                           </button>
                           <button onClick={() => handleShare(`${item.data.author} sur ELEKTRAQ`, window.location.href)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700 }}>
-                            {Icons.share} Partager
+                            {Icons.share} {t('feed.share')}
                           </button>
                         </div>
                       )}
@@ -632,7 +634,7 @@ export const FeedPage: React.FC = () => {
                   );
                 }
 
-                const authorName = isTrackItem(item) ? item.data.artist : 'Organisateur';
+                const authorName = isTrackItem(item) ? item.data.artist : t('feed.organizer');
                 const isThisPlaying = isTrackItem(item) && currentTrack?.id === item.data.id && isPlaying;
                 const isLiked = isTrackItem(item) && !!userLikes[item.data.id];
 
@@ -645,7 +647,7 @@ export const FeedPage: React.FC = () => {
                         </div>
                         <div>
                           <div style={{ fontSize: 15, fontWeight: 800, color: colors.textMain }}>
-                            {authorName} <span style={{ color: colors.textMuted, fontWeight: 500, fontSize: 13 }}>{item.type === 'track' ? 'a partagé un son' : 'a créé un événement'}</span>
+                            {authorName} <span style={{ color: colors.textMuted, fontWeight: 500, fontSize: 13 }}>{item.type === 'track' ? t('feed.shared_track') : t('feed.created_event')}</span>
                           </div>
                           <div style={{ fontSize: 12, color: colors.textMuted, marginTop: 2 }}>{formatDate(item.date)}</div>
                         </div>
@@ -655,7 +657,7 @@ export const FeedPage: React.FC = () => {
                     {isTrackItem(item) && (
                       <>
                         <div style={{ padding: '0 20px 16px', fontSize: 15, color: colors.textLight }}>
-                          Découvrez le nouveau son : <strong style={{ color: colors.textMain }}>{item.data.title}</strong>
+                          {t('feed.new_track')} <strong style={{ color: colors.textMain }}>{item.data.title}</strong>
                         </div>
 
                         <div style={{ padding: '0 20px 16px', display: 'flex', gap: 24, flexWrap: 'wrap' }}>
@@ -663,14 +665,14 @@ export const FeedPage: React.FC = () => {
                             {isLiked ? Icons.heartFilled : Icons.heart} {item.data.likes_count || 0}
                           </button>
                           <button onClick={() => openComments('track', item.data.id)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700 }}>
-                            {Icons.message} Commenter
+                            {Icons.message} {t('feed.comment')}
                           </button>
                           <button onClick={() => handleShare(`${item.data.title} — ${item.data.artist}`, `${window.location.origin}/track/${item.data.id}`)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700 }}>
-                            {Icons.share} Partager
+                            {Icons.share} {t('feed.share')}
                           </button>
                           {!!item.data.plays && (
                             <span style={{ color: colors.textMuted, fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}>
-                              ▶ {item.data.plays} écoutes
+                              ▶ {item.data.plays} {t('feed.plays')}
                             </span>
                           )}
                         </div>
@@ -689,7 +691,7 @@ export const FeedPage: React.FC = () => {
                     {isEventItem(item) && (
                       <>
                         <div style={{ padding: '0 20px 16px', fontSize: 15, color: colors.textLight }}>
-                          Nouvel événement : <strong style={{ color: colors.textMain }}>{item.data.title}</strong>
+                          {t('feed.new_event')} <strong style={{ color: colors.textMain }}>{item.data.title}</strong>
                         </div>
                         {item.data.image_url ? (
                           <div style={{ width: '100%', aspectRatio: '16 / 9', background: `url(${item.data.image_url}) center/cover`, borderTop: `1px solid ${colors.border}`, borderBottom: `1px solid ${colors.border}` }} />
@@ -710,7 +712,7 @@ export const FeedPage: React.FC = () => {
                     {isTrackItem(item) && (
                       <div style={{ padding: '16px 20px', borderTop: `1px solid ${colors.border}`, display: 'flex', justifyContent: 'flex-end' }}>
                         <button onClick={() => navigate(`/track/${item.data.id}`)} style={{ background: 'transparent', border: 'none', color: colors.accent, cursor: 'pointer', fontSize: 13, fontWeight: 800 }}>
-                          Écouter ↗
+                          {t('feed.listen')}
                         </button>
                       </div>
                     )}
@@ -721,7 +723,7 @@ export const FeedPage: React.FC = () => {
               {hasMore && (
                 <div style={{ display: 'flex', justifyContent: 'center', padding: '20px 0' }}>
                   <button onClick={() => setVisibleCount((c) => c + ITEMS_PER_LOAD)} style={{ padding: '12px 32px', background: 'transparent', border: `1px solid ${colors.border}`, color: colors.textMain, borderRadius: 8, fontWeight: 800, fontSize: 13, cursor: 'pointer', transition: 'all 0.2s' }} onMouseEnter={(e) => { e.currentTarget.style.borderColor = colors.accent; e.currentTarget.style.color = colors.accent; }} onMouseLeave={(e) => { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.color = colors.textMain; }}>
-                    Charger plus ({filteredFeedItems.length - visibleCount} restants)
+                    {t('feed.load_more', { count: filteredFeedItems.length - visibleCount })}
                   </button>
                 </div>
               )}
@@ -736,15 +738,15 @@ export const FeedPage: React.FC = () => {
               <div style={{ background: `linear-gradient(135deg, ${colors.accent}15, transparent 60%), ${colors.panelBg}`, border: `1px solid ${colors.border}`, borderRadius: 20, padding: 24, backdropFilter: 'blur(20px)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
                   <div style={{ color: colors.accent }}>{Icons.sparkles}</div>
-                  <h3 style={{ fontSize: 14, fontWeight: 900, color: colors.textMain, margin: 0 }}>Bienvenue sur ELEKTRAQ</h3>
+                  <h3 style={{ fontSize: 14, fontWeight: 900, color: colors.textMain, margin: 0 }}>{t('feed.welcome')}</h3>
                 </div>
                 <p style={{ fontSize: 13, color: colors.textMuted, lineHeight: 1.5, margin: '0 0 16px 0' }}>
-                  Découvre les meilleurs sons, partage tes propres tracks et connecte-toi avec la communauté.
+                  {t('feed.welcome_sub')}
                 </p>
               </div>
 
               <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 20, padding: 24, backdropFilter: 'blur(20px)' }}>
-                <h3 style={{ fontSize: 13, fontWeight: 800, letterSpacing: '1px', margin: '0 0 20px 0', color: colors.textMain, textTransform: 'uppercase' }}>Top 5 du moment</h3>
+                <h3 style={{ fontSize: 13, fontWeight: 800, letterSpacing: '1px', margin: '0 0 20px 0', color: colors.textMain, textTransform: 'uppercase' }}>{t('feed.top5')}</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                   {topTracks.map((track, index) => (
                     <div key={track.id} style={{ display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer', transition: 'transform 0.2s' }} onClick={() => navigate(`/track/${track.id}`)} onMouseEnter={(e) => (e.currentTarget.style.transform = 'translateX(4px)')} onMouseLeave={(e) => (e.currentTarget.style.transform = 'translateX(0)')}>
@@ -762,7 +764,7 @@ export const FeedPage: React.FC = () => {
               </div>
 
               <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 20, padding: 24, backdropFilter: 'blur(20px)' }}>
-                <h3 style={{ fontSize: 13, fontWeight: 800, letterSpacing: '1px', margin: '0 0 20px 0', color: colors.textMain, textTransform: 'uppercase' }}>Événements à venir</h3>
+                <h3 style={{ fontSize: 13, fontWeight: 800, letterSpacing: '1px', margin: '0 0 20px 0', color: colors.textMain, textTransform: 'uppercase' }}>{t('feed.upcoming')}</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                   {upcomingEvents.map((event) => (
                     <a key={event.id} href={event.url || '#'} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', flexDirection: 'column', textDecoration: 'none', padding: 16, borderRadius: 12, background: colors.inputBg, borderLeft: `3px solid ${colors.accent}`, transition: 'all 0.2s' }} onMouseEnter={(e) => { e.currentTarget.style.background = `${colors.accent}10`; e.currentTarget.style.borderLeftWidth = '6px'; }} onMouseLeave={(e) => { e.currentTarget.style.background = colors.inputBg; e.currentTarget.style.borderLeftWidth = '3px'; }}>
@@ -783,9 +785,9 @@ export const FeedPage: React.FC = () => {
               <div style={{ padding: '0 24px', fontSize: 11, color: colors.textMuted, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                 <span>© {new Date().getFullYear()} elektraq.dj</span>
                 <span>•</span>
-                <span style={{ cursor: 'pointer' }}>Confidentialité</span>
+                <span style={{ cursor: 'pointer' }}>{t('feed.privacy')}</span>
                 <span>•</span>
-                <span style={{ cursor: 'pointer' }}>CGU</span>
+                <span style={{ cursor: 'pointer' }}>{t('feed.terms')}</span>
               </div>
             </div>
           </aside>
@@ -797,14 +799,14 @@ export const FeedPage: React.FC = () => {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={() => setCommentsModalOpen(false)}>
           <div style={{ background: colors.modalBg, border: `1px solid ${colors.border}`, borderRadius: 20, padding: 24, width: '100%', maxWidth: 500, maxHeight: '80vh', display: 'flex', flexDirection: 'column', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)' }} onClick={(e) => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-              <h2 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 900, color: colors.textMain }}>Commentaires</h2>
+              <h2 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 900, color: colors.textMain }}>{t('feed.comments')}</h2>
               <button onClick={() => setCommentsModalOpen(false)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, fontSize: 24, cursor: 'pointer' }}>✕</button>
             </div>
             <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 20, paddingRight: 10 }}>
               {loadingComments ? (
-                <div style={{ color: colors.textMuted, textAlign: 'center', padding: 20 }}>Chargement...</div>
+                <div style={{ color: colors.textMuted, textAlign: 'center', padding: 20 }}>{t('feed.loading')}</div>
               ) : comments.length === 0 ? (
-                <div style={{ color: colors.textMuted, textAlign: 'center', padding: 20, fontStyle: 'italic' }}>Aucun commentaire.</div>
+                <div style={{ color: colors.textMuted, textAlign: 'center', padding: 20, fontStyle: 'italic' }}>{t('feed.no_comments')}</div>
               ) : (
                 comments.map((c) => (
                   <div key={c.id} style={{ display: 'flex', gap: 12 }}>
@@ -813,7 +815,7 @@ export const FeedPage: React.FC = () => {
                     </div>
                     <div>
                       <div style={{ fontSize: 13, fontWeight: 800, color: colors.textMain }}>
-                        {c.profiles?.username || 'Anonyme'}{' '}
+                        {c.profiles?.username || t('feed.anonymous')}{' '}
                         <span style={{ color: colors.textMuted, fontWeight: 500, fontSize: 11, marginLeft: 8 }}>
                           {formatDate(new Date(c.created_at))}
                         </span>
@@ -825,9 +827,9 @@ export const FeedPage: React.FC = () => {
               )}
             </div>
             <div style={{ display: 'flex', gap: 12 }}>
-              <input type="text" value={newComment} onChange={(e) => setNewComment(e.target.value)} placeholder="Ajouter un commentaire..." onKeyDown={(e) => e.key === 'Enter' && submitComment()} style={{ flex: 1, padding: '12px 16px', background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 30, color: colors.textMain, outline: 'none', fontSize: 14 }} />
+              <input type="text" value={newComment} onChange={(e) => setNewComment(e.target.value)} placeholder={t('feed.comment_placeholder')} onKeyDown={(e) => e.key === 'Enter' && submitComment()} style={{ flex: 1, padding: '12px 16px', background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 30, color: colors.textMain, outline: 'none', fontSize: 14 }} />
               <button onClick={submitComment} disabled={!newComment.trim() || !user} style={{ padding: '12px 24px', background: colors.accent, color: '#000', border: 'none', borderRadius: 30, fontWeight: 800, cursor: 'pointer', fontSize: 13, opacity: !newComment.trim() || !user ? 0.5 : 1 }}>
-                Envoyer
+                {t('feed.send')}
               </button>
             </div>
           </div>

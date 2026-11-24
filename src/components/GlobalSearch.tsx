@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useTheme } from '../contexts/ThemeContext';
+import { useTranslation } from 'react-i18next';
 
 const Icons = {
   search: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>,
@@ -15,6 +16,7 @@ const Icons = {
 export const GlobalSearch: React.FC = () => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const searchRef = useRef<HTMLDivElement>(null);
 
@@ -97,7 +99,7 @@ export const GlobalSearch: React.FC = () => {
         <span style={{ color: colors.textMuted, marginRight: 8 }}>{Icons.search}</span>
         <input 
           type="text" 
-          placeholder="Rechercher un son, artiste, playlist..."
+          placeholder={t('globalSearch.placeholder')}
           value={query}
           onChange={e => { setQuery(e.target.value); setIsOpen(true); }}
           onFocus={() => { if (query.length >= 2) setIsOpen(true); }}
@@ -115,16 +117,16 @@ export const GlobalSearch: React.FC = () => {
         <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, marginTop: 8, background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 12, boxShadow: '0 10px 30px rgba(0,0,0,0.3)', overflow: 'hidden', zIndex: 9999 }}>
           
           {loading ? (
-            <div style={{ padding: 16, textAlign: 'center', fontSize: 13, color: colors.textMuted }}>Recherche en cours...</div>
+            <div style={{ padding: 16, textAlign: 'center', fontSize: 13, color: colors.textMuted }}>{t('globalSearch.searching')}</div>
           ) : !hasResults ? (
-            <div style={{ padding: 16, textAlign: 'center', fontSize: 13, color: colors.textMuted }}>Aucun résultat pour "{query}"</div>
+            <div style={{ padding: 16, textAlign: 'center', fontSize: 13, color: colors.textMuted }}>{t('globalSearch.no_results', { query })}</div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               
               {/* Résultats Sons */}
               {results.tracks.length > 0 && (
                 <div style={{ padding: 8 }}>
-                  <div style={{ fontSize: 10, fontWeight: 800, color: colors.textMuted, textTransform: 'uppercase', padding: '4px 8px', marginBottom: 4 }}>Sons</div>
+                  <div style={{ fontSize: 10, fontWeight: 800, color: colors.textMuted, textTransform: 'uppercase', padding: '4px 8px', marginBottom: 4 }}>{t('globalSearch.tracks')}</div>
                   {results.tracks.map(track => (
                     <div key={track.id} onClick={() => handleNavigate(`/track/${track.id}`)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px', borderRadius: 6, cursor: 'pointer' }} onMouseEnter={e => e.currentTarget.style.background = colors.hoverBg} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                       <div style={{ width: 32, height: 32, borderRadius: 4, background: track.cover_url ? `url(${track.cover_url}) center/cover` : '#333' }} />
@@ -141,7 +143,7 @@ export const GlobalSearch: React.FC = () => {
               {/* Résultats Artistes */}
               {results.artists.length > 0 && (
                 <div style={{ padding: 8, borderTop: results.tracks.length > 0 ? `1px solid ${colors.border}` : 'none' }}>
-                  <div style={{ fontSize: 10, fontWeight: 800, color: colors.textMuted, textTransform: 'uppercase', padding: '4px 8px', marginBottom: 4 }}>Artistes</div>
+                  <div style={{ fontSize: 10, fontWeight: 800, color: colors.textMuted, textTransform: 'uppercase', padding: '4px 8px', marginBottom: 4 }}>{t('globalSearch.artists')}</div>
                   {results.artists.map(artist => (
                     <div key={artist.id} onClick={() => handleNavigate(`/premium/${artist.username}`)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px', borderRadius: 6, cursor: 'pointer' }} onMouseEnter={e => e.currentTarget.style.background = colors.hoverBg} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                       <div style={{ width: 32, height: 32, borderRadius: '50%', background: artist.avatar_url ? `url(${artist.avatar_url}) center/cover` : '#333' }} />
@@ -155,7 +157,7 @@ export const GlobalSearch: React.FC = () => {
               {/* Résultats Playlists */}
               {results.playlists.length > 0 && (
                 <div style={{ padding: 8, borderTop: (results.tracks.length > 0 || results.artists.length > 0) ? `1px solid ${colors.border}` : 'none' }}>
-                  <div style={{ fontSize: 10, fontWeight: 800, color: colors.textMuted, textTransform: 'uppercase', padding: '4px 8px', marginBottom: 4 }}>Playlists</div>
+                  <div style={{ fontSize: 10, fontWeight: 800, color: colors.textMuted, textTransform: 'uppercase', padding: '4px 8px', marginBottom: 4 }}>{t('globalSearch.playlists')}</div>
                   {results.playlists.map(pl => (
                     <div key={pl.id} onClick={() => handleNavigate(`/mes-playlists`)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px', borderRadius: 6, cursor: 'pointer' }} onMouseEnter={e => e.currentTarget.style.background = colors.hoverBg} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                       <div style={{ width: 32, height: 32, borderRadius: 4, background: colors.inputBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.textMuted }}>{Icons.playlist}</div>

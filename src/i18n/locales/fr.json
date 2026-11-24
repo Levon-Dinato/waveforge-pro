@@ -555,5 +555,23 @@
     "listeners_upper": "AUDITEURS",
     "tracks_upper": "TRACKS",
     "radio_fallback": "Écoutez la meilleure sélection musicale, en direct et sans interruption."
+  },
+  "globalSearch": {
+    "placeholder": "Rechercher un son, artiste, playlist...",
+    "searching": "Recherche en cours...",
+    "no_results": "Aucun résultat pour \"{{query}}\"",
+    "tracks": "Sons",
+    "artists": "Artistes",
+    "playlists": "Playlists"
+  },
+  "player": {
+    "add_to_playlist": "Ajouter à une playlist",
+    "loading": "Chargement...",
+    "no_playlist": "Aucune playlist",
+    "create_playlist": "Créer une playlist",
+    "playlist_name": "Nom de la playlist...",
+    "create": "Créer",
+    "cancel": "Annuler",
+    "already_in": "Ce son est déjà dans cette playlist !"
   }
 }

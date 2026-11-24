@@ -5,6 +5,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 interface GlobalPlayerProps {
   currentTrack: any;
@@ -49,6 +50,7 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
 
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   
   const [isLiked, setIsLiked] = useState(false);
   const [showPlaylistMenu, setShowPlaylistMenu] = useState(false);
@@ -155,7 +157,7 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
 
       if (error) {
         if (error.code === '23505') { // Code d'erreur Postgres pour "Unique constraint violation"
-          alert("Ce son est déjà dans cette playlist !");
+          alert(t('player.already_in'));
         } else {
           throw error;
         }
@@ -348,16 +350,16 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
 
             {showPlaylistMenu && (
               <div style={{ position: 'absolute', bottom: '100%', right: 0, marginBottom: 16, background: colors.dropdownBg, border: `1px solid ${colors.border}`, borderRadius: 12, padding: 12, width: 260, boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
-                <div style={{ fontSize: 11, fontWeight: 800, color: colors.textMuted, textTransform: 'uppercase', marginBottom: 12, padding: '0 4px', letterSpacing: '1px' }}>Ajouter à une playlist</div>
+                <div style={{ fontSize: 11, fontWeight: 800, color: colors.textMuted, textTransform: 'uppercase', marginBottom: 12, padding: '0 4px', letterSpacing: '1px' }}>{t('player.add_to_playlist')}</div>
                 
                 {!isCreatingPlaylist ? (
                   <>
                     {loadingPlaylists ? (
-                      <div style={{ fontSize: 13, color: colors.textMuted, padding: 8 }}>Chargement...</div>
+                      <div style={{ fontSize: 13, color: colors.textMuted, padding: 8 }}>{t('player.loading')}</div>
                     ) : (
                       <div style={{ maxHeight: 160, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 8 }}>
                         {playlists.length === 0 ? (
-                          <div style={{ fontSize: 13, color: colors.textMuted, padding: 8, fontStyle: 'italic' }}>Aucune playlist</div>
+                          <div style={{ fontSize: 13, color: colors.textMuted, padding: 8, fontStyle: 'italic' }}>{t('player.no_playlist')}</div>
                         ) : (
                           playlists.map(p => (
                             <button key={p.id} onClick={() => addTrackToPlaylist(p.id)} disabled={recentlyAdded === p.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', textAlign: 'left', padding: '8px 10px', background: 'transparent', border: 'none', color: colors.textMain, fontSize: 13, cursor: 'pointer', borderRadius: 6, transition: 'background 0.2s' }}
@@ -373,16 +375,16 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
                     <div style={{ borderTop: `1px solid ${colors.border}`, paddingTop: 8, marginTop: 4 }}>
                       <button onClick={() => setIsCreatingPlaylist(true)} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', textAlign: 'left', padding: '8px 10px', background: 'transparent', border: 'none', color: '#ffffff', fontSize: 13, cursor: 'pointer', borderRadius: 6, fontWeight: 700 }}
                         onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
-                        {Icons.plus} Créer une playlist
+                        {Icons.plus} {t('player.create_playlist')}
                       </button>
                     </div>
                   </>
                 ) : (
                   <form onSubmit={handleCreatePlaylist} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    <input type="text" autoFocus placeholder="Nom de la playlist..." value={newPlaylistName} onChange={(e) => setNewPlaylistName(e.target.value)} style={{ width: '100%', padding: '8px 10px', background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 6, color: colors.textMain, fontSize: 13, outline: 'none' }} />
+                    <input type="text" autoFocus placeholder={t('player.playlist_name')} value={newPlaylistName} onChange={(e) => setNewPlaylistName(e.target.value)} style={{ width: '100%', padding: '8px 10px', background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 6, color: colors.textMain, fontSize: 13, outline: 'none' }} />
                     <div style={{ display: 'flex', gap: 8 }}>
-                      <button type="submit" style={{ flex: 1, padding: '8px', background: '#ffffff', color: '#000', border: 'none', borderRadius: 6, fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>Créer</button>
-                      <button type="button" onClick={() => setIsCreatingPlaylist(false)} style={{ padding: '8px 12px', background: 'transparent', color: colors.textMuted, border: `1px solid ${colors.border}`, borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Annuler</button>
+                      <button type="submit" style={{ flex: 1, padding: '8px', background: '#ffffff', color: '#000', border: 'none', borderRadius: 6, fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>{t('player.create')}</button>
+                      <button type="button" onClick={() => setIsCreatingPlaylist(false)} style={{ padding: '8px 12px', background: 'transparent', color: colors.textMuted, border: `1px solid ${colors.border}`, borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>{t('player.cancel')}</button>
                     </div>
                   </form>
                 )}

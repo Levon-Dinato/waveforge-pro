@@ -555,5 +555,23 @@
     "listeners_upper": "LISTENERS",
     "tracks_upper": "TRACKS",
     "radio_fallback": "Listen to the best music selection, live and uninterrupted."
+  },
+  "globalSearch": {
+    "placeholder": "Search a track, artist, playlist...",
+    "searching": "Searching...",
+    "no_results": "No results for \"{{query}}\"",
+    "tracks": "Tracks",
+    "artists": "Artists",
+    "playlists": "Playlists"
+  },
+  "player": {
+    "add_to_playlist": "Add to a playlist",
+    "loading": "Loading...",
+    "no_playlist": "No playlist",
+    "create_playlist": "Create a playlist",
+    "playlist_name": "Playlist name...",
+    "create": "Create",
+    "cancel": "Cancel",
+    "already_in": "This track is already in this playlist!"
   }
 }

@@ -573,5 +573,21 @@
     "create": "Create",
     "cancel": "Cancel",
     "already_in": "This track is already in this playlist!"
+  },
+  "generator": {
+    "title": "Melody Generator",
+    "subtitle": "Melody creation with Markov chains · 5 styles",
+    "bpm_ref": "REFERENCE BPM",
+    "based_on": "Based on:",
+    "bpm_auto": "Auto BPM →",
+    "styles": "AVAILABLE STYLES",
+    "gen_label": "GENERATOR",
+    "how": "HOW IT WORKS",
+    "step1_title": "Markov chains",
+    "step1_desc": "The generator uses transition probabilities between notes.",
+    "step2_title": "Musical constraints",
+    "step2_desc": "Each style has its own scales, intervals, rhythms and chords.",
+    "step3_title": "MIDI export",
+    "step3_desc": "Export to MIDI to open it in your favorite DAW."
   }
 }

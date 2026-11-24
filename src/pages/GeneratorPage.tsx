@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { MelodyGenerator } from '../components/MelodyGenerator';
 import { useAudioEngineContext } from '../contexts/AudioEngineContext';
 import { useIsMobile } from '../hooks/useIsMobile';
+import { useTranslation } from 'react-i18next';
 
 interface StylePreset {
   id: string;
@@ -24,6 +25,7 @@ const STYLE_PRESETS: StylePreset[] = [
 
 export const GeneratorPage: React.FC = () => {
   const isMobile = useIsMobile(768);
+  const { t } = useTranslation();
   const engine = useAudioEngineContext();
   const [selectedStyle, setSelectedStyle] = useState<string>('pop');
 
@@ -42,10 +44,10 @@ export const GeneratorPage: React.FC = () => {
       {/* HEADER */}
       <div>
         <h2 style={{ fontSize: isMobile ? 16 : 20, fontWeight: 700, margin: 0, marginBottom: 8 }}>
-          🎼 <span style={{ color: '#b0b0b0' }}>Générateur de Mélodies</span>
+          🎼 <span style={{ color: '#b0b0b0' }}>{t('generator.title')}</span>
         </h2>
         <p style={{ color: '#888', fontSize: 11, margin: 0 }}>
-          Création de mélodies par chaînes de Markov · 5 styles
+          {t('generator.subtitle')}
         </p>
       </div>
 
@@ -77,14 +79,14 @@ export const GeneratorPage: React.FC = () => {
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div className="label-uppercase" style={{ fontSize: 9, color: '#666', marginBottom: 3 }}>
-              BPM DE RÉFÉRENCE
+              {t('generator.bpm_ref')}
             </div>
             <div className="mono" style={{ fontSize: 18, fontWeight: 700, color: '#ffffff' }}>
               {bpm} BPM
             </div>
             {hasAudio && engine.fileName && (
               <div style={{ fontSize: 10, color: '#666', marginTop: 2 }}>
-                Basé sur : {engine.fileName}
+                {t('generator.based_on')} {engine.fileName}
               </div>
             )}
           </div>
@@ -100,7 +102,7 @@ export const GeneratorPage: React.FC = () => {
                 fontSize: 11,
               }}
             >
-              🎹 BPM auto →
+              🎹 {t('generator.bpm_auto')}
             </Link>
           )}
         </div>
@@ -112,7 +114,7 @@ export const GeneratorPage: React.FC = () => {
           className="label-uppercase"
           style={{ fontSize: 10, color: '#666', marginBottom: 12, letterSpacing: '1px' }}
         >
-          STYLES DISPONIBLES
+          {t('generator.styles')}
         </div>
         <div
           style={{
@@ -138,7 +140,7 @@ export const GeneratorPage: React.FC = () => {
           className="label-uppercase"
           style={{ fontSize: 10, color: '#666', marginBottom: 12, letterSpacing: '1px' }}
         >
-          GÉNÉRATEUR · {STYLE_PRESETS.find((s) => s.id === selectedStyle)?.name}
+          {t('generator.gen_label')} · {STYLE_PRESETS.find((s) => s.id === selectedStyle)?.name}
         </div>
         <MelodyGenerator bpm={bpm} />
       </div>
@@ -149,7 +151,7 @@ export const GeneratorPage: React.FC = () => {
           className="label-uppercase"
           style={{ fontSize: 10, color: '#666', marginBottom: 14, letterSpacing: '1px' }}
         >
-          💡 COMMENT ÇA MARCHE
+          💡 {t('generator.how')}
         </div>
 
         <div
@@ -162,22 +164,22 @@ export const GeneratorPage: React.FC = () => {
           <InfoStep
             number="1"
             icon="🎼"
-            title="Chaînes de Markov"
-            description="Le générateur utilise des probabilités de transition entre notes."
+            title={t('generator.step1_title')}
+            description={t('generator.step1_desc')}
             color="#b0b0b0"
           />
           <InfoStep
             number="2"
             icon="🎨"
-            title="Contraintes musicales"
-            description="Chaque style a ses gammes, intervalles, rythmes et accords."
+            title={t('generator.step2_title')}
+            description={t('generator.step2_desc')}
             color="#ffffff"
           />
           <InfoStep
             number="3"
             icon="🎹"
-            title="Export MIDI"
-            description="Exporte en MIDI pour l'ouvrir dans ton DAW préféré."
+            title={t('generator.step3_title')}
+            description={t('generator.step3_desc')}
             color="#b0b0b0"
           />
         </div>

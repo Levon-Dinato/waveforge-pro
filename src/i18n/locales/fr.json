@@ -573,5 +573,21 @@
     "create": "Créer",
     "cancel": "Annuler",
     "already_in": "Ce son est déjà dans cette playlist !"
+  },
+  "generator": {
+    "title": "Générateur de Mélodies",
+    "subtitle": "Création de mélodies par chaînes de Markov · 5 styles",
+    "bpm_ref": "BPM DE RÉFÉRENCE",
+    "based_on": "Basé sur :",
+    "bpm_auto": "BPM auto →",
+    "styles": "STYLES DISPONIBLES",
+    "gen_label": "GÉNÉRATEUR",
+    "how": "COMMENT ÇA MARCHE",
+    "step1_title": "Chaînes de Markov",
+    "step1_desc": "Le générateur utilise des probabilités de transition entre notes.",
+    "step2_title": "Contraintes musicales",
+    "step2_desc": "Chaque style a ses gammes, intervalles, rythmes et accords.",
+    "step3_title": "Export MIDI",
+    "step3_desc": "Exporte en MIDI pour l'ouvrir dans ton DAW préféré."
   }
 }

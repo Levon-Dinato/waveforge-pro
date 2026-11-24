@@ -589,5 +589,18 @@
     "step2_desc": "Chaque style a ses gammes, intervalles, rythmes et accords.",
     "step3_title": "Export MIDI",
     "step3_desc": "Exporte en MIDI pour l'ouvrir dans ton DAW préféré."
+  },
+  "stems": {
+    "title": "Séparation de Stems",
+    "subtitle": "Isolation voix / instrumental avec Demucs IA (htdemucs_ft)",
+    "load_first": "Charge un audio d'abord dans la page Studio",
+    "error": "Erreur lors de la séparation. Vérifie que le serveur Demucs est bien lancé.",
+    "done": "Séparation terminée !",
+    "done_sub": "2 pistes prêtes : voix et instrumental",
+    "vocals": "Piste vocale isolée",
+    "instrumental": "Mix sans voix",
+    "multi_track": "LECTEUR MULTI-PISTE",
+    "new_separation": "Nouvelle séparation",
+    "track_label": "PISTE"
   }
 }

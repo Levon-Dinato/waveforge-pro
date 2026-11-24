@@ -589,5 +589,18 @@
     "step2_desc": "Each style has its own scales, intervals, rhythms and chords.",
     "step3_title": "MIDI export",
     "step3_desc": "Export to MIDI to open it in your favorite DAW."
+  },
+  "stems": {
+    "title": "Stem Separation",
+    "subtitle": "Vocals / instrumental isolation with Demucs AI (htdemucs_ft)",
+    "load_first": "Load an audio first in the Studio page",
+    "error": "Separation error. Make sure the Demucs server is running.",
+    "done": "Separation complete!",
+    "done_sub": "2 tracks ready: vocals and instrumental",
+    "vocals": "Isolated vocal track",
+    "instrumental": "Mix without vocals",
+    "multi_track": "MULTI-TRACK PLAYER",
+    "new_separation": "New separation",
+    "track_label": "TRACK"
   }
 }

@@ -9,9 +9,11 @@ import { audioBufferToWav } from '../audio/wavEncoder';
 import { UploadProgress } from '../components/UploadProgress';
 import { StemPlayer } from '../components/StemPlayer';
 import { ExportWav } from '../components/ExportWav';
+import { useTranslation } from 'react-i18next';
 
 export const StemsPage: React.FC = () => {
   const isMobile = useIsMobile(768);
+  const { t } = useTranslation();
   const engine = useAudioEngineContext();
 
   const [isSeparating, setIsSeparating] = useState(false);
@@ -31,7 +33,7 @@ export const StemsPage: React.FC = () => {
 
   const handleSeparate = async () => {
     if (!engine.audioBuffer) {
-      alert("Charge un audio d'abord dans la page Studio");
+      alert(t('stems.load_first'));
       return;
     }
     setIsSeparating(true);
@@ -54,7 +56,7 @@ export const StemsPage: React.FC = () => {
     } catch (e) {
       console.error('Erreur séparation:', e);
       setUploadProgress((p) => ({ ...p, visible: false }));
-      alert('Erreur lors de la séparation. Vérifie que le serveur Demucs est bien lancé.');
+      alert(t('stems.error'));
     } finally {
       setIsSeparating(false);
     }
@@ -81,10 +83,10 @@ export const StemsPage: React.FC = () => {
       {/* HEADER */}
       <div>
         <h2 style={{ fontSize: isMobile ? 16 : 20, fontWeight: 700, margin: 0, marginBottom: 8 }}>
-          🎤 <span style={{ color: '#b0b0b0' }}>Séparation de Stems</span>
+          🎤 <span style={{ color: '#b0b0b0' }}>{t('stems.title')}</span>
         </h2>
         <p style={{ color: '#888', fontSize: 11, margin: 0 }}>
-          Isolation voix / instrumental avec Demucs IA (htdemucs_ft)
+          {t('stems.subtitle')}
         </p>
       </div>
 
@@ -341,10 +343,10 @@ export const StemsPage: React.FC = () => {
               <div style={{ fontSize: 32 }}>🎉</div>
               <div>
                 <div style={{ fontSize: 15, fontWeight: 700, color: '#b0b0b0', marginBottom: 4 }}>
-                  Séparation terminée !
+                  {t('stems.done')}
                 </div>
                 <div style={{ fontSize: 11, color: '#888' }}>
-                  2 pistes prêtes : voix et instrumental
+                  {t('stems.done_sub')}
                 </div>
               </div>
             </div>
@@ -360,7 +362,7 @@ export const StemsPage: React.FC = () => {
             <StemCard
               icon="🎤"
               name="VOIX"
-              description="Piste vocale isolée"
+              description={t('stems.vocals')}
               color="#b0b0b0"
               url={stems.vocals}
               onDownload={() => handleDownload(stems.vocals, 'vocals.wav')}
@@ -368,7 +370,7 @@ export const StemsPage: React.FC = () => {
             <StemCard
               icon="🎸"
               name="INSTRUMENTAL"
-              description="Mix sans voix"
+              description={t('stems.instrumental')}
               color="#b0b0b0"
               url={stems.noVocals}
               onDownload={() => handleDownload(stems.noVocals, 'no_vocals.wav')}
@@ -377,7 +379,7 @@ export const StemsPage: React.FC = () => {
 
           <div className="panel slide-in">
             <div className="panel-header">
-              <span>🎚️ LECTEUR MULTI-PISTE</span>
+              <span>🎚️ {t('stems.multi_track')}</span>
             </div>
             <div className="panel-body">
               <StemPlayer
@@ -394,7 +396,7 @@ export const StemsPage: React.FC = () => {
 
           <div style={{ textAlign: 'center' }}>
             <button className="btn-action" onClick={() => setStems(null)} style={{ fontSize: 11 }}>
-              🔄 Nouvelle séparation
+              🔄 {t('stems.new_separation')}
             </button>
           </div>
         </>
@@ -438,7 +440,7 @@ const StemCard: React.FC<{
       </div>
       <div>
         <div className="label-uppercase" style={{ fontSize: 9, color: '#666', marginBottom: 2 }}>
-          PISTE
+          {t('stems.track_label')}
         </div>
         <div style={{ fontSize: 14, fontWeight: 700, color }}>{name}</div>
         <div style={{ fontSize: 10, color: '#888', marginTop: 2 }}>{description}</div>

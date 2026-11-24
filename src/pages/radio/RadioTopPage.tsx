@@ -5,11 +5,13 @@ import { motion } from 'framer-motion';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRadio } from '../../contexts/RadioContext';
+import { useTranslation } from 'react-i18next';
 
 export const RadioTopPage: React.FC = () => {
   const { topTracks, visualizerColor, colors, profile } = useOutletContext<any>();
   const { user } = useAuth();
   const { startRadio, stopRadio, isRadioActive } = useRadio();
+  const { t } = useTranslation();
   
   const [likedTracks, setLikedTracks] = useState<string[]>([]);
 
@@ -24,7 +26,7 @@ export const RadioTopPage: React.FC = () => {
 
   const handleLike = async (e: React.MouseEvent, trackId: string, currentLikes: number) => {
     e.stopPropagation();
-    if (!user) { alert("Connecte-toi pour liker un son !"); return; }
+    if (!user) { alert(t('radio.login_to_like')); return; }
     const isAlreadyLiked = likedTracks.includes(trackId);
     
     if (isAlreadyLiked) setLikedTracks(prev => prev.filter(id => id !== trackId));
@@ -83,14 +85,14 @@ export const RadioTopPage: React.FC = () => {
           {IconTrophy}
         </div>
         <div>
-          <h1 style={{ fontSize: 32, fontWeight: 900, margin: '0 0 4px 0', letterSpacing: '-0.5px' }}>Top Tracks</h1>
-          <p style={{ fontSize: 14, color: colors.textMuted, margin: 0 }}>Les sons les plus likés de la radio, classés par la communauté.</p>
+          <h1 style={{ fontSize: 32, fontWeight: 900, margin: '0 0 4px 0', letterSpacing: '-0.5px' }}>{t('radio.top_title')}</h1>
+          <p style={{ fontSize: 14, color: colors.textMuted, margin: 0 }}>{t('radio.top_subtitle')}</p>
         </div>
       </div>
 
       {topTracks.length === 0 ? (
         <div className="rp-glass" style={{ padding: 60, textAlign: 'center', color: colors.textMuted }}>
-          Aucun son n'a encore été liké.
+          {t('radio.no_likes')}
         </div>
       ) : (
         <>
@@ -165,7 +167,7 @@ export const RadioTopPage: React.FC = () => {
           {rest.length > 0 && (
             <div className="rp-glass" style={{ borderRadius: 24, overflow: 'hidden' }}>
               <div style={{ padding: '24px 32px', borderBottom: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <h2 style={{ fontSize: 18, fontWeight: 900, margin: 0, textTransform: 'uppercase', letterSpacing: '1px' }}>La suite du classement</h2>
+                <h2 style={{ fontSize: 18, fontWeight: 900, margin: 0, textTransform: 'uppercase', letterSpacing: '1px' }}>{t('radio.rest_ranking')}</h2>
               </div>
               
               <div style={{ display: 'flex', flexDirection: 'column' }}>

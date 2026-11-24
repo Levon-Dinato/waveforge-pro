@@ -2,18 +2,20 @@
 import React from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 export const RadioProgramPage: React.FC = () => {
   const { schedules, visualizerColor, colors, iconColor } = useOutletContext<any>();
+  const { t } = useTranslation();
 
   const DAYS = [
-    { id: '1', label: 'Lundi' },
-    { id: '2', label: 'Mardi' },
-    { id: '3', label: 'Mercredi' },
-    { id: '4', label: 'Jeudi' },
-    { id: '5', label: 'Vendredi' },
-    { id: '6', label: 'Samedi' },
-    { id: '7', label: 'Dimanche' }
+    { id: '1', label: t('radio.monday') },
+    { id: '2', label: t('radio.tuesday') },
+    { id: '3', label: t('radio.wednesday') },
+    { id: '4', label: t('radio.thursday') },
+    { id: '5', label: t('radio.friday') },
+    { id: '6', label: t('radio.saturday') },
+    { id: '7', label: t('radio.sunday') }
   ];
 
   const isCurrentlyPlaying = (startTime: string, endTime: string, days: string[]) => {
@@ -45,15 +47,15 @@ export const RadioProgramPage: React.FC = () => {
       
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 50, textAlign: 'center' }}>
         <div style={{ color: visualizerColor, marginBottom: 12 }}>{IconCalendar}</div>
-        <h2 style={{ fontSize: 32, fontWeight: 900, margin: '0 0 10px 0', letterSpacing: '-0.5px' }}>Grille des Programmes</h2>
-        <p style={{ fontSize: 15, color: colors.textMuted, margin: 0 }}>Retrouvez tous vos rendez-vous musicaux de la semaine.</p>
+        <h2 style={{ fontSize: 32, fontWeight: 900, margin: '0 0 10px 0', letterSpacing: '-0.5px' }}>{t('radio.program_title')}</h2>
+        <p style={{ fontSize: 15, color: colors.textMuted, margin: 0 }}>{t('radio.program_subtitle')}</p>
       </div>
 
       {schedules.length === 0 ? (
         <div className="rp-glass" style={{ padding: 60, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', color: colors.textMuted }}>
           <div style={{ color: colors.border, marginBottom: 16 }}>{IconEmptyBox}</div>
-          <div style={{ fontSize: 18, fontWeight: 700, color: colors.textMain, marginBottom: 8 }}>Aucun programme pour le moment</div>
-          <p style={{ margin: 0 }}>Le DJ n'a pas encore publié sa grille des programmes.</p>
+          <div style={{ fontSize: 18, fontWeight: 700, color: colors.textMain, marginBottom: 8 }}>{t('radio.no_program')}</div>
+          <p style={{ margin: 0 }}>{t('radio.no_program_sub')}</p>
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 24 }}>
@@ -95,10 +97,10 @@ export const RadioProgramPage: React.FC = () => {
                         <div style={{ flex: 1, zIndex: 1 }}>
                           <div style={{ fontSize: 15, fontWeight: 800, color: isLive ? visualizerColor : colors.textMain, display: 'flex', alignItems: 'center', gap: 8 }}>
                             {schedule.title}
-                            {isLive && <span style={{ fontSize: 9, background: '#b0b0b0', color: '#fff', padding: '2px 6px', borderRadius: 4, animation: 'pulseLive 1.5s infinite' }}>EN DIRECT</span>}
+                            {isLive && <span style={{ fontSize: 9, background: '#b0b0b0', color: '#fff', padding: '2px 6px', borderRadius: 4, animation: 'pulseLive 1.5s infinite' }}>{t('radio.live')}</span>}
                           </div>
                           <div style={{ fontSize: 13, color: colors.textMuted, marginTop: 4 }}>
-                            Fin à {schedule.end_time.slice(0, 5)} • {schedule.playlists?.name || 'Mix'}
+                            {t('radio.ends_at', { time: schedule.end_time.slice(0, 5), name: schedule.playlists?.name || t('radio.mix') })}
                           </div>
                         </div>
 

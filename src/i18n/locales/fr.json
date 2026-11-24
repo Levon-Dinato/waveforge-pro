@@ -506,5 +506,26 @@
     "no_bio_short": "Aucune biographie.",
     "networks": "Réseaux",
     "no_networks": "Aucun réseau renseigné."
+  },
+  "radio": {
+    "top_title": "Top Tracks",
+    "top_subtitle": "Les sons les plus likés de la radio, classés par la communauté.",
+    "no_likes": "Aucun son n'a encore été liké.",
+    "rest_ranking": "La suite du classement",
+    "login_to_like": "Connecte-toi pour liker un son !",
+    "program_title": "Grille des Programmes",
+    "program_subtitle": "Retrouvez tous vos rendez-vous musicaux de la semaine.",
+    "no_program": "Aucun programme pour le moment",
+    "no_program_sub": "Le DJ n'a pas encore publié sa grille des programmes.",
+    "monday": "Lundi",
+    "tuesday": "Mardi",
+    "wednesday": "Mercredi",
+    "thursday": "Jeudi",
+    "friday": "Vendredi",
+    "saturday": "Samedi",
+    "sunday": "Dimanche",
+    "live": "EN DIRECT",
+    "ends_at": "Fin à {{time}} • {{name}}",
+    "mix": "Mix"
   }
 }

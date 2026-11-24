@@ -506,5 +506,26 @@
     "no_bio_short": "No bio.",
     "networks": "Networks",
     "no_networks": "No network provided."
+  },
+  "radio": {
+    "top_title": "Top Tracks",
+    "top_subtitle": "The most liked sounds of the radio, ranked by the community.",
+    "no_likes": "No track has been liked yet.",
+    "rest_ranking": "Rest of the chart",
+    "login_to_like": "Sign in to like a track!",
+    "program_title": "Program Schedule",
+    "program_subtitle": "Find all your weekly musical appointments.",
+    "no_program": "No program yet",
+    "no_program_sub": "The DJ hasn't published their program schedule yet.",
+    "monday": "Monday",
+    "tuesday": "Tuesday",
+    "wednesday": "Wednesday",
+    "thursday": "Thursday",
+    "friday": "Friday",
+    "saturday": "Saturday",
+    "sunday": "Sunday",
+    "live": "LIVE",
+    "ends_at": "Ends at {{time}} • {{name}}",
+    "mix": "Mix"
   }
 }

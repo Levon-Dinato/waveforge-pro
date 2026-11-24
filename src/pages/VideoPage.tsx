@@ -11,6 +11,7 @@ import {
   formatDuration,
   type ExportResult,
 } from '../audio/videoExporter';
+import { useTranslation } from 'react-i18next';
 
 interface VideoExportEntry {
   id: string;
@@ -40,6 +41,7 @@ const COLOR_PRESETS = [
 
 export const VideoPage: React.FC = () => {
   const isMobile = useIsMobile(768);
+  const { t } = useTranslation();
   const engine = useAudioEngineContext();
   const hasAudio = !!engine.audioBuffer;
 
@@ -124,7 +126,7 @@ export const VideoPage: React.FC = () => {
   // ============================================================
   const handleExport = useCallback(async () => {
     if (!engine.audioBuffer || !analyserRef.current || !canvasRef.current) {
-      alert('Charge un audio dans le Studio d\'abord.');
+      alert(t('video.load_first'));
       return;
     }
 
@@ -156,7 +158,7 @@ export const VideoPage: React.FC = () => {
         {
           id: `ve-${Date.now()}`,
           timestamp: Date.now(),
-          title: config.title || 'Sans titre',
+          title: config.title || t('video.untitled'),
           style: config.style,
           duration: result.duration,
           size: result.size,
@@ -166,7 +168,7 @@ export const VideoPage: React.FC = () => {
       ]);
     } catch (e: any) {
       console.error('Erreur export vidéo:', e);
-      alert(`Erreur lors de l'export : ${e.message}`);
+      alert(t('video.export_error', { message: e.message }));
     } finally {
       setIsExporting(false);
       setExportProgress(0);
@@ -188,7 +190,7 @@ export const VideoPage: React.FC = () => {
       {/* HEADER */}
       <div>
         <h2 style={{ fontSize: isMobile ? 16 : 20, fontWeight: 700, margin: 0, marginBottom: 8 }}>
-          🎬 <span style={{ color: '#b0b0b0' }}>Générateur de clip</span>
+          🎬 <span style={{ color: '#b0b0b0' }}>{t('video.title')}</span>
           <span
             style={{
               fontSize: 10,
@@ -207,7 +209,7 @@ export const VideoPage: React.FC = () => {
           </span>
         </h2>
         <p style={{ color: '#888', fontSize: 11, margin: 0 }}>
-          Transforme ton morceau en clip vidéo 1080p synchronisé · 100% local · 100% gratuit
+          {t('video.subtitle')}
         </p>
       </div>
 
@@ -224,7 +226,7 @@ export const VideoPage: React.FC = () => {
         >
           <div style={{ fontSize: isMobile ? 40 : 52, marginBottom: 16 }}>🎬</div>
           <div style={{ fontSize: 15, color: '#fff', marginBottom: 10, fontWeight: 600 }}>
-            Aucun audio chargé
+            {t('video.no_audio')}
           </div>
           <div
             style={{
@@ -236,7 +238,7 @@ export const VideoPage: React.FC = () => {
               lineHeight: 1.6,
             }}
           >
-            Charge un morceau dans le Studio pour créer un clip vidéo synchronisé.
+            {t('video.no_audio_sub')}
           </div>
           <Link
             to="/studio"
@@ -253,7 +255,7 @@ export const VideoPage: React.FC = () => {
               fontSize: 12,
             }}
           >
-            🎹 Aller au Studio
+            🎹 {t('video.go_studio')}
           </Link>
         </div>
       )}
@@ -276,7 +278,7 @@ export const VideoPage: React.FC = () => {
                 className="label-uppercase"
                 style={{ fontSize: 10, color: '#666', letterSpacing: '1px', marginBottom: 10 }}
               >
-                🎨 STYLE DU VISUALISEUR
+                {t('video.style_label')}
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                 {STYLES.map((s) => (
@@ -306,7 +308,7 @@ export const VideoPage: React.FC = () => {
                     }}
                   >
                     <span>{s.icon}</span>
-                    <span>{s.label}</span>
+                    <span>{t(`video.style_${s.id}`)}</span>
                   </button>
                 ))}
               </div>
@@ -318,7 +320,7 @@ export const VideoPage: React.FC = () => {
                 className="label-uppercase"
                 style={{ fontSize: 10, color: '#666', letterSpacing: '1px', marginBottom: 10 }}
               >
-                🎨 PALETTE
+                {t('video.palette')}
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                 {COLOR_PRESETS.map((p) => {
@@ -387,7 +389,7 @@ export const VideoPage: React.FC = () => {
                   onChange={(e) => setConfig({ ...config, showGrid: e.target.checked })}
                   style={{ accentColor: '#b0b0b0' }}
                 />
-                Afficher la grille de fond
+                {t('video.show_grid')}
               </label>
             </div>
 
@@ -397,16 +399,16 @@ export const VideoPage: React.FC = () => {
                 className="label-uppercase"
                 style={{ fontSize: 10, color: '#666', letterSpacing: '1px', marginBottom: 10 }}
               >
-                📝 TEXTE À L'ÉCRAN
+                {t('video.text_label')}
               </div>
               <div style={{ display: 'grid', gap: 10 }}>
                 <div>
-                  <div style={{ fontSize: 9, color: '#666', marginBottom: 4 }}>TITRE</div>
+                  <div style={{ fontSize: 9, color: '#666', marginBottom: 4 }}>{t('video.title_field')}</div>
                   <input
                     type="text"
                     value={config.title}
                     onChange={(e) => setConfig({ ...config, title: e.target.value })}
-                    placeholder="Titre du morceau"
+                    placeholder={t('video.title_placeholder')}
                     style={{
                       width: '100%',
                       padding: '8px 10px',
@@ -421,12 +423,12 @@ export const VideoPage: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <div style={{ fontSize: 9, color: '#666', marginBottom: 4 }}>SOUS-TITRE</div>
+                  <div style={{ fontSize: 9, color: '#666', marginBottom: 4 }}>{t('video.subtitle_field')}</div>
                   <input
                     type="text"
                     value={config.subtitle}
                     onChange={(e) => setConfig({ ...config, subtitle: e.target.value })}
-                    placeholder="Nom artiste / label"
+                    placeholder={t('video.subtitle_placeholder')}
                     style={{
                       width: '100%',
                       padding: '8px 10px',
@@ -460,7 +462,7 @@ export const VideoPage: React.FC = () => {
                   className="label-uppercase"
                   style={{ fontSize: 10, color: '#666', letterSpacing: '1px' }}
                 >
-                  👁️ APERÇU · 1920×1080
+                  {t('video.preview')}
                 </div>
                 <div
                   style={{
@@ -508,7 +510,7 @@ export const VideoPage: React.FC = () => {
                     justifyContent: 'center',
                   }}
                 >
-                  {isPlaying ? '⏹ STOP' : '▶ LIRE L\'APERÇU'}
+                  {isPlaying ? t('video.stop') : t('video.play_preview')}
                 </button>
               </div>
             </div>
@@ -526,7 +528,7 @@ export const VideoPage: React.FC = () => {
                 className="label-uppercase"
                 style={{ fontSize: 10, color: '#b0b0b0', letterSpacing: '1px', marginBottom: 10 }}
               >
-                📼 EXPORT VIDÉO
+                {t('video.export_label')}
               </div>
 
               <div
@@ -566,8 +568,8 @@ export const VideoPage: React.FC = () => {
                 }}
               >
                 {isExporting
-                  ? `⏳ GÉNÉRATION... ${Math.floor(exportProgress)}%`
-                  : '🎬 GÉNÉRER LE CLIP VIDÉO'}
+                  ? `⏳ ${t('video.generating')} ${Math.floor(exportProgress)}%`
+                  : t('video.generate')}
                 {isExporting && (
                   <div
                     style={{
@@ -591,7 +593,7 @@ export const VideoPage: React.FC = () => {
                   className="label-uppercase"
                   style={{ fontSize: 10, color: '#666', letterSpacing: '1px', marginBottom: 10 }}
                 >
-                  📦 EXPORTS RÉCENTS · {exports.length}
+                  {t('video.exports_recent')} · {exports.length}
                 </div>
                 <div style={{ display: 'grid', gap: 8 }}>
                   {exports.slice(0, 5).map((exp) => (

@@ -4,6 +4,7 @@ import { Helmet } from 'react-helmet-async';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { useTheme } from '../contexts/ThemeContext'; // ✅ IMPORT DU THEME
 import { LiveChat } from '../components/LiveChat';
+import { useTranslation } from 'react-i18next';
 
 export const LivePage = () => {
   const isMobile = useIsMobile(768);
@@ -11,6 +12,7 @@ export const LivePage = () => {
   // ✅ RÉCUPÉRATION DU THÈME
   const { theme } = useTheme();
   const isDark = theme === 'dark';
+  const { t } = useTranslation();
 
   const [chatVisible, setChatVisible] = useState(true);
   const [showSetup, setShowSetup] = useState(false);
@@ -38,7 +40,7 @@ export const LivePage = () => {
     badgeText: isDark ? '#cccccc' : '#666666',
   };
 
-  const copyToClipboard = async (text: string, message = 'Copié !') => {
+  const copyToClipboard = async (text: string, message = t('live.copied')) => {
     try {
       await navigator.clipboard.writeText(text);
       alert(message);
@@ -59,14 +61,14 @@ export const LivePage = () => {
       try {
         await navigator.share({
           title: 'ELEKTRAQ Live 🎧',
-          text: 'Rejoins le live et vibre avec la communauté !',
+          text: t('live.share_text'),
           url: liveShareUrl,
         });
       } catch (err) {
         console.log('Partage annulé');
       }
     } else {
-      copyToClipboard(liveShareUrl, 'Lien du live copié !');
+      copyToClipboard(liveShareUrl, t('live.live_link_copied'));
     }
   };
 
@@ -129,7 +131,7 @@ export const LivePage = () => {
               marginBottom: 24,
             }}>
               <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#b0b0b0', animation: 'pulse 1.5s infinite' }} />
-              En direct
+              {t('live.badge')}
             </div>
 
             <h1 style={{
@@ -140,7 +142,7 @@ export const LivePage = () => {
               color: colors.textMain, // ✅ Couleur dynamique
               letterSpacing: '-1px',
             }}>
-              Prenez les commandes.
+              {t('live.title')}
             </h1>
             
             <p style={{
@@ -150,7 +152,7 @@ export const LivePage = () => {
               margin: '0 0 40px 0',
               lineHeight: 1.6,
             }}>
-              Rejoignez la scène ELEKTRAQ. Diffusez vos sets en direct, partagez votre passion avec la communauté et faites découvrir votre univers musical.
+              {t('live.subtitle')}
             </p>
 
             {/* Boutons d'action */}
@@ -174,7 +176,7 @@ export const LivePage = () => {
                 onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'}
                 onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
               >
-                Commencer à mixer
+                {t('live.start')}
               </button>
               
               {/* ✅ Bouton Partager */}
@@ -198,7 +200,7 @@ export const LivePage = () => {
                 onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-                Partager
+                {t('live.share')}
               </button>
             </div>
           </div>
@@ -207,11 +209,11 @@ export const LivePage = () => {
           <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', marginTop: isMobile ? 10 : 0 }}>
              <div style={{ borderLeft: `2px solid ${colors.border}`, paddingLeft: 16 }}>
                 <div style={{ fontSize: 20, fontWeight: 600, color: colors.textMain }}>24/7</div>
-                <div style={{ fontSize: 11, color: colors.textMuted, textTransform: 'uppercase', marginTop: 4 }}>Antenne ouverte</div>
+                <div style={{ fontSize: 11, color: colors.textMuted, textTransform: 'uppercase', marginTop: 4 }}>{t('live.open_air')}</div>
              </div>
              <div style={{ borderLeft: `2px solid ${colors.border}`, paddingLeft: 16 }}>
                 <div style={{ fontSize: 20, fontWeight: 600, color: colors.textMain }}>HD</div>
-                <div style={{ fontSize: 11, color: colors.textMuted, textTransform: 'uppercase', marginTop: 4 }}>Qualité Audio</div>
+                <div style={{ fontSize: 11, color: colors.textMuted, textTransform: 'uppercase', marginTop: 4 }}>{t('live.audio_quality')}</div>
              </div>
           </div>
         </div>
@@ -262,7 +264,7 @@ export const LivePage = () => {
               overflow: 'hidden',
             }}>
               <div style={{ padding: '12px 16px', borderBottom: `1px solid ${colors.border}`, background: colors.hoverBg, fontWeight: 500, fontSize: 12, color: colors.textMuted }}>
-                Chat en direct
+                {t('live.chat')}
               </div>
               <LiveChat roomId="waveforgepro" />
             </div>
@@ -273,7 +275,7 @@ export const LivePage = () => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 16, flexWrap: 'wrap', gap: 12 }}>
           <div style={{ fontSize: 12, color: colors.textMuted, display: 'flex', alignItems: 'center', gap: 8 }}>
              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#b0b0b0' }} />
-             En direct sur ELEKTRAQ
+             {t('live.live_on')}
           </div>
           <div style={{ display: 'flex', gap: 16 }}>
             {!isMobile && (
@@ -284,7 +286,7 @@ export const LivePage = () => {
                   border: 'none', cursor: 'pointer', padding: 0, textDecoration: 'underline'
                 }}
               >
-                {chatVisible ? 'Masquer le chat' : 'Afficher le chat'}
+                {chatVisible ? t('live.hide_chat') : t('live.show_chat')}
               </button>
             )}
             <a
@@ -298,7 +300,7 @@ export const LivePage = () => {
                 fontWeight: 500,
               }}
             >
-              Ouvrir sur Tviply →
+              {t('live.open_tviply')}
             </a>
           </div>
         </div>
@@ -308,12 +310,12 @@ export const LivePage = () => {
       {/* 3. POURQUOI MIXER ICI                                */}
       {/* ==================================================== */}
       <section style={{ maxWidth: 1200, margin: '0 auto', width: '100%', padding: '0 20px' }}>
-        <h2 style={{ fontSize: 20, fontWeight: 600, marginBottom: 32, color: colors.textMain }}>Pourquoi mixer sur ELEKTRAQ ?</h2>
+        <h2 style={{ fontSize: 20, fontWeight: 600, marginBottom: 32, color: colors.textMain }}>{t('live.why_title')}</h2>
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 24 }}>
           {[
-            { title: 'Outils intégrés', desc: 'Profitez de notre suite de Mastering et de nos outils pour peaufiner votre son.' },
-            { title: 'Communauté active', desc: 'Une audience de passionnés prête à écouter vos meilleurs sets.' },
-            { title: 'Setup simple', desc: 'Connectez votre logiciel en quelques minutes avec notre clé RTMP.' }
+            { title: t('live.why1_title'), desc: t('live.why1_desc') },
+            { title: t('live.why2_title'), desc: t('live.why2_desc') },
+            { title: t('live.why3_title'), desc: t('live.why3_desc') }
           ].map((item, i) => (
             <div key={i} style={{ padding: '24px 0', borderTop: `1px solid ${colors.border}` }}>
               <h3 style={{ fontSize: 14, fontWeight: 600, margin: '0 0 8px 0', color: colors.textMain }}>{item.title}</h3>
@@ -346,7 +348,7 @@ export const LivePage = () => {
               onMouseEnter={(e) => e.currentTarget.style.background = colors.hoverBg}
               onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
             >
-              Afficher la configuration technique
+              {t('live.show_setup')}
             </button>
           </div>
         )}
@@ -354,7 +356,7 @@ export const LivePage = () => {
         {showSetup && (
           <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 8, padding: isMobile ? 20 : 32 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-              <h2 style={{ fontSize: 16, fontWeight: 600, margin: 0, color: colors.textMain }}>Configuration OBS / Streamlabs</h2>
+              <h2 style={{ fontSize: 16, fontWeight: 600, margin: 0, color: colors.textMain }}>{t('live.setup_title')}</h2>
               <button onClick={() => setShowSetup(false)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', fontSize: 16 }}>✕</button>
             </div>
 
@@ -365,7 +367,7 @@ export const LivePage = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
               {/* Hôte RTMP */}
               <div>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: colors.textMuted, marginBottom: 8 }}>Serveur (RTMP URL)</label>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: colors.textMuted, marginBottom: 8 }}>{t('live.server')}</label>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <input 
                     type="text" 
@@ -373,13 +375,13 @@ export const LivePage = () => {
                     value={rtmpUrl} 
                     style={{ flex: 1, padding: '10px 12px', background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 4, fontSize: 13, color: colors.textMain, fontFamily: 'monospace' }} 
                   />
-                  <button onClick={() => copyToClipboard(rtmpUrl, 'URL copiée !')} style={{ padding: '0 16px', background: colors.hoverBg, border: `1px solid ${colors.border}`, color: colors.textMain, borderRadius: 4, cursor: 'pointer', fontWeight: 500, fontSize: 12 }}>Copier</button>
+                  <button onClick={() => copyToClipboard(rtmpUrl, t('live.url_copied'))} style={{ padding: '0 16px', background: colors.hoverBg, border: `1px solid ${colors.border}`, color: colors.textMain, borderRadius: 4, cursor: 'pointer', fontWeight: 500, fontSize: 12 }}>{t('live.copy')}</button>
                 </div>
               </div>
 
               {/* Stream Key */}
               <div>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: colors.textMuted, marginBottom: 8 }}>Clé de flux (Stream Key)</label>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: colors.textMuted, marginBottom: 8 }}>{t('live.stream_key')}</label>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <input 
                     type="password" 
@@ -387,10 +389,10 @@ export const LivePage = () => {
                     value={streamKey} 
                     style={{ flex: 1, padding: '10px 12px', background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 4, fontSize: 13, color: colors.textMain, fontFamily: 'monospace' }} 
                   />
-                  <button onClick={() => copyToClipboard(streamKey, 'Clé copiée !')} style={{ padding: '0 16px', background: colors.btnPrimaryBg, border: 'none', color: colors.btnPrimaryText, borderRadius: 4, cursor: 'pointer', fontWeight: 600, fontSize: 12 }}>Copier</button>
+                  <button onClick={() => copyToClipboard(streamKey, t('live.key_copied'))} style={{ padding: '0 16px', background: colors.btnPrimaryBg, border: 'none', color: colors.btnPrimaryText, borderRadius: 4, cursor: 'pointer', fontWeight: 600, fontSize: 12 }}>{t('live.copy')}</button>
                 </div>
                 <div style={{ marginTop: 12, fontSize: 11, color: colors.textMuted }}>
-                  Ne partagez jamais cette clé.
+                  {t('live.never_share')}
                 </div>
               </div>
             </div>

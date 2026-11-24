@@ -221,5 +221,30 @@
     "discover_artists": "🎧 Discover the artists",
     "no_artists": "No artist signed up yet.",
     "new_artist": "New artist on ELEKTRAQ."
+  },
+  "events": {
+    "title": "Good deals & Parties",
+    "subtitle": "Discover upcoming events and share your dates.",
+    "cancel": "Cancel",
+    "add": "+ Add an event",
+    "edit_title": "Edit event",
+    "new_title": "New event",
+    "luma_hint": "⚡ Save time: import the info from a Luma link.",
+    "import": "IMPORT",
+    "title_placeholder": "Event title *",
+    "description": "Description",
+    "location_placeholder": "Venue (e.g. Rex Club)",
+    "city_placeholder": "City (e.g. Paris)",
+    "url_placeholder": "Event link (ticketing, FB, etc.)",
+    "image_placeholder": "Image URL (optional)",
+    "publishing": "Publishing...",
+    "save": "Save",
+    "publish": "Publish the event",
+    "loading": "Loading...",
+    "empty": "No events yet. Be the first to add one!",
+    "edit": "Edit",
+    "delete": "Delete",
+    "more_info": "More info →",
+    "confirm_delete": "Delete this event?"
   }
 }

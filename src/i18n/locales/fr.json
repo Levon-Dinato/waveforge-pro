@@ -221,5 +221,30 @@
     "discover_artists": "🎧 Découvrir les artistes",
     "no_artists": "Aucun artiste inscrit pour le moment.",
     "new_artist": "Nouvel artiste sur ELEKTRAQ."
+  },
+  "events": {
+    "title": "Bons plans & Soirées",
+    "subtitle": "Découvre les prochains événements et partage tes dates.",
+    "cancel": "Annuler",
+    "add": "+ Ajouter un événement",
+    "edit_title": "Modifier l'événement",
+    "new_title": "Nouvel événement",
+    "luma_hint": "⚡ Gagne du temps : importe les infos depuis un lien Luma.",
+    "import": "IMPORTER",
+    "title_placeholder": "Titre de l'événement *",
+    "description": "Description",
+    "location_placeholder": "Lieu (ex: Rex Club)",
+    "city_placeholder": "Ville (ex: Paris)",
+    "url_placeholder": "Lien vers l'événement (billetterie, FB, etc.)",
+    "image_placeholder": "URL de l'image (optionnel)",
+    "publishing": "Publication...",
+    "save": "Sauvegarder",
+    "publish": "Publier l'événement",
+    "loading": "Chargement...",
+    "empty": "Aucun événement pour le moment. Sois le premier à en ajouter un !",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "more_info": "Plus d'infos →",
+    "confirm_delete": "Supprimer cet événement ?"
   }
 }

@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { useTheme } from '../contexts/ThemeContext'; // ✅ IMPORT AJOUTÉ
 import { PageMeta } from '../components/PageMeta';
+import { useTranslation } from 'react-i18next';
 
 interface Event {
   id: string;
@@ -27,6 +28,7 @@ export const EventsPage: React.FC = () => {
   // ✅ RÉCUPÉRATION DU THÈME
   const { theme } = useTheme();
   const isDark = theme === 'dark';
+  const { t } = useTranslation();
 
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
@@ -163,7 +165,7 @@ export const EventsPage: React.FC = () => {
 
   // ✅ Supprimer un événement
   const handleDelete = async (id: string) => {
-    if (!window.confirm('Supprimer cet événement ?')) return;
+    if (!window.confirm(t('events.confirm_delete'))) return;
     const { error } = await supabase.from('events').delete().eq('id', id);
     if (error) {
       alert('Erreur : ' + error.message);
@@ -203,10 +205,10 @@ export const EventsPage: React.FC = () => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
         <div>
           <h1 style={{ fontSize: isMobile ? 24 : 32, fontWeight: 700, margin: 0 }}>
-            Bons plans & Soirées
+            {t('events.title')}
           </h1>
           <p style={{ color: colors.textMuted, fontSize: 13, marginTop: 6 }}>
-            Découvre les prochains événements et partage tes dates.
+            {t('events.subtitle')}
           </p>
         </div>
         <button
@@ -227,7 +229,7 @@ export const EventsPage: React.FC = () => {
             cursor: 'pointer',
           }}
         >
-          {showForm ? 'Annuler' : '+ Ajouter un événement'}
+          {showForm ? t('events.cancel') : t('events.add')}
         </button>
       </div>
 
@@ -243,7 +245,7 @@ export const EventsPage: React.FC = () => {
           flexDirection: 'column', 
           gap: 12 
         }}>
-          <h3 style={{ margin: 0, fontSize: 15 }}>{editingId ? 'Modifier l\'événement' : 'Nouvel événement'}</h3>
+          <h3 style={{ margin: 0, fontSize: 15 }}>{editingId ? t('events.edit_title') : t('events.new_title')}</h3>
 
           {/* ✅ CHAMP D'IMPORT LUMA (seulement en création) */}
           {!editingId && (
@@ -259,7 +261,7 @@ export const EventsPage: React.FC = () => {
               flexWrap: 'wrap' 
             }}>
               <div style={{ fontSize: 12, color: colors.textMuted, flex: '1 1 200px' }}>
-                ⚡ Gagne du temps : importe les infos depuis un lien Luma.
+                {t('events.luma_hint')}
               </div>
               <input
                 type="url"
@@ -284,22 +286,22 @@ export const EventsPage: React.FC = () => {
                   flexShrink: 0,
                 }}
               >
-                {importing ? '...' : 'IMPORTER'}
+                {importing ? '...' : t('events.import')}
               </button>
             </div>
           )}
 
-          <input type="text" placeholder="Titre de l'événement *" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} style={{ padding: 10, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 6, color: colors.textMain, fontSize: 13 }} required />
-          <textarea placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={3} style={{ padding: 10, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 6, color: colors.textMain, fontSize: 13, resize: 'vertical' }} />
+          <input type="text" placeholder={t('events.title_placeholder')} value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} style={{ padding: 10, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 6, color: colors.textMain, fontSize: 13 }} required />
+          <textarea placeholder={t('events.description')} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={3} style={{ padding: 10, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 6, color: colors.textMain, fontSize: 13, resize: 'vertical' }} />
           <input type="datetime-local" value={form.event_date} onChange={(e) => setForm({ ...form, event_date: e.target.value })} style={{ padding: 10, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 6, color: colors.textMain, fontSize: 13 }} required />
           
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-            <input type="text" placeholder="Lieu (ex: Rex Club)" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} style={{ flex: 1, padding: 10, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 6, color: colors.textMain, fontSize: 13, minWidth: 150 }} />
-            <input type="text" placeholder="Ville (ex: Paris)" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} style={{ flex: 1, padding: 10, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 6, color: colors.textMain, fontSize: 13, minWidth: 150 }} />
+            <input type="text" placeholder={t('events.location_placeholder')} value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} style={{ flex: 1, padding: 10, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 6, color: colors.textMain, fontSize: 13, minWidth: 150 }} />
+            <input type="text" placeholder={t('events.city_placeholder')} value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} style={{ flex: 1, padding: 10, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 6, color: colors.textMain, fontSize: 13, minWidth: 150 }} />
           </div>
           
-          <input type="url" placeholder="Lien vers l'événement (billetterie, FB, etc.)" value={form.url} onChange={(e) => setForm({ ...form, url: e.target.value })} style={{ padding: 10, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 6, color: colors.textMain, fontSize: 13 }} />
-          <input type="url" placeholder="URL de l'image (optionnel)" value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} style={{ padding: 10, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 6, color: colors.textMain, fontSize: 13 }} />
+          <input type="url" placeholder={t('events.url_placeholder')} value={form.url} onChange={(e) => setForm({ ...form, url: e.target.value })} style={{ padding: 10, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 6, color: colors.textMain, fontSize: 13 }} />
+          <input type="url" placeholder={t('events.image_placeholder')} value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} style={{ padding: 10, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 6, color: colors.textMain, fontSize: 13 }} />
           
           <button type="submit" disabled={posting} style={{ 
             padding: '10px 20px', 
@@ -311,16 +313,16 @@ export const EventsPage: React.FC = () => {
             cursor: posting ? 'wait' : 'pointer', 
             alignSelf: 'flex-end' 
           }}>
-            {posting ? 'Publication...' : editingId ? 'Sauvegarder' : 'Publier l\'événement'}
+            {posting ? t('events.publishing') : editingId ? t('events.save') : t('events.publish')}
           </button>
         </form>
       )}
 
       {/* LISTE DES ÉVÉNEMENTS */}
       {loading ? (
-        <div style={{ textAlign: 'center', color: colors.textMuted, padding: 40 }}>Chargement...</div>
+        <div style={{ textAlign: 'center', color: colors.textMuted, padding: 40 }}>{t('events.loading')}</div>
       ) : events.length === 0 ? (
-        <div style={{ textAlign: 'center', color: colors.textMuted, padding: 40 }}>Aucun événement pour le moment. Sois le premier à en ajouter un !</div>
+        <div style={{ textAlign: 'center', color: colors.textMuted, padding: 40 }}>{t('events.empty')}</div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 20 }}>
           {events.map((event) => {
@@ -343,14 +345,14 @@ export const EventsPage: React.FC = () => {
                   <div style={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 4, zIndex: 2 }}>
                     <button
                       onClick={() => startEdit(event)}
-                      title="Modifier"
+                      title={t('events.edit')}
                       style={{ background: isDark ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.9)', border: `1px solid ${colors.border}`, color: colors.textMain, cursor: 'pointer', padding: 6, borderRadius: 4, fontSize: 12 }}
                     >
                       ✏️
                     </button>
                     <button
                       onClick={() => handleDelete(event.id)}
-                      title="Supprimer"
+                      title={t('events.delete')}
                       style={{ background: isDark ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.9)', border: `1px solid ${colors.border}`, color: colors.danger, cursor: 'pointer', padding: 6, borderRadius: 4, fontSize: 12 }}
                     >
                       🗑️
@@ -380,7 +382,7 @@ export const EventsPage: React.FC = () => {
                   
                   {event.url && (
                     <a href={event.url} target="_blank" rel="noopener noreferrer" style={{ marginTop: 'auto', padding: '8px 12px', background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 6, color: colors.accent, textDecoration: 'none', fontSize: 12, fontWeight: 600, textAlign: 'center' }}>
-                      Plus d'infos →
+                      {t('events.more_info')}
                     </a>
                   )}
                 </div>

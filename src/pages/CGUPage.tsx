@@ -1,10 +1,12 @@
 // src/pages/CGUPage.tsx
 import React from 'react';
 import { LegalPageShell } from '../components/LegalPageShell';
+import { useTranslation } from 'react-i18next';
 
 export const CGUPage: React.FC = () => {
+  const { t } = useTranslation();
   return (
-    <LegalPageShell title="Conditions générales d'utilisation" updatedAt="Novembre 2026">
+    <LegalPageShell title={t('footer.terms')} updatedAt="Novembre 2026">
       <div className="legal-shell">
         <h2>1. Objet</h2>
         <p>

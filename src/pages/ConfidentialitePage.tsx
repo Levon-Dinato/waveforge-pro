@@ -1,10 +1,12 @@
 // src/pages/ConfidentialitePage.tsx
 import React from 'react';
 import { LegalPageShell } from '../components/LegalPageShell';
+import { useTranslation } from 'react-i18next';
 
 export const ConfidentialitePage: React.FC = () => {
+  const { t } = useTranslation();
   return (
-    <LegalPageShell title="Politique de confidentialité" updatedAt="Novembre 2026">
+    <LegalPageShell title={t('footer.privacy')} updatedAt="Novembre 2026">
       <div className="legal-shell">
         <h2>1. Données collectées</h2>
         <p>Nous collectons les informations suivantes :</p>

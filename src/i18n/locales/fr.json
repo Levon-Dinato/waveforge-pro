@@ -309,5 +309,20 @@
     "buy": "Acheter sur iTunes",
     "prev": "← Précédent",
     "next": "Suivant →"
+  },
+  "artists": {
+    "title_a": "Découvrir les",
+    "title_b": "Artistes",
+    "subtitle": "Les DJs et producteurs qui font vibrer ELEKTRAQ.",
+    "search": "Rechercher un artiste...",
+    "empty": "Aucun artiste trouvé",
+    "empty_sub": "Essayez un autre nom ou modifiez votre recherche.",
+    "premium": "PREMIUM",
+    "official": "✦ SITE OFFICIEL",
+    "tracks_one": "{{count}} morceau",
+    "tracks_other": "{{count}} morceaux",
+    "city_fallback": "France",
+    "loading": "Chargement...",
+    "load_more": "Charger plus d'artistes"
   }
 }

@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { useTheme } from '../contexts/ThemeContext';
 import { PageMeta } from '../components/PageMeta';
+import { useTranslation } from 'react-i18next';
 
 interface Artist {
   id: string;
@@ -27,6 +28,7 @@ export const ArtistsPage: React.FC = () => {
   const isMobile = useIsMobile(768);
   const { theme } = useTheme();
   const isDark = theme === 'dark';
+  const { t } = useTranslation();
 
   const [artists, setArtists] = useState<Artist[]>([]);
   const [loading, setLoading] = useState(true);
@@ -221,16 +223,16 @@ export const ArtistsPage: React.FC = () => {
             color: colors.textMain,
           }}
         >
-          Découvrir les <span style={{ color: colors.textMain }}>Artistes</span>
+          {t('artists.title_a')} <span style={{ color: colors.textMain }}>{t('artists.title_b')}</span>
         </h1>
         <p style={{ color: colors.textMuted, marginTop: 8, fontSize: '0.9rem' }}>
-          Les DJs et producteurs qui font vibrer ELEKTRAQ.
+          {t('artists.subtitle')}
         </p>
 
         <div style={{ marginTop: 24, maxWidth: 400 }}>
           <input
             type="text"
-            placeholder="Rechercher un artiste..."
+            placeholder={t('artists.search')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             style={{
@@ -317,10 +319,10 @@ export const ArtistsPage: React.FC = () => {
             }}
           >
             <p style={{ fontSize: 15, fontWeight: 700, margin: '0 0 8px 0' }}>
-              Aucun artiste trouvé
+              {t('artists.empty')}
             </p>
             <p style={{ fontSize: 13, margin: 0 }}>
-              Essayez un autre nom ou modifiez votre recherche.
+              {t('artists.empty_sub')}
             </p>
           </div>
         ) : (
@@ -457,7 +459,7 @@ export const ArtistsPage: React.FC = () => {
                                 boxShadow: '0 0 10px rgba(255,255,255,0.3)',
                               }}
                             >
-                              PREMIUM
+                              {t('artists.premium')}
                             </span>
                           )}
                         </h3>
@@ -472,7 +474,7 @@ export const ArtistsPage: React.FC = () => {
                             ? `${artist.city}${
                                 artist.country ? `, ${artist.country}` : ''
                               }`
-                            : 'France'}
+                            : t('artists.city_fallback')}
                         </div>
                         {artist.bio && (
                           <div
@@ -513,10 +515,8 @@ export const ArtistsPage: React.FC = () => {
                         }}
                       >
                         {isPremium
-                          ? '✦ SITE OFFICIEL'
-                          : `${artist.trackCount} ${
-                              artist.trackCount > 1 ? 'morceaux' : 'morceau'
-                            }`}
+                          ? t('artists.official')
+                          : t('artists.tracks', { count: artist.trackCount })}
                       </div>
                     </div>
                   </Link>
@@ -558,7 +558,7 @@ export const ArtistsPage: React.FC = () => {
                     e.currentTarget.style.color = colors.textMain;
                   }}
                 >
-                  {loadingMore ? 'Chargement...' : 'Charger plus d\'artistes'}
+                  {loadingMore ? t('artists.loading') : t('artists.load_more')}
                 </button>
               </div>
             )}

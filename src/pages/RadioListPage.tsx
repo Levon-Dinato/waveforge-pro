@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase';
 import { useTheme } from '../contexts/ThemeContext';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { PageMeta } from '../components/PageMeta';
+import { useTranslation } from 'react-i18next';
 
 interface ArtistRadio {
   id: string;
@@ -17,6 +18,7 @@ export const RadioListPage: React.FC = () => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   const isMobile = useIsMobile(768);
+  const { t } = useTranslation();
 
   const [artists, setArtists] = useState<ArtistRadio[]>([]);
   const [loading, setLoading] = useState(true);
@@ -89,7 +91,7 @@ export const RadioListPage: React.FC = () => {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  if (loading) return <div style={{ color: colors.textMain, background: colors.bg, minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>Chargement des radios...</div>;
+  if (loading) return <div style={{ color: colors.textMain, background: colors.bg, minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>{t('radioList.loading')}</div>;
 
   return (
     <div style={{ background: colors.bg, minHeight: '100vh', color: colors.textMain, fontFamily: 'Inter, sans-serif', padding: isMobile ? '20px' : '40px' }}>
@@ -98,10 +100,10 @@ export const RadioListPage: React.FC = () => {
         
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
           <h1 style={{ fontSize: isMobile ? '2rem' : '3rem', fontWeight: 900, margin: '0 0 16px 0', letterSpacing: '-1px' }}>
-            📻 Toutes les Radios
+            {t('radioList.title')}
           </h1>
           <p style={{ color: colors.textMuted, fontSize: 16 }}>
-            Découvre les webradios en direct de la communauté ELEKTRAQ.
+            {t('radioList.subtitle')}
           </p>
         </div>
 
@@ -111,7 +113,7 @@ export const RadioListPage: React.FC = () => {
               onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
               onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
             >
-              <button onClick={(e) => handleCopyLink(e, artist.username)} style={{ position: 'absolute', top: 16, right: 16, background: 'transparent', border: 'none', color: copiedId === artist.username ? '#b0b0b0' : colors.textMuted, cursor: 'pointer', transition: 'all 0.2s' }} title="Copier le lien de la radio">
+              <button onClick={(e) => handleCopyLink(e, artist.username)} style={{ position: 'absolute', top: 16, right: 16, background: 'transparent', border: 'none', color: copiedId === artist.username ? '#b0b0b0' : colors.textMuted, cursor: 'pointer', transition: 'all 0.2s' }} title={t('radioList.copy_link')}>
                 {copiedId === artist.username ? (
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
                 ) : (
@@ -123,14 +125,14 @@ export const RadioListPage: React.FC = () => {
               
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(176, 176, 176, 0.15)', padding: '4px 10px', borderRadius: 20, marginBottom: 12 }}>
                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: colors.accent, animation: 'pulse 1.5s infinite' }} />
-                <span style={{ fontSize: 10, fontWeight: 800, color: colors.accent, letterSpacing: '1px' }}>EN DIRECT</span>
+                <span style={{ fontSize: 10, fontWeight: 800, color: colors.accent, letterSpacing: '1px' }}>{t('radioList.live')}</span>
               </div>
 
               <h3 style={{ fontSize: 20, fontWeight: 800, margin: '0 0 4px 0' }}>{artist.username}</h3>
-              <p style={{ fontSize: 13, color: colors.textMuted, margin: '0 0 20px 0' }}>{artist.tracks_count} sons disponibles</p>
+              <p style={{ fontSize: 13, color: colors.textMuted, margin: '0 0 20px 0' }}>{artist.tracks_count} {t('radioList.tracks')}</p>
 
               <Link to={`/radio/${artist.username}`} style={{ width: '100%', padding: '12px', background: 'linear-gradient(135deg, #b0b0b0, #b0b0b0)', color: '#fff', border: 'none', borderRadius: 30, fontWeight: 800, fontSize: 14, textDecoration: 'none', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8 }}>
-                ▶ Écouter la Radio
+                {t('radioList.listen')}
               </Link>
             </div>
           ))}
@@ -138,7 +140,7 @@ export const RadioListPage: React.FC = () => {
 
         {artists.length === 0 && (
           <div style={{ textAlign: 'center', color: colors.textMuted, padding: 60 }}>
-            Aucune radio disponible pour le moment.
+            {t('radioList.empty')}
           </div>
         )}
       </div>

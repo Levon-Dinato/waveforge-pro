@@ -7,6 +7,7 @@ import { usePlayer } from '../contexts/PlayerContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { PageMeta } from '../components/PageMeta';
+import { useTranslation } from 'react-i18next';
 
 const Icons = {
   play: <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>,
@@ -36,6 +37,7 @@ export const SortieRadioPage: React.FC = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile(768);
   const { currentTrack, isPlaying, play } = usePlayer();
+  const { t } = useTranslation();
 
   const [tracks, setTracks] = useState<Track[]>([]);
   const [userLikes, setUserLikes] = useState<Record<string, boolean>>({});
@@ -139,7 +141,7 @@ export const SortieRadioPage: React.FC = () => {
             <aside style={{ width: 240, flexShrink: 0, position: 'sticky', top: 100, alignSelf: 'flex-start' }}>
               <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: '20px 12px', backdropFilter: 'blur(20px)', boxShadow: isDark ? '0 10px 30px rgba(0,0,0,0.3)' : '0 4px 20px rgba(0,0,0,0.05)' }}>
                 <h3 style={{ fontSize: 11, fontWeight: 800, letterSpacing: '1.5px', padding: '0 10px 14px', margin: 0, color: colors.textMuted, textTransform: 'uppercase', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  Genres
+                  {t('sortieRadio.genres')}
                   <span style={{ fontSize: 10, fontWeight: 700, background: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)', color: colors.accent, padding: '2px 8px', borderRadius: 20 }}>{Array.from(new Set(tracks.map(t => (t.genre || '').trim()).filter(Boolean))).length}</span>
                 </h3>
 
@@ -149,7 +151,7 @@ export const SortieRadioPage: React.FC = () => {
                     onMouseLeave={(e) => { if (selectedGenre !== null) e.currentTarget.style.background = 'transparent'; }}
                   >
                     <span style={{ width: 26, height: 26, borderRadius: 8, background: selectedGenre === null ? (isDark ? 'linear-gradient(135deg, #ffffff, #b0b0b0)' : '#111111') : colors.inputBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: selectedGenre === null ? (isDark ? '#000' : '#ffffff') : colors.textMuted, flexShrink: 0, fontSize: 12 }}>{Icons.music}</span>
-                    <span style={{ flex: 1 }}>Tous les sons</span>
+                    <span style={{ flex: 1 }}>{t('sortieRadio.all_tracks')}</span>
                     <span style={{ fontSize: 11, fontWeight: 700, background: colors.inputBg, color: colors.textMuted, padding: '2px 7px', borderRadius: 20 }}>{tracks.length}</span>
                   </div>
 
@@ -180,36 +182,36 @@ export const SortieRadioPage: React.FC = () => {
             {/* En-tête */}
             <div style={{ marginBottom: 24 }}>
               <div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: colors.accent, marginBottom: 8 }}>
-                <span style={{ filter: 'drop-shadow(0 0 10px rgba(255,255,255,0.8))' }}>🎵</span> Sortie Radio
+                <span style={{ filter: 'drop-shadow(0 0 10px rgba(255,255,255,0.8))' }}>🎵</span> {t('sortieRadio.title')}
               </div>
-              <h1 style={{ fontSize: isMobile ? 28 : 36, fontWeight: 900, margin: 0, letterSpacing: '-1px' }}>Sortie Radio</h1>
-              <p style={{ color: colors.textMuted, fontSize: 14, marginTop: 8 }}>Les dernières sorties à écouter sur la radio ELEKTRAQ.</p>
+              <h1 style={{ fontSize: isMobile ? 28 : 36, fontWeight: 900, margin: 0, letterSpacing: '-1px' }}>{t('sortieRadio.title')}</h1>
+              <p style={{ color: colors.textMuted, fontSize: 14, marginTop: 8 }}>{t('sortieRadio.subtitle')}</p>
             </div>
 
             {/* Recherche + compteur */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 10, flex: 1, minWidth: 200, maxWidth: 360 }}>
                 {Icons.search}
-                <input type="text" placeholder="Rechercher un titre ou un artiste..." value={search} onChange={(e) => setSearch(e.target.value)} style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: colors.textMain, fontSize: 13 }} />
+                <input type="text" placeholder={t('sortieRadio.search')} value={search} onChange={(e) => setSearch(e.target.value)} style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: colors.textMain, fontSize: 13 }} />
               </div>
-              <span style={{ marginLeft: 'auto', fontSize: 12, color: colors.textMuted, fontWeight: 600 }}>{visibleTracks.length} titre{visibleTracks.length > 1 ? 's' : ''}{selectedGenre ? ` · ${selectedGenre}` : ''}</span>
+              <span style={{ marginLeft: 'auto', fontSize: 12, color: colors.textMuted, fontWeight: 600 }}>{t('sortieRadio.titles', { count: visibleTracks.length })}{selectedGenre ? ` · ${selectedGenre}` : ''}</span>
             </div>
 
             {/* Tableau */}
             <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, width: '100%', overflow: 'hidden', backdropFilter: 'blur(20px)', boxShadow: isDark ? '0 20px 40px rgba(0,0,0,0.4)' : '0 10px 30px rgba(0,0,0,0.05)' }}>
               {!isMobile && (
                 <div style={{ display: 'grid', gridTemplateColumns: '40px 40px minmax(200px, 1fr) 120px 140px 160px', gap: 16, padding: '14px 16px', borderBottom: `1px solid ${colors.border}`, fontSize: 11, color: colors.textMuted, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1.2px', background: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)' }}>
-                  <div></div><div></div><div>Titre / Artistes</div><div>Genre</div><div>BPM / Clé</div><div style={{ textAlign: 'right' }}>Actions</div>
+                  <div></div><div></div><div>{t('sortieRadio.col_title')}</div><div>{t('sortieRadio.col_genre')}</div><div>{t('sortieRadio.col_bpm')}</div><div style={{ textAlign: 'right' }}>{t('sortieRadio.col_actions')}</div>
                 </div>
               )}
 
               {loading ? (
-                <div style={{ padding: 60, textAlign: 'center', color: colors.textMuted }}>Chargement...</div>
+                <div style={{ padding: 60, textAlign: 'center', color: colors.textMuted }}>{t('sortieRadio.loading')}</div>
               ) : paginatedTracks.length === 0 ? (
                 <div style={{ padding: 60, textAlign: 'center', color: colors.textMuted }}>
                   <div style={{ fontSize: 48, marginBottom: 16 }}>🔍</div>
-                  <div style={{ fontSize: 16, fontWeight: 700, color: colors.textMain, marginBottom: 8 }}>Aucun titre pour le moment</div>
-                  <div style={{ fontSize: 13 }}>Reviens bientôt pour de nouvelles sorties.</div>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: colors.textMain, marginBottom: 8 }}>{t('sortieRadio.empty')}</div>
+                  <div style={{ fontSize: 13 }}>{t('sortieRadio.empty_sub')}</div>
                 </div>
               ) : paginatedTracks.map((track) => {
                 const isThisPlaying = currentTrack?.id === track.id && isPlaying;
@@ -247,7 +249,7 @@ export const SortieRadioPage: React.FC = () => {
                       <button onClick={() => handleLike(track.id)} style={{ background: 'transparent', border: 'none', color: isLiked ? '#b0b0b0' : colors.textMuted, cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', gap: 4 }}>
                         {isLiked ? '❤️' : '🤍'} <span style={{ color: colors.textMuted, fontWeight: 600 }}>{track.likes_count}</span>
                       </button>
-                      {track.purchase_url && <a href={track.purchase_url} target="_blank" rel="noopener noreferrer" title="Acheter sur iTunes" style={{ color: colors.accent, display: 'flex', alignItems: 'center' }}>{Icons.buy}</a>}
+                      {track.purchase_url && <a href={track.purchase_url} target="_blank" rel="noopener noreferrer" title={t('sortieRadio.buy')} style={{ color: colors.accent, display: 'flex', alignItems: 'center' }}>{Icons.buy}</a>}
                     </div>
                   </div>
                 );
@@ -258,11 +260,11 @@ export const SortieRadioPage: React.FC = () => {
             {!loading && totalPages > 1 && (
               <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 20, marginTop: 32 }}>
                 <button onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={safeCurrentPage === 1} style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, color: safeCurrentPage === 1 ? colors.textMuted : colors.textMain, padding: '10px 20px', borderRadius: 8, cursor: safeCurrentPage === 1 ? 'not-allowed' : 'pointer', fontSize: 13, fontWeight: 600 }}>
-                  ← Précédent
+                  {t('sortieRadio.prev')}
                 </button>
                 <span style={{ fontSize: 13, color: colors.textMuted }}>{safeCurrentPage} / {totalPages}</span>
                 <button onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={safeCurrentPage === totalPages} style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, color: safeCurrentPage === totalPages ? colors.textMuted : colors.textMain, padding: '10px 20px', borderRadius: 8, cursor: safeCurrentPage === totalPages ? 'not-allowed' : 'pointer', fontSize: 13, fontWeight: 600 }}>
-                  Suivant →
+                  {t('sortieRadio.next')}
                 </button>
               </div>
             )}

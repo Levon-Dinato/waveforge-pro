@@ -279,5 +279,35 @@
     "key_copied": "Key copied!",
     "live_link_copied": "Live link copied!",
     "share_text": "Join the live and vibe with the community!"
+  },
+  "radioList": {
+    "loading": "Loading radios...",
+    "title": "📻 All Radios",
+    "subtitle": "Discover the live webradios of the ELEKTRAQ community.",
+    "copy_link": "Copy radio link",
+    "live": "LIVE",
+    "tracks": "tracks available",
+    "listen": "▶ Listen to the Radio",
+    "empty": "No radio available yet."
+  },
+  "sortieRadio": {
+    "genres": "Genres",
+    "all_tracks": "All tracks",
+    "badge": "🎵 Radio Releases",
+    "title": "Radio Releases",
+    "subtitle": "The latest releases to listen to on ELEKTRAQ radio.",
+    "search": "Search a title or artist...",
+    "titles_one": "{{count}} track",
+    "titles_other": "{{count}} tracks",
+    "col_title": "Title / Artists",
+    "col_genre": "Genre",
+    "col_bpm": "BPM / Key",
+    "col_actions": "Actions",
+    "loading": "Loading...",
+    "empty": "No track yet",
+    "empty_sub": "Come back soon for new releases.",
+    "buy": "Buy on iTunes",
+    "prev": "← Previous",
+    "next": "Next →"
   }
 }

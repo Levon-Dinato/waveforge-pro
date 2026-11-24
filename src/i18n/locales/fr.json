@@ -279,5 +279,35 @@
     "key_copied": "Clé copiée !",
     "live_link_copied": "Lien du live copié !",
     "share_text": "Rejoins le live et vibre avec la communauté !"
+  },
+  "radioList": {
+    "loading": "Chargement des radios...",
+    "title": "📻 Toutes les Radios",
+    "subtitle": "Découvre les webradios en direct de la communauté ELEKTRAQ.",
+    "copy_link": "Copier le lien de la radio",
+    "live": "EN DIRECT",
+    "tracks": "sons disponibles",
+    "listen": "▶ Écouter la Radio",
+    "empty": "Aucune radio disponible pour le moment."
+  },
+  "sortieRadio": {
+    "genres": "Genres",
+    "all_tracks": "Tous les sons",
+    "badge": "🎵 Sortie Radio",
+    "title": "Sortie Radio",
+    "subtitle": "Les dernières sorties à écouter sur la radio ELEKTRAQ.",
+    "search": "Rechercher un titre ou un artiste...",
+    "titles_one": "{{count}} titre",
+    "titles_other": "{{count}} titres",
+    "col_title": "Titre / Artistes",
+    "col_genre": "Genre",
+    "col_bpm": "BPM / Clé",
+    "col_actions": "Actions",
+    "loading": "Chargement...",
+    "empty": "Aucun titre pour le moment",
+    "empty_sub": "Reviens bientôt pour de nouvelles sorties.",
+    "buy": "Acheter sur iTunes",
+    "prev": "← Précédent",
+    "next": "Suivant →"
   }
 }

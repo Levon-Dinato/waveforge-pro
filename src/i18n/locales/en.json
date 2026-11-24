@@ -631,5 +631,27 @@
     "style_wave": "Wave",
     "style_circle": "Circle",
     "style_particles": "Particles"
+  },
+  "studio": {
+    "loading": "Loading Studio...",
+    "drop": "Drop the audio file to analyze it",
+    "quit": "Quit studio",
+    "server_online": "SERVER ONLINE",
+    "server_offline": "SERVER OFFLINE",
+    "connecting": "CONNECTING...",
+    "library": "My Library",
+    "no_music": "No music.",
+    "analyzing": "Analyzing...",
+    "import_track": "+ Import a track",
+    "new_project": "New Project",
+    "notes": "notes",
+    "waiting": "Waiting",
+    "play": "PLAY",
+    "stop": "STOP",
+    "export_midi": "EXPORT MIDI",
+    "grid_title": "Composition grid",
+    "grid_sub": "Import a track on the left to extract its notes and show them on the score.",
+    "import": "Import a track",
+    "patience": "Patience:"
   }
 }

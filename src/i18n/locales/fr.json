@@ -631,5 +631,27 @@
     "style_wave": "Wave",
     "style_circle": "Cercle",
     "style_particles": "Particules"
+  },
+  "studio": {
+    "loading": "Chargement du Studio...",
+    "drop": "Déposez le fichier audio pour l'analyser",
+    "quit": "Quitter le studio",
+    "server_online": "SERVEUR EN LIGNE",
+    "server_offline": "SERVEUR HORS LIGNE",
+    "connecting": "CONNEXION...",
+    "library": "Ma Bibliothèque",
+    "no_music": "Aucune musique.",
+    "analyzing": "Analyse...",
+    "import_track": "+ Importer un son",
+    "new_project": "Nouveau Projet",
+    "notes": "notes",
+    "waiting": "En attente",
+    "play": "LECTURE",
+    "stop": "STOP",
+    "export_midi": "EXPORT MIDI",
+    "grid_title": "Grille de composition",
+    "grid_sub": "Importe un son à gauche pour extraire ses notes et les faire apparaître sur la partition.",
+    "import": "Importer un son",
+    "patience": "Patience :"
   }
 }

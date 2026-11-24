@@ -8,6 +8,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { PianoRoll } from '../components/PianoRoll';
 import type { DetectedNote } from '../types';
 import { exportMidi, download } from '../audio/midiExporter';
+import { useTranslation } from 'react-i18next';
 
 interface LibraryTrack {
   id: string; coverUrl: string | null; artist: string; title: string; key: string; bpm: number;
@@ -24,6 +25,7 @@ export const StudioPage: React.FC = () => {
 
   const { theme } = useTheme();
   const isDark = theme === 'dark';
+  const { t } = useTranslation();
 
   const [library, setLibrary] = useState<LibraryTrack[]>([]);
   const [activeTrack, setActiveTrack] = useState<LibraryTrack | null>(null);
@@ -177,14 +179,14 @@ export const StudioPage: React.FC = () => {
     "Extraction des notes MIDI en cours..."
   ];
 
-  if (loading) return <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', background: colors.bg, color: colors.accent, fontFamily: 'Inter, sans-serif', fontSize: 20, fontWeight: 800 }}>Chargement du Studio...</div>;
+  if (loading) return <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', background: colors.bg, color: colors.accent, fontFamily: 'Inter, sans-serif', fontSize: 20, fontWeight: 800 }}>{t('studio.loading')}</div>;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', background: colors.bg, color: colors.textMain, fontFamily: 'Inter, sans-serif', overflow: 'hidden' }} onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }} onDragLeave={() => setIsDragging(false)} onDrop={handleDrop}>
       
       {isDragging && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', border: `3px dashed ${colors.accent}`, pointerEvents: 'none', backdropFilter: 'blur(4px)' }}>
-          <div style={{ fontSize: 24, fontWeight: 900, color: colors.accent, letterSpacing: '1px' }}>Déposez le fichier audio pour l'analyser</div>
+          <div style={{ fontSize: 24, fontWeight: 900, color: colors.accent, letterSpacing: '1px' }}>{t('studio.drop')}</div>
         </div>
       )}
 
@@ -197,7 +199,7 @@ export const StudioPage: React.FC = () => {
         <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
           <button onClick={() => navigate('/tools')} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600, transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = colors.textMain} onMouseLeave={(e) => e.currentTarget.style.color = colors.textMuted}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-            Quitter le studio
+            {t('studio.quit')}
           </button>
           <div style={{ height: 20, width: 1, background: colors.border }} />
           <h1 style={{ fontSize: '1.1rem', fontWeight: 900, margin: 0, display: 'flex', alignItems: 'center', gap: 10, background: colors.accentGradient, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
@@ -207,7 +209,7 @@ export const StudioPage: React.FC = () => {
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{ fontSize: 11, fontWeight: 800, padding: '6px 12px', borderRadius: 20, display: 'flex', alignItems: 'center', gap: 6, color: serverStatus === 'online' ? '#4ade80' : serverStatus === 'offline' ? '#f87171' : colors.textMuted, background: serverStatus === 'online' ? 'rgba(74,222,128,0.12)' : serverStatus === 'offline' ? 'rgba(248,113,113,0.12)' : 'rgba(255,255,255,0.05)', border: `1px solid ${serverStatus === 'online' ? 'rgba(74,222,128,0.4)' : serverStatus === 'offline' ? 'rgba(248,113,113,0.4)' : colors.border}` }}>
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: serverStatus === 'online' ? '#4ade80' : serverStatus === 'offline' ? '#f87171' : colors.textMuted }} />
-            {serverStatus === 'online' ? 'SERVEUR EN LIGNE' : serverStatus === 'offline' ? 'SERVEUR HORS LIGNE' : 'CONNEXION...'}
+            {serverStatus === 'online' ? t('studio.server_online') : serverStatus === 'offline' ? t('studio.server_offline') : t('studio.connecting')}
           </div>
         </div>
       </div>
@@ -217,12 +219,12 @@ export const StudioPage: React.FC = () => {
         {/* SIDEBAR BIBLIOTHÈQUE */}
         <div style={{ width: 300, background: colors.panelBg, borderRight: `1px solid ${colors.border}`, display: 'flex', flexDirection: 'column', backdropFilter: 'blur(20px)' }}>
           <div style={{ padding: '20px 20px 12px 20px' }}>
-             <h2 style={{ fontSize: 12, fontWeight: 900, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 1, margin: 0 }}>Ma Bibliothèque</h2>
+             <h2 style={{ fontSize: 12, fontWeight: 900, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 1, margin: 0 }}>{t('studio.library')}</h2>
           </div>
           
           <div style={{ flex: 1, overflowY: 'auto', padding: '0 12px' }}>
             {library.length === 0 ? (
-              <div style={{ padding: 20, textAlign: 'center', color: colors.textMuted, fontSize: 13, fontStyle: 'italic' }}>Aucune musique.</div>
+              <div style={{ padding: 20, textAlign: 'center', color: colors.textMuted, fontSize: 13, fontStyle: 'italic' }}>{t('studio.no_music')}</div>
             ) : (
               library.map(track => (
                 <div key={track.id} onClick={() => handleSelectTrack(track)} style={{ display: 'flex', gap: 12, alignItems: 'center', padding: 12, borderRadius: 8, cursor: 'pointer', background: activeTrack?.id === track.id ? 'rgba(255, 255, 255, 0.1)' : 'transparent', border: `1px solid ${activeTrack?.id === track.id ? 'rgba(255, 255, 255, 0.3)' : 'transparent'}`, marginBottom: 6, transition: 'all 0.2s' }} onMouseEnter={(e) => { if (activeTrack?.id !== track.id) e.currentTarget.style.background = 'rgba(255,255,255,0.03)' }} onMouseLeave={(e) => { if (activeTrack?.id !== track.id) e.currentTarget.style.background = 'transparent' }}>
@@ -239,7 +241,7 @@ export const StudioPage: React.FC = () => {
           <div style={{ padding: 20, borderTop: `1px solid ${colors.border}` }}>
             <input type="file" accept="audio/*" ref={fileInputRef} onChange={handleFileChange} style={{ display: 'none' }} />
             <button onClick={() => fileInputRef.current?.click()} disabled={isAnalyzing} style={{ width: '100%', padding: '14px', background: isAnalyzing ? colors.border : colors.accentGradient, color: '#000', border: 'none', borderRadius: 8, fontWeight: 900, cursor: isAnalyzing ? 'wait' : 'pointer', fontSize: 14, boxShadow: isAnalyzing ? 'none' : '0 8px 20px rgba(255, 255, 255, 0.3)', transition: 'all 0.2s', transform: isAnalyzing ? 'scale(0.98)' : 'scale(1)' }}>
-              {isAnalyzing ? 'Analyse...' : '+ Importer un son'}
+              {isAnalyzing ? t('studio.analyzing') : t('studio.import_track')}
             </button>
           </div>
         </div>
@@ -252,10 +254,10 @@ export const StudioPage: React.FC = () => {
             <div style={{ width: 60, height: 60, borderRadius: 12, background: activeTrack?.coverUrl ? `url(${activeTrack.coverUrl}) center/cover` : 'rgba(255,255,255,0.05)', border: `1px solid ${colors.border}`, boxShadow: '0 8px 20px rgba(0,0,0,0.4)' }} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <h2 style={{ fontSize: 20, fontWeight: 900, margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', letterSpacing: '-0.5px' }}>
-                {activeTrack?.title || 'Nouveau Projet'}
+                {activeTrack?.title || t('studio.new_project')}
               </h2>
               <div style={{ fontSize: 13, color: colors.textMuted, marginTop: 6, display: 'flex', gap: 12, fontWeight: 600 }}>
-                <span style={{ color: colors.accent }}>{detectedNotes.length > 0 ? `${detectedNotes.length} notes` : 'En attente'}</span>
+                <span style={{ color: colors.accent }}>{detectedNotes.length > 0 ? `${detectedNotes.length} ${t('studio.notes')}` : t('studio.waiting')}</span>
                 <span>•</span>
                 <span>{transcriptionResult?.duration?.toFixed(1) || '0.0'}s</span>
                 <span>•</span>
@@ -268,17 +270,17 @@ export const StudioPage: React.FC = () => {
           <div style={{ padding: '16px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid ${colors.border}`, background: colors.panelBg }}>
             <div style={{ display: 'flex', gap: 12 }}>
               <button onClick={() => engine.playMidi && engine.playMidi()} disabled={detectedNotes.length === 0} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', background: detectedNotes.length === 0 ? 'transparent' : 'rgba(255, 255, 255, 0.1)', border: `1px solid ${detectedNotes.length === 0 ? colors.border : colors.accent}`, color: detectedNotes.length === 0 ? colors.textMuted : colors.accent, borderRadius: 8, cursor: detectedNotes.length === 0 ? 'not-allowed' : 'pointer', fontSize: 13, fontWeight: 800, transition: 'all 0.2s' }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> LECTURE
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> {t('studio.play')}
               </button>
               <button onClick={() => engine.stopAll && engine.stopAll()} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', background: 'rgba(176, 176, 176, 0.1)', border: '1px solid rgba(176, 176, 176, 0.3)', color: '#b0b0b0', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 800 }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12"></rect></svg> STOP
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12"></rect></svg> {t('studio.stop')}
               </button>
             </div>
             <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-              <span style={{ fontSize: 13, color: colors.textMain, fontWeight: 800, letterSpacing: 1 }}>{detectedNotes.length} <span style={{color: colors.textMuted, fontSize: 11}}>NOTES</span></span>
+              <span style={{ fontSize: 13, color: colors.textMain, fontWeight: 800, letterSpacing: 1 }}>{detectedNotes.length} <span style={{color: colors.textMuted, fontSize: 11}}>{t('studio.notes').toUpperCase()}</span></span>
               <div style={{ height: 20, width: 1, background: colors.border }} />
               <button onClick={handleExportMidi} disabled={detectedNotes.length === 0} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', background: detectedNotes.length === 0 ? 'transparent' : colors.accentGradient, border: 'none', color: detectedNotes.length === 0 ? colors.textMuted : '#000', borderRadius: 8, fontWeight: 900, cursor: detectedNotes.length === 0 ? 'not-allowed' : 'pointer', fontSize: 13, boxShadow: detectedNotes.length === 0 ? 'none' : '0 4px 15px rgba(255, 255, 255, 0.3)' }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> EXPORT MIDI
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> {t('studio.export_midi')}
               </button>
             </div>
           </div>
@@ -294,7 +296,7 @@ export const StudioPage: React.FC = () => {
               <div key={i} style={{ background: colors.cardBg, padding: 16, borderRadius: 12, border: `1px solid ${colors.border}`, position: 'relative', overflow: 'hidden' }}>
                 <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 4, background: track.color }} />
                 <div style={{ fontSize: 11, color: track.color, fontWeight: 900, letterSpacing: 1, marginBottom: 4 }}>{track.label}</div>
-                <div style={{ fontSize: 18, fontWeight: 800, color: colors.textMain }}>{track.count} <span style={{fontSize: 11, color: colors.textMuted, fontWeight: 600}}>notes</span></div>
+                <div style={{ fontSize: 18, fontWeight: 800, color: colors.textMain }}>{track.count} <span style={{fontSize: 11, color: colors.textMuted, fontWeight: 600}}>{t('studio.notes')}</span></div>
               </div>
             ))}
           </div>
@@ -319,10 +321,10 @@ export const StudioPage: React.FC = () => {
               {detectedNotes.length === 0 && !isAnalyzing && (
                 <div style={{ position: 'absolute', inset: 0, background: 'rgba(5,5,8,0.6)', backdropFilter: 'blur(8px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 10 }}>
                   <div style={{ fontSize: 60, marginBottom: 20, opacity: 0.8 }}>🎼</div>
-                  <h2 style={{ fontSize: '1.4rem', color: colors.textMain, marginBottom: 8, fontWeight: 900 }}>Grille de composition</h2>
-                  <p style={{ fontSize: 14, color: colors.textMuted, marginBottom: 30, textAlign: 'center', maxWidth: 400, lineHeight: 1.5 }}>Importe un son à gauche pour extraire ses notes et les faire apparaître sur la partition.</p>
+                  <h2 style={{ fontSize: '1.4rem', color: colors.textMain, marginBottom: 8, fontWeight: 900 }}>{t('studio.grid_title')}</h2>
+                  <p style={{ fontSize: 14, color: colors.textMuted, marginBottom: 30, textAlign: 'center', maxWidth: 400, lineHeight: 1.5 }}>{t('studio.grid_sub')}</p>
                   <button onClick={() => fileInputRef.current?.click()} style={{ padding: '14px 28px', background: 'rgba(255,255,255,0.15)', border: `1px solid ${colors.accent}`, color: colors.accent, borderRadius: 8, fontWeight: 900, cursor: 'pointer', transition: 'all 0.2s', fontSize: 14 }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.25)'; e.currentTarget.style.transform = 'translateY(-2px)' }} onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.15)'; e.currentTarget.style.transform = 'translateY(0)' }}>
-                    Importer un son
+                    {t('studio.import')}
                   </button>
                 </div>
               )}
@@ -344,7 +346,7 @@ export const StudioPage: React.FC = () => {
                   </h2>
                   
                   <p style={{ fontSize: 14, color: colors.textMuted, textAlign: 'center', maxWidth: 450, lineHeight: 1.6, background: 'rgba(255,255,255,0.03)', padding: '16px 24px', borderRadius: 12, border: `1px solid ${colors.border}` }}>
-                    <strong style={{ color: '#b0b0b0' }}>⏳ Patience :</strong> L'analyse sur le serveur Render peut prendre <strong>1 à 2 minutes</strong> si le serveur était endormi. <br/> Ne quitte pas cette page.
+                    <strong style={{ color: '#b0b0b0' }}>⏳ {t('studio.patience')}</strong> L'analyse sur le serveur Render peut prendre <strong>1 à 2 minutes</strong> si le serveur était endormi. <br/> Ne quitte pas cette page.
                   </p>
 
                   <style>{`

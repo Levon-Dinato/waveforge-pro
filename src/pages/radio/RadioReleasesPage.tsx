@@ -5,11 +5,13 @@ import { motion } from 'framer-motion';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRadio } from '../../contexts/RadioContext';
+import { useTranslation } from 'react-i18next';
 
 export const RadioReleasesPage: React.FC = () => {
   const { latestReleases, visualizerColor, colors, profile } = useOutletContext<any>();
   const { user } = useAuth();
   const { startRadio, stopRadio, isRadioActive } = useRadio();
+  const { t } = useTranslation();
   
   const [likedTracks, setLikedTracks] = useState<string[]>([]);
   const [hoveredTrack, setHoveredTrack] = useState<string | null>(null);
@@ -25,7 +27,7 @@ export const RadioReleasesPage: React.FC = () => {
 
   const handleLike = async (e: React.MouseEvent, trackId: string, currentLikes: number) => {
     e.stopPropagation();
-    if (!user) { alert("Connecte-toi pour liker un son !"); return; }
+    if (!user) { alert(t('radio.login_to_like')); return; }
     
     const isAlreadyLiked = likedTracks.includes(trackId);
     
@@ -80,14 +82,14 @@ export const RadioReleasesPage: React.FC = () => {
           {IconSparkles}
         </div>
         <div>
-          <h1 style={{ fontSize: 32, fontWeight: 900, margin: '0 0 4px 0', letterSpacing: '-0.5px' }}>Nouveautés</h1>
-          <p style={{ fontSize: 14, color: colors.textMuted, margin: 0 }}>Les dernières pépites ajoutées à la radio.</p>
+          <h1 style={{ fontSize: 32, fontWeight: 900, margin: '0 0 4px 0', letterSpacing: '-0.5px' }}>{t('radio.releases')}</h1>
+          <p style={{ fontSize: 14, color: colors.textMuted, margin: 0 }}>{t('radio.releases_sub')}</p>
         </div>
       </div>
 
       {latestReleases.length === 0 ? (
         <div className="rp-glass" style={{ padding: 60, textAlign: 'center', color: colors.textMuted }}>
-          Aucune nouveauté pour le moment.
+          {t('radio.no_releases')}
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 32 }}>

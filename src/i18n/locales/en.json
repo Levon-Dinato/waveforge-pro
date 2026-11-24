@@ -403,5 +403,23 @@
     "key_label": "Key",
     "processing": "Processing...",
     "submit": "Add the track"
+  },
+  "contact": {
+    "title": "Contact",
+    "subtitle": "A question, a bug, a partnership request? Write to us, we answer fast.",
+    "sent": "✅ Your email app opened with your message pre-filled. If it didn't, write to us directly at",
+    "name": "Your name",
+    "name_placeholder": "E.g. DJ Example",
+    "email": "Your email",
+    "subject": "Subject",
+    "subject_general": "General question",
+    "subject_support": "Technical support / Bug",
+    "subject_premium": "Premium question",
+    "subject_partnership": "Partnership",
+    "subject_report": "Content report",
+    "message": "Message",
+    "message_placeholder": "Describe your request...",
+    "submit": "Send the message",
+    "direct": "Or directly by email:"
   }
 }

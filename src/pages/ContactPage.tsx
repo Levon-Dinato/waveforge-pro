@@ -2,10 +2,12 @@
 import React, { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useTheme } from '../contexts/ThemeContext';
+import { useTranslation } from 'react-i18next';
 
 export const ContactPage: React.FC = () => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
+  const { t } = useTranslation();
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -59,43 +61,42 @@ export const ContactPage: React.FC = () => {
 
       <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: '40px 36px' }}>
         <h1 style={{ fontSize: 32, fontWeight: 900, margin: '0 0 8px 0', letterSpacing: '-0.03em', color: colors.textMain }}>
-          Contact
+          {t('contact.title')}
         </h1>
         <p style={{ fontSize: 15, color: colors.textMuted, margin: '0 0 32px 0', lineHeight: 1.6 }}>
-          Une question, un bug, une demande de partenariat ? Écrivez-nous, on répond vite.
+          {t('contact.subtitle')}
         </p>
 
         {sent ? (
           <div style={{ padding: 20, background: 'rgba(255, 255, 255, 0.08)', border: '1px solid rgba(255, 255, 255, 0.3)', borderRadius: 8, color: colors.textMain, fontSize: 14, lineHeight: 1.6 }}>
-            ✅ Votre messagerie s'est ouverte avec votre message pré-rempli. Si elle ne s'est pas ouverte,
-            écrivez-nous directement à <a href="mailto:contact@elektraq.com" style={{ color: colors.accent }}>contact@elektraq.com</a>.
+            {t('contact.sent')} <a href="mailto:contact@elektraq.com" style={{ color: colors.accent }}>contact@elektraq.com</a>.
           </div>
         ) : (
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
             <div>
-              <label style={labelStyle} htmlFor="contact-name">Votre nom</label>
-              <input id="contact-name" type="text" required value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex : DJ Example" style={inputStyle} />
+              <label style={labelStyle} htmlFor="contact-name">{t('contact.name')}</label>
+              <input id="contact-name" type="text" required value={name} onChange={(e) => setName(e.target.value)} placeholder={t('contact.name_placeholder')} style={inputStyle} />
             </div>
 
             <div>
-              <label style={labelStyle} htmlFor="contact-email">Votre email</label>
+              <label style={labelStyle} htmlFor="contact-email">{t('contact.email')}</label>
               <input id="contact-email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="vous@exemple.com" style={inputStyle} />
             </div>
 
             <div>
-              <label style={labelStyle} htmlFor="contact-subject">Sujet</label>
+              <label style={labelStyle} htmlFor="contact-subject">{t('contact.subject')}</label>
               <select id="contact-subject" value={subject} onChange={(e) => setSubject(e.target.value)} style={{ ...inputStyle, cursor: 'pointer' }}>
-                <option>Question générale</option>
-                <option>Support technique / Bug</option>
-                <option>Question Premium</option>
-                <option>Partenariat</option>
-                <option>Signalement de contenu</option>
+                <option>{t('contact.subject_general')}</option>
+                <option>{t('contact.subject_support')}</option>
+                <option>{t('contact.subject_premium')}</option>
+                <option>{t('contact.subject_partnership')}</option>
+                <option>{t('contact.subject_report')}</option>
               </select>
             </div>
 
             <div>
-              <label style={labelStyle} htmlFor="contact-message">Message</label>
-              <textarea id="contact-message" required value={message} onChange={(e) => setMessage(e.target.value)} rows={6} placeholder="Décrivez votre demande..." style={{ ...inputStyle, resize: 'vertical' }} />
+              <label style={labelStyle} htmlFor="contact-message">{t('contact.message')}</label>
+              <textarea id="contact-message" required value={message} onChange={(e) => setMessage(e.target.value)} rows={6} placeholder={t('contact.message_placeholder')} style={{ ...inputStyle, resize: 'vertical' }} />
             </div>
 
             <button
@@ -115,13 +116,13 @@ export const ContactPage: React.FC = () => {
               onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.03)')}
               onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
             >
-              Envoyer le message
+              {t('contact.submit')}
             </button>
           </form>
         )}
 
         <div style={{ marginTop: 32, paddingTop: 24, borderTop: `1px solid ${colors.border}`, fontSize: 13, color: colors.textMuted }}>
-          Ou directement par email : <a href="mailto:contact@elektraq.com" style={{ color: colors.accent }}>contact@elektraq.com</a>
+          {t('contact.direct')} <a href="mailto:contact@elektraq.com" style={{ color: colors.accent }}>contact@elektraq.com</a>
         </div>
       </div>
     </div>

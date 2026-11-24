@@ -403,5 +403,23 @@
     "key_label": "Clé",
     "processing": "Traitement en cours...",
     "submit": "Ajouter le son"
+  },
+  "contact": {
+    "title": "Contact",
+    "subtitle": "Une question, un bug, une demande de partenariat ? Écrivez-nous, on répond vite.",
+    "sent": "✅ Votre messagerie s'est ouverte avec votre message pré-rempli. Si elle ne s'est pas ouverte, écrivez-nous directement à",
+    "name": "Votre nom",
+    "name_placeholder": "Ex : DJ Example",
+    "email": "Votre email",
+    "subject": "Sujet",
+    "subject_general": "Question générale",
+    "subject_support": "Support technique / Bug",
+    "subject_premium": "Question Premium",
+    "subject_partnership": "Partenariat",
+    "subject_report": "Signalement de contenu",
+    "message": "Message",
+    "message_placeholder": "Décrivez votre demande...",
+    "submit": "Envoyer le message",
+    "direct": "Ou directement par email :"
   }
 }

@@ -695,11 +695,11 @@ export const NouveautesPage: React.FC = () => {
                 </h3>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  <div onClick={() => setSelectedGenre(null)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', fontSize: 13, cursor: 'pointer', color: selectedGenre === null ? colors.textMain : colors.textMuted, fontWeight: selectedGenre === null ? 700 : 500, background: selectedGenre === null ? (isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.1)') : 'transparent', borderRadius: 10, transition: 'all 0.15s' }}
+                  <div onClick={() => setSelectedGenre(null)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', fontSize: 13, cursor: 'pointer', color: selectedGenre === null ? '#94c748' : colors.textMuted, fontWeight: selectedGenre === null ? 800 : 500, background: selectedGenre === null ? 'rgba(148, 199, 72, 0.12)' : 'transparent', borderRadius: 10, transition: 'all 0.15s', borderLeft: selectedGenre === null ? '3px solid #94c748' : '3px solid transparent' }}
                     onMouseEnter={(e) => { if (selectedGenre !== null) e.currentTarget.style.background = colors.rowHover; }}
                     onMouseLeave={(e) => { if (selectedGenre !== null) e.currentTarget.style.background = 'transparent'; }}
                   >
-                    <span style={{ width: 26, height: 26, borderRadius: 8, background: selectedGenre === null ? (isDark ? 'linear-gradient(135deg, #ffffff, #b0b0b0)' : '#111111') : colors.inputBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: selectedGenre === null ? (isDark ? '#000' : '#ffffff') : colors.textMuted, flexShrink: 0, fontSize: 12 }}>{Icons.music}</span>
+                    <span style={{ width: 26, height: 26, borderRadius: 8, background: selectedGenre === null ? (isDark ? 'linear-gradient(135deg, #94c748, #6d9c2f)' : '#94c748') : colors.inputBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: selectedGenre === null ? '#000' : colors.textMuted, flexShrink: 0, fontSize: 12 }}>{Icons.music}</span>
                     <span style={{ flex: 1 }}>{t('nouveautes.all_tracks')}</span>
                     <span style={{ fontSize: 11, fontWeight: 700, background: colors.inputBg, color: colors.textMuted, padding: '2px 7px', borderRadius: 20 }}>{tracks.length}</span>
                   </div>
@@ -710,7 +710,7 @@ export const NouveautesPage: React.FC = () => {
                       const gColor = genreColors[gi % genreColors.length];
                       const isSel = selectedGenre === genre;
                       return (
-                        <div key={genre} onClick={() => setSelectedGenre(genre)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', fontSize: 13, cursor: 'pointer', color: isSel ? colors.textMain : colors.textMuted, fontWeight: isSel ? 700 : 500, background: isSel ? (isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.1)') : 'transparent', borderRadius: 10, transition: 'all 0.15s' }}
+                        <div key={genre} onClick={() => setSelectedGenre(genre)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', fontSize: 13, cursor: 'pointer', color: isSel ? '#94c748' : colors.textMuted, fontWeight: isSel ? 800 : 500, background: isSel ? 'rgba(148, 199, 72, 0.12)' : 'transparent', borderRadius: 10, transition: 'all 0.15s', borderLeft: isSel ? '3px solid #94c748' : '3px solid transparent' }}
                           onMouseEnter={(e) => { if (!isSel) e.currentTarget.style.background = colors.rowHover; }}
                           onMouseLeave={(e) => { if (!isSel) e.currentTarget.style.background = 'transparent'; }}
                         >
@@ -847,7 +847,7 @@ export const NouveautesPage: React.FC = () => {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                   {tracks.slice(0, 10).map((track, index) => (
                     <div key={track.id} style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }} onClick={() => navigate(`/track/${track.id}`)}>
-                      <div style={{ width: 20, textAlign: 'center', fontSize: 14, color: index === 0 ? '#ffffff' : index === 1 ? '#c0c0c0' : index === 2 ? '#cd7f32' : colors.textMuted, fontWeight: 900, fontStyle: 'italic' }}>{index + 1}</div>
+                      <div style={{ width: 20, textAlign: 'center', fontSize: 14, color: '#94c748', fontWeight: 900, fontStyle: 'italic' }}>{index + 1}</div>
                       <div style={{ width: 36, height: 36, borderRadius: 6, background: track.cover_url ? `url(${track.cover_url}) center/cover` : '#222', flexShrink: 0, border: `1px solid ${colors.border}` }} />
                       <div style={{ minWidth: 0, flex: 1 }}>
                         <div style={{ fontSize: 13, fontWeight: 700, color: colors.textMain, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.title}</div>

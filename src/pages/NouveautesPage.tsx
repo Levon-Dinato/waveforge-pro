@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import { OnlineUsersWidget } from '../components/OnlineUsersWidget';
 import { ShareButton } from '../components/ShareButton';
-import { TrackGrid } from '../components/TrackGrid';
+import { TrackList } from '../components/TrackList';
 import { supabase, AUDIO_BUCKET } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { usePlayer } from '../contexts/PlayerContext';
@@ -823,7 +823,7 @@ export const NouveautesPage: React.FC = () => {
               </span>
             </div>
 
-            <TrackGrid tracks={paginatedTracks as any} onPlay={handleGridPlay} />
+            <TrackList tracks={paginatedTracks as any} onPlay={handleGridPlay} />
 
             {!loading && totalPages > 1 && (
               <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 20, marginTop: 40 }}>

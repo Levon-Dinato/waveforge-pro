@@ -408,7 +408,12 @@
     "processing": "Traitement en cours...",
     "submit": "Envoyer ma promo",
     "rights_label": "Je certifie être l'artiste (ou son représentant autorisé) et détenir les droits de partage de ce titre.",
-    "mastering_hint": "Ton titre n'est pas encore au niveau radio ? Passe-le au mastering →"
+    "mastering_hint": "Ton titre n'est pas encore au niveau radio ? Passe-le au mastering →",
+    "fetch_meta": "Récupérer titre, artiste et pochette depuis le lien",
+    "fetch_meta_loading": "Analyse de la page...",
+    "fetch_meta_ok": "Infos récupérées — vérifie et complète si besoin.",
+    "fetch_meta_error": "Impossible de lire la page.",
+    "fetch_meta_no_url": "Colle d'abord un lien officiel ou audio."
   },
   "contact": {
     "title": "Contact",

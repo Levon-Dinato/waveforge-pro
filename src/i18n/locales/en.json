@@ -408,7 +408,12 @@
     "processing": "Processing...",
     "submit": "Send my promo",
     "rights_label": "I certify that I am the artist (or their authorized representative) and that I hold the rights to share this track.",
-    "mastering_hint": "Is your track not radio-ready yet? Master it →"
+    "mastering_hint": "Is your track not radio-ready yet? Master it →",
+    "fetch_meta": "Fetch title, artist and cover from the link",
+    "fetch_meta_loading": "Reading the page...",
+    "fetch_meta_ok": "Info fetched — check and complete if needed.",
+    "fetch_meta_error": "Could not read the page.",
+    "fetch_meta_no_url": "Paste an official or audio link first."
   },
   "contact": {
     "title": "Contact",

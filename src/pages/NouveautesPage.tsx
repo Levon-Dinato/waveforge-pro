@@ -108,6 +108,9 @@ export const NouveautesPage: React.FC = () => {
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [rightsAccepted, setRightsAccepted] = useState(false);
+  const [linkCoverUrl, setLinkCoverUrl] = useState('');
+  const [fetchingMeta, setFetchingMeta] = useState(false);
+  const [metaMsg, setMetaMsg] = useState('');
 
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 20;
@@ -266,6 +269,26 @@ export const NouveautesPage: React.FC = () => {
     }
     if (!track.audio_url) return;
     play({ id: track.id, title: track.title, artist: track.artist, audio_url: track.audio_url, cover_url: track.cover_url, user_id: track.user_id || null, duration: track.duration, peaks: track.peaks, bpm: track.bpm, song_key: track.song_key, genre: track.genre });
+  };
+
+  // 🔍 Récupère titre/artiste/pochette depuis les balises méta de la page promo
+  const fetchMetaFromUrl = async () => {
+    const target = uploadForm.purchase_url || uploadForm.audio_url;
+    if (!target) { setMetaMsg('⚠️ ' + t('nouveautes.fetch_meta_no_url')); return; }
+    setFetchingMeta(true); setMetaMsg('');
+    try {
+      const r = await fetch('/api/scrape-meta?url=' + encodeURIComponent(target));
+      const data = await r.json();
+      if (!r.ok || data.error) { setMetaMsg('❌ ' + (data.error || t('nouveautes.fetch_meta_error'))); return; }
+      if (data.title) setUploadForm(f => ({ ...f, title: f.title || data.title }));
+      if (data.artist) setUploadForm(f => ({ ...f, artist: f.artist || data.artist }));
+      if (data.cover) setLinkCoverUrl(data.cover);
+      setMetaMsg('✅ ' + t('nouveautes.fetch_meta_ok'));
+    } catch (e) {
+      setMetaMsg('❌ ' + t('nouveautes.fetch_meta_error'));
+    } finally {
+      setFetchingMeta(false);
+    }
   };
 
   // ▶️ Lecture depuis la grille (TrackGrid)
@@ -475,7 +498,7 @@ export const NouveautesPage: React.FC = () => {
         bpm: Number(uploadForm.bpm) || 0,
         song_key: uploadForm.song_key || null,
         audio_url: finalAudioUrl,
-        cover_url: coverUrl,
+        cover_url: coverUrl || linkCoverUrl,
         embed_code: uploadForm.embed_code || null,
         purchase_url: uploadForm.purchase_url || null,
         peaks: [],
@@ -693,7 +716,7 @@ export const NouveautesPage: React.FC = () => {
                 </div>
               </div>
               {user && (
-                <button onClick={() => { setRightsAccepted(false); setShowUploadModal(true); }} style={{ padding: isMobile ? '10px 16px' : '12px 24px', background: isDark ? '#ffffff' : '#111111', color: isDark ? '#000' : '#ffffff', border: '1px solid transparent', borderRadius: 10, cursor: 'pointer', fontWeight: 800, fontSize: 13, boxShadow: isDark ? '0 0 20px rgba(255, 255, 255, 0.25)' : '0 4px 16px rgba(0,0,0,0.15)', transition: 'transform 0.2s, box-shadow 0.2s', whiteSpace: 'nowrap' }}>
+                <button onClick={() => { setRightsAccepted(false); setLinkCoverUrl(''); setMetaMsg(''); setShowUploadModal(true); }} style={{ padding: isMobile ? '10px 16px' : '12px 24px', background: isDark ? '#ffffff' : '#111111', color: isDark ? '#000' : '#ffffff', border: '1px solid transparent', borderRadius: 10, cursor: 'pointer', fontWeight: 800, fontSize: 13, boxShadow: isDark ? '0 0 20px rgba(255, 255, 255, 0.25)' : '0 4px 16px rgba(0,0,0,0.15)', transition: 'transform 0.2s, box-shadow 0.2s', whiteSpace: 'nowrap' }}>
                   {isMobile ? t('nouveautes.upload_short') : t('nouveautes.upload')}
                 </button>
               )}
@@ -852,6 +875,13 @@ export const NouveautesPage: React.FC = () => {
                   <div>
                     <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6, fontWeight: 600 }}>{t('nouveautes.purchase_label')}</label>
                     <input type="url" value={uploadForm.purchase_url} onChange={e => setUploadForm({...uploadForm, purchase_url: e.target.value})} placeholder="https://pro.music-worx.com/release/..." style={{ width: '100%', padding: 10, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain }} />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 8, flexWrap: 'wrap' }}>
+                      <button type="button" onClick={fetchMetaFromUrl} disabled={fetchingMeta} style={{ padding: '8px 14px', background: 'transparent', border: `1px dashed ${colors.border}`, borderRadius: 8, color: colors.textMain, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                        {fetchingMeta ? t('nouveautes.fetch_meta_loading') : '🔍 ' + t('nouveautes.fetch_meta')}
+                      </button>
+                      {linkCoverUrl && <img src={linkCoverUrl} alt="cover" style={{ width: 48, height: 48, borderRadius: 6, objectFit: 'cover', border: `1px solid ${colors.border}` }} />}
+                    </div>
+                    {metaMsg && <p style={{ margin: '6px 0 0 0', fontSize: 11, color: metaMsg.startsWith('✅') ? '#00c878' : '#ff6b6b', fontWeight: 600 }}>{metaMsg}</p>}
                   </div>
                   <div>
                     <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6, fontWeight: 600 }}>{t('nouveautes.embed_label')}</label>

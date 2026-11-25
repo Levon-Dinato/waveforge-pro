@@ -59,6 +59,8 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [progress, setProgress] = useState(initialState?.progress || 0);
   const [duration, setDuration] = useState(0);
   const [isLive, setIsLive] = useState(initialState?.isLive || false);
+  const isLiveRef = useRef(initialState?.isLive || false);
+  useEffect(() => { isLiveRef.current = isLive; }, [isLive]);
   const [liveUrl, setLiveUrl] = useState(initialState?.liveUrl || '');
   const [isRadioActive, setIsRadioActive] = useState(initialState?.isRadioActive || false);
   const [needsGesture, setNeedsGesture] = useState(false);
@@ -128,6 +130,8 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const wireLimiter = useCallback((el: HTMLAudioElement | null, slot: 'A' | 'B') => {
     const wiredRef = slot === 'A' ? wiredARef : wiredBRef;
     if (!el || wiredRef.current === el) return;
+    // Mode LIVE : lecture 100% native (évite le silence si l'AudioContext reste suspendu sur mobile)
+    if (isLiveRef.current) return;
     // Limiteur désactivé : lecture 100% native, sans routage Web Audio
     if (!limiterEnabledRef.current) return;
     const ctx = ensureLimiterGraph();

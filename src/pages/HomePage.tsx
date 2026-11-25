@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import { Helmet } from 'react-helmet-async';
 import { supabase } from '../lib/supabase';
-import { TrackGrid } from '../components/TrackGrid';
+import { TrackStrip } from '../components/TrackStrip';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { usePlayer } from '../contexts/PlayerContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -329,45 +329,11 @@ export const HomePage = () => {
           <div style={{ padding: 40, textAlign: 'center', color: colors.textMuted, background: colors.panelBg, borderRadius: 16, border: `1px solid ${colors.border}` }}>{t('home.no_featured')}</div>
         )}
 
-        {/* 4. GRILLE PRINCIPALE + TOP 10 */}
-        <div style={{ display: 'flex', gap: isMobile ? 20 : 40, alignItems: 'flex-start', flexDirection: isMobile ? 'column' : 'row' }}>
-          <div style={{ flex: 1, minWidth: 0, width: '100%' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <h2 style={{ fontSize: isMobile ? 18 : 24, fontWeight: 800, color: colors.textMain, margin: 0, letterSpacing: '-0.5px' }}>{t('home.new_releases')}</h2>
-              <Link to="/nouveautes" style={{ fontSize: 12, color: colors.textMuted, textDecoration: 'none', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
-                {t('home.see_all')} {Icons.arrowRight}
-              </Link>
-            </div>
-            
-            {newReleases.length > 0 ? (
-              <TrackGrid tracks={newReleases as any} onPlay={(t) => handlePlayTrack(t as any)} />
-            ) : (
-              <div style={{ padding: 40, textAlign: 'center', color: colors.textMuted, background: colors.panelBg, borderRadius: 16, border: `1px solid ${colors.border}` }}>
-                {t('home.no_new_releases')}
-              </div>
-            )}
-          </div>
-
-          {!isMobile && top10.length > 0 && (
-            <aside style={{ width: 320, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 24 }}>
-              <div style={{ background: colors.panelBg, borderRadius: 16, border: `1px solid ${colors.border}`, padding: 24 }}>
-                <h3 style={{ fontSize: 14, fontWeight: 800, color: colors.textMain, margin: '0 0 20px 0', letterSpacing: '1px', textTransform: 'uppercase' }}>{t('home.top10')}</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                  {top10.map((track, idx) => (
-                    <div key={track.id} onClick={() => navigate(`/track/${track.id}`)} style={{ display: 'flex', alignItems: 'center', gap: 16, cursor: 'pointer' }}>
-                      <span style={{ fontSize: 20, fontWeight: 900, fontStyle: 'italic', color: idx < 3 ? colors.accent : colors.textDark, width: 24 }}>0{idx + 1}</span>
-                      <div style={{ width: 44, height: 44, borderRadius: 6, background: track.cover_url ? `url(${track.cover_url}) center/cover` : colors.textDark, flexShrink: 0 }} />
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 13, color: colors.textMain, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.title}</div>
-                        <div style={{ fontSize: 11, color: colors.textMuted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.artist}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </aside>
-          )}
-        </div>
+        {/* 4. RAYONS HORIZONTAUX (style Beatport) */}
+        <TrackStrip title={t('home.new_releases')} tracks={newReleases} onPlay={handlePlayTrack} seeAllUrl="/nouveautes" seeAllLabel={t('home.see_all')} />
+        {top10.length > 0 && (
+          <TrackStrip title={t('home.top10')} tracks={top10} ranked onPlay={handlePlayTrack} seeAllUrl="/charts" seeAllLabel={t('home.see_all')} />
+        )}
 
         {/* 5. ARTISTES À LA UNE */}
         {artists.length > 0 && (

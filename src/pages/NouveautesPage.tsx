@@ -169,6 +169,7 @@ export const NouveautesPage: React.FC = () => {
       .from('tracks')
       .select('*')
       .or('is_jingle.is.null,is_jingle.eq.false')
+      .or('is_private.is.null,is_private.eq.false')
       .not('user_id', 'is', null)
       .order('created_at', { ascending: false });
     if (!error && data) {

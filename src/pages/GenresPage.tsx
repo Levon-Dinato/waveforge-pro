@@ -39,6 +39,7 @@ export const GenresPage: React.FC = () => {
           .from('tracks')
           .select('*')
           .or('is_jingle.is.null,is_jingle.eq.false')
+          .or('is_private.is.null,is_private.eq.false')
           .order('created_at', { ascending: false });
 
         if (error) throw error;

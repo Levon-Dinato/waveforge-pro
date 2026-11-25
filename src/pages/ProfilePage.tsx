@@ -366,7 +366,7 @@ export const ProfilePage: React.FC = () => {
         if (!profileData) { setProfile(null); setLoading(false); return; }
         setProfile(profileData);
 
-        const { data: tracksData } = await supabase.from('tracks').select('*').eq('user_id', id).order('created_at', { ascending: false });
+        const { data: tracksData } = await supabase.from('tracks').select('*').eq('user_id', id).or('is_private.is.null,is_private.eq.false').order('created_at', { ascending: false });
         if (tracksData) setUserTracks(tracksData);
 
         const { data: playlistsData } = await supabase.from('playlists').select('*').eq('user_id', id).order('created_at', { ascending: false });

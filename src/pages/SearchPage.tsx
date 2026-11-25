@@ -56,10 +56,11 @@ export const SearchPage: React.FC = () => {
           .from('tracks')
           .select('*')
           .or(`title.ilike.%${initialQuery}%,artist.ilike.%${initialQuery}%,genre.ilike.%${initialQuery}%`)
+          .or('is_private.is.null,is_private.eq.false')
           .order('created_at', { ascending: false });
 
         // ✅ Filtre côté client : exclut les jingles radio (is_jingle = true)
-        if (tracksData) setTracks(tracksData.filter((t: any) => !t.is_jingle));
+        if (tracksData) setTracks(tracksData.filter((t: any) => !t.is_jingle && !t.is_private));
 
         // 2. Chercher les artistes
         const { data: artistsData } = await supabase

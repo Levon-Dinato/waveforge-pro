@@ -102,6 +102,7 @@ export const HomePage = () => {
               .select('*')
               .in('user_id', premiumIds) // Filtre par les IDs des premiums
               .or('is_jingle.is.null,is_jingle.eq.false') // ✅ Ignore les jingles
+              .or('is_private.is.null,is_private.eq.false') // ✅ Ignore les titres privés
               .order('created_at', { ascending: false })
               .limit(30);
               

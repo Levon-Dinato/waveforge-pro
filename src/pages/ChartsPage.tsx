@@ -115,6 +115,7 @@ export const ChartsPage: React.FC = () => {
           .from('tracks')
           .select('*')
           .or('is_jingle.is.null,is_jingle.eq.false')
+          .or('is_private.is.null,is_private.eq.false')
           .order('plays', { ascending: false })
           .limit(50);
 

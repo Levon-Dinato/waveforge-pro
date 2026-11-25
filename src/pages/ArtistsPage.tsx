@@ -114,7 +114,8 @@ export const ArtistsPage: React.FC = () => {
           const { data: tracksData } = await supabase
             .from('tracks')
             .select('user_id')
-            .in('user_id', userIds);
+            .in('user_id', userIds)
+            .or('is_private.is.null,is_private.eq.false');
 
           tracksData?.forEach((t: any) => {
             if (t.user_id) {

@@ -14,8 +14,8 @@ export const RadioManagerPage: React.FC = () => {
   const navigate = useNavigate();
 
   const [searchParams, setSearchParams] = useSearchParams();
-  const radioTab = (searchParams.get('tab') || 'musics') as 'musics' | 'jingles' | 'schedules' | 'rules' | 'appearance';
-  const setRadioTab = (tab: 'musics' | 'jingles' | 'schedules' | 'rules' | 'appearance') => {
+  const radioTab = (searchParams.get('tab') || 'musics') as 'musics' | 'jingles' | 'schedules' | 'rules' | 'appearance' | 'private';
+  const setRadioTab = (tab: 'musics' | 'jingles' | 'schedules' | 'rules' | 'appearance' | 'private') => {
     setSearchParams({ tab });
   };
 
@@ -38,6 +38,7 @@ export const RadioManagerPage: React.FC = () => {
 
   const [uploadPlaylistId, setUploadPlaylistId] = useState('');
   const [radioPlaylistId, setRadioPlaylistId] = useState('');
+  const [importPrivate, setImportPrivate] = useState(false);
   const [selectedTracks, setSelectedTracks] = useState<string[]>([]);
 
   const [filterGenre, setFilterGenre] = useState<string>('all');
@@ -251,8 +252,9 @@ export const RadioManagerPage: React.FC = () => {
           genre, 
           audio_url: urlData.publicUrl, 
           cover_url: coverUrl,
-          in_radio: true, 
+          in_radio: (radioTab === 'private' || importPrivate) ? false : true, 
           is_jingle: isJingleMode,
+          is_private: (radioTab === 'private' || importPrivate),
           peaks: [], 
           duration: 0, 
           likes_count: 0, 
@@ -457,7 +459,11 @@ export const RadioManagerPage: React.FC = () => {
   }, [myTracks]);
 
   const filteredRadioTracks = useMemo(() => {
-    let list = myTracks.filter(t => radioTab === 'jingles' ? t.is_jingle : !t.is_jingle);
+    let list = myTracks.filter(t => {
+      if (radioTab === 'jingles') return t.is_jingle;
+      if (radioTab === 'private') return t.is_private === true;
+      return !t.is_jingle && !t.is_private;
+    });
     if (radioSearch.trim()) {
       const q = radioSearch.toLowerCase();
       list = list.filter(t => t.title.toLowerCase().includes(q) || t.artist.toLowerCase().includes(q));
@@ -604,6 +610,7 @@ export const RadioManagerPage: React.FC = () => {
       <div style={{ display: 'flex', gap: 6, marginBottom: 24, borderBottom: `1px solid ${colors.border}`, paddingBottom: 12, overflowX: 'auto', flexWrap: 'nowrap' }}>
         {[
           { id: 'musics', label: '🎵 Mes musiques' },
+          { id: 'private', label: '🔒 Privés' },
           { id: 'jingles', label: '🎙️ Jingles' },
           { id: 'schedules', label: '📅 Programmation' },
           { id: 'rules', label: '⚙️ Règles' },
@@ -967,8 +974,15 @@ export const RadioManagerPage: React.FC = () => {
                 </div>
               )}
 
+              {radioTab !== 'jingles' && radioTab !== 'private' && (
+                <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginTop: 14, fontSize: 12, color: colors.textMuted, cursor: 'pointer', fontWeight: 600, lineHeight: 1.5 }}>
+                  <input type="checkbox" checked={importPrivate} onChange={(e) => setImportPrivate(e.target.checked)} style={{ marginTop: 2, accentColor: '#ffb020', width: 16, height: 16, flexShrink: 0, cursor: 'pointer' }} />
+                  <span>🔒 Titre privé — visible uniquement par toi (dossier « Privés »), jouable sur ta radio.</span>
+                </label>
+              )}
+
               {/* ✅ ON CACHE LA PLAYLIST SI ON EST SUR LES JINGLES */}
-              {radioTab !== 'jingles' && (
+              {radioTab !== 'jingles' && radioTab !== 'private' && (
                 <div style={{ marginTop: 16 }}>
                   <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6, fontWeight: 600 }}>Playlist de destination</label>
                   <select value={uploadPlaylistId} onChange={(e) => setUploadPlaylistId(e.target.value)} className="dash-input" style={{ fontSize: 12, padding: '8px' }}>
@@ -979,7 +993,7 @@ export const RadioManagerPage: React.FC = () => {
               )}
 
               {/* ✅ PLAYLIST À DIFFUSER SUR LA RADIO */}
-              {radioTab !== 'jingles' && (
+              {radioTab !== 'jingles' && radioTab !== 'private' && (
                 <div style={{ marginTop: 16 }}>
                   <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6, fontWeight: 600 }}>🎧 Playlist à diffuser</label>
                   <select value={radioPlaylistId} onChange={(e) => setRadioPlaylistId(e.target.value)} className="dash-input" style={{ fontSize: 12, padding: '8px' }}>
@@ -995,7 +1009,7 @@ export const RadioManagerPage: React.FC = () => {
             </div>
 
             {/* ✅ ON CACHE LES CATÉGORIES SI ON EST SUR LES JINGLES */}
-            {radioTab !== 'jingles' && (
+            {radioTab !== 'jingles' && radioTab !== 'private' && (
               <div className="dash-card" style={{ padding: 20 }}>
                 <h3 style={{ fontSize: 14, fontWeight: 600, margin: '0 0 12px 0' }}>Catégories</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 300, overflowY: 'auto' }}>

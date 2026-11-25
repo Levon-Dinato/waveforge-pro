@@ -47,6 +47,7 @@ export const DiscoverPage: React.FC = () => {
           .from('tracks')
           .select('*')
           .or('is_jingle.is.null,is_jingle.eq.false')
+          .or('is_private.is.null,is_private.eq.false')
           .order('plays', { ascending: false });
 
         if (tracksError) console.error("Erreur tracks:", tracksError);

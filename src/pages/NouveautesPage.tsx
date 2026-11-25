@@ -104,7 +104,7 @@ export const NouveautesPage: React.FC = () => {
   const [uploading, setUploading] = useState(false);
   const [uploadType, setUploadType] = useState<'file' | 'link'>('file');
 
-  const [uploadForm, setUploadForm] = useState({ title: '', artist: '', genre: '', bpm: '', song_key: '', audio_url: '', embed_code: '', purchase_url: '' });
+  const [uploadForm, setUploadForm] = useState({ title: '', artist: '', genre: '', bpm: '', song_key: '', audio_url: '', embed_code: '', purchase_url: '', cover_url: '' });
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [rightsAccepted, setRightsAccepted] = useState(false);
@@ -523,7 +523,7 @@ export const NouveautesPage: React.FC = () => {
         bpm: Number(uploadForm.bpm) || 0,
         song_key: uploadForm.song_key || null,
         audio_url: finalAudioUrl,
-        cover_url: coverUrl || linkCoverUrl,
+        cover_url: coverUrl || uploadForm.cover_url || linkCoverUrl,
         embed_code: uploadForm.embed_code || null,
         purchase_url: uploadForm.purchase_url || null,
         peaks: [],
@@ -537,7 +537,7 @@ export const NouveautesPage: React.FC = () => {
       if (data) setTracks((prev) => [data, ...prev]);
 
       setShowUploadModal(false);
-      setUploadForm({ title: '', artist: '', genre: '', bpm: '', song_key: '', audio_url: '', embed_code: '', purchase_url: '' });
+      setUploadForm({ title: '', artist: '', genre: '', bpm: '', song_key: '', audio_url: '', embed_code: '', purchase_url: '', cover_url: '' });
       setAudioFile(null);
       setCoverFile(null);
       alert("Son ajouté avec succès ! 🎵");
@@ -907,6 +907,13 @@ export const NouveautesPage: React.FC = () => {
                       {linkCoverUrl && <img src={linkCoverUrl} alt="cover" style={{ width: 48, height: 48, borderRadius: 6, objectFit: 'cover', border: `1px solid ${colors.border}` }} />}
                     </div>
                     {metaMsg && <p style={{ margin: '6px 0 0 0', fontSize: 11, color: metaMsg.startsWith('✅') ? '#00c878' : '#ff6b6b', fontWeight: 600 }}>{metaMsg}</p>}
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6, fontWeight: 600 }}>{t('nouveautes.cover_url_label')}</label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <input type="url" value={uploadForm.cover_url} onChange={e => setUploadForm({...uploadForm, cover_url: e.target.value})} placeholder="https://.../cover.jpg (clic droit sur la pochette → copier l'adresse de l'image)" style={{ flex: 1, padding: 10, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain }} />
+                      {(uploadForm.cover_url || linkCoverUrl) && <img src={uploadForm.cover_url || linkCoverUrl} alt="cover" style={{ width: 44, height: 44, borderRadius: 6, objectFit: 'cover', border: `1px solid ${colors.border}`, flexShrink: 0 }} />}
+                    </div>
                   </div>
                   <div>
                     <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6, fontWeight: 600 }}>{t('nouveautes.embed_label')}</label>

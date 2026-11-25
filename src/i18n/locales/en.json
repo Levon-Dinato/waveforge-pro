@@ -413,7 +413,8 @@
     "fetch_meta_loading": "Reading the page...",
     "fetch_meta_ok": "Info fetched — check and complete if needed.",
     "fetch_meta_error": "Could not read the page.",
-    "fetch_meta_no_url": "Paste an official or audio link first."
+    "fetch_meta_no_url": "Paste an official or audio link first.",
+    "cover_url_label": "Cover image URL (optional)"
   },
   "contact": {
     "title": "Contact",

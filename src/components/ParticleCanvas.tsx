@@ -1,5 +1,6 @@
 // src/components/ParticleCanvas.tsx
 import React, { useEffect, useRef } from 'react';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface ParticleCanvasProps {
   accent?: string;
@@ -14,6 +15,8 @@ export const ParticleCanvas: React.FC<ParticleCanvasProps> = ({
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const mouseRef = useRef({ x: -9999, y: -9999 });
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -27,7 +30,7 @@ export const ParticleCanvas: React.FC<ParticleCanvasProps> = ({
     let w = 0, h = 0;
     const dpr = window.devicePixelRatio || 1;
 
-    const particleColors = [accent, 'rgba(255,255,255,0.8)', accent2];
+    const particleColors = isDark ? [accent, 'rgba(255,255,255,0.8)', accent2] : ['rgba(24,24,34,0.75)', 'rgba(10,10,18,0.85)', 'rgba(60,60,78,0.6)'];
 
     const resize = () => {
       const rect = canvas.getBoundingClientRect();
@@ -93,7 +96,7 @@ export const ParticleCanvas: React.FC<ParticleCanvasProps> = ({
             ctx.beginPath();
             ctx.moveTo(p.x, p.y);
             ctx.lineTo(p2.x, p2.y);
-            ctx.strokeStyle = `rgba(176,176,176,${0.18 * (1 - d / 120)})`;
+            ctx.strokeStyle = `rgba(${isDark ? '176,176,176' : '20,20,30'},${0.18 * (1 - d / 120)})`;
             ctx.lineWidth = 0.5;
             ctx.stroke();
           }
@@ -112,7 +115,7 @@ export const ParticleCanvas: React.FC<ParticleCanvasProps> = ({
       wrap?.removeEventListener('mousemove', handleMove);
       wrap?.removeEventListener('mouseleave', handleLeave);
     };
-  }, [accent, accent2, density]);
+  }, [accent, accent2, density, isDark]);
 
   return (
     <canvas

@@ -8,6 +8,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { PayPalButton } from '../components/PayPalButton';
 import { PremiumStats } from '../components/PremiumStats';
+import { useTranslation } from 'react-i18next';
 
 const getEmbedUrl = (url: string) => {
   if (!url) return '';
@@ -29,6 +30,7 @@ export const SettingsPage: React.FC = () => {
   const { user } = useAuth();
   const { theme } = useTheme();
   const isDark = theme === 'dark';
+  const { t } = useTranslation();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -390,7 +392,7 @@ export const SettingsPage: React.FC = () => {
       <div style={{ maxWidth: 800, margin: '0 auto', padding: '60px 20px', color: colors.textMain, fontFamily: 'Inter, sans-serif', display: 'flex', justifyContent: 'center', background: colors.bg, minHeight: '100vh' }}>
         <div style={{ background: isDark ? 'linear-gradient(145deg, rgba(13, 22, 33, 0.95), rgba(6, 13, 20, 0.95))' : 'linear-gradient(145deg, #ffffff, #f0f0f0)', border: '1px solid rgba(255, 255, 255, 0.3)', borderRadius: 24, padding: '50px 40px', textAlign: 'center', maxWidth: 600, boxShadow: isDark ? '0 20px 50px rgba(0,0,0,0.5), 0 0 40px rgba(255,255,255,0.1)' : '0 10px 30px rgba(0,0,0,0.05)' }}>
           <div style={{ fontSize: 50, marginBottom: 20 }}>✨</div>
-          <h1 style={{ fontSize: 32, fontWeight: 900, marginBottom: 16 }}>Passez à la vitesse supérieure</h1>
+          <h1 style={{ fontSize: 32, fontWeight: 900, marginBottom: 16 }}>{t('settings.premium_title')}</h1>
           <p style={{ color: colors.textMuted, fontSize: 16, lineHeight: 1.6, marginBottom: 30 }}>La personnalisation de votre page et la gestion de votre musique sont réservées aux membres <strong>Premium</strong>.</p>
           <div style={{ background: 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255, 255, 255, 0.3)', borderRadius: 12, padding: '16px', marginBottom: 24 }}>
             <div style={{ fontSize: 26, fontWeight: 900, color: '#ffffff', marginBottom: 4 }}>30 € / an</div>
@@ -458,7 +460,7 @@ export const SettingsPage: React.FC = () => {
       {/* SECTION SHORTS */}
       <div id="shorts" style={{ background: colors.panelBg, padding: 24, borderRadius: 12, border: `1px solid ${colors.border}`, marginBottom: 24, scrollMarginTop: 80 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 10 }}>
-          <h2 style={{ fontSize: 18, color: colors.textMain, margin: 0 }}>🎬 Mes Shorts Vidéos ({myShorts.length})</h2>
+          <h2 style={{ fontSize: 18, color: colors.textMain, margin: 0 }}>{t('settings.my_shorts', { count: myShorts.length })}</h2>
           <div style={{ display: 'flex', gap: 10 }}>
             <button onClick={() => setShowShortLinkInput(!showShortLinkInput)} style={{ background: 'transparent', color: '#ffffff', border: '1px solid #ffffff', padding: '8px 16px', borderRadius: 6, fontWeight: 800, cursor: 'pointer' }}>{showShortLinkInput ? 'Annuler' : '+ Importer via un lien'}</button>
             <label style={{ background: colors.primaryBg, color: colors.primaryText, padding: '8px 16px', borderRadius: 6, fontWeight: 800, cursor: uploadingShort ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -474,7 +476,7 @@ export const SettingsPage: React.FC = () => {
           </div>
         )}
         {myShorts.length === 0 ? (
-          <p style={{ color: colors.textMuted, fontSize: 14 }}>Aucune vidéo pour le moment.</p>
+          <p style={{ color: colors.textMuted, fontSize: 14 }}>{t('settings.no_videos')}</p>
         ) : (
           <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 10 }}>
             {myShorts.map(short => (
@@ -721,7 +723,7 @@ export const SettingsPage: React.FC = () => {
 
       <form id="parametres" onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: 24, scrollMarginTop: 80 }}>
         <div style={{ background: colors.panelBg, padding: 24, borderRadius: 12, border: `1px solid ${colors.border}` }}>
-          <h2 style={{ fontSize: 18, marginBottom: 20, color: colors.textMain }}>Identité & Thème</h2>
+          <h2 style={{ fontSize: 18, marginBottom: 20, color: colors.textMain }}>{t('settings.identity')}</h2>
           <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
             <div style={{ flex: '1 1 300px', display: 'flex', flexDirection: 'column', gap: 8 }}>
               <label style={{ fontSize: 13, color: colors.textLight }}>Pseudo (URL)</label>
@@ -736,7 +738,7 @@ export const SettingsPage: React.FC = () => {
             </div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 20 }}>
-            <label style={{ fontSize: 13, color: colors.textLight }}>Typographie (Police d'écriture)</label>
+            <label style={{ fontSize: 13, color: colors.textLight }}>{t('settings.typography')}</label>
             <select value={form.font_family} onChange={(e) => setForm({ ...form, font_family: e.target.value })} style={{ padding: 12, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, color: colors.textMain, fontFamily: form.font_family }}>
               <option value="Inter, sans-serif">Inter (Moderne)</option>
               <option value="Montserrat, sans-serif">Montserrat (Élégant)</option>
@@ -756,7 +758,7 @@ export const SettingsPage: React.FC = () => {
             </div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 20 }}>
-            <label style={{ fontSize: 13, color: colors.textLight }}>Vidéo de fond (MP4)</label>
+            <label style={{ fontSize: 13, color: colors.textLight }}>{t('settings.bg_video')}</label>
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
               <input type="url" value={form.background_video_url} onChange={(e) => setForm({ ...form, background_video_url: e.target.value })} placeholder="URL de la vidéo (https://...)" style={{ flex: 1, minWidth: 200, padding: 12, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, color: colors.textMain }} />
               <label style={{ background: uploadingVideo ? colors.borderLight : form.theme_color, color: '#000', padding: '12px 20px', borderRadius: 8, cursor: uploadingVideo ? 'wait' : 'pointer', fontSize: 13, fontWeight: 800, whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -787,7 +789,7 @@ export const SettingsPage: React.FC = () => {
         </div>
 
         <div style={{ background: colors.panelBg, padding: 24, borderRadius: 12, border: `1px solid ${colors.border}` }}>
-          <h2 style={{ fontSize: 18, marginBottom: 20, color: colors.textMain }}>Bannière d'accueil</h2>
+          <h2 style={{ fontSize: 18, marginBottom: 20, color: colors.textMain }}>{t('settings.banner')}</h2>
           <input type="text" value={form.hero_tagline} onChange={(e) => setForm({ ...form, hero_tagline: e.target.value })} placeholder="Badge" style={{ padding: 12, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, color: colors.textMain, width: '100%', marginBottom: 20 }} />
           <input type="text" value={form.hero_title} onChange={(e) => setForm({ ...form, hero_title: e.target.value })} placeholder="Titre" style={{ padding: 12, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, color: colors.textMain, width: '100%', marginBottom: 20 }} />
           <textarea value={form.hero_description} onChange={(e) => setForm({ ...form, hero_description: e.target.value })} rows={3} placeholder="Description" style={{ padding: 12, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, color: colors.textMain, width: '100%' }} />
@@ -805,7 +807,7 @@ export const SettingsPage: React.FC = () => {
         </div>
 
         <div style={{ background: colors.panelBg, padding: 24, borderRadius: 12, border: `1px solid ${colors.border}` }}>
-          <h2 style={{ fontSize: 18, marginBottom: 20, color: colors.textMain }}>Réseaux Sociaux</h2>
+          <h2 style={{ fontSize: 18, marginBottom: 20, color: colors.textMain }}>{t('settings.socials')}</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <input type="url" placeholder="Instagram" value={form.instagram_url} onChange={(e) => setForm({ ...form, instagram_url: e.target.value })} style={{ padding: 12, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, color: colors.textMain }} />
             <input type="url" placeholder="SoundCloud" value={form.soundcloud_url} onChange={(e) => setForm({ ...form, soundcloud_url: e.target.value })} style={{ padding: 12, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, color: colors.textMain }} />

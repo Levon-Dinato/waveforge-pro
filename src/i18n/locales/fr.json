@@ -708,5 +708,15 @@
     "no_favs": "Aucun favori ne correspond à ta recherche.",
     "no_results": "Aucun morceau ne correspond à ta recherche.",
     "download_wav": "Télécharger WAV"
+  },
+  "settings": {
+    "premium_title": "Passez à la vitesse supérieure",
+    "my_shorts": "🎬 Mes Shorts Vidéos ({{count}})",
+    "no_videos": "Aucune vidéo pour le moment.",
+    "identity": "Identité & Thème",
+    "banner": "Bannière d'accueil",
+    "socials": "Réseaux Sociaux",
+    "typography": "Typographie (Police d'écriture)",
+    "bg_video": "Vidéo de fond (MP4)"
   }
 }

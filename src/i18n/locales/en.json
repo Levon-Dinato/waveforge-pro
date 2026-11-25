@@ -708,5 +708,15 @@
     "no_favs": "No favorite matches your search.",
     "no_results": "No track matches your search.",
     "download_wav": "Download WAV"
+  },
+  "settings": {
+    "premium_title": "Level up",
+    "my_shorts": "🎬 My Video Shorts ({{count}})",
+    "no_videos": "No videos yet.",
+    "identity": "Identity & Theme",
+    "banner": "Home banner",
+    "socials": "Social Networks",
+    "typography": "Typography (Font)",
+    "bg_video": "Background video (MP4)"
   }
 }

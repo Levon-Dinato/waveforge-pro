@@ -37,6 +37,7 @@ export const RadioManagerPage: React.FC = () => {
   const previewAudioRef = useRef<HTMLAudioElement | null>(null);
 
   const [uploadPlaylistId, setUploadPlaylistId] = useState('');
+  const [radioPlaylistId, setRadioPlaylistId] = useState('');
   const [selectedTracks, setSelectedTracks] = useState<string[]>([]);
 
   const [filterGenre, setFilterGenre] = useState<string>('all');
@@ -167,6 +168,20 @@ export const RadioManagerPage: React.FC = () => {
     }
     const { error } = await supabase.from('tracks').update({ in_radio: !currentStatus }).eq('id', trackId);
     if (!error) setMyTracks(myTracks.map(t => t.id === trackId ? { ...t, in_radio: !currentStatus } : t));
+  };
+
+  const applyPlaylistToRadio = async (status: boolean) => {
+    if (!radioPlaylistId) return alert("Sélectionne une playlist.");
+    setSaving(true);
+    const { data: pt } = await supabase.from('playlist_tracks').select('track_id').eq('playlist_id', radioPlaylistId);
+    const ids = (pt || []).map((r: any) => r.track_id);
+    if (ids.length === 0) { setSaving(false); return alert("Cette playlist est vide."); }
+    const { error } = await supabase.from('tracks').update({ in_radio: status }).in('id', ids);
+    if (!error) {
+      setMyTracks(prev => prev.map(t => ids.includes(t.id) ? { ...t, in_radio: status } : t));
+      alert(status ? "Playlist mise à l'antenne ! 📻" : "Playlist retirée de l'antenne.");
+    }
+    setSaving(false);
   };
 
   const handleDeleteTrack = async (trackId: string) => {
@@ -960,6 +975,21 @@ export const RadioManagerPage: React.FC = () => {
                     <option value="">Non classé</option>
                     {myPlaylists.map(p => <option key={p.id} value={p.id}>📁 {p.name}</option>)}
                   </select>
+                </div>
+              )}
+
+              {/* ✅ PLAYLIST À DIFFUSER SUR LA RADIO */}
+              {radioTab !== 'jingles' && (
+                <div style={{ marginTop: 16 }}>
+                  <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6, fontWeight: 600 }}>🎧 Playlist à diffuser</label>
+                  <select value={radioPlaylistId} onChange={(e) => setRadioPlaylistId(e.target.value)} className="dash-input" style={{ fontSize: 12, padding: '8px' }}>
+                    <option value="">Choisir une playlist...</option>
+                    {myPlaylists.map(p => <option key={p.id} value={p.id}>📁 {p.name}</option>)}
+                  </select>
+                  <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                    <button onClick={() => applyPlaylistToRadio(true)} disabled={saving || !radioPlaylistId} className="dash-btn dash-btn-primary" style={{ flex: 1, fontSize: 12 }}>▶ Mettre à l'antenne</button>
+                    <button onClick={() => applyPlaylistToRadio(false)} disabled={saving || !radioPlaylistId} className="dash-btn dash-btn-secondary" style={{ flex: 1, fontSize: 12 }}>⏸ Retirer</button>
+                  </div>
                 </div>
               )}
             </div>

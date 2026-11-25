@@ -617,9 +617,9 @@ export const RadioLayout: React.FC = () => {
 
       <div style={{ position: 'fixed', inset: 0, zIndex: 0, overflow: 'hidden', pointerEvents: 'none' }}>
         {customBgType === 'video' && customBgUrl ? (
-          <video src={customBgUrl} autoPlay loop muted playsInline style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0, opacity: customBgOpacity }} />
+          <video src={customBgUrl} autoPlay loop muted playsInline style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0, opacity: customBgOpacity, filter: isDark ? 'none' : 'invert(1) hue-rotate(180deg)' }} />
         ) : customBgType === 'image' && customBgUrl ? (
-          <div style={{ position: 'absolute', inset: 0, background: `url(${customBgUrl}) center/cover`, opacity: customBgOpacity }} />
+          <div style={{ position: 'absolute', inset: 0, background: `url(${customBgUrl}) center/cover`, opacity: customBgOpacity, filter: isDark ? 'none' : 'invert(1) hue-rotate(180deg)' }} />
         ) : (
           <>
             {customBgAnimation === 'aurora' && (<><div className="aurora-blob blob1" /><div className="aurora-blob blob2" /></>)}
@@ -628,7 +628,7 @@ export const RadioLayout: React.FC = () => {
             {customBgAnimation === 'stars' && <div className="stars-animation" />}
           </>
         )}
-        {(customBgType === 'image' || customBgType === 'video') && (<div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)' }} />)}
+        {(customBgType === 'image' || customBgType === 'video') && (<div style={{ position: 'absolute', inset: 0, background: isDark ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.45)' }} />)}
         <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px)', backgroundSize: '40px 40px', maskImage: 'radial-gradient(circle at center, black 40%, transparent 80%)' }} />
       </div>
 

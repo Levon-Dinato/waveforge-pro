@@ -246,7 +246,7 @@ export const MainLayout: React.FC = () => {
 
       {/* HEADER TOP BAR (style Beatport) — fixe en haut */}
       <header style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50, background: colors.bg, borderBottom: `1px solid ${colors.border}`, boxShadow: '0 6px 24px rgba(0,0,0,0.45)', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 24, padding: '10px 24px' }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto', width: '100%', display: 'flex', alignItems: 'center', gap: 24, padding: '10px 24px' }}>
           <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', flexShrink: 0 }}>
             <img src="/icons/icon-192.png" alt="ELEKTRAQ" style={{ width: 30, height: 30, objectFit: 'contain', borderRadius: 6 }} />
             <span style={{ fontWeight: 900, fontSize: '1.15rem', letterSpacing: '-0.5px', color: '#94c748' }}>ELEKTRAQ</span>
@@ -274,7 +274,7 @@ export const MainLayout: React.FC = () => {
         </div>
 
         {/* NAV LINKS (style Beatport) */}
-        <nav style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2, padding: '8px 24px 10px 24px', overflowX: 'auto', borderTop: `1px solid ${colors.border}` }}>
+        <nav style={{ maxWidth: 1280, margin: '0 auto', width: '100%', display: 'flex', alignItems: 'center', gap: 2, padding: '8px 24px 10px 24px', overflowX: 'auto', borderTop: `1px solid ${colors.border}` }}>
           {NAV_ITEMS.map(item => {
             const isActive = item.exact ? location.pathname === item.path : location.pathname.startsWith(item.path);
             return (

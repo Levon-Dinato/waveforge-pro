@@ -111,6 +111,7 @@ export const NouveautesPage: React.FC = () => {
   const [linkCoverUrl, setLinkCoverUrl] = useState('');
   const [fetchingMeta, setFetchingMeta] = useState(false);
   const [metaMsg, setMetaMsg] = useState('');
+  const [embedModalTrack, setEmbedModalTrack] = useState<any>(null);
 
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 20;
@@ -320,8 +321,8 @@ export const NouveautesPage: React.FC = () => {
   const handleGridPlay = (track: any) => {
     if (!user) { alert("🔒 Inscrivez-vous gratuitement pour écouter les morceaux en entier."); navigate('/auth'); return; }
     if (!track.audio_url) {
-      // ✅ Promo avec embed : on va sur la fiche titre où l'extrait se joue
-      if (track.embed_code) { navigate('/track/' + track.id); return; }
+      // ✅ Promo avec embed : extrait joué directement dans une fenêtre sur la page Promos
+      if (track.embed_code) { setEmbedModalTrack(track); return; }
       // ✅ Promo sans audio direct : on ouvre la page officielle de l'artiste
       if (track.purchase_url) window.open(track.purchase_url, '_blank');
       else alert("Cette promo s'écoute sur la plateforme de l'artiste.");
@@ -958,6 +959,29 @@ export const NouveautesPage: React.FC = () => {
                 {uploading ? t('nouveautes.processing') : t('nouveautes.submit')}
               </button>
             </form>
+          </div>
+        </div>, document.body
+      )}
+
+      {embedModalTrack && createPortal(
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }} onClick={(e) => { if (e.target === e.currentTarget) setEmbedModalTrack(null); }}>
+          <div style={{ padding: 24, width: '100%', maxWidth: 560, background: colors.panelBg, borderRadius: 16, border: `1px solid ${colors.border}`, position: 'relative', boxShadow: '0 30px 80px rgba(0,0,0,0.6)' }}>
+            <button onClick={() => setEmbedModalTrack(null)} style={{ position: 'absolute', top: 12, right: 12, background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', fontSize: 20 }}>✕</button>
+            <div style={{ display: 'flex', gap: 14, alignItems: 'center', marginBottom: 16, paddingRight: 30 }}>
+              {embedModalTrack.cover_url && <img src={embedModalTrack.cover_url} alt="cover" style={{ width: 56, height: 56, borderRadius: 10, objectFit: 'cover', border: `1px solid ${colors.border}`, flexShrink: 0 }} />}
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 16, fontWeight: 900, color: colors.textMain, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{embedModalTrack.title}</div>
+                <div style={{ fontSize: 13, color: colors.textMuted, marginTop: 2 }}>{embedModalTrack.artist}</div>
+              </div>
+            </div>
+            <div style={{ fontSize: 11, fontWeight: 800, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>🎧 {t('nouveautes.embed_listen')}</div>
+            <div style={{ borderRadius: 12, overflow: 'hidden', border: `1px solid ${colors.border}` }} dangerouslySetInnerHTML={{ __html: embedModalTrack.embed_code }} />
+            <div style={{ display: 'flex', gap: 10, marginTop: 16, flexWrap: 'wrap' }}>
+              {embedModalTrack.purchase_url && (
+                <a href={embedModalTrack.purchase_url} target="_blank" rel="noopener noreferrer" style={{ flex: 1, textAlign: 'center', padding: '12px', background: isDark ? '#ffffff' : '#111111', color: isDark ? '#000' : '#ffffff', borderRadius: 10, fontWeight: 800, fontSize: 13, textDecoration: 'none', whiteSpace: 'nowrap' }}>🛒 {t('nouveautes.open_official')}</a>
+              )}
+              <button onClick={() => { setEmbedModalTrack(null); navigate('/track/' + embedModalTrack.id); }} style={{ flex: 1, padding: '12px', background: 'transparent', border: `1px solid ${colors.border}`, color: colors.textMain, borderRadius: 10, fontWeight: 700, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap' }}>{t('nouveautes.view_track')}</button>
+            </div>
           </div>
         </div>, document.body
       )}

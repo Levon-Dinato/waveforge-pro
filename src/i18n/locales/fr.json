@@ -415,7 +415,10 @@
     "fetch_meta_ok": "Infos récupérées — vérifie et complète si besoin.",
     "fetch_meta_error": "Impossible de lire la page.",
     "fetch_meta_no_url": "Colle d'abord un lien officiel ou audio.",
-    "cover_url_label": "URL de la pochette (optionnel)"
+    "cover_url_label": "URL de la pochette (optionnel)",
+    "embed_listen": "Extrait officiel",
+    "open_official": "Page officielle",
+    "view_track": "Voir la fiche"
   },
   "contact": {
     "title": "Contact",

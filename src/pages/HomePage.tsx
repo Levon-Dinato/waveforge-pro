@@ -208,6 +208,8 @@ export const HomePage = () => {
 
       <EventsTicker />
 
+      <style>{`@keyframes pulseLive { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.8); } 100% { opacity: 1; transform: scale(1); } }`}</style>
+
       <div style={{ maxWidth: 1200, margin: '0 auto', width: '100%', paddingLeft: isMobile ? 12 : 24, paddingRight: isMobile ? 12 : 24, display: 'flex', flexDirection: 'column', gap: isMobile ? 24 : 48, paddingTop: 24, paddingBottom: isMobile ? 40 : 80 }}>
 
         {/* 1. HERO */}
@@ -232,8 +234,10 @@ export const HomePage = () => {
               {t('home.badge')}
             </div>
 
-            <h1 style={{ fontSize: isMobile ? '2.2rem' : '4rem', fontWeight: 900, margin: '0 0 16px 0', letterSpacing: '-1.5px', lineHeight: 1.05, textShadow: isDark ? '0 4px 20px rgba(0,0,0,0.8)' : 'none', color: colors.textMain }}>
-              {t('home.hero_1')}<br /><span style={{ color: colors.accent }}>{t('home.hero_2')}</span> {t('home.hero_3')}
+            <h1 style={{ fontSize: isMobile ? '2rem' : '3.6rem', fontWeight: 900, margin: '0 0 16px 0', letterSpacing: '-1.5px', lineHeight: 1.12, textShadow: isDark ? '0 4px 20px rgba(0,0,0,0.8)' : 'none', color: colors.textMain }}>
+              {t('home.hero_1')}<br />
+              <span style={{ color: colors.accent }}>{t('home.hero_2')}</span><br />
+              {t('home.hero_3')}
             </h1>
 
             <p style={{ color: colors.textMuted, fontSize: isMobile ? 14 : 18, margin: '0 0 24px 0', lineHeight: 1.5, maxWidth: 480 }}>
@@ -241,7 +245,8 @@ export const HomePage = () => {
             </p>
 
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 28 }}>
-              <Link to="/radio/ELEKTRAQ" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: isMobile ? '10px 20px' : '14px 32px', background: colors.accent, color: '#000', borderRadius: 30, fontWeight: 800, fontSize: isMobile ? 13 : 15, textDecoration: 'none', boxShadow: `0 8px 24px ${colors.accent}40` }}>
+              <Link to="/radio/ELEKTRAQ" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: isMobile ? '12px 22px' : '16px 34px', background: colors.accent, color: '#000', borderRadius: 30, fontWeight: 800, fontSize: isMobile ? 14 : 16, textDecoration: 'none', boxShadow: `0 8px 24px ${colors.accent}40` }}>
+                <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#ff2d55', animation: 'pulseLive 1.5s infinite' }} />
                 {t('home.listen_releases')} {Icons.arrowRight}
               </Link>
               <Link to="/auth" style={{ padding: isMobile ? '10px 20px' : '14px 32px', background: colors.btnSecondaryBg, color: colors.textMain, border: `1px solid ${colors.btnSecondaryBorder}`, borderRadius: 30, fontWeight: 600, fontSize: isMobile ? 13 : 15, textDecoration: 'none' }}>

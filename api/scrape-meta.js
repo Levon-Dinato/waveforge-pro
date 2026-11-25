@@ -11,8 +11,15 @@ export default async function handler(req, res) {
     const timeout = setTimeout(() => controller.abort(), 9000);
     const response = await fetch(url, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; ELEKTRAQ-Bot/1.0; +https://dropzone-dj.vercel.app)',
-        'Accept': 'text/html,application/xhtml+xml',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+        'Accept-Language': 'fr-FR,fr;q=0.9,en;q=0.8',
+        'Accept-Encoding': 'identity',
+        'Cache-Control': 'no-cache',
+        'Sec-Fetch-Dest': 'document',
+        'Sec-Fetch-Mode': 'navigate',
+        'Sec-Fetch-Site': 'none',
+        'Upgrade-Insecure-Requests': '1',
       },
       redirect: 'follow',
       signal: controller.signal,

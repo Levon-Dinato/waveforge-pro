@@ -277,9 +277,34 @@ export const NouveautesPage: React.FC = () => {
     if (!target) { setMetaMsg('⚠️ ' + t('nouveautes.fetch_meta_no_url')); return; }
     setFetchingMeta(true); setMetaMsg('');
     try {
-      const r = await fetch('/api/scrape-meta?url=' + encodeURIComponent(target));
-      const data = await r.json();
-      if (!r.ok || data.error) { setMetaMsg('❌ ' + (data.error || t('nouveautes.fetch_meta_error'))); return; }
+      // 1. Via notre endpoint Vercel
+      let data: any = null;
+      try {
+        const r = await fetch('/api/scrape-meta?url=' + encodeURIComponent(target));
+        if (r.ok) {
+          const j = await r.json();
+          if (!j.error) data = j;
+        }
+      } catch (e) {}
+
+      // 2. Fallback navigateur : lecteur r.jina.ai (passe les protections Cloudflare)
+      if (!data) {
+        const r2 = await fetch('https://r.jina.ai/' + target);
+        if (!r2.ok) throw new Error('jina');
+        const text = await r2.text();
+        const m = text.match(/^Title:\s*(.+)$/m);
+        if (m && m[1]) {
+          const full = m[1].trim();
+          let title = full; let artist = '';
+          const sep = full.match(/\s+[-–—]\s+/);
+          if (sep) { const parts = full.split(sep[0]); if (parts.length === 2) { title = parts[1].trim(); artist = parts[0].trim(); } }
+          data = { title, artist, cover: '' };
+          const img = text.match(/!\[[^\]]*\]\((https?:\/\/[^)]+\.(?:jpg|jpeg|png|webp)[^)]*)\)/i);
+          if (img && img[1]) data.cover = img[1];
+        }
+      }
+
+      if (!data || (!data.title && !data.cover)) { setMetaMsg('❌ ' + t('nouveautes.fetch_meta_error')); return; }
       if (data.title) setUploadForm(f => ({ ...f, title: f.title || data.title }));
       if (data.artist) setUploadForm(f => ({ ...f, artist: f.artist || data.artist }));
       if (data.cover) setLinkCoverUrl(data.cover);

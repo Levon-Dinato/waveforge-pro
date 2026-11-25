@@ -66,6 +66,8 @@ export const MainLayout: React.FC = () => {
   const isMobile = useIsMobile(768);
   const location = useLocation();
   const navigate = useNavigate();
+  // ✅ Barre de lecture visible uniquement sur les pages d'écoute principales
+  const showGlobalPlayer = ['/', '/nouveautes', '/charts', '/artists', '/sortie-radio'].includes(location.pathname);
   
   const { theme, toggleTheme } = useTheme();
   const { t } = useTranslation();
@@ -138,7 +140,7 @@ export const MainLayout: React.FC = () => {
 
         <Footer />
         
-        {currentTrack && <GlobalPlayer currentTrack={currentTrack} isPlaying={isPlaying} onTogglePlay={togglePlay} onStop={stop} />}
+        {currentTrack && showGlobalPlayer && <GlobalPlayer currentTrack={currentTrack} isPlaying={isPlaying} onTogglePlay={togglePlay} onStop={stop} />}
 
         <nav style={{ 
           position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50,
@@ -264,7 +266,7 @@ export const MainLayout: React.FC = () => {
 
       <ScrollButtons />
 
-      {currentTrack && <GlobalPlayer currentTrack={currentTrack} isPlaying={isPlaying} onTogglePlay={togglePlay} onStop={stop} />}
+      {currentTrack && showGlobalPlayer && <GlobalPlayer currentTrack={currentTrack} isPlaying={isPlaying} onTogglePlay={togglePlay} onStop={stop} />}
     </div>
   );
 };

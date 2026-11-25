@@ -33,32 +33,30 @@ const Icons = {
   radioList: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15V6"></path><path d="M18.5 18a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"></path><path d="M12 12H3"></path><path d="M16 6H3"></path><path d="M12 18H3"></path></svg>,
 };
 
-const NAV_ITEMS = [
+interface NavItem { path: string; labelKey: string; icon: React.ReactNode; exact?: boolean; highlight?: boolean; }
+
+const NAV_ITEMS: NavItem[] = [
   { path: '/', labelKey: 'nav.home', icon: Icons.home, exact: true },
-  { path: '/discover', labelKey: 'nav.discover', icon: Icons.discover },
-  { path: '/charts', labelKey: 'nav.top50', icon: Icons.trophy },
-  { path: '/genres', labelKey: 'nav.genres', icon: Icons.genres },
-  { path: '/artists', labelKey: 'nav.artists', icon: Icons.artists },
-  { path: '/feed', labelKey: 'nav.feed', icon: Icons.feed },
+  // 📻 LA RADIO = vitrine n°1
+  { path: '/radio/ELEKTRAQ', labelKey: 'nav.radio', icon: Icons.live, highlight: true },
+  // 🎧 Le coeur : promos des artistes
   { path: '/nouveautes', labelKey: 'nav.djonly', icon: Icons.new },
-  { path: '/mes-playlists', labelKey: 'nav.playlists', icon: Icons.playlist },
-  { path: '/radio/ELEKTRAQ', labelKey: 'nav.radio', icon: Icons.live },
-  { path: '/sortie-radio', labelKey: 'nav.sortieRadio', icon: Icons.radioList },
+  { path: '/artists', labelKey: 'nav.artists', icon: Icons.artists },
+  { path: '/charts', labelKey: 'nav.top50', icon: Icons.trophy },
   { path: '/radios', labelKey: 'nav.allRadios', icon: Icons.radioList },
-  { path: '/live', labelKey: 'nav.live', icon: Icons.live },
-  { path: '/events', labelKey: 'nav.events', icon: Icons.events },
-  
-  // ✅ "Outils DJ" et "Réglages" ont été retirés d'ici
-  
+  { path: '/feed', labelKey: 'nav.feed', icon: Icons.feed },
+  { path: '/discover', labelKey: 'nav.discover', icon: Icons.discover },
+  { path: '/genres', labelKey: 'nav.genres', icon: Icons.genres },
+  { path: '/mes-playlists', labelKey: 'nav.playlists', icon: Icons.playlist },
+  { path: '/sortie-radio', labelKey: 'nav.sortieRadio', icon: Icons.radioList },
   { path: '/help', labelKey: 'nav.guide', icon: Icons.help },
 ];
 
-const MOBILE_NAV = [
-  { path: '/', labelKey: 'nav.home', icon: Icons.home, exact: true },
-  { path: '/discover', labelKey: 'nav.discover', icon: Icons.discover }, 
-  { path: '/charts', labelKey: 'nav.top50', icon: Icons.trophy },
-  { path: '/nouveautes', labelKey: 'nav.releases', icon: Icons.new },
+const MOBILE_NAV: NavItem[] = [
   { path: '/radio/ELEKTRAQ', labelKey: 'nav.radioShort', icon: Icons.radioList },
+  { path: '/nouveautes', labelKey: 'nav.releases', icon: Icons.new },
+  { path: '/artists', labelKey: 'nav.artists', icon: Icons.artists },
+  { path: '/charts', labelKey: 'nav.top50', icon: Icons.trophy },
   { path: '#menu', labelKey: 'nav.menu', icon: Icons.menu }, 
 ];
 
@@ -260,12 +258,13 @@ export const MainLayout: React.FC = () => {
             const isActive = item.exact ? location.pathname === item.path : location.pathname.startsWith(item.path);
 
             return (
-              <NavLink key={item.path} to={item.path} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: `1px solid ${colors.border}`, textDecoration: 'none', color: isActive ? colors.textMain : colors.textMuted, background: isActive ? colors.activeBg : 'transparent', fontWeight: isActive ? 700 : 500, fontSize: '0.9rem', borderLeft: isActive ? `2px solid ${colors.textMain}` : '2px solid transparent', transition: 'all 0.2s' }}
-                onMouseEnter={(e) => { if (!isActive) { e.currentTarget.style.background = colors.hoverBg; e.currentTarget.style.color = colors.textMain; } }}
-                onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = colors.textMuted; } }}
+              <NavLink key={item.path} to={item.path} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: `1px solid ${colors.border}`, textDecoration: 'none', color: isActive ? colors.textMain : (item.highlight ? colors.textMain : colors.textMuted), background: isActive ? colors.activeBg : (item.highlight ? 'rgba(0, 217, 255, 0.08)' : 'transparent'), fontWeight: isActive ? 700 : (item.highlight ? 800 : 500), fontSize: '0.9rem', borderLeft: item.highlight ? '3px solid #00d9ff' : (isActive ? `2px solid ${colors.textMain}` : '2px solid transparent'), transition: 'all 0.2s' }}
+                onMouseEnter={(e) => { if (!isActive) { e.currentTarget.style.background = item.highlight ? 'rgba(0, 217, 255, 0.14)' : colors.hoverBg; e.currentTarget.style.color = colors.textMain; } }}
+                onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.background = item.highlight ? 'rgba(0, 217, 255, 0.08)' : 'transparent'; e.currentTarget.style.color = item.highlight ? colors.textMain : colors.textMuted; } }}
               >
                 <span style={{ display: 'flex' }}>{item.icon}</span>
                 <span style={{ flex: 1 }}>{t(item.labelKey)}</span>
+                {item.highlight && <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#00d9ff', boxShadow: '0 0 8px #00d9ff', flexShrink: 0 }} />}
               </NavLink>
             );
           })}

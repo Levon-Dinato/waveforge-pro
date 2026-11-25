@@ -473,7 +473,7 @@ export const RadioLayout: React.FC = () => {
   const totalLikes = topTracks.reduce((a, t) => a + (t.likes_count || 0), 0);
   const isOwner = user && user.id === profile.id;
   const currentUrl = window.location.href;
-  const currentCover = currentTrack?.cover_url || coverImage;
+  const currentCover = isLive ? coverImage : currentTrack?.cover_url || coverImage;
 
   const SocialLink = ({ url, icon, name }: { url: string; icon: React.ReactNode; name: string }) => {
     if (!url) return null;
@@ -795,7 +795,7 @@ export const RadioLayout: React.FC = () => {
               </div>
 
               <div style={{ minWidth: 0, flex: 1 }}>
-                <div style={{ fontSize: 13, fontWeight: 800, color: colors.textMain, display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{currentTrack?.title || 'En attente'} {isLive && <span style={{ fontSize: 9, background: '#b0b0b0', color: '#fff', padding: '2px 6px', borderRadius: 4 }}>LIVE</span>}</div>
+                <div style={{ fontSize: 13, fontWeight: 800, color: colors.textMain, display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{isLive ? '🎙️ EN DIRECT' : currentTrack?.title || 'En attente'}</div>
                 <div style={{ fontSize: 11, color: colors.textMuted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{currentTrack?.artist || 'ELEKTRAQ Radio'}</div>
               </div>
             </div>

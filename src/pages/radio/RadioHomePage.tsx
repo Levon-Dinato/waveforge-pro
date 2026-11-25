@@ -26,7 +26,7 @@ export const RadioHomePage: React.FC = () => {
   // ✅ ON UTILISE CURRENTTRACK POUR LE MARQUEE
   const marqueeItems = [
     `${(profile.radio_name || profile.username).toUpperCase()}`, 
-    `${t('radio.on_air')} : ${currentTrack?.title || t('radio.live_radio')}`, 
+    `${t('radio.on_air')} : ${isLive ? '🎙️ ' + t('radio.live_badge') : currentTrack?.title || t('radio.live_radio')}`, 
     `${totalLikes} ${t('radio.likes_upper')}`,
     t('radio.live_upper'), 
     `${listeners} ${t('radio.listeners_upper')}`, 
@@ -162,7 +162,7 @@ export const RadioHomePage: React.FC = () => {
                   {/* ✅ IMAGE DU VINYLE AVEC KEY POUR FORCER LA MISE À JOUR */}
                   <img 
                     key={currentTrack?.id || 'vinyl-cover'}
-                    src={currentTrack?.cover_url || coverImage} 
+                    src={isLive ? coverImage : currentTrack?.cover_url || coverImage} 
                     alt="Cover" 
                     style={{ width: '82%', height: '82%', borderRadius: '50%', objectFit: 'cover', border: '4px solid rgba(255,255,255,0.1)' }} 
                   />
@@ -218,7 +218,7 @@ export const RadioHomePage: React.FC = () => {
             {/* ✅ IMAGE DE LA CARTE INFOS AVEC KEY */}
             <img 
               key={currentTrack?.id || 'card-cover'}
-              src={currentTrack?.cover_url || coverImage} 
+              src={isLive ? coverImage : currentTrack?.cover_url || coverImage} 
               alt="Now playing" 
               style={{ width: 72, height: 72, borderRadius: 12, objectFit: 'cover', border: `2px solid ${visualizerColor}40` }} 
             />

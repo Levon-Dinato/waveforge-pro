@@ -611,7 +611,7 @@ export const RadioManagerPage: React.FC = () => {
                 <label style={{ position: 'relative', display: 'inline-block', width: 50, height: 26, cursor: 'pointer' }}>
                   <input type="checkbox" checked={crossfadeEnabled} onChange={(e) => setCrossfadeEnabled(e.target.checked)} style={{ opacity: 0, width: 0, height: 0 }} />
                   <span style={{ position: 'absolute', inset: 0, background: crossfadeEnabled ? colors.accent : colors.border, borderRadius: 13, transition: '0.2s' }}>
-                    <span style={{ position: 'absolute', height: 20, width: 20, left: crossfadeEnabled ? 26 : 3, bottom: 3, background: 'white', borderRadius: '50%', transition: '0.2s' }} />
+                    <span style={{ position: 'absolute', height: 20, width: 20, left: crossfadeEnabled ? 26 : 3, bottom: 3, background: crossfadeEnabled ? colors.bg : '#ffffff', borderRadius: '50%', transition: '0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.35)' }} />
                   </span>
                 </label>
               </div>
@@ -644,7 +644,7 @@ export const RadioManagerPage: React.FC = () => {
                 <label style={{ position: 'relative', display: 'inline-block', width: 50, height: 26, cursor: 'pointer' }}>
                   <input type="checkbox" checked={limiterEnabled} onChange={(e) => setLimiterEnabled(e.target.checked)} style={{ opacity: 0, width: 0, height: 0 }} />
                   <span style={{ position: 'absolute', inset: 0, background: limiterEnabled ? colors.accent : colors.border, borderRadius: 13, transition: '0.2s' }}>
-                    <span style={{ position: 'absolute', height: 20, width: 20, left: limiterEnabled ? 26 : 3, bottom: 3, background: 'white', borderRadius: '50%', transition: '0.2s' }} />
+                    <span style={{ position: 'absolute', height: 20, width: 20, left: limiterEnabled ? 26 : 3, bottom: 3, background: limiterEnabled ? colors.bg : '#ffffff', borderRadius: '50%', transition: '0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.35)' }} />
                   </span>
                 </label>
               </div>
@@ -664,7 +664,7 @@ export const RadioManagerPage: React.FC = () => {
                 <label style={{ position: 'relative', display: 'inline-block', width: 50, height: 26, cursor: 'pointer' }}>
                   <input type="checkbox" checked={noRepeatEnabled} onChange={(e) => setNoRepeatEnabled(e.target.checked)} style={{ opacity: 0, width: 0, height: 0 }} />
                   <span style={{ position: 'absolute', inset: 0, background: noRepeatEnabled ? colors.accent : colors.border, borderRadius: 13, transition: '0.2s' }}>
-                    <span style={{ position: 'absolute', height: 20, width: 20, left: noRepeatEnabled ? 26 : 3, bottom: 3, background: 'white', borderRadius: '50%', transition: '0.2s' }} />
+                    <span style={{ position: 'absolute', height: 20, width: 20, left: noRepeatEnabled ? 26 : 3, bottom: 3, background: noRepeatEnabled ? colors.bg : '#ffffff', borderRadius: '50%', transition: '0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.35)' }} />
                   </span>
                 </label>
               </div>
@@ -1044,9 +1044,12 @@ export const RadioManagerPage: React.FC = () => {
       )}
 
       {showJingleModal && createPortal(
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={(e) => { if (e.target === e.currentTarget) setShowJingleModal(false); }}>
           <div className="dash-card" style={{ padding: 24, width: '100%', maxWidth: 400 }}>
-            <h2 style={{ color: colors.textMain, marginTop: 0, fontSize: 18 }}>Ajouter un Jingle</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <h2 style={{ color: colors.textMain, margin: 0, fontSize: 18 }}>Ajouter un Jingle</h2>
+              <button type="button" onClick={() => setShowJingleModal(false)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', fontSize: 18 }}>✕</button>
+            </div>
             <form onSubmit={handleJingleUpload} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <input type="file" accept="audio/*" required onChange={(e) => setJingleForm({...jingleForm, audioFile: e.target.files?.[0] || null})} className="dash-input" />
               <input type="text" placeholder="Nom du jingle" value={jingleForm.title} onChange={e => setJingleForm({...jingleForm, title: e.target.value})} required className="dash-input" />
@@ -1057,9 +1060,12 @@ export const RadioManagerPage: React.FC = () => {
       )}
 
       {showScheduleModal && createPortal(
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={(e) => { if (e.target === e.currentTarget) setShowScheduleModal(false); }}>
           <div className="dash-card" style={{ padding: 24, width: '100%', maxWidth: 500 }}>
-            <h2 style={{ color: colors.textMain, marginTop: 0, fontSize: 18 }}>Nouveau Programme</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <h2 style={{ color: colors.textMain, margin: 0, fontSize: 18 }}>Nouveau Programme</h2>
+              <button type="button" onClick={() => setShowScheduleModal(false)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', fontSize: 18 }}>✕</button>
+            </div>
             <form onSubmit={handleAddSchedule} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <input type="text" placeholder="Nom (ex: Morning Show)" value={scheduleForm.title} onChange={e => setScheduleForm({...scheduleForm, title: e.target.value})} required className="dash-input" />
               <div style={{ display: 'flex', gap: 12 }}>

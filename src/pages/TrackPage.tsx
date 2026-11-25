@@ -320,6 +320,12 @@ export const TrackPage: React.FC = () => {
   const handlePlay = () => {
     if (!user) { navigate('/auth'); return; }
     
+    // ✅ Promo sans audio direct : on ouvre la page officielle de l'artiste
+    if (!track.audio_url) {
+      if (track.purchase_url) window.open(track.purchase_url, '_blank');
+      return;
+    }
+    
     if (currentTrack?.id === track.id) {
       togglePlay();
     } else {

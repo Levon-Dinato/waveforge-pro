@@ -271,7 +271,12 @@ export const NouveautesPage: React.FC = () => {
   // ▶️ Lecture depuis la grille (TrackGrid)
   const handleGridPlay = (track: any) => {
     if (!user) { alert("🔒 Inscrivez-vous gratuitement pour écouter les morceaux en entier."); navigate('/auth'); return; }
-    if (!track.audio_url) return;
+    if (!track.audio_url) {
+      // ✅ Promo sans audio direct : on ouvre la page officielle de l'artiste
+      if (track.purchase_url) window.open(track.purchase_url, '_blank');
+      else alert("Cette promo s'écoute sur la plateforme de l'artiste.");
+      return;
+    }
     play({ id: track.id, title: track.title, artist: track.artist, audio_url: track.audio_url, cover_url: track.cover_url, user_id: track.user_id || null, duration: track.duration, peaks: track.peaks, bpm: track.bpm, song_key: track.song_key, genre: track.genre });
   };
 
@@ -457,7 +462,7 @@ export const NouveautesPage: React.FC = () => {
         if (uploadForm.audio_url && (uploadForm.audio_url.endsWith('.mp3') || uploadForm.audio_url.includes('catbox'))) {
             finalAudioUrl = uploadForm.audio_url;
         } else if (uploadForm.audio_url) {
-            uploadForm.purchase_url = uploadForm.audio_url;
+            if (!uploadForm.purchase_url) uploadForm.purchase_url = uploadForm.audio_url;
             finalAudioUrl = '';
         }
       }
@@ -841,7 +846,12 @@ export const NouveautesPage: React.FC = () => {
                 <>
                   <div>
                     <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6, fontWeight: 600 }}>{t('nouveautes.link_label')}</label>
-                    <input type="url" value={uploadForm.audio_url} onChange={e => setUploadForm({...uploadForm, audio_url: e.target.value})} placeholder="https://..." style={{ width: '100%', padding: 10, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain }} />
+                    <input type="url" value={uploadForm.audio_url} onChange={e => setUploadForm({...uploadForm, audio_url: e.target.value})} placeholder="https://.../track.mp3" style={{ width: '100%', padding: 10, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain }} />
+                    <p style={{ margin: '6px 0 0 0', fontSize: 11, color: colors.textMuted, lineHeight: 1.5 }}>{t('nouveautes.link_hint')}</p>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6, fontWeight: 600 }}>{t('nouveautes.purchase_label')}</label>
+                    <input type="url" value={uploadForm.purchase_url} onChange={e => setUploadForm({...uploadForm, purchase_url: e.target.value})} placeholder="https://pro.music-worx.com/release/..." style={{ width: '100%', padding: 10, background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain }} />
                   </div>
                   <div>
                     <label style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginBottom: 6, fontWeight: 600 }}>{t('nouveautes.embed_label')}</label>

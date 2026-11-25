@@ -104,7 +104,7 @@ export const HomePage = () => {
               .or('is_jingle.is.null,is_jingle.eq.false') // ✅ Ignore les jingles
               .or('is_private.is.null,is_private.eq.false') // ✅ Ignore les titres privés
               .order('created_at', { ascending: false })
-              .limit(30);
+              .limit(60);
               
             if (tracksData) setTracks(tracksData as ExtendedTrack[]);
           }
@@ -141,6 +141,17 @@ export const HomePage = () => {
   const featured = tracks[0];
   const top10 = [...tracks].sort((a, b) => (b.likes_count || 0) - (a.likes_count || 0)).slice(0, 10);
   const newReleases = tracks.slice(1, 13);
+  const mostPlayed = [...tracks].sort((a, b) => (b.plays || 0) - (a.plays || 0)).slice(0, 12);
+
+  // ✅ Rayons par genre (les 3 genres les plus représentés, style Beatport)
+  const genreStrips = (() => {
+    const counts: Record<string, number> = {};
+    tracks.forEach(t => { const g = (t.genre || '').trim(); if (g) counts[g] = (counts[g] || 0) + 1; });
+    return Object.keys(counts).sort((a, b) => counts[b] - counts[a]).slice(0, 3).map(genre => ({
+      genre,
+      tracks: tracks.filter(t => (t.genre || '').trim() === genre).slice(0, 12),
+    }));
+  })();
   
   const isFeaturedPlaying = featured ? (currentTrack as any)?.id === featured.id && isPlaying : false; 
 
@@ -334,6 +345,10 @@ export const HomePage = () => {
         {top10.length > 0 && (
           <TrackStrip title={t('home.top10')} tracks={top10} ranked onPlay={handlePlayTrack} seeAllUrl="/charts" seeAllLabel={t('home.see_all')} />
         )}
+        <TrackStrip title={t('home.most_played')} tracks={mostPlayed} onPlay={handlePlayTrack} seeAllUrl="/charts" seeAllLabel={t('home.see_all')} />
+        {genreStrips.map(g => (
+          <TrackStrip key={g.genre} title={g.genre} tracks={g.tracks} onPlay={handlePlayTrack} seeAllUrl={`/nouveautes?genre=${encodeURIComponent(g.genre)}`} seeAllLabel={t('home.see_all')} />
+        ))}
 
         {/* 5. ARTISTES À LA UNE */}
         {artists.length > 0 && (

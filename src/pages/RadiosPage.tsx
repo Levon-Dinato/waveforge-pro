@@ -267,11 +267,11 @@ export const RadioPage: React.FC = () => {
         .glass-panel { background: ${colors.glass}; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid ${colors.border}; box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
         
         /* EFFET VINYLE 3D */
-        .vinyl-container { position: relative; width: ${size}px; height: ${size}px; border-radius: 50%; background: #000; box-shadow: 0 20px 50px rgba(0,0,0,0.8), inset 0 0 20px rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; z-index: 2; }
-        .vinyl-spin { width: ${size - 80}px; height: ${size - 80}px; border-radius: 50%; object-fit: cover; animation: spin 4s linear infinite; animation-play-state: ${isPlaying ? 'running' : 'paused'}; border: 4px solid rgba(255,255,255,0.1); }
-        .vinyl-grooves { position: absolute; inset: 0; border-radius: 50%; pointer-events: none; background: repeating-radial-gradient(circle, transparent, transparent 2px, rgba(255,255,255,0.03) 3px, transparent 4px); }
-        .vinyl-label { position: absolute; width: 50px; height: 50px; border-radius: 50%; background: ${colors.bg}; border: 3px solid rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; z-index: 2; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
-        .vinyl-hole { width: 8px; height: 8px; border-radius: 50%; background: #fff; box-shadow: 0 0 10px #fff; }
+        .vinyl-container { position: relative; width: ${size}px; height: ${size}px; border-radius: 50%; background: ${isDark ? '#000' : '#f2f2f4'}; box-shadow: ${isDark ? '0 20px 50px rgba(0,0,0,0.8), inset 0 0 20px rgba(255,255,255,0.1)' : '0 18px 40px rgba(0,0,0,0.25), inset 0 0 18px rgba(0,0,0,0.08)'}; display: flex; align-items: center; justify-content: center; z-index: 2; }
+        .vinyl-spin { width: ${size - 80}px; height: ${size - 80}px; border-radius: 50%; object-fit: cover; animation: spin 4s linear infinite; animation-play-state: ${isPlaying ? 'running' : 'paused'}; border: 4px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.12)'}; }
+        .vinyl-grooves { position: absolute; inset: 0; border-radius: 50%; pointer-events: none; background: repeating-radial-gradient(circle, transparent, transparent 2px, ${isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.05)'} 3px, transparent 4px); }
+        .vinyl-label { position: absolute; width: 50px; height: 50px; border-radius: 50%; background: ${colors.bg}; border: 3px solid ${isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.15)'}; display: flex; align-items: center; justify-content: center; z-index: 2; box-shadow: inset 0 0 10px ${isDark ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.15)'}; }
+        .vinyl-hole { width: 8px; height: 8px; border-radius: 50%; background: ${isDark ? '#fff' : '#0a0a0a'}; box-shadow: 0 0 10px ${isDark ? '#fff' : 'rgba(0,0,0,0.4)'}; }
 
         /* ✅ VISUALISEUR CIRCULAIRE CORRIGÉ */
         .circular-visualizer { 

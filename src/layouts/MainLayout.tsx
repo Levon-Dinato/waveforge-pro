@@ -301,5 +301,4 @@ export const MainLayout: React.FC = () => {
       {currentTrack && <GlobalPlayer currentTrack={currentTrack} isPlaying={isPlaying} onTogglePlay={togglePlay} onStop={stop} />}
     </div>
   );
-  );
 };

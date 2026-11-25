@@ -3,6 +3,7 @@ import React from 'react';
 import { useParams, Link, useOutletContext } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useIsMobile } from '../../hooks/useIsMobile';
+import { useTheme } from '../../contexts/ThemeContext';
 import { ParticleCanvas } from '../../components/ParticleCanvas';
 import { useRadio } from '../../contexts/RadioContext';
 import { useTranslation } from 'react-i18next';
@@ -10,6 +11,8 @@ import { useTranslation } from 'react-i18next';
 export const RadioHomePage: React.FC = () => {
   const { username } = useParams<{ username: string }>();
   const isMobile = useIsMobile(768);
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
   
   // ✅ ON RÉCUPÈRE CURRENTTRACK ICI POUR LA MISE À JOUR EN TEMPS RÉEL
   const { isPlaying, currentTrack } = useRadio();
@@ -134,7 +137,7 @@ export const RadioHomePage: React.FC = () => {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 20 }}>
               
               <div style={{ flexShrink: 0, display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative', width: vinylSize + 60, height: vinylSize + 60 }}>
-                <div style={{ position: 'absolute', width: vinylSize + 40, height: vinylSize + 40, borderRadius: '50%', background: `radial-gradient(circle, ${visualizerColor}40 0%, transparent 65%)`, filter: 'blur(40px)' }} />
+                {isDark && (<div style={{ position: 'absolute', width: vinylSize + 40, height: vinylSize + 40, borderRadius: '50%', background: `radial-gradient(circle, ${visualizerColor}40 0%, transparent 65%)`, filter: 'blur(40px)' }} />)}
                 
                 <div style={{ position: 'absolute', width: vinylSize, height: vinylSize, top: '50%', left: '50%', transform: 'translate(-50%, -50%)', pointerEvents: 'none', zIndex: 3 }}>
                   {visualizerBars.map((_, i) => {
@@ -145,7 +148,7 @@ export const RadioHomePage: React.FC = () => {
                       <div key={i} style={{ position: 'absolute', left: '50%', top: '50%', width: 2, height: barHeight, marginLeft: -1, marginTop: -(barHeight / 2), transformOrigin: 'center center', transform: `rotate(${angle}deg) translateY(-${distance}px)` }}>
                         <div style={{ 
                           width: '100%', height: '100%', background: dynamicGradient, borderRadius: 2, transformOrigin: 'bottom center', 
-                          boxShadow: `0 0 10px ${visualizerColor}`, animationName: 'beatCircle', animationDuration: `${0.3 + Math.random() * 0.4}s`, 
+                          boxShadow: isDark ? `0 0 10px ${visualizerColor}` : 'none', animationName: 'beatCircle', animationDuration: `${0.3 + Math.random() * 0.4}s`, 
                           animationDelay: `-${Math.random() * 0.5}s`, animationIterationCount: 'infinite', animationDirection: 'alternate', 
                           animationTimingFunction: 'ease-in-out', animationPlayState: isPlaying ? 'running' : 'paused' 
                         }} />
@@ -154,16 +157,16 @@ export const RadioHomePage: React.FC = () => {
                   })}
                 </div>
 
-                <div className="rp-vinyl-spin" style={{ width: vinylSize, height: vinylSize, borderRadius: '50%', background: '#000', boxShadow: `0 30px 80px rgba(0,0,0,0.8), inset 0 0 40px rgba(255,255,255,0.1), 0 0 60px ${visualizerColor}40`, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', zIndex: 4 }}>
+                <div className="rp-vinyl-spin" style={{ width: vinylSize, height: vinylSize, borderRadius: '50%', background: isDark ? '#000' : '#f2f2f4', boxShadow: isDark ? `0 30px 80px rgba(0,0,0,0.8), inset 0 0 40px rgba(255,255,255,0.1), 0 0 60px ${visualizerColor}40` : 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', zIndex: 4 }}>
                   {/* ✅ IMAGE DU VINYLE AVEC KEY POUR FORCER LA MISE À JOUR */}
                   <img 
                     key={currentTrack?.id || 'vinyl-cover'}
                     src={currentTrack?.cover_url || coverImage} 
                     alt="Cover" 
-                    style={{ width: '82%', height: '82%', borderRadius: '50%', objectFit: 'cover', border: '4px solid rgba(255,255,255,0.1)' }} 
+                    style={{ width: '82%', height: '82%', borderRadius: '50%', objectFit: 'cover', border: isDark ? '4px solid rgba(255,255,255,0.1)' : '4px solid rgba(0,0,0,0.1)' }} 
                   />
-                  <div style={{ position: 'absolute', width: 40, height: 40, borderRadius: '50%', background: '#05050a', border: '3px solid rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: visualizerColor, boxShadow: `0 0 15px ${visualizerColor}` }} />
+                  <div style={{ position: 'absolute', width: 40, height: 40, borderRadius: '50%', background: isDark ? '#05050a' : '#ffffff', border: isDark ? '3px solid rgba(255,255,255,0.2)' : '3px solid rgba(0,0,0,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: visualizerColor, boxShadow: isDark ? `0 0 15px ${visualizerColor}` : 'none' }} />
                   </div>
                 </div>
               </div>

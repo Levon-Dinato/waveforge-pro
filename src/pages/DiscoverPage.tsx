@@ -91,6 +91,9 @@ export const DiscoverPage: React.FC = () => {
       navigate('/auth');
       return;
     }
+    // ✅ Promo embed / sans audio : la fiche titre joue l'extrait officiel
+    if (!track.audio_url) { window.location.href = '/track/' + track.id; return; }
+
     play({
       id: track.id, title: track.title, artist: track.artist, audio_url: track.audio_url,
       cover_url: track.cover_url, user_id: track.user_id, duration: track.duration,

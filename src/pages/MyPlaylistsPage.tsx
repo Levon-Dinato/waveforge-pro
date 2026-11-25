@@ -138,6 +138,9 @@ export const MyPlaylistsPage: React.FC = () => {
 
   const handlePlayTrack = (track: any) => {
     if (!user) return;
+    // ✅ Promo embed / sans audio : la fiche titre joue l'extrait officiel
+    if (!track.audio_url) { window.location.href = '/track/' + track.id; return; }
+
     if (currentTrack?.id === track.id) {
       togglePlay();
     } else {

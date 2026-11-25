@@ -268,7 +268,12 @@ export const NouveautesPage: React.FC = () => {
       navigate('/auth');
       return;
     }
-    if (!track.audio_url) return;
+    if (!track.audio_url) {
+      // ✅ Promo embed : extrait joué dans une fenêtre (comme la grille)
+      if (track.embed_code) { setEmbedModalTrack(track); return; }
+      if (track.purchase_url) { window.open(track.purchase_url, '_blank'); return; }
+      return;
+    }
     play({ id: track.id, title: track.title, artist: track.artist, audio_url: track.audio_url, cover_url: track.cover_url, user_id: track.user_id || null, duration: track.duration, peaks: track.peaks, bpm: track.bpm, song_key: track.song_key, genre: track.genre });
   };
 

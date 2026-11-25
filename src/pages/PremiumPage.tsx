@@ -240,6 +240,7 @@ export const PremiumPage: React.FC = () => {
 
   const handlePlayTrack = async (track: any) => {
     if (!user) return alert("🔒 Inscrivez-vous pour écouter.");
+    if (!track.audio_url) { window.location.href = '/track/' + track.id; return; }
     if (track.audio_url && track.audio_url.length > 0) {
       const isNew = currentTrack?.id !== track.id;
       const queue = tracks.filter(t => t.audio_url && t.audio_url.length > 0);

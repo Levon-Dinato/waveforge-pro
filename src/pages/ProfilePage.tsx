@@ -421,6 +421,9 @@ export const ProfilePage: React.FC = () => {
   };
 
   const handlePlay = (track: any) => {
+    // ✅ Promo embed / sans audio : la fiche titre joue l'extrait officiel
+    if (!track.audio_url) { window.location.href = '/track/' + track.id; return; }
+
     play({ id: track.id, title: track.title, artist: track.artist, audio_url: track.audio_url, cover_url: track.cover_url, user_id: track.user_id, duration: track.duration, peaks: track.peaks, bpm: track.bpm, song_key: track.song_key, genre: track.genre, player_bg_image_url: track.player_bg_image_url, player_bg_color: track.player_bg_color });
   };
 

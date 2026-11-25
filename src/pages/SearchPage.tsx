@@ -85,6 +85,9 @@ export const SearchPage: React.FC = () => {
   };
 
   const handlePlay = (track: Track) => {
+    // ✅ Promo embed / sans audio : la fiche titre joue l'extrait officiel
+    if (!track.audio_url) { window.location.href = '/track/' + track.id; return; }
+
     play({
       id: track.id,
       title: track.title,

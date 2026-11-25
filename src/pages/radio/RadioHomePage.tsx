@@ -15,7 +15,7 @@ export const RadioHomePage: React.FC = () => {
   const isDark = theme === 'dark';
   
   // ✅ ON RÉCUPÈRE CURRENTTRACK ICI POUR LA MISE À JOUR EN TEMPS RÉEL
-  const { isPlaying, currentTrack, isLive } = useRadio();
+  const { isPlaying, currentTrack, isLive, startRadio, liveUrl } = useRadio();
   const { t } = useTranslation();
   
   const { 
@@ -200,6 +200,37 @@ export const RadioHomePage: React.FC = () => {
           )}
         </div>
       </section>
+
+      {/* 📻 PLAYLIST DE LA RADIO — visible pour les auditeurs */}
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '20px 16px' : '40px 40px', width: '100%', boxSizing: 'border-box', position: 'relative', zIndex: 2 }}>
+        <div className="rp-glass" style={{ padding: isMobile ? 20 : 28, borderRadius: 16 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1.5px', color: colors.textMain, marginBottom: 4 }}>📻 {t('radio.playlist_title')}</div>
+              <div style={{ fontSize: 12, color: colors.textMuted }}>{t('radio.playlist_sub')}</div>
+            </div>
+            <span style={{ fontSize: 12, fontWeight: 800, color: colors.textMuted }}>{radioTracks.length} {t('radio.tracks_upper')}</span>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', maxHeight: 420, overflowY: 'auto', gap: 4 }}>
+            {radioTracks.length === 0 ? (
+              <div style={{ fontSize: 13, color: colors.textMuted, fontStyle: 'italic' }}>{t('radio.playlist_empty')}</div>
+            ) : radioTracks.map((track: any, idx: number) => {
+              const isNow = !isLive && currentTrack?.id === track.id;
+              return (
+                <div key={track.id + '-' + idx} onClick={() => { if (!isLive) startRadio(radioTracks, false, '', idx, 0, true); }} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 10, background: isNow ? `${visualizerColor}18` : 'transparent', border: `1px solid ${isNow ? visualizerColor + '40' : 'transparent'}`, cursor: isLive ? 'default' : 'pointer', transition: 'background 0.15s' }} onMouseEnter={e => { if (!isLive) e.currentTarget.style.background = `${visualizerColor}10`; }} onMouseLeave={e => { if (!isLive) e.currentTarget.style.background = isNow ? `${visualizerColor}18` : 'transparent'; }}>
+                  <span style={{ width: 22, fontSize: 12, fontWeight: 800, color: isNow ? visualizerColor : colors.textMuted, textAlign: 'center', flexShrink: 0 }}>{isNow ? '▶' : idx + 1}</span>
+                  <img src={track.cover_url || coverImage} alt="cover" style={{ width: 36, height: 36, borderRadius: 6, objectFit: 'cover', flexShrink: 0 }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: colors.textMain, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.title}</div>
+                    <div style={{ fontSize: 11, color: colors.textMuted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.artist}</div>
+                  </div>
+                  {track.bpm && <span style={{ fontSize: 10, color: colors.textMuted, background: `${visualizerColor}10`, padding: '2px 8px', borderRadius: 10, flexShrink: 0 }}>{track.bpm} BPM</span>}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
 
       {/* MARQUEE */}
       <div style={{ borderTop: `1px solid ${colors.border}`, borderBottom: `1px solid ${colors.border}`, padding: '18px 0', overflow: 'hidden', background: `${visualizerColor}05`, position: 'relative', zIndex: 2 }}>

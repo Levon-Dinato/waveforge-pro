@@ -244,8 +244,6 @@ export const MainLayout: React.FC = () => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: colors.mainBg, color: colors.textMain, transition: 'background 0.3s ease', paddingBottom: currentTrack ? 100 : 0 }}>
 
-      <ThemeToggleButton />
-
       {/* HEADER TOP BAR (style Beatport) */}
       <header style={{ position: 'sticky', top: 0, zIndex: 50, background: colors.bg, borderBottom: `1px solid ${colors.border}`, display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 24, padding: '10px 24px' }}>

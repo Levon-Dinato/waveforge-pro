@@ -13,6 +13,7 @@ import { GlassCard } from '../components/ui/GlassCard';
 import { SectionTitle } from '../components/ui/SectionTitle';
 import { useAudioEngineContext } from '../contexts/AudioEngineContext';
 import { addVocalPadToBlob, type VocalVowel } from '../audio/vocalPad';
+import { useTranslation } from 'react-i18next';
 
 // ============================================================
 // PRESETS (avec mode VOIX/INST)
@@ -52,6 +53,7 @@ const SORT_OPTIONS: { value: SortOption; label: string; icon: string }[] = [
 const DURATION_OPTIONS = [30, 60, 90, 120];
 
 export const MusicGenPage: React.FC = () => {
+  const { t } = useTranslation();
   const isMobile = useIsMobile(768);
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -152,11 +154,11 @@ export const MusicGenPage: React.FC = () => {
 
   const handleGenerate = async () => {
     if (!prompt.trim()) {
-      showToast('Écris une description du morceau.', 'warning');
+      showToast(t('musicgen.desc_required'), 'warning');
       return;
     }
     if (isProduction()) {
-      showToast('La génération MusicGen nécessite le serveur Python local.', 'warning');
+      showToast(t('musicgen.server_required'), 'warning');
       return;
     }
     const controller = new AbortController();
@@ -189,7 +191,7 @@ export const MusicGenPage: React.FC = () => {
 
       if (withVocals) {
         if (!engine.audioContext) {
-          showToast('Audio non initialisé — voix ignorée', 'warning');
+          showToast(t('musicgen.audio_ignored'), 'warning');
         } else {
           setStatus('Ajout du chœur vocal...');
           try {
@@ -216,7 +218,7 @@ export const MusicGenPage: React.FC = () => {
       };
       await musicgenHistory.add(entry);
       await loadHistory();
-      showToast('✅ Morceau généré avec succès', 'success');
+      showToast(t('musicgen.success'), 'success');
     } catch (e: any) {
       if (e.name !== 'AbortError') {
         console.error(e);
@@ -237,7 +239,7 @@ export const MusicGenPage: React.FC = () => {
     setStatus('');
     setProgress(0);
     if (timerRef.current) clearInterval(timerRef.current);
-    showToast('Génération annulée', 'info');
+    showToast(t('musicgen.cancelled'), 'info');
   };
 
   const handleDownload = (url: string, name: string) => {
@@ -267,7 +269,7 @@ export const MusicGenPage: React.FC = () => {
   const handleExtractMidi = async (entry: MusicGenHistoryEntry) => {
     if (transcribingId) return;
     setTranscribingId(entry.id);
-    setTranscribeStatus('Préparation...');
+    setTranscribeStatus(t('musicgen.preparing'));
     setMidiSuccess(null);
     try {
       const bpm = 120;
@@ -289,14 +291,14 @@ export const MusicGenPage: React.FC = () => {
     if (!window.confirm('Supprimer ce morceau ?')) return;
     await musicgenHistory.delete(id);
     await loadHistory();
-    showToast('Morceau supprimé', 'info');
+    showToast(t('musicgen.deleted'), 'info');
   };
 
   const handleClearHistory = async () => {
     if (!window.confirm("Effacer TOUT l'historique ?")) return;
     await musicgenHistory.clear();
     await loadHistory();
-    showToast('Historique effacé', 'info');
+    showToast(t('musicgen.history_cleared'), 'info');
   };
 
   const startEditing = (id: string, currentTitle: string) => {
@@ -732,7 +734,7 @@ export const MusicGenPage: React.FC = () => {
               }}
             >
               <span>Sage</span>
-              <span>Créatif</span>
+              <span>{t('musicgen.creative')}</span>
             </div>
           </div>
 
@@ -822,7 +824,7 @@ export const MusicGenPage: React.FC = () => {
                 ? `⏳ ${Math.floor(progress)}%`
                 : isOnline === false
                 ? '❌ HORS LIGNE'
-                : '🎵 GÉNÉRER'}
+                : '🎵 ' + t('musicgen.generate')}
             </button>
             {isGenerating && (
               <button
@@ -1098,8 +1100,8 @@ export const MusicGenPage: React.FC = () => {
             </div>
             <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 16 }}>
               {showFavoritesOnly
-                ? 'Aucun favori ne correspond à ta recherche.'
-                : 'Aucun morceau ne correspond à ta recherche.'}
+                ? t('musicgen.no_favs')
+                : t('musicgen.no_results')}
             </div>
             <button
               onClick={() => {
@@ -1406,7 +1408,7 @@ export const MusicGenPage: React.FC = () => {
                         onClick: () => handleDownload(h.audioUrl, `musicgen-${h.id}.wav`),
                         icon: '💾',
                         color: '#b0b0b0',
-                        title: 'Télécharger WAV',
+                        title: t('musicgen.download_wav'),
                         disabled: isTranscribing,
                       },
                       {

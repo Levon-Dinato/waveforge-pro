@@ -691,5 +691,22 @@
     "subtle": "SUBTIL",
     "normal": "NORMAL",
     "instant": "Instantané"
+  },
+  "musicgen": {
+    "desc_required": "Écris une description du morceau.",
+    "server_required": "La génération MusicGen nécessite le serveur Python local.",
+    "audio_ignored": "Audio non initialisé — voix ignorée",
+    "success": "✅ Morceau généré avec succès",
+    "cancelled": "Génération annulée",
+    "deleted": "Morceau supprimé",
+    "history_cleared": "Historique effacé",
+    "preparing": "Préparation...",
+    "recent": "Récents",
+    "duration": "Durée",
+    "creative": "Créatif",
+    "generate": "GÉNÉRER",
+    "no_favs": "Aucun favori ne correspond à ta recherche.",
+    "no_results": "Aucun morceau ne correspond à ta recherche.",
+    "download_wav": "Télécharger WAV"
   }
 }

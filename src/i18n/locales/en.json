@@ -691,5 +691,22 @@
     "subtle": "SUBTLE",
     "normal": "NORMAL",
     "instant": "Instant"
+  },
+  "musicgen": {
+    "desc_required": "Write a description of the track.",
+    "server_required": "MusicGen generation requires the local Python server.",
+    "audio_ignored": "Audio not initialized — vocals ignored",
+    "success": "✅ Track generated successfully",
+    "cancelled": "Generation cancelled",
+    "deleted": "Track deleted",
+    "history_cleared": "History cleared",
+    "preparing": "Preparing...",
+    "recent": "Recent",
+    "duration": "Duration",
+    "creative": "Creative",
+    "generate": "GENERATE",
+    "no_favs": "No favorite matches your search.",
+    "no_results": "No track matches your search.",
+    "download_wav": "Download WAV"
   }
 }

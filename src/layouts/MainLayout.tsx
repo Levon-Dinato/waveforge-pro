@@ -242,111 +242,66 @@ export const MainLayout: React.FC = () => {
   }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: colors.mainBg, color: colors.textMain, transition: 'background 0.3s ease' }}>
-      
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: colors.mainBg, color: colors.textMain, transition: 'background 0.3s ease', paddingBottom: currentTrack ? 100 : 0 }}>
+
       <ThemeToggleButton />
 
-      <aside style={{ width: 240, background: colors.bg, borderRight: `1px solid ${colors.border}`, display: 'flex', flexDirection: 'column', position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 50, transition: 'background 0.3s ease, border-color 0.3s ease' }}>
-        
-        <div style={{ padding: '24px 20px', borderBottom: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
-          <img src="/icons/icon-192.png" alt="ELEKTRAQ" style={{ width: 36, height: 36, objectFit: 'contain', borderRadius: 8 }} />
-          <span style={{ fontWeight: 800, fontSize: '1.1rem', letterSpacing: '-0.5px', color: colors.textMain }}>ELEKTRAQ</span>
+      {/* HEADER TOP BAR (style Beatport) */}
+      <header style={{ position: 'sticky', top: 0, zIndex: 50, background: colors.bg, borderBottom: `1px solid ${colors.border}`, display: 'flex', flexDirection: 'column' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 24, padding: '10px 24px' }}>
+          <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', flexShrink: 0 }}>
+            <img src="/icons/icon-192.png" alt="ELEKTRAQ" style={{ width: 30, height: 30, objectFit: 'contain', borderRadius: 6 }} />
+            <span style={{ fontWeight: 900, fontSize: '1.15rem', letterSpacing: '-0.5px', color: '#94c748' }}>ELEKTRAQ</span>
+          </Link>
+          <div style={{ flex: 1, maxWidth: 380, minWidth: 200 }}>
+            <GlobalSearch />
+          </div>
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexShrink: 0 }}>
+            <LanguageSwitcher />
+            <button onClick={toggleTheme} style={{ background: 'transparent', border: `1px solid ${colors.border}`, borderRadius: 6, color: colors.textMain, cursor: 'pointer', padding: 6, display: 'flex', alignItems: 'center' }}>
+              {isDark ? Icons.sun : Icons.moon}
+            </button>
+            {user ? (
+              <Link to={`/profil/${user.id}`} style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', color: colors.textMain }}>
+                <div style={{ width: 32, height: 32, borderRadius: '50%', background: colors.hoverBg, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', border: `1px solid ${colors.border}` }}>
+                  {avatarUrl ? <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : displayName.charAt(0).toUpperCase()}
+                </div>
+              </Link>
+            ) : (
+              <button onClick={handleAuthClick} style={{ background: '#94c748', border: 'none', color: '#000', fontWeight: 800, fontSize: 11, padding: '9px 16px', borderRadius: 6, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                {t('common.sign_in')}
+              </button>
+            )}
+          </div>
         </div>
 
-        <nav style={{ flex: 1, padding: '16px 12px', display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
+        {/* NAV LINKS (style Beatport) */}
+        <nav style={{ display: 'flex', alignItems: 'center', gap: 2, padding: '8px 24px 10px 24px', overflowX: 'auto', borderTop: `1px solid ${colors.border}` }}>
           {NAV_ITEMS.map(item => {
             const isActive = item.exact ? location.pathname === item.path : location.pathname.startsWith(item.path);
-
             return (
-              <NavLink key={item.path} to={item.path} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: `1px solid ${colors.border}`, textDecoration: 'none', color: isActive ? colors.textMain : (item.highlight ? colors.textMain : colors.textMuted), background: isActive ? colors.activeBg : (item.highlight ? 'rgba(148, 199, 72, 0.08)' : 'transparent'), fontWeight: isActive ? 700 : (item.highlight ? 800 : 500), fontSize: '0.9rem', borderLeft: item.highlight ? '3px solid #94c748' : (isActive ? `2px solid ${colors.textMain}` : '2px solid transparent'), transition: 'all 0.2s' }}
-                onMouseEnter={(e) => { if (!isActive) { e.currentTarget.style.background = item.highlight ? 'rgba(148, 199, 72, 0.14)' : colors.hoverBg; e.currentTarget.style.color = colors.textMain; } }}
-                onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.background = item.highlight ? 'rgba(148, 199, 72, 0.08)' : 'transparent'; e.currentTarget.style.color = item.highlight ? colors.textMain : colors.textMuted; } }}
+              <NavLink key={item.path} to={item.path} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 4, textDecoration: 'none', fontSize: 11, fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', whiteSpace: 'nowrap', color: isActive ? '#94c748' : (item.highlight ? colors.textMain : colors.textMuted), background: item.highlight ? 'rgba(148,199,72,0.1)' : (isActive ? 'rgba(148,199,72,0.08)' : 'transparent'), borderBottom: isActive ? '2px solid #94c748' : '2px solid transparent', transition: 'all 0.15s' }}
+                onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.color = '#94c748'; }}
+                onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.color = item.highlight ? colors.textMain : colors.textMuted; }}
               >
-                <span style={{ display: 'flex' }}>{item.icon}</span>
-                <span style={{ flex: 1 }}>{t(item.labelKey)}</span>
-                {item.highlight && <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#94c748', boxShadow: '0 0 8px #94c748', flexShrink: 0 }} />}
+                {t(item.labelKey)}
+                {item.highlight && <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#94c748', boxShadow: '0 0 6px #94c748' }} />}
               </NavLink>
             );
           })}
         </nav>
+      </header>
 
-        <div style={{ padding: '16px', borderTop: `1px solid ${colors.border}`, display: 'flex', flexDirection: 'column', gap: '12px', flexShrink: 0 }}>
-          
-          <LanguageSwitcher />
-          <button onClick={toggleTheme} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '10px 12px', border: `1px solid ${colors.border}`, borderRadius: 8, background: 'transparent', color: colors.textMain, cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem', transition: 'all 0.2s' }}>
-             {isDark ? Icons.sun : Icons.moon}
-             {isDark ? t('common.light_mode') : t('common.dark_mode')}
-          </button>
+      <main style={{ flex: 1, width: '100%', maxWidth: 1600, margin: '0 auto', padding: '24px 24px 60px' }}>
+        <Outlet />
+      </main>
 
-          {isAdmin && (
-            <NavLink to="/admin" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '10px 12px', textDecoration: 'none', color: '#ff4444', background: 'rgba(255, 68, 68, 0.05)', fontWeight: 700, fontSize: '0.85rem', border: '1px solid rgba(255, 68, 68, 0.2)', borderRadius: 8, transition: 'all 0.2s' }}
-              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 68, 68, 0.1)'}
-              onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255, 68, 68, 0.05)'}
-            >
-              {Icons.admin}
-              {t('common.admin')}
-            </NavLink>
-          )}
-
-          <button 
-            onClick={handleAuthClick}
-            style={{
-              width: '100%', padding: '10px',
-              background: user ? 'transparent' : '#ffffff',
-              color: user ? '#b0b0b0' : '#000',
-              border: user ? '1px solid rgba(176, 176, 176, 0.5)' : 'none',
-              borderRadius: '8px', fontWeight: 700, fontSize: '0.85rem',
-              cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', transition: 'all 0.2s'
-            }}
-            onMouseEnter={(e) => { if (user) e.currentTarget.style.background = 'rgba(176, 176, 176, 0.1)'; }}
-            onMouseLeave={(e) => { if (user) e.currentTarget.style.background = 'transparent'; }}
-          >
-            {user ? (
-              <>{Icons.logout} {t('common.logout')}</>
-            ) : (
-              t('common.sign_in')
-            )}
-          </button>
-
-          <Link to={user ? `/profil/${user.id}` : '/auth'} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px', borderRadius: 8, textDecoration: 'none', color: colors.textMain, background: colors.hoverBg }} onMouseEnter={(e) => e.currentTarget.style.filter = 'brightness(0.95)'} onMouseLeave={(e) => e.currentTarget.style.filter = 'none'}>
-            <div style={{ width: 36, height: 36, borderRadius: '50%', background: colors.bg, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.textMain, fontWeight: 700, fontSize: 14, border: `1px solid ${colors.border}`, flexShrink: 0 }}>
-              {avatarUrl ? <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (user ? displayName.charAt(0).toUpperCase() : '?')}
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-               <div style={{ fontSize: '0.85rem', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: colors.textMain }}>{user ? displayName : t('common.guest')}</div>
-               <div style={{ fontSize: '0.7rem', color: colors.textMuted }}>{user ? t('common.view_profile') : t('common.sign_in')}</div>
-            </div>
-          </Link>
-        </div>
-      </aside>
-
-      <div style={{ flex: 1, marginLeft: 240, display: 'flex', flexDirection: 'column', minHeight: '100vh', paddingBottom: currentTrack ? 100 : 0 }}>
-        
-        <div style={{ background: colors.bg, borderBottom: `1px solid ${colors.border}`, padding: '10px 32px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 24 }}>
-          <GlobalSearch />
-          <div style={{ display: 'flex', gap: 20, flexShrink: 0 }}>
-            {[
-              { label: 'Charts', path: '/charts' },
-              { label: 'Promos', path: '/nouveautes' },
-              { label: 'Radio', path: '/radio/ELEKTRAQ' },
-            ].map(l => (
-              <Link key={l.path} to={l.path} style={{ fontSize: 11, fontWeight: 800, letterSpacing: '1.5px', color: colors.textMuted, textDecoration: 'none', textTransform: 'uppercase', transition: 'color 0.15s' }} onMouseEnter={e => e.currentTarget.style.color = '#94c748'} onMouseLeave={e => e.currentTarget.style.color = colors.textMuted}>
-                {l.label}
-              </Link>
-            ))}
-          </div>
-        </div>
-
-        <main style={{ flex: 1, padding: 32, maxWidth: 1400, margin: '0 auto', width: '100%' }}>
-          <Outlet />
-        </main>
-
-        <Footer />
-      </div>
+      <Footer />
 
       <ScrollButtons />
 
       {currentTrack && <GlobalPlayer currentTrack={currentTrack} isPlaying={isPlaying} onTogglePlay={togglePlay} onStop={stop} />}
     </div>
+  );
   );
 };

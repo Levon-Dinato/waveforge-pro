@@ -157,15 +157,15 @@ export const RadioHomePage: React.FC = () => {
                   })}
                 </div>
 
-                <div className="rp-vinyl-spin" style={{ width: vinylSize, height: vinylSize, borderRadius: '50%', background: isDark ? '#000' : '#f2f2f4', boxShadow: isDark ? `0 30px 80px rgba(0,0,0,0.8), inset 0 0 40px rgba(255,255,255,0.1), 0 0 60px ${visualizerColor}40` : 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', zIndex: 4 }}>
+                <div className="rp-vinyl-spin" style={{ width: vinylSize, height: vinylSize, borderRadius: '50%', background: '#000', boxShadow: isDark ? `0 30px 80px rgba(0,0,0,0.8), inset 0 0 40px rgba(255,255,255,0.1), 0 0 60px ${visualizerColor}40` : 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', zIndex: 4 }}>
                   {/* ✅ IMAGE DU VINYLE AVEC KEY POUR FORCER LA MISE À JOUR */}
                   <img 
                     key={currentTrack?.id || 'vinyl-cover'}
                     src={currentTrack?.cover_url || coverImage} 
                     alt="Cover" 
-                    style={{ width: '82%', height: '82%', borderRadius: '50%', objectFit: 'cover', border: isDark ? '4px solid rgba(255,255,255,0.1)' : '4px solid rgba(0,0,0,0.1)' }} 
+                    style={{ width: '82%', height: '82%', borderRadius: '50%', objectFit: 'cover', border: '4px solid rgba(255,255,255,0.1)' }} 
                   />
-                  <div style={{ position: 'absolute', width: 40, height: 40, borderRadius: '50%', background: isDark ? '#05050a' : '#ffffff', border: isDark ? '3px solid rgba(255,255,255,0.2)' : '3px solid rgba(0,0,0,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ position: 'absolute', width: 40, height: 40, borderRadius: '50%', background: '#05050a', border: '3px solid rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <div style={{ width: 8, height: 8, borderRadius: '50%', background: visualizerColor, boxShadow: isDark ? `0 0 15px ${visualizerColor}` : 'none' }} />
                   </div>
                 </div>

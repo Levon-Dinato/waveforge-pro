@@ -113,7 +113,7 @@ export const RadioPlayer: React.FC<RadioPlayerProps> = ({ profile, visualizerCol
         
         <div style={{ position: 'absolute', width: size + 40, height: size + 40, zIndex: 10, cursor: 'default' }} />
         
-        <div className="vinyl-container" style={{ position: 'relative', width: size, height: size, borderRadius: '50%', background: isDark ? '#000' : '#f2f2f4', boxShadow: isDark ? '0 20px 50px rgba(0,0,0,0.8), inset 0 0 20px rgba(255,255,255,0.1)' : 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 4 }}>
+        <div className="vinyl-container" style={{ position: 'relative', width: size, height: size, borderRadius: '50%', background: '#000', boxShadow: isDark ? '0 20px 50px rgba(0,0,0,0.8), inset 0 0 20px rgba(255,255,255,0.1)' : 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 4 }}>
           <img 
             key={currentTrack?.id || 'cover'}
             src={currentTrack?.cover_url || profile?.radio_custom_logo_url || profile?.avatar_url || 'https://via.placeholder.com/300'} 
@@ -121,7 +121,7 @@ export const RadioPlayer: React.FC<RadioPlayerProps> = ({ profile, visualizerCol
             className="vinyl-spin" 
             style={{ 
               width: size - (compact ? 40 : 60), height: size - (compact ? 40 : 60), borderRadius: '50%', objectFit: 'cover', 
-              border: `${compact ? 3 : 4}px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.12)'}`,
+              border: `${compact ? 3 : 4}px solid rgba(255,255,255,0.1)`,
               animationName: 'spin',
               animationDuration: '4s',
               animationIterationCount: 'infinite',
@@ -129,9 +129,9 @@ export const RadioPlayer: React.FC<RadioPlayerProps> = ({ profile, visualizerCol
               animationPlayState: isPlaying ? 'running' : 'paused' 
             }} 
           />
-          <div className="vinyl-grooves" style={{ position: 'absolute', inset: 0, borderRadius: '50%', pointerEvents: 'none', background: isDark ? 'repeating-radial-gradient(circle, transparent, transparent 2px, rgba(255,255,255,0.03) 3px, transparent 4px)' : 'repeating-radial-gradient(circle, transparent, transparent 2px, rgba(0,0,0,0.05) 3px, transparent 4px)' }} />
-          <div className="vinyl-label" style={{ position: 'absolute', width: compact ? 30 : 40, height: compact ? 30 : 40, borderRadius: '50%', background: isDark ? '#05050a' : '#ffffff', border: isDark ? '2px solid rgba(255,255,255,0.2)' : '2px solid rgba(0,0,0,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2, boxShadow: isDark ? 'inset 0 0 10px rgba(0,0,0,0.5)' : 'inset 0 0 8px rgba(0,0,0,0.15)' }}>
-            <div className="vinyl-hole" style={{ width: 5, height: 5, borderRadius: '50%', background: isDark ? '#fff' : '#0a0a0a', boxShadow: isDark ? '0 0 8px #fff' : '0 0 6px rgba(0,0,0,0.4)' }} />
+          <div className="vinyl-grooves" style={{ position: 'absolute', inset: 0, borderRadius: '50%', pointerEvents: 'none', background: 'repeating-radial-gradient(circle, transparent, transparent 2px, rgba(255,255,255,0.03) 3px, transparent 4px)' }} />
+          <div className="vinyl-label" style={{ position: 'absolute', width: compact ? 30 : 40, height: compact ? 30 : 40, borderRadius: '50%', background: '#05050a', border: '2px solid rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2, boxShadow: 'inset 0 0 10px rgba(0,0,0,0.5)' }}>
+            <div className="vinyl-hole" style={{ width: 5, height: 5, borderRadius: '50%', background: '#fff', boxShadow: isDark ? '0 0 8px #fff' : 'none' }} />
           </div>
         </div>
       </div>

@@ -107,6 +107,7 @@ export const NouveautesPage: React.FC = () => {
   const [uploadForm, setUploadForm] = useState({ title: '', artist: '', genre: '', bpm: '', song_key: '', audio_url: '', embed_code: '', purchase_url: '' });
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [rightsAccepted, setRightsAccepted] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 20;
@@ -684,7 +685,7 @@ export const NouveautesPage: React.FC = () => {
                 </p>
               </div>
               {user && (
-                <button onClick={() => setShowUploadModal(true)} style={{ padding: isMobile ? '10px 16px' : '12px 24px', background: isDark ? '#ffffff' : '#111111', color: isDark ? '#000' : '#ffffff', border: '1px solid transparent', borderRadius: 10, cursor: 'pointer', fontWeight: 800, fontSize: 13, boxShadow: isDark ? '0 0 20px rgba(255, 255, 255, 0.25)' : '0 4px 16px rgba(0,0,0,0.15)', transition: 'transform 0.2s, box-shadow 0.2s', whiteSpace: 'nowrap' }}>
+                <button onClick={() => { setRightsAccepted(false); setShowUploadModal(true); }} style={{ padding: isMobile ? '10px 16px' : '12px 24px', background: isDark ? '#ffffff' : '#111111', color: isDark ? '#000' : '#ffffff', border: '1px solid transparent', borderRadius: 10, cursor: 'pointer', fontWeight: 800, fontSize: 13, boxShadow: isDark ? '0 0 20px rgba(255, 255, 255, 0.25)' : '0 4px 16px rgba(0,0,0,0.15)', transition: 'transform 0.2s, box-shadow 0.2s', whiteSpace: 'nowrap' }}>
                   {isMobile ? t('nouveautes.upload_short') : t('nouveautes.upload')}
                 </button>
               )}
@@ -871,7 +872,12 @@ export const NouveautesPage: React.FC = () => {
                 </div>
               </div>
 
-              <button type="submit" disabled={uploading} style={{ marginTop: 12, padding: 16, background: '#ffffff', color: '#000', border: 'none', borderRadius: 10, fontWeight: 800, fontSize: 14, cursor: uploading ? 'wait' : 'pointer', transition: 'opacity 0.2s', boxShadow: '0 0 20px rgba(255, 255, 255, 0.3)' }}>
+              <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginTop: 12, fontSize: 12, color: colors.textMuted, cursor: 'pointer', fontWeight: 600, lineHeight: 1.5 }}>
+                <input type="checkbox" checked={rightsAccepted} onChange={(e) => setRightsAccepted(e.target.checked)} style={{ marginTop: 2, accentColor: '#00c878', width: 16, height: 16, flexShrink: 0, cursor: 'pointer' }} />
+                <span>{t('nouveautes.rights_label')}</span>
+              </label>
+
+              <button type="submit" disabled={uploading || !rightsAccepted} style={{ marginTop: 12, padding: 16, background: '#ffffff', color: '#000', border: 'none', borderRadius: 10, fontWeight: 800, fontSize: 14, cursor: (uploading || !rightsAccepted) ? 'not-allowed' : 'pointer', transition: 'opacity 0.2s', boxShadow: '0 0 20px rgba(255, 255, 255, 0.3)', opacity: rightsAccepted ? 1 : 0.5 }}>
                 {uploading ? t('nouveautes.processing') : t('nouveautes.submit')}
               </button>
             </form>

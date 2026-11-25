@@ -404,7 +404,8 @@
     "bpm_label": "BPM",
     "key_label": "Key",
     "processing": "Processing...",
-    "submit": "Add the track"
+    "submit": "Send my promo",
+    "rights_label": "I certify that I am the artist (or their authorized representative) and that I hold the rights to share this track."
   },
   "contact": {
     "title": "Contact",

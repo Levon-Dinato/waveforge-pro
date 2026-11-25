@@ -38,6 +38,20 @@ export const CGUPage: React.FC = () => {
           et pourra entraîner la suppression immédiate du contenu et du compte.
         </p>
 
+        <p>
+          <strong>Promos officielles.</strong> ELEKTRAQ est une plateforme de promotion : les titres sont uploadés
+          directement par les artistes ou leurs représentants autorisés afin d'être découverts par les DJs.
+          L'objectif est de faire découvrir les talents et d'orienter les auditeurs vers les plateformes légales
+          pour l'écoute et l'achat.
+        </p>
+
+        <p>
+          <strong>Procédure de retrait.</strong> Si vous estimez qu'un contenu publié sur ELEKTRAQ porte atteinte à
+          vos droits, contactez-nous à{' '}
+          <a href="mailto:contact@elektraq.com">contact@elektraq.com</a> en précisant le titre concerné et la nature
+          de vos droits. Le contenu sera examiné et, le cas échéant, retiré sous 48 heures ouvrées.
+        </p>
+
         <h2>4. Comportement</h2>
         <p>Il est interdit de :</p>
         <ul>

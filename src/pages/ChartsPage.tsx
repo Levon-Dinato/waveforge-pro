@@ -8,6 +8,7 @@ import { usePlayer } from '../contexts/PlayerContext';
 import { ScrollToTop } from '../components/ScrollToTop';
 import { PageMeta } from '../components/PageMeta';
 import { useTranslation } from 'react-i18next';
+import { TrackList } from '../components/TrackList';
 
 interface Track {
   id: string;
@@ -230,148 +231,7 @@ export const ChartsPage: React.FC = () => {
           </div>
         ) : (
           <>
-            {/* PODIUM TOP 3 (Design moderne + Badges de tendance) */}
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-end', gap: 20, marginBottom: 60, flexWrap: 'wrap' }}>
-              {podiumOrder.map((track, index) => {
-                if (!track) return null;
-                const rank = track === top3[0] ? 1 : track === top3[1] ? 2 : 3;
-                const isFirst = rank === 1;
-                const isSecond = rank === 2;
-                const isThird = rank === 3;
-                
-                const medalColor = isFirst ? colors.gold : isSecond ? colors.silver : colors.bronze;
-                const height = isFirst ? 290 : isSecond ? 230 : 210;
-                const coverSize = isFirst ? 120 : isSecond ? 90 : 80;
-                const isCurrent = currentTrack?.id === track.id && isPlaying;
-
-                return (
-                  <div key={track.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: isFirst ? 220 : 180 }}>
-                    
-                    {isFirst && <div style={{ fontSize: 40, marginBottom: -10 }}>👑</div>}
-                    
-                    <div 
-                      onClick={() => handlePlay(track)}
-                      style={{ 
-                        position: 'relative',
-                        width: coverSize, height: coverSize, 
-                        borderRadius: '50%', 
-                        background: track.cover_url ? `url(${track.cover_url}) center/cover` : colors.border, 
-                        border: `4px solid ${medalColor}`,
-                        boxShadow: `0 0 30px ${medalColor}40`,
-                        cursor: 'pointer',
-                        marginBottom: 16,
-                        transition: 'transform 0.2s'
-                      }}
-                      onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
-                      onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
-                    >
-                      <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: isCurrent ? 1 : 0, transition: 'opacity 0.2s' }} onMouseEnter={e => e.currentTarget.style.opacity = '1'} onMouseLeave={e => { if (!isCurrent) e.currentTarget.style.opacity = '0' }}>
-                        {isCurrent ? (
-                          <svg width="32" height="32" viewBox="0 0 24 24" fill="#fff"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
-                        ) : (
-                          <svg width="32" height="32" viewBox="0 0 24 24" fill="#fff"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-                        )}
-                      </div>
-                    </div>
-
-                    <div style={{ 
-                      background: colors.panelBg, 
-                      border: `1px solid ${colors.border}`, 
-                      borderTop: `4px solid ${medalColor}`,
-                      borderRadius: '16px 16px 0 0', 
-                      padding: '20px 16px', 
-                      textAlign: 'center',
-                      width: '100%',
-                      height: height,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'flex-start'
-                    }}>
-                      {/* RANG + BADGE DE TENDANCE */}
-                      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                        <div style={{ fontSize: 28, fontWeight: 900, color: medalColor }}>#{rank}</div>
-                        <TrendBadge currentRank={rank} previousRank={track.previous_rank} />
-                      </div>
-                      
-                      <div style={{ fontSize: 15, fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: 4 }}>{track.title}</div>
-                      <div style={{ fontSize: 13, color: colors.textMuted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.artist}</div>
-                      
-                      <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontSize: 12, color: colors.textMuted, fontWeight: 700 }}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-                        {formatPlays(track.plays || 0)} {t('charts.plays')}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* LISTE RESTE DU TOP 50 (Design spacieux + Badges de tendance) */}
-            <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, overflow: 'hidden' }}>
-              {rest.map((track, index) => {
-                const rank = index + 4;
-                const isCurrent = currentTrack?.id === track.id && isPlaying;
-                
-                return (
-                  <div 
-                    key={track.id} 
-                    style={{ 
-                      display: 'flex', alignItems: 'center', gap: 20, padding: '16px 24px', 
-                      borderBottom: index !== rest.length - 1 ? `1px solid ${colors.border}` : 'none',
-                      transition: 'background 0.2s',
-                      cursor: 'pointer'
-                    }}
-                    onMouseEnter={e => e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                    onClick={() => handlePlay(track)}
-                  >
-                    {/* RANG + BADGE DE TENDANCE */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 75 }}>
-                      <div style={{ width: 30, fontSize: 20, fontWeight: 800, color: colors.textMuted, textAlign: 'center' }}>{rank}</div>
-                      <TrendBadge currentRank={rank} previousRank={track.previous_rank} size="small" />
-                    </div>
-                    
-                    <div style={{ position: 'relative', width: 56, height: 56, borderRadius: 8, background: track.cover_url ? `url(${track.cover_url}) center/cover` : colors.border, flexShrink: 0 }}>
-                      {isCurrent && (
-                        <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <div style={{ width: 16, height: 16, borderRadius: '50%', border: `2px solid ${colors.accent}`, borderTopColor: 'transparent', animation: 'spin 1s linear infinite' }} />
-                        </div>
-                      )}
-                    </div>
-
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 15, fontWeight: 700, color: isCurrent ? colors.accent : colors.textMain, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {track.title}
-                      </div>
-                      <div style={{ fontSize: 13, color: colors.textMuted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {track.artist}
-                      </div>
-                    </div>
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: colors.textMuted, fontWeight: 600, width: 100, justifyContent: 'flex-end' }}>
-                      {formatPlays(track.plays || 0)} <span style={{ fontSize: 10 }}>{t('charts.plays')}</span>
-                    </div>
-
-                    <button 
-                      style={{ 
-                        width: 36, height: 36, borderRadius: '50%', 
-                        background: isCurrent ? colors.accent : 'transparent', 
-                        border: `1px solid ${isCurrent ? colors.accent : colors.border}`,
-                        color: isCurrent ? '#000' : colors.textMain,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        cursor: 'pointer', transition: 'all 0.2s'
-                      }}
-                    >
-                      {isCurrent ? (
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
-                      ) : (
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: 2 }}><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-                      )}
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
+            <TrackList tracks={tracks} onPlay={handlePlay} />
           </>
         )}
       </div>

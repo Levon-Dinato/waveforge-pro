@@ -265,11 +265,40 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
   };
 
   if (!currentTrack) {
-    // ✅ État vide : barre visible mais aucun titre en lecture
+    // ✅ État vide : barre complète visible, contrôles désactivés (style Beatport)
     return (
-      <div style={{ position: 'fixed', bottom: isMobile ? 70 : 0, left: 0, right: 0, zIndex: 1000, background: colors.bg, borderTop: `1px solid ${colors.border}`, backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' }}>
-        <div style={{ maxWidth: 1400, margin: '0 auto', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, padding: '0 24px' }}>
-          <span style={{ fontSize: 13, fontWeight: 700, color: colors.textMuted }}>🎧 Aucun titre en lecture — choisis un son dans les Promos ou le Top 50</span>
+      <div style={{ position: 'fixed', bottom: isMobile ? 70 : 0, left: 0, right: 0, zIndex: 1000, background: colors.bg, backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderTop: `1px solid ${colors.border}`, boxShadow: colors.shadow }}>
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'rgba(255,255,255,0.1)' }} />
+        <div style={{ maxWidth: 1400, margin: '0 auto', height: isMobile ? '72px' : '96px', display: 'flex', alignItems: 'center', gap: isMobile ? '12px' : '32px', padding: isMobile ? '0 16px' : '0 32px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 12 : 16, width: isMobile ? 'auto' : '320px', flexShrink: 0 }}>
+            <div style={{ width: isMobile ? 40 : 56, height: isMobile ? 40 : 56, borderRadius: 8, background: 'linear-gradient(135deg, #17171b, #101013)', border: `1px dashed ${colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.textMuted, fontSize: 20, flexShrink: 0 }}>♪</div>
+            <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', maxWidth: isMobile ? '120px' : 'none' }}>
+              <div style={{ fontSize: isMobile ? 13 : 15, fontWeight: 800, color: colors.textMuted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Aucun titre en lecture</div>
+              <div style={{ fontSize: isMobile ? 11 : 13, color: colors.textMuted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: 4, opacity: 0.7 }}>Choisis un son dans les Promos ou le Top 50</div>
+            </div>
+          </div>
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: isMobile ? 12 : 24 }}>
+            <button disabled style={{ background: 'transparent', border: 'none', color: colors.textMuted, opacity: 0.3, display: 'flex', padding: 4 }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="19" x2="5" y2="5"></line></svg>
+            </button>
+            <button disabled style={{ background: 'transparent', border: 'none', color: colors.textMuted, opacity: 0.3, display: 'flex', padding: 4 }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            </button>
+            <button disabled style={{ background: 'transparent', border: 'none', color: colors.textMuted, opacity: 0.3, display: 'flex', padding: 4 }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg>
+            </button>
+            <span style={{ fontSize: 11, color: colors.textMuted, fontFamily: 'monospace' }}>0:00</span>
+            <div style={{ flex: 1, height: isMobile ? 32 : 40, display: 'flex', alignItems: 'center', position: 'relative' }}>
+              <div style={{ width: '100%', height: 3, background: 'rgba(255,255,255,0.1)', borderRadius: 2 }} />
+            </div>
+            <span style={{ fontSize: 11, color: colors.textMuted, fontFamily: 'monospace' }}>0:00</span>
+          </div>
+          <div style={{ display: 'flex', gap: isMobile ? 8 : 12, alignItems: 'center', justifyContent: 'flex-end', width: isMobile ? 'auto' : '264px' }}>
+            <button onClick={toggleMute} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', padding: 4 }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 5 6 9H2v6h4l5 4V5z"></path><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+            </button>
+            <input type="range" min="0" max="1" step="0.01" value={volume} onChange={(e) => setVolume(parseFloat(e.target.value))} style={{ width: isMobile ? 60 : 90, accentColor: '#94c748', cursor: 'pointer' }} aria-label="Volume" />
+          </div>
         </div>
       </div>
     );

@@ -650,7 +650,7 @@ export const RadioManagerPage: React.FC = () => {
               </div>
               {limiterEnabled && (
                 <div style={{ marginTop: 20, paddingTop: 20, borderTop: `1px solid ${colors.border}`, fontSize: 12, color: colors.textMuted }}>
-                  ✅ Crêtes plafonnées à -1 dB · compression douce pour un niveau constant d'un titre à l'autre.
+                  ✅ Crêtes plafonnées à 0 dB · compression douce pour un niveau constant d'un titre à l'autre.
                 </div>
               )}
             </div>

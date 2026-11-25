@@ -107,7 +107,7 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         glue.release.value = 0.18;
         // Étage 2 : limiteur « brickwall » — plafonne les crêtes, aucune saturation possible
         const limiter = ctx.createDynamicsCompressor();
-        limiter.threshold.value = -1;
+        limiter.threshold.value = 0;
         limiter.knee.value = 0;
         limiter.ratio.value = 20;
         limiter.attack.value = 0.001;

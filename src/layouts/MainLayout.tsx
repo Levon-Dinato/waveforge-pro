@@ -290,14 +290,11 @@ export const MainLayout: React.FC = () => {
         </nav>
       </header>
 
-      <main style={{ flex: 1, width: '100%', maxWidth: 1280, margin: '0 auto', padding: '116px 24px 230px' }}>
+      <main style={{ flex: 1, width: '100%', maxWidth: 1280, margin: '0 auto', padding: '116px 24px 80px' }}>
         <Outlet />
       </main>
 
-      {/* FOOTER fixe en bas */}
-      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 40, maxHeight: '34vh', overflowY: 'auto' }}>
-        <Footer />
-      </div>
+      <Footer />
 
       <ScrollButtons />
 

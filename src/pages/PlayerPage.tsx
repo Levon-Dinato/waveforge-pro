@@ -109,7 +109,7 @@ export const PlayerPage: React.FC = () => {
             t -= durations[i];
           }
 
-          startRadio(mixedTracks, data.is_live || false, data.live_url || '', startIndex, t);
+          startRadio(mixedTracks, data.is_live || false, data.live_url || '', startIndex, t, true);
         }
       }
 

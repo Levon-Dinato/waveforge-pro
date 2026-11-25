@@ -9,7 +9,7 @@ import { useTheme } from '../contexts/ThemeContext';
 
 export const PlayerPage: React.FC = () => {
   const { username } = useParams<{ username: string }>();
-  const { startRadio, currentTrack, needsGesture, unlockAudio, isRadioActive } = useRadio();
+  const { startRadio, currentTrack, needsGesture, unlockAudio } = useRadio();
   const { theme, toggleTheme } = useTheme();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -25,6 +25,7 @@ export const PlayerPage: React.FC = () => {
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const chatEndRef = React.useRef<HTMLDivElement>(null);
+  const didInitRef = React.useRef(false);
 
   const [recentTracks, setRecentTracks] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<'chat' | 'history'>('chat');
@@ -68,8 +69,10 @@ export const PlayerPage: React.FC = () => {
         if (isMounted) setUserProfile(myProfile);
       }
 
-      // ✅ ON NE FAIT LE START QUE SI LA RADIO N'EST PAS DÉJÀ ACTIVE
-      if (!isRadioActive) {
+      // ✅ Premier montage uniquement : on force toujours la synchro avec le profil
+      // (corrige l'état périmé du localStorage qui bloquait l'URL live)
+      if (!didInitRef.current) {
+        didInitRef.current = true;
         const { data: musicTracks } = await supabase
           .from('tracks').select('*').eq('user_id', data.id).eq('in_radio', true).eq('is_jingle', false).order('created_at', { ascending: true });
         
@@ -134,7 +137,7 @@ export const PlayerPage: React.FC = () => {
     return () => { 
       isMounted = false; 
     };
-  }, [username, isRadioActive, startRadio, user]);
+  }, [username, startRadio, user]);
 
   // 📡 Abonnement temps réel au chat (créé UNE SEULE FOIS pour éviter les doublons)
   useEffect(() => {

@@ -653,5 +653,13 @@
     "grid_sub": "Import a track on the left to extract its notes and show them on the score.",
     "import": "Import a track",
     "patience": "Patience:"
+  },
+  "cdj": {
+    "no_track": "No track selected",
+    "analyzing": "SPECTRAL ANALYSIS IN PROGRESS...",
+    "analyze_short": "ANALYZING...",
+    "library": "My Library",
+    "analyze": "Analyze",
+    "drag": "Drag to edit"
   }
 }

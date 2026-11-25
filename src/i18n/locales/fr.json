@@ -653,5 +653,13 @@
     "grid_sub": "Importe un son à gauche pour extraire ses notes et les faire apparaître sur la partition.",
     "import": "Importer un son",
     "patience": "Patience :"
+  },
+  "cdj": {
+    "no_track": "Aucun morceau sélectionné",
+    "analyzing": "ANALYSE SPECTRALE EN COURS...",
+    "analyze_short": "ANALYSE...",
+    "library": "Ma Bibliothèque",
+    "analyze": "Analyser",
+    "drag": "Glisser pour modifier"
   }
 }

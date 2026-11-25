@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { Waveform } from '../components/Waveform';
+import { useTranslation } from 'react-i18next';
 
 interface LibraryTrack {
   id: string;
@@ -60,6 +61,7 @@ export const CDJPage: React.FC = () => {
   const { user } = useAuth();
   const { theme } = useTheme();
   const isDark = theme === 'dark';
+  const { t } = useTranslation();
 
   const [activeTrack, setActiveTrack] = useState<LibraryTrack | null>(null);
   const [library, setLibrary] = useState<LibraryTrack[]>([]);
@@ -553,7 +555,7 @@ export const CDJPage: React.FC = () => {
                   {isPlaying ? <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg> : <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" style={{marginLeft: 4}}><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <h1 style={{ fontSize: '1.4rem', fontWeight: 900, margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: colors.textMain, letterSpacing: '-0.5px' }}>{activeTrack?.title || 'Aucun morceau sélectionné'}</h1>
+                  <h1 style={{ fontSize: '1.4rem', fontWeight: 900, margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: colors.textMain, letterSpacing: '-0.5px' }}>{activeTrack?.title || t('cdj.no_track')}</h1>
                   <div style={{ fontSize: '0.9rem', color: '#ffffff', marginTop: 4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: 700 }}>{activeTrack?.artist}</div>
                 </div>
               </div>
@@ -565,7 +567,7 @@ export const CDJPage: React.FC = () => {
               >
                 {!activeTrack?.waveform && analyzingId === activeTrack?.id && (
                   <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: isDark ? 'rgba(0,0,0,0.9)' : 'rgba(255,255,255,0.9)', zIndex: 20, backdropFilter: 'blur(10px)' }}>
-                    <span style={{ color: '#ffffff', fontSize: '0.8rem', fontWeight: 900, animation: 'pulse 1.5s infinite', letterSpacing: '2px' }}>ANALYSE SPECTRALE EN COURS...</span>
+                    <span style={{ color: '#ffffff', fontSize: '0.8rem', fontWeight: 900, animation: 'pulse 1.5s infinite', letterSpacing: '2px' }}>{t('cdj.analyzing')}</span>
                   </div>
                 )}
                 
@@ -602,7 +604,7 @@ export const CDJPage: React.FC = () => {
                         justifyContent: 'center',
                         alignItems: 'center'
                       }} 
-                      title={`${cue.label} - Glisser pour modifier`}
+                      title={`${cue.label} - ${t('cdj.drag')}`}
                     >
                       <div style={{ 
                         width: draggingCueId === cue.id ? 4 : 2, 
@@ -646,7 +648,7 @@ export const CDJPage: React.FC = () => {
           <div style={{ flex: 1, overflowY: 'auto', padding: '0 32px 40px 32px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, paddingTop: 16 }}>
               <h2 style={{ fontSize: '1.2rem', fontWeight: 900, margin: 0, color: colors.textMain, letterSpacing: '-0.5px', display: 'flex', alignItems: 'center', gap: 12 }}>
-                Ma Bibliothèque 
+                {t('cdj.library')} 
                 <span style={{ fontSize: '0.8rem', color: colors.textMain, background: colors.border, padding: '2px 10px', borderRadius: 20, fontWeight: 800 }}>{filteredLibrary.length}</span>
               </h2>
             </div>
@@ -675,7 +677,7 @@ export const CDJPage: React.FC = () => {
                       </div>
                       
                       {analyzingId === track.id ? (
-                        <span style={{ color: '#ffffff', fontSize: '0.7rem', fontWeight: 900, animation: 'pulse 1.5s infinite', letterSpacing: '1px' }}>ANALYSE...</span>
+                        <span style={{ color: '#ffffff', fontSize: '0.7rem', fontWeight: 900, animation: 'pulse 1.5s infinite', letterSpacing: '1px' }}>{t('cdj.analyze_short')}</span>
                       ) : track.cuePoints ? (
                         <div style={{ display: 'flex', gap: 4 }}>
                           {track.cuePoints.map((cue, i) => (
@@ -683,7 +685,7 @@ export const CDJPage: React.FC = () => {
                           ))}
                         </div>
                       ) : (
-                        <button onClick={(e) => { e.stopPropagation(); analyzeTrack(track); }} style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))', color: colors.textMain, border: `1px solid ${colors.borderLight}`, padding: '6px 14px', borderRadius: 6, fontSize: '0.75rem', fontWeight: 800, cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 5px rgba(0,0,0,0.2)' }} onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#ffffff'; e.currentTarget.style.color = '#ffffff'; e.currentTarget.style.boxShadow = '0 0 15px rgba(255,255,255,0.2)'; }} onMouseLeave={(e) => { e.currentTarget.style.borderColor = colors.borderLight; e.currentTarget.style.color = colors.textMain; e.currentTarget.style.boxShadow = '0 2px 5px rgba(0,0,0,0.2)'; }}>Analyser</button>
+                        <button onClick={(e) => { e.stopPropagation(); analyzeTrack(track); }} style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))', color: colors.textMain, border: `1px solid ${colors.borderLight}`, padding: '6px 14px', borderRadius: 6, fontSize: '0.75rem', fontWeight: 800, cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 5px rgba(0,0,0,0.2)' }} onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#ffffff'; e.currentTarget.style.color = '#ffffff'; e.currentTarget.style.boxShadow = '0 0 15px rgba(255,255,255,0.2)'; }} onMouseLeave={(e) => { e.currentTarget.style.borderColor = colors.borderLight; e.currentTarget.style.color = colors.textMain; e.currentTarget.style.boxShadow = '0 2px 5px rgba(0,0,0,0.2)'; }}>{t('cdj.analyze')}</button>
                       )}
                     </div>
                   </div>

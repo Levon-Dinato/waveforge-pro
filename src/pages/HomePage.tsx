@@ -1,6 +1,7 @@
 // src/pages/HomePage.tsx
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { createPortal } from 'react-dom';
 import { Helmet } from 'react-helmet-async';
 import { supabase } from '../lib/supabase';
 import { TrackGrid } from '../components/TrackGrid';
@@ -43,6 +44,8 @@ interface ExtendedTrack {
   likes_count?: number;
   plays?: number;
   downloads?: number;
+  embed_code?: string;
+  purchase_url?: string;
 }
 
 export const HomePage = () => {
@@ -57,6 +60,7 @@ export const HomePage = () => {
   const [tracks, setTracks] = useState<ExtendedTrack[]>([]);
   const [artists, setArtists] = useState<Artist[]>([]);
   const [loading, setLoading] = useState(true);
+  const [embedModalTrack, setEmbedModalTrack] = useState<any>(null);
 
   const colors = {
     bg: isDark ? '#0a0a0a' : '#f5f5f7',
@@ -146,6 +150,13 @@ export const HomePage = () => {
     e.preventDefault();
     if (!featured) return;
 
+    // ✅ Promo embed : extrait joué dans une fenêtre (comme la page Promos)
+    if (!featured.audio_url) {
+      if (featured.embed_code) { setEmbedModalTrack(featured); return; }
+      if (featured.purchase_url) { window.open(featured.purchase_url, '_blank'); return; }
+      return;
+    }
+
     const isNew = (currentTrack as any)?.id !== featured.id;
     
     const trackToPlay = {
@@ -168,6 +179,13 @@ export const HomePage = () => {
   };
 
   const handlePlayTrack = (track: any) => {
+    // ✅ Promo embed : extrait joué dans une fenêtre (comme la page Promos)
+    if (!track.audio_url) {
+      if (track.embed_code) { setEmbedModalTrack(track); return; }
+      if (track.purchase_url) { window.open(track.purchase_url, '_blank'); return; }
+      return;
+    }
+
     const isNew = (currentTrack as any)?.id !== track.id;
     
     const trackToPlay = {
@@ -487,6 +505,29 @@ export const HomePage = () => {
 
       {/* Animation pour le point rouge */}
       <style>{`@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }`}</style>
+
+      {embedModalTrack && createPortal(
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }} onClick={(e) => { if (e.target === e.currentTarget) setEmbedModalTrack(null); }}>
+          <div style={{ padding: 24, width: '100%', maxWidth: 560, background: colors.panelBg, borderRadius: 16, border: `1px solid ${colors.border}`, position: 'relative', boxShadow: '0 30px 80px rgba(0,0,0,0.6)' }}>
+            <button onClick={() => setEmbedModalTrack(null)} style={{ position: 'absolute', top: 12, right: 12, background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', fontSize: 20 }}>✕</button>
+            <div style={{ display: 'flex', gap: 14, alignItems: 'center', marginBottom: 16, paddingRight: 30 }}>
+              {embedModalTrack.cover_url && <img src={embedModalTrack.cover_url} alt="cover" style={{ width: 56, height: 56, borderRadius: 10, objectFit: 'cover', border: `1px solid ${colors.border}`, flexShrink: 0 }} />}
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 16, fontWeight: 900, color: colors.textMain, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{embedModalTrack.title}</div>
+                <div style={{ fontSize: 13, color: colors.textMuted, marginTop: 2 }}>{embedModalTrack.artist}</div>
+              </div>
+            </div>
+            <div style={{ fontSize: 11, fontWeight: 800, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>🎧 {t('nouveautes.embed_listen')}</div>
+            <div style={{ borderRadius: 12, overflow: 'hidden', border: `1px solid ${colors.border}` }} dangerouslySetInnerHTML={{ __html: embedModalTrack.embed_code }} />
+            <div style={{ display: 'flex', gap: 10, marginTop: 16, flexWrap: 'wrap' }}>
+              {embedModalTrack.purchase_url && (
+                <a href={embedModalTrack.purchase_url} target="_blank" rel="noopener noreferrer" style={{ flex: 1, textAlign: 'center', padding: '12px', background: colors.accent, color: '#000', borderRadius: 10, fontWeight: 800, fontSize: 13, textDecoration: 'none', whiteSpace: 'nowrap' }}>🛒 {t('nouveautes.open_official')}</a>
+              )}
+              <button onClick={() => { setEmbedModalTrack(null); navigate('/track/' + embedModalTrack.id); }} style={{ flex: 1, padding: '12px', background: 'transparent', border: `1px solid ${colors.btnSecondaryBorder}`, color: colors.textMain, borderRadius: 10, fontWeight: 700, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap' }}>{t('nouveautes.view_track')}</button>
+            </div>
+          </div>
+        </div>, document.body
+      )}
     </div>
   );
 };

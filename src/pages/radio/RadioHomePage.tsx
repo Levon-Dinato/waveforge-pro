@@ -89,6 +89,11 @@ export const RadioHomePage: React.FC = () => {
                 })()}
               </span>
             </h1>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 16, marginTop: -8 }}>
+              <span style={{ fontSize: isMobile ? 12 : 14, fontWeight: 800, color: colors.textMain, letterSpacing: '0.3px' }}>{t('home.founding_1')}</span>
+              <span style={{ fontSize: isMobile ? 12 : 14, fontWeight: 800, color: visualizerColor, letterSpacing: '0.3px' }}>{t('home.founding_2')}</span>
+              <span style={{ fontSize: isMobile ? 12 : 14, fontWeight: 800, color: colors.textMain, letterSpacing: '0.3px' }}>{t('home.founding_3')}</span>
+            </div>
             <p style={{ fontSize: isMobile ? 14 : 17, color: colors.textMuted, marginBottom: 32, lineHeight: 1.6 }}>{profile.radio_instructions || t('radio.radio_fallback')}</p>
             
             {/* ✅ BOUTON PRINCIPAL HARMONISÉ */}

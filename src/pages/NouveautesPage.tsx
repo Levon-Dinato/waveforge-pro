@@ -873,8 +873,8 @@ export const NouveautesPage: React.FC = () => {
             </div>
 
             <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
-              <button onClick={() => setUploadType('file')} style={{ flex: 1, padding: 12, background: uploadType === 'file' ? 'linear-gradient(135deg, #ffffff, #0099ff)' : 'transparent', color: uploadType === 'file' ? '#000' : colors.textMain, border: `1px solid ${colors.border}`, borderRadius: 8, cursor: 'pointer', fontWeight: 800, transition: 'all 0.2s' }}>{t('nouveautes.file_tab')}</button>
-              <button onClick={() => setUploadType('link')} style={{ flex: 1, padding: 12, background: uploadType === 'link' ? 'linear-gradient(135deg, #ffffff, #0099ff)' : 'transparent', color: uploadType === 'link' ? '#000' : colors.textMain, border: `1px solid ${colors.border}`, borderRadius: 8, cursor: 'pointer', fontWeight: 800, transition: 'all 0.2s' }}>{t('nouveautes.link_tab')}</button>
+              <button onClick={() => setUploadType('file')} style={{ flex: 1, padding: 12, background: uploadType === 'file' ? '#94c748' : 'transparent', color: uploadType === 'file' ? '#000' : colors.textMain, border: `1px solid ${uploadType === 'file' ? '#94c748' : colors.border}`, borderRadius: 8, cursor: 'pointer', fontWeight: 800, transition: 'all 0.2s' }}>{t('nouveautes.file_tab')}</button>
+              <button onClick={() => setUploadType('link')} style={{ flex: 1, padding: 12, background: uploadType === 'link' ? 'rgba(148,199,72,0.14)' : 'transparent', color: uploadType === 'link' ? '#94c748' : colors.textMain, border: `1px solid ${uploadType === 'link' ? '#94c748' : colors.border}`, borderRadius: 8, cursor: 'pointer', fontWeight: 800, transition: 'all 0.2s' }}>{t('nouveautes.link_tab')}</button>
             </div>
 
             <form onSubmit={handleUploadSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>

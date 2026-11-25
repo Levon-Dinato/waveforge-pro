@@ -84,8 +84,6 @@ export const MainLayout: React.FC = () => {
     panelBg: isDark ? '#121212' : '#ffffff',
   };
 
-  const isFullScreen = location.pathname === '/mastering' || location.pathname === '/cdj' || location.pathname === '/studio' || location.pathname === '/nouveautes';
-
   useEffect(() => { setMobileMenuOpen(false); }, [location.pathname]);
   useEffect(() => { if (user?.id) refreshProfile(); }, [user?.id, refreshProfile]);
 
@@ -100,36 +98,6 @@ export const MainLayout: React.FC = () => {
       navigate('/auth');
     }
   };
-
-  const ThemeToggleButton = () => (
-    <button
-      onClick={toggleTheme}
-      style={{
-        position: 'fixed', top: 20, right: 20, zIndex: 9999,
-        width: 44, height: 44, borderRadius: '50%',
-        background: isDark ? '#ffffff' : '#1a1a1a', 
-        border: `1px solid ${isDark ? '#e5e7eb' : '#333333'}`,
-        color: isDark ? '#000000' : '#ffffff', 
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        cursor: 'pointer', boxShadow: '0 4px 15px rgba(0,0,0,0.2)', transition: 'all 0.2s',
-      }}
-      title={isDark ? 'Passer en mode clair' : 'Passer en mode sombre'}
-    >
-      {isDark ? Icons.sun : Icons.moon}
-    </button>
-  );
-
-  if (isFullScreen) {
-    return (
-      <div style={{ minHeight: '100vh', background: colors.bg, color: colors.textMain, transition: 'background 0.3s ease' }}>
-        {location.pathname !== '/nouveautes' && <ThemeToggleButton />}
-        <Outlet />
-        <ScrollButtons />
-        {location.pathname === '/nouveautes' && <Footer />}
-        {currentTrack && <GlobalPlayer currentTrack={currentTrack} isPlaying={isPlaying} onTogglePlay={togglePlay} onStop={stop} />}
-      </div>
-    );
-  }
 
   if (isMobile) {
     return (

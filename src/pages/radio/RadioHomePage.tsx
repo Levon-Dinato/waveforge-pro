@@ -15,7 +15,7 @@ export const RadioHomePage: React.FC = () => {
   const isDark = theme === 'dark';
   
   // ✅ ON RÉCUPÈRE CURRENTTRACK ICI POUR LA MISE À JOUR EN TEMPS RÉEL
-  const { isPlaying, currentTrack } = useRadio();
+  const { isPlaying, currentTrack, isLive } = useRadio();
   const { t } = useTranslation();
   
   const { 
@@ -158,6 +158,7 @@ export const RadioHomePage: React.FC = () => {
                 </div>
 
                 <div className="rp-vinyl-spin" style={{ width: vinylSize, height: vinylSize, borderRadius: '50%', background: '#000', boxShadow: isDark ? `0 30px 80px rgba(0,0,0,0.8), inset 0 0 40px rgba(255,255,255,0.1), 0 0 60px ${visualizerColor}40` : 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', zIndex: 4 }}>
+                  {isLive && (<div style={{ position: 'absolute', top: 12, left: '50%', transform: 'translateX(-50%)', zIndex: 6, background: '#ff2d55', color: '#fff', padding: '4px 12px', borderRadius: 20, fontSize: 10, fontWeight: 900, letterSpacing: '1px', display: 'flex', alignItems: 'center', gap: 6, boxShadow: '0 0 16px rgba(255,45,85,0.7)', animation: 'pulseLive 1.5s infinite' }}><span style={{ width: 6, height: 6, borderRadius: '50%', background: '#fff' }} /> LIVE</div>)}
                   {/* ✅ IMAGE DU VINYLE AVEC KEY POUR FORCER LA MISE À JOUR */}
                   <img 
                     key={currentTrack?.id || 'vinyl-cover'}
@@ -222,8 +223,8 @@ export const RadioHomePage: React.FC = () => {
               style={{ width: 72, height: 72, borderRadius: 12, objectFit: 'cover', border: `2px solid ${visualizerColor}40` }} 
             />
             <div style={{ minWidth: 0, flex: 1 }}>
-              <div style={{ fontSize: 15, fontWeight: 900, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{currentTrack?.title || t('radio.waiting')}</div>
-              <div style={{ fontSize: 12, color: colors.textMuted, marginTop: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{currentTrack?.artist || 'ELEKTRAQ Radio'}</div>
+              <div style={{ fontSize: 15, fontWeight: 900, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: isLive ? '#ff2d55' : undefined }}>{isLive ? '🎙️ ' + t('radio.live_badge') : currentTrack?.title || t('radio.waiting')}</div>
+              <div style={{ fontSize: 12, color: colors.textMuted, marginTop: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{isLive ? t('radio.live_radio') : currentTrack?.artist || 'ELEKTRAQ Radio'}</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 8, fontSize: 11, color: colors.textMuted, fontWeight: 700 }}>
                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#b0b0b0' }} /> {listeners} {t('radio.listener', { count: listeners })}
               </div>

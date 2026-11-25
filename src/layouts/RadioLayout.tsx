@@ -544,7 +544,7 @@ export const RadioLayout: React.FC = () => {
         
         .nav-link { padding: 14px 20px; color: ${colors.textMuted}; text-decoration: none; font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; transition: color 0.2s; position: relative; }
         .nav-link:hover { color: ${colors.textMain}; }
-        .nav-link.active { color: ${visualizerColor}; }
+        .nav-link.active { color: ${isDark ? visualizerColor : colors.textMain}; }
         .nav-link.active::after { content: ''; position: absolute; bottom: 0; left: 20px; right: 20px; height: 2px; background: ${visualizerColor}; box-shadow: 0 0 10px ${visualizerColor}; border-radius: 2px; }
 
         @keyframes slideWipeAnim { 0% { transform: translateX(100%); } 40% { transform: translateX(0); } 60% { transform: translateX(0); } 100% { transform: translateX(-100%); } }

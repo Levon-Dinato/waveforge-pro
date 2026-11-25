@@ -113,7 +113,7 @@ export const RadioPlayer: React.FC<RadioPlayerProps> = ({ profile, visualizerCol
         
         <div style={{ position: 'absolute', width: size + 40, height: size + 40, zIndex: 10, cursor: 'default' }} />
         
-        <div className="vinyl-container" style={{ position: 'relative', width: size, height: size, borderRadius: '50%', background: isDark ? '#000' : '#f2f2f4', boxShadow: isDark ? '0 20px 50px rgba(0,0,0,0.8), inset 0 0 20px rgba(255,255,255,0.1)' : '0 18px 40px rgba(0,0,0,0.25), inset 0 0 18px rgba(0,0,0,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 4 }}>
+        <div className="vinyl-container" style={{ position: 'relative', width: size, height: size, borderRadius: '50%', background: isDark ? '#000' : '#f2f2f4', boxShadow: isDark ? '0 20px 50px rgba(0,0,0,0.8), inset 0 0 20px rgba(255,255,255,0.1)' : '0 6px 16px rgba(0,0,0,0.12), inset 0 0 14px rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 4 }}>
           <img 
             key={currentTrack?.id || 'cover'}
             src={currentTrack?.cover_url || profile?.radio_custom_logo_url || profile?.avatar_url || 'https://via.placeholder.com/300'} 

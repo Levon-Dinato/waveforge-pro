@@ -9,6 +9,7 @@ import { usePlayer } from '../contexts/PlayerContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { OnlineUsersWidget } from '../components/OnlineUsersWidget';
 import { PageMeta } from '../components/PageMeta';
+import { EmbedPreviewModal } from '../components/EmbedPreviewModal';
 import { useTranslation } from 'react-i18next';
 
 const Icons = {
@@ -27,7 +28,7 @@ const Icons = {
 };
 
 interface DbEvent { id: string; title: string; event_date: string; location: string | null; city: string | null; url: string | null; image_url: string | null; created_at?: string; }
-interface Track { id: string; title: string; artist: string; genre: string; bpm: number; song_key: string | null; audio_url: string; cover_url: string | null; user_id: string; created_at: string; duration: number; peaks: number[]; likes_count?: number; plays?: number; downloads?: number; }
+interface Track { id: string; title: string; artist: string; genre: string; bpm: number; song_key: string | null; audio_url: string; cover_url: string | null; user_id: string; created_at: string; duration: number; peaks: number[]; likes_count?: number; plays?: number; downloads?: number; embed_code?: string; purchase_url?: string | null; }
 interface Comment { id: string; user_id: string; content: string; created_at: string; profiles?: { username: string; avatar_url: string | null } }
 interface FollowedArtist { id: string; username: string; avatar_url: string | null; }
 
@@ -390,11 +391,20 @@ export const FeedPage: React.FC = () => {
     setFeedItems((prev) => prev.filter((item) => !(isPostItem(item) && item.data.id === postId)));
   };
 
+  const [embedTrack, setEmbedTrack] = useState<any>(null);
+
   const handlePlayClick = async (e: React.MouseEvent, track: Track) => {
     e.stopPropagation();
     if (!user) {
       alert('🔒 Inscrivez-vous gratuitement pour écouter les morceaux en entier.');
       navigate('/auth');
+      return;
+    }
+
+    // ✅ Promo embed : extrait joué dans une fenêtre (comme la page Promos)
+    if (!track.audio_url) {
+      if (track.embed_code) { setEmbedTrack(track); return; }
+      if (track.purchase_url) { window.open(track.purchase_url, '_blank'); return; }
       return;
     }
 
@@ -836,6 +846,8 @@ export const FeedPage: React.FC = () => {
         </div>,
         document.body
       )}
+
+      {embedTrack && <EmbedPreviewModal track={embedTrack} onClose={() => setEmbedTrack(null)} />}
     </div>
   );
 };

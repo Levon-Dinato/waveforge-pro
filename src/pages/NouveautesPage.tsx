@@ -683,6 +683,9 @@ export const NouveautesPage: React.FC = () => {
                 <p style={{ color: colors.textMuted, fontSize: 15, margin: '10px 0 0 0', fontWeight: 500, maxWidth: 480, lineHeight: 1.5 }}>
                   {t('nouveautes.subtitle')}
                 </p>
+                <div onClick={() => navigate('/mastering')} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 12, padding: '6px 14px', background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)', border: `1px solid ${colors.border}`, borderRadius: 20, fontSize: 12, fontWeight: 700, color: colors.textMuted, cursor: 'pointer', textDecoration: 'none' }}>
+                  🎚️ {t('nouveautes.mastering_hint')}
+                </div>
               </div>
               {user && (
                 <button onClick={() => { setRightsAccepted(false); setShowUploadModal(true); }} style={{ padding: isMobile ? '10px 16px' : '12px 24px', background: isDark ? '#ffffff' : '#111111', color: isDark ? '#000' : '#ffffff', border: '1px solid transparent', borderRadius: 10, cursor: 'pointer', fontWeight: 800, fontSize: 13, boxShadow: isDark ? '0 0 20px rgba(255, 255, 255, 0.25)' : '0 4px 16px rgba(0,0,0,0.15)', transition: 'transform 0.2s, box-shadow 0.2s', whiteSpace: 'nowrap' }}>

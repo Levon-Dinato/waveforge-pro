@@ -405,7 +405,8 @@
     "key_label": "Clé",
     "processing": "Traitement en cours...",
     "submit": "Envoyer ma promo",
-    "rights_label": "Je certifie être l'artiste (ou son représentant autorisé) et détenir les droits de partage de ce titre."
+    "rights_label": "Je certifie être l'artiste (ou son représentant autorisé) et détenir les droits de partage de ce titre.",
+    "mastering_hint": "Ton titre n'est pas encore au niveau radio ? Passe-le au mastering →"
   },
   "contact": {
     "title": "Contact",
@@ -666,8 +667,8 @@
     "drag": "Glisser pour modifier"
   },
   "mastering": {
-    "drop": "Déposez votre fichier audio ici",
-    "drop_sub": "Analyse IA + mastering haute qualité.",
+    "drop": "Dépose ton titre ici",
+    "drop_sub": "Analyse IA + mastering au niveau radio. Prêt pour l'antenne et les plateformes.",
     "eq": "ÉGALISEUR PARAMÉTRIQUE",
     "reset_eq": "Réinitialiser",
     "chain": "CHAÎNE ACTIVE",

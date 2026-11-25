@@ -405,7 +405,8 @@
     "key_label": "Key",
     "processing": "Processing...",
     "submit": "Send my promo",
-    "rights_label": "I certify that I am the artist (or their authorized representative) and that I hold the rights to share this track."
+    "rights_label": "I certify that I am the artist (or their authorized representative) and that I hold the rights to share this track.",
+    "mastering_hint": "Is your track not radio-ready yet? Master it →"
   },
   "contact": {
     "title": "Contact",
@@ -666,8 +667,8 @@
     "drag": "Drag to edit"
   },
   "mastering": {
-    "drop": "Drop your audio file here",
-    "drop_sub": "AI analysis + high quality mastering.",
+    "drop": "Drop your track here",
+    "drop_sub": "AI analysis + radio-ready mastering. Ready for airplay and platforms.",
     "eq": "PARAMETRIC EQ",
     "reset_eq": "Reset",
     "chain": "ACTIVE CHAIN",

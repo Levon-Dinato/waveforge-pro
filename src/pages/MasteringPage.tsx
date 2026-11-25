@@ -707,7 +707,7 @@ export const MasteringPage: React.FC = () => {
           <div style={{ background: colors.cardBg, borderRadius: 16, border: `1px solid ${colors.border}`, padding: '20px 24px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <div style={{ fontSize: 11, color: colors.textMuted, fontWeight: 900, letterSpacing: '1.5px' }}>LOUDNESS METER (LUFS)</div>
-              <div style={{ fontSize: 10, color: colors.textMuted, fontWeight: 700 }}>Cible : -14 LUFS (streaming)</div>
+              <div style={{ fontSize: 10, color: colors.textMuted, fontWeight: 700 }}>Cible : niveau radio (-14 LUFS)</div>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 16 }}>
               {[

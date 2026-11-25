@@ -658,7 +658,7 @@ export const NouveautesPage: React.FC = () => {
           </button>
           <span style={{ color: colors.border }}>|</span>
           <h1 style={{ fontSize: '1.2rem', fontWeight: 900, margin: 0, display: 'flex', alignItems: 'center', gap: 8, letterSpacing: '-0.5px' }}>
-            <span style={{ color: colors.accent, filter: 'drop-shadow(0 0 10px rgba(255,255,255,0.8))' }}>🔥</span> {t('nouveautes.title')}
+            {t('nouveautes.title')}
           </h1>
         </div>
 
@@ -714,7 +714,6 @@ export const NouveautesPage: React.FC = () => {
                           onMouseEnter={(e) => { if (!isSel) e.currentTarget.style.background = colors.rowHover; }}
                           onMouseLeave={(e) => { if (!isSel) e.currentTarget.style.background = 'transparent'; }}
                         >
-                          <span style={{ width: 8, height: 8, borderRadius: '50%', background: gColor, flexShrink: 0, boxShadow: `0 0 6px ${gColor}80` }} />
                           <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{genre}</span>
                           <span style={{ fontSize: 11, fontWeight: 700, background: colors.inputBg, color: isSel ? gColor : colors.textMuted, padding: '2px 7px', borderRadius: 20 }}>{genreCounts[genre] || 0}</span>
                         </div>
@@ -842,7 +841,7 @@ export const NouveautesPage: React.FC = () => {
             <aside style={{ width: 280, flexShrink: 0, position: 'sticky', top: 100, display: 'flex', flexDirection: 'column', gap: 24 }}>
               <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 20, boxShadow: isDark ? 'none' : '0 4px 20px rgba(0,0,0,0.05)' }}>
                 <h3 style={{ fontSize: 12, fontWeight: 800, letterSpacing: '1px', margin: '0 0 16px 0', color: colors.textMain, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ color: colors.accent }}>🔥</span> {t('nouveautes.top10')}
+                  {t('nouveautes.top10')}
                 </h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                   {tracks.slice(0, 10).map((track, index) => (

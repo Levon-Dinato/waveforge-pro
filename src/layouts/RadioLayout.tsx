@@ -235,6 +235,8 @@ export const RadioLayout: React.FC = () => {
           .eq('user_id', profileData.id)
           .eq('in_radio', true)
           .eq('is_jingle', false)
+          .neq('audio_url', '')
+          .not('audio_url', 'is', null)
           .order('created_at', { ascending: true });
 
         const { data: jingles } = await supabase

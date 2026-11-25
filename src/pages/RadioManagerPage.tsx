@@ -159,6 +159,12 @@ export const RadioManagerPage: React.FC = () => {
   };
 
   const toggleRadioStatus = async (trackId: string, currentStatus: boolean) => {
+    const track = myTracks.find(t => t.id === trackId);
+    // ✅ Les promos sans fichier audio ne peuvent pas être diffusées à la radio
+    if (!currentStatus && track && !track.audio_url) {
+      alert("Ce titre n'a pas de fichier audio — il ne peut pas être diffusé à la radio.");
+      return;
+    }
     const { error } = await supabase.from('tracks').update({ in_radio: !currentStatus }).eq('id', trackId);
     if (!error) setMyTracks(myTracks.map(t => t.id === trackId ? { ...t, in_radio: !currentStatus } : t));
   };

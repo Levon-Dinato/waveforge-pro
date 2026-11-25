@@ -74,7 +74,7 @@ export const PlayerPage: React.FC = () => {
       if (!didInitRef.current) {
         didInitRef.current = true;
         const { data: musicTracks } = await supabase
-          .from('tracks').select('*').eq('user_id', data.id).eq('in_radio', true).eq('is_jingle', false).order('created_at', { ascending: true });
+          .from('tracks').select('*').eq('user_id', data.id).eq('in_radio', true).eq('is_jingle', false).neq('audio_url', '').not('audio_url', 'is', null).order('created_at', { ascending: true });
         
         const { data: jingles } = await supabase
           .from('tracks').select('*').eq('user_id', data.id).eq('in_radio', true).eq('is_jingle', true);

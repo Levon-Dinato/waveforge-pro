@@ -70,10 +70,69 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const audioARef = useRef<HTMLAudioElement | null>(null);
   const audioBRef = useRef<HTMLAudioElement | null>(null);
   const activePlayerRef = useRef<'A' | 'B'>('A');
+  // 🎚️ Limiteur anti-saturation : homogénéise le niveau des titres et empêche l'écrêtage
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const glueRef = useRef<DynamicsCompressorNode | null>(null);
+  const limiterRef = useRef<DynamicsCompressorNode | null>(null);
+  const wiredARef = useRef<HTMLAudioElement | null>(null);
+  const wiredBRef = useRef<HTMLAudioElement | null>(null);
 
   const pendingSeekRef = useRef<number | null>(initialState?.progress || null);
   const isActiveRef = useRef(initialState?.isRadioActive || false); 
   const { stop: stopMainPlayer } = usePlayer();
+
+  // ==== LIMITEUR / NORMALISATION DU NIVEAU (Web Audio) ====
+  const resumeAudioCtx = useCallback(() => {
+    const ctx = audioCtxRef.current;
+    if (ctx && ctx.state === 'suspended') ctx.resume().catch(() => {});
+  }, []);
+
+  const ensureLimiterGraph = useCallback(() => {
+    try {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return null;
+      if (!audioCtxRef.current) {
+        const ctx = new AudioCtx();
+        // Étage 1 : compresseur « glue » — rapproche les niveaux (titre calme remonté, titre fort adouci)
+        const glue = ctx.createDynamicsCompressor();
+        glue.threshold.value = -18;
+        glue.knee.value = 12;
+        glue.ratio.value = 3;
+        glue.attack.value = 0.004;
+        glue.release.value = 0.18;
+        // Étage 2 : limiteur « brickwall » — plafonne les crêtes, aucune saturation possible
+        const limiter = ctx.createDynamicsCompressor();
+        limiter.threshold.value = -1;
+        limiter.knee.value = 0;
+        limiter.ratio.value = 20;
+        limiter.attack.value = 0.001;
+        limiter.release.value = 0.08;
+        glue.connect(limiter);
+        limiter.connect(ctx.destination);
+        audioCtxRef.current = ctx;
+        glueRef.current = glue;
+        limiterRef.current = limiter;
+      }
+      return audioCtxRef.current;
+    } catch (e) {
+      console.warn('[Radio] Limiteur audio indisponible:', e);
+      return null;
+    }
+  }, []);
+
+  const wireLimiter = useCallback((el: HTMLAudioElement | null, slot: 'A' | 'B') => {
+    const wiredRef = slot === 'A' ? wiredARef : wiredBRef;
+    if (!el || wiredRef.current === el) return;
+    const ctx = ensureLimiterGraph();
+    if (!ctx) return;
+    try {
+      const source = ctx.createMediaElementSource(el);
+      source.connect(glueRef.current!);
+      wiredRef.current = el;
+    } catch (e) {
+      console.warn(`[Radio] Routage audio ${slot} impossible:`, e);
+    }
+  }, [ensureLimiterGraph]);
 
   const currentTrack = tracks[currentIndex];
 
@@ -167,6 +226,7 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     isCrossfadingRef.current = false;
     
     pendingSeekRef.current = startTime || 0;
+    resumeAudioCtx();
 
     setTimeout(() => {
       localStorage.setItem(SYNC_KEY, JSON.stringify({
@@ -181,7 +241,7 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     setNeedsGesture(false);
     setIsPlaying(true);
     const currentAudio = activePlayerRef.current === 'A' ? audioARef.current : audioBRef.current;
-    if (currentAudio) currentAudio.play().catch(() => setNeedsGesture(true));
+    if (currentAudio) { resumeAudioCtx(); currentAudio.play().catch(() => setNeedsGesture(true)); }
     saveStateToLocalStorage({ isPlaying: true });
   }, [saveStateToLocalStorage]);
 
@@ -196,6 +256,7 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       currentAudio.pause();
     } else {
       setNeedsGesture(false);
+      resumeAudioCtx();
       currentAudio.play().catch(() => setNeedsGesture(true));
     }
     saveStateToLocalStorage({ isPlaying: newPlayingState });
@@ -306,6 +367,12 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }
   };
 
+  // 🎚️ Route les éléments audio A/B à travers le limiteur
+  useEffect(() => {
+    wireLimiter(audioARef.current, 'A');
+    wireLimiter(audioBRef.current, 'B');
+  }, [wireLimiter, currentTrack?.id, isLive, liveUrl]);
+
   useEffect(() => {
     const currentAudio = activePlayerRef.current === 'A' ? audioARef.current : audioBRef.current;
     if (!currentAudio || !currentTrack) return;
@@ -326,6 +393,7 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         pendingSeekRef.current = null;
       }
       if (isPlaying) {
+        resumeAudioCtx();
         currentAudio.play().catch((e) => {
           if (e.name === 'NotAllowedError') {
             setNeedsGesture(true);

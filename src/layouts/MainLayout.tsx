@@ -322,8 +322,19 @@ export const MainLayout: React.FC = () => {
 
       <div style={{ flex: 1, marginLeft: 240, display: 'flex', flexDirection: 'column', minHeight: '100vh', paddingBottom: currentTrack ? 100 : 0 }}>
         
-        <div style={{ background: colors.bg, borderBottom: `1px solid ${colors.border}`, padding: '12px 32px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <div style={{ background: colors.bg, borderBottom: `1px solid ${colors.border}`, padding: '10px 32px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 24 }}>
           <GlobalSearch />
+          <div style={{ display: 'flex', gap: 20, flexShrink: 0 }}>
+            {[
+              { label: 'Charts', path: '/charts' },
+              { label: 'Promos', path: '/nouveautes' },
+              { label: 'Radio', path: '/radio/ELEKTRAQ' },
+            ].map(l => (
+              <Link key={l.path} to={l.path} style={{ fontSize: 11, fontWeight: 800, letterSpacing: '1.5px', color: colors.textMuted, textDecoration: 'none', textTransform: 'uppercase', transition: 'color 0.15s' }} onMouseEnter={e => e.currentTarget.style.color = '#94c748'} onMouseLeave={e => e.currentTarget.style.color = colors.textMuted}>
+                {l.label}
+              </Link>
+            ))}
+          </div>
         </div>
 
         <main style={{ flex: 1, padding: 32, maxWidth: 1400, margin: '0 auto', width: '100%' }}>

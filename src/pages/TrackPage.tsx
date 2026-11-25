@@ -818,7 +818,7 @@ export const TrackPage: React.FC = () => {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                   <span style={{ fontSize: 11, fontWeight: 700, color: colors.textMuted, padding: '10px 4px' }}>{t('track.buy_on')}</span>
                   {buyLinks.map((b, i) => (
-                    <a key={i} href={b.url} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', padding: '10px 14px', background: 'transparent', border: `1px solid ${colors.border}`, color: colors.textMain, borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer', textDecoration: 'none', transition: 'border-color 0.2s' }} onMouseEnter={e => e.currentTarget.style.borderColor = themeColor} onMouseLeave={e => e.currentTarget.style.borderColor = colors.border}>
+                    <a key={i} href={b.url} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', padding: '10px 14px', background: 'transparent', border: `1px solid #94c748`, color: '#94c748', borderRadius: 8, fontSize: 12, fontWeight: 800, cursor: 'pointer', textDecoration: 'none', transition: 'all 0.2s' }} onMouseEnter={e => { e.currentTarget.style.background = 'rgba(148,199,72,0.1)'; }} onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}>
                       {b.name}
                     </a>
                   ))}

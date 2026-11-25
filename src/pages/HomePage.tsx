@@ -343,7 +343,7 @@ export const HomePage = () => {
                 <div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: colors.accent, marginBottom: 6 }}>{t('home.community')}</div>
                 <h2 style={{ fontSize: isMobile ? 20 : 28, fontWeight: 900, color: colors.textMain, margin: 0, letterSpacing: '-0.5px' }}>{t('home.discover_artists')}</h2>
               </div>
-              <Link to="/artists" style={{ fontSize: 12, color: colors.textMuted, textDecoration: 'none', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+              <Link to="/artists" style={{ fontSize: 12, color: colors.accent, textDecoration: 'none', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', display: 'flex', alignItems: 'center', gap: 4 }}>
                 {t('home.see_all')} {Icons.arrowRight}
               </Link>
             </div>
@@ -392,7 +392,7 @@ export const HomePage = () => {
                 </div>
                 <h2 style={{ fontSize: isMobile ? 20 : 28, fontWeight: 900, color: colors.textMain, margin: 0, letterSpacing: '-0.5px' }}>{t('home.community_radios')}</h2>
               </div>
-              <Link to="/radios" style={{ fontSize: 12, color: colors.textMuted, textDecoration: 'none', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+              <Link to="/radios" style={{ fontSize: 12, color: colors.accent, textDecoration: 'none', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', display: 'flex', alignItems: 'center', gap: 4 }}>
                 {t('home.see_all_radios')} {Icons.arrowRight}
               </Link>
             </div>

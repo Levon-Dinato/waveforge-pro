@@ -101,7 +101,7 @@ export const ChartsPage: React.FC = () => {
     border: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
     textMain: isDark ? '#ffffff' : '#1a1a1a',
     textMuted: isDark ? 'rgba(255,255,255,0.5)' : '#666666',
-    accent: '#ffffff',
+    accent: '#94c748',
     gold: '#b0b0b0',
     silver: '#9ca3af',
     bronze: '#b45309',

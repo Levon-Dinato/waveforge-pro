@@ -199,10 +199,10 @@ export const HomePage = () => {
     <div style={{ display: 'flex', flexDirection: 'column', fontFamily: 'Inter, sans-serif', color: colors.textMain, width: '100%', maxWidth: '100%', overflowX: 'hidden', background: colors.bg, transition: 'background 0.3s ease, color 0.3s ease' }}>
 
       <Helmet>
-        <title>ELEKTRAQ — La plateforme des DJs indépendants</title>
-        <meta name="description" content="Partage tes sons, découvre les dernières exclusivités et connecte-toi avec les meilleurs DJs. La plateforme gratuite des DJs indépendants." />
-        <meta property="og:title" content="ELEKTRAQ — La plateforme des DJs indépendants" />
-        <meta property="og:description" content="Partage tes sons et fais vibrer la nuit. La plateforme gratuite des DJs indépendants." />
+        <title>ELEKTRAQ — La radio des artistes électroniques indépendants</title>
+        <meta name="description" content="La radio des artistes électroniques indépendants : les artistes uploadent leurs nouveautés, les DJs les découvrent à l'antenne 24/7 et les achètent sur les plateformes légales." />
+        <meta property="og:title" content="ELEKTRAQ — La radio des artistes électroniques indépendants" />
+        <meta property="og:description" content="Les artistes uploadent leurs nouveautés, les DJs les découvrent à l'antenne 24/7 et les achètent sur les plateformes légales." />
         <meta property="og:type" content="website" />
       </Helmet>
 
@@ -241,7 +241,7 @@ export const HomePage = () => {
             </p>
 
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 28 }}>
-              <Link to="/nouveautes" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: isMobile ? '10px 20px' : '14px 32px', background: colors.accent, color: '#000', borderRadius: 30, fontWeight: 800, fontSize: isMobile ? 13 : 15, textDecoration: 'none', boxShadow: `0 8px 24px ${colors.accent}40` }}>
+              <Link to="/radio/ELEKTRAQ" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: isMobile ? '10px 20px' : '14px 32px', background: colors.accent, color: '#000', borderRadius: 30, fontWeight: 800, fontSize: isMobile ? 13 : 15, textDecoration: 'none', boxShadow: `0 8px 24px ${colors.accent}40` }}>
                 {t('home.listen_releases')} {Icons.arrowRight}
               </Link>
               <Link to="/auth" style={{ padding: isMobile ? '10px 20px' : '14px 32px', background: colors.btnSecondaryBg, color: colors.textMain, border: `1px solid ${colors.btnSecondaryBorder}`, borderRadius: 30, fontWeight: 600, fontSize: isMobile ? 13 : 15, textDecoration: 'none' }}>

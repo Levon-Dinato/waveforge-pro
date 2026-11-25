@@ -35,7 +35,7 @@ export const RadioHomePage: React.FC = () => {
   const repeatedItems = [...marqueeItems, ...marqueeItems, ...marqueeItems, ...marqueeItems];
 
   const vinylSize = 300; 
-  const totalBars = 140; 
+  const totalBars = 220; 
   const barHeight = 30; 
   const offset = 2; 
   

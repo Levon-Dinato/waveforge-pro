@@ -229,7 +229,7 @@ export const RadioPage: React.FC = () => {
   const strokeDashoffset = duration > 0 ? circumference - (progress / duration) * circumference : circumference;
   
   // ✅ Génération des barres de l'égaliseur circulaire
-  const totalBars = 72; 
+  const totalBars = 110; 
   const visualizerBars = Array.from({ length: totalBars }).map((_, i) => i);
 
   if (loading) return <div style={{ color: colors.textMain, background: colors.bg, height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 800 }}>Connexion à la fréquence... 📻</div>;

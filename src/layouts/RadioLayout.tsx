@@ -20,7 +20,7 @@ export const RadioLayout: React.FC = () => {
 
   const { 
     isLive, currentTrack, isPlaying, togglePlay, startRadio, isRadioActive, 
-    progress, duration, updateRadioSettings, stopRadio, seek, volume, setVolume
+    progress, duration, updateRadioSettings, setLimiterEnabled, stopRadio, seek, volume, setVolume
   } = useRadio();
 
   const [isMuted, setIsMuted] = useState(false);
@@ -214,6 +214,9 @@ export const RadioLayout: React.FC = () => {
           profileData.radio_crossfade_enabled || false,
           profileData.radio_crossfade_duration || 3
         );
+
+        // 🎚️ Limiteur anti-saturation (actif par défaut)
+        setLimiterEnabled(profileData.radio_limiter_enabled !== false);
 
         setSocials({
           instagram: profileData.instagram_url, spotify: profileData.spotify_url, soundcloud: profileData.soundcloud_url,

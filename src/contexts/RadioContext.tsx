@@ -17,6 +17,7 @@ export interface RadioContextType {
   needsGesture: boolean;
   startRadio: (newTracks: any[], live: boolean, url: string, startIndex?: number, startTime?: number, force?: boolean) => void;
   updateRadioSettings: (crossfadeEnabled: boolean, crossfadeDuration: number) => void;
+  setLimiterEnabled: (enabled: boolean) => void;
   togglePlay: () => void;
   playNext: () => void;
   playPrev: () => void;
@@ -65,6 +66,7 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [crossfadeEnabled, setCrossfadeEnabled] = useState(false);
   const [crossfadeDuration, setCrossfadeDuration] = useState(3);
   const [volume, setVolume] = useState(1);
+  const [limiterEnabled, setLimiterEnabledState] = useState(true);
   const isCrossfadingRef = useRef(false);
 
   const audioARef = useRef<HTMLAudioElement | null>(null);
@@ -76,6 +78,9 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const limiterRef = useRef<DynamicsCompressorNode | null>(null);
   const wiredARef = useRef<HTMLAudioElement | null>(null);
   const wiredBRef = useRef<HTMLAudioElement | null>(null);
+  const sourceARef = useRef<MediaElementAudioSourceNode | null>(null);
+  const sourceBRef = useRef<MediaElementAudioSourceNode | null>(null);
+  const limiterEnabledRef = useRef(true);
 
   const pendingSeekRef = useRef<number | null>(initialState?.progress || null);
   const isActiveRef = useRef(initialState?.isRadioActive || false); 
@@ -123,16 +128,41 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const wireLimiter = useCallback((el: HTMLAudioElement | null, slot: 'A' | 'B') => {
     const wiredRef = slot === 'A' ? wiredARef : wiredBRef;
     if (!el || wiredRef.current === el) return;
+    // Limiteur désactivé : lecture 100% native, sans routage Web Audio
+    if (!limiterEnabledRef.current) return;
     const ctx = ensureLimiterGraph();
     if (!ctx) return;
     try {
       const source = ctx.createMediaElementSource(el);
       source.connect(glueRef.current!);
+      if (slot === 'A') sourceARef.current = source; else sourceBRef.current = source;
       wiredRef.current = el;
     } catch (e) {
       console.warn(`[Radio] Routage audio ${slot} impossible:`, e);
     }
   }, [ensureLimiterGraph]);
+
+  // 🎚️ Active/désactive le limiteur à la volée (routage direct si désactivé)
+  const setLimiterEnabled = useCallback((enabled: boolean) => {
+    limiterEnabledRef.current = enabled;
+    setLimiterEnabledState(enabled);
+    const ctx = audioCtxRef.current;
+    const glue = glueRef.current;
+    if (ctx) {
+      if (sourceARef.current) {
+        sourceARef.current.disconnect();
+        sourceARef.current.connect(enabled && glue ? glue : ctx.destination);
+      }
+      if (sourceBRef.current) {
+        sourceBRef.current.disconnect();
+        sourceBRef.current.connect(enabled && glue ? glue : ctx.destination);
+      }
+    }
+    if (enabled) {
+      wireLimiter(audioARef.current, 'A');
+      wireLimiter(audioBRef.current, 'B');
+    }
+  }, [wireLimiter]);
 
   const currentTrack = tracks[currentIndex];
 
@@ -145,6 +175,8 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
+      // ✅ Hors des pages radio/player, on ignore la synchro (évite que le Radio Manager joue la radio en doublon)
+      if (!window.location.pathname.includes('/radio/') && !window.location.pathname.includes('/player/')) return;
       if (e.key === SYNC_KEY && e.newValue) {
         try {
           const data = JSON.parse(e.newValue);
@@ -371,7 +403,7 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   useEffect(() => {
     wireLimiter(audioARef.current, 'A');
     wireLimiter(audioBRef.current, 'B');
-  }, [wireLimiter, currentTrack?.id, isLive, liveUrl]);
+  }, [wireLimiter, limiterEnabled, currentTrack?.id, isLive, liveUrl]);
 
   useEffect(() => {
     const currentAudio = activePlayerRef.current === 'A' ? audioARef.current : audioBRef.current;
@@ -450,7 +482,7 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     <RadioContext.Provider value={{
       tracks, currentIndex, currentTrack, isPlaying, progress, duration,
       isLive, liveUrl, isRadioActive, needsGesture,
-      startRadio, updateRadioSettings, togglePlay, playNext, playPrev, seek, stopRadio, unlockAudio,
+      startRadio, updateRadioSettings, setLimiterEnabled, togglePlay, playNext, playPrev, seek, stopRadio, unlockAudio,
       volume, setVolume
     }}>
       {children}

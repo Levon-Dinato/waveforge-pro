@@ -1,5 +1,5 @@
 // src/pages/RadioManagerPage.tsx
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import { parseBlob } from 'music-metadata-browser';
@@ -34,6 +34,7 @@ export const RadioManagerPage: React.FC = () => {
   const [jingleForm, setJingleForm] = useState({ title: '', audioFile: null as File | null });
   const [scheduleForm, setScheduleForm] = useState({ title: '', start_time: '08:00', end_time: '10:00', playlist_id: '', days: [] as string[] });
   const [previewTrack, setPreviewTrack] = useState<any>(null);
+  const previewAudioRef = useRef<HTMLAudioElement | null>(null);
 
   const [uploadPlaylistId, setUploadPlaylistId] = useState('');
   const [selectedTracks, setSelectedTracks] = useState<string[]>([]);
@@ -83,6 +84,7 @@ export const RadioManagerPage: React.FC = () => {
   
   const [crossfadeEnabled, setCrossfadeEnabled] = useState(false);
   const [crossfadeDuration, setCrossfadeDuration] = useState(3); // En secondes
+  const [limiterEnabled, setLimiterEnabled] = useState(true);
 
   const colors = {
     bg: isDark ? '#0a0a0a' : '#f5f5f7',
@@ -130,6 +132,7 @@ export const RadioManagerPage: React.FC = () => {
         
         setCrossfadeEnabled(profileData.radio_crossfade_enabled || false);
         setCrossfadeDuration(profileData.radio_crossfade_duration ?? 3);
+        setLimiterEnabled(profileData.radio_limiter_enabled !== false);
       }
 
       const { data: tracksData } = await supabase.from('tracks').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
@@ -416,7 +419,8 @@ export const RadioManagerPage: React.FC = () => {
       radio_no_repeat_minutes: noRepeatMinutes,
       jingle_interval_minutes: jingleInterval,
       radio_crossfade_enabled: crossfadeEnabled,
-      radio_crossfade_duration: crossfadeDuration
+      radio_crossfade_duration: crossfadeDuration,
+      radio_limiter_enabled: limiterEnabled
     }).eq('id', user.id);
     setSaving(false);
     if (error) { alert("Erreur : " + error.message); }
@@ -499,7 +503,7 @@ export const RadioManagerPage: React.FC = () => {
         </div>
         {profileUsername && (
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-            <a href={`/radio/${profileUsername}`} target="_blank" rel="noopener noreferrer" className="dash-btn dash-btn-secondary" style={{ textDecoration: 'none' }}>Écouter la Radio ↗</a>
+            <a href={`/radio/${profileUsername}`} target="_blank" rel="noopener noreferrer" className="dash-btn dash-btn-secondary" style={{ textDecoration: 'none' }} onClick={() => previewAudioRef.current?.pause()}>Écouter la Radio ↗</a>
             
             <button 
               onClick={() => {
@@ -626,6 +630,27 @@ export const RadioManagerPage: React.FC = () => {
                     />
                     <span style={{ fontSize: 16, fontWeight: 800, width: 40, textAlign: 'right' }}>{crossfadeDuration}s</span>
                   </div>
+                </div>
+              )}
+            </div>
+
+            {/* SECTION : LIMITEUR ANTI-SATURATION */}
+            <div style={{ padding: 20, background: colors.inputBg, borderRadius: 12, border: `1px solid ${colors.border}` }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+                <div>
+                  <h3 style={{ margin: '0 0 4px 0', fontSize: 15, fontWeight: 700 }}>🔊 Limiteur anti-saturation</h3>
+                  <p style={{ margin: 0, fontSize: 13, color: colors.textMuted, maxWidth: 500 }}>Homogénéise le niveau de tes titres (même volume d'un morceau à l'autre) et empêche toute saturation à l'antenne. Recommandé, surtout en direct.</p>
+                </div>
+                <label style={{ position: 'relative', display: 'inline-block', width: 50, height: 26, cursor: 'pointer' }}>
+                  <input type="checkbox" checked={limiterEnabled} onChange={(e) => setLimiterEnabled(e.target.checked)} style={{ opacity: 0, width: 0, height: 0 }} />
+                  <span style={{ position: 'absolute', inset: 0, background: limiterEnabled ? colors.accent : colors.border, borderRadius: 13, transition: '0.2s' }}>
+                    <span style={{ position: 'absolute', height: 20, width: 20, left: limiterEnabled ? 26 : 3, bottom: 3, background: 'white', borderRadius: '50%', transition: '0.2s' }} />
+                  </span>
+                </label>
+              </div>
+              {limiterEnabled && (
+                <div style={{ marginTop: 20, paddingTop: 20, borderTop: `1px solid ${colors.border}`, fontSize: 12, color: colors.textMuted }}>
+                  ✅ Crêtes plafonnées à -1 dB · compression douce pour un niveau constant d'un titre à l'autre.
                 </div>
               )}
             </div>
@@ -1013,7 +1038,7 @@ export const RadioManagerPage: React.FC = () => {
       {previewTrack && (
         <div style={{ position: 'fixed', bottom: 20, right: 20, background: colors.panelBg, padding: 16, borderRadius: 12, border: `1px solid ${colors.accent}`, boxShadow: '0 10px 30px rgba(0,0,0,0.5)', zIndex: 998, display: 'flex', alignItems: 'center', gap: 16 }}>
           <div><div style={{ fontSize: 14, fontWeight: 700 }}>{previewTrack.title}</div><div style={{ fontSize: 12, color: colors.textMuted }}>{previewTrack.artist}</div></div>
-          <audio src={previewTrack.audio_url} controls autoPlay style={{ height: 36 }} />
+          <audio ref={previewAudioRef} src={previewTrack.audio_url} controls autoPlay style={{ height: 36 }} />
           <button onClick={() => setPreviewTrack(null)} style={{ background: 'transparent', border: 'none', color: colors.danger, cursor: 'pointer', fontSize: 18 }}>✕</button>
         </div>
       )}

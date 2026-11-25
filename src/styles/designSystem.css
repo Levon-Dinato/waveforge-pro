@@ -5,25 +5,26 @@
 
 :root {
   --bg-0: #000000;
-  --bg-1: #0a0a0f;
-  --bg-2: #0f0f16;
-  --bg-3: #15151e;
-  --bg-glass: rgba(20, 20, 30, 0.6);
+  --bg-1: #0b0b0d;
+  --bg-2: #101013;
+  --bg-3: #17171b;
+  --bg-glass: rgba(18, 18, 22, 0.6);
 
-  --border-subtle: rgba(255, 255, 255, 0.06);
-  --border-default: rgba(255, 255, 255, 0.1);
-  --border-strong: rgba(255, 255, 255, 0.15);
+  --border-subtle: rgba(255, 255, 255, 0.05);
+  --border-default: rgba(255, 255, 255, 0.09);
+  --border-strong: rgba(255, 255, 255, 0.14);
 
-  --accent-primary: #ffffff;
-  --accent-secondary: #b0b0b0;
-  --accent-success: #b0b0b0;
-  --accent-warning: #b0b0b0;
-  --accent-danger: #b0b0b0;
-  --accent-magenta: #b0b0b0;
+  /* ✅ Palette inspirée Beatport — vert signature */
+  --accent-primary: #94c748;
+  --accent-secondary: #b4dd6a;
+  --accent-success: #94c748;
+  --accent-warning: #ffb020;
+  --accent-danger: #ff4d4d;
+  --accent-magenta: #c748a8;
 
   --text-primary: #ffffff;
-  --text-secondary: rgba(255, 255, 255, 0.65);
-  --text-tertiary: rgba(255, 255, 255, 0.4);
+  --text-secondary: rgba(255, 255, 255, 0.6);
+  --text-tertiary: rgba(255, 255, 255, 0.35);
 
   --radius-sm: 8px;
   --radius-md: 12px;
@@ -48,7 +49,7 @@ a {
 html, body {
   margin: 0;
   padding: 0;
-  background: #050507;
+  background: #0b0b0d;
   color: var(--text-primary);
   font-family: var(--font-sans);
   font-size: 13px;
@@ -73,8 +74,8 @@ h2 { font-weight: 700; }
    ============================================================ */
 body {
   background-image:
-    radial-gradient(circle at 15% 10%, rgba(255, 255, 255, 0.08) 0%, transparent 40%),
-    radial-gradient(circle at 85% 90%, rgba(176, 176, 176, 0.06) 0%, transparent 40%);
+    radial-gradient(circle at 15% 10%, rgba(148, 199, 72, 0.08) 0%, transparent 40%),
+    radial-gradient(circle at 85% 90%, rgba(148, 199, 72, 0.05) 0%, transparent 40%);
   background-attachment: fixed;
 }
 

@@ -76,7 +76,7 @@ export const HomePage = () => {
     btnPrimaryText: isDark ? '#000000' : '#ffffff',
     btnSecondaryBg: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
     btnSecondaryBorder: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
-    accent: '#ffffff',
+    accent: '#94c748',
     footerBg: isDark ? '#050505' : '#ffffff',
   };
 

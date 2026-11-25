@@ -258,13 +258,13 @@ export const MainLayout: React.FC = () => {
             const isActive = item.exact ? location.pathname === item.path : location.pathname.startsWith(item.path);
 
             return (
-              <NavLink key={item.path} to={item.path} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: `1px solid ${colors.border}`, textDecoration: 'none', color: isActive ? colors.textMain : (item.highlight ? colors.textMain : colors.textMuted), background: isActive ? colors.activeBg : (item.highlight ? 'rgba(0, 217, 255, 0.08)' : 'transparent'), fontWeight: isActive ? 700 : (item.highlight ? 800 : 500), fontSize: '0.9rem', borderLeft: item.highlight ? '3px solid #00d9ff' : (isActive ? `2px solid ${colors.textMain}` : '2px solid transparent'), transition: 'all 0.2s' }}
-                onMouseEnter={(e) => { if (!isActive) { e.currentTarget.style.background = item.highlight ? 'rgba(0, 217, 255, 0.14)' : colors.hoverBg; e.currentTarget.style.color = colors.textMain; } }}
-                onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.background = item.highlight ? 'rgba(0, 217, 255, 0.08)' : 'transparent'; e.currentTarget.style.color = item.highlight ? colors.textMain : colors.textMuted; } }}
+              <NavLink key={item.path} to={item.path} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: `1px solid ${colors.border}`, textDecoration: 'none', color: isActive ? colors.textMain : (item.highlight ? colors.textMain : colors.textMuted), background: isActive ? colors.activeBg : (item.highlight ? 'rgba(148, 199, 72, 0.08)' : 'transparent'), fontWeight: isActive ? 700 : (item.highlight ? 800 : 500), fontSize: '0.9rem', borderLeft: item.highlight ? '3px solid #94c748' : (isActive ? `2px solid ${colors.textMain}` : '2px solid transparent'), transition: 'all 0.2s' }}
+                onMouseEnter={(e) => { if (!isActive) { e.currentTarget.style.background = item.highlight ? 'rgba(148, 199, 72, 0.14)' : colors.hoverBg; e.currentTarget.style.color = colors.textMain; } }}
+                onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.background = item.highlight ? 'rgba(148, 199, 72, 0.08)' : 'transparent'; e.currentTarget.style.color = item.highlight ? colors.textMain : colors.textMuted; } }}
               >
                 <span style={{ display: 'flex' }}>{item.icon}</span>
                 <span style={{ flex: 1 }}>{t(item.labelKey)}</span>
-                {item.highlight && <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#00d9ff', boxShadow: '0 0 8px #00d9ff', flexShrink: 0 }} />}
+                {item.highlight && <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#94c748', boxShadow: '0 0 8px #94c748', flexShrink: 0 }} />}
               </NavLink>
             );
           })}

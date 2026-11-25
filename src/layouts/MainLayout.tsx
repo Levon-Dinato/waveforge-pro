@@ -274,7 +274,7 @@ export const MainLayout: React.FC = () => {
         </div>
 
         {/* NAV LINKS (style Beatport) */}
-        <nav style={{ display: 'flex', alignItems: 'center', gap: 2, padding: '8px 24px 10px 24px', overflowX: 'auto', borderTop: `1px solid ${colors.border}` }}>
+        <nav style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2, padding: '8px 24px 10px 24px', overflowX: 'auto', borderTop: `1px solid ${colors.border}` }}>
           {NAV_ITEMS.map(item => {
             const isActive = item.exact ? location.pathname === item.path : location.pathname.startsWith(item.path);
             return (

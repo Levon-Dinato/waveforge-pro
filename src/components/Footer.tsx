@@ -11,7 +11,7 @@ export const Footer: React.FC = () => {
   const isDark = theme === 'dark';
 
   const colors = {
-    bg: isDark ? '#08080c' : '#ffffff',
+    bg: isDark ? '#050507' : '#ffffff',
     border: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
     textMain: isDark ? '#ffffff' : '#1a1a1a',
     textMuted: isDark ? '#a1a1aa' : '#666666',

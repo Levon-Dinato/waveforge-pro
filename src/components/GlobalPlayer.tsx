@@ -68,7 +68,7 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
   const [isMobile, setIsMobile] = useState(false);
 
   const colors = {
-    bg: isDark ? 'rgba(9, 9, 11, 0.85)' : 'rgba(255, 255, 255, 0.85)',
+    bg: isDark ? 'rgba(23, 23, 27, 0.97)' : 'rgba(255, 255, 255, 0.9)',
     border: isDark ? '#27272a' : '#e5e7eb',
     textMain: isDark ? '#ffffff' : '#1a1a1a',
     textMuted: isDark ? '#a1a1aa' : '#666666',

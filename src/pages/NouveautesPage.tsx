@@ -506,7 +506,7 @@ export const NouveautesPage: React.FC = () => {
           }
         }
       } else {
-        if (!uploadForm.audio_url && !uploadForm.embed_code) throw new Error("Renseigne un lien ou un code d'intégration.");
+        if (!uploadForm.audio_url && !uploadForm.embed_code && !uploadForm.purchase_url) throw new Error("Renseigne un lien audio, un lien officiel ou un code d'intégration.");
         if (uploadForm.audio_url && (uploadForm.audio_url.endsWith('.mp3') || uploadForm.audio_url.includes('catbox'))) {
             finalAudioUrl = uploadForm.audio_url;
         } else if (uploadForm.audio_url) {

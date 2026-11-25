@@ -11,7 +11,7 @@ export const Footer: React.FC = () => {
   const isDark = theme === 'dark';
 
   const colors = {
-    bg: isDark ? '#050507' : '#ffffff',
+    bg: isDark ? '#0a0a0e' : '#ffffff',
     border: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
     textMain: isDark ? '#ffffff' : '#1a1a1a',
     textMuted: isDark ? '#a1a1aa' : '#666666',
@@ -41,7 +41,7 @@ export const Footer: React.FC = () => {
   return (
     <footer style={{
       background: colors.bg,
-      borderTop: `1px solid ${colors.border}`,
+      borderTop: `2px solid #94c748`,
       padding: '56px 24px 24px',
       fontFamily: 'Inter, sans-serif',
       color: colors.textMuted,

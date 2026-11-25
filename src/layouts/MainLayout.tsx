@@ -214,7 +214,7 @@ export const MainLayout: React.FC = () => {
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: colors.mainBg, color: colors.textMain, transition: 'background 0.3s ease', paddingBottom: currentTrack ? 100 : 0 }}>
 
       {/* HEADER TOP BAR (style Beatport) — fixe en haut */}
-      <header style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50, background: isDark ? '#101013' : '#f3f4f6', borderBottom: `1px solid ${colors.border}`, boxShadow: '0 6px 24px rgba(0,0,0,0.45)', display: 'flex', flexDirection: 'column' }}>
+      <header style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50, background: isDark ? '#1c1c21' : '#f3f4f6', borderBottom: `1px solid ${colors.border}`, boxShadow: '0 6px 24px rgba(0,0,0,0.45)', display: 'flex', flexDirection: 'column' }}>
         <div style={{ maxWidth: 1280, margin: '0 auto', width: '100%', display: 'flex', alignItems: 'center', gap: 24, padding: '10px 24px' }}>
           <Link to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', flexShrink: 0 }}>
             <span style={{ fontWeight: 900, fontSize: '1.3rem', letterSpacing: '2px', color: colors.textMain }}>ELEKTRAQ</span>
@@ -242,7 +242,7 @@ export const MainLayout: React.FC = () => {
         </div>
 
         {/* NAV LINKS (style Beatport) */}
-        <nav style={{ maxWidth: 1280, margin: '0 auto', width: '100%', display: 'flex', alignItems: 'center', gap: 2, padding: '8px 24px 10px 24px', overflowX: 'auto', borderTop: `1px solid ${colors.border}`, background: isDark ? '#101013' : '#f0f0f3' }}>
+        <nav style={{ maxWidth: 1280, margin: '0 auto', width: '100%', display: 'flex', alignItems: 'center', gap: 2, padding: '8px 24px 10px 24px', overflowX: 'auto', borderTop: `1px solid ${colors.border}`, background: isDark ? '#1c1c21' : '#f0f0f3' }}>
           {NAV_ITEMS.map(item => {
             const isActive = item.exact ? location.pathname === item.path : location.pathname.startsWith(item.path);
             return (

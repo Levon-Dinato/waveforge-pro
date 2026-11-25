@@ -140,7 +140,7 @@ export const MainLayout: React.FC = () => {
 
         <Footer />
         
-        {currentTrack && showGlobalPlayer && <GlobalPlayer currentTrack={currentTrack} isPlaying={isPlaying} onTogglePlay={togglePlay} onStop={stop} />}
+        {showGlobalPlayer && <GlobalPlayer currentTrack={currentTrack} isPlaying={isPlaying} onTogglePlay={togglePlay} onStop={stop} />}
 
         <nav style={{ 
           position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50,
@@ -266,7 +266,7 @@ export const MainLayout: React.FC = () => {
 
       <ScrollButtons />
 
-      {currentTrack && showGlobalPlayer && <GlobalPlayer currentTrack={currentTrack} isPlaying={isPlaying} onTogglePlay={togglePlay} onStop={stop} />}
+      {showGlobalPlayer && <GlobalPlayer currentTrack={currentTrack} isPlaying={isPlaying} onTogglePlay={togglePlay} onStop={stop} />}
     </div>
   );
 };

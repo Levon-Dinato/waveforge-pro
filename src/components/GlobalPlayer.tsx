@@ -264,7 +264,16 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
     }
   };
 
-  if (!currentTrack) return null;
+  if (!currentTrack) {
+    // ✅ État vide : barre visible mais aucun titre en lecture
+    return (
+      <div style={{ position: 'fixed', bottom: isMobile ? 70 : 0, left: 0, right: 0, zIndex: 1000, background: colors.bg, borderTop: `1px solid ${colors.border}`, backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' }}>
+        <div style={{ maxWidth: 1400, margin: '0 auto', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, padding: '0 24px' }}>
+          <span style={{ fontSize: 13, fontWeight: 700, color: colors.textMuted }}>🎧 Aucun titre en lecture — choisis un son dans les Promos ou le Top 50</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{

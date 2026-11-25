@@ -320,6 +320,8 @@ export const NouveautesPage: React.FC = () => {
   const handleGridPlay = (track: any) => {
     if (!user) { alert("🔒 Inscrivez-vous gratuitement pour écouter les morceaux en entier."); navigate('/auth'); return; }
     if (!track.audio_url) {
+      // ✅ Promo avec embed : on va sur la fiche titre où l'extrait se joue
+      if (track.embed_code) { navigate('/track/' + track.id); return; }
       // ✅ Promo sans audio direct : on ouvre la page officielle de l'artiste
       if (track.purchase_url) window.open(track.purchase_url, '_blank');
       else alert("Cette promo s'écoute sur la plateforme de l'artiste.");

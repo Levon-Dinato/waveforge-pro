@@ -721,7 +721,14 @@ export const TrackPage: React.FC = () => {
 
             <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 24, backdropFilter: 'blur(20px)', marginBottom: 32, position: 'relative' }}>
               
-              <div style={{ display: 'flex', alignItems: 'center', gap: 24, marginBottom: 16 }}>
+              {track.embed_code && (
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ fontSize: 11, fontWeight: 800, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>🎧 {t('track.official_excerpt')}</div>
+                  <div style={{ borderRadius: 12, overflow: 'hidden', border: `1px solid ${colors.border}` }} dangerouslySetInnerHTML={{ __html: track.embed_code }} />
+                </div>
+              )}
+
+              {!track.embed_code && (<div style={{ display: 'flex', alignItems: 'center', gap: 24, marginBottom: 16 }}>
                 <button 
                   onClick={handlePlay}
                   style={{ 
@@ -752,7 +759,7 @@ export const TrackPage: React.FC = () => {
                     <span>{formatTime(trackDuration)}</span>
                   </div>
                 </div>
-              </div>
+              </div>)}
 
               <div style={{ marginTop: 16 }}>
                 {!isCommenting ? (

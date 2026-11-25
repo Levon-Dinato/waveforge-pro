@@ -6,6 +6,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { LUFSMeter, MasteringChain, type MasteringPreset, analyzeTrackWeakness, type TrackAnalysis } from '../audio/masteringChain';
 import { Knob } from '../components/ui/Knob';
 import { CurveVisualizer } from '../components/ui/CurveVisualizer';
+import { useTranslation } from 'react-i18next';
 
 const PRESETS = [
   { id: 'universal', name: 'Universel', desc: 'Équilibre parfait', color: '#b0b0b0', icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg> },
@@ -56,6 +57,7 @@ export const MasteringPage: React.FC = () => {
   const hasAudio = !!engine.audioBuffer;
   const { theme } = useTheme();
   const isDark = theme === 'dark';
+  const { t } = useTranslation();
 
   const [localFileName, setLocalFileName] = useState<string | null>(null);
   const [isImporting, setIsImporting] = useState(false);
@@ -563,8 +565,8 @@ export const MasteringPage: React.FC = () => {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%' }}>
                     <div className="preset-icon-wrapper">{p.icon}</div>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 13, fontWeight: 800, color: colors.textMain }}>{p.name}</div>
-                      <div style={{ fontSize: 10, color: colors.textMuted, fontWeight: 600 }}>{p.desc}</div>
+                      <div style={{ fontSize: 13, fontWeight: 800, color: colors.textMain }}>{t('mastering.preset_' + p.id)}</div>
+                      <div style={{ fontSize: 10, color: colors.textMuted, fontWeight: 600 }}>{t('mastering.preset_' + p.id + '_desc')}</div>
                     </div>
                     <button 
                       onClick={(e) => { e.stopPropagation(); previewPreset(p.id); }}
@@ -616,14 +618,14 @@ export const MasteringPage: React.FC = () => {
               style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 16, border: `2px dashed ${isDragging ? colors.textMain : colors.borderLight}`, borderRadius: 20, padding: 40, background: colors.cardBg, textAlign: 'center', transition: 'border-color 0.2s, background 0.2s', minHeight: 320 }}
             >
               <div style={{ fontSize: 56 }}>🎛️</div>
-              <div style={{ fontSize: 22, fontWeight: 900 }}>Déposez votre fichier audio ici</div>
+              <div style={{ fontSize: 22, fontWeight: 900 }}>{t('mastering.drop')}</div>
               <div style={{ fontSize: 13, color: colors.textMuted, maxWidth: 400, lineHeight: 1.6 }}>
                 WAV, MP3, FLAC… Importez un morceau pour l'analyser, appliquer un style de mastering, comparer A/B et exporter en WAV.
               </div>
               <button onClick={() => fileInputRef.current?.click()} disabled={isImporting} className="btn-modern btn-import" style={{ color: '#000', border: 'none', padding: '12px 24px', borderRadius: 8, fontWeight: 900, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
                 {isImporting ? 'CHARGEMENT...' : '+ PARCOURIR LES FICHIERS'}
               </button>
-              <div style={{ fontSize: 11, color: colors.textDark }}>Analyse IA + mastering haute qualité.</div>
+              <div style={{ fontSize: 11, color: colors.textDark }}>{t('mastering.drop_sub')}</div>
             </div>
           )}
 
@@ -746,7 +748,7 @@ export const MasteringPage: React.FC = () => {
 
           <div style={{ background: colors.cardBg, borderRadius: 16, border: `1px solid ${colors.border}`, padding: '24px 32px', flexShrink: 0 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-              <div style={{ fontSize: 11, color: colors.textMuted, fontWeight: 900, letterSpacing: '1.5px' }}>ÉGALISEUR PARAMÉTRIQUE</div>
+              <div style={{ fontSize: 11, color: colors.textMuted, fontWeight: 900, letterSpacing: '1.5px' }}>{t('mastering.eq')}</div>
               <button onClick={() => setEq({ bass: 50, lowMid: 50, mid: 50, highMid: 50, high: 50 })} style={{ background: 'transparent', border: `1px solid ${colors.border}`, color: colors.textMuted, fontSize: 10, fontWeight: 700, cursor: 'pointer', padding: '6px 12px', borderRadius: 6 }}>RÉINITIALISER</button>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 24 }}>
@@ -807,7 +809,7 @@ export const MasteringPage: React.FC = () => {
 
           <div style={{ marginTop: 'auto', background: colors.cardBg, border: `2px solid ${activePresetData.color}40`, borderRadius: 12, padding: 16 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <div style={{ fontSize: 10, color: colors.textDark, fontWeight: 800, letterSpacing: '1.5px' }}>CHAÎNE ACTIVE</div>
+              <div style={{ fontSize: 10, color: colors.textDark, fontWeight: 800, letterSpacing: '1.5px' }}>{t('mastering.chain')}</div>
               <div style={{ width: 8, height: 8, borderRadius: '50%', background: activePresetData.color, boxShadow: `0 0 10px ${activePresetData.color}` }} />
             </div>
             <div style={{ background: `${activePresetData.color}15`, border: `1px solid ${activePresetData.color}40`, borderRadius: 8, padding: '10px 12px', marginBottom: 12 }}>
@@ -817,7 +819,7 @@ export const MasteringPage: React.FC = () => {
             </div>
             <div style={{ marginBottom: 12 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: colors.textMuted, marginBottom: 4 }}>
-                <span>Intensité</span>
+                <span>{t('mastering.intensity')}</span>
                 <span style={{ color: intensityLabel.color, fontWeight: 800 }}>{intensityLabel.label} • {presetIntensity}%</span>
               </div>
               <div style={{ height: 4, background: colors.border, borderRadius: 2, overflow: 'hidden' }}>
@@ -834,7 +836,7 @@ export const MasteringPage: React.FC = () => {
                 <span style={{ color: colors.textMain, fontWeight: 800, fontFamily: 'monospace' }}>{effectiveValues.comp.toFixed(1)}:1</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, padding: '4px 0', borderBottom: `1px solid ${colors.border}` }}>
-                <span style={{ color: colors.textMuted }}>Stéréo</span>
+                <span style={{ color: colors.textMuted }}>{t('mastering.stereo')}</span>
                 <span style={{ color: colors.textMain, fontWeight: 800, fontFamily: 'monospace' }}>{effectiveValues.width.toFixed(0)}%</span>
               </div>
             </div>

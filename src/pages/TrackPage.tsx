@@ -602,6 +602,15 @@ export const TrackPage: React.FC = () => {
     ...(formatReleaseDate(track.created_at) ? [{ icon: Icons.calendar, label: formatReleaseDate(track.created_at)! }] : []),
   ];
 
+  // 🛒 Liens d'achat vers les plateformes légales (recherche par artiste + titre)
+  const buyQuery = encodeURIComponent(`${track.artist || ''} ${track.title || ''}`.trim());
+  const buyLinks = [
+    { name: 'Beatport', url: `https://www.beatport.com/search/tracks?q=${buyQuery}` },
+    { name: 'Traxsource', url: `https://www.traxsource.com/search/tracks?term=${buyQuery}` },
+    { name: 'Bandcamp', url: `https://bandcamp.com/search?q=${buyQuery}` },
+    { name: 'Apple Music', url: `https://music.apple.com/fr/search?term=${buyQuery}` },
+  ];
+
   return (
     <div style={{ background: colors.bg, minHeight: '100vh', color: colors.textMain, fontFamily: 'Inter, sans-serif', position: 'relative', overflowX: 'hidden' }}>
       
@@ -644,6 +653,12 @@ export const TrackPage: React.FC = () => {
                     </Link>
                   )}
                 </div>
+
+                {artistIsUploader && (
+                  <div style={{ marginTop: 10 }}>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 12px', background: 'rgba(0, 200, 120, 0.12)', border: '1px solid rgba(0, 200, 120, 0.35)', borderRadius: 20, fontSize: 11, fontWeight: 800, color: '#00c878' }}>✓ {t('track.official_promo')}</span>
+                  </div>
+                )}
 
                 {(track.song_key || track.bpm) && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginTop: 18, flexWrap: 'wrap' }}>
@@ -785,6 +800,16 @@ export const TrackPage: React.FC = () => {
                     {Icons.buy} {t('track.buy')}
                   </a>
                 )}
+
+                {/* 🛒 ACHETER SUR LES PLATEFORMES LÉGALES */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: colors.textMuted, padding: '10px 4px' }}>{t('track.buy_on')}</span>
+                  {buyLinks.map((b, i) => (
+                    <a key={i} href={b.url} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', padding: '10px 14px', background: 'transparent', border: `1px solid ${colors.border}`, color: colors.textMain, borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer', textDecoration: 'none', transition: 'border-color 0.2s' }} onMouseEnter={e => e.currentTarget.style.borderColor = themeColor} onMouseLeave={e => e.currentTarget.style.borderColor = colors.border}>
+                      {b.name}
+                    </a>
+                  ))}
+                </div>
 
                 {/* PLAYLIST */}
                 <div ref={playlistMenuRef} style={{ position: 'relative', display: 'inline-block' }}>

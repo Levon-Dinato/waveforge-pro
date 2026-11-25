@@ -104,9 +104,8 @@ export const MainLayout: React.FC = () => {
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: colors.bg, color: colors.textMain, overflowX: 'hidden', width: '100%', maxWidth: '100vw', transition: 'background 0.3s ease' }}>
         
         <header style={{ position: 'sticky', top: 0, zIndex: 50, background: colors.bg, borderBottom: `1px solid ${colors.border}`, padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
-            <img src="/icons/icon-192.png" alt="ELEKTRAQ" style={{ width: 32, height: 32, objectFit: 'contain', borderRadius: 8 }} />
-            <span style={{ fontWeight: 800, fontSize: '1rem', color: colors.textMain, letterSpacing: '-0.5px' }}>ELEKTRAQ</span>
+          <Link to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+            <span style={{ fontWeight: 900, fontSize: '1.1rem', letterSpacing: '2px', color: colors.textMain }}>ELEKTRAQ</span>
           </Link>
           
           <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
@@ -215,9 +214,8 @@ export const MainLayout: React.FC = () => {
       {/* HEADER TOP BAR (style Beatport) — fixe en haut */}
       <header style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50, background: colors.bg, borderBottom: `1px solid ${colors.border}`, boxShadow: '0 6px 24px rgba(0,0,0,0.45)', display: 'flex', flexDirection: 'column' }}>
         <div style={{ maxWidth: 1280, margin: '0 auto', width: '100%', display: 'flex', alignItems: 'center', gap: 24, padding: '10px 24px' }}>
-          <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', flexShrink: 0 }}>
-            <img src="/icons/icon-192.png" alt="ELEKTRAQ" style={{ width: 30, height: 30, objectFit: 'contain', borderRadius: 6 }} />
-            <span style={{ fontWeight: 900, fontSize: '1.15rem', letterSpacing: '-0.5px', color: '#94c748' }}>ELEKTRAQ</span>
+          <Link to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', flexShrink: 0 }}>
+            <span style={{ fontWeight: 900, fontSize: '1.3rem', letterSpacing: '2px', color: colors.textMain }}>ELEKTRAQ</span>
           </Link>
           <div style={{ flex: 1, maxWidth: 380, minWidth: 200 }}>
             <GlobalSearch />

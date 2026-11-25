@@ -244,8 +244,8 @@ export const MainLayout: React.FC = () => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: colors.mainBg, color: colors.textMain, transition: 'background 0.3s ease', paddingBottom: currentTrack ? 100 : 0 }}>
 
-      {/* HEADER TOP BAR (style Beatport) */}
-      <header style={{ position: 'sticky', top: 0, zIndex: 50, background: colors.bg, borderBottom: `1px solid ${colors.border}`, display: 'flex', flexDirection: 'column' }}>
+      {/* HEADER TOP BAR (style Beatport) — fixe en haut */}
+      <header style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50, background: colors.bg, borderBottom: `1px solid ${colors.border}`, boxShadow: '0 6px 24px rgba(0,0,0,0.45)', display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 24, padding: '10px 24px' }}>
           <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', flexShrink: 0 }}>
             <img src="/icons/icon-192.png" alt="ELEKTRAQ" style={{ width: 30, height: 30, objectFit: 'contain', borderRadius: 6 }} />
@@ -290,11 +290,14 @@ export const MainLayout: React.FC = () => {
         </nav>
       </header>
 
-      <main style={{ flex: 1, width: '100%', maxWidth: 1600, margin: '0 auto', padding: '24px 24px 60px' }}>
+      <main style={{ flex: 1, width: '100%', maxWidth: 1280, margin: '0 auto', padding: '116px 24px 230px' }}>
         <Outlet />
       </main>
 
-      <Footer />
+      {/* FOOTER fixe en bas */}
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 40, maxHeight: '34vh', overflowY: 'auto' }}>
+        <Footer />
+      </div>
 
       <ScrollButtons />
 

@@ -75,7 +75,7 @@ export const RadioPlayer: React.FC<RadioPlayerProps> = ({ profile, visualizerCol
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
       <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: compact ? 16 : 30, padding: compact ? 5 : 10 }}>
         
-        <div style={{ position: 'absolute', width: size + 40, height: size + 40, borderRadius: '50%', background: `radial-gradient(circle, ${visualizerColor}40 0%, transparent 60%)`, filter: 'blur(30px)', animationName: 'pulseGlow', animationDuration: '2s', animationIterationCount: 'infinite', animationPlayState: isPlaying ? 'running' : 'paused' }} />
+        {isDark && (<div style={{ position: 'absolute', width: size + 40, height: size + 40, borderRadius: '50%', background: `radial-gradient(circle, ${visualizerColor}40 0%, transparent 60%)`, filter: 'blur(30px)', animationName: 'pulseGlow', animationDuration: '2s', animationIterationCount: 'infinite', animationPlayState: isPlaying ? 'running' : 'paused' }} />)}
         
         <div className="circular-visualizer" style={{ position: 'absolute', width: size, height: size, top: '50%', left: '50%', transform: 'translate(-50%, -50%)', pointerEvents: 'none', zIndex: 3 }}>
           {visualizerBars.map((_, i) => {
@@ -87,7 +87,7 @@ export const RadioPlayer: React.FC<RadioPlayerProps> = ({ profile, visualizerCol
                   background: dynamicGradient, 
                   borderRadius: 4, 
                   transformOrigin: 'bottom center', 
-                  boxShadow: `0 0 10px ${visualizerColor}90`, 
+                  boxShadow: isDark ? `0 0 10px ${visualizerColor}90` : 'none', 
                   animationName: 'beatCircle', 
                   animationDuration: `${0.4 + Math.random() * 0.4}s`, 
                   animationDelay: `-${Math.random() * 0.5}s`, 
@@ -108,12 +108,12 @@ export const RadioPlayer: React.FC<RadioPlayerProps> = ({ profile, visualizerCol
               <stop offset="100%" stopColor={visualizerColor} stopOpacity={0.4} />
             </linearGradient>
           </defs>
-          <circle cx={(size + 40) / 2} cy={(size + 40) / 2} r={radius + 20} stroke="url(#progressGradient)" strokeWidth={compact ? 2 : 3} fill="none" strokeDasharray={circumference + 100} strokeDashoffset={strokeDashoffset} strokeLinecap="round" style={{ transition: 'stroke-dashoffset 1s linear', filter: `drop-shadow(0 0 8px ${visualizerColor}90)` }} />
+          <circle cx={(size + 40) / 2} cy={(size + 40) / 2} r={radius + 20} stroke="url(#progressGradient)" strokeWidth={compact ? 2 : 3} fill="none" strokeDasharray={circumference + 100} strokeDashoffset={strokeDashoffset} strokeLinecap="round" style={{ transition: 'stroke-dashoffset 1s linear', filter: isDark ? `drop-shadow(0 0 8px ${visualizerColor}90)` : 'none' }} />
         </svg>
         
         <div style={{ position: 'absolute', width: size + 40, height: size + 40, zIndex: 10, cursor: 'default' }} />
         
-        <div className="vinyl-container" style={{ position: 'relative', width: size, height: size, borderRadius: '50%', background: isDark ? '#000' : '#f2f2f4', boxShadow: isDark ? '0 20px 50px rgba(0,0,0,0.8), inset 0 0 20px rgba(255,255,255,0.1)' : '0 6px 16px rgba(0,0,0,0.12), inset 0 0 14px rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 4 }}>
+        <div className="vinyl-container" style={{ position: 'relative', width: size, height: size, borderRadius: '50%', background: isDark ? '#000' : '#f2f2f4', boxShadow: isDark ? '0 20px 50px rgba(0,0,0,0.8), inset 0 0 20px rgba(255,255,255,0.1)' : 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 4 }}>
           <img 
             key={currentTrack?.id || 'cover'}
             src={currentTrack?.cover_url || profile?.radio_custom_logo_url || profile?.avatar_url || 'https://via.placeholder.com/300'} 

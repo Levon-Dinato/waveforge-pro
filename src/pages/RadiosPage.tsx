@@ -267,7 +267,7 @@ export const RadioPage: React.FC = () => {
         .glass-panel { background: ${colors.glass}; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid ${colors.border}; box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
         
         /* EFFET VINYLE 3D */
-        .vinyl-container { position: relative; width: ${size}px; height: ${size}px; border-radius: 50%; background: ${isDark ? '#000' : '#f2f2f4'}; box-shadow: ${isDark ? '0 20px 50px rgba(0,0,0,0.8), inset 0 0 20px rgba(255,255,255,0.1)' : '0 6px 16px rgba(0,0,0,0.12), inset 0 0 14px rgba(0,0,0,0.05)'}; display: flex; align-items: center; justify-content: center; z-index: 2; }
+        .vinyl-container { position: relative; width: ${size}px; height: ${size}px; border-radius: 50%; background: ${isDark ? '#000' : '#f2f2f4'}; box-shadow: ${isDark ? '0 20px 50px rgba(0,0,0,0.8), inset 0 0 20px rgba(255,255,255,0.1)' : 'none'}; display: flex; align-items: center; justify-content: center; z-index: 2; }
         .vinyl-spin { width: ${size - 80}px; height: ${size - 80}px; border-radius: 50%; object-fit: cover; animation: spin 4s linear infinite; animation-play-state: ${isPlaying ? 'running' : 'paused'}; border: 4px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.12)'}; }
         .vinyl-grooves { position: absolute; inset: 0; border-radius: 50%; pointer-events: none; background: repeating-radial-gradient(circle, transparent, transparent 2px, ${isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.05)'} 3px, transparent 4px); }
         .vinyl-label { position: absolute; width: 50px; height: 50px; border-radius: 50%; background: ${colors.bg}; border: 3px solid ${isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.15)'}; display: flex; align-items: center; justify-content: center; z-index: 2; box-shadow: inset 0 0 10px ${isDark ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.15)'}; }
@@ -305,7 +305,7 @@ export const RadioPage: React.FC = () => {
           background: ${colors.accentGradient};
           border-radius: 6px;
           transform-origin: bottom center; /* L'animation part du bas (bord du vinyle) */
-          box-shadow: 0 0 12px rgba(176,176,176,0.8);
+          box-shadow: ${isDark ? '0 0 12px rgba(176,176,176,0.8)' : 'none'};
           animation: beatCircle 0.5s ease-in-out infinite alternate;
           animation-play-state: ${isPlaying ? 'running' : 'paused'};
         }
@@ -384,7 +384,7 @@ export const RadioPage: React.FC = () => {
             <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 40, padding: 40 }}>
               
               {/* AURA LUMINEUSE */}
-              <div style={{ position: 'absolute', width: size + 40, height: size + 40, borderRadius: '50%', background: 'radial-gradient(circle, rgba(176,176,176,0.3) 0%, transparent 60%)', filter: 'blur(30px)', animation: isPlaying ? 'pulseGlow 2s infinite' : 'none' }} />
+              {isDark && (<div style={{ position: 'absolute', width: size + 40, height: size + 40, borderRadius: '50%', background: 'radial-gradient(circle, rgba(176,176,176,0.3) 0%, transparent 60%)', filter: 'blur(30px)', animation: isPlaying ? 'pulseGlow 2s infinite' : 'none' }} />)}
               
               {/* ✅ LE VISUALISEUR CIRCULAIRE CORRIGÉ */}
               <div className="circular-visualizer">
@@ -414,7 +414,7 @@ export const RadioPage: React.FC = () => {
               {/* CERCLE DE PROGRESSION */}
               <svg width={size + 40} height={size + 40} style={{ position: 'absolute', transform: 'rotate(-90deg)', zIndex: 3 }}>
                 <defs><linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#b0b0b0" /><stop offset="100%" stopColor="#b0b0b0" /></linearGradient></defs>
-                <circle cx={(size + 40) / 2} cy={(size + 40) / 2} r={radius + 20} stroke="url(#progressGradient)" strokeWidth={strokeWidth} fill="none" strokeDasharray={circumference + 100} strokeDashoffset={strokeDashoffset} strokeLinecap="round" style={{ transition: 'stroke-dashoffset 0.1s linear', filter: 'drop-shadow(0 0 10px rgba(176,176,176,0.8))' }} />
+                <circle cx={(size + 40) / 2} cy={(size + 40) / 2} r={radius + 20} stroke="url(#progressGradient)" strokeWidth={strokeWidth} fill="none" strokeDasharray={circumference + 100} strokeDashoffset={strokeDashoffset} strokeLinecap="round" style={{ transition: 'stroke-dashoffset 0.1s linear', filter: isDark ? 'drop-shadow(0 0 10px rgba(176,176,176,0.8))' : 'none' }} />
               </svg>
               <input type="range" min={0} max={duration || 100} value={progress} onChange={(e) => seek(Number(e.target.value))} style={{ position: 'absolute', width: size + 40, height: size + 40, opacity: 0, cursor: 'pointer', zIndex: 10, transform: 'rotate(-90deg)' }} />
               

@@ -1,8 +1,10 @@
 // src/pages/LivePage.tsx
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { useTheme } from '../contexts/ThemeContext'; // ✅ IMPORT DU THEME
+import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabase';
 import { LiveChat } from '../components/LiveChat';
 import { useTranslation } from 'react-i18next';
 
@@ -16,6 +18,58 @@ export const LivePage = () => {
 
   const [chatVisible, setChatVisible] = useState(true);
   const [showSetup, setShowSetup] = useState(false);
+
+  // ✅ PLANNING DES LIVES
+  const { user, profile } = useAuth();
+  const [liveSlots, setLiveSlots] = useState<any[]>([]);
+  const [showPlanningForm, setShowPlanningForm] = useState(false);
+  const [planningForm, setPlanningForm] = useState({ title: '', date: '', startTime: '', endTime: '', link: '' });
+  const [planningSubmitting, setPlanningSubmitting] = useState(false);
+
+  const fetchLiveSlots = async () => {
+    const now = new Date().toISOString();
+    const { data } = await supabase
+      .from('events')
+      .select('*')
+      .eq('location', 'LIVE')
+      .gte('event_date', now)
+      .order('event_date', { ascending: true });
+    if (data) setLiveSlots(data);
+  };
+
+  useEffect(() => { fetchLiveSlots(); }, []);
+
+  const addLiveSlot = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+    if (!planningForm.date || !planningForm.startTime) { alert(t('live.planning_required')); return; }
+    setPlanningSubmitting(true);
+    try {
+      const eventDate = new Date(`${planningForm.date}T${planningForm.startTime}:00`).toISOString();
+      const username = profile?.username || user.email?.split('@')[0] || 'DJ';
+      const description = `${username} · ${planningForm.startTime}${planningForm.endTime ? ' - ' + planningForm.endTime : ''}`;
+      const { error } = await supabase.from('events').insert({
+        title: planningForm.title || `Live de ${username}`,
+        description,
+        event_date: eventDate,
+        location: 'LIVE',
+        created_by: user.id,
+        url: planningForm.link || null,
+        image_url: profile?.avatar_url || null,
+      });
+      if (error) throw error;
+      setPlanningForm({ title: '', date: '', startTime: '', endTime: '', link: '' });
+      setShowPlanningForm(false);
+      fetchLiveSlots();
+    } catch (err: any) {
+      alert(t('live.planning_error') + (err.message || err));
+    } finally {
+      setPlanningSubmitting(false);
+    }
+  };
+
+  const formatSlotDate = (iso: string) => new Date(iso).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' });
+  const formatSlotTime = (iso: string) => new Date(iso).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 
   const rtmpUrl = 'rtmp://live.tviply.com/stream';
   const streamKey = '6n9kjjb7qw4ko4w4ock';
@@ -329,6 +383,86 @@ export const LivePage = () => {
       {/* ==================================================== */}
       {/* 4. SETUP TECHNIQUE                                   */}
       {/* ==================================================== */}
+      <section style={{ maxWidth: 900, margin: '0 auto', width: '100%', padding: '0 20px' }}>
+        <h2 style={{ fontSize: 20, fontWeight: 600, marginBottom: 24, color: colors.textMain }}>{t('live.planning_title')}</h2>
+
+        {user && (
+          <div style={{ marginBottom: 24 }}>
+            {!showPlanningForm ? (
+              <button onClick={() => setShowPlanningForm(true)} style={{ padding: '12px 24px', background: colors.btnPrimaryBg, color: colors.btnPrimaryText, border: 'none', borderRadius: 4, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                {t('live.planning_add')}
+              </button>
+            ) : (
+              <form onSubmit={addLiveSlot} style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 8, padding: 20, display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <h3 style={{ fontSize: 15, fontWeight: 600, margin: 0, color: colors.textMain }}>{t('live.planning_form_title')}</h3>
+                  <button type="button" onClick={() => setShowPlanningForm(false)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', fontSize: 16 }}>✕</button>
+                </div>
+                <div style={{ padding: '10px 14px', background: `${colors.accent}14`, border: `1px solid ${colors.accent}55`, borderRadius: 6, fontSize: 12, color: colors.textMain, lineHeight: 1.5, display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                  <span style={{ fontSize: 14 }}>⚠️</span>
+                  <span>{t('live.planning_warning')}</span>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr', gap: 12 }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: colors.textMuted, marginBottom: 6 }}>{t('live.planning_title_field')}</label>
+                    <input value={planningForm.title} onChange={e => setPlanningForm({ ...planningForm, title: e.target.value })} placeholder={t('live.planning_placeholder')} style={{ width: '100%', padding: '10px 12px', background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 4, color: colors.textMain, boxSizing: 'border-box' }} />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: colors.textMuted, marginBottom: 6 }}>{t('live.planning_date')}</label>
+                    <input type="date" value={planningForm.date} onChange={e => setPlanningForm({ ...planningForm, date: e.target.value })} style={{ width: '100%', padding: '10px 12px', background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 4, color: colors.textMain, boxSizing: 'border-box' }} />
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: colors.textMuted, marginBottom: 6 }}>{t('live.planning_start')}</label>
+                      <input type="time" value={planningForm.startTime} onChange={e => setPlanningForm({ ...planningForm, startTime: e.target.value })} style={{ width: '100%', padding: '10px 12px', background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 4, color: colors.textMain, boxSizing: 'border-box' }} />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: colors.textMuted, marginBottom: 6 }}>{t('live.planning_end')}</label>
+                      <input type="time" value={planningForm.endTime} onChange={e => setPlanningForm({ ...planningForm, endTime: e.target.value })} style={{ width: '100%', padding: '10px 12px', background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 4, color: colors.textMain, boxSizing: 'border-box' }} />
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: colors.textMuted, marginBottom: 6 }}>{t('live.planning_link')}</label>
+                  <input value={planningForm.link} onChange={e => setPlanningForm({ ...planningForm, link: e.target.value })} placeholder={t('live.planning_link_placeholder')} style={{ width: '100%', padding: '10px 12px', background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 4, color: colors.textMain, boxSizing: 'border-box' }} />
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+                  <button type="button" onClick={() => setShowPlanningForm(false)} style={{ padding: '10px 16px', background: 'transparent', border: `1px solid ${colors.border}`, color: colors.textMuted, borderRadius: 4, fontWeight: 600, cursor: 'pointer' }}>{t('live.planning_cancel')}</button>
+                  <button type="submit" disabled={planningSubmitting} style={{ padding: '10px 16px', background: colors.btnPrimaryBg, color: colors.btnPrimaryText, border: 'none', borderRadius: 4, fontWeight: 600, cursor: 'pointer' }}>{planningSubmitting ? t('live.planning_submitting') : t('live.planning_submit')}</button>
+                </div>
+              </form>
+            )}
+          </div>
+        )}
+
+        {liveSlots.length === 0 ? (
+          <div style={{ color: colors.textMuted, fontSize: 14, padding: '20px 0', borderTop: `1px solid ${colors.border}` }}>
+            {t('live.planning_empty')}
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            {liveSlots.map(slot => (
+              <div key={slot.id} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '14px 0', borderTop: `1px solid ${colors.border}` }}>
+                {slot.image_url && (
+                  <img src={slot.image_url} alt="" style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: `1px solid ${colors.border}` }} />
+                )}
+                <div style={{ width: 110, flexShrink: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: colors.accent, textTransform: 'capitalize' }}>{formatSlotDate(slot.event_date)}</div>
+                  <div style={{ fontSize: 12, color: colors.textMuted, marginTop: 2 }}>{formatSlotTime(slot.event_date)}</div>
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: colors.textMain, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{slot.title}</div>
+                  <div style={{ fontSize: 12, color: colors.textMuted, marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{slot.description}</div>
+                </div>
+                {slot.url && (
+                  <a href={slot.url} target="_blank" rel="noopener noreferrer" style={{ padding: '6px 12px', background: colors.accent, color: '#000', borderRadius: 4, fontSize: 12, fontWeight: 700, textDecoration: 'none', flexShrink: 0 }}>{t('live.planning_link_open')}</a>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
       <section id="setup-section" style={{ maxWidth: 800, margin: '0 auto', width: '100%', padding: '0 20px' }}>
         
         {!showSetup && (
@@ -362,7 +496,7 @@ export const LivePage = () => {
             </div>
 
             <p style={{ fontSize: 13, color: colors.textMuted, marginBottom: 24, lineHeight: 1.6 }}>
-              Dans les paramètres de diffusion de votre logiciel, sélectionnez "Personnalisé" et entrez les informations suivantes :
+              {t('live.setup_hint')}
             </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>

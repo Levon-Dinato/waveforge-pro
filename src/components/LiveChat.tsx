@@ -1,6 +1,7 @@
 // src/components/LiveChat.tsx
 import { useEffect, useState, useRef } from 'react';
 import { supabase } from '../lib/supabase';
+import { useTranslation } from 'react-i18next';
 
 interface Message {
   id: string;
@@ -10,6 +11,7 @@ interface Message {
 }
 
 export const LiveChat = ({ roomId = 'djcontrolradio' }: { roomId?: string }) => {
+  const { t } = useTranslation();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [authorName, setAuthorName] = useState('');
@@ -90,14 +92,14 @@ export const LiveChat = ({ roomId = 'djcontrolradio' }: { roomId?: string }) => 
       }}>
         <div style={{ fontSize: 48 }}>💬</div>
         <h3 style={{ fontFamily: 'Space Grotesk', color: '#fff', margin: 0, fontSize: 18 }}>
-          Rejoindre le chat
+          {t('live.chat_join')}
         </h3>
         <p style={{ fontSize: 13, color: 'rgba(255, 255, 255, 0.5)', textAlign: 'center', margin: 0 }}>
-          Choisis un pseudo pour discuter avec les autres auditeurs.
+          {t('live.chat_join_desc')}
         </p>
         <input
           type="text"
-          placeholder="Ton pseudo..."
+          placeholder={t('live.chat_pseudo_placeholder')}
           value={authorName}
           onChange={(e) => setAuthorName(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && authorName.trim() && setNameSet(true)}
@@ -130,7 +132,7 @@ export const LiveChat = ({ roomId = 'djcontrolradio' }: { roomId?: string }) => 
             cursor: authorName.trim() ? 'pointer' : 'not-allowed',
           }}
         >
-          Entrer dans le chat
+          {t('live.chat_enter')}
         </button>
       </div>
     );
@@ -163,7 +165,7 @@ export const LiveChat = ({ roomId = 'djcontrolradio' }: { roomId?: string }) => 
             background: '#b0b0b0',
             boxShadow: '0 0 8px #b0b0b0',
           }} />
-          Chat en direct
+          {t('live.chat_live')}
         </div>
         <div style={{ fontSize: 11, color: 'rgba(255, 255, 255, 0.5)' }}>
           {authorName}
@@ -184,7 +186,7 @@ export const LiveChat = ({ roomId = 'djcontrolradio' }: { roomId?: string }) => 
       >
         {messages.length === 0 && (
           <div style={{ color: 'rgba(255, 255, 255, 0.4)', fontSize: 13, textAlign: 'center', marginTop: 20 }}>
-            Aucun message. Sois le premier !
+            {t('live.chat_empty')}
           </div>
         )}
         {messages.map((msg) => {
@@ -217,7 +219,7 @@ export const LiveChat = ({ roomId = 'djcontrolradio' }: { roomId?: string }) => 
         <input
           ref={inputRef}
           type="text"
-          placeholder="Écrire un message..."
+          placeholder={t('live.chat_message_placeholder')}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSend()}

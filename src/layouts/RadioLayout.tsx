@@ -121,8 +121,6 @@ export const RadioLayout: React.FC = () => {
   const [showToast, setShowToast] = useState(false);
   const [toastMsg, setToastMsg] = useState('');
 
-  const [isWiping, setIsWiping] = useState(false);
-
   const isRadioStartedRef = useRef(false);
   const prevUsernameRef = useRef<string | undefined>(username);
 
@@ -347,12 +345,6 @@ export const RadioLayout: React.FC = () => {
     };
   }, [profile?.id, user?.id]);
 
-  useEffect(() => {
-    setIsWiping(true);
-    const timer = setTimeout(() => setIsWiping(false), 800);
-    return () => clearTimeout(timer);
-  }, [location.pathname]);
-
   useEffect(() => { if (isChatOpen) chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, isChatOpen]);
 
   const showToastMsg = (msg: string) => { setToastMsg(msg); setShowToast(true); setTimeout(() => setShowToast(false), 3000); };
@@ -549,27 +541,6 @@ export const RadioLayout: React.FC = () => {
         .nav-link.active { color: ${isDark ? visualizerColor : colors.textMain}; }
         .nav-link.active::after { content: ''; position: absolute; bottom: 0; left: 20px; right: 20px; height: 2px; background: ${visualizerColor}; box-shadow: 0 0 10px ${visualizerColor}; border-radius: 2px; }
 
-        @keyframes slideWipeAnim { 0% { transform: translateX(100%); } 40% { transform: translateX(0); } 60% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
-        @keyframes wipeLogoIn { 0% { opacity: 0; transform: scale(0.9); } 40% { opacity: 1; transform: scale(1); } 60% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(1.05); } }
-        
-        .wipe-overlay { 
-          position: fixed; inset: 0; z-index: 999999; 
-          background: ${isDark ? '#111111' : '#ffffff'}; 
-          border-left: 4px solid ${isDark ? '#ffffff' : '#000000'}; 
-          display: flex; justify-content: center; align-items: center; 
-          box-shadow: -10px 0 60px ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}; 
-          transform: translateX(100%); 
-          animation: slideWipeAnim 0.8s cubic-bezier(0.77, 0, 0.175, 1) forwards; 
-          pointer-events: none; 
-        }
-        .wipe-overlay span { 
-          color: ${isDark ? '#ffffff' : '#000000'}; 
-          font-family: 'Space Grotesk', sans-serif; font-size: 1.8rem; font-weight: 700; 
-          letter-spacing: 6px; opacity: 0; transform: scale(0.9); transition: all 0.3s; 
-          text-shadow: 0 0 30px ${isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'}; 
-          animation: wipeLogoIn 0.8s ease-out; 
-        }
-
         .share-menu {
           position: absolute;
           top: 100%;
@@ -765,10 +736,10 @@ export const RadioLayout: React.FC = () => {
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
               style={{ display: 'flex', flexDirection: 'column', flex: 1 }}
             >
               <Outlet context={outletContext} />
@@ -865,11 +836,6 @@ export const RadioLayout: React.FC = () => {
         </div>
       </div>
 
-      {isWiping && (
-        <div className="wipe-overlay">
-          <span>ELEKTRAQ</span>
-        </div>
-      )}
     </div>
   );
 };

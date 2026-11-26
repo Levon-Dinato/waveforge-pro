@@ -289,7 +289,7 @@
   },
   "radioList": {
     "loading": "Loading radios...",
-    "title": "📻 All Radios",
+    "title": "All Radios",
     "subtitle": "Discover the live webradios of the ELEKTRAQ community.",
     "copy_link": "Copy radio link",
     "live": "LIVE",

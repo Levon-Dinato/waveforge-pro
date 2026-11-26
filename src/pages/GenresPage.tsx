@@ -19,6 +19,9 @@ export const GenresPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
   const [genres, setGenres] = useState<string[]>([]);
+  const [radarTracks, setRadarTracks] = useState<Track[]>([]);
+  const [radarGenres, setRadarGenres] = useState<string[]>([]);
+  const [selectedRadarGenre, setSelectedRadarGenre] = useState<string | null>(null);
 
   // ✅ PALETTE DE COULEURS DYNAMIQUES
   const colors = {
@@ -40,6 +43,7 @@ export const GenresPage: React.FC = () => {
           .select('*')
           .or('is_jingle.is.null,is_jingle.eq.false')
           .or('is_private.is.null,is_private.eq.false')
+          .not('user_id', 'is', null)
           .order('created_at', { ascending: false });
 
         if (error) throw error;
@@ -47,9 +51,26 @@ export const GenresPage: React.FC = () => {
         if (data) {
           setTracks(data as Track[]);
           const uniqueGenres = Array.from(
-            new Set(data.map((t: any) => t.genre).filter(Boolean))
+            new Set(data.map((t: any) => (t.genre || 'Inconnu').trim()))
           ).sort() as string[];
           setGenres(uniqueGenres);
+        }
+
+        // ✅ NOUVEAUTÉS RADAR : sons sans user_id (sorties auto iTunes/Apple)
+        const { data: radarData } = await supabase
+          .from('tracks')
+          .select('*')
+          .or('is_jingle.is.null,is_jingle.eq.false')
+          .or('is_private.is.null,is_private.eq.false')
+          .is('user_id', null)
+          .order('created_at', { ascending: false });
+
+        if (radarData) {
+          setRadarTracks(radarData as Track[]);
+          const uniqueRadarGenres = Array.from(
+            new Set(radarData.map((t: any) => (t.genre || 'Inconnu').trim()))
+          ).sort() as string[];
+          setRadarGenres(uniqueRadarGenres);
         }
       } catch (err) {
         console.error("Erreur chargement genres:", err);
@@ -62,8 +83,12 @@ export const GenresPage: React.FC = () => {
   }, []);
 
   const filteredTracks = selectedGenre
-    ? tracks.filter((t: any) => t.genre === selectedGenre)
+    ? tracks.filter((t: any) => (t.genre || 'Inconnu').trim() === selectedGenre)
     : tracks;
+
+  const filteredRadarTracks = selectedRadarGenre
+    ? radarTracks.filter((t: any) => (t.genre || 'Inconnu').trim() === selectedRadarGenre)
+    : radarTracks;
 
   // ✅ Lecture d'un morceau depuis la grille
   const handlePlay = (track: Track) => {
@@ -116,6 +141,11 @@ export const GenresPage: React.FC = () => {
         </p>
       </div>
 
+      {/* SECTION IMPORT DJ */}
+      <h2 style={{ fontSize: 22, fontWeight: 700, margin: '0 0 20px 0', padding: '0 24px', color: colors.textMain }}>
+        Import DJ
+      </h2>
+
       {/* LISTE DES GENRES */}
       {!selectedGenre && (
         <div style={{ 
@@ -126,7 +156,7 @@ export const GenresPage: React.FC = () => {
           padding: '0 24px',
         }}>
           {genres.map((genre) => {
-            const count = tracks.filter((t: any) => t.genre === genre).length;
+            const count = tracks.filter((t: any) => (t.genre || 'Inconnu').trim() === genre).length;
             return (
               <button
                 key={genre}
@@ -202,6 +232,81 @@ export const GenresPage: React.FC = () => {
           <TrackGrid tracks={filteredTracks} onPlay={handlePlay} />
         </div>
       )}
+
+      {/* === MODULE NOUVEAUTÉS RADAR === */}
+      <div style={{ marginTop: 60, borderTop: `1px solid ${colors.border}`, padding: '32px 24px' }}>
+        <h2 style={{ fontSize: 22, fontWeight: 700, margin: '0 0 6px 0', color: colors.textMain }}>
+          Découverte
+        </h2>
+        <p style={{ color: colors.textMuted, fontSize: 13, margin: '0 0 24px 0' }}>
+          Explorez les dernières sorties.
+        </p>
+
+        {!selectedRadarGenre && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 }}>
+            {radarGenres.map((genre) => {
+              const count = radarTracks.filter((t: any) => (t.genre || 'Inconnu').trim() === genre).length;
+              return (
+                <button
+                  key={genre}
+                  onClick={() => setSelectedRadarGenre(genre)}
+                  style={{
+                    background: colors.panelBg,
+                    border: `1px solid ${colors.border}`,
+                    borderRadius: 6,
+                    padding: '16px 20px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    color: colors.textMain,
+                    transition: 'all 0.15s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = colors.hoverBg;
+                    e.currentTarget.style.borderColor = colors.borderHover;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = colors.panelBg;
+                    e.currentTarget.style.borderColor = colors.border;
+                  }}
+                >
+                  <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 4 }}>{genre}</div>
+                  <div style={{ fontSize: 12, color: colors.textMuted }}>{count} {t('genres.tracks')}</div>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {selectedRadarGenre && (
+          <div>
+            <button
+              onClick={() => setSelectedRadarGenre(null)}
+              style={{
+                background: colors.panelBg,
+                border: `1px solid ${colors.border}`,
+                color: colors.textMain,
+                padding: '8px 16px',
+                borderRadius: 4,
+                fontSize: 12,
+                cursor: 'pointer',
+                marginBottom: 24,
+                fontWeight: 600,
+                transition: 'all 0.2s',
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.background = colors.hoverBg}
+              onMouseLeave={(e) => e.currentTarget.style.background = colors.panelBg}
+            >
+              {t('genres.back')}
+            </button>
+
+            <h2 style={{ fontSize: 22, fontWeight: 700, margin: '0 0 8px 0', color: colors.textMain }}>
+              {selectedRadarGenre} <span style={{ color: colors.textMuted, fontWeight: 500, fontSize: 14 }}>({filteredRadarTracks.length} {t('genres.tracks')})</span>
+            </h2>
+
+            <TrackGrid tracks={filteredRadarTracks} onPlay={handlePlay} />
+          </div>
+        )}
+      </div>
 
     </div>
   );

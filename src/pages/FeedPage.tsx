@@ -173,7 +173,6 @@ export const FeedPage: React.FC = () => {
           if (followedUserIds.length > 0) {
             const { data: profilesData } = await supabase.from('profiles').select('id, username, avatar_url').in('id', followedUserIds);
             setFollowedArtists(profilesData || []);
-            setFeedMode('following');
           }
         }
 
@@ -447,9 +446,9 @@ export const FeedPage: React.FC = () => {
   }
 
   return (
-    <div style={{ background: colors.bg, minHeight: '100vh', color: colors.textMain, fontFamily: 'Inter, sans-serif', transition: 'background 0.3s ease, color 0.3s ease' }}>
+    <div style={{ background: colors.bg, color: colors.textMain, fontFamily: 'Inter, sans-serif', transition: 'background 0.3s ease, color 0.3s ease' }}>
       <PageMeta title="Feed" description="Suivez l'actualité et les partages de la communauté ELEKTRAQ." />
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '16px 12px' : '24px', display: 'flex', gap: 40, flexDirection: isMobile ? 'column' : 'row', height: isMobile ? 'auto' : 'calc(100vh - 120px)' }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '16px 12px' : '24px 24px 0', display: 'flex', gap: 40, flexDirection: isMobile ? 'column' : 'row', height: isMobile ? 'auto' : 'calc(100vh - 120px)' }}>
         
         {/* COLONNE PRINCIPALE */}
         <div style={{ flex: 1, maxWidth: isMobile ? '100%' : 680, minWidth: 0, width: '100%', overflowY: isMobile ? 'visible' : 'auto', paddingRight: isMobile ? 0 : 20, paddingBottom: currentTrack ? 100 : 20 }}>
@@ -463,11 +462,11 @@ export const FeedPage: React.FC = () => {
 
           {user && (
             <div style={{ display: 'flex', gap: 8, marginBottom: 24, background: colors.panelBg, padding: 6, borderRadius: 12, border: `1px solid ${colors.border}`, width: 'fit-content', backdropFilter: 'blur(20px)' }}>
-              <button onClick={() => setFeedMode('following')} style={{ padding: '10px 20px', borderRadius: 8, border: 'none', cursor: 'pointer', background: feedMode === 'following' ? colors.accent : 'transparent', color: feedMode === 'following' ? '#000' : colors.textMuted, fontWeight: 800, fontSize: 13, transition: 'all 0.2s' }}>
-                {t('feed.my_feed', { count: followedArtists.length })}
-              </button>
               <button onClick={() => setFeedMode('discover')} style={{ padding: '10px 20px', borderRadius: 8, border: 'none', cursor: 'pointer', background: feedMode === 'discover' ? colors.accent : 'transparent', color: feedMode === 'discover' ? '#000' : colors.textMuted, fontWeight: 800, fontSize: 13, transition: 'all 0.2s' }}>
                 {t('feed.discover')}
+              </button>
+              <button onClick={() => setFeedMode('following')} style={{ padding: '10px 20px', borderRadius: 8, border: 'none', cursor: 'pointer', background: feedMode === 'following' ? colors.accent : 'transparent', color: feedMode === 'following' ? '#000' : colors.textMuted, fontWeight: 800, fontSize: 13, transition: 'all 0.2s' }}>
+                {t('feed.my_feed', { count: followedArtists.length })}
               </button>
             </div>
           )}

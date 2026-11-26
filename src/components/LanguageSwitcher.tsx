@@ -67,9 +67,9 @@ export const LanguageSwitcher: React.FC = () => {
         <div
           style={{
             position: 'absolute',
-            bottom: '100%',
+            top: '100%',
             left: 0,
-            marginBottom: 6,
+            marginTop: 6,
             background: 'linear-gradient(135deg, rgba(15, 18, 28, 0.98), rgba(10, 12, 20, 0.99))',
             border: '1px solid rgba(255, 255, 255, 0.35)',
             borderRadius: 10,

@@ -97,7 +97,7 @@ export const ReleaseCard: React.FC<ReleaseCardProps> = ({
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             {track.purchase_url && (
-              <a href={track.purchase_url} target="_blank" rel="noopener noreferrer" style={{ background: 'transparent', border: `1px solid #ffffff`, color: '#ffffff', padding: '10px 16px', borderRadius: 8, fontSize: 12, fontWeight: 700, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <a href={track.purchase_url} target="_blank" rel="noopener noreferrer" style={{ background: 'transparent', border: `1px solid ${themeColor}`, color: themeColor, padding: '10px 16px', borderRadius: 8, fontSize: 12, fontWeight: 700, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 8 }}>
                 Acheter
               </a>
             )}
@@ -113,7 +113,7 @@ export const ReleaseCard: React.FC<ReleaseCardProps> = ({
               {track.comments_count || 0}
             </Link>
 
-            <button onClick={() => handlePlayTrack(track)} style={{ width: 48, height: 48, borderRadius: '50%', background: isThisPlaying ? themeColor : (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'), border: 'none', color: isThisPlaying ? '#000' : btnTextColor, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s', boxShadow: isThisPlaying ? `0 0 20px ${themeColor}60` : 'none' }}>
+            <button onClick={() => handlePlayTrack(track)} style={{ width: 48, height: 48, borderRadius: '50%', background: themeColor, border: 'none', color: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s', boxShadow: `0 0 20px ${themeColor}40` }}>
               {isThisPlaying ? (
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
               ) : (

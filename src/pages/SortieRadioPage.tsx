@@ -51,7 +51,7 @@ export const SortieRadioPage: React.FC = () => {
     bg: isDark ? '#0a0a0a' : '#f5f5f7',
     textMain: isDark ? '#ffffff' : '#1a1a1a',
     textMuted: isDark ? '#888888' : '#666666',
-    accent: isDark ? '#ffffff' : '#111111',
+    accent: '#94c748',
     border: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.08)',
     panelBg: isDark ? 'rgba(255, 255, 255, 0.02)' : '#ffffff',
     inputBg: isDark ? 'rgba(255, 255, 255, 0.03)' : '#ffffff',
@@ -146,11 +146,11 @@ export const SortieRadioPage: React.FC = () => {
                 </h3>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  <div onClick={() => setSelectedGenre(null)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', fontSize: 13, cursor: 'pointer', color: selectedGenre === null ? colors.textMain : colors.textMuted, fontWeight: selectedGenre === null ? 700 : 500, background: selectedGenre === null ? (isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.1)') : 'transparent', borderRadius: 10, transition: 'all 0.15s' }}
+                  <div onClick={() => setSelectedGenre(null)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', fontSize: 13, cursor: 'pointer', color: selectedGenre === null ? colors.textMain : colors.textMuted, fontWeight: selectedGenre === null ? 700 : 500, background: selectedGenre === null ? 'rgba(148, 199, 72, 0.12)' : 'transparent', borderRadius: 10, transition: 'all 0.15s' }}
                     onMouseEnter={(e) => { if (selectedGenre !== null) e.currentTarget.style.background = colors.rowHover; }}
                     onMouseLeave={(e) => { if (selectedGenre !== null) e.currentTarget.style.background = 'transparent'; }}
                   >
-                    <span style={{ width: 26, height: 26, borderRadius: 8, background: selectedGenre === null ? (isDark ? 'linear-gradient(135deg, #ffffff, #b0b0b0)' : '#111111') : colors.inputBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: selectedGenre === null ? (isDark ? '#000' : '#ffffff') : colors.textMuted, flexShrink: 0, fontSize: 12 }}>{Icons.music}</span>
+                    <span style={{ width: 26, height: 26, borderRadius: 8, background: selectedGenre === null ? 'linear-gradient(135deg, #94c748, #6d9c2f)' : colors.inputBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: selectedGenre === null ? '#000' : colors.textMuted, flexShrink: 0, fontSize: 12 }}>{Icons.music}</span>
                     <span style={{ flex: 1 }}>{t('sortieRadio.all_tracks')}</span>
                     <span style={{ fontSize: 11, fontWeight: 700, background: colors.inputBg, color: colors.textMuted, padding: '2px 7px', borderRadius: 20 }}>{tracks.length}</span>
                   </div>
@@ -161,7 +161,7 @@ export const SortieRadioPage: React.FC = () => {
                       const gColor = genreColors[gi % genreColors.length];
                       const isSel = selectedGenre === genre;
                       return (
-                        <div key={genre} onClick={() => setSelectedGenre(genre)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', fontSize: 13, cursor: 'pointer', color: isSel ? colors.textMain : colors.textMuted, fontWeight: isSel ? 700 : 500, background: isSel ? (isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.1)') : 'transparent', borderRadius: 10, transition: 'all 0.15s' }}
+                        <div key={genre} onClick={() => setSelectedGenre(genre)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', fontSize: 13, cursor: 'pointer', color: isSel ? colors.textMain : colors.textMuted, fontWeight: isSel ? 700 : 500, background: isSel ? 'rgba(148, 199, 72, 0.12)' : 'transparent', borderRadius: 10, transition: 'all 0.15s' }}
                           onMouseEnter={(e) => { if (!isSel) e.currentTarget.style.background = colors.rowHover; }}
                           onMouseLeave={(e) => { if (!isSel) e.currentTarget.style.background = 'transparent'; }}
                         >
@@ -182,7 +182,7 @@ export const SortieRadioPage: React.FC = () => {
             {/* En-tête */}
             <div style={{ marginBottom: 24 }}>
               <div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: colors.accent, marginBottom: 8 }}>
-                <span style={{ filter: 'drop-shadow(0 0 10px rgba(255,255,255,0.8))' }}>🎵</span> {t('sortieRadio.title')}
+                <span style={{ filter: 'drop-shadow(0 0 10px rgba(148,199,72,0.8))' }}>🎵</span> {t('sortieRadio.title')}
               </div>
               <h1 style={{ fontSize: isMobile ? 28 : 36, fontWeight: 900, margin: 0, letterSpacing: '-1px' }}>{t('sortieRadio.title')}</h1>
               <p style={{ color: colors.textMuted, fontSize: 14, marginTop: 8 }}>{t('sortieRadio.subtitle')}</p>
@@ -222,7 +222,7 @@ export const SortieRadioPage: React.FC = () => {
                     onMouseEnter={e => e.currentTarget.style.background = colors.rowHover}
                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                   >
-                    <button onClick={(e) => handlePlayTrack(e, track)} style={{ width: 36, height: 36, borderRadius: '50%', background: isThisPlaying ? '#ffffff' : colors.inputBg, border: `1px solid ${isThisPlaying ? '#ffffff' : colors.inputBorder}`, color: isThisPlaying ? '#000' : colors.textMain, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s', boxShadow: isThisPlaying ? '0 0 12px rgba(255,255,255,0.5)' : 'none' }}>
+                    <button onClick={(e) => handlePlayTrack(e, track)} style={{ width: 36, height: 36, borderRadius: '50%', background: isThisPlaying ? '#94c748' : colors.inputBg, border: `1px solid ${isThisPlaying ? '#94c748' : colors.inputBorder}`, color: isThisPlaying ? '#000' : colors.textMain, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s', boxShadow: isThisPlaying ? '0 0 12px rgba(148,199,72,0.5)' : 'none' }}>
                       {isThisPlaying ? Icons.pause : Icons.play}
                     </button>
                     <div onClick={() => navigate(`/track/${track.id}`)} style={{ width: 44, height: 44, borderRadius: 10, background: track.cover_url ? `url(${track.cover_url}) center/cover` : '#222', flexShrink: 0, border: `1px solid ${colors.border}`, boxShadow: '0 2px 8px rgba(0,0,0,0.3)', cursor: 'pointer' }} />
@@ -246,7 +246,7 @@ export const SortieRadioPage: React.FC = () => {
                     )}
 
                     <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', alignItems: 'center' }}>
-                      <button onClick={() => handleLike(track.id)} style={{ background: 'transparent', border: 'none', color: isLiked ? '#b0b0b0' : colors.textMuted, cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <button onClick={() => handleLike(track.id)} style={{ background: 'transparent', border: 'none', color: isLiked ? '#94c748' : colors.textMuted, cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', gap: 4 }}>
                         {isLiked ? '❤️' : '🤍'} <span style={{ color: colors.textMuted, fontWeight: 600 }}>{track.likes_count}</span>
                       </button>
                       {track.purchase_url && <a href={track.purchase_url} target="_blank" rel="noopener noreferrer" title={t('sortieRadio.buy')} style={{ color: colors.accent, display: 'flex', alignItems: 'center' }}>{Icons.buy}</a>}

@@ -47,10 +47,10 @@ export const HelpPage: React.FC = () => {
     textMain: isDark ? '#ffffff' : '#1a1a1a',
     textMuted: isDark ? '#a1a1aa' : '#666666',
     textLight: isDark ? '#d4d4d8' : '#444444',
-    activeBg: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.05)',
-    activeBorder: isDark ? 'rgba(255, 255, 255, 0.4)' : 'rgba(255, 255, 255, 0.5)',
-    activeText: '#ffffff',
-    accent: '#ffffff',
+    activeBg: 'rgba(148, 199, 72, 0.12)',
+    activeBorder: 'rgba(148, 199, 72, 0.4)',
+    activeText: '#94c748',
+    accent: '#94c748',
   };
 
   const scrollTo = (id: string) => {
@@ -160,7 +160,7 @@ export const HelpPage: React.FC = () => {
           <p>Pour ajouter un son à ton catalogue, rends-toi dans ton Espace Artiste.</p>
           
           <Step number={1} title="Va dans ton Espace Artiste" items={[
-            'Clique sur "Réglages" dans le menu de gauche.',
+            'Clique sur "Réglages" dans le menu de navigation.',
             'Tu arriveras sur ton tableau de bord personnel.',
           ]} colors={colors} />
           
@@ -345,7 +345,7 @@ const Mistake: React.FC<{ problem: string; solution: string; colors: ThemeColors
       <span style={{ fontSize: 15, color: colors.textMain, fontWeight: 700 }}>{problem}</span>
     </div>
     <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-      <span style={{ color: '#b0b0b0', fontWeight: 900, fontSize: 16, marginTop: 1 }}>✓</span>
+      <span style={{ color: '#94c748', fontWeight: 900, fontSize: 16, marginTop: 1 }}>✓</span>
       <span style={{ fontSize: 14, color: colors.textMuted, lineHeight: 1.6 }}>{solution}</span>
     </div>
   </div>

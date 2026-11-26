@@ -92,6 +92,8 @@ export const SettingsPage: React.FC = () => {
     duo_title: 'Bio',
     prestations_title: 'Parcours',
     releases_title: 'Dernières Sorties',
+    video_overlay_color: '#94c748',
+    video_opacity: 0.6,
     parcours_title: 'Un parcours visible, des événements qui parlent.',
     parcours_subtitle: "L'écosystème du DJ indépendant.",
     parcours_description: "ELEKTRAQ n'est pas juste une page web, c'est votre QG numérique...",
@@ -772,6 +774,17 @@ export const SettingsPage: React.FC = () => {
                 <span style={{ fontSize: 11, color: form.theme_color }}>Vidéo de fond chargée ✓</span>
               </div>
             )}
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 20 }}>
+            <label style={{ fontSize: 13, color: colors.textLight }}>Couleur du voile vidéo</label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <input type="color" value={settings.video_overlay_color || '#94c748'} onChange={(e) => setSettings({ ...settings, video_overlay_color: e.target.value })} style={{ width: 50, height: 40, padding: 0, background: 'transparent', border: 'none', cursor: 'pointer' }} />
+              <input type="text" value={settings.video_overlay_color || '#94c748'} onChange={(e) => setSettings({ ...settings, video_overlay_color: e.target.value })} style={{ flex: 1, padding: 12, background: colors.inputBg, border: `1px solid ${colors.borderLight}`, borderRadius: 8, color: colors.textMain }} />
+            </div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 20 }}>
+            <label style={{ fontSize: 13, color: colors.textLight }}>Intensité vidéo : {Math.round((settings.video_opacity ?? 0.6) * 100)}%</label>
+            <input type="range" min="0" max="1" step="0.05" value={settings.video_opacity ?? 0.6} onChange={(e) => setSettings({ ...settings, video_opacity: parseFloat(e.target.value) })} style={{ width: '100%', accentColor: form.theme_color, cursor: 'pointer' }} />
           </div>
         </div>
 

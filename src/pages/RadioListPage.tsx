@@ -30,7 +30,7 @@ export const RadioListPage: React.FC = () => {
     textMuted: isDark ? '#888888' : '#666666',
     border: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
     panelBg: isDark ? 'rgba(20,20,25,0.6)' : 'rgba(255,255,255,0.7)',
-    accent: '#b0b0b0',
+    accent: '#94c748',
   };
 
   useEffect(() => {
@@ -99,7 +99,14 @@ export const RadioListPage: React.FC = () => {
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>
         
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
-          <h1 style={{ fontSize: isMobile ? '2rem' : '3rem', fontWeight: 900, margin: '0 0 16px 0', letterSpacing: '-1px' }}>
+          <h1 style={{ fontSize: isMobile ? '2rem' : '3rem', fontWeight: 900, margin: '0 0 16px 0', letterSpacing: '-1px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
+            <svg width={isMobile ? 26 : 34} height={isMobile ? 26 : 34} viewBox="0 0 24 24" fill="none" stroke="#94c748" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+              <circle cx="12" cy="12" r="2"></circle>
+              <path d="M16.24 7.76a6 6 0 0 1 0 8.49"></path>
+              <path d="M7.76 16.24a6 6 0 0 1 0-8.49"></path>
+              <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+              <path d="M4.93 19.07a10 10 0 0 1 0-14.14"></path>
+            </svg>
             {t('radioList.title')}
           </h1>
           <p style={{ color: colors.textMuted, fontSize: 16 }}>
@@ -109,11 +116,11 @@ export const RadioListPage: React.FC = () => {
 
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(280px, 1fr))', gap: 24 }}>
           {artists.map((artist) => (
-            <div key={artist.id} style={{ background: colors.panelBg, backdropFilter: 'blur(20px)', border: `1px solid ${colors.border}`, borderRadius: 20, padding: 24, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', transition: 'transform 0.2s', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', position: 'relative' }}
+            <div key={artist.id} style={{ background: colors.panelBg, backdropFilter: 'blur(20px)', border: `1px solid ${colors.border}`, borderRadius: 20, padding: 24, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', transition: 'transform 0.2s', position: 'relative' }}
               onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
               onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
             >
-              <button onClick={(e) => handleCopyLink(e, artist.username)} style={{ position: 'absolute', top: 16, right: 16, background: 'transparent', border: 'none', color: copiedId === artist.username ? '#b0b0b0' : colors.textMuted, cursor: 'pointer', transition: 'all 0.2s' }} title={t('radioList.copy_link')}>
+              <button onClick={(e) => handleCopyLink(e, artist.username)} style={{ position: 'absolute', top: 16, right: 16, background: 'transparent', border: 'none', color: copiedId === artist.username ? '#94c748' : colors.textMuted, cursor: 'pointer', transition: 'all 0.2s' }} title={t('radioList.copy_link')}>
                 {copiedId === artist.username ? (
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
                 ) : (
@@ -121,9 +128,9 @@ export const RadioListPage: React.FC = () => {
                 )}
               </button>
 
-              <div style={{ width: 100, height: 100, borderRadius: '50%', background: artist.avatar_url ? `url(${artist.avatar_url}) center/cover` : colors.border, border: `3px solid ${colors.bg}`, boxShadow: '0 0 20px rgba(176, 176, 176, 0.3)', marginBottom: 16 }} />
+              <div style={{ width: 100, height: 100, borderRadius: '50%', background: artist.avatar_url ? `url(${artist.avatar_url}) center/cover` : colors.border, border: `1px solid ${colors.border}`, marginBottom: 16 }} />
               
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(176, 176, 176, 0.15)', padding: '4px 10px', borderRadius: 20, marginBottom: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: colors.accent, animation: 'pulse 1.5s infinite' }} />
                 <span style={{ fontSize: 10, fontWeight: 800, color: colors.accent, letterSpacing: '1px' }}>{t('radioList.live')}</span>
               </div>
@@ -131,7 +138,7 @@ export const RadioListPage: React.FC = () => {
               <h3 style={{ fontSize: 20, fontWeight: 800, margin: '0 0 4px 0' }}>{artist.username}</h3>
               <p style={{ fontSize: 13, color: colors.textMuted, margin: '0 0 20px 0' }}>{artist.tracks_count} {t('radioList.tracks')}</p>
 
-              <Link to={`/radio/${artist.username}`} style={{ width: '100%', padding: '12px', background: 'linear-gradient(135deg, #b0b0b0, #b0b0b0)', color: '#fff', border: 'none', borderRadius: 30, fontWeight: 800, fontSize: 14, textDecoration: 'none', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8 }}>
+              <Link to={`/radio/${artist.username}`} style={{ width: '100%', padding: '12px', background: '#94c748', color: '#000', border: 'none', borderRadius: 30, fontWeight: 800, fontSize: 14, textDecoration: 'none', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8 }}>
                 {t('radioList.listen')}
               </Link>
             </div>

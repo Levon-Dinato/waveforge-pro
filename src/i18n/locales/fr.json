@@ -289,7 +289,7 @@
   },
   "radioList": {
     "loading": "Chargement des radios...",
-    "title": "📻 Toutes les Radios",
+    "title": "Toutes les Radios",
     "subtitle": "Découvre les webradios en direct de la communauté ELEKTRAQ.",
     "copy_link": "Copier le lien de la radio",
     "live": "EN DIRECT",

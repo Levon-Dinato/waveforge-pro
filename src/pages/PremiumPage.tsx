@@ -105,7 +105,7 @@ export const PremiumPage: React.FC = () => {
   const [followLoading, setFollowLoading] = useState(false);
 
   const isOwner = user && profile && user.id === profile.id;
-  const themeColor = profile?.theme_color || '#ffffff';
+  const themeColor = profile?.theme_color || '#94c748';
   const fontFamily = profile?.settings?.font_family || 'Inter, sans-serif';
 
   const colors = {
@@ -338,8 +338,7 @@ export const PremiumPage: React.FC = () => {
       `}</style>
 
       <div style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', top: '-10%', right: '-10%', width: '50vw', height: '50vw', borderRadius: '50%', background: themeColor, filter: 'blur(120px)', opacity: 0.15, animation: 'float 10s ease-in-out infinite' }} />
-        <div style={{ position: 'absolute', bottom: '10%', left: '-10%', width: '40vw', height: '40vw', borderRadius: '50%', background: themeColor, filter: 'blur(100px)', opacity: 0.1, animation: 'float 12s ease-in-out infinite reverse' }} />
+        <div style={{ position: 'absolute', top: '-10%', right: '-10%', width: '50vw', height: '50vw', borderRadius: '50%', background: themeColor, filter: 'blur(140px)', opacity: 0.07 }} />
       </div>
 
       <Helmet>
@@ -411,7 +410,7 @@ export const PremiumPage: React.FC = () => {
             </button>
             <button onClick={() => setShowBookingModal(true)} style={{ 
               padding: isMobile ? '6px 12px' : '8px 20px', fontSize: 12, 
-              background: `linear-gradient(135deg, ${themeColor}, #b0b0b0)`, color: '#fff', 
+              background: themeColor, color: '#000', 
               border: 'none', borderRadius: 6, fontWeight: 800, cursor: 'pointer', 
               display: 'flex', alignItems: 'center', gap: 8, boxShadow: `0 4px 15px ${themeColor}40`
             }}>
@@ -423,7 +422,7 @@ export const PremiumPage: React.FC = () => {
 
       <section style={{ position: 'relative', minHeight: isMobile ? '90vh' : '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', background: colors.bg, paddingTop: isMobile ? 80 : 100 }}>
         
-        <div style={{ position: 'absolute', inset: 0, opacity: 0.1, backgroundImage: `linear-gradient(${themeColor} 1px, transparent 1px), linear-gradient(90deg, ${themeColor} 1px, transparent 1px)`, backgroundSize: '60px 60px', maskImage: 'radial-gradient(circle at center, black 30%, transparent 80%)', WebkitMaskImage: 'radial-gradient(circle at center, black 30%, transparent 80%)', zIndex: 0 }} />
+        <div style={{ position: 'absolute', inset: 0, opacity: 0, backgroundImage: `linear-gradient(${themeColor} 1px, transparent 1px), linear-gradient(90deg, ${themeColor} 1px, transparent 1px)`, backgroundSize: '60px 60px', zIndex: 0 }} />
 
         <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
           <video autoPlay muted loop playsInline poster={profile.avatar_url || "/logo.jpg"} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: isDark ? 0.6 : 0.3, filter: isDark ? 'grayscale(50%) contrast(1.2) brightness(0.8)' : 'grayscale(50%) contrast(1.2) brightness(1)' }}>
@@ -434,12 +433,12 @@ export const PremiumPage: React.FC = () => {
         </div>
         
         <div style={{ position: 'relative', zIndex: 10, textAlign: 'center', maxWidth: 1000, padding: '0 24px', marginTop: isMobile ? '5vh' : '10vh' }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: isDark ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.6)', backdropFilter: 'blur(12px)', padding: '6px 16px', borderRadius: 50, border: `1px solid ${themeColor}40`, marginBottom: 32, boxShadow: `0 4px 20px ${themeColor}20` }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: `${themeColor}12`, border: `1px solid ${themeColor}40`, padding: '6px 16px', borderRadius: 50, marginBottom: 32 }}>
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: themeColor, boxShadow: `0 0 10px ${themeColor}` }} />
-            <span style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: colors.textMain }}>{heroTagline}</span>
+            <span style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: themeColor }}>{heroTagline}</span>
           </div>
           
-          <h1 className="hero-title" style={{ fontSize: isMobile ? '3rem' : 'clamp(4rem, 10vw, 8rem)', fontWeight: 900, lineHeight: 1, letterSpacing: '-0.05em', marginBottom: 24, animation: 'glow 3s infinite alternate', color: colors.textMain }}>
+          <h1 className="hero-title" style={{ fontSize: isMobile ? '3rem' : 'clamp(4rem, 10vw, 8rem)', fontWeight: 900, lineHeight: 1, letterSpacing: '-0.05em', marginBottom: 24, color: colors.textMain }}>
             {renderTitle(heroTitle)}
           </h1>
 
@@ -472,13 +471,13 @@ export const PremiumPage: React.FC = () => {
                 style={{ 
                   display: 'flex', alignItems: 'center', gap: 8, 
                   padding: isMobile ? '10px 20px' : '16px 32px', 
-                  background: 'linear-gradient(135deg, #b0b0b0, #b0b0b0)', 
-                  color: '#fff', borderRadius: 8, fontSize: 14, fontWeight: 800, 
-                  textDecoration: 'none', boxShadow: '0 8px 20px rgba(176, 176, 176, 0.4)',
+                  background: 'linear-gradient(135deg, #94c748, #6d9c2f)', 
+                  color: '#000', borderRadius: 8, fontSize: 14, fontWeight: 800, 
+                  textDecoration: 'none', boxShadow: '0 8px 20px rgba(148, 199, 72, 0.4)',
                   border: 'none', cursor: 'pointer', backdropFilter: 'blur(10px)'
                 }}
               >
-                <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#fff', animation: 'pulse 1.5s infinite' }} />
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#000' }} />
                 ÉCOUTER LA RADIO
               </Link>
             )}
@@ -490,7 +489,16 @@ export const PremiumPage: React.FC = () => {
             )}
           </div>
 
-          <div style={{ position: 'absolute', bottom: isMobile ? -80 : -150, left: '50%', animation: 'bounce 2s infinite', cursor: 'pointer' }} onClick={() => window.scrollTo({ top: window.innerHeight, behavior: 'smooth' })}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20, borderTop: `1px solid ${colors.border}`, paddingTop: 28, maxWidth: 460, margin: '48px auto 0 auto' }}>
+            {[{ n: tracks.length, l: 'Titres' }, { n: followersCount, l: 'Abonnés' }, { n: followingCount, l: 'Abonnements' }].map((s, i) => (
+              <div key={i}>
+                <div style={{ fontSize: 28, fontWeight: 900, color: themeColor }}>{s.n}</div>
+                <div style={{ fontSize: 10, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700, marginTop: 4 }}>{s.l}</div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ position: 'absolute', bottom: isMobile ? -80 : -150, left: '50%', cursor: 'pointer' }} onClick={() => window.scrollTo({ top: window.innerHeight, behavior: 'smooth' })}>
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={themeColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 13l5 5 5-5M7 6l5 5 5-5"/></svg>
           </div>
         </div>
@@ -712,25 +720,38 @@ export const PremiumPage: React.FC = () => {
             )}
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 16 : 24 }}>
-              {tracks.length > 0 ? tracks.slice(0, visibleTracksCount).map((track) => (
-                <ReleaseCard 
-                  key={track.id}
-                  track={track}
-                  isDark={isDark}
-                  themeColor={themeColor}
-                  colors={colors}
-                  isCurrentTrack={currentTrack?.id === track.id}
-                  isThisPlaying={currentTrack?.id === track.id && isPlaying}
-                  isMobile={isMobile}
-                  handlePlayTrack={handlePlayTrack}
-                  handleDownload={handleDownload}
-                  seek={seek}
-                  currentTime={currentTime}
-                  duration={duration}
-                  formatTime={formatTime}
-                  isOwner={isOwner}
-                />
-              )) : (
+              {tracks.length > 0 ? tracks.slice(0, visibleTracksCount).map((track) => {
+                const isThisPlaying = currentTrack?.id === track.id && isPlaying;
+                return (
+                  <div key={track.id} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '14px 16px', background: colors.cardBg, border: `1px solid ${colors.cardBorder}`, borderRadius: 12, transition: 'border-color 0.2s' }}
+                    onMouseEnter={(e) => e.currentTarget.style.borderColor = `${themeColor}50`}
+                    onMouseLeave={(e) => e.currentTarget.style.borderColor = colors.cardBorder}
+                  >
+                    <button onClick={() => handlePlayTrack(track)} style={{ width: 44, height: 44, borderRadius: '50%', background: themeColor, color: '#000', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: `0 0 15px ${themeColor}30` }}>
+                      {isThisPlaying ? (
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+                      ) : (
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: 2 }}><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                      )}
+                    </button>
+                    <div style={{ width: 48, height: 48, borderRadius: 8, overflow: 'hidden', flexShrink: 0, background: track.cover_url ? `url(${track.cover_url}) center/cover` : colors.inputBg, border: `1px solid ${colors.border}` }} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 15, fontWeight: 800, color: colors.textMain, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.title}</div>
+                      <div style={{ fontSize: 13, color: colors.textMuted, marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.artist}{track.genre ? ` • ${track.genre}` : ''}</div>
+                    </div>
+                    {!isMobile && (
+                      <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexShrink: 0 }}>
+                        {track.bpm ? <span style={{ fontSize: 11, fontWeight: 700, color: themeColor, background: `${themeColor}15`, border: `1px solid ${themeColor}40`, padding: '3px 8px', borderRadius: 4, fontFamily: 'monospace' }}>{track.bpm} BPM</span> : null}
+                        {track.song_key ? <span style={{ fontSize: 11, fontWeight: 700, color: colors.textMuted, background: colors.inputBg, border: `1px solid ${colors.border}`, padding: '3px 8px', borderRadius: 4, fontFamily: 'monospace' }}>{track.song_key}</span> : null}
+                      </div>
+                    )}
+                    <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+                      {track.purchase_url && <a href={track.purchase_url} target="_blank" rel="noopener noreferrer" style={{ padding: '8px 14px', border: `1px solid ${themeColor}`, color: themeColor, borderRadius: 6, fontSize: 12, fontWeight: 700, textDecoration: 'none' }}>Acheter</a>}
+                      {track.is_downloadable !== false && <button onClick={(e) => handleDownload(e, track.audio_url, `${track.artist} - ${track.title}.mp3`, track.id)} style={{ padding: '8px 14px', background: 'transparent', border: `1px solid ${colors.border}`, color: colors.textMain, borderRadius: 6, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Télécharger</button>}
+                    </div>
+                  </div>
+                );
+              }) : (
                 <div style={{ textAlign: 'center', color: colors.textMuted, padding: 40, border: `1px dashed ${colors.border}`, borderRadius: 16 }}>
                   Aucun son pour le moment.
                 </div>

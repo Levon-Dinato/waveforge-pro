@@ -67,7 +67,7 @@ export const MainLayout: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   // ✅ Barre de lecture visible uniquement sur les pages d'écoute principales
-  const showGlobalPlayer = ['/', '/nouveautes', '/charts', '/artists', '/sortie-radio'].includes(location.pathname);
+  const showGlobalPlayer = ['/', '/nouveautes', '/charts', '/artists', '/sortie-radio', '/discover', '/genres'].includes(location.pathname);
   
   const { theme, toggleTheme } = useTheme();
   const { t } = useTranslation();
@@ -189,6 +189,12 @@ export const MainLayout: React.FC = () => {
                   </NavLink>
                 );
               })}
+              {isAdmin && (
+                <NavLink to="/admin" onClick={() => setMobileMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '16px', borderRadius: 12, textDecoration: 'none', color: location.pathname.startsWith('/admin') ? '#ff4444' : '#ff8888', background: location.pathname.startsWith('/admin') ? 'rgba(255,68,68,0.1)' : 'transparent', fontWeight: location.pathname.startsWith('/admin') ? 700 : 500 }}>
+                  <span style={{ display: 'flex' }}>{Icons.admin}</span>
+                  Panel Admin
+                </NavLink>
+              )}
             </div>
 
             <div style={{ padding: '20px', borderTop: `1px solid ${colors.border}`, display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -215,6 +221,7 @@ export const MainLayout: React.FC = () => {
 
       {/* HEADER TOP BAR (style Beatport) — fixe en haut */}
       <header style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50, background: isDark ? '#1c1c21' : '#f3f4f6', borderBottom: `1px solid ${colors.border}`, boxShadow: '0 6px 24px rgba(0,0,0,0.45)', display: 'flex', flexDirection: 'column' }}>
+        <style>{`header nav::-webkit-scrollbar { display: none; } header nav { scrollbar-width: none; }`}</style>
         <div style={{ maxWidth: 1280, margin: '0 auto', width: '100%', display: 'flex', alignItems: 'center', gap: 24, padding: '10px 24px' }}>
           <Link to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', flexShrink: 0 }}>
             <span style={{ fontWeight: 900, fontSize: '1.3rem', letterSpacing: '2px', color: colors.textMain }}>ELEKTRAQ</span>
@@ -255,10 +262,15 @@ export const MainLayout: React.FC = () => {
               </NavLink>
             );
           })}
+          {isAdmin && (
+            <NavLink to="/admin" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 4, textDecoration: 'none', fontSize: 11, fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', whiteSpace: 'nowrap', color: location.pathname.startsWith('/admin') ? '#ff4444' : '#ff8888', background: location.pathname.startsWith('/admin') ? 'rgba(255,68,68,0.1)' : 'transparent', borderBottom: location.pathname.startsWith('/admin') ? '2px solid #ff4444' : '2px solid transparent', transition: 'all 0.15s' }}>
+              Panel Admin
+            </NavLink>
+          )}
         </nav>
       </header>
 
-      <main style={{ flex: 1, width: '100%', maxWidth: 1280, margin: '0 auto', padding: '116px 24px 80px' }}>
+      <main style={{ flex: 1, width: '100%', maxWidth: 1280, margin: '0 auto', padding: `116px 24px ${showGlobalPlayer ? 80 : 0}px` }}>
         <Outlet />
       </main>
 

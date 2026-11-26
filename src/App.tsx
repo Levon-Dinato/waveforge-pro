@@ -22,6 +22,15 @@ import { RadioTopPage } from './pages/radio/RadioTopPage';
 import { RadioReleasesPage } from './pages/radio/RadioReleasesPage';
 import { RadioProgramPage } from './pages/radio/RadioProgramPage';
 
+// ✅ ARCHITECTURE PAGE ARTISTE (PREMIUM)
+import { PremiumLayout } from './layouts/PremiumLayout';
+import { PremiumHomePage } from './pages/premium/PremiumHomePage';
+import { PremiumBioPage } from './pages/premium/PremiumBioPage';
+import { PremiumAgendaPage } from './pages/premium/PremiumAgendaPage';
+import { PremiumReferencesPage } from './pages/premium/PremiumReferencesPage';
+import { PremiumGalleryPage } from './pages/premium/PremiumGalleryPage';
+import { PremiumReleasesPage } from './pages/premium/PremiumReleasesPage';
+
 import './styles.css';
 
 const HomePage = lazy(() => import('./pages/HomePage').then((m) => ({ default: m.HomePage })));
@@ -51,7 +60,6 @@ const SortieRadioPage = lazy(() => import('./pages/SortieRadioPage').then((m) =>
 const ToolsPage = lazy(() => import('./pages/ToolsPage').then((m) => ({ default: m.ToolsPage })));
 const AdminPage = lazy(() => import('./pages/AdminPage').then((m) => ({ default: m.AdminPage }))); 
 const LevonDinatoPage = lazy(() => import('./pages/LevonDinatoPage').then((m) => ({ default: m.LevonDinatoPage })));
-const PremiumPage = lazy(() => import('./pages/PremiumPage').then((m) => ({ default: m.PremiumPage })));
 const PremiumLandingPage = lazy(() => import('./pages/PremiumLandingPage').then((m) => ({ default: m.PremiumLandingPage })));
 const ElektraqVideosPage = lazy(() => import('./pages/ElektraqVideosPage').then((m) => ({ default: m.ElektraqVideosPage })));
 const SmartLinkPage = lazy(() => import('./pages/SmartLinkPage').then((m) => ({ default: m.SmartLinkPage })));
@@ -87,7 +95,14 @@ function AnimatedRoutes() {
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/levon-dinato" element={<LevonDinatoPage />} />
         <Route path="/premium" element={<PremiumLandingPage />} />
-        <Route path="/premium/:username" element={<PremiumPage />} />
+        <Route path="/premium/:username" element={<PremiumLayout />}>
+          <Route index element={<PremiumHomePage />} />
+          <Route path="bio" element={<PremiumBioPage />} />
+          <Route path="dates" element={<PremiumAgendaPage />} />
+          <Route path="references" element={<PremiumReferencesPage />} />
+          <Route path="galerie" element={<PremiumGalleryPage />} />
+          <Route path="musique" element={<PremiumReleasesPage />} />
+        </Route>
         <Route path="/link/:slug" element={<SmartLinkPage />} />
         
         <Route path="/player/:username" element={<PlayerPage />} />

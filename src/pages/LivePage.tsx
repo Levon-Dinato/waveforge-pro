@@ -33,8 +33,9 @@ export const LivePage = () => {
     textMain: isDark ? '#ffffff' : '#1a1a1a',
     textMuted: isDark ? '#999999' : '#666666',
     inputBg: isDark ? '#121212' : '#f3f4f6',
-    btnPrimaryBg: isDark ? '#ffffff' : '#1a1a1a',
-    btnPrimaryText: isDark ? '#000000' : '#ffffff',
+    btnPrimaryBg: '#94c748',
+    btnPrimaryText: '#000000',
+    accent: '#94c748',
     hoverBg: isDark ? '#1e1e1e' : '#f0f0f0',
     badgeBg: isDark ? '#1e1e1e' : '#e5e7eb',
     badgeText: isDark ? '#cccccc' : '#666666',
@@ -95,7 +96,7 @@ export const LivePage = () => {
         <meta property="og:title" content="Live ELEKTRAQ 🎧" />
         <meta property="og:description" content="Rejoins la scène, mixe en direct et partage ta passion avec la communauté." />
         <meta property="og:url" content={liveShareUrl} />
-        <meta property="og:image" content="https://elektraq.dj/og-live.jpg" />
+        <meta property="og:image" content="https://dropzone-dj.vercel.app/og-live.jpg" />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
         
@@ -103,7 +104,7 @@ export const LivePage = () => {
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Live ELEKTRAQ 🎧" />
         <meta name="twitter:description" content="Rejoins la scène, mixe en direct et partage ta passion." />
-        <meta name="twitter:image" content="https://elektraq.dj/og-live.jpg" />
+        <meta name="twitter:image" content="https://dropzone-dj.vercel.app/og-live.jpg" />
       </Helmet>
 
       {/* ==================================================== */}
@@ -130,7 +131,7 @@ export const LivePage = () => {
               textTransform: 'uppercase',
               marginBottom: 24,
             }}>
-              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#b0b0b0', animation: 'pulse 1.5s infinite' }} />
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: colors.accent, boxShadow: `0 0 8px ${colors.accent}`, animation: 'pulse 1.5s infinite' }} />
               {t('live.badge')}
             </div>
 

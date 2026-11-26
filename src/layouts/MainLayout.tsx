@@ -44,6 +44,7 @@ const NAV_ITEMS: NavItem[] = [
   { path: '/artists', labelKey: 'nav.artists', icon: Icons.artists },
   { path: '/charts', labelKey: 'nav.top50', icon: Icons.trophy },
   { path: '/radios', labelKey: 'nav.allRadios', icon: Icons.radioList },
+  { path: '/live', labelKey: 'nav.live', icon: Icons.live },
   { path: '/feed', labelKey: 'nav.feed', icon: Icons.feed },
   { path: '/discover', labelKey: 'nav.discover', icon: Icons.discover },
   { path: '/genres', labelKey: 'nav.genres', icon: Icons.genres },
@@ -222,6 +223,13 @@ export const MainLayout: React.FC = () => {
       {/* HEADER TOP BAR (style Beatport) — fixe en haut */}
       <header style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50, background: isDark ? '#1c1c21' : '#f3f4f6', borderBottom: `1px solid ${colors.border}`, boxShadow: '0 6px 24px rgba(0,0,0,0.45)', display: 'flex', flexDirection: 'column' }}>
         <style>{`header nav::-webkit-scrollbar { display: none; } header nav { scrollbar-width: none; }`}</style>
+        {isAdmin && (
+          <div style={{ width: '100%', background: '#94c748', display: 'flex', justifyContent: 'flex-end', padding: '4px 24px' }}>
+            <Link to="/admin" style={{ color: '#000', fontWeight: 800, fontSize: 11, textTransform: 'uppercase', letterSpacing: '1px', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
+              {Icons.admin} Panel Admin
+            </Link>
+          </div>
+        )}
         <div style={{ maxWidth: 1280, margin: '0 auto', width: '100%', display: 'flex', alignItems: 'center', gap: 24, padding: '10px 24px' }}>
           <Link to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', flexShrink: 0 }}>
             <span style={{ fontWeight: 900, fontSize: '1.3rem', letterSpacing: '2px', color: colors.textMain }}>ELEKTRAQ</span>
@@ -270,7 +278,7 @@ export const MainLayout: React.FC = () => {
         </nav>
       </header>
 
-      <main style={{ flex: 1, width: '100%', maxWidth: 1280, margin: '0 auto', padding: `116px 24px ${showGlobalPlayer ? 80 : 0}px` }}>
+      <main style={{ flex: 1, width: '100%', maxWidth: 1280, margin: '0 auto', padding: `${isAdmin ? 144 : 116}px 24px ${showGlobalPlayer ? 80 : 0}px` }}>
         <Outlet />
       </main>
 

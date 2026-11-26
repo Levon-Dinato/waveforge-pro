@@ -7,6 +7,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { usePlayer } from '../contexts/PlayerContext';
 import { fetchArtistInfo } from '../utils/artistInfo';
 import { useTranslation } from 'react-i18next';
+import { DeleteButton } from '../components/DeleteButton';
 
 // --- ICÔNES ---
 const Icons = {
@@ -192,6 +193,10 @@ export const TrackPage: React.FC = () => {
   const [toast, setToast] = useState<string | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
   const [playlistOpen, setPlaylistOpen] = useState(false);
+
+  // Modération (admin/auteur)
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editForm, setEditForm] = useState({ title: '', artist: '', genre: '', bpm: '', song_key: '', description: '' });
   const [copied, setCopied] = useState(false);
   const [userPlaylists, setUserPlaylists] = useState<any[]>([]);
   const [creatingPlaylist, setCreatingPlaylist] = useState(false);
@@ -371,6 +376,35 @@ export const TrackPage: React.FC = () => {
     } finally {
       setIsDownloading(false);
     }
+  };
+
+  // ✅ MODIFICATION D'UN TITRE (admin/auteur)
+  const openEditModal = () => {
+    setEditForm({
+      title: track?.title || '',
+      artist: track?.artist || '',
+      genre: track?.genre || '',
+      bpm: track?.bpm ? String(track.bpm) : '',
+      song_key: track?.song_key || '',
+      description: track?.description || '',
+    });
+    setShowEditModal(true);
+  };
+
+  const saveTrackEdit = async () => {
+    if (!editForm.title.trim()) { alert('Le titre est requis.'); return; }
+    const updates: any = {
+      title: editForm.title,
+      artist: editForm.artist,
+      genre: editForm.genre || null,
+      bpm: editForm.bpm ? Number(editForm.bpm) : null,
+      song_key: editForm.song_key || null,
+      description: editForm.description || null,
+    };
+    const { error } = await supabase.from('tracks').update(updates).eq('id', track.id);
+    if (error) { alert('Erreur : ' + error.message); return; }
+    setTrack((prev: any) => ({ ...prev, ...updates }));
+    setShowEditModal(false);
   };
 
   // ✅ PARTAGE
@@ -643,7 +677,10 @@ export const TrackPage: React.FC = () => {
                 </button>
               </div>
               <div style={{ flex: 1, minWidth: 240 }}>
-                <div style={{ display: 'inline-block', fontSize: 11, fontWeight: 800, color: themeColor, background: `${themeColor}15`, padding: '4px 12px', borderRadius: 20, letterSpacing: '1px', textTransform: 'uppercase', marginBottom: 12 }}>{track.genre || 'Musique'}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 12 }}>
+                  <div style={{ display: 'inline-block', fontSize: 11, fontWeight: 800, color: themeColor, background: `${themeColor}15`, padding: '4px 12px', borderRadius: 20, letterSpacing: '1px', textTransform: 'uppercase' }}>{track.genre || 'Musique'}</div>
+                  <DeleteButton table="tracks" itemId={track.id} itemOwnerId={track.user_id} onDeleted={() => navigate('/')} onEdit={openEditModal} />
+                </div>
                 <h1 style={{ fontSize: 'clamp(2rem, 5vw, 3rem)', fontWeight: 900, margin: '0 0 8px 0', letterSpacing: '-0.03em', lineHeight: 1.1 }}>{track.title}</h1>
                 <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 10, marginBottom: 4 }}>
                   {artistIsUploader ? (
@@ -1041,6 +1078,50 @@ export const TrackPage: React.FC = () => {
           animation: 'menuIn 0.2s ease', whiteSpace: 'nowrap', maxWidth: '90vw', textAlign: 'center'
         }}>
           {toast}
+        </div>
+      )}
+
+      {/* MODAL D'ÉDITION (admin/auteur) */}
+      {showEditModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(6px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }} onClick={() => setShowEditModal(false)}>
+          <div style={{ width: '100%', maxWidth: 480, background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 24, display: 'flex', flexDirection: 'column', gap: 14 }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ fontSize: 18, fontWeight: 800, margin: 0, color: colors.textMain }}>Modifier le son</h3>
+              <button onClick={() => setShowEditModal(false)} style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', fontSize: 20 }}>✕</button>
+            </div>
+
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 700, color: colors.textMuted, display: 'block', marginBottom: 6 }}>Titre</label>
+              <input value={editForm.title} onChange={e => setEditForm({ ...editForm, title: e.target.value })} style={{ width: '100%', padding: '10px 12px', background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain, boxSizing: 'border-box' }} />
+            </div>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 700, color: colors.textMuted, display: 'block', marginBottom: 6 }}>Artiste</label>
+              <input value={editForm.artist} onChange={e => setEditForm({ ...editForm, artist: e.target.value })} style={{ width: '100%', padding: '10px 12px', background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain, boxSizing: 'border-box' }} />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700, color: colors.textMuted, display: 'block', marginBottom: 6 }}>Genre</label>
+                <input value={editForm.genre} onChange={e => setEditForm({ ...editForm, genre: e.target.value })} style={{ width: '100%', padding: '10px 12px', background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain, boxSizing: 'border-box' }} />
+              </div>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700, color: colors.textMuted, display: 'block', marginBottom: 6 }}>BPM</label>
+                <input value={editForm.bpm} onChange={e => setEditForm({ ...editForm, bpm: e.target.value })} style={{ width: '100%', padding: '10px 12px', background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain, boxSizing: 'border-box' }} />
+              </div>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700, color: colors.textMuted, display: 'block', marginBottom: 6 }}>Clé</label>
+                <input value={editForm.song_key} onChange={e => setEditForm({ ...editForm, song_key: e.target.value })} style={{ width: '100%', padding: '10px 12px', background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain, boxSizing: 'border-box' }} />
+              </div>
+            </div>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 700, color: colors.textMuted, display: 'block', marginBottom: 6 }}>Description</label>
+              <textarea value={editForm.description} onChange={e => setEditForm({ ...editForm, description: e.target.value })} rows={3} style={{ width: '100%', padding: '10px 12px', background: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: 8, color: colors.textMain, boxSizing: 'border-box', resize: 'vertical' }} />
+            </div>
+
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 6 }}>
+              <button onClick={() => setShowEditModal(false)} style={{ padding: '10px 16px', background: 'transparent', border: `1px solid ${colors.border}`, color: colors.textMuted, borderRadius: 8, fontWeight: 700, cursor: 'pointer' }}>Annuler</button>
+              <button onClick={saveTrackEdit} style={{ padding: '10px 16px', background: themeColor, color: '#000', border: 'none', borderRadius: 8, fontWeight: 800, cursor: 'pointer' }}>Enregistrer</button>
+            </div>
+          </div>
         </div>
       )}
     </div>

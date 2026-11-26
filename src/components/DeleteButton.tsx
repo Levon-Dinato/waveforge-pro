@@ -28,6 +28,8 @@ interface DeleteButtonProps {
   size?: 'sm' | 'md';
   /** ✅ Chemin vers la page d'édition (ex: /edit/track/{id}) */
   editPath?: string;
+  /** ✅ Callback pour ouvrir un formulaire d'édition inline (prioritaire sur editPath) */
+  onEdit?: () => void;
 }
 
 // ✅ Style commun aux boutons d'action
@@ -46,7 +48,7 @@ const ACTION_BTN: React.CSSProperties = {
 };
 
 export const DeleteButton: React.FC<DeleteButtonProps> = ({
-  table, itemId, itemOwnerId, label = 'Supprimer', onDeleted, size = 'sm', editPath
+  table, itemId, itemOwnerId, label = 'Supprimer', onDeleted, size = 'sm', editPath, onEdit
 }) => {
   const navigate = useNavigate();
   const { user, isAdmin, isModerator } = useAuth();
@@ -54,8 +56,8 @@ export const DeleteButton: React.FC<DeleteButtonProps> = ({
   const [hoverDelete, setHoverDelete] = useState(false);
   const [hoverEdit, setHoverEdit] = useState(false);
 
-  // On peut supprimer/modifier si on est l'auteur ou admin/modo
-  const canEdit = user?.id === itemOwnerId || isModerator;
+  // ✅ Seul l'admin (ou l'auteur pour son propre contenu) peut modifier/supprimer
+  const canEdit = user?.id === itemOwnerId || isAdmin;
   if (!canEdit) return null;
 
   const handleDelete = async (e: React.MouseEvent) => {
@@ -79,12 +81,16 @@ export const DeleteButton: React.FC<DeleteButtonProps> = ({
   const handleEdit = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
+    if (onEdit) {
+      onEdit();
+      return;
+    }
     if (editPath) {
       navigate(editPath);
     } else {
       // Fallback : navigation par défaut selon la table
       const routes: Record<string, string> = {
-        tracks: `/edit/track/${itemId}`,
+        tracks: `/settings`,
         artist_posts: `/edit/post/${itemId}`,
         playlists: `/edit/playlist/${itemId}`,
         photos: `/edit/photo/${itemId}`,

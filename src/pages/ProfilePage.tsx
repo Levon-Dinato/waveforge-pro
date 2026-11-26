@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { usePlayer } from '../contexts/PlayerContext';
 import { useTranslation } from 'react-i18next';
+import { DeleteButton } from '../components/DeleteButton';
 
 const Icons = {
   music: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>,
@@ -153,14 +154,14 @@ const TrackRow: React.FC<{
   isLiked: boolean;
   onPlay: () => void;
   onToggleLike: () => void;
-  onDelete?: () => void;
+  onDeleted?: () => void;
   colors: any;
   recentlyAdded?: boolean;
   openMenu?: boolean;
   onToggleMenu?: () => void;
   playlists?: any[];
   onAddToPlaylist?: (playlistId: string) => void;
-}> = ({ track, isThisPlaying, isOwner, isLiked, onPlay, onToggleLike, onDelete, colors, recentlyAdded, openMenu, onToggleMenu, playlists, onAddToPlaylist }) => {
+}> = ({ track, isThisPlaying, isOwner, isLiked, onPlay, onToggleLike, onDeleted, colors, recentlyAdded, openMenu, onToggleMenu, playlists, onAddToPlaylist }) => {
   const [hovered, setHovered] = useState(false);
 
   return (
@@ -251,17 +252,7 @@ const TrackRow: React.FC<{
         </div>
       )}
 
-      {isOwner && onDelete && (
-        <button
-          onClick={(e) => { e.stopPropagation(); onDelete(); }}
-          title="Supprimer ce son"
-          style={{ background: 'transparent', border: 'none', color: colors.textMuted, cursor: 'pointer', padding: 8 }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = '#b0b0b0')}
-          onMouseLeave={(e) => (e.currentTarget.style.color = colors.textMuted)}
-        >
-          {Icons.trash}
-        </button>
-      )}
+      <DeleteButton table="tracks" itemId={track.id} itemOwnerId={track.user_id} onDeleted={onDeleted} />
 
       <Link to={`/track/${track.id}`} style={{ padding: '6px 12px', background: 'transparent', border: `1px solid ${colors.border}`, color: colors.textMain, borderRadius: 6, fontSize: 12, textDecoration: 'none', fontWeight: 600 }}>
         Voir
@@ -634,12 +625,7 @@ export const ProfilePage: React.FC = () => {
                       isLiked={myLikedTrackIds.has(track.id)}
                       onPlay={() => handlePlay(track)}
                       onToggleLike={() => handleToggleLike(track.id)}
-                      onDelete={isOwner ? () => {
-                        if (!window.confirm(t('profile.confirm_delete_track'))) return;
-                        supabase.from('tracks').delete().eq('id', track.id).then(() => {
-                          setUserTracks((prev) => prev.filter((t) => t.id !== track.id));
-                        });
-                      } : undefined}
+                      onDeleted={() => setUserTracks((prev) => prev.filter((t) => t.id !== track.id))}
                       colors={colors}
                       recentlyAdded={recentlyAdded === track.id}
                       openMenu={addingTrackId === track.id}

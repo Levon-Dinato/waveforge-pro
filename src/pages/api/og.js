@@ -7,7 +7,7 @@ export default async function handler(req, res) {
   const supabaseKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
 
   // ✅ URL DE TON PROJET VERCEL
-  const baseUrl = "https://elektraq.dj";
+  const baseUrl = "https://dropzone-dj.vercel.app";
   
   let title = `Radio ${username} — ELEKTRAQ`;
   let description = "Ta radio, ta musique, ton univers. Écoute les meilleurs DJs en direct.";

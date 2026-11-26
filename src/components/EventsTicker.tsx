@@ -36,17 +36,12 @@ export const EventsTicker: React.FC = () => {
 
   return (
     <div style={{
-      // ✅ MODIFICATIONS ICI POUR RÉDUIRE LA LARGEUR
-      width: '100%',
-      maxWidth: '1600px',       // <-- Change cette valeur (800px, 60%, 50%...)
-      margin: '0px',        // <-- Centre la bannière
-      // FIN DES MODIFICATIONS
-      
+      // ✅ BANNIÈRE PLEINE LARGEUR (bord à bord, casse le padding parent)
+      width: '100vw',
+      marginLeft: 'calc(50% - 50vw)',
       overflow: 'hidden',
       background: '#0f0f0f',
-      border: '1px solid #2a2a2a', // On met une bordure de chaque côté puisqu'elle ne touche plus les bords
-      borderRadius: 8,            // On arrondit les coins
-      marginBottom: 32,           // Un peu plus d'espace en dessous
+      marginBottom: 32,
       position: 'relative',
       padding: '16px 0',
       boxSizing: 'border-box',

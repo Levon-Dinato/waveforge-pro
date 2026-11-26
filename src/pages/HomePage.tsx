@@ -226,7 +226,7 @@ export const HomePage = () => {
   ];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', fontFamily: 'Inter, sans-serif', color: colors.textMain, width: '100%', maxWidth: '100%', overflowX: 'hidden', background: colors.bg, transition: 'background 0.3s ease, color 0.3s ease' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', fontFamily: 'Inter, sans-serif', color: colors.textMain, width: '100%', maxWidth: '100%', background: colors.bg, transition: 'background 0.3s ease, color 0.3s ease' }}>
 
       <Helmet>
         <title>ELEKTRAQ — La radio des artistes électroniques indépendants</title>

@@ -5,7 +5,8 @@ export default async function handler(req: any, res: any) {
 
   const supabaseUrl = 'https://ivusrxkufajugvkbpcia.supabase.co';
   const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml2dXNyeGt1ZmFqdWd2a2JwY2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE5MzU1MDUsImV4cCI6MjEwNzUxMTUwNX0.iwjZ-9Lm8vRazk6KR7zi0BLmZ1RYRUP9dIwfyiW83_U';
-  const baseUrl = 'https://elektraq.dj'; // ✅ Domaine mis à jour
+  const baseUrl = 'https://dropzone-dj.vercel.app'; // ✅ Domaine réel déployé
+  const normalizeUrl = (url: string) => (url && !url.startsWith('http') ? `${baseUrl}${url}` : url);
 
   // ==========================================
   // 1️⃣ CAS : PAGE PREMIUM (Artiste)
@@ -29,7 +30,7 @@ export default async function handler(req: any, res: any) {
       if (Array.isArray(data) && data[0]) {
         title = `${data[0].username || premiumUsername} — Artiste ELEKTRAQ`;
         description = data[0].hero_description || `Découvre l'univers de ${data[0].username || premiumUsername} sur elektraq.dj`;
-        coverUrl = data[0].avatar_url || coverUrl;
+        coverUrl = normalizeUrl(data[0].avatar_url) || coverUrl;
       }
     } catch (e) {
       console.error('Supabase fetch error (Premium):', e);
@@ -139,7 +140,7 @@ export default async function handler(req: any, res: any) {
     if (Array.isArray(data) && data[0]) {
       title = data[0].title || title;
       artist = data[0].artist || artist;
-      coverUrl = data[0].cover_url || coverUrl;
+      coverUrl = normalizeUrl(data[0].cover_url) || coverUrl;
       audioUrl = data[0].audio_url || '';
     }
   } catch (e) {
@@ -162,7 +163,7 @@ export default async function handler(req: any, res: any) {
     <meta property="og:image" content="${coverUrl}" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:url" content="${baseUrl}/share/${trackId}" />
+    <meta property="og:url" content="${baseUrl}/track/${trackId}" />
     ${audioUrl ? `<meta property="og:audio" content="${audioUrl}" />` : ''}
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="${safeTitle} — ${safeArtist}" />

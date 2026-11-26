@@ -4,6 +4,17 @@
     { "source": "/share/:id", "destination": "/api/share?id=:id" },
     { "source": "/levon-dinato", "destination": "/api/levon-dinato" },
     {
+      "source": "/track/:id",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(facebookexternalhit|twitterbot|whatsapp|linkedinbot|discordbot|telegrambot|pinterest|slackbot|skypeuripreview).*"
+        }
+      ],
+      "destination": "/api/share?id=:id"
+    },
+    {
       "source": "/premium/:username",
       "has": [
         {

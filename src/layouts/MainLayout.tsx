@@ -231,8 +231,8 @@ export const MainLayout: React.FC = () => {
           </div>
         )}
         <div style={{ maxWidth: 1600, margin: '0 auto', width: '100%', display: 'flex', alignItems: 'center', gap: 24, padding: '10px 24px' }}>
-          <Link to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', flexShrink: 0 }}>
-            <span style={{ fontWeight: 900, fontSize: '1.3rem', letterSpacing: '2px', color: colors.textMain }}>ELEKTRAQ</span>
+          <Link to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', flexShrink: 0, height: 40 }}>
+            <span style={{ fontWeight: 900, fontSize: '1.3rem', letterSpacing: '2px', color: colors.textMain, lineHeight: 1 }}>ELEKTRAQ</span>
           </Link>
           <div style={{ flex: 1, maxWidth: 380, minWidth: 200 }}>
             <GlobalSearch />

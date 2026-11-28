@@ -85,6 +85,7 @@ export const PremiumLayout: React.FC = () => {
   const [events, setEvents] = useState<any[]>([]);
   const [gallery, setGallery] = useState<any[]>([]);
   const [shorts, setShorts] = useState<any[]>([]);
+  const [upcomingLive, setUpcomingLive] = useState<any>(null);
 
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
   const [showBookingModal, setShowBookingModal] = useState(false);
@@ -188,6 +189,10 @@ export const PremiumLayout: React.FC = () => {
 
         const { data: g } = await supabase.from('profile_gallery').select('*').eq('user_id', p.id);
         if (g) setGallery(g);
+
+        const nowIso = new Date().toISOString();
+        const { data: liveSlots } = await supabase.from('events').select('*').eq('created_by', p.id).eq('location', 'LIVE').lte('event_date', nowIso).gte('city', nowIso).order('event_date', { ascending: true }).limit(1);
+        if (liveSlots && liveSlots.length > 0) setUpcomingLive(liveSlots[0]);
 
         const { data: s } = await supabase.from('artist_shorts').select('*').eq('user_id', p.id).order('created_at', { ascending: false });
         if (s) setShorts(s);
@@ -389,6 +394,20 @@ export const PremiumLayout: React.FC = () => {
       </header>
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative', zIndex: 10 }}>
+        {upcomingLive && (
+          <div style={{ maxWidth: 1100, margin: '0 auto 20px', width: '100%', display: 'flex', alignItems: 'center', gap: 14, padding: '12px 18px', background: 'rgba(148,199,72,0.08)', border: '1px solid rgba(148,199,72,0.35)', borderRadius: 14, boxSizing: 'border-box', flexWrap: 'wrap' }}>
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#94c748', boxShadow: '0 0 10px #94c748', animation: 'pulse 1.5s infinite', flexShrink: 0 }} />
+            <img src={upcomingLive.image_url || profile.avatar_url || '/logo.jpg'} alt="" style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: '1px solid rgba(148,199,72,0.5)', background: colors.cardBg }} />
+            <div style={{ flex: 1, minWidth: 160 }}>
+              <div style={{ fontSize: 11, fontWeight: 800, color: '#94c748', textTransform: 'uppercase', letterSpacing: '1px' }}>En direct</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: colors.textMain, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: 2 }}>{upcomingLive.title}</div>
+            </div>
+            {upcomingLive.url && (
+              <a href={upcomingLive.url} target="_blank" rel="noopener noreferrer" style={{ padding: '8px 14px', border: '1px solid #94c748', color: '#94c748', borderRadius: 8, fontSize: 12, fontWeight: 800, textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}>Réseau ↗</a>
+            )}
+            <Link to="/live" style={{ padding: '8px 14px', background: '#94c748', color: '#000', borderRadius: 8, fontSize: 12, fontWeight: 800, textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}>Regarder le live</Link>
+          </div>
+        )}
         <AnimatePresence mode="wait">
           <motion.div
             key={location.pathname}

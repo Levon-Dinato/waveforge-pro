@@ -46,6 +46,9 @@ export const LivePage = () => {
     setPlanningSubmitting(true);
     try {
       const eventDate = new Date(`${planningForm.date}T${planningForm.startTime}:00`).toISOString();
+      const endIso = planningForm.endTime
+        ? new Date(`${planningForm.date}T${planningForm.endTime}:00`).toISOString()
+        : new Date(new Date(eventDate).getTime() + 2 * 60 * 60 * 1000).toISOString();
       const username = profile?.username || user.email?.split('@')[0] || 'DJ';
       const description = `${username} · ${planningForm.startTime}${planningForm.endTime ? ' - ' + planningForm.endTime : ''}`;
       const { error } = await supabase.from('events').insert({
@@ -56,6 +59,7 @@ export const LivePage = () => {
         created_by: user.id,
         url: planningForm.link || null,
         image_url: profile?.avatar_url || null,
+        city: endIso,
       });
       if (error) throw error;
       setPlanningForm({ title: '', date: '', startTime: '', endTime: '', link: '' });

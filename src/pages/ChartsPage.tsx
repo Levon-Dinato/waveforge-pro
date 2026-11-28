@@ -113,38 +113,38 @@ export const ChartsPage: React.FC = () => {
       setLoading(true);
       try {
         if (timeRange === 'weekly') {
-          // 📅 Top de la semaine : likes reçus sur les 7 derniers jours
+          // 📅 Top de la semaine : base des 50 titres, triés par likes récents (7 jours),
+          // puis complétés par les plus likés au global pour toujours en afficher 50.
           const since = new Date();
           since.setDate(since.getDate() - 7);
           const sinceIso = since.toISOString();
+
+          const { data: baseTracks } = await supabase
+            .from('tracks')
+            .select('*')
+            .or('is_jingle.is.null,is_jingle.eq.false')
+            .or('is_private.is.null,is_private.eq.false')
+            .order('likes_count', { ascending: false })
+            .limit(50);
 
           const { data: likesData } = await supabase
             .from('likes')
             .select('track_id')
             .gte('created_at', sinceIso);
 
-          const counts: Record<string, number> = {};
+          const recentCounts: Record<string, number> = {};
           (likesData || []).forEach((l: any) => {
-            counts[l.track_id] = (counts[l.track_id] || 0) + 1;
+            recentCounts[l.track_id] = (recentCounts[l.track_id] || 0) + 1;
           });
 
-          const topIds = Object.entries(counts)
-            .sort((a, b) => b[1] - a[1])
-            .slice(0, 50)
-            .map(([id]) => id);
+          const sorted = [...(baseTracks || [])].sort((a: any, b: any) => {
+            const ra = recentCounts[a.id] || 0;
+            const rb = recentCounts[b.id] || 0;
+            if (rb !== ra) return rb - ra;
+            return (b.likes_count || 0) - (a.likes_count || 0);
+          });
 
-          if (topIds.length === 0) {
-            setTracks([]);
-          } else {
-            const { data } = await supabase
-              .from('tracks')
-              .select('*')
-              .in('id', topIds);
-
-            const map = new Map((data || []).map((t: any) => [t.id, t]));
-            const sorted = topIds.map((id: string) => map.get(id)).filter(Boolean);
-            setTracks(sorted);
-          }
+          setTracks(sorted);
         } else {
           // 🏆 Tous les temps : likes cumulés (likes_count)
           const { data, error } = await supabase

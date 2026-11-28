@@ -106,9 +106,23 @@ export const TrackList: React.FC<TrackListProps> = ({ tracks, onPlay, startRank 
             onMouseEnter={(e) => { if (!isCurrent) e.currentTarget.style.background = colors.rowHover; }}
             onMouseLeave={(e) => { if (!isCurrent) e.currentTarget.style.background = 'transparent'; }}
           >
-            <span style={{ width: 24, fontSize: 12, fontWeight: 900, fontStyle: 'italic', color: isCurrent ? colors.accent : colors.textMuted, textAlign: 'center', flexShrink: 0 }}>
-              {isCurrent ? '▶' : startRank + idx + 1}
-            </span>
+            <div style={{ width: 52, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
+              <span style={{ fontSize: 12, fontWeight: 900, fontStyle: 'italic', color: isCurrent ? colors.accent : colors.textMuted, textAlign: 'center' }}>
+                {isCurrent ? '▶' : startRank + idx + 1}
+              </span>
+              {(() => {
+                const currentRank = startRank + idx + 1;
+                const prev = track.previous_rank;
+                if (prev === null || prev === undefined || prev === currentRank) return null;
+                const diff = prev - currentRank;
+                const up = diff > 0;
+                return (
+                  <span style={{ fontSize: 9, fontWeight: 800, color: up ? '#94c748' : '#ff5c5c', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 1 }}>
+                    {up ? '▲' : '▼'}{Math.abs(diff)}
+                  </span>
+                );
+              })()}
+            </div>
             <button
               onClick={(e) => { e.stopPropagation(); onPlay(track); }}
               style={{ width: 32, height: 32, borderRadius: '50%', border: `1px solid ${colors.accent}`, background: isCurrent ? colors.accent : 'transparent', color: isCurrent ? '#000' : colors.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, fontSize: 11 }}

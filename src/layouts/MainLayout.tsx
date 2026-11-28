@@ -270,11 +270,6 @@ export const MainLayout: React.FC = () => {
               </NavLink>
             );
           })}
-          {isAdmin && (
-            <NavLink to="/admin" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 4, textDecoration: 'none', fontSize: 11, fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', whiteSpace: 'nowrap', color: location.pathname.startsWith('/admin') ? '#ff4444' : '#ff8888', background: location.pathname.startsWith('/admin') ? 'rgba(255,68,68,0.1)' : 'transparent', borderBottom: location.pathname.startsWith('/admin') ? '2px solid #ff4444' : '2px solid transparent', transition: 'all 0.15s' }}>
-              Panel Admin
-            </NavLink>
-          )}
         </nav>
       </header>
 

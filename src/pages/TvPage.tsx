@@ -39,7 +39,14 @@ export const TvPage: React.FC = () => {
   const fetchClips = async () => {
     try {
       const { data } = await supabase.from('tv_videos').select('*').order('created_at', { ascending: true });
-      if (data) setClips(data);
+      if (data && data.length > 0) {
+        // 🔀 Mélange aléatoire + point d'entrée aléatoire (comme allumer la TV en direct)
+        const shuffled = [...data].sort(() => Math.random() - 0.5);
+        setClips(shuffled);
+        setCurrentIndex(Math.floor(Math.random() * shuffled.length));
+      } else {
+        setClips(data || []);
+      }
     } catch (e) { console.error(e); }
   };
 
@@ -51,6 +58,12 @@ export const TvPage: React.FC = () => {
   const currentInfo = currentClip ? getVideoUrlInfo(currentClip.video_url) : null;
 
   const next = () => { if (clips.length) setCurrentIndex((p) => (p + 1) % clips.length); };
+  const nextRandom = () => {
+    if (clips.length <= 1) return;
+    let n;
+    do { n = Math.floor(Math.random() * clips.length); } while (n === currentIndex);
+    setCurrentIndex(n);
+  };
   const prev = () => { if (clips.length) setCurrentIndex((p) => (p - 1 + clips.length) % clips.length); };
 
   const toggleMute = () => {
@@ -104,7 +117,7 @@ export const TvPage: React.FC = () => {
           autoPlay
           muted={muted}
           playsInline
-          onEnded={next}
+          onEnded={nextRandom}
           style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
         />
       ) : currentInfo?.type === 'iframe' && currentClip ? (
@@ -151,7 +164,7 @@ export const TvPage: React.FC = () => {
             {muted ? '🔇 Activer le son' : '🔊 Son activé'}
           </button>
         )}
-        <button onClick={next} style={btn}>Suivant ⏭</button>
+        <button onClick={nextRandom} style={btn}>Suivant ⏭</button>
       </div>
 
       {/* États */}

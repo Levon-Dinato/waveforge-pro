@@ -448,7 +448,7 @@ export const FeedPage: React.FC = () => {
   return (
     <div style={{ background: colors.bg, color: colors.textMain, fontFamily: 'Inter, sans-serif', transition: 'background 0.3s ease, color 0.3s ease' }}>
       <PageMeta title="Feed" description="Suivez l'actualité et les partages de la communauté ELEKTRAQ." />
-      <div style={{ width: '100vw', marginLeft: 'calc(50% - 50vw)', padding: isMobile ? '16px 12px' : '24px 24px 0', display: 'flex', gap: 24, flexDirection: isMobile ? 'column' : 'row', height: isMobile ? 'auto' : 'calc(100vh - 120px)', boxSizing: 'border-box' }}>
+      <div style={{ width: '100%', maxWidth: 1600, margin: '0 auto', padding: isMobile ? '16px 12px' : '24px 24px 0', display: 'flex', gap: 24, flexDirection: isMobile ? 'column' : 'row', aspectRatio: isMobile ? 'auto' : '16 / 9', maxHeight: 'calc(100vh - 140px)', boxSizing: 'border-box' }}>
         
         {/* COLONNE PRINCIPALE */}
         <div style={{ flex: 1, minWidth: 0, width: '100%', overflowY: isMobile ? 'visible' : 'auto', paddingRight: isMobile ? 0 : 20, paddingBottom: currentTrack ? 100 : 20 }}>

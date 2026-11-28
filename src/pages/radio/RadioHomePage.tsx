@@ -217,7 +217,7 @@ export const RadioHomePage: React.FC = () => {
       </section>
 
       {/* MARQUEE */}
-      <div style={{ borderTop: `1px solid ${colors.border}`, borderBottom: `1px solid ${colors.border}`, padding: '18px 0', overflow: 'hidden', background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)', position: 'relative', zIndex: 2 }}>
+      <div style={{ borderTop: `1px solid ${colors.border}`, borderBottom: `1px solid ${colors.border}`, padding: '18px 0', overflow: 'hidden', background: isDark ? '#0e0e16' : '#ffffff', position: 'relative', zIndex: 2 }}>
         <motion.div style={{ display: 'flex', gap: 60, width: 'max-content' }} animate={{ x: ['0%', '-50%'] }} transition={{ repeat: Infinity, duration: 30, ease: 'linear' }}>
           {repeatedItems.map((t, i) => (
             <span key={i} style={{ fontFamily: '"Space Grotesk", Inter, sans-serif', fontSize: 14, fontWeight: 700, color: colors.textMuted, letterSpacing: '2px', textTransform: 'uppercase', display: 'inline-flex', alignItems: 'center', gap: 60 }}>

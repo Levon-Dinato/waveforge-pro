@@ -7,6 +7,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { RadioPlayer } from '../components/RadioPlayer';
 import { useTheme } from '../contexts/ThemeContext';
 import { useRadioStats } from '../hooks/useRadioStats';
+import { seededShuffle } from '../lib/shuffle';
 
 export const PlayerPage: React.FC = () => {
   const { username } = useParams<{ username: string }>();
@@ -77,11 +78,18 @@ export const PlayerPage: React.FC = () => {
       // (corrige l'état périmé du localStorage qui bloquait l'URL live)
       if (!didInitRef.current) {
         didInitRef.current = true;
-        const { data: musicTracks } = await supabase
+        const { data: rawTracks } = await supabase
           .from('tracks').select('*').eq('user_id', data.id).eq('in_radio', true).eq('is_jingle', false).neq('audio_url', '').not('audio_url', 'is', null).order('created_at', { ascending: true });
         
         const { data: jingles } = await supabase
           .from('tracks').select('*').eq('user_id', data.id).eq('in_radio', true).eq('is_jingle', true);
+
+        let musicTracks: any[] = rawTracks || [];
+        // 🔀 Anti-répétition : même mélange déterministe que la page radio
+        if (data.radio_no_repeat_enabled && musicTracks.length > 1) {
+          const daySeed = Math.floor(Date.now() / 86400000);
+          musicTracks = seededShuffle(musicTracks, daySeed);
+        }
 
         if (musicTracks && musicTracks.length > 0) {
           const mixedTracks: any[] = [];

@@ -9,6 +9,7 @@ import { useIsMobile } from '../hooks/useIsMobile';
 import { useAuth } from '../contexts/AuthContext';
 import { useRadio } from '../contexts/RadioContext';
 import { useRadioStats } from '../hooks/useRadioStats';
+import { seededShuffle } from '../lib/shuffle';
 
 export const RadioLayout: React.FC = () => {
   const { username } = useParams<{ username: string }>();
@@ -265,6 +266,12 @@ export const RadioLayout: React.FC = () => {
             .not('audio_url', 'is', null)
             .order('created_at', { ascending: true });
           if (mt) musicTracks = mt;
+        }
+
+        // 🔀 Anti-répétition : mélange déterministe quotidien (même ordre pour tous les auditeurs)
+        if (profileData.radio_no_repeat_enabled && musicTracks.length > 1) {
+          const daySeed = Math.floor(Date.now() / 86400000);
+          musicTracks = seededShuffle(musicTracks, daySeed);
         }
 
         const { data: jingles } = await supabase

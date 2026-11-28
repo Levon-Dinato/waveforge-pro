@@ -257,13 +257,13 @@ export const MainLayout: React.FC = () => {
         </div>
 
         {/* NAV LINKS (style Beatport) */}
-        <nav style={{ maxWidth: 1600, margin: '0 auto', width: '100%', display: 'flex', alignItems: 'center', gap: 2, padding: '8px 24px 10px 24px', overflowX: 'auto', borderTop: `1px solid ${colors.border}`, background: isDark ? '#1c1c21' : '#f0f0f3' }}>
+        <nav style={{ maxWidth: 1600, margin: '0 auto', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '12px 24px', overflowX: 'auto', borderTop: `1px solid ${colors.border}`, background: isDark ? '#1c1c21' : '#f0f0f3' }}>
           {NAV_ITEMS.map(item => {
             const isActive = item.exact ? location.pathname === item.path : location.pathname.startsWith(item.path);
             return (
-              <NavLink key={item.path} to={item.path} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 4, textDecoration: 'none', fontSize: 11, fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', whiteSpace: 'nowrap', color: isActive ? '#94c748' : (item.highlight ? colors.textMain : colors.textMuted), background: item.highlight ? 'rgba(148,199,72,0.1)' : (isActive ? 'rgba(148,199,72,0.08)' : 'transparent'), borderBottom: isActive ? '2px solid #94c748' : '2px solid transparent', transition: 'all 0.15s' }}
-                onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.color = '#94c748'; }}
-                onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.color = item.highlight ? colors.textMain : colors.textMuted; }}
+              <NavLink key={item.path} to={item.path} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 18px', borderRadius: 30, textDecoration: 'none', fontSize: 12, fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', whiteSpace: 'nowrap', color: isActive ? '#000' : (item.highlight ? '#94c748' : colors.textMuted), background: isActive ? '#94c748' : 'transparent', border: `1px solid ${isActive ? '#94c748' : 'transparent'}`, boxShadow: isActive ? '0 4px 14px rgba(148,199,72,0.35)' : 'none', transition: 'all 0.2s' }}
+                onMouseEnter={(e) => { if (!isActive) { e.currentTarget.style.background = 'rgba(148,199,72,0.1)'; e.currentTarget.style.color = '#94c748'; e.currentTarget.style.borderColor = 'rgba(148,199,72,0.4)'; } }}
+                onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = item.highlight ? '#94c748' : colors.textMuted; e.currentTarget.style.borderColor = 'transparent'; } }}
               >
                 {t(item.labelKey)}
                 {item.highlight && <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#94c748', boxShadow: '0 0 6px #94c748' }} />}

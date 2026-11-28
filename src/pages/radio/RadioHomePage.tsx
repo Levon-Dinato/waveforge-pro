@@ -19,8 +19,8 @@ export const RadioHomePage: React.FC = () => {
   const { t } = useTranslation();
   
   const { 
-    profile, radioTracks, listeners, colors, visualizerColor, iconColor, titleColorStart, titleColor, titleSplitStart, titleSplitEnd, titleText,
-    socials, coverImage, totalLikes, SocialLink, recentTracks, handlePlayRadio 
+    profile, radioTracks, listeners, radioLikes, isRadioLiked, toggleRadioLike, colors, visualizerColor, iconColor, titleColorStart, titleColor, titleSplitStart, titleSplitEnd, titleText,
+    socials, coverImage, totalLikes, totalPlays, SocialLink, recentTracks, handlePlayRadio 
   } = useOutletContext<any>();
 
   // ✅ ON UTILISE CURRENTTRACK POUR LE MARQUEE
@@ -119,6 +119,21 @@ export const RadioHomePage: React.FC = () => {
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> {t('radio.listen_radio')}
               </button>
+
+              {/* ❤️ Like de la radio (vrai compteur, table radio_likes) */}
+              <button 
+                onClick={toggleRadioLike} 
+                style={{ 
+                  background: isRadioLiked ? `${visualizerColor}20` : 'transparent', 
+                  color: isRadioLiked ? visualizerColor : colors.textMuted, 
+                  border: `1px solid ${isRadioLiked ? visualizerColor : colors.border}`, 
+                  padding: '14px 20px', borderRadius: 12, fontSize: 13, fontWeight: 800, cursor: 'pointer', 
+                  display: 'flex', alignItems: 'center', gap: 8, transition: 'all 0.2s' 
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill={isRadioLiked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                {radioLikes} {t('radio.like_radio')}
+              </button>
               
               <div style={{ display: 'flex', gap: 8 }}>
                 <SocialLink url={socials.instagram} name="Instagram" icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>} />
@@ -128,7 +143,7 @@ export const RadioHomePage: React.FC = () => {
             </div>
             
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20, borderTop: `1px solid ${colors.border}`, paddingTop: 28, maxWidth: 460 }}>
-              {[{ n: listeners, l: t('radio.listeners') }, { n: radioTracks.length, l: t('radio.titles') }, { n: totalLikes, l: t('radio.likes') }].map((s, i) => (
+              {[{ n: listeners, l: t('radio.listeners') }, { n: totalPlays, l: t('radio.plays') }, { n: totalLikes + radioLikes, l: t('radio.likes') }].map((s, i) => (
                 <div key={i}>
                   <div style={{ fontSize: 28, fontWeight: 900, color: titleColorStart }}>{s.n}</div>
                   <div style={{ fontSize: 10, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700, marginTop: 4 }}>{s.l}</div>

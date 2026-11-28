@@ -395,9 +395,13 @@ export const RadioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     setDuration(currentAudio.duration || 0);
 
     if (crossfadeEnabled && !isCrossfadingRef.current && currentAudio.duration > 0 && !currentTrack?.is_jingle) {
+      const nextIndex = (currentIndex + 1) % tracks.length;
+      const nextTrack = tracks[nextIndex];
+      // ✅ Si le prochain titre est un jingle, on laisse le titre finir naturellement
+      // (le jingle démarrera via onEnded → playNext), au lieu de couper net 3 s avant.
+      if (nextTrack?.is_jingle) return;
       const timeLeft = currentAudio.duration - currentAudio.currentTime;
       if (timeLeft <= crossfadeDuration) {
-        const nextIndex = (currentIndex + 1) % tracks.length;
         transitionToTrack(nextIndex);
       }
     }

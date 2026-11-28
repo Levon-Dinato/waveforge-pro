@@ -8,6 +8,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { useAuth } from '../contexts/AuthContext';
 import { useRadio } from '../contexts/RadioContext';
+import { useRadioStats } from '../hooks/useRadioStats';
 
 export const RadioLayout: React.FC = () => {
   const { username } = useParams<{ username: string }>();
@@ -63,7 +64,7 @@ export const RadioLayout: React.FC = () => {
   const [recentTracks, setRecentTracks] = useState<any[]>([]);
   const [activeSchedule, setActiveSchedule] = useState<string | null>(null);
 
-  const [listeners, setListeners] = useState(1);
+  const { listeners, views, radioLikes, isRadioLiked, toggleRadioLike } = useRadioStats(profile?.id);
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -227,15 +228,44 @@ export const RadioLayout: React.FC = () => {
           if (isMounted) setUserProfile(myProfile);
         }
 
-        const { data: musicTracks } = await supabase
-          .from('tracks')
-          .select('*')
-          .eq('user_id', profileData.id)
-          .eq('in_radio', true)
-          .eq('is_jingle', false)
-          .neq('audio_url', '')
-          .not('audio_url', 'is', null)
-          .order('created_at', { ascending: true });
+        // 📅 Programmation horaire : on détermine le créneau actif AVANT de charger les titres
+        const { data: schedulesData } = await supabase.from('radio_schedules').select('*, playlists(name)').eq('user_id', profileData.id).order('start_time');
+        let activeProgram: any = null;
+        if (schedulesData) {
+          setSchedules(schedulesData);
+          const now = new Date();
+          const ct = now.toTimeString().split(' ')[0];
+          const cd = now.getDay() === 0 ? '7' : now.getDay().toString();
+          activeProgram = schedulesData.find((s: any) => s.start_time <= ct && s.end_time >= ct && (s.days?.length === 0 || s.days?.includes(cd)));
+          if (activeProgram) setActiveSchedule(activeProgram.title);
+        }
+
+        let musicTracks: any[] = [];
+        if (activeProgram?.playlist_id) {
+          // 🎯 Créneau actif : on diffuse la playlist programmée (dans son ordre)
+          const { data: pt } = await supabase.from('playlist_tracks').select('track_id').eq('playlist_id', activeProgram.playlist_id).order('order');
+          const ids = (pt || []).map((r: any) => r.track_id);
+          if (ids.length > 0) {
+            const { data: playlistTracks } = await supabase.from('tracks').select('*').in('id', ids).eq('is_jingle', false).neq('audio_url', '').not('audio_url', 'is', null);
+            if (playlistTracks) {
+              const map = new Map(playlistTracks.map((t: any) => [t.id, t]));
+              musicTracks = ids.map((id: string) => map.get(id)).filter(Boolean);
+            }
+          }
+        }
+        if (musicTracks.length === 0) {
+          // Pas de créneau actif : playlist normale (tous les titres en radio)
+          const { data: mt } = await supabase
+            .from('tracks')
+            .select('*')
+            .eq('user_id', profileData.id)
+            .eq('in_radio', true)
+            .eq('is_jingle', false)
+            .neq('audio_url', '')
+            .not('audio_url', 'is', null)
+            .order('created_at', { ascending: true });
+          if (mt) musicTracks = mt;
+        }
 
         const { data: jingles } = await supabase
           .from('tracks')
@@ -295,15 +325,7 @@ export const RadioLayout: React.FC = () => {
         const { data: historyData } = await supabase.from('tracks').select('id, title, artist, cover_url, last_played_at').eq('user_id', profileData.id).not('last_played_at', 'is', null).order('last_played_at', { ascending: false }).limit(5);
         if (historyData) setRecentTracks(historyData);
 
-        const { data: schedulesData } = await supabase.from('radio_schedules').select('*, playlists(name)').eq('user_id', profileData.id).order('start_time');
-        if (schedulesData) {
-          setSchedules(schedulesData);
-          const now = new Date();
-          const ct = now.toTimeString().split(' ')[0];
-          const cd = now.getDay() === 0 ? '7' : now.getDay().toString();
-          const active = schedulesData.find((s: any) => s.start_time <= ct && s.end_time >= ct && (s.days?.length === 0 || s.days?.includes(cd)));
-          if (active) setActiveSchedule(active.title);
-        }
+        // (programmation horaire déjà traitée en amont)
       } catch (e) { 
         console.error(e); 
       } finally { 
@@ -315,22 +337,14 @@ export const RadioLayout: React.FC = () => {
     return () => { isMounted = false; };
   }, [username, user]);
 
+  // 💬 Chat en temps réel (indépendant de la présence, gérée par useRadioStats)
   useEffect(() => {
     if (!profile?.id) return;
     let isMounted = true;
 
-    const channel = supabase.channel(`radio_${profile.id}_${Date.now()}`, { config: { presence: { key: user?.id || Math.random().toString() } } });
-    
-    channel
+    const channel = supabase.channel(`radio_chat_${profile.id}`)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'radio_messages', filter: `radio_owner_id=eq.${profile.id}` }, (payload: any) => setMessages(prev => [...prev, payload.new]))
-      .on('presence', { event: 'sync' }, () => {
-        if (!channel) return;
-        const state = channel.presenceState();
-        let c = 0;
-        Object.keys(state).forEach(k => { c += state[k].length; });
-        setListeners(Math.max(1, c));
-      })
-      .subscribe(async (status: string) => { if (status === 'SUBSCRIBED' && isMounted && channel) await channel.track({ online_at: new Date().toISOString() }); });
+      .subscribe();
 
     const fetchMessages = async () => {
       const { data } = await supabase.from('radio_messages').select('*').eq('radio_owner_id', profile.id).order('created_at', { ascending: true }).limit(50);
@@ -340,10 +354,9 @@ export const RadioLayout: React.FC = () => {
 
     return () => { 
       isMounted = false; 
-      channel.unsubscribe(); 
       supabase.removeChannel(channel); 
     };
-  }, [profile?.id, user?.id]);
+  }, [profile?.id]);
 
   useEffect(() => { if (isChatOpen) chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, isChatOpen]);
 
@@ -446,25 +459,11 @@ export const RadioLayout: React.FC = () => {
   if (loading) return <div style={{ color: colors.textMain, background: colors.bg, height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Chargement...</div>;
   if (!profile) return <div style={{ color: colors.textMain, background: colors.bg, height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>DJ introuvable.</div>;
 
-  if (!profile.is_premium) {
-    return (
-      <div style={{ background: colors.bg, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, fontFamily: 'Inter, sans-serif' }}>
-        <div className="rp-glass" style={{ maxWidth: 500, padding: 40, textAlign: 'center', borderRadius: 24, border: `1px solid ${colors.border}` }}>
-          <div style={{ fontSize: 48, marginBottom: 20 }}>🔒</div>
-          <h1 style={{ fontSize: 24, fontWeight: 900, margin: '0 0 16px 0', color: colors.textMain }}>Radio désactivée</h1>
-          <p style={{ fontSize: 15, color: colors.textMuted, margin: '0 0 24px 0', lineHeight: 1.6 }}>
-            Ce DJ n'a pas activé son abonnement Premium. Sa radio n'est donc pas accessible pour le moment.
-          </p>
-          <button onClick={() => navigate('/auth')} className="rp-btn-3d" style={{ background: visualizerColor, color: iconColor, border: 'none', padding: '12px 24px', borderRadius: 12, fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>
-            Devenir Premium pour 30€/an
-          </button>
-        </div>
-      </div>
-    );
-  }
+  // ✅ Radio et live accessibles à tous (paywall Premium retiré temporairement).
 
   const coverImage = customLogo || profile.avatar_url || '';
   const totalLikes = topTracks.reduce((a, t) => a + (t.likes_count || 0), 0);
+  const totalPlays = topTracks.reduce((a, t) => a + (Number(t.plays) || 0), 0);
   const isOwner = user && user.id === profile.id;
   const currentUrl = window.location.href;
   const currentCover = isLive ? coverImage : currentTrack?.cover_url || coverImage;
@@ -484,7 +483,7 @@ export const RadioLayout: React.FC = () => {
 
   const outletContext = {
     profile, userProfile, radioTracks, topTracks, latestReleases, schedules, activeSchedule,
-    listeners, colors, visualizerColor, iconColor, titleColorStart, titleColor, titleSplitStart, titleSplitEnd, titleText, socials, coverImage, totalLikes, recentTracks,
+    listeners, views, radioLikes, isRadioLiked, toggleRadioLike, colors, visualizerColor, iconColor, titleColorStart, titleColor, titleSplitStart, titleSplitEnd, titleText, socials, coverImage, totalLikes, totalPlays, recentTracks,
     handleOpenPlayer, handlePlayRadio, handleTogglePlay, handleSendMessage, messages, newMessage, setNewMessage, isChatOpen, setIsChatOpen, chatEndRef,
     SocialLink
   };

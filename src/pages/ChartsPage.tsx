@@ -117,7 +117,7 @@ export const ChartsPage: React.FC = () => {
           .select('*')
           .or('is_jingle.is.null,is_jingle.eq.false')
           .or('is_private.is.null,is_private.eq.false')
-          .order('plays', { ascending: false })
+          .order('likes_count', { ascending: false })
           .limit(50);
 
         if (error) {

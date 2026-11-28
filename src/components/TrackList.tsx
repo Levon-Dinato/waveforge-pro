@@ -139,6 +139,7 @@ export const TrackList: React.FC<TrackListProps> = ({ tracks, onPlay, startRank 
               </div>
               <div style={{ fontSize: 11, color: colors.textMuted, marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.artist}</div>
             </div>
+            <span style={{ fontSize: 11, color: colors.textMain, flexShrink: 0, width: 34, textAlign: 'right', fontWeight: 700 }}>{fmt(track.duration)}</span>
             {track.genre && (
               <span style={{ fontSize: 10, fontWeight: 700, color: colors.textMuted, background: colors.chipBg, border: `1px solid ${colors.border}`, padding: '3px 10px', borderRadius: 20, flexShrink: 0, whiteSpace: 'nowrap' }}>{track.genre}</span>
             )}
@@ -151,7 +152,6 @@ export const TrackList: React.FC<TrackListProps> = ({ tracks, onPlay, startRank 
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
               {track.likes_count || 0}
             </span>
-            <span style={{ fontSize: 10, color: colors.textMuted, flexShrink: 0, width: 30, textAlign: 'right' }}>{fmt(track.duration)}</span>
           </div>
         );
       })}

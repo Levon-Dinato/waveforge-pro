@@ -1,8 +1,9 @@
 // src/pages/TvPage.tsx
-// ELEKTRAQ TV : chaîne vidéo en continu qui enchaîne les clips des artistes en boucle.
+// ELEKTRAQ TV : chaîne vidéo en continu qui enchaîne les clips (gérés manuellement via des liens).
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { useAuth } from '../contexts/AuthContext';
 import { PageMeta } from '../components/PageMeta';
 
 const getVideoUrlInfo = (url: string) => {
@@ -24,29 +25,26 @@ const getVideoUrlInfo = (url: string) => {
 
 export const TvPage: React.FC = () => {
   const navigate = useNavigate();
+  const { isAdmin } = useAuth();
   const [clips, setClips] = useState<any[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [muted, setMuted] = useState(true);
+  const [showManager, setShowManager] = useState(false);
+  const [newTitle, setNewTitle] = useState('');
+  const [newUrl, setNewUrl] = useState('');
+  const [adding, setAdding] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
+  const fetchClips = async () => {
+    try {
+      const { data } = await supabase.from('tv_videos').select('*').order('created_at', { ascending: true });
+      if (data) setClips(data);
+    } catch (e) { console.error(e); }
+  };
+
   useEffect(() => {
-    let isMounted = true;
-    const fetchClips = async () => {
-      try {
-        const { data } = await supabase
-          .from('artist_shorts')
-          .select('*')
-          .order('created_at', { ascending: false });
-        if (isMounted && data) setClips(data);
-      } catch (e) {
-        console.error(e);
-      } finally {
-        if (isMounted) setLoading(false);
-      }
-    };
-    fetchClips();
-    return () => { isMounted = false; };
+    fetchClips().finally(() => setLoading(false));
   }, []);
 
   const currentClip = clips[currentIndex];
@@ -62,15 +60,40 @@ export const TvPage: React.FC = () => {
     setMuted(!v.muted);
   };
 
+  const addVideo = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newUrl.trim()) return;
+    setAdding(true);
+    const { error } = await supabase.from('tv_videos').insert({ title: newTitle.trim() || 'Clip', video_url: newUrl.trim() });
+    if (!error) {
+      setNewTitle(''); setNewUrl('');
+      await fetchClips();
+    } else {
+      alert('Erreur : ' + error.message);
+    }
+    setAdding(false);
+  };
+
+  const removeVideo = async (id: string) => {
+    await supabase.from('tv_videos').delete().eq('id', id);
+    await fetchClips();
+    setCurrentIndex(0);
+  };
+
   const btn = {
     background: 'rgba(0,0,0,0.45)', color: '#fff', border: '1px solid rgba(255,255,255,0.25)',
     borderRadius: 40, padding: '10px 18px', fontSize: 13, fontWeight: 800, cursor: 'pointer',
     backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', gap: 8,
   } as const;
 
+  const inputStyle = {
+    width: '100%', padding: '12px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)',
+    borderRadius: 8, color: '#fff', fontSize: 14, outline: 'none', boxSizing: 'border-box' as const,
+  };
+
   return (
     <div style={{ background: '#000', height: '100vh', width: '100vw', position: 'relative', overflow: 'hidden', color: '#fff', fontFamily: 'Inter, sans-serif' }}>
-      <PageMeta title="ELEKTRAQ TV" description="La chaîne vidéo ELEKTRAQ en continu : les clips des artistes en boucle." />
+      <PageMeta title="ELEKTRAQ TV" description="La chaîne vidéo ELEKTRAQ en continu : les clips en boucle." />
 
       {/* Vidéo / iframe en fond */}
       {currentInfo?.type === 'video' && currentClip ? (
@@ -104,10 +127,13 @@ export const TvPage: React.FC = () => {
         <span style={{ fontSize: 13, fontWeight: 700, opacity: 0.85 }}>ELEKTRAQ TV</span>
       </div>
 
-      {/* Bouton retour site */}
-      <button onClick={() => navigate('/')} style={{ position: 'absolute', top: 16, right: 16, zIndex: 10, background: 'rgba(0,0,0,0.45)', color: '#fff', border: '1px solid rgba(255,255,255,0.25)', borderRadius: 40, padding: '10px 16px', fontSize: 13, fontWeight: 800, cursor: 'pointer', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', gap: 6 }}>
-        ← Site
-      </button>
+      {/* Boutons haut droite */}
+      <div style={{ position: 'absolute', top: 16, right: 16, display: 'flex', gap: 10, zIndex: 10 }}>
+        {isAdmin && (
+          <button onClick={() => setShowManager(true)} style={{ ...btn, background: 'rgba(148,199,72,0.25)', border: '1px solid rgba(148,199,72,0.5)' }}>⚙ Gérer</button>
+        )}
+        <button onClick={() => navigate('/')} style={btn}>← Site</button>
+      </div>
 
       {/* Titre du clip en cours */}
       {currentClip && (
@@ -139,7 +165,41 @@ export const TvPage: React.FC = () => {
           <div style={{ textAlign: 'center', maxWidth: 400, padding: 24 }}>
             <div style={{ fontSize: 40, marginBottom: 12 }}>📺</div>
             <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 8 }}>Aucune vidéo pour le moment</div>
-            <div style={{ fontSize: 14, opacity: 0.7 }}>Les clips uploadés par les artistes apparaîtront ici automatiquement.</div>
+            <div style={{ fontSize: 14, opacity: 0.7, marginBottom: 16 }}>Ajoute tes clips via le bouton « ⚙ Gérer » en haut à droite.</div>
+            {isAdmin && <button onClick={() => setShowManager(true)} style={btn}>⚙ Gérer les vidéos</button>}
+          </div>
+        </div>
+      )}
+
+      {/* Modal de gestion */}
+      {showManager && (
+        <div style={{ position: 'absolute', inset: 0, zIndex: 50, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div style={{ background: '#121216', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 16, padding: 24, width: '100%', maxWidth: 500, maxHeight: '80vh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 900 }}>Gérer la TV</h2>
+              <button onClick={() => setShowManager(false)} style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: 22, cursor: 'pointer' }}>✕</button>
+            </div>
+
+            <form onSubmit={addVideo} style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 }}>
+              <input value={newTitle} onChange={(e) => setNewTitle(e.target.value)} placeholder="Titre du clip" style={inputStyle} />
+              <input value={newUrl} onChange={(e) => setNewUrl(e.target.value)} placeholder="Lien vidéo (mp4, YouTube, TikTok…)" style={inputStyle} required />
+              <button type="submit" disabled={adding} style={{ padding: '12px', background: '#94c748', color: '#000', border: 'none', borderRadius: 8, fontWeight: 800, fontSize: 14, cursor: 'pointer' }}>
+                {adding ? 'Ajout…' : 'Ajouter la vidéo'}
+              </button>
+            </form>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {clips.map((clip) => (
+                <div key={clip.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 10, background: 'rgba(255,255,255,0.05)', borderRadius: 8 }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{clip.title}</div>
+                    <div style={{ fontSize: 11, opacity: 0.55, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{clip.video_url}</div>
+                  </div>
+                  <button onClick={() => removeVideo(clip.id)} style={{ background: 'rgba(255,45,85,0.15)', border: 'none', color: '#ff5c7a', borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>Suppr.</button>
+                </div>
+              ))}
+              {clips.length === 0 && <div style={{ textAlign: 'center', opacity: 0.6, padding: 20 }}>Aucune vidéo. Ajoute un lien ci-dessus.</div>}
+            </div>
           </div>
         </div>
       )}

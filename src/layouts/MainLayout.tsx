@@ -113,17 +113,17 @@ export const MainLayout: React.FC = () => {
           
           <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
             {user ? (
-              <button onClick={handleAuthClick} style={{ background: 'transparent', border: 'none', color: '#b0b0b0', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+              <button onClick={handleAuthClick} style={{ background: 'transparent', border: 'none', color: '#b0b0b0', fontWeight: 700, fontSize: 13, cursor: 'pointer', padding: '10px 4px', minHeight: 40 }}>
                 {t('common.logout')}
               </button>
             ) : (
-              <button onClick={handleAuthClick} style={{ background: '#ffffff', border: 'none', color: '#000', fontWeight: 700, fontSize: 13, padding: '6px 12px', borderRadius: 6, cursor: 'pointer' }}>
+              <button onClick={handleAuthClick} style={{ background: '#94c748', border: 'none', color: '#000', fontWeight: 800, fontSize: 13, padding: '10px 16px', borderRadius: 8, cursor: 'pointer', minHeight: 40 }}>
                 {t('common.login')}
               </button>
             )}
 
             <LanguageSwitcher />
-            <button onClick={toggleTheme} style={{ background: 'transparent', border: 'none', color: colors.textMain, cursor: 'pointer', padding: 4 }}>
+            <button onClick={toggleTheme} style={{ background: 'transparent', border: 'none', color: colors.textMain, cursor: 'pointer', padding: 8, minWidth: 40, minHeight: 40 }}>
               {isDark ? Icons.sun : Icons.moon}
             </button>
 
@@ -153,9 +153,9 @@ export const MainLayout: React.FC = () => {
             const isMenu = item.path === '#menu';
             const isActive = !isMenu && (item.exact ? location.pathname === item.path : location.pathname.startsWith(item.path));
             return (
-              <button key={item.path} onClick={() => isMenu ? setMobileMenuOpen(true) : navigate(item.path)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 12, background: 'transparent', border: 'none', color: isActive ? colors.textMain : colors.textMuted, cursor: 'pointer', minWidth: 60 }}>
-                <div style={{ transform: isActive ? 'scale(1.1)' : 'scale(1)', transition: 'transform 0.1s' }}>{item.icon}</div>
-                <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.2px' }}>{t(item.labelKey)}</span>
+              <button key={item.path} onClick={() => isMenu ? setMobileMenuOpen(true) : navigate(item.path)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 5, padding: '8px 10px', minHeight: 52, borderRadius: 14, background: isActive ? 'rgba(148,199,72,0.12)' : 'transparent', border: 'none', color: isActive ? '#94c748' : colors.textMuted, cursor: 'pointer', minWidth: 64, transition: 'background 0.15s, color 0.15s' }}>
+                <div style={{ transform: isActive ? 'scale(1.12)' : 'scale(1)', transition: 'transform 0.15s', lineHeight: 0 }}>{item.icon}</div>
+                <span style={{ fontSize: 11, fontWeight: isActive ? 800 : 700, letterSpacing: '0.2px', whiteSpace: 'nowrap' }}>{t(item.labelKey)}</span>
               </button>
             );
           })}

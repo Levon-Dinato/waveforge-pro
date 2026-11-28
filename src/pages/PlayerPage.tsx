@@ -11,7 +11,7 @@ import { seededShuffle } from '../lib/shuffle';
 
 export const PlayerPage: React.FC = () => {
   const { username } = useParams<{ username: string }>();
-  const { startRadio, currentTrack, needsGesture, unlockAudio } = useRadio();
+  const { startRadio, currentTrack, needsGesture, unlockAudio, stopRadio } = useRadio();
   const { theme, toggleTheme } = useTheme();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -48,6 +48,13 @@ export const PlayerPage: React.FC = () => {
     window.addEventListener('beforeinstallprompt', handler);
     return () => window.removeEventListener('beforeinstallprompt', handler);
   }, []);
+
+  // ⏹️ Arrête la radio quand on quitte le player mobile (pas en popup desktop)
+  useEffect(() => {
+    return () => {
+      if (!window.opener) stopRadio();
+    };
+  }, [stopRadio]);
 
   const handleInstall = async () => {
     if (!installPrompt) return;
@@ -224,7 +231,8 @@ export const PlayerPage: React.FC = () => {
     if (window.opener) {
       window.close(); // Ferme le popup PC
     } else {
-      navigate(-1); // Retourne à la page précédente sur mobile
+      stopRadio();
+      navigate('/'); // Retour au site sur mobile
     }
   };
 

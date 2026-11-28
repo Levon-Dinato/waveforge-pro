@@ -243,7 +243,7 @@ export const HomePage = () => {
       <div style={{ maxWidth: 1200, margin: '0 auto', width: '100%', paddingLeft: isMobile ? 12 : 24, paddingRight: isMobile ? 12 : 24, display: 'flex', flexDirection: 'column', gap: isMobile ? 24 : 48, paddingTop: 24, paddingBottom: isMobile ? 40 : 80 }}>
 
         {/* 1. HERO */}
-        <div style={{ position: 'relative', borderRadius: isMobile ? 16 : 24, overflow: 'hidden', border: `1px solid ${colors.border}`, width: '100%', height: isMobile ? 420 : 540, background: isDark ? '#000' : '#e5e7eb', boxShadow: '0 20px 40px rgba(0,0,0,0.1)' }}>
+        <div style={{ position: 'relative', borderRadius: isMobile ? 16 : 24, overflow: 'hidden', border: `1px solid ${colors.border}`, width: '100%', height: isMobile ? 480 : 540, background: isDark ? '#000' : '#e5e7eb', boxShadow: '0 20px 40px rgba(0,0,0,0.1)' }}>
 
           {!isMobile ? (
             <video autoPlay loop muted playsInline poster="/og-image.jpg" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: isDark ? 0.3 : 0.3 }}>
@@ -284,7 +284,7 @@ export const HomePage = () => {
               </Link>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+            <div style={{ display: isMobile ? 'none' : 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
               <div style={{ display: 'flex' }}>
                 {artists.slice(0, 4).map((a, i) => (
                   <div key={a.id} style={{ width: 32, height: 32, borderRadius: '50%', background: a.avatar_url ? `url(${a.avatar_url}) center/cover` : colors.textDark, border: `2px solid ${colors.bg}`, marginLeft: i > 0 ? -10 : 0 }} />

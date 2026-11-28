@@ -20,6 +20,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     localStorage.setItem('elektraq-theme', theme);
     document.body.style.backgroundColor = theme === 'dark' ? '#0b0b0d' : '#f5f5f7';
     document.body.setAttribute('data-theme', theme);
+    document.documentElement.style.colorScheme = theme;
   }, [theme]);
 
   const toggleTheme = () => {

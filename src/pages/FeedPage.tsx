@@ -448,10 +448,10 @@ export const FeedPage: React.FC = () => {
   return (
     <div style={{ background: colors.bg, color: colors.textMain, fontFamily: 'Inter, sans-serif', transition: 'background 0.3s ease, color 0.3s ease' }}>
       <PageMeta title="Feed" description="Suivez l'actualité et les partages de la communauté ELEKTRAQ." />
-      <div style={{ maxWidth: 1600, margin: '0 auto', padding: isMobile ? '16px 12px' : '24px 24px 0', display: 'flex', gap: 24, flexDirection: isMobile ? 'column' : 'row', alignItems: 'flex-start' }}>
+      <div style={{ maxWidth: 1600, margin: '0 auto', padding: isMobile ? '16px 12px' : '24px 24px 0', display: 'flex', gap: 24, flexDirection: isMobile ? 'column' : 'row', height: isMobile ? 'auto' : 'calc(100vh - 120px)' }}>
         
         {/* COLONNE PRINCIPALE */}
-        <div style={{ flex: 1, minWidth: 0, width: '100%', overflowY: 'visible', paddingRight: isMobile ? 0 : 20, paddingBottom: currentTrack ? 100 : 20 }}>
+        <div style={{ flex: 1, minWidth: 0, width: '100%', overflowY: isMobile ? 'visible' : 'auto', paddingRight: isMobile ? 0 : 20, paddingBottom: currentTrack ? 100 : 20 }}>
           
           <div style={{ marginBottom: 32 }}>
             <h1 style={{ fontSize: isMobile ? 26 : 36, fontWeight: 900, margin: 0, letterSpacing: '-1px' }}>
@@ -742,7 +742,7 @@ export const FeedPage: React.FC = () => {
 
         {/* SIDEBAR */}
         {!isMobile && (
-          <aside style={{ width: 320, flexShrink: 0, position: 'sticky', top: 120, alignSelf: 'flex-start', maxHeight: 'calc(100vh - 140px)', overflowY: 'auto', paddingRight: 10 }}>
+          <aside style={{ width: 320, flexShrink: 0, height: '100%', overflowY: 'auto', paddingRight: 10 }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
               <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 20, padding: 24, backdropFilter: 'blur(20px)' }}>
                 <h3 style={{ fontSize: 13, fontWeight: 800, letterSpacing: '1px', margin: '0 0 20px 0', color: colors.textMain, textTransform: 'uppercase' }}>{t('feed.upcoming')}</h3>

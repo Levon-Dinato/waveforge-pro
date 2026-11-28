@@ -1,9 +1,10 @@
 // src/components/TrackList.tsx
-// Liste de titres style Beatport : lignes avec classement, pochette, titre/artiste, genre, tonalité, BPM, durée
+// Liste de titres style Beatport : classement, pochette, titre/artiste, genre, date, tonalité, BPM, likes, durée
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
 import { usePlayer } from '../contexts/PlayerContext';
+import { getCamelotColor } from '../audio/keyDetector';
 
 interface TrackListProps {
   tracks: any[];
@@ -16,6 +17,15 @@ const fmt = (s: number) => {
   const m = Math.floor(s / 60);
   return `${m}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 };
+
+const fmtDate = (d: string) => {
+  if (!d) return '';
+  const date = new Date(d);
+  if (isNaN(date.getTime())) return '';
+  return date.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+};
+
+const isNew = (createdAt: string): boolean => (Date.now() - new Date(createdAt).getTime()) < 24 * 60 * 60 * 1000;
 
 export const TrackList: React.FC<TrackListProps> = ({ tracks, onPlay, startRank = 0 }) => {
   const { theme } = useTheme();
@@ -36,6 +46,10 @@ export const TrackList: React.FC<TrackListProps> = ({ tracks, onPlay, startRank 
     <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       {tracks.map((track: any, idx: number) => {
         const isCurrent = currentTrack?.id === track.id && isPlaying;
+        const camelot = track.camelot || (/^[1-9][0-9]?[AB]$/i.test(track.song_key || '') ? track.song_key.toUpperCase() : '');
+        const keyColor = camelot ? getCamelotColor(camelot) : '';
+        const showNew = isNew(track.created_at);
+
         return (
           <div
             key={track.id}
@@ -60,14 +74,26 @@ export const TrackList: React.FC<TrackListProps> = ({ tracks, onPlay, startRank 
             </button>
             <img src={track.cover_url || 'https://via.placeholder.com/50'} alt="" style={{ width: 44, height: 44, borderRadius: 4, objectFit: 'cover', flexShrink: 0, border: `1px solid ${colors.border}` }} />
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: colors.textMain, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.title}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: colors.textMain, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.title}</span>
+                {showNew && (
+                  <span style={{ fontSize: 9, fontWeight: 900, letterSpacing: '1px', color: '#000', background: colors.accent, padding: '2px 6px', borderRadius: 4, flexShrink: 0, textTransform: 'uppercase' }}>New</span>
+                )}
+              </div>
               <div style={{ fontSize: 11, color: colors.textMuted, marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.artist}</div>
             </div>
             {track.genre && (
               <span style={{ fontSize: 10, fontWeight: 700, color: colors.textMuted, background: colors.chipBg, border: `1px solid ${colors.border}`, padding: '3px 10px', borderRadius: 20, flexShrink: 0, whiteSpace: 'nowrap' }}>{track.genre}</span>
             )}
-            {track.song_key && <span style={{ fontSize: 10, fontWeight: 800, color: colors.accent, flexShrink: 0, width: 24, textAlign: 'center' }}>{track.song_key}</span>}
+            <span style={{ fontSize: 11, fontWeight: 600, color: colors.textMuted, flexShrink: 0, whiteSpace: 'nowrap', minWidth: 78, textAlign: 'right' }}>{fmtDate(track.created_at)}</span>
+            {track.song_key && (
+              <span style={{ fontSize: 10, fontWeight: 800, color: keyColor || colors.accent, flexShrink: 0, minWidth: 30, textAlign: 'center', border: keyColor ? `1px solid ${keyColor}` : 'none', borderRadius: 5, padding: keyColor ? '2px 4px' : 0 }}>{track.song_key}</span>
+            )}
             {track.bpm ? <span style={{ fontSize: 10, fontWeight: 700, color: colors.textMuted, flexShrink: 0, width: 34, textAlign: 'right' }}>{Math.round(track.bpm)}</span> : null}
+            <span style={{ fontSize: 11, fontWeight: 700, color: colors.textMuted, flexShrink: 0, whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 4 }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+              {track.likes_count || 0}
+            </span>
             <span style={{ fontSize: 10, color: colors.textMuted, flexShrink: 0, width: 30, textAlign: 'right' }}>{fmt(track.duration)}</span>
           </div>
         );

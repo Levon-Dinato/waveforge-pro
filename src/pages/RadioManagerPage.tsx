@@ -535,9 +535,9 @@ export const RadioManagerPage: React.FC = () => {
             <button 
               onClick={() => {
                 if (!profileUsername) return;
-                const m3uUrl = `${window.location.origin}/radio/${profileUsername}/stream.m3u`;
+                const m3uUrl = `https://dropzone-dj.vercel.app/radio/${encodeURIComponent(profileUsername)}/stream.m3u`;
                 navigator.clipboard.writeText(m3uUrl);
-                alert(`Lien M3U copié !\n\n${m3uUrl}\n\nCe lien est DYNAMIQUE : il diffusera automatiquement la playlist ou le live en cours.`);
+                alert(`Lien M3U copié !\n\n${m3uUrl}\n\nCe lien pointe vers ton flux live (Icecast/tunnel).`);
               }} 
               className="dash-btn dash-btn-secondary" 
               style={{ borderColor: colors.accent, color: colors.accent }}

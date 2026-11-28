@@ -1,49 +1,40 @@
 // api/stream-m3u.js
+// Génère un fichier M3U pointant vers le flux live de la radio (Icecast/cloudflared).
+
 export default async function handler(req, res) {
   const { username } = req.query;
+  if (!username) {
+    res.setHeader('Content-Type', 'audio/x-mpegurl');
+    return res.status(400).send('#EXTM3U\n');
+  }
 
-  const supabaseUrl = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '').replace(/\/$/, '');
-  const supabaseKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+  const supabaseUrl = 'https://ivusrxkufajugvkbpcia.supabase.co';
+  const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml2dXNyeGt1ZmFqdWd2a2JwY2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE5MzU1MDUsImV4cCI6MjEwNzUxMTUwNX0.iwjZ-9Lm8vRazk6KR7zi0BLmZ1RYRUP9dIwfyiW83_U';
 
   try {
-    // 1. On cherche l'ID du DJ via son pseudo
-    const profileRes = await fetch(`${supabaseUrl}/rest/v1/profiles?username=eq.${username}&select=id`, {
-      headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
-    });
-    const profiles = await profileRes.json();
-    
-    if (!profiles || profiles.length === 0) {
-      return res.status(404).send("DJ introuvable");
-    }
-    
-    const userId = profiles[0].id;
+    const r = await fetch(
+      `${supabaseUrl}/rest/v1/profiles?username=ilike.${username}&select=username,radio_name,live_url`,
+      { headers: { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` } }
+    );
+    const data = await r.json();
+    const profile = Array.isArray(data) && data[0] ? data[0] : null;
 
-    // 2. On récupère toutes ses musiques diffusées à la radio
-    const tracksRes = await fetch(`${supabaseUrl}/rest/v1/tracks?user_id=eq.${userId}&in_radio=eq.true&select=title,artist,audio_url`, {
-      headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
-    });
-    const tracks = await tracksRes.json();
+    const name = profile?.radio_name || profile?.username || 'ELEKTRAQ';
+    const streamUrl = profile?.live_url || '';
 
-    if (!tracks || tracks.length === 0) {
-      return res.status(404).send("Aucune musique à diffuser");
+    let content;
+    if (streamUrl) {
+      content = `#EXTM3U\n#EXTINF:-1,${name}\n${streamUrl}\n`;
+    } else {
+      content = `#EXTM3U\n#EXTINF:-1,${name} — flux non configuré\n`;
     }
 
-    // 3. On génère le fichier M3U
-    let m3uContent = "#EXTM3U\n";
-    tracks.forEach(track => {
-      m3uContent += `#EXTINF:-1,${track.artist} - ${track.title}\n`;
-      m3uContent += `${track.audio_url}\n`;
-    });
-
-    // 4. On renvoie le fichier avec le bon format
     res.setHeader('Content-Type', 'audio/x-mpegurl');
-    res.setHeader('Content-Disposition', `attachment; filename="${username}-radio.m3u"`);
-    res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate'); // Cache de 1 min
-    
-    return res.status(200).send(m3uContent);
-
-  } catch (error) {
-    console.error("Erreur génération M3U:", error);
-    return res.status(500).send("Erreur serveur");
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    return res.status(200).send(content);
+  } catch (e) {
+    console.error('stream-m3u error:', e);
+    res.setHeader('Content-Type', 'audio/x-mpegurl');
+    return res.status(500).send('#EXTM3U\n');
   }
 }

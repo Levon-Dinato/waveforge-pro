@@ -112,18 +112,54 @@ export const ChartsPage: React.FC = () => {
     const fetchTopTracks = async () => {
       setLoading(true);
       try {
-        const { data, error } = await supabase
-          .from('tracks')
-          .select('*')
-          .or('is_jingle.is.null,is_jingle.eq.false')
-          .or('is_private.is.null,is_private.eq.false')
-          .order('likes_count', { ascending: false })
-          .limit(50);
+        if (timeRange === 'weekly') {
+          // 📅 Top de la semaine : likes reçus sur les 7 derniers jours
+          const since = new Date();
+          since.setDate(since.getDate() - 7);
+          const sinceIso = since.toISOString();
 
-        if (error) {
-          console.error("Erreur Supabase:", error);
-        } else if (data) {
-          setTracks(data);
+          const { data: likesData } = await supabase
+            .from('likes')
+            .select('track_id')
+            .gte('created_at', sinceIso);
+
+          const counts: Record<string, number> = {};
+          (likesData || []).forEach((l: any) => {
+            counts[l.track_id] = (counts[l.track_id] || 0) + 1;
+          });
+
+          const topIds = Object.entries(counts)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 50)
+            .map(([id]) => id);
+
+          if (topIds.length === 0) {
+            setTracks([]);
+          } else {
+            const { data } = await supabase
+              .from('tracks')
+              .select('*')
+              .in('id', topIds);
+
+            const map = new Map((data || []).map((t: any) => [t.id, t]));
+            const sorted = topIds.map((id: string) => map.get(id)).filter(Boolean);
+            setTracks(sorted);
+          }
+        } else {
+          // 🏆 Tous les temps : likes cumulés (likes_count)
+          const { data, error } = await supabase
+            .from('tracks')
+            .select('*')
+            .or('is_jingle.is.null,is_jingle.eq.false')
+            .or('is_private.is.null,is_private.eq.false')
+            .order('likes_count', { ascending: false })
+            .limit(50);
+
+          if (error) {
+            console.error("Erreur Supabase:", error);
+          } else if (data) {
+            setTracks(data);
+          }
         }
       } catch (err) {
         console.error("Erreur catch:", err);
@@ -132,7 +168,7 @@ export const ChartsPage: React.FC = () => {
       }
     };
     fetchTopTracks();
-  }, []);
+  }, [timeRange]);
 
   const incrementPlayCount = async (track: Track) => {
     if (!user || user.id === track.user_id) return;

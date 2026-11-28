@@ -248,6 +248,11 @@ export const PlayerPage: React.FC = () => {
         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: colors.scrim }} />
       </div>
 
+      {/* ✅ RETOUR SITE */}
+      <button onClick={handleClose} style={{ position: 'absolute', top: 12, left: 12, background: colors.btnTopBg, border: `1px solid ${colors.btnTopBorder}`, borderRadius: 20, padding: '7px 14px', display: 'flex', alignItems: 'center', gap: 6, color: colors.textMain, cursor: 'pointer', zIndex: 100, backdropFilter: 'blur(10px)', fontSize: 12, fontWeight: 800 }}>
+        ← Site
+      </button>
+
       {/* ✅ BOUTON FERMER CORRIGÉ */}
       <button onClick={toggleTheme} style={{ position: 'absolute', top: 12, right: 52, background: colors.btnTopBg, border: `1px solid ${colors.btnTopBorder}`, borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.textMain, cursor: 'pointer', zIndex: 100, backdropFilter: 'blur(10px)' }} title={isDark ? 'Mode clair' : 'Mode sombre'}>
         {isDark ? (

@@ -45,6 +45,7 @@ const HelpPage = lazy(() => import('./pages/HelpPage').then((m) => ({ default: m
 const SettingsPage = lazy(() => import('./pages/SettingsPage').then((m) => ({ default: m.SettingsPage })));
 const RadioManagerPage = lazy(() => import('./pages/RadioManagerPage').then((m) => ({ default: m.RadioManagerPage })));
 const NouveautesPage = lazy(() => import('./pages/NouveautesPage').then((m) => ({ default: m.NouveautesPage })));
+const TvPage = lazy(() => import('./pages/TvPage').then((m) => ({ default: m.TvPage })));
 const AuthPage = lazy(() => import('./pages/AuthPage').then((m) => ({ default: m.AuthPage })));
 const AuthCallback = lazy(() => import('./pages/AuthCallback').then((m) => ({ default: m.AuthCallback })));
 const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage').then((m) => ({ default: m.ResetPasswordPage })));
@@ -112,6 +113,8 @@ function AnimatedRoutes() {
           <Route path="nouveautes" element={<RadioReleasesPage />} />
           <Route path="programme" element={<RadioProgramPage />} />
         </Route>
+
+        <Route path="/tv" element={<TvPage />} />
 
         <Route path="/" element={<MainLayout />}>
           

@@ -45,6 +45,7 @@ const NAV_ITEMS: NavItem[] = [
   { path: '/charts', labelKey: 'nav.top50', icon: Icons.trophy },
   { path: '/radios', labelKey: 'nav.allRadios', icon: Icons.radioList },
   { path: '/live', labelKey: 'nav.live', icon: Icons.live },
+  { path: '/tv', labelKey: 'nav.tv', icon: Icons.live, highlight: true },
   { path: '/feed', labelKey: 'nav.feed', icon: Icons.feed },
   { path: '/discover', labelKey: 'nav.discover', icon: Icons.discover },
   { path: '/genres', labelKey: 'nav.genres', icon: Icons.genres },

@@ -14,7 +14,7 @@ const getVideoUrlInfo = (url: string) => {
     if (url.includes('youtu.be/')) videoId = url.split('youtu.be/')[1].split('?')[0];
     else if (url.includes('shorts/')) videoId = url.split('shorts/')[1].split('?')[0];
     else if (url.includes('watch?v=')) videoId = url.split('watch?v=')[1].split('&')[0];
-    return { type: 'iframe', src: `https://www.youtube.com/embed/${videoId}?autoplay=1&controls=0&rel=0&modestbranding=1&playsinline=1` };
+    return { type: 'iframe', src: `https://www.youtube.com/embed/${videoId}?autoplay=1` };
   }
   if (url.includes('tiktok.com')) {
     const match = url.match(/\/video\/(\d+)/);
@@ -73,14 +73,6 @@ export const TvPage: React.FC = () => {
     setMuted(!v.muted);
   };
 
-  const toggleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen?.().catch(() => {});
-    } else {
-      document.exitFullscreen?.().catch(() => {});
-    }
-  };
-
   const addVideo = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newUrl.trim()) return;
@@ -125,6 +117,7 @@ export const TvPage: React.FC = () => {
           autoPlay
           muted={muted}
           playsInline
+          controls
           onEnded={nextRandom}
           style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
         />
@@ -153,7 +146,6 @@ export const TvPage: React.FC = () => {
         {isAdmin && (
           <button onClick={() => setShowManager(true)} style={{ ...btn, background: 'rgba(148,199,72,0.25)', border: '1px solid rgba(148,199,72,0.5)' }}>⚙ Gérer</button>
         )}
-        <button onClick={toggleFullscreen} style={btn} title="Plein écran">⛶</button>
         <button onClick={() => navigate('/')} style={btn}>← Site</button>
       </div>
 

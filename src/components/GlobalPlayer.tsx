@@ -225,10 +225,10 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
 
     ctx.save(); ctx.beginPath(); ctx.rect(0, 0, playedX, H); ctx.clip();
     const gradient = ctx.createLinearGradient(0, 0, 0, H);
-    gradient.addColorStop(0, 'rgba(255, 255, 255, 0.2)');
-    gradient.addColorStop(0.5, 'rgba(255, 255, 255, 1)');
-    gradient.addColorStop(1, 'rgba(255, 255, 255, 0.2)');
-    ctx.fillStyle = gradient; ctx.shadowColor = '#ffffff'; ctx.shadowBlur = isMobile ? 2 : 6;
+    gradient.addColorStop(0, 'rgba(148, 199, 72, 0.25)');
+    gradient.addColorStop(0.5, '#94c748');
+    gradient.addColorStop(1, 'rgba(148, 199, 72, 0.25)');
+    ctx.fillStyle = gradient; ctx.shadowColor = '#94c748'; ctx.shadowBlur = isMobile ? 2 : 6;
 
     for (let i = 0; i < displayPeaks.length; i++) {
       const x = (i / displayPeaks.length) * W;
@@ -239,8 +239,8 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
     ctx.shadowBlur = 0; ctx.restore();
 
     if (duration > 0 && playedRatio < 1) {
-      ctx.strokeStyle = isDark ? '#ffffff' : '#000000'; ctx.lineWidth = 2;
-      ctx.shadowColor = isDark ? '#ffffff' : '#000000'; ctx.shadowBlur = 4;
+      ctx.strokeStyle = '#94c748'; ctx.lineWidth = 2;
+      ctx.shadowColor = '#94c748'; ctx.shadowBlur = 4;
       ctx.beginPath(); ctx.moveTo(playedX, 0); ctx.lineTo(playedX, H); ctx.stroke();
       ctx.shadowBlur = 0;
     }
@@ -315,7 +315,7 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
       transition: 'background 0.3s ease, border-color 0.3s ease'
     }}>
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'rgba(255,255,255,0.1)' }}>
-        <div style={{ width: `${(currentTime / (duration || 1)) * 100}%`, height: '100%', background: '#ffffff', boxShadow: '0 0 10px #ffffff' }} />
+        <div style={{ width: `${(currentTime / (duration || 1)) * 100}%`, height: '100%', background: '#94c748', boxShadow: '0 0 10px #94c748' }} />
       </div>
 
       <div style={{ maxWidth: 1400, margin: '0 auto', height: isMobile ? '72px' : '96px', display: 'flex', alignItems: 'center', gap: isMobile ? '12px' : '32px', padding: isMobile ? '0 16px' : '0 32px' }}>

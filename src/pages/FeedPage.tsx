@@ -129,12 +129,12 @@ export const FeedPage: React.FC = () => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const colors = {
-    bg: isDark ? '#0a0a0a' : '#f5f5f7',
+    bg: isDark ? '#0d0d11' : '#f5f5f7',
     textMain: isDark ? '#ffffff' : '#1a1a1a',
     textMuted: isDark ? '#888888' : '#666666',
     textLight: isDark ? '#dddddd' : '#333333',
     border: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
-    panelBg: isDark ? 'rgba(18, 18, 18, 0.65)' : 'rgba(255, 255, 255, 0.75)',
+    panelBg: isDark ? 'rgba(24, 24, 28, 0.7)' : 'rgba(255, 255, 255, 0.75)',
     modalBg: isDark ? '#121212' : '#ffffff',
     inputBg: isDark ? '#0a0a0a' : '#f3f4f6',
     avatarBg: isDark ? '#1a1a1a' : '#e5e7eb',
@@ -142,8 +142,8 @@ export const FeedPage: React.FC = () => {
     btnPublishText: isDark ? '#000000' : '#ffffff',
     btnPublishDisabledBg: isDark ? '#1a1a1a' : '#e5e7eb',
     btnPublishDisabledText: isDark ? '#555555' : '#999999',
-    accent: '#ffffff',
-    cardHoverBorder: isDark ? 'rgba(255, 255, 255, 0.3)' : 'rgba(255, 255, 255, 0.4)',
+    accent: '#94c748',
+    cardHoverBorder: isDark ? 'rgba(148, 199, 72, 0.4)' : 'rgba(148, 199, 72, 0.4)',
   };
 
   useEffect(() => {
@@ -744,6 +744,21 @@ export const FeedPage: React.FC = () => {
         {!isMobile && (
           <aside style={{ width: 320, flexShrink: 0, position: 'sticky', top: 120, alignSelf: 'flex-start', maxHeight: 'calc(100vh - 140px)', overflowY: 'auto', paddingRight: 10 }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+              <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 20, padding: 24, backdropFilter: 'blur(20px)' }}>
+                <h3 style={{ fontSize: 13, fontWeight: 800, letterSpacing: '1px', margin: '0 0 20px 0', color: colors.textMain, textTransform: 'uppercase' }}>{t('feed.upcoming')}</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  {upcomingEvents.map((event) => (
+                    <a key={event.id} href={event.url || '#'} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', flexDirection: 'column', textDecoration: 'none', padding: 16, borderRadius: 12, background: colors.inputBg, borderLeft: `3px solid ${colors.accent}`, transition: 'all 0.2s' }} onMouseEnter={(e) => { e.currentTarget.style.background = `${colors.accent}10`; e.currentTarget.style.borderLeftWidth = '6px'; }} onMouseLeave={(e) => { e.currentTarget.style.background = colors.inputBg; e.currentTarget.style.borderLeftWidth = '3px'; }}>
+                      <div style={{ fontSize: 11, color: colors.accent, fontWeight: 900, marginBottom: 6, letterSpacing: '1px' }}>
+                        {new Date(event.event_date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }).toUpperCase()}
+                      </div>
+                      <div style={{ fontSize: 14, fontWeight: 800, color: colors.textMain, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{event.title}</div>
+                      <div style={{ fontSize: 12, color: colors.textMuted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: 4 }}>{event.city || event.location}</div>
+                    </a>
+                  ))}
+                </div>
+              </div>
+
               <div style={{ background: `linear-gradient(135deg, ${colors.accent}15, transparent 60%), ${colors.panelBg}`, border: `1px solid ${colors.border}`, borderRadius: 20, padding: 24, backdropFilter: 'blur(20px)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
                   <div style={{ color: colors.accent }}>{Icons.sparkles}</div>
@@ -772,20 +787,7 @@ export const FeedPage: React.FC = () => {
                 </div>
               </div>
 
-              <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 20, padding: 24, backdropFilter: 'blur(20px)' }}>
-                <h3 style={{ fontSize: 13, fontWeight: 800, letterSpacing: '1px', margin: '0 0 20px 0', color: colors.textMain, textTransform: 'uppercase' }}>{t('feed.upcoming')}</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                  {upcomingEvents.map((event) => (
-                    <a key={event.id} href={event.url || '#'} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', flexDirection: 'column', textDecoration: 'none', padding: 16, borderRadius: 12, background: colors.inputBg, borderLeft: `3px solid ${colors.accent}`, transition: 'all 0.2s' }} onMouseEnter={(e) => { e.currentTarget.style.background = `${colors.accent}10`; e.currentTarget.style.borderLeftWidth = '6px'; }} onMouseLeave={(e) => { e.currentTarget.style.background = colors.inputBg; e.currentTarget.style.borderLeftWidth = '3px'; }}>
-                      <div style={{ fontSize: 11, color: colors.accent, fontWeight: 900, marginBottom: 6, letterSpacing: '1px' }}>
-                        {new Date(event.event_date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }).toUpperCase()}
-                      </div>
-                      <div style={{ fontSize: 14, fontWeight: 800, color: colors.textMain, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{event.title}</div>
-                      <div style={{ fontSize: 12, color: colors.textMuted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: 4 }}>{event.city || event.location}</div>
-                    </a>
-                  ))}
-                </div>
-              </div>
+
 
               <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 20, padding: 24, backdropFilter: 'blur(20px)' }}>
                 <OnlineUsersWidget />

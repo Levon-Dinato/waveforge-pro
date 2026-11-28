@@ -14,7 +14,7 @@ const getVideoUrlInfo = (url: string) => {
     if (url.includes('youtu.be/')) videoId = url.split('youtu.be/')[1].split('?')[0];
     else if (url.includes('shorts/')) videoId = url.split('shorts/')[1].split('?')[0];
     else if (url.includes('watch?v=')) videoId = url.split('watch?v=')[1].split('&')[0];
-    return { type: 'iframe', src: `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1` };
+    return { type: 'iframe', src: `https://www.youtube.com/embed/${videoId}?autoplay=1` };
   }
   if (url.includes('tiktok.com')) {
     const match = url.match(/\/video\/(\d+)/);
@@ -147,8 +147,8 @@ export const TvPage: React.FC = () => {
       <div style={{ position: 'absolute', bottom: 22, right: 22, display: 'flex', gap: 10, zIndex: 10 }}>
         <button onClick={prev} style={btn}>⏮ Précédent</button>
         {currentInfo?.type === 'video' && (
-          <button onClick={toggleMute} style={{ ...btn, padding: '10px 14px' }} title={muted ? 'Activer le son' : 'Couper le son'}>
-            {muted ? '🔇' : '🔊'}
+          <button onClick={toggleMute} style={{ ...btn, background: muted ? 'rgba(148,199,72,0.3)' : 'rgba(0,0,0,0.45)', border: muted ? '1px solid #94c748' : '1px solid rgba(255,255,255,0.25)' }} title={muted ? 'Activer le son' : 'Couper le son'}>
+            {muted ? '🔇 Activer le son' : '🔊 Son activé'}
           </button>
         )}
         <button onClick={next} style={btn}>Suivant ⏭</button>

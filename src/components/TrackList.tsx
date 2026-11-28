@@ -1,10 +1,11 @@
 // src/components/TrackList.tsx
-// Liste de titres style Beatport : classement, pochette, titre/artiste, genre, date, tonalité, BPM, likes, durée
+// Liste de titres style Beatport : version desktop riche + version mobile compacte.
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
 import { usePlayer } from '../contexts/PlayerContext';
 import { getCamelotColor } from '../audio/keyDetector';
+import { useIsMobile } from '../hooks/useIsMobile';
 
 interface TrackListProps {
   tracks: any[];
@@ -30,6 +31,7 @@ const isNew = (createdAt: string): boolean => (Date.now() - new Date(createdAt).
 export const TrackList: React.FC<TrackListProps> = ({ tracks, onPlay, startRank = 0 }) => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
+  const isMobile = useIsMobile(768);
   const navigate = useNavigate();
   const { currentTrack, isPlaying } = usePlayer() as any;
 
@@ -43,13 +45,54 @@ export const TrackList: React.FC<TrackListProps> = ({ tracks, onPlay, startRank 
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 8 : 2 }}>
       {tracks.map((track: any, idx: number) => {
         const isCurrent = currentTrack?.id === track.id && isPlaying;
         const camelot = track.camelot || (/^[1-9][0-9]?[AB]$/i.test(track.song_key || '') ? track.song_key.toUpperCase() : '');
         const keyColor = camelot ? getCamelotColor(camelot) : '';
         const showNew = isNew(track.created_at);
 
+        const metaParts: string[] = [];
+        if (track.genre) metaParts.push(track.genre);
+        if (track.bpm) metaParts.push(`${Math.round(track.bpm)} BPM`);
+        if (track.song_key) metaParts.push(track.song_key);
+        const meta = metaParts.join(' · ');
+
+        // ===== MOBILE : ligne compacte =====
+        if (isMobile) {
+          return (
+            <div
+              key={track.id}
+              onClick={() => navigate('/track/' + track.id)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 12, padding: '12px',
+                borderRadius: 12, cursor: 'pointer',
+                background: isCurrent ? 'rgba(148,199,72,0.08)' : colors.chipBg,
+                border: `1px solid ${isCurrent ? 'rgba(148,199,72,0.4)' : colors.border}`,
+                transition: 'background 0.15s',
+              }}
+            >
+              <button
+                onClick={(e) => { e.stopPropagation(); onPlay(track); }}
+                style={{ width: 44, height: 44, borderRadius: '50%', border: `1px solid ${colors.accent}`, background: isCurrent ? colors.accent : 'transparent', color: isCurrent ? '#000' : colors.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, fontSize: 14 }}
+              >
+                {isCurrent ? '⏸' : '▶'}
+              </button>
+              <img src={track.cover_url || 'https://via.placeholder.com/50'} alt="" style={{ width: 52, height: 52, borderRadius: 8, objectFit: 'cover', flexShrink: 0, border: `1px solid ${colors.border}` }} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: colors.textMain, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.title}</span>
+                  {showNew && <span style={{ fontSize: 9, fontWeight: 900, color: '#000', background: colors.accent, padding: '2px 5px', borderRadius: 4, flexShrink: 0, letterSpacing: '0.5px' }}>NEW</span>}
+                </div>
+                <div style={{ fontSize: 12, color: colors.textMuted, marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.artist}</div>
+                {meta && <div style={{ fontSize: 11, color: keyColor || colors.textMuted, marginTop: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', opacity: 0.85 }}>{meta}</div>}
+              </div>
+              <span style={{ fontSize: 12, color: colors.textMuted, flexShrink: 0, fontWeight: 600 }}>{fmt(track.duration)}</span>
+            </div>
+          );
+        }
+
+        // ===== DESKTOP : ligne riche =====
         return (
           <div
             key={track.id}

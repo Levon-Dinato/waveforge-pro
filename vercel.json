@@ -55,5 +55,8 @@
         { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
       ]
     }
+  ],
+  "crons": [
+    { "path": "/api/snapshot-charts", "schedule": "0 3 * * *" }
   ]
 }

@@ -230,7 +230,7 @@ export const MainLayout: React.FC = () => {
             </Link>
           </div>
         )}
-        <div style={{ maxWidth: 1280, margin: '0 auto', width: '100%', display: 'flex', alignItems: 'center', gap: 24, padding: '10px 24px' }}>
+        <div style={{ maxWidth: 1600, margin: '0 auto', width: '100%', display: 'flex', alignItems: 'center', gap: 24, padding: '10px 24px' }}>
           <Link to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', flexShrink: 0 }}>
             <span style={{ fontWeight: 900, fontSize: '1.3rem', letterSpacing: '2px', color: colors.textMain }}>ELEKTRAQ</span>
           </Link>
@@ -257,7 +257,7 @@ export const MainLayout: React.FC = () => {
         </div>
 
         {/* NAV LINKS (style Beatport) */}
-        <nav style={{ maxWidth: 1280, margin: '0 auto', width: '100%', display: 'flex', alignItems: 'center', gap: 2, padding: '8px 24px 10px 24px', overflowX: 'auto', borderTop: `1px solid ${colors.border}`, background: isDark ? '#1c1c21' : '#f0f0f3' }}>
+        <nav style={{ maxWidth: 1600, margin: '0 auto', width: '100%', display: 'flex', alignItems: 'center', gap: 2, padding: '8px 24px 10px 24px', overflowX: 'auto', borderTop: `1px solid ${colors.border}`, background: isDark ? '#1c1c21' : '#f0f0f3' }}>
           {NAV_ITEMS.map(item => {
             const isActive = item.exact ? location.pathname === item.path : location.pathname.startsWith(item.path);
             return (
@@ -278,7 +278,7 @@ export const MainLayout: React.FC = () => {
         </nav>
       </header>
 
-      <main style={{ flex: 1, width: '100%', maxWidth: 1280, margin: '0 auto', padding: `${isAdmin ? 144 : 116}px 24px ${showGlobalPlayer ? 80 : 0}px` }}>
+      <main style={{ flex: 1, width: '100%', maxWidth: 1600, margin: '0 auto', padding: `${isAdmin ? 144 : 116}px 24px ${showGlobalPlayer ? 80 : 0}px` }}>
         <Outlet />
       </main>
 

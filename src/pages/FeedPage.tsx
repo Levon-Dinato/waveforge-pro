@@ -742,9 +742,9 @@ export const FeedPage: React.FC = () => {
 
         {/* SIDEBAR */}
         {!isMobile && (
-          <aside style={{ width: 320, flexShrink: 0, paddingRight: 10 }}>
+          <aside style={{ width: 320, flexShrink: 0, position: 'sticky', top: 120, alignSelf: 'flex-start', maxHeight: 'calc(100vh - 140px)', overflowY: 'auto', paddingRight: 10 }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-              <div style={{ position: 'sticky', top: 120, zIndex: 10, background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 20, padding: 24, backdropFilter: 'blur(20px)' }}>
+              <div style={{ background: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: 20, padding: 24, backdropFilter: 'blur(20px)' }}>
                 <h3 style={{ fontSize: 13, fontWeight: 800, letterSpacing: '1px', margin: '0 0 20px 0', color: colors.textMain, textTransform: 'uppercase' }}>{t('feed.upcoming')}</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                   {upcomingEvents.map((event) => (

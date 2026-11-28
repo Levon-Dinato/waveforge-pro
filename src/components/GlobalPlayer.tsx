@@ -334,11 +334,11 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
         </div>
 
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: isMobile ? 12 : 24 }}>
-          <button onClick={previous} disabled={!hasPrevious} style={{ background: 'transparent', border: 'none', color: hasPrevious ? colors.textMain : colors.textMuted, cursor: hasPrevious ? 'pointer' : 'default', opacity: hasPrevious ? 1 : 0.35, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, padding: 4 }}>
+          <button onClick={previous} disabled={!hasPrevious} style={{ background: 'transparent', border: 'none', color: hasPrevious ? colors.textMain : colors.textMuted, cursor: hasPrevious ? 'pointer' : 'default', opacity: hasPrevious ? 1 : 0.35, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, padding: isMobile ? 8 : 4 }}>
             <svg width={isMobile ? 18 : 22} height={isMobile ? 18 : 22} viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="4" width="2.5" height="16"></rect><polygon points="19 4 8.5 12 19 20"></polygon></svg>
           </button>
 
-          <button onClick={onTogglePlay} style={{ width: isMobile ? 36 : 48, height: isMobile ? 36 : 48, borderRadius: '50%', background: colors.playBtnBg, color: colors.playBtnText, border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, transition: 'transform 0.1s, background 0.3s, color 0.3s', boxShadow: isDark ? '0 0 20px rgba(255,255,255,0.1)' : '0 4px 10px rgba(0,0,0,0.1)' }}
+          <button onClick={onTogglePlay} style={{ width: isMobile ? 44 : 48, height: isMobile ? 44 : 48, borderRadius: '50%', background: colors.playBtnBg, color: colors.playBtnText, border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, transition: 'transform 0.1s, background 0.3s, color 0.3s', boxShadow: isDark ? '0 0 20px rgba(255,255,255,0.1)' : '0 4px 10px rgba(0,0,0,0.1)' }}
             onMouseDown={e => e.currentTarget.style.transform = 'scale(0.92)'} onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'} onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}>
             {isPlaying ? (
               <svg width={isMobile ? 16 : 20} height={isMobile ? 16 : 20} viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
@@ -347,7 +347,7 @@ export const GlobalPlayer: React.FC<GlobalPlayerProps> = ({ currentTrack, isPlay
             )}
           </button>
 
-          <button onClick={next} disabled={!hasNext} style={{ background: 'transparent', border: 'none', color: hasNext ? colors.textMain : colors.textMuted, cursor: hasNext ? 'pointer' : 'default', opacity: hasNext ? 1 : 0.35, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, padding: 4 }}>
+          <button onClick={next} disabled={!hasNext} style={{ background: 'transparent', border: 'none', color: hasNext ? colors.textMain : colors.textMuted, cursor: hasNext ? 'pointer' : 'default', opacity: hasNext ? 1 : 0.35, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, padding: isMobile ? 8 : 4 }}>
             <svg width={isMobile ? 18 : 22} height={isMobile ? 18 : 22} viewBox="0 0 24 24" fill="currentColor"><polygon points="5 4 15.5 12 5 20"></polygon><rect x="16.5" y="4" width="2.5" height="16"></rect></svg>
           </button>
 

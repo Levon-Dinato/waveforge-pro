@@ -478,10 +478,14 @@ export const NouveautesPage: React.FC = () => {
       console.warn("Impossible de lire les tags ID3", err);
     }
 
-    // Détection de la tonalité même si les tags sont illisibles/absents
+    // Détection de la tonalité en SECOURS uniquement si les tags sont illisibles/absents
     decodeAndDetectKey(file).then((audioCamelot) => {
       if (audioCamelot) {
-        setUploadForm((prev) => ({ ...prev, song_key: audioCamelot }));
+        setUploadForm((prev) => {
+          // ✅ Ne jamais écraser la tonalité déjà lue dans les tags (Serato / Mixed In Key)
+          if (prev.song_key && prev.song_key.trim()) return prev;
+          return { ...prev, song_key: audioCamelot };
+        });
       }
     }).catch(() => {});
   };

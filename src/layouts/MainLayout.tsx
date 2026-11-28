@@ -68,7 +68,7 @@ export const MainLayout: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   // ✅ Barre de lecture visible uniquement sur les pages d'écoute principales
-  const showGlobalPlayer = ['/', '/nouveautes', '/charts', '/artists', '/sortie-radio', '/discover', '/genres'].includes(location.pathname);
+  const showGlobalPlayer = ['/', '/nouveautes', '/charts', '/artists', '/sortie-radio', '/discover', '/genres', '/feed'].includes(location.pathname);
   
   const { theme, toggleTheme } = useTheme();
   const { t } = useTranslation();
